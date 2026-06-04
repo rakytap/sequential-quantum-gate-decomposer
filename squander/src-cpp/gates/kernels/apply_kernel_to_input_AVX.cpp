@@ -80,8 +80,8 @@ apply_kernel_to_input_AVX_small(Matrix& u3_1qbit, Matrix& input, const bool& der
                 for (int col_idx = 0; col_idx < 2 * (input.cols - 1); col_idx = col_idx + 4) {
 
                     // extract successive elements from arrays element, element_pair
-                    __m256d element_vec = _mm256_load_pd(element + col_idx); // 6th register
-                    __m256d element_pair_vec = _mm256_load_pd(element_pair + col_idx); // 7th register
+                    __m256d element_vec = _mm256_loadu_pd(element + col_idx); // 6th register
+                    __m256d element_pair_vec = _mm256_loadu_pd(element_pair + col_idx); // 7th register
 
                     //// u3_1qbit_00*element_vec ////
 
@@ -123,7 +123,7 @@ apply_kernel_to_input_AVX_small(Matrix& u3_1qbit, Matrix& input, const bool& der
 
 
                     // 6 store the transformed elements in vec3
-                    _mm256_store_pd(element + col_idx, vec3);
+                    _mm256_storeu_pd(element + col_idx, vec3);
 
 
                     //// u3_1qbit_10*element_vec ////
@@ -153,7 +153,7 @@ apply_kernel_to_input_AVX_small(Matrix& u3_1qbit, Matrix& input, const bool& der
                     vec3 = _mm256_add_pd(vec3, vec5);
 
                     // 6 store the transformed elements in vec3
-                    _mm256_store_pd(element_pair + col_idx, vec3);
+                    _mm256_storeu_pd(element_pair + col_idx, vec3);
 
                 }
 
@@ -218,9 +218,7 @@ apply_kernel_to_input_AVX_small32(Matrix_float& u3_1qbit, Matrix_float& input, c
 
     auto cmul_ps = [](__m256 ar, __m256 ai, __m256 x) {
         const __m256 swapped = _mm256_permute_ps(x, 0xB1);
-        const __m256 mul1 = _mm256_mul_ps(ar, x);
-        const __m256 mul2 = _mm256_mul_ps(ai, swapped);
-        return _mm256_addsub_ps(mul1, mul2);
+        return _mm256_fmaddsub_ps(ar, x, _mm256_mul_ps(ai, swapped));
     };
 
     const int index_step_target = 1 << target_qbit;
@@ -249,14 +247,14 @@ apply_kernel_to_input_AVX_small32(Matrix_float& u3_1qbit, Matrix_float& input, c
                 int col_idx = 0;
                 const int limit = 2 * input.cols - 8;
                 for (; col_idx <= limit; col_idx += 8) {
-                    const __m256 e = _mm256_load_ps(element + col_idx);
-                    const __m256 p = _mm256_load_ps(element_pair + col_idx);
+                    const __m256 e = _mm256_loadu_ps(element + col_idx);
+                    const __m256 p = _mm256_loadu_ps(element_pair + col_idx);
 
                     const __m256 out0 = _mm256_add_ps(cmul_ps(u00r, u00i, e), cmul_ps(u01r, u01i, p));
                     const __m256 out1 = _mm256_add_ps(cmul_ps(u10r, u10i, e), cmul_ps(u11r, u11i, p));
 
-                    _mm256_store_ps(element + col_idx, out0);
-                    _mm256_store_ps(element_pair + col_idx, out1);
+                    _mm256_storeu_ps(element + col_idx, out0);
+                    _mm256_storeu_ps(element_pair + col_idx, out1);
                 }
 
                 for (int c = col_idx / 2; c < input.cols; ++c) {
@@ -287,14 +285,229 @@ apply_kernel_to_input_AVX_small32(Matrix_float& u3_1qbit, Matrix_float& input, c
 
 
 void
+apply_kernel_from_right_AVX_small(Matrix& u3_1qbit, Matrix& input, const int& target_qbit, const int& control_qbit, const int& matrix_size) {
+    input.ensure_aligned();
+
+    const int index_step_target = 1 << target_qbit;
+
+    const __m256d u00r = _mm256_broadcast_sd(&u3_1qbit[0].real);
+    const __m256d u00i = _mm256_broadcast_sd(&u3_1qbit[0].imag);
+    const __m256d u01r = _mm256_broadcast_sd(&u3_1qbit[1].real);
+    const __m256d u01i = _mm256_broadcast_sd(&u3_1qbit[1].imag);
+    const __m256d u10r = _mm256_broadcast_sd(&u3_1qbit[2].real);
+    const __m256d u10i = _mm256_broadcast_sd(&u3_1qbit[2].imag);
+    const __m256d u11r = _mm256_broadcast_sd(&u3_1qbit[3].real);
+    const __m256d u11i = _mm256_broadcast_sd(&u3_1qbit[3].imag);
+
+    auto apply_pair_scalar = [&](const int index, const int index_pair) {
+        QGD_Complex16 element = input[index];
+        QGD_Complex16 element_pair = input[index_pair];
+
+        QGD_Complex16 tmp1 = mult(u3_1qbit[0], element);
+        QGD_Complex16 tmp2 = mult(u3_1qbit[2], element_pair);
+        input[index].real = tmp1.real + tmp2.real;
+        input[index].imag = tmp1.imag + tmp2.imag;
+
+        tmp1 = mult(u3_1qbit[1], element);
+        tmp2 = mult(u3_1qbit[3], element_pair);
+        input[index_pair].real = tmp1.real + tmp2.real;
+        input[index_pair].imag = tmp1.imag + tmp2.imag;
+    };
+
+    for (int row_idx = 0; row_idx < input.rows; ++row_idx) {
+        const int row_offset = row_idx * input.stride;
+        double* const row_data = (double*)input.get_data() + 2 * row_offset;
+
+        int current_idx = 0;
+        int current_idx_pair = index_step_target;
+
+        while (current_idx_pair < input.cols) {
+            const bool mixed = (control_qbit >= 0 && control_qbit < target_qbit);
+            const bool active = (control_qbit < 0)
+                || (control_qbit >= target_qbit && ((current_idx >> control_qbit) & 1));
+
+            if (!mixed && active) {
+                double* element = row_data + 2 * current_idx;
+                double* element_pair = row_data + 2 * current_idx_pair;
+
+                int col_idx = 0;
+                const int avx_limit = 2 * index_step_target - 8;
+
+                for (; col_idx <= avx_limit; col_idx += 8) {
+                    __m256d element_vec = _mm256_loadu_pd(element + col_idx);
+                    __m256d element_vec2 = _mm256_loadu_pd(element + col_idx + 4);
+                    __m256d tmp = _mm256_shuffle_pd(element_vec, element_vec2, 0);
+                    element_vec2 = _mm256_shuffle_pd(element_vec, element_vec2, 0xf);
+                    element_vec = tmp;
+
+                    __m256d element_pair_vec = _mm256_loadu_pd(element_pair + col_idx);
+                    __m256d element_pair_vec2 = _mm256_loadu_pd(element_pair + col_idx + 4);
+                    tmp = _mm256_shuffle_pd(element_pair_vec, element_pair_vec2, 0);
+                    element_pair_vec2 = _mm256_shuffle_pd(element_pair_vec, element_pair_vec2, 0xf);
+                    element_pair_vec = tmp;
+
+                    __m256d vec3 = _mm256_mul_pd(u00r, element_vec);
+                    vec3 = _mm256_fnmadd_pd(u00i, element_vec2, vec3);
+                    __m256d vec4 = _mm256_mul_pd(u10r, element_pair_vec);
+                    vec4 = _mm256_fnmadd_pd(u10i, element_pair_vec2, vec4);
+                    vec3 = _mm256_add_pd(vec3, vec4);
+                    __m256d vec5 = _mm256_mul_pd(u00r, element_vec2);
+                    vec5 = _mm256_fmadd_pd(u00i, element_vec, vec5);
+                    __m256d vec6 = _mm256_mul_pd(u10r, element_pair_vec2);
+                    vec6 = _mm256_fmadd_pd(u10i, element_pair_vec, vec6);
+                    vec5 = _mm256_add_pd(vec5, vec6);
+
+                    tmp = _mm256_shuffle_pd(vec3, vec5, 0);
+                    vec5 = _mm256_shuffle_pd(vec3, vec5, 0xf);
+                    vec3 = tmp;
+                    _mm256_storeu_pd(element + col_idx, vec3);
+                    _mm256_storeu_pd(element + col_idx + 4, vec5);
+
+                    __m256d vec7 = _mm256_mul_pd(u01r, element_vec);
+                    vec7 = _mm256_fnmadd_pd(u01i, element_vec2, vec7);
+                    __m256d vec8 = _mm256_mul_pd(u11r, element_pair_vec);
+                    vec8 = _mm256_fnmadd_pd(u11i, element_pair_vec2, vec8);
+                    vec7 = _mm256_add_pd(vec7, vec8);
+                    __m256d vec9 = _mm256_mul_pd(u01r, element_vec2);
+                    vec9 = _mm256_fmadd_pd(u01i, element_vec, vec9);
+                    __m256d vec10 = _mm256_mul_pd(u11r, element_pair_vec2);
+                    vec10 = _mm256_fmadd_pd(u11i, element_pair_vec, vec10);
+                    vec9 = _mm256_add_pd(vec9, vec10);
+
+                    tmp = _mm256_shuffle_pd(vec7, vec9, 0);
+                    vec9 = _mm256_shuffle_pd(vec7, vec9, 0xf);
+                    vec7 = tmp;
+                    _mm256_storeu_pd(element_pair + col_idx, vec7);
+                    _mm256_storeu_pd(element_pair + col_idx + 4, vec9);
+                }
+
+                for (int c = col_idx / 2; c < index_step_target; ++c) {
+                    const int index = row_offset + current_idx + c;
+                    const int index_pair = row_offset + current_idx_pair + c;
+                    apply_pair_scalar(index, index_pair);
+                }
+            }
+            else if (mixed) {
+                for (int idx = 0; idx < index_step_target; ++idx) {
+                    const int col = current_idx + idx;
+                    if ((col >> control_qbit) & 1) {
+                        const int index = row_offset + col;
+                        const int index_pair = row_offset + current_idx_pair + idx;
+                        apply_pair_scalar(index, index_pair);
+                    }
+                }
+            }
+
+            current_idx += (index_step_target << 1);
+            current_idx_pair += (index_step_target << 1);
+        }
+    }
+
+    (void)matrix_size;
+}
+
+
+void
+apply_kernel_from_right_AVX_small32(Matrix_float& u3_1qbit, Matrix_float& input, const int& target_qbit, const int& control_qbit, const int& matrix_size) {
+    input.ensure_aligned();
+
+    auto cmul_ps = [](__m256 ar, __m256 ai, __m256 x) {
+        const __m256 swapped = _mm256_permute_ps(x, 0xB1);
+        return _mm256_fmaddsub_ps(ar, x, _mm256_mul_ps(ai, swapped));
+    };
+
+    const int index_step_target = 1 << target_qbit;
+
+    const __m256 u00r = _mm256_set1_ps(u3_1qbit[0].real);
+    const __m256 u00i = _mm256_set1_ps(u3_1qbit[0].imag);
+    const __m256 u01r = _mm256_set1_ps(u3_1qbit[1].real);
+    const __m256 u01i = _mm256_set1_ps(u3_1qbit[1].imag);
+    const __m256 u10r = _mm256_set1_ps(u3_1qbit[2].real);
+    const __m256 u10i = _mm256_set1_ps(u3_1qbit[2].imag);
+    const __m256 u11r = _mm256_set1_ps(u3_1qbit[3].real);
+    const __m256 u11i = _mm256_set1_ps(u3_1qbit[3].imag);
+
+    const float u00r_s = u3_1qbit[0].real;
+    const float u00i_s = u3_1qbit[0].imag;
+    const float u01r_s = u3_1qbit[1].real;
+    const float u01i_s = u3_1qbit[1].imag;
+    const float u10r_s = u3_1qbit[2].real;
+    const float u10i_s = u3_1qbit[2].imag;
+    const float u11r_s = u3_1qbit[3].real;
+    const float u11i_s = u3_1qbit[3].imag;
+
+    auto apply_pair_scalar = [&](const int index, const int index_pair) {
+        const QGD_Complex8 element = input[index];
+        const QGD_Complex8 element_pair = input[index_pair];
+        input[index].real = u00r_s * element.real - u00i_s * element.imag + u10r_s * element_pair.real - u10i_s * element_pair.imag;
+        input[index].imag = u00r_s * element.imag + u00i_s * element.real + u10r_s * element_pair.imag + u10i_s * element_pair.real;
+        input[index_pair].real = u01r_s * element.real - u01i_s * element.imag + u11r_s * element_pair.real - u11i_s * element_pair.imag;
+        input[index_pair].imag = u01r_s * element.imag + u01i_s * element.real + u11r_s * element_pair.imag + u11i_s * element_pair.real;
+    };
+
+    for (int row_idx = 0; row_idx < input.rows; ++row_idx) {
+        const int row_offset = row_idx * input.stride;
+        float* const row_data = (float*)input.get_data() + 2 * row_offset;
+
+        int current_idx = 0;
+        int current_idx_pair = index_step_target;
+
+        while (current_idx_pair < input.cols) {
+            const bool mixed = (control_qbit >= 0 && control_qbit < target_qbit);
+            const bool active = (control_qbit < 0)
+                || (control_qbit >= target_qbit && ((current_idx >> control_qbit) & 1));
+
+            if (!mixed && active) {
+                float* element = row_data + 2 * current_idx;
+                float* element_pair = row_data + 2 * current_idx_pair;
+
+                int col_idx = 0;
+                const int avx_limit = 2 * index_step_target - 8;
+
+                for (; col_idx <= avx_limit; col_idx += 8) {
+                    const __m256 e = _mm256_loadu_ps(element + col_idx);
+                    const __m256 p = _mm256_loadu_ps(element_pair + col_idx);
+
+                    const __m256 out0 = _mm256_add_ps(cmul_ps(u00r, u00i, e), cmul_ps(u10r, u10i, p));
+                    const __m256 out1 = _mm256_add_ps(cmul_ps(u01r, u01i, e), cmul_ps(u11r, u11i, p));
+
+                    _mm256_storeu_ps(element + col_idx, out0);
+                    _mm256_storeu_ps(element_pair + col_idx, out1);
+                }
+
+                for (int c = col_idx / 2; c < index_step_target; ++c) {
+                    const int index = row_offset + current_idx + c;
+                    const int index_pair = row_offset + current_idx_pair + c;
+                    apply_pair_scalar(index, index_pair);
+                }
+            }
+            else if (mixed) {
+                for (int idx = 0; idx < index_step_target; ++idx) {
+                    const int col = current_idx + idx;
+                    if ((col >> control_qbit) & 1) {
+                        const int index = row_offset + col;
+                        const int index_pair = row_offset + current_idx_pair + idx;
+                        apply_pair_scalar(index, index_pair);
+                    }
+                }
+            }
+
+            current_idx += (index_step_target << 1);
+            current_idx_pair += (index_step_target << 1);
+        }
+    }
+
+    (void)matrix_size;
+}
+
+
+void
 apply_kernel_to_input_AVX32(Matrix_float& u3_1qbit, Matrix_float& input, const bool& deriv, const int& target_qbit, const int& control_qbit, const int& matrix_size) {
     input.ensure_aligned();
 
     auto cmul_ps = [](__m256 ar, __m256 ai, __m256 x) {
         const __m256 swapped = _mm256_permute_ps(x, 0xB1);
-        const __m256 mul1 = _mm256_mul_ps(ar, x);
-        const __m256 mul2 = _mm256_mul_ps(ai, swapped);
-        return _mm256_addsub_ps(mul1, mul2);
+        return _mm256_fmaddsub_ps(ar, x, _mm256_mul_ps(ai, swapped));
     };
 
     const int index_step_target = 1 << target_qbit;
@@ -323,14 +536,14 @@ apply_kernel_to_input_AVX32(Matrix_float& u3_1qbit, Matrix_float& input, const b
                 int col_idx = 0;
                 const int limit = 2 * input.cols - 8;
                 for (; col_idx <= limit; col_idx += 8) {
-                    const __m256 e = _mm256_load_ps(element + col_idx);
-                    const __m256 p = _mm256_load_ps(element_pair + col_idx);
+                    const __m256 e = _mm256_loadu_ps(element + col_idx);
+                    const __m256 p = _mm256_loadu_ps(element_pair + col_idx);
 
                     const __m256 out0 = _mm256_add_ps(cmul_ps(u00r, u00i, e), cmul_ps(u01r, u01i, p));
                     const __m256 out1 = _mm256_add_ps(cmul_ps(u10r, u10i, e), cmul_ps(u11r, u11i, p));
 
-                    _mm256_store_ps(element + col_idx, out0);
-                    _mm256_store_ps(element_pair + col_idx, out1);
+                    _mm256_storeu_ps(element + col_idx, out0);
+                    _mm256_storeu_ps(element_pair + col_idx, out1);
                 }
 
                 for (int c = col_idx / 2; c < input.cols; ++c) {
@@ -366,9 +579,7 @@ apply_kernel_to_input_AVX_parallel32(Matrix_float& u3_1qbit, Matrix_float& input
 
     auto cmul_ps = [](__m256 ar, __m256 ai, __m256 x) {
         const __m256 swapped = _mm256_permute_ps(x, 0xB1);
-        const __m256 mul1 = _mm256_mul_ps(ar, x);
-        const __m256 mul2 = _mm256_mul_ps(ai, swapped);
-        return _mm256_addsub_ps(mul1, mul2);
+        return _mm256_fmaddsub_ps(ar, x, _mm256_mul_ps(ai, swapped));
     };
 
     const int index_step_target = 1 << target_qbit;
@@ -401,14 +612,14 @@ apply_kernel_to_input_AVX_parallel32(Matrix_float& u3_1qbit, Matrix_float& input
                     int col_idx = 0;
                     const int limit = 2 * input.cols - 8;
                     for (; col_idx <= limit; col_idx += 8) {
-                        const __m256 e = _mm256_load_ps(element + col_idx);
-                        const __m256 p = _mm256_load_ps(element_pair + col_idx);
+                        const __m256 e = _mm256_loadu_ps(element + col_idx);
+                        const __m256 p = _mm256_loadu_ps(element_pair + col_idx);
 
                         const __m256 out0 = _mm256_add_ps(cmul_ps(u00r, u00i, e), cmul_ps(u01r, u01i, p));
                         const __m256 out1 = _mm256_add_ps(cmul_ps(u10r, u10i, e), cmul_ps(u11r, u11i, p));
 
-                        _mm256_store_ps(element + col_idx, out0);
-                        _mm256_store_ps(element_pair + col_idx, out1);
+                        _mm256_storeu_ps(element + col_idx, out0);
+                        _mm256_storeu_ps(element_pair + col_idx, out1);
                     }
 
                     for (int c = col_idx / 2; c < input.cols; ++c) {
@@ -492,14 +703,14 @@ apply_kernel_to_input_AVX(Matrix& u3_1qbit, Matrix& input, const bool& deriv, co
                         for (int col_idx = 0; col_idx < 2 * (input.cols - 3); col_idx = col_idx + 8) {
 
                             // extract successive elements from arrays element, element_pair
-                            __m256d element_vec = _mm256_load_pd(element + col_idx);
-                            __m256d element_vec2 = _mm256_load_pd(element + col_idx + 4);
+                            __m256d element_vec = _mm256_loadu_pd(element + col_idx);
+                            __m256d element_vec2 = _mm256_loadu_pd(element + col_idx + 4);
                             __m256d tmp = _mm256_shuffle_pd(element_vec, element_vec2, 0);
                             element_vec2 = _mm256_shuffle_pd(element_vec, element_vec2, 0xf);
                             element_vec = tmp;
 
-                            __m256d element_pair_vec = _mm256_load_pd(element_pair + col_idx);
-                            __m256d element_pair_vec2 = _mm256_load_pd(element_pair + col_idx + 4);
+                            __m256d element_pair_vec = _mm256_loadu_pd(element_pair + col_idx);
+                            __m256d element_pair_vec2 = _mm256_loadu_pd(element_pair + col_idx + 4);
                             tmp = _mm256_shuffle_pd(element_pair_vec, element_pair_vec2, 0);
                             element_pair_vec2 = _mm256_shuffle_pd(element_pair_vec, element_pair_vec2, 0xf);
                             element_pair_vec = tmp;
@@ -519,8 +730,8 @@ apply_kernel_to_input_AVX(Matrix& u3_1qbit, Matrix& input, const bool& deriv, co
                             tmp = _mm256_shuffle_pd(vec3, vec5, 0);
                             vec5 = _mm256_shuffle_pd(vec3, vec5, 0xf);
                             vec3 = tmp;
-                            _mm256_store_pd(element + col_idx, vec3);
-                            _mm256_store_pd(element + col_idx + 4, vec5);
+                            _mm256_storeu_pd(element + col_idx, vec3);
+                            _mm256_storeu_pd(element + col_idx + 4, vec5);
 
                             __m256d vec7 = _mm256_mul_pd(u3_1bit_10r_vec, element_vec);
                             vec7 = _mm256_fnmadd_pd(u3_1bit_10i_vec, element_vec2, vec7);
@@ -537,8 +748,8 @@ apply_kernel_to_input_AVX(Matrix& u3_1qbit, Matrix& input, const bool& deriv, co
                             tmp = _mm256_shuffle_pd(vec7, vec9, 0);
                             vec9 = _mm256_shuffle_pd(vec7, vec9, 0xf);
                             vec7 = tmp;
-                            _mm256_store_pd(element_pair + col_idx, vec7);
-                            _mm256_store_pd(element_pair + col_idx + 4, vec9);
+                            _mm256_storeu_pd(element_pair + col_idx, vec7);
+                            _mm256_storeu_pd(element_pair + col_idx + 4, vec9);
                         }
 
                         int remainder = input.cols % 4;
@@ -669,14 +880,14 @@ apply_kernel_to_input_AVX_parallel(Matrix& u3_1qbit, Matrix& input, const bool& 
                         for (int col_idx = 0; col_idx < 2 * (input.cols - 3); col_idx = col_idx + 8) {
 
                             // extract successive elements from arrays element, element_pair
-                            __m256d element_vec = _mm256_load_pd(element + col_idx);
-                            __m256d element_vec2 = _mm256_load_pd(element + col_idx + 4);
+                            __m256d element_vec = _mm256_loadu_pd(element + col_idx);
+                            __m256d element_vec2 = _mm256_loadu_pd(element + col_idx + 4);
                             __m256d tmp = _mm256_shuffle_pd(element_vec, element_vec2, 0);
                             element_vec2 = _mm256_shuffle_pd(element_vec, element_vec2, 0xf);
                             element_vec = tmp;
 
-                            __m256d element_pair_vec = _mm256_load_pd(element_pair + col_idx);
-                            __m256d element_pair_vec2 = _mm256_load_pd(element_pair + col_idx + 4);
+                            __m256d element_pair_vec = _mm256_loadu_pd(element_pair + col_idx);
+                            __m256d element_pair_vec2 = _mm256_loadu_pd(element_pair + col_idx + 4);
                             tmp = _mm256_shuffle_pd(element_pair_vec, element_pair_vec2, 0);
                             element_pair_vec2 = _mm256_shuffle_pd(element_pair_vec, element_pair_vec2, 0xf);
                             element_pair_vec = tmp;
@@ -696,8 +907,8 @@ apply_kernel_to_input_AVX_parallel(Matrix& u3_1qbit, Matrix& input, const bool& 
                             tmp = _mm256_shuffle_pd(vec3, vec5, 0);
                             vec5 = _mm256_shuffle_pd(vec3, vec5, 0xf);
                             vec3 = tmp;
-                            _mm256_store_pd(element + col_idx, vec3);
-                            _mm256_store_pd(element + col_idx + 4, vec5);
+                            _mm256_storeu_pd(element + col_idx, vec3);
+                            _mm256_storeu_pd(element + col_idx + 4, vec5);
 
                             __m256d vec7 = _mm256_mul_pd(u3_1bit_10r_vec, element_vec);
                             vec7 = _mm256_fnmadd_pd(u3_1bit_10i_vec, element_vec2, vec7);
@@ -714,8 +925,8 @@ apply_kernel_to_input_AVX_parallel(Matrix& u3_1qbit, Matrix& input, const bool& 
                             tmp = _mm256_shuffle_pd(vec7, vec9, 0);
                             vec9 = _mm256_shuffle_pd(vec7, vec9, 0xf);
                             vec7 = tmp;
-                            _mm256_store_pd(element_pair + col_idx, vec7);
-                            _mm256_store_pd(element_pair + col_idx + 4, vec9);
+                            _mm256_storeu_pd(element_pair + col_idx, vec7);
+                            _mm256_storeu_pd(element_pair + col_idx + 4, vec9);
                         }
 
                         int remainder = input.cols % 4;
@@ -773,5 +984,533 @@ apply_kernel_to_input_AVX_parallel(Matrix& u3_1qbit, Matrix& input, const bool& 
 }
 
 
+// ---------------------------------------------------------------------------
+// apply_kernel_from_right AVX implementations
+//
+// For right-apply (input = input * U) the outer loop runs over rows so that
+// all memory accesses within a row are sequential (row-major order).
+// Within each row the column-pair blocks   [current_idx .. current_idx+step-1]
+// and [current_idx+step .. current_idx+2*step-1] are two contiguous segments,
+// so the AVX inner loop is identical to the left-apply AVX kernel – only the
+// kernel coefficient mapping is transposed: u[0],u[2] drive the first block
+// and u[1],u[3] drive the pair block (vs u[0],u[1] / u[2],u[3] for left-apply).
+//
+// Control-bit handling:
+//   control_qbit < 0             → always active, full AVX
+//   control_qbit >= target_qbit  → uniform per block, one test per block
+//   control_qbit < target_qbit   → activity alternates within the block;
+//                                   scalar fallback for those blocks
+// ---------------------------------------------------------------------------
+
+
+/**
+@brief AVX kernel: apply 2x2 gate from the right (input = input * U), row-major f64.
+@param u3_1qbit  2x2 gate kernel.
+@param input     Matrix to transform in-place.
+@param target_qbit  Target qubit index.
+@param control_qbit Control qubit (-1 = none).
+@param matrix_size  Full Hilbert-space dimension.
+*/
+void
+apply_kernel_from_right_AVX(Matrix& u3_1qbit, Matrix& input, const int& target_qbit, const int& control_qbit, const int& matrix_size)
+{
+    input.ensure_aligned();
+
+    const int index_step_target = 1 << target_qbit;
+
+    // Right-apply uses u[0],u[2] for element block and u[1],u[3] for pair block
+    // (transpose of left-apply which uses u[0],u[1] and u[2],u[3]).
+    const __m256d u00r = _mm256_broadcast_sd(&u3_1qbit[0].real);
+    const __m256d u00i = _mm256_broadcast_sd(&u3_1qbit[0].imag);
+    const __m256d u01r = _mm256_broadcast_sd(&u3_1qbit[1].real);
+    const __m256d u01i = _mm256_broadcast_sd(&u3_1qbit[1].imag);
+    const __m256d u10r = _mm256_broadcast_sd(&u3_1qbit[2].real);
+    const __m256d u10i = _mm256_broadcast_sd(&u3_1qbit[2].imag);
+    const __m256d u11r = _mm256_broadcast_sd(&u3_1qbit[3].real);
+    const __m256d u11i = _mm256_broadcast_sd(&u3_1qbit[3].imag);
+
+    for (int row_idx = 0; row_idx < input.rows; row_idx++) {
+
+        const int row_offset = row_idx * input.stride;
+        double* const row_data = (double*)input.get_data() + 2 * row_offset;
+
+        int current_idx      = 0;
+        int current_idx_pair = index_step_target;
+
+        while (current_idx_pair < input.cols) {
+
+            // Determine control-bit activity for this block.
+            // If control_qbit < target_qbit the bit alternates within the block
+            // and we fall back to scalar for the affected elements.
+            const bool mixed = (control_qbit >= 0 && control_qbit < target_qbit);
+            const bool active = (control_qbit < 0) ||
+                                (control_qbit >= target_qbit &&
+                                 ((current_idx >> control_qbit) & 1));
+
+            if (!mixed && !active) {
+                // whole block inactive – skip
+            } else if (!mixed) {
+                // whole block active – use AVX
+                double* element      = row_data + 2 * current_idx;
+                double* element_pair = row_data + 2 * current_idx_pair;
+
+                int col_idx = 0;
+                const int avx_limit = 2 * (index_step_target - 3);
+
+                for (; col_idx < avx_limit; col_idx += 8) {
+
+                    __m256d e_vec  = _mm256_loadu_pd(element + col_idx);
+                    __m256d e_vec2 = _mm256_loadu_pd(element + col_idx + 4);
+                    __m256d tmp    = _mm256_shuffle_pd(e_vec, e_vec2, 0);
+                    e_vec2 = _mm256_shuffle_pd(e_vec, e_vec2, 0xf);
+                    e_vec  = tmp;
+
+                    __m256d p_vec  = _mm256_loadu_pd(element_pair + col_idx);
+                    __m256d p_vec2 = _mm256_loadu_pd(element_pair + col_idx + 4);
+                    tmp    = _mm256_shuffle_pd(p_vec, p_vec2, 0);
+                    p_vec2 = _mm256_shuffle_pd(p_vec, p_vec2, 0xf);
+                    p_vec  = tmp;
+
+                    // new element block = u[0]*e + u[2]*p
+                    __m256d vec3 = _mm256_mul_pd(u00r, e_vec);
+                    vec3 = _mm256_fnmadd_pd(u00i, e_vec2, vec3);
+                    __m256d vec4 = _mm256_mul_pd(u10r, p_vec);
+                    vec4 = _mm256_fnmadd_pd(u10i, p_vec2, vec4);
+                    vec3 = _mm256_add_pd(vec3, vec4);
+                    __m256d vec5 = _mm256_mul_pd(u00r, e_vec2);
+                    vec5 = _mm256_fmadd_pd(u00i, e_vec, vec5);
+                    __m256d vec6 = _mm256_mul_pd(u10r, p_vec2);
+                    vec6 = _mm256_fmadd_pd(u10i, p_vec, vec6);
+                    vec5 = _mm256_add_pd(vec5, vec6);
+
+                    tmp  = _mm256_shuffle_pd(vec3, vec5, 0);
+                    vec5 = _mm256_shuffle_pd(vec3, vec5, 0xf);
+                    vec3 = tmp;
+                    _mm256_storeu_pd(element + col_idx,     vec3);
+                    _mm256_storeu_pd(element + col_idx + 4, vec5);
+
+                    // new pair block = u[1]*e + u[3]*p
+                    __m256d vec7  = _mm256_mul_pd(u01r, e_vec);
+                    vec7 = _mm256_fnmadd_pd(u01i, e_vec2, vec7);
+                    __m256d vec8  = _mm256_mul_pd(u11r, p_vec);
+                    vec8 = _mm256_fnmadd_pd(u11i, p_vec2, vec8);
+                    vec7 = _mm256_add_pd(vec7, vec8);
+                    __m256d vec9  = _mm256_mul_pd(u01r, e_vec2);
+                    vec9 = _mm256_fmadd_pd(u01i, e_vec, vec9);
+                    __m256d vec10 = _mm256_mul_pd(u11r, p_vec2);
+                    vec10 = _mm256_fmadd_pd(u11i, p_vec, vec10);
+                    vec9 = _mm256_add_pd(vec9, vec10);
+
+                    tmp  = _mm256_shuffle_pd(vec7, vec9, 0);
+                    vec9 = _mm256_shuffle_pd(vec7, vec9, 0xf);
+                    vec7 = tmp;
+                    _mm256_storeu_pd(element_pair + col_idx,     vec7);
+                    _mm256_storeu_pd(element_pair + col_idx + 4, vec9);
+                }
+
+                // scalar remainder within block
+                for (int c = col_idx / 2; c < index_step_target; c++) {
+                    const int index      = row_offset + current_idx      + c;
+                    const int index_pair = row_offset + current_idx_pair + c;
+                    QGD_Complex16 e = input[index];
+                    QGD_Complex16 p = input[index_pair];
+                    QGD_Complex16 t1 = mult(u3_1qbit[0], e);
+                    QGD_Complex16 t2 = mult(u3_1qbit[2], p);
+                    input[index].real = t1.real + t2.real;
+                    input[index].imag = t1.imag + t2.imag;
+                    t1 = mult(u3_1qbit[1], e);
+                    t2 = mult(u3_1qbit[3], p);
+                    input[index_pair].real = t1.real + t2.real;
+                    input[index_pair].imag = t1.imag + t2.imag;
+                }
+
+            } else {
+                // mixed control: check element-by-element (cache-friendly – still row-outer)
+                for (int idx = 0; idx < index_step_target; idx++) {
+                    const int col      = current_idx + idx;
+                    const int col_pair = current_idx_pair + idx;
+                    if ((col >> control_qbit) & 1) {
+                        const int index      = row_offset + col;
+                        const int index_pair = row_offset + col_pair;
+                        QGD_Complex16 e = input[index];
+                        QGD_Complex16 p = input[index_pair];
+                        QGD_Complex16 t1 = mult(u3_1qbit[0], e);
+                        QGD_Complex16 t2 = mult(u3_1qbit[2], p);
+                        input[index].real = t1.real + t2.real;
+                        input[index].imag = t1.imag + t2.imag;
+                        t1 = mult(u3_1qbit[1], e);
+                        t2 = mult(u3_1qbit[3], p);
+                        input[index_pair].real = t1.real + t2.real;
+                        input[index_pair].imag = t1.imag + t2.imag;
+                    }
+                }
+            }
+
+            current_idx      += (index_step_target << 1);
+            current_idx_pair += (index_step_target << 1);
+        }
+    }
+
+    (void)matrix_size;
+}
+
+
+/**
+@brief Parallel AVX kernel: apply 2x2 gate from the right (input = input * U), f64.
+Parallelises over rows using TBB; each task processes a contiguous row range.
+*/
+void
+apply_kernel_from_right_AVX_parallel(Matrix& u3_1qbit, Matrix& input, const int& target_qbit, const int& control_qbit, const int& matrix_size)
+{
+    input.ensure_aligned();
+
+    const int index_step_target = 1 << target_qbit;
+
+    const __m256d u00r = _mm256_broadcast_sd(&u3_1qbit[0].real);
+    const __m256d u00i = _mm256_broadcast_sd(&u3_1qbit[0].imag);
+    const __m256d u01r = _mm256_broadcast_sd(&u3_1qbit[1].real);
+    const __m256d u01i = _mm256_broadcast_sd(&u3_1qbit[1].imag);
+    const __m256d u10r = _mm256_broadcast_sd(&u3_1qbit[2].real);
+    const __m256d u10i = _mm256_broadcast_sd(&u3_1qbit[2].imag);
+    const __m256d u11r = _mm256_broadcast_sd(&u3_1qbit[3].real);
+    const __m256d u11i = _mm256_broadcast_sd(&u3_1qbit[3].imag);
+
+    const int grain = (input.rows < 64) ? 1 : 8;
+
+    tbb::parallel_for(tbb::blocked_range<int>(0, input.rows, grain),
+        [&](tbb::blocked_range<int> r) {
+
+        for (int row_idx = r.begin(); row_idx < r.end(); row_idx++) {
+
+            const int row_offset = row_idx * input.stride;
+            double* const row_data = (double*)input.get_data() + 2 * row_offset;
+
+            int current_idx      = 0;
+            int current_idx_pair = index_step_target;
+
+            while (current_idx_pair < input.cols) {
+
+                const bool mixed  = (control_qbit >= 0 && control_qbit < target_qbit);
+                const bool active = (control_qbit < 0) ||
+                                    (control_qbit >= target_qbit &&
+                                     ((current_idx >> control_qbit) & 1));
+
+                if (!mixed && !active) {
+                    // skip
+                } else if (!mixed) {
+                    double* element      = row_data + 2 * current_idx;
+                    double* element_pair = row_data + 2 * current_idx_pair;
+
+                    int col_idx = 0;
+                    const int avx_limit = 2 * (index_step_target - 3);
+
+                    for (; col_idx < avx_limit; col_idx += 8) {
+
+                        __m256d e_vec  = _mm256_loadu_pd(element + col_idx);
+                        __m256d e_vec2 = _mm256_loadu_pd(element + col_idx + 4);
+                        __m256d tmp    = _mm256_shuffle_pd(e_vec, e_vec2, 0);
+                        e_vec2 = _mm256_shuffle_pd(e_vec, e_vec2, 0xf);
+                        e_vec  = tmp;
+
+                        __m256d p_vec  = _mm256_loadu_pd(element_pair + col_idx);
+                        __m256d p_vec2 = _mm256_loadu_pd(element_pair + col_idx + 4);
+                        tmp    = _mm256_shuffle_pd(p_vec, p_vec2, 0);
+                        p_vec2 = _mm256_shuffle_pd(p_vec, p_vec2, 0xf);
+                        p_vec  = tmp;
+
+                        __m256d vec3 = _mm256_mul_pd(u00r, e_vec);
+                        vec3 = _mm256_fnmadd_pd(u00i, e_vec2, vec3);
+                        __m256d vec4 = _mm256_mul_pd(u10r, p_vec);
+                        vec4 = _mm256_fnmadd_pd(u10i, p_vec2, vec4);
+                        vec3 = _mm256_add_pd(vec3, vec4);
+                        __m256d vec5 = _mm256_mul_pd(u00r, e_vec2);
+                        vec5 = _mm256_fmadd_pd(u00i, e_vec, vec5);
+                        __m256d vec6 = _mm256_mul_pd(u10r, p_vec2);
+                        vec6 = _mm256_fmadd_pd(u10i, p_vec, vec6);
+                        vec5 = _mm256_add_pd(vec5, vec6);
+
+                        tmp  = _mm256_shuffle_pd(vec3, vec5, 0);
+                        vec5 = _mm256_shuffle_pd(vec3, vec5, 0xf);
+                        vec3 = tmp;
+                        _mm256_storeu_pd(element + col_idx,     vec3);
+                        _mm256_storeu_pd(element + col_idx + 4, vec5);
+
+                        __m256d vec7  = _mm256_mul_pd(u01r, e_vec);
+                        vec7 = _mm256_fnmadd_pd(u01i, e_vec2, vec7);
+                        __m256d vec8  = _mm256_mul_pd(u11r, p_vec);
+                        vec8 = _mm256_fnmadd_pd(u11i, p_vec2, vec8);
+                        vec7 = _mm256_add_pd(vec7, vec8);
+                        __m256d vec9  = _mm256_mul_pd(u01r, e_vec2);
+                        vec9 = _mm256_fmadd_pd(u01i, e_vec, vec9);
+                        __m256d vec10 = _mm256_mul_pd(u11r, p_vec2);
+                        vec10 = _mm256_fmadd_pd(u11i, p_vec, vec10);
+                        vec9 = _mm256_add_pd(vec9, vec10);
+
+                        tmp  = _mm256_shuffle_pd(vec7, vec9, 0);
+                        vec9 = _mm256_shuffle_pd(vec7, vec9, 0xf);
+                        vec7 = tmp;
+                        _mm256_storeu_pd(element_pair + col_idx,     vec7);
+                        _mm256_storeu_pd(element_pair + col_idx + 4, vec9);
+                    }
+
+                    for (int c = col_idx / 2; c < index_step_target; c++) {
+                        const int index      = row_offset + current_idx      + c;
+                        const int index_pair = row_offset + current_idx_pair + c;
+                        QGD_Complex16 e = input[index];
+                        QGD_Complex16 p = input[index_pair];
+                        QGD_Complex16 t1 = mult(u3_1qbit[0], e);
+                        QGD_Complex16 t2 = mult(u3_1qbit[2], p);
+                        input[index].real = t1.real + t2.real;
+                        input[index].imag = t1.imag + t2.imag;
+                        t1 = mult(u3_1qbit[1], e);
+                        t2 = mult(u3_1qbit[3], p);
+                        input[index_pair].real = t1.real + t2.real;
+                        input[index_pair].imag = t1.imag + t2.imag;
+                    }
+
+                } else {
+                    for (int idx = 0; idx < index_step_target; idx++) {
+                        const int col      = current_idx + idx;
+                        const int col_pair = current_idx_pair + idx;
+                        if ((col >> control_qbit) & 1) {
+                            const int index      = row_offset + col;
+                            const int index_pair = row_offset + col_pair;
+                            QGD_Complex16 e = input[index];
+                            QGD_Complex16 p = input[index_pair];
+                            QGD_Complex16 t1 = mult(u3_1qbit[0], e);
+                            QGD_Complex16 t2 = mult(u3_1qbit[2], p);
+                            input[index].real = t1.real + t2.real;
+                            input[index].imag = t1.imag + t2.imag;
+                            t1 = mult(u3_1qbit[1], e);
+                            t2 = mult(u3_1qbit[3], p);
+                            input[index_pair].real = t1.real + t2.real;
+                            input[index_pair].imag = t1.imag + t2.imag;
+                        }
+                    }
+                }
+
+                current_idx      += (index_step_target << 1);
+                current_idx_pair += (index_step_target << 1);
+            }
+        }
+    });
+
+    (void)matrix_size;
+}
+
+
+/**
+@brief AVX kernel: apply 2x2 gate from the right (input = input * U), row-major f32.
+Same structure as the f64 version; uses fmaddsub_ps for compact complex multiply.
+*/
+void
+apply_kernel_from_right_AVX32(Matrix_float& u3_1qbit, Matrix_float& input, const int& target_qbit, const int& control_qbit, const int& matrix_size)
+{
+    input.ensure_aligned();
+
+    auto cmul_ps = [](__m256 ar, __m256 ai, __m256 x) {
+        const __m256 swapped = _mm256_permute_ps(x, 0xB1);
+        return _mm256_fmaddsub_ps(ar, x, _mm256_mul_ps(ai, swapped));
+    };
+
+    const int index_step_target = 1 << target_qbit;
+
+    // Right-apply: u[0],u[2] for element block; u[1],u[3] for pair block.
+    const __m256 u00r = _mm256_set1_ps(u3_1qbit[0].real);
+    const __m256 u00i = _mm256_set1_ps(u3_1qbit[0].imag);
+    const __m256 u01r = _mm256_set1_ps(u3_1qbit[1].real);
+    const __m256 u01i = _mm256_set1_ps(u3_1qbit[1].imag);
+    const __m256 u10r = _mm256_set1_ps(u3_1qbit[2].real);
+    const __m256 u10i = _mm256_set1_ps(u3_1qbit[2].imag);
+    const __m256 u11r = _mm256_set1_ps(u3_1qbit[3].real);
+    const __m256 u11i = _mm256_set1_ps(u3_1qbit[3].imag);
+
+    const float u00r_s = u3_1qbit[0].real;
+    const float u00i_s = u3_1qbit[0].imag;
+    const float u01r_s = u3_1qbit[1].real;
+    const float u01i_s = u3_1qbit[1].imag;
+    const float u10r_s = u3_1qbit[2].real;
+    const float u10i_s = u3_1qbit[2].imag;
+    const float u11r_s = u3_1qbit[3].real;
+    const float u11i_s = u3_1qbit[3].imag;
+
+    auto apply_pair_scalar = [&](const int index, const int index_pair) {
+        const QGD_Complex8 e = input[index];
+        const QGD_Complex8 p = input[index_pair];
+        input[index].real = u00r_s * e.real - u00i_s * e.imag + u10r_s * p.real - u10i_s * p.imag;
+        input[index].imag = u00r_s * e.imag + u00i_s * e.real + u10r_s * p.imag + u10i_s * p.real;
+        input[index_pair].real = u01r_s * e.real - u01i_s * e.imag + u11r_s * p.real - u11i_s * p.imag;
+        input[index_pair].imag = u01r_s * e.imag + u01i_s * e.real + u11r_s * p.imag + u11i_s * p.real;
+    };
+
+    for (int row_idx = 0; row_idx < input.rows; row_idx++) {
+
+        const int row_offset = row_idx * input.stride;
+        float* const row_data = (float*)input.get_data() + 2 * row_offset;
+
+        int current_idx      = 0;
+        int current_idx_pair = index_step_target;
+
+        while (current_idx_pair < input.cols) {
+
+            const bool mixed  = (control_qbit >= 0 && control_qbit < target_qbit);
+            const bool active = (control_qbit < 0) ||
+                                (control_qbit >= target_qbit &&
+                                 ((current_idx >> control_qbit) & 1));
+
+            if (!mixed && !active) {
+                // skip
+            } else if (!mixed) {
+                float* element      = row_data + 2 * current_idx;
+                float* element_pair = row_data + 2 * current_idx_pair;
+
+                int col_idx = 0;
+                const int avx_limit = 2 * index_step_target - 8;
+
+                for (; col_idx <= avx_limit; col_idx += 8) {
+                    const __m256 e = _mm256_loadu_ps(element + col_idx);
+                    const __m256 p = _mm256_loadu_ps(element_pair + col_idx);
+                    // new element = u[0]*e + u[2]*p
+                    const __m256 out0 = _mm256_add_ps(cmul_ps(u00r, u00i, e), cmul_ps(u10r, u10i, p));
+                    // new pair   = u[1]*e + u[3]*p
+                    const __m256 out1 = _mm256_add_ps(cmul_ps(u01r, u01i, e), cmul_ps(u11r, u11i, p));
+                    _mm256_storeu_ps(element + col_idx,      out0);
+                    _mm256_storeu_ps(element_pair + col_idx, out1);
+                }
+
+                for (int c = col_idx / 2; c < index_step_target; c++) {
+                    const int index      = row_offset + current_idx      + c;
+                    const int index_pair = row_offset + current_idx_pair + c;
+                    apply_pair_scalar(index, index_pair);
+                }
+
+            } else {
+                for (int idx = 0; idx < index_step_target; idx++) {
+                    const int col      = current_idx + idx;
+                    const int col_pair = current_idx_pair + idx;
+                    if ((col >> control_qbit) & 1) {
+                        const int index      = row_offset + col;
+                        const int index_pair = row_offset + col_pair;
+                        apply_pair_scalar(index, index_pair);
+                    }
+                }
+            }
+
+            current_idx      += (index_step_target << 1);
+            current_idx_pair += (index_step_target << 1);
+        }
+    }
+
+    (void)matrix_size;
+}
+
+
+/**
+@brief Parallel AVX kernel: apply 2x2 gate from the right (input = input * U), f32.
+Parallelises over rows using TBB.
+*/
+void
+apply_kernel_from_right_AVX_parallel32(Matrix_float& u3_1qbit, Matrix_float& input, const int& target_qbit, const int& control_qbit, const int& matrix_size)
+{
+    input.ensure_aligned();
+
+    auto cmul_ps = [](__m256 ar, __m256 ai, __m256 x) {
+        const __m256 swapped = _mm256_permute_ps(x, 0xB1);
+        return _mm256_fmaddsub_ps(ar, x, _mm256_mul_ps(ai, swapped));
+    };
+
+    const int index_step_target = 1 << target_qbit;
+
+    const __m256 u00r = _mm256_set1_ps(u3_1qbit[0].real);
+    const __m256 u00i = _mm256_set1_ps(u3_1qbit[0].imag);
+    const __m256 u01r = _mm256_set1_ps(u3_1qbit[1].real);
+    const __m256 u01i = _mm256_set1_ps(u3_1qbit[1].imag);
+    const __m256 u10r = _mm256_set1_ps(u3_1qbit[2].real);
+    const __m256 u10i = _mm256_set1_ps(u3_1qbit[2].imag);
+    const __m256 u11r = _mm256_set1_ps(u3_1qbit[3].real);
+    const __m256 u11i = _mm256_set1_ps(u3_1qbit[3].imag);
+
+    const float u00r_s = u3_1qbit[0].real;
+    const float u00i_s = u3_1qbit[0].imag;
+    const float u01r_s = u3_1qbit[1].real;
+    const float u01i_s = u3_1qbit[1].imag;
+    const float u10r_s = u3_1qbit[2].real;
+    const float u10i_s = u3_1qbit[2].imag;
+    const float u11r_s = u3_1qbit[3].real;
+    const float u11i_s = u3_1qbit[3].imag;
+
+    const int grain = (input.rows < 64) ? 1 : 8;
+
+    tbb::parallel_for(tbb::blocked_range<int>(0, input.rows, grain),
+        [&](tbb::blocked_range<int> r) {
+
+        for (int row_idx = r.begin(); row_idx < r.end(); row_idx++) {
+
+            const int row_offset = row_idx * input.stride;
+            float* const row_data = (float*)input.get_data() + 2 * row_offset;
+
+            auto apply_pair_scalar = [&](const int index, const int index_pair) {
+                const QGD_Complex8 e = input[index];
+                const QGD_Complex8 p = input[index_pair];
+                input[index].real = u00r_s * e.real - u00i_s * e.imag + u10r_s * p.real - u10i_s * p.imag;
+                input[index].imag = u00r_s * e.imag + u00i_s * e.real + u10r_s * p.imag + u10i_s * p.real;
+                input[index_pair].real = u01r_s * e.real - u01i_s * e.imag + u11r_s * p.real - u11i_s * p.imag;
+                input[index_pair].imag = u01r_s * e.imag + u01i_s * e.real + u11r_s * p.imag + u11i_s * p.real;
+            };
+
+            int current_idx      = 0;
+            int current_idx_pair = index_step_target;
+
+            while (current_idx_pair < input.cols) {
+
+                const bool mixed  = (control_qbit >= 0 && control_qbit < target_qbit);
+                const bool active = (control_qbit < 0) ||
+                                    (control_qbit >= target_qbit &&
+                                     ((current_idx >> control_qbit) & 1));
+
+                if (!mixed && !active) {
+                    // skip
+                } else if (!mixed) {
+                    float* element      = row_data + 2 * current_idx;
+                    float* element_pair = row_data + 2 * current_idx_pair;
+
+                    int col_idx = 0;
+                    const int avx_limit = 2 * index_step_target - 8;
+
+                    for (; col_idx <= avx_limit; col_idx += 8) {
+                        const __m256 e = _mm256_loadu_ps(element + col_idx);
+                        const __m256 p = _mm256_loadu_ps(element_pair + col_idx);
+                        const __m256 out0 = _mm256_add_ps(cmul_ps(u00r, u00i, e), cmul_ps(u10r, u10i, p));
+                        const __m256 out1 = _mm256_add_ps(cmul_ps(u01r, u01i, e), cmul_ps(u11r, u11i, p));
+                        _mm256_storeu_ps(element + col_idx,      out0);
+                        _mm256_storeu_ps(element_pair + col_idx, out1);
+                    }
+
+                    for (int c = col_idx / 2; c < index_step_target; c++) {
+                        const int index      = row_offset + current_idx      + c;
+                        const int index_pair = row_offset + current_idx_pair + c;
+                        apply_pair_scalar(index, index_pair);
+                    }
+
+                } else {
+                    for (int idx = 0; idx < index_step_target; idx++) {
+                        const int col      = current_idx + idx;
+                        const int col_pair = current_idx_pair + idx;
+                        if ((col >> control_qbit) & 1) {
+                            const int index      = row_offset + col;
+                            const int index_pair = row_offset + col_pair;
+                            apply_pair_scalar(index, index_pair);
+                        }
+                    }
+                }
+
+                current_idx      += (index_step_target << 1);
+                current_idx_pair += (index_step_target << 1);
+            }
+        }
+    });
+
+    (void)matrix_size;
+}
 
 

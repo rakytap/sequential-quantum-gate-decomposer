@@ -24,22 +24,23 @@ limitations under the License.
 #include "common_DFE.h"
 #include "matrix_base.hpp"
 
-#include <atomic>
 #include <dlfcn.h>
 #include <unistd.h>
-#include <mutex>
+#include <tbb/queuing_rw_mutex.h>
+
+namespace {
+
+tbb::queuing_rw_mutex libmutex;
+
+void unload_dfe_lib_unlocked();
+int init_dfe_lib_unlocked(const int accelerator_num, int qbit_num, int initialize_id_in);
+void uploadMatrix2DFE_unlocked(Matrix& input);
+
+}
 
 
 // pointer to the dynamically loaded DFE library
 void* handle = NULL;
-
-/// reference counting of locking-unlocking the DFE accelerators
-std::atomic_size_t read_count(0); //readers-writer problem semaphore
-
-/// mutex to guard DFE lib locking and unlocking
-std::recursive_mutex libmutex; //writing mutex
-std::mutex libreadmutex; //reader mutex
-
 
 extern "C" {
 
@@ -57,12 +58,30 @@ int (*get_chained_gates_num_dll)() = NULL;
 int initialize_id = -1;
 
 
+DFE_Lib_Read_Lock::DFE_Lib_Read_Lock() {
+    lock.acquire(libmutex, false);
+}
+
+
+DFE_Lib_Read_Lock::~DFE_Lib_Read_Lock() {
+    lock.release();
+}
+
+
 
 /**
 @brief Call to upload the input matrix to the DFE engine
 @param input The input matrix
 */
 void uploadMatrix2DFE( Matrix& input ) {
+    tbb::queuing_rw_mutex::scoped_lock lock(libmutex, true);
+    uploadMatrix2DFE_unlocked(input);
+}
+
+
+namespace {
+
+void uploadMatrix2DFE_unlocked( Matrix& input ) {
 
     std::cout << "size in bytes of uploading to DFE: " << input.size()*2*sizeof(float) << std::endl;    
 
@@ -72,17 +91,26 @@ void uploadMatrix2DFE( Matrix& input ) {
 }
 
 
-/**
-@brief Call to unload the DFE libarary and release the allocated devices
-*/
-void unload_dfe_lib()
+void unload_dfe_lib_unlocked()
 {
-    const std::lock_guard<std::recursive_mutex> lock(libmutex);
     if (handle) {
         releive_DFE_dll();
         dlclose(handle);
         handle = NULL;
     }
+}
+
+
+}
+
+
+/**
+@brief Call to unload the DFE libarary and release the allocated devices
+*/
+void unload_dfe_lib()
+{
+    tbb::queuing_rw_mutex::scoped_lock lock(libmutex, true);
+    unload_dfe_lib_unlocked();
 }
 
 
@@ -99,13 +127,19 @@ void unload_dfe_lib()
 @return Returns with the identification number of the inititalization of the library.
 */
 int init_dfe_lib( const int accelerator_num, int qbit_num, int initialize_id_in )  {
+    tbb::queuing_rw_mutex::scoped_lock lock(libmutex, true);
+    return init_dfe_lib_unlocked(accelerator_num, qbit_num, initialize_id_in);
+}
 
-    const std::lock_guard<std::recursive_mutex> lock(libmutex);
+
+namespace {
+
+int init_dfe_lib_unlocked( const int accelerator_num, int qbit_num, int initialize_id_in )  {
 
     initialize_id = initialize_id_in;
 
     
-    unload_dfe_lib();
+    unload_dfe_lib_unlocked();
 
 
     std::string lib_name_DFE = qbit_num > 9 ? DFE_LIB_10QUBITS : DFE_LIB_9QUBITS;
@@ -138,25 +172,17 @@ int init_dfe_lib( const int accelerator_num, int qbit_num, int initialize_id_in 
 
 }
 
-
-/**
-@brief Call to lock the access to the execution of the DFE library
-*/
-void lock_lib()
-{
-    const std::lock_guard<std::mutex> lock(libreadmutex);
-    if (++read_count == 1) libmutex.lock();
 }
 
 
-/**
-@brief Call to unlock the access to the execution of the DFE library
-*/
-void unlock_lib()
-{
-    const std::lock_guard<std::mutex> lock(libreadmutex);
-    if (--read_count == 0) libmutex.unlock();
+void init_dfe_lib_and_upload(const int accelerator_num, int qbit_num, int initialize_id_in, Matrix& input) {
+    tbb::queuing_rw_mutex::scoped_lock lock(libmutex, true);
+    if (initialize_id != initialize_id_in) {
+        init_dfe_lib_unlocked(accelerator_num, qbit_num, initialize_id_in);
+    }
+    uploadMatrix2DFE_unlocked(input);
 }
+
 
 
 
@@ -222,5 +248,4 @@ int get_chained_gates_num() {
     return get_chained_gates_num_dll();
 
 }
-
 

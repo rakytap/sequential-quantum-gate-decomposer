@@ -22,7 +22,39 @@ limitations under the License.
 
 
 #include "apply_large_kernel_to_input.h"
+#include "apply_kernel_to_state_vector_input.h"
 #include "tbb/tbb.h"
+#include <algorithm>
+#include <array>
+#include <type_traits>
+#include <utility>
+
+template<typename MatrixT>
+using KernelLargeComplexT = typename std::remove_reference<decltype(std::declval<MatrixT&>()[0])>::type;
+
+template<typename MatrixT>
+void apply_large_kernel_to_input_impl(MatrixT& unitary, MatrixT& input, std::vector<int> involved_qbits, const int& matrix_size);
+
+template<typename MatrixT>
+void apply_large_kernel_from_right_impl(MatrixT& unitary, MatrixT& input, std::vector<int> involved_qbits, const int& matrix_size);
+
+template<typename MatrixT>
+void apply_nqbit_kernel_to_matrix_input_from_right_impl(MatrixT& unitary, MatrixT& input, std::vector<int> involved_qbits, const int& matrix_size);
+
+template<typename MatrixT>
+void apply_nqbit_kernel_to_matrix_input_impl(MatrixT& unitary, MatrixT& input, std::vector<int> involved_qbits, const int& matrix_size);
+
+template<typename MatrixT>
+void apply_2qbit_kernel_to_matrix_input_impl(MatrixT& two_qbit_unitary, MatrixT& input, const int& inner_qbit, const int& outer_qbit, const int& matrix_size);
+
+template<typename MatrixT>
+void apply_2qbit_kernel_to_matrix_input_from_right_impl(MatrixT& two_qbit_unitary, MatrixT& input, const int& inner_qbit, const int& outer_qbit, const int& matrix_size);
+
+template<typename MatrixT>
+void apply_crot_kernel_to_matrix_input_impl(MatrixT& u3_1qbit1, MatrixT& u3_1qbit2, MatrixT& input, const int& target_qbit, const int& control_qbit, const int& matrix_size);
+
+template<typename MatrixT>
+void apply_crot_kernel_to_matrix_input_from_right_impl(MatrixT& u3_1qbit1, MatrixT& u3_1qbit2, MatrixT& input, const int& target_qbit, const int& control_qbit, const int& matrix_size);
 
 
 int get_grain_size(int index_step){
@@ -35,7 +67,19 @@ int get_grain_size(int index_step){
     return grain_size;
 }
 
-void apply_large_kernel_to_input(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size){
+template<typename MatrixT>
+MatrixT transpose_local_kernel_impl(const MatrixT& unitary) {
+    MatrixT transposed = unitary.copy();
+    for (int row = 0; row < unitary.rows; ++row) {
+        for (int col = 0; col < unitary.cols; ++col) {
+            transposed[row * unitary.cols + col] = unitary[col * unitary.cols + row];
+        }
+    }
+    return transposed;
+}
+
+template<typename MatrixT>
+void apply_large_kernel_to_input_impl(MatrixT& unitary, MatrixT& input, std::vector<int> involved_qbits, const int& matrix_size){
 
     if (input.cols==1){
         switch(involved_qbits.size()){
@@ -48,70 +92,224 @@ void apply_large_kernel_to_input(Matrix& unitary, Matrix& input, std::vector<int
     }
     else 
     {
-        apply_2qbit_kernel_to_matrix_input(unitary, input, involved_qbits[0], involved_qbits[1], matrix_size);
-    }
-}
-
-/**
-@brief Call to apply kernel to apply two qubit gate kernel on a state vector
-@param two_qbit_unitary The 4x4 kernel of the gate operation
-@param input The input matrix on which the transformation is applied
-@param inner_qbit The lower significance qubit (little endian convention)
-@param outer_qbit The higher significance qubit (little endian convention)
-@param matrix_size The size of the input
-*/
-void apply_2qbit_kernel_to_state_vector_input(Matrix& two_qbit_unitary, Matrix& input, const int& inner_qbit, const int& outer_qbit, const int& matrix_size){
-
-    int index_step_outer = 1 << outer_qbit;
-    int index_step_inner = 1 << inner_qbit;
-    int current_idx = 0;
-    
-    for (int current_idx_pair_outer=current_idx + index_step_outer; current_idx_pair_outer<input.rows; current_idx_pair_outer=current_idx_pair_outer+(index_step_outer << 1)){
-    
-        for (int current_idx_inner = 0; current_idx_inner < index_step_outer; current_idx_inner=current_idx_inner+(index_step_inner<<1)){
-        
-        	for (int idx=0; idx<index_step_inner; idx++){
-        	
-
-			int current_idx_outer_loc = current_idx + current_idx_inner + idx;
-			int current_idx_inner_loc = current_idx + current_idx_inner + idx + index_step_inner;
-			int current_idx_outer_pair_loc = current_idx_pair_outer + idx + current_idx_inner;
-			int current_idx_inner_pair_loc = current_idx_pair_outer + idx + current_idx_inner + index_step_inner;
-			int indexes[4] = {current_idx_outer_loc,current_idx_inner_loc,current_idx_outer_pair_loc,current_idx_inner_pair_loc};
-			
-			QGD_Complex16 element_outer = input[current_idx_outer_loc];
-			QGD_Complex16 element_outer_pair = input[current_idx_outer_pair_loc];
-			QGD_Complex16 element_inner = input[current_idx_inner_loc];
-			QGD_Complex16 element_inner_pair = input[current_idx_inner_pair_loc];
-			
-			QGD_Complex16 tmp1;
-			QGD_Complex16 tmp2;
-			QGD_Complex16 tmp3;
-			QGD_Complex16 tmp4;
-			for (int mult_idx=0; mult_idx<4; mult_idx++){
-			
-				tmp1 = mult(two_qbit_unitary[mult_idx*4], element_outer);
-				tmp2 = mult(two_qbit_unitary[mult_idx*4 + 1], element_inner);
-				tmp3 = mult(two_qbit_unitary[mult_idx*4 + 2], element_outer_pair);
-				tmp4 = mult(two_qbit_unitary[mult_idx*4 + 3], element_inner_pair);
-				input[indexes[mult_idx]].real = tmp1.real + tmp2.real + tmp3.real + tmp4.real;
-				input[indexes[mult_idx]].imag = tmp1.imag + tmp2.imag + tmp3.imag + tmp4.imag;
-			}
-        	}
+        if (involved_qbits.size() == 2) {
+            apply_2qbit_kernel_to_matrix_input_impl(unitary, input, involved_qbits[0], involved_qbits[1], matrix_size);
+            return;
         }
-        current_idx = current_idx + (index_step_outer << 1);
+
+        apply_nqbit_kernel_to_matrix_input_impl(unitary, input, std::move(involved_qbits), matrix_size);
+    }
+}
+
+template<typename MatrixT>
+void apply_large_kernel_from_right_impl(MatrixT& unitary, MatrixT& input, std::vector<int> involved_qbits, const int& matrix_size){
+
+    if (input.cols == 1) {
+        throw std::invalid_argument("Right-apply is not supported for column state vectors.");
     }
 
+    if (involved_qbits.size() < 2 || involved_qbits.size() > 5) {
+        throw std::invalid_argument("Unsupported number of qubits for right-applied matrix input.");
+    }
+
+    if (involved_qbits.size() == 2) {
+        apply_2qbit_kernel_to_matrix_input_from_right_impl(unitary, input, involved_qbits[0], involved_qbits[1], matrix_size);
+        return;
+    }
+
+    apply_nqbit_kernel_to_matrix_input_from_right_impl(unitary, input, std::move(involved_qbits), matrix_size);
 }
+
+template<typename MatrixT>
+void apply_nqbit_kernel_to_matrix_input_impl(MatrixT& unitary, MatrixT& input, std::vector<int> involved_qbits, const int& matrix_size) {
+
+    using ComplexT = KernelLargeComplexT<MatrixT>;
+
+    const int n = static_cast<int>(involved_qbits.size());
+    const int block_size = 1 << n;
+
+    if (input.cols == 1) {
+        throw std::invalid_argument("Left-apply large matrix-input dispatch received a column state vector.");
+    }
+
+    if (n < 2 || n > 5) {
+        throw std::invalid_argument("Unsupported number of qubits for left-applied matrix input.");
+    }
+
+    if (unitary.rows != block_size || unitary.cols != block_size) {
+        throw std::invalid_argument("Left-apply large-kernel dispatch received a mismatched local kernel size.");
+    }
+
+    std::sort(involved_qbits.begin(), involved_qbits.end());
+
+    int qubit_num = 0;
+    int dim = 1;
+    while (dim < matrix_size) {
+        dim <<= 1;
+        qubit_num++;
+    }
+
+    std::vector<int> non_targets;
+    non_targets.reserve(qubit_num - n);
+    for (int q = 0; q < qubit_num; ++q) {
+        if (!std::binary_search(involved_qbits.begin(), involved_qbits.end(), q)) {
+            non_targets.push_back(q);
+        }
+    }
+
+    std::vector<int> block_pattern(block_size);
+    for (int k = 0; k < block_size; ++k) {
+        int idx = 0;
+        for (int bit = 0; bit < n; ++bit) {
+            if (k & (1 << bit)) {
+                idx |= (1 << involved_qbits[bit]);
+            }
+        }
+        block_pattern[k] = idx;
+    }
+
+    const int num_blocks = matrix_size >> n;
+    const ComplexT* unitary_data = unitary.get_data();
+    ComplexT* input_data = input.get_data();
+    const int unitary_stride = unitary.stride;
+    const int input_stride = input.stride;
+    std::array<int, 32> indices;
+    std::array<ComplexT, 32> source;
+    std::array<ComplexT, 32> out;
+
+    for (int col = 0; col < input.cols; ++col) {
+        for (int iter_idx = 0; iter_idx < num_blocks; ++iter_idx) {
+            int base = 0;
+            for (size_t i = 0; i < non_targets.size(); ++i) {
+                if (iter_idx & (1ULL << i)) {
+                    base |= (1 << non_targets[i]);
+                }
+            }
+
+            for (int k = 0; k < block_size; ++k) {
+                indices[k] = base | block_pattern[k];
+                source[k] = input_data[indices[k] * input_stride + col];
+            }
+
+            for (int out_idx = 0; out_idx < block_size; ++out_idx) {
+                ComplexT accum{};
+                accum.real = 0;
+                accum.imag = 0;
+
+                for (int in_idx = 0; in_idx < block_size; ++in_idx) {
+                    const ComplexT kernel_element = unitary_data[out_idx * unitary_stride + in_idx];
+                    const ComplexT source_element = source[in_idx];
+                    accum.real += kernel_element.real * source_element.real - kernel_element.imag * source_element.imag;
+                    accum.imag += kernel_element.real * source_element.imag + kernel_element.imag * source_element.real;
+                }
+
+                out[out_idx] = accum;
+            }
+
+            for (int out_idx = 0; out_idx < block_size; ++out_idx) {
+                input_data[indices[out_idx] * input_stride + col] = out[out_idx];
+            }
+        }
+    }
+}
+
+template<typename MatrixT>
+void apply_nqbit_kernel_to_matrix_input_from_right_impl(MatrixT& unitary, MatrixT& input, std::vector<int> involved_qbits, const int& matrix_size) {
+
+    using ComplexT = KernelLargeComplexT<MatrixT>;
+
+    const int n = static_cast<int>(involved_qbits.size());
+    const int block_size = 1 << n;
+
+    if (unitary.rows != block_size || unitary.cols != block_size) {
+        throw std::invalid_argument("Right-apply large-kernel dispatch received a mismatched local kernel size.");
+    }
+
+    std::sort(involved_qbits.begin(), involved_qbits.end());
+
+    int qubit_num = 0;
+    int dim = 1;
+    while (dim < matrix_size) {
+        dim <<= 1;
+        qubit_num++;
+    }
+
+    std::vector<int> non_targets;
+    non_targets.reserve(qubit_num - n);
+    for (int q = 0; q < qubit_num; ++q) {
+        if (!std::binary_search(involved_qbits.begin(), involved_qbits.end(), q)) {
+            non_targets.push_back(q);
+        }
+    }
+
+    std::vector<int> block_pattern(block_size);
+    for (int k = 0; k < block_size; ++k) {
+        int idx = 0;
+        for (int bit = 0; bit < n; ++bit) {
+            if (k & (1 << bit)) {
+                idx |= (1 << involved_qbits[bit]);
+            }
+        }
+        block_pattern[k] = idx;
+    }
+
+    const int num_blocks = matrix_size >> n;
+    const ComplexT* unitary_data = unitary.get_data();
+    ComplexT* input_data = input.get_data();
+    const int unitary_stride = unitary.stride;
+    const int input_stride = input.stride;
+    std::array<int, 32> indices;
+    std::array<ComplexT, 32> source;
+    std::array<ComplexT, 32> out;
+
+    for (int row = 0; row < input.rows; ++row) {
+        const int row_offset = row * input_stride;
+
+        for (int iter_idx = 0; iter_idx < num_blocks; ++iter_idx) {
+            int base = 0;
+            for (size_t i = 0; i < non_targets.size(); ++i) {
+                if (iter_idx & (1ULL << i)) {
+                    base |= (1 << non_targets[i]);
+                }
+            }
+
+            for (int k = 0; k < block_size; ++k) {
+                indices[k] = base | block_pattern[k];
+                source[k] = input_data[row_offset + indices[k]];
+            }
+
+            for (int out_idx = 0; out_idx < block_size; ++out_idx) {
+                ComplexT accum{};
+                accum.real = 0;
+                accum.imag = 0;
+
+                for (int in_idx = 0; in_idx < block_size; ++in_idx) {
+                    const ComplexT kernel_element = unitary_data[in_idx * unitary_stride + out_idx];
+                    const ComplexT source_element = source[in_idx];
+                    accum.real += kernel_element.real * source_element.real - kernel_element.imag * source_element.imag;
+                    accum.imag += kernel_element.real * source_element.imag + kernel_element.imag * source_element.real;
+                }
+
+                out[out_idx] = accum;
+            }
+
+            for (int out_idx = 0; out_idx < block_size; ++out_idx) {
+                input_data[row_offset + indices[out_idx]] = out[out_idx];
+            }
+        }
+    }
+}
+
 /**
-@brief Call to apply kernel to apply two qubit gate kernel on an input matrix using AVX
+@brief Call to apply a two-qubit gate kernel on an input matrix
 @param two_qbit_unitary The 4x4 kernel of the gate operation
 @param input The input matrix on which the transformation is applied
 @param inner_qbit The lower significance qubit (little endian convention)
 @param outer_qbit The higher significance qubit (little endian convention)
 @param matrix_size The size of the input
 */
-void apply_2qbit_kernel_to_matrix_input(Matrix& two_qbit_unitary, Matrix& input, const int& inner_qbit, const int& outer_qbit, const int& matrix_size){
+template<typename MatrixT>
+void apply_2qbit_kernel_to_matrix_input_impl(MatrixT& two_qbit_unitary, MatrixT& input, const int& inner_qbit, const int& outer_qbit, const int& matrix_size){
 
     int index_step_outer = 1 << outer_qbit;
     int index_step_inner = 1 << inner_qbit;
@@ -139,15 +337,15 @@ void apply_2qbit_kernel_to_matrix_input(Matrix& two_qbit_unitary, Matrix& input,
                 int index_inner = row_offset_inner+col_idx;
                 int index_inner_pair = row_offset_inner_pair + col_idx;
       			int indexes[4] = {index_outer,index_inner,index_outer_pair,index_inner_pair};
-			QGD_Complex16 element_outer = input[index_outer];
-			QGD_Complex16 element_outer_pair = input[index_outer_pair];
-			QGD_Complex16 element_inner = input[index_inner];
-			QGD_Complex16 element_inner_pair = input[index_inner_pair];
+			KernelLargeComplexT<MatrixT> element_outer = input[index_outer];
+			KernelLargeComplexT<MatrixT> element_outer_pair = input[index_outer_pair];
+			KernelLargeComplexT<MatrixT> element_inner = input[index_inner];
+			KernelLargeComplexT<MatrixT> element_inner_pair = input[index_inner_pair];
 			
-			QGD_Complex16 tmp1;
-			QGD_Complex16 tmp2;
-			QGD_Complex16 tmp3;
-			QGD_Complex16 tmp4;
+			KernelLargeComplexT<MatrixT> tmp1;
+			KernelLargeComplexT<MatrixT> tmp2;
+			KernelLargeComplexT<MatrixT> tmp3;
+			KernelLargeComplexT<MatrixT> tmp4;
 			for (int mult_idx=0; mult_idx<4; mult_idx++){
 			
 				tmp1 = mult(two_qbit_unitary[mult_idx*4], element_outer);
@@ -165,399 +363,63 @@ void apply_2qbit_kernel_to_matrix_input(Matrix& two_qbit_unitary, Matrix& input,
 
 }
 
-/**
-@brief Call to apply kernel to apply three qubit gate kernel on a state vector
-@param two_qbit_unitary The 8x8 kernel of the gate operation
-@param input The input matrix on which the transformation is applied
-@param involved_qbits The qubits affected by the gate in order
-@param matrix_size The size of the input
-*/
-void apply_3qbit_kernel_to_state_vector_input(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size){
+template<typename MatrixT>
+void apply_2qbit_kernel_to_matrix_input_from_right_impl(MatrixT& two_qbit_unitary, MatrixT& input, const int& inner_qbit, const int& outer_qbit, const int& matrix_size){
 
-    int index_step_inner = 1 << involved_qbits[0];
-    int index_step_middle = 1 << involved_qbits[1];
-    int index_step_outer = 1 << involved_qbits[2];
-    int current_idx = 0;
-    
-    for (int current_idx_pair_outer=current_idx + index_step_outer; current_idx_pair_outer<input.rows; current_idx_pair_outer=current_idx_pair_outer+(index_step_outer << 1)){
-    
-        for (int current_idx_middle = 0; current_idx_middle < index_step_outer; current_idx_middle=current_idx_middle+(index_step_middle<<1)){
-        
-                for (int current_idx_inner = 0; current_idx_inner < index_step_middle; current_idx_inner=current_idx_inner+(index_step_inner<<1)){
-                
-    	        for (int idx=0; idx<index_step_inner; idx++){
-    	        
-        	    int current_idx_loc = current_idx + current_idx_middle + current_idx_inner + idx;
-                int current_idx_pair_loc = current_idx_pair_outer + idx + current_idx_inner + current_idx_middle;
+    int index_step_outer = 1 << outer_qbit;
+    int index_step_inner = 1 << inner_qbit;
 
-			    int current_idx_outer_loc = current_idx_loc;
-			    int current_idx_inner_loc = current_idx_loc + index_step_inner;
-			    
-			    int current_idx_middle_loc = current_idx_loc + index_step_middle;
-			    int current_idx_middle_inner_loc = current_idx_loc + index_step_middle + index_step_inner;
-			    
-	        	int current_idx_outer_pair_loc = current_idx_pair_loc;
-			    int current_idx_inner_pair_loc = current_idx_pair_loc + index_step_inner;
-			    
-			    int current_idx_middle_pair_loc =current_idx_pair_loc + index_step_middle;
-			    int current_idx_middle_inner_pair_loc = current_idx_pair_loc + index_step_middle + index_step_inner;
-			    
-			    int indexes[8] = {current_idx_outer_loc,current_idx_inner_loc,current_idx_middle_loc,current_idx_middle_inner_loc,current_idx_outer_pair_loc,current_idx_inner_pair_loc,current_idx_middle_pair_loc,current_idx_middle_inner_pair_loc};
-			    //input.print_matrix();
-			    QGD_Complex16 element_outer = input[current_idx_outer_loc];
-			    QGD_Complex16 element_outer_pair = input[current_idx_outer_pair_loc];
-			    
-			    QGD_Complex16 element_inner = input[current_idx_inner_loc];
-			    QGD_Complex16 element_inner_pair = input[current_idx_inner_pair_loc];
-			    
-			    QGD_Complex16 element_middle = input[current_idx_middle_loc];
-			    QGD_Complex16 element_middle_pair = input[current_idx_middle_pair_loc];
-			    
-			    QGD_Complex16 element_middle_inner = input[current_idx_middle_inner_loc];
-			    QGD_Complex16 element_middle_inner_pair = input[current_idx_middle_inner_pair_loc];
-			    
-			    QGD_Complex16 tmp1;
-			    QGD_Complex16 tmp2;
-			    QGD_Complex16 tmp3;
-			    QGD_Complex16 tmp4;
-			    QGD_Complex16 tmp5;
-			    QGD_Complex16 tmp6;
-			    QGD_Complex16 tmp7;
-			    QGD_Complex16 tmp8;
-			   for (int mult_idx=0; mult_idx<8; mult_idx++){
-				    tmp1 = mult(unitary[mult_idx*8], element_outer);
-				    tmp2 = mult(unitary[mult_idx*8 + 1], element_inner);
-				    tmp3 = mult(unitary[mult_idx*8 + 2], element_middle);
-				    tmp4 = mult(unitary[mult_idx*8 + 3], element_middle_inner);
-				    tmp5 = mult(unitary[mult_idx*8 + 4], element_outer_pair);
-				    tmp6 = mult(unitary[mult_idx*8 + 5], element_inner_pair);
-				    tmp7 = mult(unitary[mult_idx*8 + 6], element_middle_pair);
-				    tmp8 = mult(unitary[mult_idx*8 + 7], element_middle_inner_pair);
-				    input[indexes[mult_idx]].real = tmp1.real + tmp2.real + tmp3.real + tmp4.real + tmp5.real + tmp6.real + tmp7.real + tmp8.real;
-				    input[indexes[mult_idx]].imag = tmp1.imag + tmp2.imag + tmp3.imag + tmp4.imag + tmp5.imag + tmp6.imag + tmp7.imag + tmp8.imag;
-		        }
-        	  }
-            }
-        }
-        current_idx = current_idx + (index_step_outer << 1);
-     }
-}
+    for (int row_idx = 0; row_idx < input.rows; row_idx++) {
 
+        int row_offset = row_idx * input.stride;
+        int current_idx = 0;
 
-/**
-@brief Call to apply kernel to apply four qubit gate kernel on a state vector
-@param unitary The 16x16 kernel of the gate operation
-@param input The input matrix on which the transformation is applied
-@param involved_qbits The qubits affected by the gate in order
-@param matrix_size The size of the input
-*/
-void apply_4qbit_kernel_to_state_vector_input(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size) {
+        for (int current_idx_pair_outer = current_idx + index_step_outer; current_idx_pair_outer < input.cols; current_idx_pair_outer = current_idx_pair_outer + (index_step_outer << 1)) {
 
-    int index_step_q0 = 1 << involved_qbits[0];
-    int index_step_q1 = 1 << involved_qbits[1];
-    int index_step_q2 = 1 << involved_qbits[2];
-    int index_step_q3 = 1 << involved_qbits[3];
+            for (int current_idx_inner = 0; current_idx_inner < index_step_outer; current_idx_inner = current_idx_inner + (index_step_inner << 1)) {
 
-    int current_idx = 0;
+                for (int idx = 0; idx < index_step_inner; idx++) {
 
-    // q3 loop (outermost)
-    for (int current_idx_pair_q3 = current_idx + index_step_q3; current_idx_pair_q3 < input.rows; current_idx_pair_q3 += (index_step_q3 << 1)) {
-        
-        // q2 loop
-        for (int current_idx_q2 = 0; current_idx_q2 < index_step_q3; current_idx_q2 += (index_step_q2 << 1)) {
+                    int current_idx_outer_loc = current_idx + current_idx_inner + idx;
+                    int current_idx_inner_loc = current_idx + current_idx_inner + idx + index_step_inner;
+                    int current_idx_outer_pair_loc = current_idx_pair_outer + idx + current_idx_inner;
+                    int current_idx_inner_pair_loc = current_idx_pair_outer + idx + current_idx_inner + index_step_inner;
 
-            // q1 loop
-            for (int current_idx_q1 = 0; current_idx_q1 < index_step_q2; current_idx_q1 += (index_step_q1 << 1)) {
-
-                for (int current_idx_q0 = 0; current_idx_q0 < index_step_q1; current_idx_q0 += (index_step_q0 << 1)) {
-                
-                // q0 loop (innermost)
-                for (int idx = 0; idx < index_step_q0; idx++) {
-
-                    // base indices for current iteration
-                    int current_idx_loc = current_idx + current_idx_q2 + current_idx_q1 + current_idx_q0 + idx;
-                    int current_idx_pair_loc = current_idx_pair_q3 + idx + current_idx_q1 + current_idx_q2 + current_idx_q0;
-
-                    // q3=0 states (first 8 states)
-                    int current_idx_q0_0_loc = current_idx_loc; // |0000>
-                    int current_idx_q0_1_loc = current_idx_loc + index_step_q0; // |0001>
-                    int current_idx_q1_0_loc = current_idx_loc + index_step_q1;
-                    int current_idx_q1_1_loc = current_idx_loc + index_step_q1 + index_step_q0;
-                    int current_idx_q2_0_loc = current_idx_loc + index_step_q2;
-                    int current_idx_q2_1_loc = current_idx_loc + index_step_q2 + index_step_q0;
-                    int current_idx_q2_q1_0_loc = current_idx_loc + index_step_q2 + index_step_q1; // |0110>
-                    int current_idx_q2_q1_1_loc = current_idx_loc + index_step_q2 + index_step_q1 + index_step_q0; // |0111>
-
-                    // q3=1 states (first 8 states)
-                    int current_idx_q3_q0_0_pair_loc = current_idx_pair_loc; // |1000>
-                    int current_idx_q3_q0_1_pair_loc = current_idx_pair_loc + index_step_q0; // |1001>
-                    int current_idx_q3_q1_0_pair_loc = current_idx_pair_loc + index_step_q1;
-                    int current_idx_q3_q1_1_pair_loc = current_idx_pair_loc + index_step_q1 + index_step_q0;
-                    int current_idx_q3_q2_0_pair_loc = current_idx_pair_loc + index_step_q2;
-                    int current_idx_q3_q2_1_pair_loc = current_idx_pair_loc + index_step_q2 + index_step_q0;
-                    int current_idx_q3_q2_q1_0_pair_loc = current_idx_pair_loc + index_step_q2 + index_step_q1; // |1110>
-                    int current_idx_q3_q2_q1_1_pair_loc = current_idx_pair_loc + index_step_q2 + index_step_q1 + index_step_q0; // |1111>
-
-                    int indexes[16] = {
-                        current_idx_q0_0_loc, current_idx_q0_1_loc, current_idx_q1_0_loc, current_idx_q1_1_loc,
-                        current_idx_q2_0_loc, current_idx_q2_1_loc, current_idx_q2_q1_0_loc, current_idx_q2_q1_1_loc,
-                        current_idx_q3_q0_0_pair_loc, current_idx_q3_q0_1_pair_loc, current_idx_q3_q1_0_pair_loc, current_idx_q3_q1_1_pair_loc,
-                        current_idx_q3_q2_0_pair_loc, current_idx_q3_q2_1_pair_loc, current_idx_q3_q2_q1_0_pair_loc, current_idx_q3_q2_q1_1_pair_loc
+                    int indexes[4] = {
+                        row_offset + current_idx_outer_loc,
+                        row_offset + current_idx_inner_loc,
+                        row_offset + current_idx_outer_pair_loc,
+                        row_offset + current_idx_inner_pair_loc,
                     };
 
-                    QGD_Complex16 element_0  = input[current_idx_q0_0_loc];
-                    QGD_Complex16 element_1  = input[current_idx_q0_1_loc];
-                    QGD_Complex16 element_2  = input[current_idx_q1_0_loc];
-                    QGD_Complex16 element_3  = input[current_idx_q1_1_loc];
-                    QGD_Complex16 element_4  = input[current_idx_q2_0_loc];
-                    QGD_Complex16 element_5  = input[current_idx_q2_1_loc];
-                    QGD_Complex16 element_6  = input[current_idx_q2_q1_0_loc];
-                    QGD_Complex16 element_7  = input[current_idx_q2_q1_1_loc];
-                    QGD_Complex16 element_8  = input[current_idx_q3_q0_0_pair_loc];
-                    QGD_Complex16 element_9  = input[current_idx_q3_q0_1_pair_loc];
-                    QGD_Complex16 element_10 = input[current_idx_q3_q1_0_pair_loc];
-                    QGD_Complex16 element_11 = input[current_idx_q3_q1_1_pair_loc];
-                    QGD_Complex16 element_12 = input[current_idx_q3_q2_0_pair_loc];
-                    QGD_Complex16 element_13 = input[current_idx_q3_q2_1_pair_loc];
-                    QGD_Complex16 element_14 = input[current_idx_q3_q2_q1_0_pair_loc];
-                    QGD_Complex16 element_15 = input[current_idx_q3_q2_q1_1_pair_loc];
+                    KernelLargeComplexT<MatrixT> element_outer = input[indexes[0]];
+                    KernelLargeComplexT<MatrixT> element_inner = input[indexes[1]];
+                    KernelLargeComplexT<MatrixT> element_outer_pair = input[indexes[2]];
+                    KernelLargeComplexT<MatrixT> element_inner_pair = input[indexes[3]];
 
-                    for (int mult_idx = 0; mult_idx < 16; mult_idx++) {
-                        QGD_Complex16 tmp0  = mult(unitary[mult_idx*16], element_0);
-                        QGD_Complex16 tmp1  = mult(unitary[mult_idx*16 + 1], element_1);
-                        QGD_Complex16 tmp2  = mult(unitary[mult_idx*16 + 2], element_2);
-                        QGD_Complex16 tmp3  = mult(unitary[mult_idx*16 + 3], element_3);
-                        QGD_Complex16 tmp4  = mult(unitary[mult_idx*16 + 4], element_4);
-                        QGD_Complex16 tmp5  = mult(unitary[mult_idx*16 + 5], element_5);
-                        QGD_Complex16 tmp6  = mult(unitary[mult_idx*16 + 6], element_6);
-                        QGD_Complex16 tmp7  = mult(unitary[mult_idx*16 + 7], element_7);
-                        QGD_Complex16 tmp8  = mult(unitary[mult_idx*16 + 8], element_8);
-                        QGD_Complex16 tmp9  = mult(unitary[mult_idx*16 + 9], element_9);
-                        QGD_Complex16 tmp10 = mult(unitary[mult_idx*16 + 10], element_10);
-                        QGD_Complex16 tmp11 = mult(unitary[mult_idx*16 + 11], element_11);
-                        QGD_Complex16 tmp12 = mult(unitary[mult_idx*16 + 12], element_12);
-                        QGD_Complex16 tmp13 = mult(unitary[mult_idx*16 + 13], element_13);
-                        QGD_Complex16 tmp14 = mult(unitary[mult_idx*16 + 14], element_14);
-                        QGD_Complex16 tmp15 = mult(unitary[mult_idx*16 + 15], element_15);
+                    KernelLargeComplexT<MatrixT> tmp1;
+                    KernelLargeComplexT<MatrixT> tmp2;
+                    KernelLargeComplexT<MatrixT> tmp3;
+                    KernelLargeComplexT<MatrixT> tmp4;
 
-                        input[indexes[mult_idx]].real = tmp0.real + tmp1.real + tmp2.real + tmp3.real
-                        + tmp4.real + tmp5.real + tmp6.real + tmp7.real
-                        + tmp8.real + tmp9.real + tmp10.real + tmp11.real
-                        + tmp12.real + tmp13.real + tmp14.real + tmp15.real;
+                    for (int out_idx = 0; out_idx < 4; out_idx++) {
 
-                        input[indexes[mult_idx]].imag = tmp0.imag + tmp1.imag + tmp2.imag + tmp3.imag
-                        + tmp4.imag + tmp5.imag + tmp6.imag + tmp7.imag
-                        + tmp8.imag + tmp9.imag + tmp10.imag + tmp11.imag
-                        + tmp12.imag + tmp13.imag + tmp14.imag + tmp15.imag;
+                        tmp1 = mult(two_qbit_unitary[out_idx], element_outer);
+                        tmp2 = mult(two_qbit_unitary[4 + out_idx], element_inner);
+                        tmp3 = mult(two_qbit_unitary[8 + out_idx], element_outer_pair);
+                        tmp4 = mult(two_qbit_unitary[12 + out_idx], element_inner_pair);
+
+                        input[indexes[out_idx]].real = tmp1.real + tmp2.real + tmp3.real + tmp4.real;
+                        input[indexes[out_idx]].imag = tmp1.imag + tmp2.imag + tmp3.imag + tmp4.imag;
                     }
-                }
-
                 }
             }
+
+            current_idx = current_idx + (index_step_outer << 1);
         }
-        current_idx += (index_step_q3 << 1);
     }
-}
 
-
-/**
-@brief Call to apply kernel to apply five qubit gate kernel on a state vector
-@param unitary The 32x32 kernel of the gate operation
-@param input The input matrix on which the transformation is applied
-@param involved_qbits The qubits affected by the gate in order
-@param matrix_size The size of the input
-*/
-void apply_5qbit_kernel_to_state_vector_input(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size){
-
-    int index_step_q0 = 1 << involved_qbits[0];
-    int index_step_q1 = 1 << involved_qbits[1];
-    int index_step_q2 = 1 << involved_qbits[2];
-    int index_step_q3 = 1 << involved_qbits[3];
-    int index_step_q4 = 1 << involved_qbits[4];  
-
-    int current_idx = 0;
-
-    // q4 loop (outermost)
-    for (int current_idx_pair_q4 = current_idx + index_step_q4; current_idx_pair_q4 < input.rows; current_idx_pair_q4 += (index_step_q4 << 1)) {
-        
-        // q3 loop
-        for (int current_idx_q3 = 0; current_idx_q3 < index_step_q4; current_idx_q3 += (index_step_q3 << 1)) {
-
-            // q2 loop
-            for (int current_idx_q2 = 0; current_idx_q2 < index_step_q3; current_idx_q2 += (index_step_q2 << 1)) {
-                
-                // q1 loop
-                for (int current_idx_q1 = 0; current_idx_q1 < index_step_q2; current_idx_q1 += (index_step_q1 << 1)) {
-
-                    for (int current_idx_q0 = 0; current_idx_q0 < index_step_q1; current_idx_q0 += (index_step_q0 << 1)) {
-
-                    // q0 loop (innermost)
-                    for (int idx = 0; idx < index_step_q0; idx++) {
-
-                    // base indices for current iteration
-                    int current_idx_loc = current_idx + current_idx_q3 + current_idx_q2 + current_idx_q1 + current_idx_q0 + idx;
-                    int current_idx_pair_q4_loc = current_idx_pair_q4 + idx + current_idx_q1 + current_idx_q2 + current_idx_q3 + current_idx_q0;
-
-                    // q4=0 states (first 16 states)
-                    int current_idx_q0_0_loc = current_idx_loc; // |00000>
-                    int current_idx_q0_1_loc = current_idx_loc + index_step_q0; // |00001>
-                    int current_idx_q1_0_loc = current_idx_loc + index_step_q1;
-                    int current_idx_q1_1_loc = current_idx_loc + index_step_q1 + index_step_q0;
-                    int current_idx_q2_0_loc = current_idx_loc + index_step_q2;
-                    int current_idx_q2_1_loc = current_idx_loc + index_step_q2 + index_step_q0;
-                    int current_idx_q2_q1_0_loc = current_idx_loc + index_step_q2 + index_step_q1;
-                    int current_idx_q2_q1_1_loc = current_idx_loc + index_step_q2 + index_step_q1 + index_step_q0;
-                    int current_idx_q3_0_loc = current_idx_loc + index_step_q3;
-                    int current_idx_q3_1_loc = current_idx_loc + index_step_q3 + index_step_q0;
-                    int current_idx_q3_q1_0_loc = current_idx_loc + index_step_q3 + index_step_q1;
-                    int current_idx_q3_q1_1_loc = current_idx_loc + index_step_q3 + index_step_q1 + index_step_q0;
-                    int current_idx_q3_q2_0_loc = current_idx_loc + index_step_q3 + index_step_q2;
-                    int current_idx_q3_q2_1_loc = current_idx_loc + index_step_q3 + index_step_q2 + index_step_q0;
-                    int current_idx_q3_q2_q1_0_loc = current_idx_loc + index_step_q3 + index_step_q2 + index_step_q1; // |01110>
-                    int current_idx_q3_q2_q1_1_loc = current_idx_loc + index_step_q3 + index_step_q2 + index_step_q1 + index_step_q0; // |01111>
-
-                    // q4=1 states (last 16 states)
-                    int current_idx_q4_q0_0_pair_loc = current_idx_pair_q4_loc; // |10000>
-                    int current_idx_q4_q0_1_pair_loc = current_idx_pair_q4_loc + index_step_q0; // |10001>
-                    int current_idx_q4_q1_0_pair_loc = current_idx_pair_q4_loc + index_step_q1;
-                    int current_idx_q4_q1_1_pair_loc = current_idx_pair_q4_loc + index_step_q1 + index_step_q0;
-                    int current_idx_q4_q2_0_pair_loc = current_idx_pair_q4_loc + index_step_q2;
-                    int current_idx_q4_q2_1_pair_loc = current_idx_pair_q4_loc + index_step_q2 + index_step_q0;
-                    int current_idx_q4_q2_q1_0_pair_loc = current_idx_pair_q4_loc + index_step_q2 + index_step_q1;
-                    int current_idx_q4_q2_q1_1_pair_loc = current_idx_pair_q4_loc + index_step_q2 + index_step_q1 + index_step_q0;
-                    int current_idx_q4_q3_0_pair_loc = current_idx_pair_q4_loc + index_step_q3;
-                    int current_idx_q4_q3_1_pair_loc = current_idx_pair_q4_loc + index_step_q3 + index_step_q0;
-                    int current_idx_q4_q3_q1_0_pair_loc = current_idx_pair_q4_loc + index_step_q3 + index_step_q1;
-                    int current_idx_q4_q3_q1_1_pair_loc = current_idx_pair_q4_loc + index_step_q3 + index_step_q1 + index_step_q0;
-                    int current_idx_q4_q3_q2_0_pair_loc = current_idx_pair_q4_loc + index_step_q3 + index_step_q2;
-                    int current_idx_q4_q3_q2_1_pair_loc = current_idx_pair_q4_loc + index_step_q3 + index_step_q2 + index_step_q0;
-                    int current_idx_q4_q3_q2_q1_0_pair_loc = current_idx_pair_q4_loc + index_step_q3 + index_step_q2 + index_step_q1; // |11110>
-                    int current_idx_q4_q3_q2_q1_1_pair_loc = current_idx_pair_q4_loc + index_step_q3 + index_step_q2 + index_step_q1 + index_step_q0; // |11111>
-
-                    int indexes[32] = {
-                        current_idx_q0_0_loc, // state 0: |00000>
-                        current_idx_q0_1_loc, // state 1: |00001>
-                        current_idx_q1_0_loc,
-                        current_idx_q1_1_loc,
-                        current_idx_q2_0_loc,
-                        current_idx_q2_1_loc,
-                        current_idx_q2_q1_0_loc,
-                        current_idx_q2_q1_1_loc,
-                        current_idx_q3_0_loc,
-                        current_idx_q3_1_loc,
-                        current_idx_q3_q1_0_loc,
-                        current_idx_q3_q1_1_loc,
-                        current_idx_q3_q2_0_loc,
-                        current_idx_q3_q2_1_loc,
-                        current_idx_q3_q2_q1_0_loc,
-                        current_idx_q3_q2_q1_1_loc, // state 15: |01111>
-                        current_idx_q4_q0_0_pair_loc, // state 16: |10000>
-                        current_idx_q4_q0_1_pair_loc,
-                        current_idx_q4_q1_0_pair_loc,
-                        current_idx_q4_q1_1_pair_loc,
-                        current_idx_q4_q2_0_pair_loc,
-                        current_idx_q4_q2_1_pair_loc,
-                        current_idx_q4_q2_q1_0_pair_loc,
-                        current_idx_q4_q2_q1_1_pair_loc,
-                        current_idx_q4_q3_0_pair_loc,
-                        current_idx_q4_q3_1_pair_loc,
-                        current_idx_q4_q3_q1_0_pair_loc,
-                        current_idx_q4_q3_q1_1_pair_loc,
-                        current_idx_q4_q3_q2_0_pair_loc,
-                        current_idx_q4_q3_q2_1_pair_loc,
-                        current_idx_q4_q3_q2_q1_0_pair_loc, // state 30: |11110>
-                        current_idx_q4_q3_q2_q1_1_pair_loc // state 31: |11111>
-                    };
-
-                    QGD_Complex16 element_0 = input[current_idx_q0_0_loc];
-                    QGD_Complex16 element_1 = input[current_idx_q0_1_loc];
-                    QGD_Complex16 element_2 = input[current_idx_q1_0_loc];
-                    QGD_Complex16 element_3 = input[current_idx_q1_1_loc];
-                    QGD_Complex16 element_4 = input[current_idx_q2_0_loc];
-                    QGD_Complex16 element_5 = input[current_idx_q2_1_loc];
-                    QGD_Complex16 element_6 = input[current_idx_q2_q1_0_loc];
-                    QGD_Complex16 element_7 = input[current_idx_q2_q1_1_loc];
-                    QGD_Complex16 element_8 = input[current_idx_q3_0_loc];
-                    QGD_Complex16 element_9 = input[current_idx_q3_1_loc];
-                    QGD_Complex16 element_10 = input[current_idx_q3_q1_0_loc];
-                    QGD_Complex16 element_11 = input[current_idx_q3_q1_1_loc];
-                    QGD_Complex16 element_12 = input[current_idx_q3_q2_0_loc];
-                    QGD_Complex16 element_13 = input[current_idx_q3_q2_1_loc];
-                    QGD_Complex16 element_14 = input[current_idx_q3_q2_q1_0_loc];
-                    QGD_Complex16 element_15 = input[current_idx_q3_q2_q1_1_loc];
-                    QGD_Complex16 element_16 = input[current_idx_q4_q0_0_pair_loc];
-                    QGD_Complex16 element_17 = input[current_idx_q4_q0_1_pair_loc];
-                    QGD_Complex16 element_18 = input[current_idx_q4_q1_0_pair_loc];
-                    QGD_Complex16 element_19 = input[current_idx_q4_q1_1_pair_loc];
-                    QGD_Complex16 element_20 = input[current_idx_q4_q2_0_pair_loc];
-                    QGD_Complex16 element_21 = input[current_idx_q4_q2_1_pair_loc];
-                    QGD_Complex16 element_22 = input[current_idx_q4_q2_q1_0_pair_loc];
-                    QGD_Complex16 element_23 = input[current_idx_q4_q2_q1_1_pair_loc];
-                    QGD_Complex16 element_24 = input[current_idx_q4_q3_0_pair_loc];
-                    QGD_Complex16 element_25 = input[current_idx_q4_q3_1_pair_loc];
-                    QGD_Complex16 element_26 = input[current_idx_q4_q3_q1_0_pair_loc];
-                    QGD_Complex16 element_27 = input[current_idx_q4_q3_q1_1_pair_loc];
-                    QGD_Complex16 element_28 = input[current_idx_q4_q3_q2_0_pair_loc];
-                    QGD_Complex16 element_29 = input[current_idx_q4_q3_q2_1_pair_loc];
-                    QGD_Complex16 element_30 = input[current_idx_q4_q3_q2_q1_0_pair_loc];
-                    QGD_Complex16 element_31 = input[current_idx_q4_q3_q2_q1_1_pair_loc];
-
-                    for (int mult_idx = 0; mult_idx < 32; mult_idx++) {
-                        QGD_Complex16 tmp1 = mult(unitary[mult_idx*32], element_0);
-                        QGD_Complex16 tmp2 = mult(unitary[mult_idx*32 + 1], element_1);
-                        QGD_Complex16 tmp3 = mult(unitary[mult_idx*32 + 2], element_2);
-                        QGD_Complex16 tmp4 = mult(unitary[mult_idx*32 + 3], element_3);
-                        QGD_Complex16 tmp5 = mult(unitary[mult_idx*32 + 4], element_4);
-                        QGD_Complex16 tmp6 = mult(unitary[mult_idx*32 + 5], element_5);
-                        QGD_Complex16 tmp7 = mult(unitary[mult_idx*32 + 6], element_6);
-                        QGD_Complex16 tmp8 = mult(unitary[mult_idx*32 + 7], element_7);
-                        QGD_Complex16 tmp9 = mult(unitary[mult_idx*32 + 8], element_8);
-                        QGD_Complex16 tmp10 = mult(unitary[mult_idx*32 + 9], element_9);
-                        QGD_Complex16 tmp11 = mult(unitary[mult_idx*32 + 10], element_10);
-                        QGD_Complex16 tmp12 = mult(unitary[mult_idx*32 + 11], element_11);
-                        QGD_Complex16 tmp13 = mult(unitary[mult_idx*32 + 12], element_12);
-                        QGD_Complex16 tmp14 = mult(unitary[mult_idx*32 + 13], element_13);
-                        QGD_Complex16 tmp15 = mult(unitary[mult_idx*32 + 14], element_14);
-                        QGD_Complex16 tmp16 = mult(unitary[mult_idx*32 + 15], element_15);
-                        QGD_Complex16 tmp17 = mult(unitary[mult_idx*32 + 16], element_16);
-                        QGD_Complex16 tmp18 = mult(unitary[mult_idx*32 + 17], element_17);
-                        QGD_Complex16 tmp19 = mult(unitary[mult_idx*32 + 18], element_18);
-                        QGD_Complex16 tmp20 = mult(unitary[mult_idx*32 + 19], element_19);
-                        QGD_Complex16 tmp21 = mult(unitary[mult_idx*32 + 20], element_20);
-                        QGD_Complex16 tmp22 = mult(unitary[mult_idx*32 + 21], element_21);
-                        QGD_Complex16 tmp23 = mult(unitary[mult_idx*32 + 22], element_22);
-                        QGD_Complex16 tmp24 = mult(unitary[mult_idx*32 + 23], element_23);
-                        QGD_Complex16 tmp25 = mult(unitary[mult_idx*32 + 24], element_24);
-                        QGD_Complex16 tmp26 = mult(unitary[mult_idx*32 + 25], element_25);
-                        QGD_Complex16 tmp27 = mult(unitary[mult_idx*32 + 26], element_26);
-                        QGD_Complex16 tmp28 = mult(unitary[mult_idx*32 + 27], element_27);
-                        QGD_Complex16 tmp29 = mult(unitary[mult_idx*32 + 28], element_28);
-                        QGD_Complex16 tmp30 = mult(unitary[mult_idx*32 + 29], element_29);
-                        QGD_Complex16 tmp31 = mult(unitary[mult_idx*32 + 30], element_30);
-                        QGD_Complex16 tmp32 = mult(unitary[mult_idx*32 + 31], element_31);
-
-                        input[indexes[mult_idx]].real = tmp1.real + tmp2.real + tmp3.real + tmp4.real 
-                        + tmp5.real + tmp6.real + tmp7.real + tmp8.real + tmp9.real + tmp10.real 
-                        + tmp11.real + tmp12.real + tmp13.real + tmp14.real + tmp15.real + tmp16.real 
-                        + tmp17.real + tmp18.real + tmp19.real + tmp20.real + tmp21.real + tmp22.real 
-                        + tmp23.real + tmp24.real + tmp25.real + tmp26.real + tmp27.real + tmp28.real 
-                        + tmp29.real + tmp30.real + tmp31.real + tmp32.real;
-
-                        input[indexes[mult_idx]].imag = tmp1.imag + tmp2.imag + tmp3.imag + tmp4.imag 
-                        + tmp5.imag + tmp6.imag + tmp7.imag + tmp8.imag + tmp9.imag + tmp10.imag 
-                        + tmp11.imag + tmp12.imag + tmp13.imag + tmp14.imag + tmp15.imag + tmp16.imag 
-                        + tmp17.imag + tmp18.imag + tmp19.imag + tmp20.imag + tmp21.imag + tmp22.imag 
-                        + tmp23.imag + tmp24.imag + tmp25.imag + tmp26.imag + tmp27.imag + tmp28.imag
-                        + tmp29.imag + tmp30.imag + tmp31.imag + tmp32.imag;
-                    }
-                    }
-                }
-
-                }
-            }
-        }
-        current_idx += (index_step_q4 << 1);
-    }
+    (void)matrix_size;
 }
 
 /**
@@ -569,8 +431,9 @@ void apply_5qbit_kernel_to_state_vector_input(Matrix& unitary, Matrix& input, st
 @param control_qbit The control qubit
 @param matrix_size The size of the input
 */
+template<typename MatrixT>
 void
-apply_crot_kernel_to_matrix_input(Matrix& u3_1qbit1, Matrix& u3_1qbit2, Matrix& input, const int& target_qbit, const int& control_qbit, const int& matrix_size) {
+apply_crot_kernel_to_matrix_input_impl(MatrixT& u3_1qbit1, MatrixT& u3_1qbit2, MatrixT& input, const int& target_qbit, const int& control_qbit, const int& matrix_size) {
 
     int index_step_target = 1 << target_qbit;
     int current_idx = 0;
@@ -594,11 +457,11 @@ apply_crot_kernel_to_matrix_input(Matrix& u3_1qbit1, Matrix& u3_1qbit2, Matrix& 
 
               
 
-                    QGD_Complex16 element      = input[index];
-                    QGD_Complex16 element_pair = input[index_pair];              
+                    KernelLargeComplexT<MatrixT> element      = input[index];
+                    KernelLargeComplexT<MatrixT> element_pair = input[index_pair];              
 
-                    QGD_Complex16 tmp1 = mult(u3_1qbit1[0], element);
-                    QGD_Complex16 tmp2 = mult(u3_1qbit1[1], element_pair);
+                    KernelLargeComplexT<MatrixT> tmp1 = mult(u3_1qbit1[0], element);
+                    KernelLargeComplexT<MatrixT> tmp2 = mult(u3_1qbit1[1], element_pair);
  
                     input[index].real = tmp1.real + tmp2.real;
                     input[index].imag = tmp1.imag + tmp2.imag;
@@ -612,11 +475,11 @@ apply_crot_kernel_to_matrix_input(Matrix& u3_1qbit1, Matrix& u3_1qbit2, Matrix& 
                 }
 
             else {
-                    QGD_Complex16 element      = input[index];
-                    QGD_Complex16 element_pair = input[index_pair];              
+                    KernelLargeComplexT<MatrixT> element      = input[index];
+                    KernelLargeComplexT<MatrixT> element_pair = input[index_pair];              
 
-                    QGD_Complex16 tmp1 = mult(u3_1qbit2[0], element);
-                    QGD_Complex16 tmp2 = mult(u3_1qbit2[1], element_pair);
+                    KernelLargeComplexT<MatrixT> tmp1 = mult(u3_1qbit2[0], element);
+                    KernelLargeComplexT<MatrixT> tmp2 = mult(u3_1qbit2[1], element_pair);
  
                     input[index].real = tmp1.real + tmp2.real;
                     input[index].imag = tmp1.imag + tmp2.imag;
@@ -642,3 +505,101 @@ apply_crot_kernel_to_matrix_input(Matrix& u3_1qbit1, Matrix& u3_1qbit2, Matrix& 
 
 
 }
+
+template<typename MatrixT>
+void
+apply_crot_kernel_to_matrix_input_from_right_impl(MatrixT& u3_1qbit1, MatrixT& u3_1qbit2, MatrixT& input, const int& target_qbit, const int& control_qbit, const int& matrix_size) {
+
+    int index_step_target = 1 << target_qbit;
+
+    for (int row_idx = 0; row_idx < input.rows; ++row_idx) {
+
+        int row_offset = row_idx * input.stride;
+        int current_idx = 0;
+        int current_idx_pair = index_step_target;
+
+        while (current_idx_pair < input.cols) {
+
+            for (int idx = 0; idx < index_step_target; ++idx) {
+
+                int current_idx_loc = current_idx + idx;
+                int current_idx_pair_loc = current_idx_pair + idx;
+                int index = row_offset + current_idx_loc;
+                int index_pair = row_offset + current_idx_pair_loc;
+
+                const MatrixT& gate = ((current_idx_loc >> control_qbit) & 1) ? u3_1qbit1 : u3_1qbit2;
+
+                KernelLargeComplexT<MatrixT> element = input[index];
+                KernelLargeComplexT<MatrixT> element_pair = input[index_pair];
+
+                KernelLargeComplexT<MatrixT> tmp1 = mult(gate[0], element);
+                KernelLargeComplexT<MatrixT> tmp2 = mult(gate[2], element_pair);
+                input[index].real = tmp1.real + tmp2.real;
+                input[index].imag = tmp1.imag + tmp2.imag;
+
+                tmp1 = mult(gate[1], element);
+                tmp2 = mult(gate[3], element_pair);
+                input[index_pair].real = tmp1.real + tmp2.real;
+                input[index_pair].imag = tmp1.imag + tmp2.imag;
+            }
+
+            current_idx += (index_step_target << 1);
+            current_idx_pair += (index_step_target << 1);
+        }
+    }
+
+    (void)matrix_size;
+}
+
+void
+apply_crot_kernel_to_matrix_input(Matrix& u3_1qbit1, Matrix& u3_1qbit2, Matrix& input, const int& target_qbit, const int& control_qbit, const int& matrix_size) {
+    apply_crot_kernel_to_matrix_input_impl(u3_1qbit1, u3_1qbit2, input, target_qbit, control_qbit, matrix_size);
+}
+
+void
+apply_crot_kernel_to_matrix_input(Matrix_float& u3_1qbit1, Matrix_float& u3_1qbit2, Matrix_float& input, const int& target_qbit, const int& control_qbit, const int& matrix_size) {
+    apply_crot_kernel_to_matrix_input_impl(u3_1qbit1, u3_1qbit2, input, target_qbit, control_qbit, matrix_size);
+}
+
+void
+apply_crot_kernel_to_matrix_input_from_right(Matrix& u3_1qbit1, Matrix& u3_1qbit2, Matrix& input, const int& target_qbit, const int& control_qbit, const int& matrix_size) {
+    apply_crot_kernel_to_matrix_input_from_right_impl(u3_1qbit1, u3_1qbit2, input, target_qbit, control_qbit, matrix_size);
+}
+
+void
+apply_crot_kernel_to_matrix_input_from_right(Matrix_float& u3_1qbit1, Matrix_float& u3_1qbit2, Matrix_float& input, const int& target_qbit, const int& control_qbit, const int& matrix_size) {
+    apply_crot_kernel_to_matrix_input_from_right_impl(u3_1qbit1, u3_1qbit2, input, target_qbit, control_qbit, matrix_size);
+}
+
+void apply_large_kernel_to_input(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size) {
+    apply_large_kernel_to_input_impl(unitary, input, involved_qbits, matrix_size);
+}
+
+void apply_large_kernel_to_input(Matrix_float& unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size) {
+    apply_large_kernel_to_input_impl(unitary, input, involved_qbits, matrix_size);
+}
+
+void apply_large_kernel_from_right(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size) {
+    apply_large_kernel_from_right_impl(unitary, input, involved_qbits, matrix_size);
+}
+
+void apply_large_kernel_from_right(Matrix_float& unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size) {
+    apply_large_kernel_from_right_impl(unitary, input, involved_qbits, matrix_size);
+}
+
+void apply_2qbit_kernel_to_matrix_input(Matrix& two_qbit_unitary, Matrix& input, const int& inner_qbit, const int& outer_qbit, const int& matrix_size) {
+    apply_2qbit_kernel_to_matrix_input_impl(two_qbit_unitary, input, inner_qbit, outer_qbit, matrix_size);
+}
+
+void apply_2qbit_kernel_to_matrix_input(Matrix_float& two_qbit_unitary, Matrix_float& input, const int& inner_qbit, const int& outer_qbit, const int& matrix_size) {
+    apply_2qbit_kernel_to_matrix_input_impl(two_qbit_unitary, input, inner_qbit, outer_qbit, matrix_size);
+}
+
+void apply_2qbit_kernel_to_matrix_input_from_right(Matrix& two_qbit_unitary, Matrix& input, const int& inner_qbit, const int& outer_qbit, const int& matrix_size) {
+    apply_2qbit_kernel_to_matrix_input_from_right_impl(two_qbit_unitary, input, inner_qbit, outer_qbit, matrix_size);
+}
+
+void apply_2qbit_kernel_to_matrix_input_from_right(Matrix_float& two_qbit_unitary, Matrix_float& input, const int& inner_qbit, const int& outer_qbit, const int& matrix_size) {
+    apply_2qbit_kernel_to_matrix_input_from_right_impl(two_qbit_unitary, input, inner_qbit, outer_qbit, matrix_size);
+}
+

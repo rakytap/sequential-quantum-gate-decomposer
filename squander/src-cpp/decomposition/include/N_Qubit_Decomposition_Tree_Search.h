@@ -348,6 +348,12 @@ class N_Qubit_Decomposition_Tree_Search : public Optimization_Interface {
                                       int accelerator_num = 0);
 
     /**
+    @brief Constructor of the class from a single precision unitary matrix.
+    */
+    N_Qubit_Decomposition_Tree_Search(Matrix_float Umtx_in, int qbit_num_in, std::map<std::string, Config_Element>& config,
+                                      int accelerator_num = 0);
+
+    /**
     @brief Constructor of the class.
     @param Umtx_in The unitary matrix to be decomposed
     @param qbit_num_in The number of qubits spanning the unitary Umtx
@@ -358,6 +364,12 @@ class N_Qubit_Decomposition_Tree_Search : public Optimization_Interface {
     @return An instance of the class
     */
     N_Qubit_Decomposition_Tree_Search(Matrix Umtx_in, int qbit_num_in, std::vector<matrix_base<int>> topology_in,
+                                      std::map<std::string, Config_Element>& config, int accelerator_num = 0);
+
+    /**
+    @brief Constructor of the class from a single precision unitary matrix.
+    */
+    N_Qubit_Decomposition_Tree_Search(Matrix_float Umtx_in, int qbit_num_in, std::vector<matrix_base<int>> topology_in,
                                       std::map<std::string, Config_Element>& config, int accelerator_num = 0);
 
     /**
@@ -458,6 +470,8 @@ class N_Qubit_Decomposition_Tree_Search : public Optimization_Interface {
     @param matrix to set unitary to
     */
     void set_unitary(Matrix& Umtx_new);
+
+    void set_unitary(Matrix_float& Umtx_new);
 
     /**
     @brief Perform tabu serach over gate structures

@@ -79,7 +79,8 @@ void GateOperation::apply_to_density(const double *params, int param_count,
 
   if (num_params == 0) {
     // Constant gate (H, X, CNOT, etc.) - use no-parameter version
-    kernel = gate_->calc_one_qubit_u3();
+    Matrix_real empty_params(0, 0);
+    kernel = gate_->gate_kernel(empty_params);
   } else {
     // Parametric gate (RZ, U3, etc.) - compute kernel with parameters
     if (param_count < num_params || params == nullptr) {
@@ -130,7 +131,7 @@ void GateOperation::apply_to_density(const double *params, int param_count,
       lambda = params[2];
     }
 
-    kernel = gate_->calc_one_qubit_u3(theta_over_2 * 2, phi, lambda);
+    kernel = Gate::calc_one_qubit_u3(theta_over_2 * 2, phi, lambda);
   }
 
   // Get target and control qubits

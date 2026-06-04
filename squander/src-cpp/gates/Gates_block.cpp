@@ -20,7 +20,9 @@ limitations under the License.
     \brief Class responsible for grouping gates into subcircuits. (Subcircuits can be nested)
 */
 
+#include <deque>
 #include <set>
+#include <tbb/enumerable_thread_specific.h>
 #include "CU.h"
 #include "CZ.h"
 #include "CH.h"
@@ -51,18 +53,13 @@ limitations under the License.
 #include "SX.h"
 #include "SXdg.h"
 #include "SYC.h"
-#include "UN.h"
-#include "ON.h"
 #include "CROT.h"
 #include "RXX.h"
 #include "RYY.h"
 #include "RZZ.h"
 #include "Adaptive.h"
-#include "CZ_NU.h"
-#include "Composite.h"
 #include "Gates_block.h"
-
-#include "custom_kernel_1qubit_gate.h"
+#include "qgd_math.h"
 
 #ifdef _WIN32
 #include <cstdio>
@@ -73,6 +70,9 @@ limitations under the License.
 #ifdef USE_AVX 
 #include "apply_large_kernel_to_input_AVX.h"
 #endif
+
+static tbb::enumerable_thread_specific<int> gates_block_derivative_depth([](){ return 0; });
+static tbb::enumerable_thread_specific<int> gates_block_fusion_depth([](){ return 0; });
 
 
 //static tbb::spin_mutex my_mutex;
@@ -88,6 +88,10 @@ Gates_block::Gates_block() : Gate() {
     type = BLOCK_OPERATION;
     // number of operation layers
     layer_num = 0;
+    min_fusion = 14;
+    involved_qubits_cache_valid = false;
+    involved_target_qubits_cache_valid = false;
+    involved_qubits_cache_mutex = std::make_shared<tbb::spin_mutex>();
 }
 
 
@@ -107,7 +111,22 @@ Gates_block::Gates_block(int qbit_num_in) : Gate(qbit_num_in) {
     layer_num = 0;
     
     min_fusion = 14;
+    involved_qubits_cache_valid = false;
+    involved_target_qubits_cache_valid = false;
+    involved_qubits_cache_mutex = std::make_shared<tbb::spin_mutex>();
     
+}
+
+void
+Gates_block::invalidate_structure_cache() {
+    {
+        tbb::spin_mutex::scoped_lock lock(*involved_qubits_cache_mutex);
+        involved_qubits_cache_valid = false;
+        involved_target_qubits_cache_valid = false;
+        involved_qubits_cache.clear();
+        involved_target_qubits_cache.clear();
+    }
+    fusion_block.update(std::shared_ptr<Gates_block>{});
 }
 
 
@@ -137,6 +156,7 @@ Gates_block::release_gates() {
     gates.clear();
     layer_num = 0;
     parameter_num = 0;
+    invalidate_structure_cache();
 
 }
 
@@ -154,10 +174,12 @@ Gates_block::release_gate( int idx) {
     parameter_num -= gate->get_parameter_num();
 
     gates.erase( gates.begin() + idx );
+    delete gate;
     
     // TODO: develop a more efficient method for large circuits. Now it is updating the whole circuit
     reset_parameter_start_indices();
     reset_dependency_graph();
+    invalidate_structure_cache();
 
 
 }
@@ -207,6 +229,324 @@ Gates_block::get_matrix( Matrix_real& parameters, int parallel ) {
 }
 
 
+Matrix_float
+Gates_block::get_matrix( Matrix_real_float& parameters ) {
+    return get_matrix( parameters, 0 );
+}
+
+Matrix_float
+Gates_block::get_matrix( Matrix_real_float& parameters, int parallel ) {
+
+    Matrix_float block_mtx = create_identity_float(matrix_size);
+    apply_to(parameters, block_mtx, parallel);
+    return block_mtx;
+
+}
+
+
+
+
+namespace {
+/// Helper used by both apply_to_list overloads (f64 and f32) to avoid code duplication.
+template<typename Params, typename Input>
+static void apply_to_list_impl(Gates_block* self, Params& parameters_mtx, std::vector<Input>& inputs, int parallel) {
+    if (parallel == 0) {
+        for (Input& input : inputs) {
+            self->apply_to(parameters_mtx, input, parallel);
+        }
+        return;
+    }
+
+    int work_batch = 1;
+    tbb::parallel_for( tbb::blocked_range<int>(0, static_cast<int>(inputs.size()), work_batch),
+        [&](tbb::blocked_range<int> r) {
+            for (int idx = r.begin(); idx < r.end(); ++idx) {
+                self->apply_to(parameters_mtx, inputs[idx], parallel);
+            }
+        });
+}
+
+static Matrix_real precompute_block_sincos(const Matrix_real& parameters) {
+    const int parameter_count = static_cast<int>(parameters.size());
+    if (parameter_count <= 0) {
+        return Matrix_real(0, 0);
+    }
+
+    Matrix_real sincos(parameter_count, 2);
+    qgd_sincos_batch<double>(parameters.get_data(), sincos.get_data(), parameter_count, sincos.stride);
+
+    return sincos;
+}
+
+static Matrix_real_float precompute_block_sincos(const Matrix_real_float& parameters) {
+    const int parameter_count = static_cast<int>(parameters.size());
+    if (parameter_count <= 0) {
+        return Matrix_real_float(0, 0);
+    }
+
+    Matrix_real_float sincos(parameter_count, 2);
+    qgd_sincos_batch<float>(parameters.get_data(), sincos.get_data(), parameter_count, sincos.stride);
+
+    return sincos;
+}
+
+static void reset_identity(Matrix& mtx, int matrix_size) {
+    if (mtx.rows != matrix_size || mtx.cols != matrix_size || mtx.stride != matrix_size) {
+        mtx = Matrix(matrix_size, matrix_size);
+    }
+    memset(mtx.get_data(), 0, mtx.size()*sizeof(QGD_Complex16));
+    for (int idx = 0; idx < matrix_size; ++idx) {
+        mtx[idx*mtx.stride + idx].real = 1.0;
+    }
+}
+
+static void reset_identity(Matrix_float& mtx, int matrix_size) {
+    if (mtx.rows != matrix_size || mtx.cols != matrix_size || mtx.stride != matrix_size) {
+        mtx = Matrix_float(matrix_size, matrix_size);
+    }
+    memset(mtx.get_data(), 0, mtx.size()*sizeof(QGD_Complex8));
+    for (int idx = 0; idx < matrix_size; ++idx) {
+        mtx[idx*mtx.stride + idx].real = 1.0f;
+    }
+}
+
+struct BlockDerivativeWorkspace {
+    std::vector<Gate> suffix_gates;
+    std::vector<Matrix> suffix_matrices;
+    std::vector<Matrix> forward_inputs;
+    std::vector<std::vector<Matrix>> gate_gradients;
+    std::vector<int> suffix_targets;
+    Matrix suffix;
+};
+
+struct BlockDerivativeWorkspaceFloat {
+    std::vector<Gate> suffix_gates;
+    std::vector<Matrix_float> suffix_matrices;
+    std::vector<Matrix_float> forward_inputs;
+    std::vector<std::vector<Matrix_float>> gate_gradients;
+    std::vector<int> suffix_targets;
+    Matrix_float suffix;
+};
+
+static void prepare_suffix_gates(std::vector<Gate>& suffix_gates, size_t gate_count, int qbit_num) {
+    if (suffix_gates.size() == gate_count
+        && (suffix_gates.empty() || suffix_gates[0].get_qbit_num() == qbit_num)) {
+        return;
+    }
+
+    suffix_gates.clear();
+    suffix_gates.reserve(gate_count);
+    for (size_t idx = 0; idx < gate_count; ++idx) {
+        suffix_gates.emplace_back(qbit_num);
+    }
+}
+
+static void prepare_all_qubits(std::vector<int>& qubits, int qbit_num) {
+    if (qubits.size() != static_cast<size_t>(qbit_num)) {
+        qubits.resize(static_cast<size_t>(qbit_num));
+    }
+    for (int idx = 0; idx < qbit_num; ++idx) {
+        qubits[static_cast<size_t>(idx)] = idx;
+    }
+}
+
+static void build_suffix_gates(
+    const std::vector<Gate*>& gates,
+    int qbit_num,
+    int matrix_size,
+    Matrix_real& parameters_mtx_in,
+    const Matrix_real& precomputed_sincos,
+    std::vector<Gate>& suffix_gates,
+    std::vector<Matrix>& suffix_matrices,
+    std::vector<int>& targets,
+    Matrix& suffix) {
+
+    prepare_suffix_gates(suffix_gates, gates.size(), qbit_num);
+    suffix_matrices.resize(gates.size());
+
+    if (gates.size() < 2) {
+        return;
+    }
+
+    prepare_all_qubits(targets, qbit_num);
+    reset_identity(suffix, matrix_size);
+
+    for (int idx = static_cast<int>(gates.size()) - 1; idx >= 0; --idx) {
+        if (static_cast<size_t>(idx) + 1 < gates.size()) {
+            Matrix& suffix_after_current = suffix_matrices[static_cast<size_t>(idx)];
+            suffix.copy_to(suffix_after_current);
+            Gate& suffix_gate = suffix_gates[static_cast<size_t>(idx)];
+            suffix_gate.set_target_qbits(targets);
+            suffix_gate.set_matrix(suffix_after_current);
+        }
+
+        Gate* operation = gates[static_cast<size_t>(idx)];
+        const int op_param_num = operation->get_parameter_num();
+        const int op_param_start_idx = operation->get_parameter_start_idx();
+        Matrix_real parameters_mtx(
+            parameters_mtx_in.get_data() + op_param_start_idx,
+            1,
+            op_param_num
+        );
+        Matrix_real precomputed_sincos_loc(
+            precomputed_sincos.get_data() + 2 * op_param_start_idx,
+            op_param_num,
+            2
+        );
+
+        if (op_param_num == 0 && operation->get_type() != BLOCK_OPERATION) {
+            operation->apply_from_right(suffix);
+        }
+        else if (operation->get_type() == ADAPTIVE_OPERATION) {
+            operation->apply_from_right(parameters_mtx, suffix);
+        }
+        else {
+            operation->apply_from_right_inner(parameters_mtx, precomputed_sincos_loc, suffix);
+        }
+    }
+}
+
+static void build_forward_inputs(
+    const std::vector<Gate*>& gates,
+    Matrix& input,
+    Matrix_real& parameters_mtx_in,
+    const Matrix_real& precomputed_sincos,
+    int parallel,
+    std::vector<Matrix>& forward_inputs) {
+
+    forward_inputs.resize(gates.size());
+    if (gates.empty()) {
+        return;
+    }
+
+    input.copy_to(forward_inputs[0]);
+    for (size_t idx = 0; idx + 1 < gates.size(); ++idx) {
+        forward_inputs[idx].copy_to(forward_inputs[idx + 1]);
+        Gate* operation = gates[idx];
+        const int op_param_num = operation->get_parameter_num();
+        const int op_param_start_idx = operation->get_parameter_start_idx();
+        Matrix_real parameters_mtx(
+            parameters_mtx_in.get_data() + op_param_start_idx,
+            1,
+            op_param_num
+        );
+        Matrix_real precomputed_sincos_loc(
+            precomputed_sincos.get_data() + 2 * op_param_start_idx,
+            op_param_num,
+            2
+        );
+
+        if (op_param_num == 0) {
+            operation->apply_to(forward_inputs[idx + 1], parallel);
+        }
+        else if (operation->get_type() == ADAPTIVE_OPERATION) {
+            operation->apply_to(parameters_mtx, forward_inputs[idx + 1], parallel);
+        }
+        else {
+            operation->apply_to_inner(parameters_mtx, precomputed_sincos_loc, forward_inputs[idx + 1], parallel);
+        }
+    }
+}
+
+static void build_forward_inputs(
+    const std::vector<Gate*>& gates,
+    Matrix_float& input,
+    Matrix_real_float& parameters_mtx_in,
+    const Matrix_real_float& precomputed_sincos,
+    int parallel,
+    std::vector<Matrix_float>& forward_inputs) {
+
+    forward_inputs.resize(gates.size());
+    if (gates.empty()) {
+        return;
+    }
+
+    input.copy_to(forward_inputs[0]);
+    for (size_t idx = 0; idx + 1 < gates.size(); ++idx) {
+        forward_inputs[idx].copy_to(forward_inputs[idx + 1]);
+        Gate* operation = gates[idx];
+        const int op_param_num = operation->get_parameter_num();
+        const int op_param_start_idx = operation->get_parameter_start_idx();
+        Matrix_real_float parameters_mtx(
+            parameters_mtx_in.get_data() + op_param_start_idx,
+            1,
+            op_param_num
+        );
+        Matrix_real_float precomputed_sincos_loc(
+            precomputed_sincos.get_data() + 2 * op_param_start_idx,
+            op_param_num,
+            2
+        );
+
+        if (op_param_num == 0) {
+            operation->apply_to(forward_inputs[idx + 1], parallel);
+        }
+        else if (operation->get_type() == ADAPTIVE_OPERATION) {
+            operation->apply_to(parameters_mtx, forward_inputs[idx + 1], parallel);
+        }
+        else {
+            operation->apply_to_inner(parameters_mtx, precomputed_sincos_loc, forward_inputs[idx + 1], parallel);
+        }
+    }
+}
+
+static void build_suffix_gates(
+    const std::vector<Gate*>& gates,
+    int qbit_num,
+    int matrix_size,
+    Matrix_real_float& parameters_mtx_in,
+    const Matrix_real_float& precomputed_sincos,
+    std::vector<Gate>& suffix_gates,
+    std::vector<Matrix_float>& suffix_matrices,
+    std::vector<int>& targets,
+    Matrix_float& suffix) {
+
+    prepare_suffix_gates(suffix_gates, gates.size(), qbit_num);
+    suffix_matrices.resize(gates.size());
+
+    if (gates.size() < 2) {
+        return;
+    }
+
+    prepare_all_qubits(targets, qbit_num);
+    reset_identity(suffix, matrix_size);
+
+    for (int idx = static_cast<int>(gates.size()) - 1; idx >= 0; --idx) {
+        if (static_cast<size_t>(idx) + 1 < gates.size()) {
+            Matrix_float& suffix_after_current = suffix_matrices[static_cast<size_t>(idx)];
+            suffix.copy_to(suffix_after_current);
+            Gate& suffix_gate = suffix_gates[static_cast<size_t>(idx)];
+            suffix_gate.set_target_qbits(targets);
+            suffix_gate.set_matrix(suffix_after_current);
+        }
+
+        Gate* operation = gates[static_cast<size_t>(idx)];
+        const int op_param_num = operation->get_parameter_num();
+        const int op_param_start_idx = operation->get_parameter_start_idx();
+        Matrix_real_float parameters_mtx(
+            parameters_mtx_in.get_data() + op_param_start_idx,
+            1,
+            op_param_num
+        );
+        Matrix_real_float precomputed_sincos_loc(
+            precomputed_sincos.get_data() + 2 * op_param_start_idx,
+            op_param_num,
+            2
+        );
+
+        if (op_param_num == 0 && operation->get_type() != BLOCK_OPERATION) {
+            operation->apply_from_right(suffix);
+        }
+        else if (operation->get_type() == ADAPTIVE_OPERATION) {
+            operation->apply_from_right(parameters_mtx, suffix);
+        }
+        else {
+            operation->apply_from_right_inner(parameters_mtx, precomputed_sincos_loc, suffix);
+        }
+    }
+}
+} // anonymous namespace
+
 
 /**
 @brief Call to apply the gate on the input array/matrix by U3*input
@@ -216,26 +556,21 @@ Gates_block::get_matrix( Matrix_real& parameters, int parallel ) {
 void 
 Gates_block::apply_to_list( Matrix_real& parameters_mtx, std::vector<Matrix>& inputs, int parallel ) {
 
-    int work_batch = 1;
-    if ( parallel == 0 ) {
-        work_batch = static_cast<int>(inputs.size());
-    }
-    else {
-        work_batch = 1;
-    }
+    apply_to_list_impl(this, parameters_mtx, inputs, parallel);
+
+}
 
 
-    tbb::parallel_for( tbb::blocked_range<int>(0,static_cast<int>(inputs.size()),work_batch), [&](tbb::blocked_range<int> r) {
-        for (int idx=r.begin(); idx<r.end(); ++idx) { 
+/**
+@brief Float32 overload: apply circuit to a list of float32 matrices.
+@param parameters_mtx Float32 parameter array
+@param inputs Float32 input matrices/states
+@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
+*/
+void
+Gates_block::apply_to_list( Matrix_real_float& parameters_mtx, std::vector<Matrix_float>& inputs, int parallel ) {
 
-            Matrix* input = &inputs[idx];
-
-            apply_to( parameters_mtx, *input, parallel );
-
-        }
-
-    });
-
+    apply_to_list_impl(this, parameters_mtx, inputs, parallel);
 
 }
 
@@ -248,6 +583,14 @@ Gates_block::apply_to_list( Matrix_real& parameters_mtx, std::vector<Matrix>& in
 */
 void 
 Gates_block::apply_to( Matrix_real& parameters_mtx_in, Matrix& input, int parallel ) {
+
+    Matrix_real precomputed_sincos = precompute_block_sincos(parameters_mtx_in);
+    apply_to_inner(parameters_mtx_in, precomputed_sincos, input, parallel);
+}
+
+
+void
+Gates_block::apply_to_inner( Matrix_real& parameters_mtx_in, const Matrix_real& precomputed_sincos_in, Matrix& input, int parallel ) {
 
 
 
@@ -265,9 +608,16 @@ Gates_block::apply_to( Matrix_real& parameters_mtx_in, Matrix& input, int parall
 
     int size = static_cast<int>(involved_qubits.size());
 
-    if (min_fusion != -1 && qbit_num >= min_fusion && size <= (input.cols == 1 ? 5 : 2) && qbit_num != size && gates.size() > 1) {        
+    if (min_fusion != -1 && qbit_num >= min_fusion && size <= (input.cols == 1 ? 5 : 2) && qbit_num != size && gates.size() > 1) {
         auto fb = fusion_block.get();
-        Matrix Umtx_mini = create_identity(Power_of_2(size));
+        int& fusion_depth = gates_block_fusion_depth.local();
+        static tbb::enumerable_thread_specific<std::deque<Matrix>> Umtx_mini_reusable_tls([](){ return std::deque<Matrix>{}; });
+        std::deque<Matrix>& Umtx_mini_reusable = Umtx_mini_reusable_tls.local();
+        if (Umtx_mini_reusable.size() <= static_cast<size_t>(fusion_depth)) {
+            Umtx_mini_reusable.resize(fusion_depth + 1);
+        }
+        Matrix& Umtx_mini = Umtx_mini_reusable[fusion_depth];
+        reset_identity(Umtx_mini, Power_of_2(size));
         if (fb == nullptr) {
 
             std::vector<int> old_to_new(qbit_num, -2);
@@ -281,36 +631,52 @@ Gates_block::apply_to( Matrix_real& parameters_mtx_in, Matrix& input, int parall
             fusion_block.update(clone_block);
             fb = fusion_block.get();
         }
-        fb->apply_to(parameters_mtx_in, Umtx_mini, parallel);
+        fusion_depth++;
+        fb->apply_to_inner(parameters_mtx_in, precomputed_sincos_in, Umtx_mini, parallel);
+        fusion_depth--;
 
-        if (size == 1) {
-            custom_kernel_1qubit_gate merged_gate( qbit_num, involved_qubits[0], Umtx_mini );
-            merged_gate.apply_to( input );
+        static tbb::enumerable_thread_specific<std::deque<Gate>> merged_gate_reusable_tls([](){ return std::deque<Gate>{}; });
+        static tbb::enumerable_thread_specific<std::deque<int>> merged_gate_qbit_num_tls([](){ return std::deque<int>{}; });
+        std::deque<Gate>& merged_gate_reusable = merged_gate_reusable_tls.local();
+        std::deque<int>& merged_gate_qbit_num = merged_gate_qbit_num_tls.local();
+        if (merged_gate_reusable.size() <= static_cast<size_t>(fusion_depth)) {
+            merged_gate_reusable.resize(fusion_depth + 1);
+            merged_gate_qbit_num.resize(fusion_depth + 1, -1);
         }
-        else
-        {
-#ifdef USE_AVX
-            if (size <= 5 && qbit_num >= 14){
-                apply_large_kernel_to_input_AVX_TBB(Umtx_mini, input, involved_qubits, input.size() );
-            }
-            else{
-                apply_large_kernel_to_input_AVX(Umtx_mini, input, involved_qubits, input.size() );
-            }
-#else
-            apply_large_kernel_to_input(Umtx_mini, input, involved_qubits, input.size() );
-#endif  
+        Gate& merged_gate = merged_gate_reusable[fusion_depth];
+        int& merged_gate_qbits = merged_gate_qbit_num[fusion_depth];
+        if (merged_gate_qbits != qbit_num) {
+            merged_gate = Gate(qbit_num);
+            merged_gate_qbits = qbit_num;
         }
+        merged_gate.set_target_qbits(involved_qubits);
+        merged_gate.set_matrix(Umtx_mini);
+
+        // Keep legacy high-qubit fused execution behavior, but route through Gate::apply_to.
+        int fused_parallel = parallel;
+        if (parallel != 0 && size <= 5 && qbit_num >= 14) {
+            fused_parallel = 2;
+        }
+        merged_gate.apply_to(input, fused_parallel);
     } else {
         for( size_t idx=0; idx<gates.size(); idx++) {
             Gate* operation = gates[idx];
+            const int op_param_num = operation->get_parameter_num();
+            const int op_param_start_idx = operation->get_parameter_start_idx();
             
-            Matrix_real parameters_mtx_loc(parameters_mtx_in.get_data() + operation->get_parameter_start_idx(), 1, operation->get_parameter_num());
+            Matrix_real parameters_mtx_loc(parameters_mtx_in.get_data() + op_param_start_idx, 1, op_param_num);
+            Matrix_real precomputed_sincos_loc(precomputed_sincos_in.get_data() + 2 * op_param_start_idx, op_param_num, 2);
             
             if  ( parameters_mtx_loc.size() == 0 && operation->get_type() != BLOCK_OPERATION ) {
                 operation->apply_to(input, parallel);            
             }
             else {
-                operation->apply_to( parameters_mtx_loc, input, parallel );
+                if (operation->get_type() == ADAPTIVE_OPERATION) {
+                    operation->apply_to(parameters_mtx_loc, input, parallel);
+                }
+                else {
+                    operation->apply_to_inner(parameters_mtx_loc, precomputed_sincos_loc, input, parallel);
+                }
             }
 #ifdef DEBUG
             if (input.isnan()) {
@@ -334,9 +700,116 @@ Gates_block::apply_to( Matrix_float& input, int parallel ) {
 void
 Gates_block::apply_to( Matrix_real_float& parameters_mtx_in, Matrix_float& input, int parallel ) {
 
-    Matrix_real_any params_any(parameters_mtx_in);
-    Matrix_any input_any(input);
-    apply_to(params_any, input_any, parallel);
+    Matrix_real_float precomputed_sincos = precompute_block_sincos(parameters_mtx_in);
+    apply_to_inner(parameters_mtx_in, precomputed_sincos, input, parallel);
+}
+
+
+void
+Gates_block::apply_to_inner( Matrix_real_float& parameters_mtx_in, const Matrix_real_float& precomputed_sincos_in, Matrix_float& input, int parallel ) {
+
+    std::vector<int> involved_qubits = get_involved_qubits();
+
+    if (input.rows != matrix_size ) {
+        std::string err("Gates_block::apply_to(Matrix_real_float&, Matrix_float&): Wrong input size in Gates_block gate apply.");
+        throw err;
+    }
+
+    if (qbit_num > 31) {
+        std::string err("Gates_block::apply_to(Matrix_real_float&, Matrix_float&): Number of qubits supported up to 31");
+        throw err;
+    }
+
+    int size = static_cast<int>(involved_qubits.size());
+
+    if (min_fusion != -1 && qbit_num >= min_fusion && size <= (input.cols == 1 ? 5 : 2) && qbit_num != size && gates.size() > 1) {
+        auto fb = fusion_block.get();
+        int& fusion_depth = gates_block_fusion_depth.local();
+        static tbb::enumerable_thread_specific<std::deque<Matrix_float>> Umtx_mini_reusable_tls([](){ return std::deque<Matrix_float>{}; });
+        std::deque<Matrix_float>& Umtx_mini_reusable = Umtx_mini_reusable_tls.local();
+        if (Umtx_mini_reusable.size() <= static_cast<size_t>(fusion_depth)) {
+            Umtx_mini_reusable.resize(fusion_depth + 1);
+        }
+        Matrix_float& Umtx_mini = Umtx_mini_reusable[fusion_depth];
+        reset_identity(Umtx_mini, Power_of_2(size));
+        if (fb == nullptr) {
+
+            std::vector<int> old_to_new(qbit_num, -2);
+            for (int i = 0; i < size; i++) {
+                old_to_new[i] = involved_qubits[i];
+            }
+
+            Gates_block* clone_block = clone();
+            clone_block->reorder_qubits(old_to_new);
+            clone_block->set_qbit_num(size);
+            fusion_block.update(clone_block);
+            fb = fusion_block.get();
+        }
+        fusion_depth++;
+        fb->apply_to_inner(parameters_mtx_in, precomputed_sincos_in, Umtx_mini, parallel);
+        fusion_depth--;
+
+        static tbb::enumerable_thread_specific<std::deque<Gate>> merged_gate_reusable_tls([](){ return std::deque<Gate>{}; });
+        static tbb::enumerable_thread_specific<std::deque<int>> merged_gate_qbit_num_tls([](){ return std::deque<int>{}; });
+        std::deque<Gate>& merged_gate_reusable = merged_gate_reusable_tls.local();
+        std::deque<int>& merged_gate_qbit_num = merged_gate_qbit_num_tls.local();
+        if (merged_gate_reusable.size() <= static_cast<size_t>(fusion_depth)) {
+            merged_gate_reusable.resize(fusion_depth + 1);
+            merged_gate_qbit_num.resize(fusion_depth + 1, -1);
+        }
+        Gate& merged_gate = merged_gate_reusable[fusion_depth];
+        int& merged_gate_qbits = merged_gate_qbit_num[fusion_depth];
+        if (merged_gate_qbits != qbit_num) {
+            merged_gate = Gate(qbit_num);
+            merged_gate_qbits = qbit_num;
+        }
+        merged_gate.set_target_qbits(involved_qubits);
+        merged_gate.set_matrix(Umtx_mini);
+
+        // Keep legacy high-qubit fused execution behavior, but route through Gate::apply_to.
+        int fused_parallel = parallel;
+        if (parallel != 0 && size <= 5 && qbit_num >= 14) {
+            fused_parallel = 2;
+        }
+        merged_gate.apply_to(input, fused_parallel);
+    }
+    else {
+        for (size_t idx = 0; idx < gates.size(); idx++) {
+            Gate* operation = gates[idx];
+            const int op_param_num = operation->get_parameter_num();
+            const int op_param_start_idx = operation->get_parameter_start_idx();
+
+            Matrix_real_float parameters_mtx_loc(
+                parameters_mtx_in.get_data() + op_param_start_idx,
+                1,
+                op_param_num
+            );
+
+            Matrix_real_float precomputed_sincos_loc(
+                precomputed_sincos_in.get_data() + 2 * op_param_start_idx,
+                op_param_num,
+                2
+            );
+
+            if (parameters_mtx_loc.size() == 0 && operation->get_type() != BLOCK_OPERATION) {
+                operation->apply_to(input, parallel);
+            }
+            else {
+                if (operation->get_type() == ADAPTIVE_OPERATION) {
+                    operation->apply_to(parameters_mtx_loc, input, parallel);
+                }
+                else {
+                    operation->apply_to_inner(parameters_mtx_loc, precomputed_sincos_loc, input, parallel);
+                }
+            }
+#ifdef DEBUG
+            if (input.isnan()) {
+                std::string err("Gates_block::apply_to(Matrix_real_float&, Matrix_float&): transformed matrix contains NaN.");
+                throw(err);
+            }
+#endif
+        }
+    }
 }
 
 
@@ -349,49 +822,7 @@ Gates_block::apply_to( Matrix_real_any& parameters_mtx_in, Matrix_any& input, in
     }
 
     if (parameters_mtx_in.is_float32() && input.is_float32()) {
-
-        Matrix_float& input32 = input.as_float32();
-        Matrix_real_float& params32 = parameters_mtx_in.as_float32();
-
-        std::vector<int> involved_qubits = get_involved_qubits();
-
-        if (input32.rows != matrix_size ) {
-            std::string err("Gates_block::apply_to(Matrix_real_any&, Matrix_any&): Wrong input size in Gates_block apply.");
-            throw err;
-        }
-
-        if (qbit_num > 31) {
-            std::string err("Gates_block::apply_to(Matrix_real_any&, Matrix_any&): Number of qubits supported up to 31");
-            throw err;
-        }
-
-        int size = static_cast<int>(involved_qubits.size());
-        (void)size;
-
-        for (size_t idx = 0; idx < gates.size(); idx++) {
-            Gate* operation = gates[idx];
-
-            Matrix_real_float parameters_mtx_loc(
-                params32.get_data() + operation->get_parameter_start_idx(),
-                1,
-                operation->get_parameter_num()
-            );
-
-            if (parameters_mtx_loc.size() == 0 && operation->get_type() != BLOCK_OPERATION) {
-                operation->apply_to(input32, parallel);
-            }
-            else {
-                operation->apply_to(parameters_mtx_loc, input32, parallel);
-            }
-
-#ifdef DEBUG
-            if (input32.isnan()) {
-                std::string err("Gates_block::apply_to(Matrix_real_any&, Matrix_any&): transformed matrix contains NaN.");
-                throw(err);
-            }
-#endif
-        }
-
+        apply_to(parameters_mtx_in.as_float32(), input.as_float32(), parallel);
         return;
     }
 
@@ -432,81 +863,42 @@ bool is_qbit_present(std::vector<int> involved_qubits, int new_qbit, int num_of_
 void 
 Gates_block::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
 
-
-    //The stringstream input to store the output messages.
-    std::stringstream sstream;
-
-
-
-    // determine the number of parameters
-    int parameters_num_total = 0;  
-    for (size_t idx=0; idx<gates.size(); idx++) {
-
-        // The current gate
-        Gate* gate = gates[idx];
-        parameters_num_total = parameters_num_total + gate->get_parameter_num();
-
-    }
+    Matrix_real precomputed_sincos = precompute_block_sincos(parameters_mtx);
+    apply_from_right_inner(parameters_mtx, precomputed_sincos, input);
+}
 
 
-    double* parameters = parameters_mtx.get_data() + parameters_num_total;
+void
+Gates_block::apply_from_right_inner( Matrix_real& parameters_mtx, const Matrix_real& precomputed_sincos, Matrix& input ) {
 
-
-
-    for( int idx=0; idx<(int)gates.size(); idx++) {
+    for (int idx = static_cast<int>(gates.size()) - 1; idx >= 0; --idx) {
 
         Gate* operation = gates[idx];
-        Matrix_real parameters_mtx(parameters-operation->get_parameter_num(), 1, operation->get_parameter_num());
+        const int op_param_num = operation->get_parameter_num();
+        const int op_param_start_idx = operation->get_parameter_start_idx();
 
-        switch (operation->get_type()) {
-        case CNOT_OPERATION: case CZ_OPERATION:
-        case CH_OPERATION: case SYC_OPERATION:
-        case X_OPERATION: case Y_OPERATION:
-        case Z_OPERATION: case SX_OPERATION:
-        case SXDG_OPERATION:
-        case T_OPERATION: case TDG_OPERATION:
-        case S_OPERATION: case SDG_OPERATION:
-        case GENERAL_OPERATION: case H_OPERATION:
+        Matrix_real parameters_mtx_loc(
+            parameters_mtx.get_data() + op_param_start_idx,
+            1,
+            op_param_num
+        );
+        Matrix_real precomputed_sincos_loc(
+            precomputed_sincos.get_data() + 2 * op_param_start_idx,
+            op_param_num,
+            2
+        );
+
+        if (parameters_mtx_loc.size() == 0 && operation->get_type() != BLOCK_OPERATION) {
             operation->apply_from_right(input);
-            break;  
-                  
-        case U1_OPERATION: case U2_OPERATION:
-        case U3_OPERATION: case CU_OPERATION:
-        case R_OPERATION: case RX_OPERATION:
-        case RY_OPERATION: case RZ_OPERATION:
-        case CRY_OPERATION: case CR_OPERATION:
-        case CRX_OPERATION: case CRZ_OPERATION:
-        case CZ_NU_OPERATION: case CP_OPERATION:
-        case ADAPTIVE_OPERATION:
-        {
-            operation->apply_from_right( parameters_mtx, input );
         }
-        case UN_OPERATION: {
-            UN* un_operation = static_cast<UN*>(operation);
-            un_operation->apply_from_right( parameters_mtx, input );
-            break; 
+        else {
+            if (operation->get_type() == ADAPTIVE_OPERATION) {
+                operation->apply_from_right(parameters_mtx_loc, input);
+            }
+            else {
+                operation->apply_from_right_inner(parameters_mtx_loc, precomputed_sincos_loc, input);
+            }
         }
-        case ON_OPERATION: {
-            ON* on_operation = static_cast<ON*>(operation);
-            on_operation->apply_from_right( parameters_mtx, input );
-            break; 
-        }
-        case BLOCK_OPERATION: {
-            Gates_block* block_operation = static_cast<Gates_block*>(operation);
-            block_operation->apply_from_right(parameters_mtx, input);
-            break;
-        }       
-        case COMPOSITE_OPERATION: {
-            Composite* com_operation = static_cast<Composite*>(operation);
-            com_operation->apply_from_right( parameters_mtx, input );
-            break; 
-        }
-        default:
-            std::string err("Gates_block::apply_from_right: unimplemented gate"); 
-            throw err;
-        }
-
-        parameters = parameters - operation->get_parameter_num();
 
 #ifdef DEBUG
         if (input.isnan()) { 
@@ -525,31 +917,43 @@ Gates_block::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
 void
 Gates_block::apply_from_right( Matrix_real_float& parameters_mtx, Matrix_float& input ) {
 
-    int parameters_num_total = 0;
-    for (size_t idx = 0; idx < gates.size(); idx++) {
-        Gate* gate = gates[idx];
-        parameters_num_total += gate->get_parameter_num();
-    }
+    Matrix_real_float precomputed_sincos = precompute_block_sincos(parameters_mtx);
+    apply_from_right_inner(parameters_mtx, precomputed_sincos, input);
+}
 
-    float* parameters = parameters_mtx.get_data() + parameters_num_total;
 
-    for (int idx = 0; idx < (int)gates.size(); idx++) {
+void
+Gates_block::apply_from_right_inner( Matrix_real_float& parameters_mtx, const Matrix_real_float& precomputed_sincos, Matrix_float& input ) {
+
+    for (int idx = static_cast<int>(gates.size()) - 1; idx >= 0; --idx) {
 
         Gate* operation = gates[idx];
+        const int op_param_num = operation->get_parameter_num();
+        const int op_param_start_idx = operation->get_parameter_start_idx();
+
         Matrix_real_float parameters_mtx_loc(
-            parameters - operation->get_parameter_num(),
+            parameters_mtx.get_data() + op_param_start_idx,
             1,
-            operation->get_parameter_num()
+            op_param_num
+        );
+
+        Matrix_real_float precomputed_sincos_loc(
+            precomputed_sincos.get_data() + 2 * op_param_start_idx,
+            op_param_num,
+            2
         );
 
         if (parameters_mtx_loc.size() == 0 && operation->get_type() != BLOCK_OPERATION) {
             operation->apply_from_right(input);
         }
         else {
-            operation->apply_from_right(parameters_mtx_loc, input);
+            if (operation->get_type() == ADAPTIVE_OPERATION) {
+                operation->apply_from_right(parameters_mtx_loc, input);
+            }
+            else {
+                operation->apply_from_right_inner(parameters_mtx_loc, precomputed_sincos_loc, input);
+            }
         }
-
-        parameters = parameters - operation->get_parameter_num();
 
 #ifdef DEBUG
         if (input.isnan()) {
@@ -570,101 +974,366 @@ Gates_block::apply_from_right( Matrix_real_float& parameters_mtx, Matrix_float& 
 std::vector<Matrix> 
 Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input, int parallel ) {
 
-    //The stringstream input to store the output messages.
-    std::stringstream sstream;
-  
-    std::vector<Matrix> grad(parameter_num, Matrix(0,0));
+    std::vector<Matrix> grad;
+    apply_derivate_to(parameters_mtx_in, input, parallel, grad);
+    return grad;
+}
 
-    int work_batch = 1;
-    if ( parallel == 0 ) {
-        work_batch = static_cast<int>(gates.size());
+
+void
+Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input, int parallel, std::vector<Matrix>& output ) {
+
+    apply_derivate_to(parameters_mtx_in, input, parallel, output, 0, true);
+}
+
+
+void
+Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input, int parallel, std::vector<Matrix>& output, size_t output_offset, bool resize_output ) {
+
+    const size_t output_size = output_offset + static_cast<size_t>(parameter_num);
+    if (resize_output) {
+        output.resize(output_size);
+    }
+    else if (output.size() < output_size) {
+        std::string err("Gates_block::apply_derivate_to: output vector is too small.");
+        throw err;
+    }
+
+    Matrix_real precomputed_sincos = precompute_block_sincos(parameters_mtx_in);
+    static tbb::enumerable_thread_specific<std::deque<BlockDerivativeWorkspace>> workspace_tls;
+    std::deque<BlockDerivativeWorkspace>& workspaces = workspace_tls.local();
+    int& workspace_depth = gates_block_derivative_depth.local();
+    if (workspaces.size() <= static_cast<size_t>(workspace_depth)) {
+        workspaces.resize(static_cast<size_t>(workspace_depth) + 1);
+    }
+    BlockDerivativeWorkspace& workspace = workspaces[static_cast<size_t>(workspace_depth)];
+    std::vector<Gate>& suffix_gates = workspace.suffix_gates;
+    std::vector<Matrix>& suffix_matrices = workspace.suffix_matrices;
+    std::vector<Matrix>& forward_inputs = workspace.forward_inputs;
+    forward_inputs.resize(gates.size());
+    workspace.gate_gradients.resize(gates.size());
+
+    if (parallel == 0 || gates.size() < 2) {
+        build_suffix_gates(gates, qbit_num, matrix_size, parameters_mtx_in, precomputed_sincos, suffix_gates, suffix_matrices, workspace.suffix_targets, workspace.suffix);
+        build_forward_inputs(gates, input, parameters_mtx_in, precomputed_sincos, parallel, forward_inputs);
     }
     else {
-        work_batch = 1;
+        tbb::parallel_invoke(
+            [&]() {
+                build_suffix_gates(gates, qbit_num, matrix_size, parameters_mtx_in, precomputed_sincos, suffix_gates, suffix_matrices, workspace.suffix_targets, workspace.suffix);
+            },
+            [&]() {
+                build_forward_inputs(gates, input, parameters_mtx_in, precomputed_sincos, parallel, forward_inputs);
+            }
+        );
     }
 
-    // deriv_idx ... the index of the gate block for which the gradient is to be calculated
+    auto apply_derivative_for_gate = [&](size_t deriv_idx) {
+        Gate* gate_deriv = gates[deriv_idx];            
 
-    tbb::parallel_for( tbb::blocked_range<size_t>(0,gates.size(),work_batch), [&](tbb::blocked_range<size_t> r) {
-        for (size_t deriv_idx=r.begin(); deriv_idx<r.end(); ++deriv_idx) { 
-
-        //for (int deriv_idx=0; deriv_idx<gates.size(); ++deriv_idx) { 
-
-
-            Gate* gate_deriv = gates[deriv_idx];            
-
-            // for constant gate no gardient component is calculated
-            if ( gate_deriv->get_parameter_num() == 0 ) {
-                continue;
-            }
+        // for constant gate no gradient component is calculated
+        if ( gate_deriv->get_parameter_num() == 0 ) {
+            return;
+        }
             
-            int deriv_parameter_idx = gate_deriv->get_parameter_start_idx();       
+        int deriv_parameter_idx = gate_deriv->get_parameter_start_idx();       
 
+        int& derivative_depth = gates_block_derivative_depth.local();
+        static tbb::enumerable_thread_specific<std::deque<Matrix>> input_loc_reusable_tls([](){ return std::deque<Matrix>{}; });
+        std::deque<Matrix>& input_loc_reusable = input_loc_reusable_tls.local();
+        if (input_loc_reusable.size() <= static_cast<size_t>(derivative_depth)) {
+            input_loc_reusable.resize(derivative_depth + 1);
+        }
+        Matrix& input_loc = input_loc_reusable[derivative_depth];
+        forward_inputs[deriv_idx].copy_to(input_loc);
 
+        derivative_depth++;
+        Gate* operation = gates[deriv_idx];
+        const int op_param_num = operation->get_parameter_num();
+        const int op_param_start_idx = operation->get_parameter_start_idx();
+        Matrix_real parameters_mtx(parameters_mtx_in.get_data() + op_param_start_idx, 1, op_param_num);
+        std::vector<Matrix>& grad_loc = workspace.gate_gradients[deriv_idx];
 
-            Matrix&& input_loc = input.copy();
+        if (operation->get_type() == ADAPTIVE_OPERATION) {
+            operation->apply_derivate_to( parameters_mtx, input_loc, parallel, grad_loc );
+        }
+        else {
+            operation->apply_derivate_to( parameters_mtx, input_loc, parallel, grad_loc );
+        }
 
-            std::vector<Matrix> grad_loc;
-
-            for( size_t idx=0; idx<gates.size(); idx++) {            
-
-                Gate* operation = gates[idx];
-                
-                
-                Matrix_real parameters_mtx(parameters_mtx_in.get_data() + operation->get_parameter_start_idx(), 1, operation->get_parameter_num());
-                
-                switch (operation->get_type()) {
-                case UN_OPERATION:
-                case ON_OPERATION:
-                case SYC_OPERATION:
-                case COMPOSITE_OPERATION: {
-                    std::string err( "Gates_block::apply_derivate_to: Given operation not supported in gardient calculation");
-			        throw( err );
-	                break;
-                }
-                default :
-                
-                    if ( operation->get_parameter_num() == 0 ) {
-                
-                        if( idx < deriv_idx ) {
-                            operation->apply_to( input_loc, parallel );    
-                        }
-                        else {
-                            operation->apply_to_list(grad_loc, parallel );
-                        }
-                    
-                    }
-                    else  {
-                        // Gates such as U1, U2, and U3 fall here.
-                        if( idx < deriv_idx ) {
-                            operation->apply_to( parameters_mtx, input_loc, parallel );    
-                        }
-                        else if ( idx == deriv_idx ) {
-                            grad_loc = operation->apply_derivate_to( parameters_mtx, input_loc, parallel );
-                        }
-                        else {
-                            operation->apply_to_list(parameters_mtx, grad_loc, parallel );
-                        }                       
-                    
-                    }
-                    
-                }
+        if (deriv_idx + 1 < gates.size()) {
+            Gate& suffix_gate = suffix_gates[deriv_idx];
+            if (parallel == 0) {
+                suffix_gate.apply_to_list(grad_loc, parallel);
             }
-
-
-            for ( int idx = 0; idx<(int)grad_loc.size(); idx++ ) {
-                grad[deriv_parameter_idx+idx] = grad_loc[idx];
+            else {
+                tbb::parallel_for(tbb::blocked_range<int>(0, static_cast<int>(grad_loc.size()), 1),
+                    [&](tbb::blocked_range<int> r) {
+                        for (int grad_idx = r.begin(); grad_idx < r.end(); ++grad_idx) {
+                            suffix_gate.apply_to(grad_loc[static_cast<size_t>(grad_idx)], parallel);
+                        }
+                    });
             }
+        }
+        derivative_depth--;
 
 
-        } // tbb range end
-    
+        for ( int idx = 0; idx<(int)grad_loc.size(); idx++ ) {
+            grad_loc[idx].copy_to(output[output_offset + static_cast<size_t>(deriv_parameter_idx + idx)]);
+        }
+    };
+
+    if (parallel == 0) {
+        for (size_t deriv_idx=0; deriv_idx<gates.size(); ++deriv_idx) {
+            apply_derivative_for_gate(deriv_idx);
+        }
+        return;
+    }
+
+    int work_batch = 1;
+    tbb::parallel_for( tbb::blocked_range<size_t>(0,gates.size(),work_batch), [&](tbb::blocked_range<size_t> r) {
+        for (size_t deriv_idx=r.begin(); deriv_idx<r.end(); ++deriv_idx) {
+            apply_derivative_for_gate(deriv_idx);
+        }
     });
    
 
+}
+
+
+/**
+@brief Float32 overload: evaluate the derivative of the circuit w.r.t. all free parameters.
+       Stabilized path: casts inputs to float64, runs the float64 derivative, then casts
+       the results back to float32. Identical computational route to the float64 overload.
+@param parameters_mtx_in Float32 parameter array
+@param input Float32 input matrix/state
+@param parallel Set 0 for sequential execution, 1 for parallel with TBB (optional)
+*/
+std::vector<Matrix_float>
+Gates_block::apply_derivate_to( Matrix_real_float& parameters_mtx_in, Matrix_float& input, int parallel ) {
+
+    std::vector<Matrix_float> grad;
+    apply_derivate_to(parameters_mtx_in, input, parallel, grad);
     return grad;
+}
+
+
+void
+Gates_block::apply_derivate_to( Matrix_real_float& parameters_mtx_in, Matrix_float& input, int parallel, std::vector<Matrix_float>& output ) {
+
+    apply_derivate_to(parameters_mtx_in, input, parallel, output, 0, true);
+}
+
+
+void
+Gates_block::apply_derivate_to( Matrix_real_float& parameters_mtx_in, Matrix_float& input, int parallel, std::vector<Matrix_float>& output, size_t output_offset, bool resize_output ) {
+
+    const size_t output_size = output_offset + static_cast<size_t>(parameter_num);
+    if (resize_output) {
+        output.resize(output_size);
+    }
+    else if (output.size() < output_size) {
+        std::string err("Gates_block::apply_derivate_to(Matrix_real_float): output vector is too small.");
+        throw err;
+    }
+
+    Matrix_real_float precomputed_sincos = precompute_block_sincos(parameters_mtx_in);
+    static tbb::enumerable_thread_specific<std::deque<BlockDerivativeWorkspaceFloat>> workspace_tls;
+    std::deque<BlockDerivativeWorkspaceFloat>& workspaces = workspace_tls.local();
+    int& workspace_depth = gates_block_derivative_depth.local();
+    if (workspaces.size() <= static_cast<size_t>(workspace_depth)) {
+        workspaces.resize(static_cast<size_t>(workspace_depth) + 1);
+    }
+    BlockDerivativeWorkspaceFloat& workspace = workspaces[static_cast<size_t>(workspace_depth)];
+    std::vector<Gate>& suffix_gates = workspace.suffix_gates;
+    std::vector<Matrix_float>& suffix_matrices = workspace.suffix_matrices;
+    std::vector<Matrix_float>& forward_inputs = workspace.forward_inputs;
+    forward_inputs.resize(gates.size());
+    workspace.gate_gradients.resize(gates.size());
+
+    if (parallel == 0 || gates.size() < 2) {
+        build_suffix_gates(gates, qbit_num, matrix_size, parameters_mtx_in, precomputed_sincos, suffix_gates, suffix_matrices, workspace.suffix_targets, workspace.suffix);
+        build_forward_inputs(gates, input, parameters_mtx_in, precomputed_sincos, parallel, forward_inputs);
+    }
+    else {
+        tbb::parallel_invoke(
+            [&]() {
+                build_suffix_gates(gates, qbit_num, matrix_size, parameters_mtx_in, precomputed_sincos, suffix_gates, suffix_matrices, workspace.suffix_targets, workspace.suffix);
+            },
+            [&]() {
+                build_forward_inputs(gates, input, parameters_mtx_in, precomputed_sincos, parallel, forward_inputs);
+            }
+        );
+    }
+
+    auto apply_derivative_for_gate = [&](size_t deriv_idx) {
+        Gate* gate_deriv = gates[deriv_idx];            
+
+        // for constant gate no gradient component is calculated
+        if ( gate_deriv->get_parameter_num() == 0 ) {
+            return;
+        }
+            
+        int deriv_parameter_idx = gate_deriv->get_parameter_start_idx();       
+
+        int& derivative_depth = gates_block_derivative_depth.local();
+        static tbb::enumerable_thread_specific<std::deque<Matrix_float>> input_loc_reusable_tls([](){ return std::deque<Matrix_float>{}; });
+        std::deque<Matrix_float>& input_loc_reusable = input_loc_reusable_tls.local();
+        if (input_loc_reusable.size() <= static_cast<size_t>(derivative_depth)) {
+            input_loc_reusable.resize(derivative_depth + 1);
+        }
+        Matrix_float& input_loc = input_loc_reusable[derivative_depth];
+        forward_inputs[deriv_idx].copy_to(input_loc);
+
+        derivative_depth++;
+        Gate* operation = gates[deriv_idx];
+        const int op_param_num = operation->get_parameter_num();
+        const int op_param_start_idx = operation->get_parameter_start_idx();
+        Matrix_real_float parameters_mtx(parameters_mtx_in.get_data() + op_param_start_idx, 1, op_param_num);
+        std::vector<Matrix_float>& grad_loc = workspace.gate_gradients[deriv_idx];
+
+        if (operation->get_type() == ADAPTIVE_OPERATION) {
+            operation->apply_derivate_to( parameters_mtx, input_loc, parallel, grad_loc );
+        }
+        else {
+            operation->apply_derivate_to( parameters_mtx, input_loc, parallel, grad_loc );
+        }
+
+        if (deriv_idx + 1 < gates.size()) {
+            Gate& suffix_gate = suffix_gates[deriv_idx];
+            if (parallel == 0) {
+                suffix_gate.apply_to_list(grad_loc, parallel);
+            }
+            else {
+                tbb::parallel_for(tbb::blocked_range<int>(0, static_cast<int>(grad_loc.size()), 1),
+                    [&](tbb::blocked_range<int> r) {
+                        for (int grad_idx = r.begin(); grad_idx < r.end(); ++grad_idx) {
+                            suffix_gate.apply_to(grad_loc[static_cast<size_t>(grad_idx)], parallel);
+                        }
+                    });
+            }
+        }
+        derivative_depth--;
+
+
+        for ( int idx = 0; idx<(int)grad_loc.size(); idx++ ) {
+            grad_loc[idx].copy_to(output[output_offset + static_cast<size_t>(deriv_parameter_idx + idx)]);
+        }
+    };
+
+    if (parallel == 0) {
+        for (size_t deriv_idx=0; deriv_idx<gates.size(); ++deriv_idx) {
+            apply_derivative_for_gate(deriv_idx);
+        }
+        return;
+    }
+
+    int work_batch = 1;
+    tbb::parallel_for( tbb::blocked_range<size_t>(0,gates.size(),work_batch), [&](tbb::blocked_range<size_t> r) {
+        for (size_t deriv_idx=r.begin(); deriv_idx<r.end(); ++deriv_idx) {
+            apply_derivative_for_gate(deriv_idx);
+        }
+    });
+   
 
 }
+
+
+std::vector<Matrix>
+Gates_block::apply_to_combined( Matrix_real& parameters_mtx_in, Matrix& input, int parallel ) {
+
+    Matrix_real precomputed_sincos = precompute_block_sincos(parameters_mtx_in);
+    return apply_to_combined_inner(parameters_mtx_in, precomputed_sincos, input, parallel);
+}
+
+
+void
+Gates_block::apply_to_combined( Matrix_real& parameters_mtx_in, Matrix& input, int parallel, std::vector<Matrix>& output ) {
+
+    Matrix_real precomputed_sincos = precompute_block_sincos(parameters_mtx_in);
+    apply_to_combined_inner(parameters_mtx_in, precomputed_sincos, input, parallel, output);
+}
+
+
+std::vector<Matrix>
+Gates_block::apply_to_combined_inner( Matrix_real& parameters_mtx_in, const Matrix_real& precomputed_sincos, Matrix& input, int parallel ) {
+
+    std::vector<Matrix> ret;
+    apply_to_combined_inner(parameters_mtx_in, precomputed_sincos, input, parallel, ret);
+    return ret;
+}
+
+
+void
+Gates_block::apply_to_combined_inner( Matrix_real& parameters_mtx_in, const Matrix_real& precomputed_sincos, Matrix& input, int parallel, std::vector<Matrix>& output ) {
+
+    output.resize(static_cast<size_t>(parameter_num) + 1);
+    if (parallel == 0) {
+        input.copy_to(output[0]);
+        apply_to_inner(parameters_mtx_in, precomputed_sincos, output[0], parallel);
+        apply_derivate_to(parameters_mtx_in, input, parallel, output, 1, false);
+    }
+    else {
+        tbb::parallel_invoke(
+            [&]() {
+                input.copy_to(output[0]);
+                apply_to_inner(parameters_mtx_in, precomputed_sincos, output[0], parallel);
+            },
+            [&]() {
+                apply_derivate_to(parameters_mtx_in, input, parallel, output, 1, false);
+            }
+        );
+    }
+}
+
+
+std::vector<Matrix_float>
+Gates_block::apply_to_combined( Matrix_real_float& parameters_mtx_in, Matrix_float& input, int parallel ) {
+
+    Matrix_real_float precomputed_sincos = precompute_block_sincos(parameters_mtx_in);
+    return apply_to_combined_inner(parameters_mtx_in, precomputed_sincos, input, parallel);
+}
+
+
+void
+Gates_block::apply_to_combined( Matrix_real_float& parameters_mtx_in, Matrix_float& input, int parallel, std::vector<Matrix_float>& output ) {
+
+    Matrix_real_float precomputed_sincos = precompute_block_sincos(parameters_mtx_in);
+    apply_to_combined_inner(parameters_mtx_in, precomputed_sincos, input, parallel, output);
+}
+
+
+std::vector<Matrix_float>
+Gates_block::apply_to_combined_inner( Matrix_real_float& parameters_mtx_in, const Matrix_real_float& precomputed_sincos, Matrix_float& input, int parallel ) {
+
+    std::vector<Matrix_float> ret;
+    apply_to_combined_inner(parameters_mtx_in, precomputed_sincos, input, parallel, ret);
+    return ret;
+}
+
+
+void
+Gates_block::apply_to_combined_inner( Matrix_real_float& parameters_mtx_in, const Matrix_real_float& precomputed_sincos, Matrix_float& input, int parallel, std::vector<Matrix_float>& output ) {
+
+    output.resize(static_cast<size_t>(parameter_num) + 1);
+    if (parallel == 0) {
+        input.copy_to(output[0]);
+        apply_to_inner(parameters_mtx_in, precomputed_sincos, output[0], parallel);
+        apply_derivate_to(parameters_mtx_in, input, parallel, output, 1, false);
+    }
+    else {
+        tbb::parallel_invoke(
+            [&]() {
+                input.copy_to(output[0]);
+                apply_to_inner(parameters_mtx_in, precomputed_sincos, output[0], parallel);
+            },
+            [&]() {
+                apply_derivate_to(parameters_mtx_in, input, parallel, output, 1, false);
+            }
+        );
+    }
+}
+
 
 /**
 @brief Append a U1 gate to the list of gates
@@ -1099,39 +1768,6 @@ void Gates_block::add_crot_to_front(int target_qbit, int control_qbit ) {
 }
 
 /**
-@brief Append a CZ_NU gate to the list of gates
-@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
-@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
-*/
-void Gates_block::add_cz_nu(int target_qbit, int control_qbit) {
-
-        // create the operation
-        Gate* operation = static_cast<Gate*>(new CZ_NU( qbit_num, target_qbit, control_qbit));
-
-        // adding the operation to the end of the list of gates
-        add_gate( operation );
-}
-
-
-
-/**
-@brief Add a CZ_NU gate to the front of the list of gates
-@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
-@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
-*/
-void Gates_block::add_cz_nu_to_front(int target_qbit, int control_qbit ) {
-
-        // create the operation
-        Gate* gate = static_cast<Gate*>(new CZ_NU( qbit_num, target_qbit, control_qbit ));
-
-        // adding the operation to the front of the list of gates
-        add_gate_to_front( gate );
-
-}
-
-
-
-/**
 @brief Append a RZ gate to the list of gates
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
 */
@@ -1157,8 +1793,6 @@ void Gates_block::add_rz_to_front(int target_qbit ) {
         add_gate_to_front( gate );
 
 }
-
-
 
 
 /**
@@ -1722,85 +2356,6 @@ void Gates_block::add_gates_to_front( std::vector<Gate*>  gates_in) {
 
 
 /**
-@brief Append a UN gate to the list of gates
-*/
-void Gates_block::add_un() {
-
-        // create the operation
-        Gate* operation = static_cast<Gate*>(new UN( qbit_num ));
-
-        // adding the operation to the end of the list of gates
-        add_gate( operation );
-}
-
-/**
-@brief Add a UN gate to the front of the list of gates
-*/
-void Gates_block::add_un_to_front() {
-
-        // create the operation
-        Gate* gate = static_cast<Gate*>(new UN( qbit_num ));
-
-        // adding the operation to the front of the list of gates
-        add_gate_to_front( gate );
-
-}
-
-
-/**
-@brief Append a ON gate to the list of gates
-*/
-void Gates_block::add_on() {
-
-        // create the operation
-        Gate* operation = static_cast<Gate*>(new ON( qbit_num ));
-
-        // adding the operation to the end of the list of gates
-        add_gate( operation );
-}
-
-/**
-@brief Add a ON gate to the front of the list of gates
-*/
-void Gates_block::add_on_to_front() {
-
-        // create the operation
-        Gate* gate = static_cast<Gate*>(new ON( qbit_num ));
-
-        // adding the operation to the front of the list of gates
-        add_gate_to_front( gate );
-
-}
-
-
-/**
-@brief Append a Composite gate to the list of gates
-*/
-void Gates_block::add_composite()  {
-
-        // create the operation
-        Gate* operation = static_cast<Gate*>(new Composite( qbit_num ));
-
-        // adding the operation to the end of the list of gates
-        add_gate( operation );
-}
-
-/**
-@brief Add a Composite gate to the front of the list of gates
-*/
-void Gates_block::add_composite_to_front()  {
-
-        // create the operation
-        Gate* gate = static_cast<Gate*>(new Composite( qbit_num ));
-
-        // adding the operation to the front of the list of gates
-        add_gate_to_front( gate );
-
-}
-
-
-
-/**
 @brief Append a Adaptive gate to the list of gates
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
 @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
@@ -1831,6 +2386,35 @@ void Gates_block::add_adaptive_to_front(int target_qbit, int control_qbit)  {
 }
 
 
+/**
+@brief Append a GENERAL_OPERATION gate with an explicitly provided matrix.
+@param operation_mtx The operation matrix. Must be matrix_size x matrix_size.
+@param target_qbits Optional metadata for target qubits involved in this gate.
+@param control_qbits Optional metadata for control qubits involved in this gate.
+*/
+void Gates_block::add_general_operation(
+    const Matrix& operation_mtx,
+    const std::vector<int>& target_qbits,
+    const std::vector<int>& control_qbits
+) {
+
+    if (operation_mtx.rows != matrix_size || operation_mtx.cols != matrix_size) {
+        std::string err("Gates_block::add_general_operation: operation matrix has invalid size.");
+        throw err;
+    }
+
+    Gate* operation = new Gate(qbit_num);
+    operation->set_matrix(operation_mtx);
+    if (!target_qbits.empty()) {
+        operation->set_target_qbits(target_qbits);
+    }
+    if (!control_qbits.empty()) {
+        operation->set_control_qbits(control_qbits);
+    }
+    add_gate(operation);
+}
+
+
 
 /**
 @brief Append a general gate to the list of gates
@@ -1848,6 +2432,7 @@ void Gates_block::add_gate( Gate* gate ) {
 
         // append the gate to the list
         gates.push_back(gate);
+        invalidate_structure_cache();
         
         // set the parameter starting index in the parameters array used to execute the circuit.
         gate->set_parameter_start_idx( parameter_num );
@@ -1880,6 +2465,7 @@ void Gates_block::add_gate( Gate* gate ) {
         determine_children( gate );
 
         gates.insert( gates.begin(), gate);
+        invalidate_structure_cache();
 
         // increase the number of U3 gate parameters by the number of parameters
         parameter_num = parameter_num + gate->get_parameter_num();
@@ -1910,6 +2496,7 @@ Gates_block::insert_gate( Gate* gate, int idx ) {
         gate->set_qbit_num( qbit_num );
 
         gates.insert( gates.begin()+idx, gate);
+        invalidate_structure_cache();
 
         // increase the number of U3 gate parameters by the number of parameters
         parameter_num = parameter_num + gate->get_parameter_num();
@@ -2317,42 +2904,6 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
                 parameter_idx = parameter_idx + block_gate->get_parameter_num();
                 gate_idx = gate_idx + block_gate->get_gate_num();
             }
-            else if (gate->get_type() == UN_OPERATION) {
-                parameter_idx = parameter_idx + gate->get_parameter_num();
-
-		std::stringstream sstream;
-		sstream << gate_idx << "th gate: UN " << gate->get_parameter_num() << " parameters" << std::endl;
-		print(sstream, 1);	    	         
-                gate_idx = gate_idx + 1;
-            }
-            else if (gate->get_type() == CZ_NU_OPERATION) {
-                // definig the rotation parameter
-                double Theta;
-                // get the inverse parameters of the U3 rotation
-                CZ_NU* cz_nu_gate = static_cast<CZ_NU*>(gate);
-                Theta = std::fmod( parameters_data[parameter_idx], 2*M_PI);
-                parameter_idx = parameter_idx +1;
-
-		std::stringstream sstream;
-		sstream << gate_idx << "th gate: CZ_NU gate on target qubit: " << cz_nu_gate->get_target_qbit() << ", control qubit " << cz_nu_gate->get_control_qbit() << " and with parameters Theta = " << Theta << std::endl;
-		print(sstream, 1);	    	
-                gate_idx = gate_idx + 1;
-            }         
-            else if (gate->get_type() == ON_OPERATION) {
-                parameter_idx = parameter_idx + gate->get_parameter_num();
-		std::stringstream sstream;
-		sstream << gate_idx << "th gate: ON " << gate->get_parameter_num() << " parameters" << std::endl;
-		print(sstream, 1);	    	 
-                gate_idx = gate_idx + 1;
-            }
-            else if (gate->get_type() == COMPOSITE_OPERATION) {
-                parameter_idx = parameter_idx + gate->get_parameter_num();
-
-		std::stringstream sstream;
-		sstream << gate_idx << "th gate: Composite " << gate->get_parameter_num() << " parameters" << std::endl;
-		print(sstream, 1);	    	               
-                gate_idx = gate_idx + 1;
-            }
             else if (gate->get_type() == ADAPTIVE_OPERATION) {
                 // definig the rotation parameter
                 double Theta;
@@ -2416,12 +2967,11 @@ Gates_block::create_remapped_circuit( const std::map<int, int>& qbit_map, const 
         case RZ_OPERATION: case X_OPERATION:
         case Y_OPERATION: case Z_OPERATION:
         case SX_OPERATION: case BLOCK_OPERATION:
-        case GENERAL_OPERATION: case UN_OPERATION:
-        case ON_OPERATION: case COMPOSITE_OPERATION:
+        case GENERAL_OPERATION:
         case ADAPTIVE_OPERATION: case H_OPERATION:
         case S_OPERATION: case SDG_OPERATION:
         case T_OPERATION: case TDG_OPERATION:
-        case CZ_NU_OPERATION: case CU_OPERATION:
+        case CU_OPERATION:
         case RXX_OPERATION: case RYY_OPERATION:
         case RZZ_OPERATION: case SXDG_OPERATION:
         {
@@ -2521,6 +3071,7 @@ void Gates_block::reorder_qubits( std::vector<int>  qbit_list ) {
 
     }
 
+    invalidate_structure_cache();
 }
 
 /**
@@ -2529,7 +3080,18 @@ void Gates_block::reorder_qubits( std::vector<int>  qbit_list ) {
 */
 std::vector<int> Gates_block::get_involved_qubits(bool only_target) {
 
-    std::set<int> involved_qbits;
+    {
+        tbb::spin_mutex::scoped_lock lock(*involved_qubits_cache_mutex);
+        if (only_target && involved_target_qubits_cache_valid) {
+            return involved_target_qubits_cache;
+        }
+        if (!only_target && involved_qubits_cache_valid) {
+            return involved_qubits_cache;
+        }
+    }
+
+    std::vector<int> involved_qbits;
+    std::vector<char> seen(qbit_num > 0 ? qbit_num : 0, 0);
 
     for(std::vector<Gate*>::iterator it = gates.begin(); it != gates.end(); ++it) {
 
@@ -2539,12 +3101,38 @@ std::vector<int> Gates_block::get_involved_qubits(bool only_target) {
         // both single and vector-based qubits (SWAP, CSWAP, CCX, etc.)
         std::vector<int> gate_qbits = gate->get_involved_qubits(only_target);
         for (std::vector<int>::iterator in_it = gate_qbits.begin(); in_it != gate_qbits.end(); ++in_it){
-            involved_qbits.insert(*in_it);
+            const int qbit = *in_it;
+            if (qbit < 0) {
+                continue;
+            }
+            if (qbit >= static_cast<int>(seen.size())) {
+                if (std::find(involved_qbits.begin(), involved_qbits.end(), qbit) == involved_qbits.end()) {
+                    involved_qbits.push_back(qbit);
+                }
+            }
+            else if (!seen[qbit]) {
+                seen[qbit] = 1;
+                involved_qbits.push_back(qbit);
+            }
         }
 
     }
 
-    return std::vector<int>(involved_qbits.begin(), involved_qbits.end());
+    std::sort(involved_qbits.begin(), involved_qbits.end());
+
+    {
+        tbb::spin_mutex::scoped_lock lock(*involved_qubits_cache_mutex);
+        if (only_target) {
+            involved_target_qubits_cache = involved_qbits;
+            involved_target_qubits_cache_valid = true;
+        }
+        else {
+            involved_qubits_cache = involved_qbits;
+            involved_qubits_cache_valid = true;
+        }
+    }
+
+    return involved_qbits;
 }
 
 
@@ -2598,6 +3186,7 @@ void Gates_block::combine(Gates_block* op_block) {
 
 void Gates_block::set_min_fusion( int min_fusion ) {
     this->min_fusion = min_fusion;
+    fusion_block.update(std::shared_ptr<Gates_block>{});
     for (size_t i = 0; i < gates.size(); i++){
         if ( gates[i]->get_type() == BLOCK_OPERATION ) {
             ((Gates_block*)gates[i])->set_min_fusion( min_fusion );
@@ -2629,11 +3218,10 @@ void Gates_block::set_qbit_num( int qbit_num_in ) {
         case RZ_OPERATION: case X_OPERATION:
         case Y_OPERATION: case Z_OPERATION:
         case SX_OPERATION: case BLOCK_OPERATION:
-        case GENERAL_OPERATION: case UN_OPERATION:
-        case ON_OPERATION: case COMPOSITE_OPERATION:
+        case GENERAL_OPERATION:
         case ADAPTIVE_OPERATION: case CROT_OPERATION:
         case H_OPERATION: case R_OPERATION:
-        case CZ_NU_OPERATION: case CU_OPERATION:
+        case CU_OPERATION:
         case S_OPERATION: case SDG_OPERATION:
         case T_OPERATION: case TDG_OPERATION:
         case RXX_OPERATION: case RYY_OPERATION:
@@ -2645,6 +3233,7 @@ void Gates_block::set_qbit_num( int qbit_num_in ) {
             throw err;
         }
     }
+    invalidate_structure_cache();
 }
 
 
@@ -2694,11 +3283,10 @@ int Gates_block::extract_gates( Gates_block* op_block ) {
         case RZ_OPERATION: case X_OPERATION:
         case Y_OPERATION: case Z_OPERATION:
         case SX_OPERATION: case BLOCK_OPERATION:
-        case GENERAL_OPERATION: case UN_OPERATION:
-        case ON_OPERATION: case COMPOSITE_OPERATION:
+        case GENERAL_OPERATION:
         case ADAPTIVE_OPERATION: case CROT_OPERATION:
         case H_OPERATION:  case R_OPERATION:
-        case CZ_NU_OPERATION: case CU_OPERATION:
+        case CU_OPERATION:
         case S_OPERATION: case SDG_OPERATION:
         case T_OPERATION: case TDG_OPERATION:
         case SWAP_OPERATION: case RXX_OPERATION:
@@ -3444,17 +4032,6 @@ void Gates_block::adjust_parameters_for_derivation( DFEgate_kernel_type* DFEgate
                 std::string error("Gates_block::adjust_parameters_for_derivation: RZ gate not implemented for DFE");
                 throw error;	    	
             }
-            else if (gate->get_type() == RZ_P_OPERATION) { // Did not cehcked
-
-                DFEgate_kernel_type& DFEGate = DFEgates[gate_set_index*gatesNum + gate_idx];
-                DFEGate.Phi                  = DFEGate.Phi + parameter_shift;
-                DFEGate.metadata             = 3 + (1<<7); // The 0-th and 1st element in kernel matrix should be zero for derivates and 3 = 0011, plus the leading bit indicates that derivate is processed
-                gate_set_index               = gate_set_index - 1;
-
-                parameter_idx = parameter_idx - 1;
-	    	
-                gate_idx = gate_idx + 1;
-            }
             else if (gate->get_type() == CU_OPERATION) {
                 std::string error("Gates_block::convert_to_DFE_gates: CU_gate not implemented");
                 throw error;	 
@@ -3514,20 +4091,6 @@ void Gates_block::adjust_parameters_for_derivation( DFEgate_kernel_type* DFEgate
                 //gate_set_index               = gate_set_index - block_gate->get_parameter_num();
 
                 parameter_idx = parameter_idx - block_gate->get_parameter_num();
-            }
-            else if (gate->get_type() == UN_OPERATION) {
-                std::string error("Gates_block::convert_to_DFE_gates: UN_gate not implemented");
-                throw error;
-            }
-            else if (gate->get_type() == ON_OPERATION) {
-
-                // THE LAST GATE IS A GENERAL GATE APPENDED IN THE BLOCK-WISE OPTIMISATION ROUTINE OF DECOMPOSITION_BASE
-                std::string error("Gates_block::convert_to_DFE_gates: ON_gate not implemented");
-                throw error;
-            }
-            else if (gate->get_type() == COMPOSITE_OPERATION) {
-                std::string error("Gates_block::convert_to_DFE_gates: Composite_gate not implemented");
-                throw error;
             }
             else if (gate->get_type() == GENERAL_OPERATION) {
                 std::string error("Gates_block::convert_to_DFE_gates: general_gate not implemented");
@@ -3849,28 +4412,8 @@ void Gates_block::convert_to_DFE_gates( const Matrix_real& parameters_mtx, DFEga
             }
             else if (gate->get_type() == RZ_OPERATION) { // Did not cehcked
 
-                std::string error("Gates_block::convert_to_DFE_gates: RZ gate not implemented for DFE. Use RZ_P gate instead that differs from RZ gate by a global phase");
+                std::string error("Gates_block::convert_to_DFE_gates: RZ gate not implemented for DFE");
                 throw error;	    	
-            }
-            else if (gate->get_type() == RZ_P_OPERATION) {
-
-
-                // definig the rotation parameter
-                double varphi;
-                // get the inverse parameters of the U3 rotation
-                RZ* rz_gate = static_cast<RZ*>(gate);
-                varphi = std::fmod( parameters_data[parameter_idx-1], 2*M_PI);
-                parameter_idx = parameter_idx - 1;
-
-                DFEGate.target_qbit = rz_gate->get_target_qbit();
-                DFEGate.control_qbit = -1;
-                DFEGate.gate_type = RZ_P_OPERATION;
-                DFEGate.ThetaOver2 = (int32_t)(0); // TODO: check !!!!!!!!!!!!!!!!!!!!!!!!!!!
-                DFEGate.Phi = (int32_t)(varphi*(1<<25));  // TODO: check !!!!!!!!!!!!!!!!!!!!!!!!!!!
-                DFEGate.Lambda = (int32_t)(0); // TODO: check !!!!!!!!!!!!!!!!!!!!!!!!!!!
-                DFEGate.metadata = 0;
-	    	
-                gate_idx = gate_idx + 1;
             }
             else if (gate->get_type() == H_OPERATION) {
                 // get the inverse parameters of the Hadamard rotation
@@ -3953,20 +4496,6 @@ void Gates_block::convert_to_DFE_gates( const Matrix_real& parameters_mtx, DFEga
                 block_gate->convert_to_DFE_gates( parameters_layer_mtx, DFEgates, gate_idx );
                 parameter_idx = parameter_idx - block_gate->get_parameter_num();
             }
-            else if (gate->get_type() == UN_OPERATION) {
-                std::string error("Gates_block::convert_to_DFE_gates: UN_gate not implemented");
-                throw error;
-            }
-            else if (gate->get_type() == ON_OPERATION) {
-
-                // THE LAST GATE IS A GENERAL GATE APPENDED IN THE BLOCK-WISE OPTIMISATION ROUTINE OF DECOMPOSITION_BASE
-                std::string error("Gates_block::convert_to_DFE_gates: ON_gate not implemented");
-                throw error;
-            }
-            else if (gate->get_type() == COMPOSITE_OPERATION) {
-                std::string error("Gates_block::convert_to_DFE_gates: Composite_gate not implemented");
-                throw error;
-            }
             else if (gate->get_type() == GENERAL_OPERATION) {
                 std::string error("Gates_block::convert_to_DFE_gates: general_gate not implemented");
                 throw error;
@@ -4045,117 +4574,98 @@ Gates_block::extract_gate_kernels_target_and_control_qubits(std::vector<Matrix> 
         switch (operation->get_type()) {
         case CNOT_OPERATION: case CZ_OPERATION:
         case CH_OPERATION: {
-            CNOT* cnot_operation = static_cast<CNOT*>(operation);
-            u3_qbit.push_back(cnot_operation->calc_one_qubit_u3());
+            Matrix_real empty_params(0, 0);
+            u3_qbit.push_back(operation->gate_kernel(empty_params));
             break;    
         }
         case H_OPERATION: {
-            H* h_operation = static_cast<H*>(operation);
-            u3_qbit.push_back(h_operation->calc_one_qubit_u3());
+            Matrix_real empty_params(0, 0);
+            u3_qbit.push_back(operation->gate_kernel(empty_params));
             break;
         }
         case X_OPERATION: {
-            X* x_operation = static_cast<X*>(operation);
-            u3_qbit.push_back(x_operation->calc_one_qubit_u3());
+            Matrix_real empty_params(0, 0);
+            u3_qbit.push_back(operation->gate_kernel(empty_params));
             break;
         }
         case Y_OPERATION: {
-            Y* y_operation = static_cast<Y*>(operation);
-            u3_qbit.push_back(y_operation->calc_one_qubit_u3());
+            Matrix_real empty_params(0, 0);
+            u3_qbit.push_back(operation->gate_kernel(empty_params));
             break;
         }
         case Z_OPERATION: {
-            Z* z_operation = static_cast<Z*>(operation);
-            u3_qbit.push_back(z_operation->calc_one_qubit_u3());
+            Matrix_real empty_params(0, 0);
+            u3_qbit.push_back(operation->gate_kernel(empty_params));
             break;
         }
         case T_OPERATION: {
-            T* t_operation = static_cast<T*>(operation);
-            u3_qbit.push_back(t_operation->calc_one_qubit_u3());
+            Matrix_real empty_params(0, 0);
+            u3_qbit.push_back(operation->gate_kernel(empty_params));
             break;
         }
         case S_OPERATION: {
-            S* s_operation = static_cast<S*>(operation);
-            u3_qbit.push_back(s_operation->calc_one_qubit_u3());
+            Matrix_real empty_params(0, 0);
+            u3_qbit.push_back(operation->gate_kernel(empty_params));
             break;
         }
         case SDG_OPERATION: {
-            SDG* sdg_operation = static_cast<SDG*>(operation);
-            u3_qbit.push_back(sdg_operation->calc_one_qubit_u3());
+            Matrix_real empty_params(0, 0);
+            u3_qbit.push_back(operation->gate_kernel(empty_params));
             break;
         }
         case TDG_OPERATION: {
-            Tdg* tdg_operation = static_cast<Tdg*>(operation);
-            u3_qbit.push_back(tdg_operation->calc_one_qubit_u3());
+            Matrix_real empty_params(0, 0);
+            u3_qbit.push_back(operation->gate_kernel(empty_params));
             break;
         }
         case SX_OPERATION: {
-            SX* sx_operation = static_cast<SX*>(operation);
-            u3_qbit.push_back(sx_operation->calc_one_qubit_u3());
+            Matrix_real empty_params(0, 0);
+            u3_qbit.push_back(operation->gate_kernel(empty_params));
             break;
         }
         case SXDG_OPERATION: {
-            SXdg* sxdg_operation = static_cast<SXdg*>(operation);
-            u3_qbit.push_back(sxdg_operation->calc_one_qubit_u3());
+            Matrix_real empty_params(0, 0);
+            u3_qbit.push_back(operation->gate_kernel(empty_params));
             break;
         }
         case U1_OPERATION: {
-            U1* u1_operation = static_cast<U1*>(operation);
-            u3_qbit.push_back(u1_operation->calc_one_qubit_u3(params_mtx[0]));
+            u3_qbit.push_back(Gate::calc_one_qubit_u3(0.0, 0.0, params_mtx[0]));
             break;
         }
         case U2_OPERATION: {
-            U2* u2_operation = static_cast<U2*>(operation);
-            u3_qbit.push_back(u2_operation->calc_one_qubit_u3(params_mtx[0], params_mtx[1]));
+            u3_qbit.push_back(Gate::calc_one_qubit_u3(M_PI / 4.0, params_mtx[0], params_mtx[1]));
             break;
         }
         case U3_OPERATION: {
-            U3* u3_operation = static_cast<U3*>(operation);
-            u3_qbit.push_back(u3_operation->calc_one_qubit_u3(params_mtx[0], params_mtx[1], params_mtx[2]));
+            u3_qbit.push_back(Gate::calc_one_qubit_u3(params_mtx[0], params_mtx[1], params_mtx[2]));
             break;
         }
         case RX_OPERATION: {
-            RX* rx_operation = static_cast<RX*>(operation);
             // set static values for the angles
             double ThetaOver2 = params_mtx[0];
             double Phi    = -M_PI/2;
             double Lambda = M_PI/2;
-            rx_operation->parameters_for_calc_one_qubit(ThetaOver2, Phi, Lambda);
-            u3_qbit.push_back(rx_operation->calc_one_qubit_u3(ThetaOver2, Phi, Lambda));
+            u3_qbit.push_back(Gate::calc_one_qubit_u3(ThetaOver2, Phi, Lambda));
             break;
         }
         case RY_OPERATION: {
-            RY* ry_operation = static_cast<RY*>(operation);
             double ThetaOver2 = params_mtx[0];
             double Phi    = 0.0;
             double Lambda = 0.0;
-            ry_operation->parameters_for_calc_one_qubit(ThetaOver2, Phi, Lambda);
-            u3_qbit.push_back(ry_operation->calc_one_qubit_u3(ThetaOver2, Phi, Lambda));
+            u3_qbit.push_back(Gate::calc_one_qubit_u3(ThetaOver2, Phi, Lambda));
             break;
         }
         case CRY_OPERATION: {
-            CRY* cry_operation = static_cast<CRY*>(operation);
-            double ThetaOver2, Phi, Lambda;
-            ThetaOver2 = params_mtx[0];
-            cry_operation->parameters_for_calc_one_qubit(ThetaOver2, Phi, Lambda);
-            u3_qbit.push_back(cry_operation->calc_one_qubit_u3(ThetaOver2, Phi, Lambda));
+            double ThetaOver2 = params_mtx[0];
+            double Phi = 0.0;
+            double Lambda = 0.0;
+            u3_qbit.push_back(Gate::calc_one_qubit_u3(ThetaOver2, Phi, Lambda));
             break;
         }
         case RZ_OPERATION: {
-            RZ* rz_operation = static_cast<RZ*>(operation);
-            u3_qbit.push_back(rz_operation->calc_one_qubit_u3(params_mtx[0]));
+            u3_qbit.push_back(Gate::calc_one_qubit_u3(0.0, 0.0, params_mtx[0]));
             break;
         }
-/*
-        case RZ_P_OPERATION: {
-            RZ_P* rz_p_operation = static_cast<RZ_P*>(operation);
-            double ThetaOver2, Phi, Lambda;
-            Phi = params_mtx[0];
-            rz_p_operation->parameters_for_calc_one_qubit(ThetaOver2, Phi, Lambda);
-            u3_qbit.push_back(rz_p_operation->calc_one_qubit_u3(ThetaOver2, Phi, Lambda));
-            break;
-        }
-*/
         case BLOCK_OPERATION: {
         
             Gates_block* block_operation = static_cast<Gates_block*>(operation);
@@ -4192,9 +4702,6 @@ Gates_block::extract_gate_kernels_target_and_control_qubits(std::vector<Matrix> 
         }
         //case ADAPTIVE_OPERATION:
         //case SYC_OPERATION:
-        //case UN_OPERATION:
-        //case ON_OPERATION:
-        //case COMPOSITE_OPERATION:
         //case GENERAL_OPERATION:
         default:
             std::string err("Optimization_Interface::apply_to: unimplemented gate (" + std::to_string(operation->get_type()) + ")"); 
@@ -4955,5 +5462,3 @@ Matrix_real inverse_reverse_parameters( const Matrix_real& parameters_in, std::v
 
 
 }
-
-

@@ -56,6 +56,15 @@ N_Qubit_Decomposition::N_Qubit_Decomposition( Matrix Umtx_in, int qbit_num_in, b
 
 }
 
+/**
+@brief Constructor of the class from a single precision unitary matrix.
+*/
+N_Qubit_Decomposition::N_Qubit_Decomposition( Matrix_float Umtx_in, int qbit_num_in, bool optimize_layer_num_in, std::map<std::string, Config_Element>& config_in, guess_type initial_guess_in ) : Optimization_Interface(Umtx_in, qbit_num_in, optimize_layer_num_in, config_in, initial_guess_in) {
+
+    set_optimizer( BFGS );
+
+}
+
 
 
 /**
@@ -511,7 +520,6 @@ int N_Qubit_Decomposition::set_identical_blocks( std::map<int, int> identical_bl
     return 0;
 
 }
-
 
 
 

@@ -25,6 +25,8 @@ limitations under the License.
 
 #include "BFGS_Powell.h"
 
+#include <tbb/enumerable_thread_specific.h>
+
 
 #ifdef __MPI__
 #include <mpi.h>
@@ -412,7 +414,9 @@ double Sub_Matrix_Decomposition::optimization_problem( double* parameters ) {
 
         // get the transformed matrix with the gates in the list
         Matrix_real parameters_mtx(parameters, 1, parameter_num );
-        Matrix matrix_new = Umtx.copy();
+        static tbb::enumerable_thread_specific<Matrix> matrix_new_tls;
+        Matrix& matrix_new = matrix_new_tls.local();
+        Umtx.copy_to(matrix_new);
         apply_to( parameters_mtx, matrix_new );
 
 #ifdef DEBUG
@@ -441,13 +445,9 @@ double Sub_Matrix_Decomposition::optimization_problem( Matrix_real parameters, v
     Sub_Matrix_Decomposition* instance = reinterpret_cast<Sub_Matrix_Decomposition*>(void_instance);
     std::vector<Gate*> gates_loc = instance->get_gates();
 
-    Matrix Umtx_loc, matrix_new;
-
-//{
-//tbb::spin_mutex::scoped_lock my_lock{my_mutex};
-
-    Umtx_loc = instance->get_Umtx();
-    matrix_new = Umtx_loc.copy();
+    static tbb::enumerable_thread_specific<Matrix> matrix_new_tls;
+    Matrix& matrix_new = matrix_new_tls.local();
+    instance->get_Umtx().copy_to(matrix_new);
     instance->apply_to( parameters, matrix_new );
 
 #ifdef DEBUG
@@ -457,9 +457,6 @@ double Sub_Matrix_Decomposition::optimization_problem( Matrix_real parameters, v
 	   print(sstream, 1);	 
         }
 #endif
-
-//}
-
 
     double cost_function = get_submatrix_cost_function(matrix_new);  //NEW METHOD
 
@@ -508,23 +505,35 @@ void Sub_Matrix_Decomposition::optimization_problem_combined( Matrix_real parame
     // the difference in one direction in the parameter for the gradient calculation
     double dparam = 1e-8;
 
-    // calculate the function values at displaced x and the central x0 points through TBB parallel for
-    tbb::parallel_for(0, parameter_num_loc+1, 1, [&](int i) {
-
+    auto calculate_displaced_cost = [&](int i) {
         if (i == (int)parameters.size()) {
             // calculate function value at x0
             *f0 = instance->optimization_problem(parameters, reinterpret_cast<void*>(instance));
         }
         else {
 
-            Matrix_real parameters_d = parameters.copy();
+            static tbb::enumerable_thread_specific<Matrix_real> parameters_d_tls;
+            Matrix_real& parameters_d = parameters_d_tls.local();
+            parameters.copy_to(parameters_d);
             parameters_d[i] = parameters_d[i] + dparam;
 
             // calculate the cost function at the displaced point
             f[i] = instance->optimization_problem(parameters_d, reinterpret_cast<void*>(instance));
 
         }
-    });
+    };
+
+    if (instance->get_parallel_configuration() == 0) {
+        for (int i=0; i<parameter_num_loc+1; ++i) {
+            calculate_displaced_cost(i);
+        }
+    }
+    else {
+        // calculate the function values at displaced x and the central x0 points through TBB parallel for
+        tbb::parallel_for(0, parameter_num_loc+1, 1, [&](int i) {
+            calculate_displaced_cost(i);
+        });
+    }
 
 
 /*
@@ -622,5 +631,3 @@ Sub_Matrix_Decomposition* Sub_Matrix_Decomposition::clone() {
     return ret;
 
 }
-
-
