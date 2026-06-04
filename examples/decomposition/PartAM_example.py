@@ -139,7 +139,7 @@ if __name__ == '__main__':
         'three_qubit_exit_weight': 1.5,
         'partition_weight_model': 'window_turnover',
         'pack_credit_weight': 1.0,
-        'partition_chain_penalty_weight': 3.0,
+        'partition_chain_penalty_weight': 2.5,
     }
 
     # instantiate the object for Partition Aware Mapping
