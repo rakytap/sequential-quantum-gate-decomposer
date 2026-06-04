@@ -13,6 +13,28 @@ from squander.gates.qgd_Circuit import qgd_Circuit as Circuit
 # ============================================================================
 # SWAP Routing Algorithms
 # ============================================================================
+def _neighbor_signature(neighbor_info):
+    """Stable hash-friendly signature of an active neighbor_info.
+
+    Returns None when the neighbor heuristic is inactive (no info, zero
+    weight, or empty edge list) — callers treat all such calls as cache-
+    compatible.  Otherwise returns a tuple of (sorted edges as
+    (min(u,v), max(u,v), weight), initial_pos tuple, rounded weight).
+    """
+    if neighbor_info is None:
+        return None
+    weight = neighbor_info.get('weight', 0.0)
+    edges = neighbor_info.get('edges') or ()
+    if weight == 0.0 or not edges:
+        return None
+    canonical_edges = tuple(sorted(
+        (min(int(u), int(v)), max(int(u), int(v)), float(w))
+        for u, v, w in edges
+    ))
+    initial_pos = tuple(int(p) for p in neighbor_info.get('initial_pos', ()))
+    return (canonical_edges, initial_pos, round(float(weight), 6))
+
+
 def find_constrained_swaps_partial(pi_A, pi_B_dict, dist_matrix, adj=None, neighbor_info=None):
     """
     Route partition qubits to their target physical positions using A* over
@@ -96,22 +118,31 @@ def find_constrained_swaps_partial(pi_A, pi_B_dict, dist_matrix, adj=None, neigh
     # Paths are reconstructed via a parent-pointer dict to avoid copying lists
     # on every heap push (which would be O(depth²) total).
     counter = 0  # tiebreak counter so tuples never compare paths
-    parent = {}  # state → (parent_state, swap) for path reconstruction
-    parent[initial_positions] = None
+    # When the neighbor tie-breaker is active, the full search state must
+    # include the tracked future-qubit positions.  Otherwise two equal-length
+    # paths to the same partition positions but different bystander layouts
+    # collapse into one visited entry, defeating the downstream-layout signal.
+    initial_state = (
+        (initial_positions, initial_n_pos) if use_neighbor else initial_positions
+    )
+    parent = {}  # state_key → (parent_state_key, swap) for path reconstruction
+    parent[initial_state] = None
 
     h0 = heuristic(initial_positions)
     nh0 = n_weight * neighbor_heuristic(initial_n_pos) if use_neighbor else 0.0
     heap = []
     heapq.heappush(heap, (h0 + nh0, 0, counter, initial_positions, initial_n_pos))
-    visited = {initial_positions: 0}
+    visited = {initial_state: 0}
 
     while heap:
         f, g, _, positions, n_pos = heapq.heappop(heap)
 
+        state_key = (positions, n_pos) if use_neighbor else positions
+
         if positions == target_positions:
             # Reconstruct swap path via parent pointers
             path = []
-            state = positions
+            state = state_key
             while parent[state] is not None:
                 prev_state, swap = parent[state]
                 path.append(swap)
@@ -129,7 +160,7 @@ def find_constrained_swaps_partial(pi_A, pi_B_dict, dist_matrix, adj=None, neigh
                 final_v2p[q1], final_v2p[q2] = P2, P1
             return path, final_v2p
 
-        if visited.get(positions, float('inf')) < g:
+        if visited.get(state_key, float('inf')) < g:
             continue
 
         # Quick lookup: physical position → index within partition_qubits list
@@ -151,13 +182,9 @@ def find_constrained_swaps_partial(pi_A, pi_B_dict, dist_matrix, adj=None, neigh
                 new_positions = tuple(new_positions)
 
                 new_g = g + 1
-                if visited.get(new_positions, float('inf')) <= new_g:
-                    continue
-
-                # Bug B fix: update neighbor positions for BOTH sides of the swap.
-                # A neighbor qubit at nb gets displaced to p, AND a neighbor qubit
-                # at p (if it's also tracked, e.g. overlaps with a partition qubit)
-                # moves to nb.
+                # When a partition qubit swaps into nb, a tracked neighbor at nb
+                # is displaced to p AND a tracked neighbor at p (if it overlaps
+                # with a partition qubit) moves to nb. Update both sides.
                 if use_neighbor:
                     new_n_pos = list(n_pos)
                     if nb in n_phys_to_idx:
@@ -170,9 +197,15 @@ def find_constrained_swaps_partial(pi_A, pi_B_dict, dist_matrix, adj=None, neigh
                     new_n_pos = n_pos
                     new_nh = 0.0
 
-                visited[new_positions] = new_g
+                new_state_key = (
+                    (new_positions, new_n_pos) if use_neighbor else new_positions
+                )
+                if visited.get(new_state_key, float('inf')) <= new_g:
+                    continue
+
+                visited[new_state_key] = new_g
                 swap_key = (min(p, nb), max(p, nb))
-                parent[new_positions] = (positions, swap_key)
+                parent[new_state_key] = (state_key, swap_key)
                 counter += 1
                 heapq.heappush(heap, (new_g + heuristic(new_positions) + new_nh,
                                       new_g, counter, new_positions, new_n_pos))
@@ -409,15 +442,35 @@ class PartitionSynthesisResult:
         self._topology_cache = topology_cache
 
     def add_result(self, permutations_pair, synthesised_circuit, synthesised_parameters, topology_idx):
+        from squander.utils import circuit_to_CNOT_basis
+
+        flat_circuit = synthesised_circuit.get_Flat_Circuit()
+        flat_circuit, synthesised_parameters = circuit_to_CNOT_basis(
+            flat_circuit,
+            np.asarray(synthesised_parameters),
+        )
+        unsupported_multi = [
+            gate.get_Name()
+            for gate in flat_circuit.get_Gates()
+            if len(gate.get_Involved_Qbits()) > 1
+            and gate.get_Name() != "CNOT"
+        ]
+        if unsupported_multi:
+            raise ValueError(
+                "Partition synthesis produced non-CNOT multi-qubit gates "
+                f"after CNOT-basis conversion: {unsupported_multi}"
+            )
         self.permutations_pairs[topology_idx].append(permutations_pair)
-        self.synthesised_circuits[topology_idx].append(synthesised_circuit)
+        self.synthesised_circuits[topology_idx].append(flat_circuit)
         self.synthesised_parameters[topology_idx].append(synthesised_parameters)
-        self.cnot_counts[topology_idx].append(synthesised_circuit.get_Gate_Nums().get('CNOT', 0))
-        self.circuit_structures[topology_idx].append(self.extract_circuit_structure(synthesised_circuit))
-    
+        self.cnot_counts[topology_idx].append(flat_circuit.get_Gate_Nums().get('CNOT', 0))
+        self.circuit_structures[topology_idx].append(self.extract_circuit_structure(flat_circuit))
+
     def extract_circuit_structure(self, circuit):
         circuit_structure = []
         for gate in circuit.get_Gates():
+            if gate.get_Name() == "Permutation":
+                continue
             involved_qbits = gate.get_Involved_Qbits()
             if len(involved_qbits) != 1:
                 circuit_structure.append(involved_qbits)
@@ -481,7 +534,7 @@ class PartitionSynthesisResult:
 
 
 class PartitionCandidate:
-    
+
     def __init__(self, partition_idx, topology_idx, permutation_idx, circuit_structure, P_i, P_o, topology, mini_topology, qbit_map, involved_qbits, cnot_count=0):
         #Which partition does this belong to
         self.partition_idx = partition_idx
@@ -491,7 +544,7 @@ class PartitionCandidate:
         self.permutation_idx = permutation_idx
         # the structure of the circuit in Q*
         self.circuit_structure = circuit_structure
-        # P_i in q*->Q* permutation pattern: [q*1 q*0 q*2] where q*1 goes to Q* qubit 0 and etc 
+        # P_i in q*->Q* permutation pattern: [q*1 q*0 q*2] where q*1 goes to Q* qubit 0 and etc
         self.P_i = P_i
         # P_o in Q*->q* permutation pattern [Q*1 Q*0 Q*2] This means that the current output of Q*1 is equal to q*0
         self.P_o = P_o
@@ -529,15 +582,14 @@ class PartitionCandidate:
         pi_list = [int(x) for x in pi]
         n = len(pi_list)
 
-        # Check cache if provided (Bug A: skip cache when neighbor heuristic is active,
-        # since cached paths were computed with different future context)
-        use_cache = (neighbor_info is None or
-                      neighbor_info.get('weight', 0) == 0 or
-                      not neighbor_info.get('edges', []))
-        if swap_cache is not None and use_cache:
+        # Cache is keyed on (pi, qbit_map, neighbor_signature). The signature
+        # captures the neighbor-heuristic context so hits across calls with
+        # the same active neighbor_info are safe.
+        if swap_cache is not None:
             pi_tuple = tuple(pi_list)
             qbit_map_frozen = frozenset(qbit_map_input.items())
-            cache_key = (pi_tuple, qbit_map_frozen)
+            neighbor_sig = _neighbor_signature(neighbor_info)
+            cache_key = (pi_tuple, qbit_map_frozen, neighbor_sig)
             if cache_key in swap_cache:
                 swaps, pi_init = swap_cache[cache_key]
             else:
@@ -555,7 +607,7 @@ class PartitionCandidate:
                 k = qbit_map_inverse[q_star]
                 pi_output[k] = self.node_mapping[P_exit[q_star]]
         return swaps, pi_output
-    
+
     def estimate_swap_count(self, pi, D, reverse=False) -> int:
         """O(n) lower-bound on the number of SWAPs needed to route this
         partition's virtual qubits to their target physical positions.
@@ -589,6 +641,7 @@ class PartitionScoreData:
         Tuple[Tuple[Tuple[int, ...], Tuple[int, ...]], ...], ...
     ]
     circuit_structures: Tuple[Tuple[Tuple[int, ...], ...], ...]
+    cnot_counts: Tuple[Tuple[int, ...], ...]
     qubit_map: Dict[int, int]
     involved_qbits: Tuple[int, ...]
 
@@ -599,24 +652,28 @@ class PartitionScoreData:
 
 def check_circuit_compatibility(circuit: Circuit, topology):
     circuit_topology = []
-    gates = circuit.get_Gates()
-    for gate in gates:
+
+    def collect_two_qubit_edges(gate):
+        if isinstance(gate, Circuit):
+            for subgate in gate.get_Gates():
+                collect_two_qubit_edges(subgate)
+            return
+
         qubits = gate.get_Involved_Qbits()
         if len(qubits) == 1:
-            continue
-        elif len(qubits) == 2:
+            return
+        if len(qubits) == 2:
             qubits = tuple(qubits)
             if qubits not in circuit_topology and qubits[::-1] not in circuit_topology:
                 circuit_topology.append(qubits)
-        else:
-            gates_new = gate.get_Gates()
-            for gate_new in gates_new:
-                qubits_new = gate_new.get_Involved_Qbits()
-                if len(qubits_new)==1:
-                    continue
-                qubits_new = tuple(qubits_new)
-                if qubits_new not in circuit_topology and qubits_new[::-1] not in circuit_topology:
-                    circuit_topology.append(qubits_new)
+            return
+
+        for subgate in gate.get_Gates():
+            collect_two_qubit_edges(subgate)
+
+    for gate in circuit.get_Gates():
+        collect_two_qubit_edges(gate)
+
     for qubits in circuit_topology:
         if qubits not in topology and qubits[::-1] not in topology:
             return False
@@ -629,4 +686,3 @@ def construct_swap_circuit(swap_order, N):
         swap_circ.add_CNOT(swap[1],swap[0])
         swap_circ.add_CNOT(swap[0],swap[1])
     return swap_circ
-
