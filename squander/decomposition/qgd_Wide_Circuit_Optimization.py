@@ -26,6 +26,194 @@ from squander.partitioning.partition import PartitionCircuit
 from squander.partitioning.tools import translate_param_order, build_dependency
 from squander.synthesis.qgd_SABRE import qgd_SABRE as SABRE
 
+try:
+    from bqskit.compiler.basepass import BasePass as _BQSKitBasePass
+    from bqskit.passes.synthesis.synthesis import SynthesisPass as _BQSKitSynthesisPass
+except Exception:
+    _BQSKitBasePass = object
+    _BQSKitSynthesisPass = object
+
+
+_SQUANDER_BQSKIT_SYNTHESIS_CONFIG = None
+
+
+def _copy_bqskit_synthesis_config(config):
+    """Copy only plain data needed by BQSKit worker processes."""
+
+    def copy_value(value):
+        if value is None or isinstance(value, (bool, int, float, str)):
+            return value
+        if isinstance(value, np.generic):
+            return value.item()
+        if isinstance(value, tuple):
+            copied = [copy_value(item) for item in value]
+            return tuple(item for item in copied if item is not _SKIP_CONFIG_VALUE)
+        if isinstance(value, list):
+            copied = [copy_value(item) for item in value]
+            return [item for item in copied if item is not _SKIP_CONFIG_VALUE]
+        if isinstance(value, dict):
+            copied = {}
+            for key, item in value.items():
+                copied_item = copy_value(item)
+                if copied_item is not _SKIP_CONFIG_VALUE:
+                    copied[key] = copied_item
+            return copied
+        return _SKIP_CONFIG_VALUE
+
+    copied_config = {}
+    for key, value in config.items():
+        copied_value = copy_value(value)
+        if copied_value is not _SKIP_CONFIG_VALUE:
+            copied_config[key] = copied_value
+    return copied_config
+
+
+_SKIP_CONFIG_VALUE = object()
+
+
+class SquanderPartitioner(_BQSKitBasePass):
+    """BQSKit pass: replace circuit body with Squander ILP partition blocks."""
+
+    def __init__(self, max_partition_size):
+        super().__init__()
+        self.max_partition_size = max_partition_size
+
+    async def run(self, circuit, data=None):
+        from qiskit import qasm2, QuantumCircuit
+        from squander import Qiskit_IO
+        from bqskit import Circuit as BQSKitCircuit
+        from bqskit.ir.lang.qasm2 import OPENQASM2Language
+
+        circ_qiskit = QuantumCircuit.from_qasm_str(OPENQASM2Language().encode(circuit))
+        circ, orig_parameters = Qiskit_IO.convert_Qiskit_to_Squander(circ_qiskit)
+        partitioned_circuit, parameters, _ = PartitionCircuit(
+            circ, orig_parameters, self.max_partition_size, strategy="ilp"
+        )
+        partitioned_circuit_bqskit = BQSKitCircuit(circ.get_Qbit_Num())
+        for subcircuit in partitioned_circuit.get_Gates():
+            if not isinstance(subcircuit, Circuit):
+                raise RuntimeError(
+                    "Squander ILP partitioning returned a non-block gate; "
+                    "BQSKit SEQPAM requires partition blocks."
+                )
+
+            involved_qbits = sorted(subcircuit.get_Qbits())
+            qbit_map = {qbit: idx for idx, qbit in enumerate(involved_qbits)}
+            subcircuit_parameters = parameters[
+                subcircuit.get_Parameter_Start_Index() :
+                subcircuit.get_Parameter_Start_Index() + subcircuit.get_Parameter_Num()
+            ]
+            remapped_subcircuit = subcircuit.Remap_Qbits(qbit_map, len(involved_qbits))
+            subcircuit_qiskit = Qiskit_IO.get_Qiskit_Circuit(
+                remapped_subcircuit.get_Flat_Circuit(),
+                np.asarray(subcircuit_parameters, dtype=np.float64),
+            )
+            subcircuit_bqskit = OPENQASM2Language().decode(qasm2.dumps(subcircuit_qiskit))
+            partitioned_circuit_bqskit.append_circuit(
+                subcircuit_bqskit,
+                involved_qbits,
+                True,
+                True,
+            )
+        circuit.become(partitioned_circuit_bqskit, False)
+
+
+class SquanderSynthesisPass(_BQSKitSynthesisPass):
+    """BQSKit synthesis pass: optimize partition blocks with Squander."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__()
+        self.config = dict(_SQUANDER_BQSKIT_SYNTHESIS_CONFIG or {})
+
+    @staticmethod
+    def _data_topology(data):
+        if data is not None and getattr(data, "model", None) is not None:
+            return list(data.model.coupling_graph)
+        return None
+
+    async def synthesize(self, target, data=None):
+        from qiskit import qasm2
+        from squander import Qiskit_IO
+        from bqskit.ir.lang.qasm2 import OPENQASM2Language
+
+        target_matrix = np.asarray(target)
+        qbit_num = target.num_qudits
+        mini_topology = self._data_topology(data)
+
+        config = {
+            **self.config,
+            "topology": mini_topology,
+        }
+        candidates = qgd_Wide_Circuit_Optimization.DecomposePartition(
+            target_matrix,
+            config,
+            mini_topology=mini_topology,
+        )
+        if len(candidates) == 0:
+            raise RuntimeError("Squander synthesis failed for BQSKit target.")
+
+        optimized_circuit, optimized_parameters = (
+            qgd_Wide_Circuit_Optimization.CompareAndPickCircuits(
+                [candidate[0] for candidate in candidates],
+                [candidate[1] for candidate in candidates],
+            )
+        )
+
+        optimized_qiskit = Qiskit_IO.get_Qiskit_Circuit(
+            optimized_circuit.Remap_Qbits(
+                {idx: idx for idx in range(qbit_num)}, qbit_num
+            ).get_Flat_Circuit(),
+            np.asarray(optimized_parameters, dtype=np.float64),
+        )
+        return OPENQASM2Language().decode(qasm2.dumps(optimized_qiskit))
+
+    async def run(self, circuit, data=None):
+        from qiskit import qasm2, QuantumCircuit
+        from squander import Qiskit_IO
+        from bqskit.ir.lang.qasm2 import OPENQASM2Language
+
+        circ_qiskit = QuantumCircuit.from_qasm_str(OPENQASM2Language().encode(circuit))
+        circ, parameters = Qiskit_IO.convert_Qiskit_to_Squander(circ_qiskit)
+
+        topology = self._data_topology(data)
+        optimizer = qgd_Wide_Circuit_Optimization(
+            {**self.config, "topology": topology}
+        )
+        optimized_circuit, optimized_parameters = optimizer.OptimizeWideCircuit(
+            circ, parameters
+        )
+
+        optimized_qiskit = Qiskit_IO.get_Qiskit_Circuit(
+            optimized_circuit.get_Flat_Circuit(),
+            np.asarray(optimized_parameters, dtype=np.float64),
+        )
+        optimized_bqskit = OPENQASM2Language().decode(qasm2.dumps(optimized_qiskit))
+        circuit.become(optimized_bqskit, False)
+
+
+@contextlib.contextmanager
+def patched_seqpam_workflow_classes(bqskit_compile_module, use_squander_partitioner, config):
+    """Patch BQSKit workflow factories to instantiate Squander-aware passes."""
+
+    global _SQUANDER_BQSKIT_SYNTHESIS_CONFIG
+
+    original_quick = bqskit_compile_module.QuickPartitioner
+    original_qsearch = bqskit_compile_module.QSearchSynthesisPass
+    original_leap = bqskit_compile_module.LEAPSynthesisPass
+    original_config = _SQUANDER_BQSKIT_SYNTHESIS_CONFIG
+    try:
+        _SQUANDER_BQSKIT_SYNTHESIS_CONFIG = _copy_bqskit_synthesis_config(config)
+        if use_squander_partitioner:
+            bqskit_compile_module.QuickPartitioner = SquanderPartitioner
+        bqskit_compile_module.QSearchSynthesisPass = SquanderSynthesisPass
+        bqskit_compile_module.LEAPSynthesisPass = SquanderSynthesisPass
+        yield
+    finally:
+        bqskit_compile_module.QuickPartitioner = original_quick
+        bqskit_compile_module.QSearchSynthesisPass = original_qsearch
+        bqskit_compile_module.LEAPSynthesisPass = original_leap
+        _SQUANDER_BQSKIT_SYNTHESIS_CONFIG = original_config
+
 
 def extract_subtopology(involved_qbits, qbit_map, config):
     """Return topology edges restricted to ``involved_qbits``, with indices remapped via ``qbit_map``.
@@ -1968,7 +2156,9 @@ class qgd_Wide_Circuit_Optimization:
 
             # Convert squander circuit → qiskit → BQSKit
             # (BQSKit has a from_qiskit helper if you go via Qiskit IR)
-            circo = Qiskit_IO.get_Qiskit_Circuit(circ, parameters)
+            circo = Qiskit_IO.get_Qiskit_Circuit(
+                circ, np.asarray(parameters, dtype=np.float64)
+            )
 
             bqskit_circ = OPENQASM2Language().decode(qasm2.dumps(circo))
 
@@ -2027,7 +2217,9 @@ class qgd_Wide_Circuit_Optimization:
                 and issubclass(getattr(gate, n), gate.Gate)
                 and n not in ("Gate", "CROT", "CR", "SYC", "CCX", "CSWAP")
             }
-            circo = Qiskit_IO.get_Qiskit_Circuit(circ, parameters)
+            circo = Qiskit_IO.get_Qiskit_Circuit(
+                circ, np.asarray(parameters, dtype=np.float64)
+            )
             coupling_map = (
                 None
                 if self.config["topology"] is None
@@ -2504,102 +2696,15 @@ class qgd_Wide_Circuit_Optimization:
         if strategy in ("seqpam-ilp", "seqpam-quick", "bqskit-sabre"):
             from squander import Qiskit_IO
             import bqskit.compiler.compile as bqskit_compile_module
-            from bqskit import Circuit as BQSKitCircuit, compile
             from bqskit.compiler import Compiler
             from bqskit.compiler.compile import (
                 build_sabre_mapping_workflow,
                 build_seqpam_mapping_optimization_workflow,
             )
-            from bqskit.compiler.basepass import BasePass
-            from bqskit.passes.synthesis.synthesis import SynthesisPass
-            wide_circuit_optimizer = self
-
-            class SquanderPartitioner(BasePass):
-                """BQSKit pass: replace circuit body with Squander ILP partition blocks (QASM round-trip)."""
-
-                def __init__(self, max_partition_size):
-                    super().__init__()
-                    self.max_partition_size = max_partition_size
-
-                async def run(self, circuit: BQSKitCircuit, data=None):
-                    from squander import Qiskit_IO
-                    from squander.partitioning.partition import PartitionCircuit
-
-                    circ_qiskit = QuantumCircuit.from_qasm_str(
-                        OPENQASM2Language().encode(circuit)
-                    )
-                    circ, orig_parameters = Qiskit_IO.convert_Qiskit_to_Squander(
-                        circ_qiskit
-                    )
-                    partitioned_circuit, parameters, _ = PartitionCircuit(
-                        circ, orig_parameters, self.max_partition_size, strategy="ilp"
-                    )
-                    partitioned_circuit_qiskit = Qiskit_IO.get_Qiskit_Circuit(
-                        partitioned_circuit, parameters
-                    )
-                    partitioned_circuit_bqskit = OPENQASM2Language().decode(
-                        qasm2.dumps(partitioned_circuit_qiskit)
-                    )
-                    circuit.become(partitioned_circuit_bqskit, False)
-
-            class SquanderSynthesisPass(SynthesisPass):
-                """BQSKit synthesis pass: optimize partition blocks with Squander."""
-
-                def __init__(self, *args, **kwargs):
-                    super().__init__()
-                    self.wide_circuit_optimizer = wide_circuit_optimizer
-
-                async def synthesize(self, target, data=None):
-                    raise NotImplementedError(
-                        "SquanderSynthesisPass optimizes BQSKit circuits via run()."
-                    )
-
-                async def run(self, circuit: BQSKitCircuit, data=None):
-                    from squander import Qiskit_IO
-
-                    circ_qiskit = QuantumCircuit.from_qasm_str(
-                        OPENQASM2Language().encode(circuit)
-                    )
-                    circ, parameters = Qiskit_IO.convert_Qiskit_to_Squander(circ_qiskit)
-
-                    optimizer = qgd_Wide_Circuit_Optimization(
-                        {
-                            **self.wide_circuit_optimizer.config,
-                            "topology": None,
-                        }
-                    )
-                    optimized_circuit, optimized_parameters = optimizer.OptimizeWideCircuit(
-                        circ, parameters
-                    )
-
-                    optimized_qiskit = Qiskit_IO.get_Qiskit_Circuit(
-                        optimized_circuit, optimized_parameters
-                    )
-                    optimized_bqskit = OPENQASM2Language().decode(
-                        qasm2.dumps(optimized_qiskit)
-                    )
-                    circuit.become(optimized_bqskit, False)
-
-            @contextlib.contextmanager
-            def patched_seqpam_workflow_classes(use_squander_partitioner: bool):
-                original_quick = bqskit_compile_module.QuickPartitioner
-                original_qsearch = bqskit_compile_module.QSearchSynthesisPass
-                original_leap = bqskit_compile_module.LEAPSynthesisPass
-                try:
-                    if use_squander_partitioner:
-                        bqskit_compile_module.QuickPartitioner = SquanderPartitioner
-                    bqskit_compile_module.QSearchSynthesisPass = SquanderSynthesisPass
-                    bqskit_compile_module.LEAPSynthesisPass = SquanderSynthesisPass
-                    yield
-                finally:
-                    bqskit_compile_module.QuickPartitioner = original_quick
-                    bqskit_compile_module.QSearchSynthesisPass = original_qsearch
-                    bqskit_compile_module.LEAPSynthesisPass = original_leap
 
             from bqskit.passes import (
                 SetModelPass,
             )
-            from bqskit.ir.gates import CNOTGate  # example; extend as needed
             from bqskit.compiler.machine import MachineModel
             from bqskit.ir.lang.qasm2 import OPENQASM2Language
             from qiskit import qasm2, QuantumCircuit
@@ -2609,7 +2714,9 @@ class qgd_Wide_Circuit_Optimization:
 
             # Convert squander circuit → qiskit → BQSKit
             # (BQSKit has a from_qiskit helper if you go via Qiskit IR)
-            circo = Qiskit_IO.get_Qiskit_Circuit(circ, orig_parameters)
+            circo = Qiskit_IO.get_Qiskit_Circuit(
+                circ, np.asarray(orig_parameters, dtype=np.float64)
+            )
 
             bqskit_circ = OPENQASM2Language().decode(qasm2.dumps(circo))
             # Customizable knobs
@@ -2618,14 +2725,22 @@ class qgd_Wide_Circuit_Optimization:
                 # Routing-only SEQPAM pass pipeline. Patch the classes BQSKit's
                 # workflow factory instantiates, so we do not depend on the private
                 # shape of the returned Workflow.
-                with patched_seqpam_workflow_classes(use_squander_partitioner=True):
+                with patched_seqpam_workflow_classes(
+                    bqskit_compile_module,
+                    use_squander_partitioner=True,
+                    config=self.config,
+                ):
                     mainflow = build_seqpam_mapping_optimization_workflow(
                         block_size=3 #self.config["max_partition_size"]
                     )
             elif strategy == "seqpam-quick":
                 # Keep BQSKit's QuickPartitioner, but replace QSearch/LEAP so
                 # routing does not synthesize/decompose partition blocks.
-                with patched_seqpam_workflow_classes(use_squander_partitioner=False):
+                with patched_seqpam_workflow_classes(
+                    bqskit_compile_module,
+                    use_squander_partitioner=False,
+                    config=self.config,
+                ):
                     mainflow = build_seqpam_mapping_optimization_workflow(
                         block_size=3 #self.config["max_partition_size"]
                     )
@@ -2672,7 +2787,9 @@ class qgd_Wide_Circuit_Optimization:
             from squander.gates import gates_Wrapper as gate
 
             # SUPPORTED_GATES_NAMES = {n.lower().replace("cnot", "cx") for n in dir(gate) if not n.startswith("_") and issubclass(getattr(gate, n), gate.Gate) and n not in ("Gate", "CROT", "CR", "SYC", "CCX", "CSWAP")}
-            circo = Qiskit_IO.get_Qiskit_Circuit(circ, orig_parameters)
+            circo = Qiskit_IO.get_Qiskit_Circuit(
+                circ, np.asarray(orig_parameters, dtype=np.float64)
+            )
             coupling_map = [[i, j] for i, j in self.config["topology"]]
             # circuit_qiskit_sabre = transpile(circo, basis_gates=SUPPORTED_GATES_NAMES, coupling_map=coupling_map, optimization_level=0)
             coupling_map = CouplingMap(coupling_map)
