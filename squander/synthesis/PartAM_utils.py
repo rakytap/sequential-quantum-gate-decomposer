@@ -182,10 +182,9 @@ def find_constrained_swaps_partial(pi_A, pi_B_dict, dist_matrix, adj=None, neigh
                 new_positions = tuple(new_positions)
 
                 new_g = g + 1
-                # Bug B fix: update neighbor positions for BOTH sides of the swap.
-                # A neighbor qubit at nb gets displaced to p, AND a neighbor qubit
-                # at p (if it's also tracked, e.g. overlaps with a partition qubit)
-                # moves to nb.
+                # When a partition qubit swaps into nb, a tracked neighbor at nb
+                # is displaced to p AND a tracked neighbor at p (if it overlaps
+                # with a partition qubit) moves to nb. Update both sides.
                 if use_neighbor:
                     new_n_pos = list(n_pos)
                     if nb in n_phys_to_idx:
@@ -466,7 +465,7 @@ class PartitionSynthesisResult:
         self.synthesised_parameters[topology_idx].append(synthesised_parameters)
         self.cnot_counts[topology_idx].append(flat_circuit.get_Gate_Nums().get('CNOT', 0))
         self.circuit_structures[topology_idx].append(self.extract_circuit_structure(flat_circuit))
-    
+
     def extract_circuit_structure(self, circuit):
         circuit_structure = []
         for gate in circuit.get_Gates():
@@ -535,7 +534,7 @@ class PartitionSynthesisResult:
 
 
 class PartitionCandidate:
-    
+
     def __init__(self, partition_idx, topology_idx, permutation_idx, circuit_structure, P_i, P_o, topology, mini_topology, qbit_map, involved_qbits, cnot_count=0):
         #Which partition does this belong to
         self.partition_idx = partition_idx
@@ -545,7 +544,7 @@ class PartitionCandidate:
         self.permutation_idx = permutation_idx
         # the structure of the circuit in Q*
         self.circuit_structure = circuit_structure
-        # P_i in q*->Q* permutation pattern: [q*1 q*0 q*2] where q*1 goes to Q* qubit 0 and etc 
+        # P_i in q*->Q* permutation pattern: [q*1 q*0 q*2] where q*1 goes to Q* qubit 0 and etc
         self.P_i = P_i
         # P_o in Q*->q* permutation pattern [Q*1 Q*0 Q*2] This means that the current output of Q*1 is equal to q*0
         self.P_o = P_o
@@ -608,7 +607,7 @@ class PartitionCandidate:
                 k = qbit_map_inverse[q_star]
                 pi_output[k] = self.node_mapping[P_exit[q_star]]
         return swaps, pi_output
-    
+
     def estimate_swap_count(self, pi, D, reverse=False) -> int:
         """O(n) lower-bound on the number of SWAPs needed to route this
         partition's virtual qubits to their target physical positions.

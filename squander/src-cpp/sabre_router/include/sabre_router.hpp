@@ -9,7 +9,6 @@ You may obtain a copy of the License at
     http://www.apache.org/licenses/LICENSE-2.0
 
 C++ backend for the SABRE-style partition-aware routing engine.
-Ported from squander/synthesis/PartAM.py and PartAM_utils.py.
 */
 
 #include <cstdint>
@@ -228,8 +227,8 @@ private:
         return D_[phys_u * N_ + phys_v];
     }
 
-    // Heuristic search (port of _heuristic_search_layout_only)
-    // children_graph/parents_graph: swapped for backward passes
+    // Main heuristic search loop.
+    // children_graph/parents_graph are swapped for backward passes.
     std::pair<std::vector<int>, double> heuristic_search(
         const std::vector<int>& F_init,
         std::vector<int> pi,
@@ -241,7 +240,7 @@ private:
         ForwardRouteResult* route_trace = nullptr
     ) const;
 
-    // A* constrained swap search (port of find_constrained_swaps_partial)
+    // A* constrained swap search over the k-dimensional partition state space.
     std::pair<std::vector<std::pair<int,int>>, std::vector<int>>
     find_constrained_swaps(
         const std::vector<int>& pi,
@@ -253,14 +252,14 @@ private:
         const NeighborInfo* neighbor_info = nullptr
     ) const;
 
-    // Lower-bound swap estimate (port of estimate_swap_count)
+    // Lower-bound swap estimate for routing the candidate's partition qubits.
     int estimate_swap_count(
         const CandidateData& cand,
         const std::vector<int>& pi,
         bool reverse
     ) const;
 
-    // BFS lookahead (port of generate_extended_set)
+    // BFS lookahead: multi-qubit partitions near the front layer.
     std::vector<std::pair<int,int>> generate_extended_set(
         const std::vector<int>& F,
         const std::vector<uint8_t>& resolved,
@@ -268,7 +267,7 @@ private:
         const std::vector<std::vector<int>>& parents_graph
     ) const;
 
-    // LightSABRE scoring (port of score_partition_candidate)
+    // LightSABRE relative scoring (arXiv:2409.08368, eq. 1).
     double score_candidate(
         const CandidateData& cand,
         const std::vector<int>& F_snapshot,
@@ -283,7 +282,8 @@ private:
         const NeighborInfo* cached_neighbor_info = nullptr
     ) const;
 
-    // Route and update layout for a candidate (port of transform_pi)
+    // Route a candidate's partition qubits to their input positions and
+    // update pi for the exit positions.
     std::pair<std::vector<std::pair<int,int>>, std::vector<int>>
     transform_pi(
         const CandidateData& cand,

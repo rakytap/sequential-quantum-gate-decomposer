@@ -152,12 +152,6 @@ SabreRouter::SabreRouter(
 }
 
 // ---------------------------------------------------------------------------
-// run_trial (stub for Phase A)
-// ---------------------------------------------------------------------------
-
-// run_trial implemented below (after all private methods)
-
-// ---------------------------------------------------------------------------
 // Helper: random permutation
 // ---------------------------------------------------------------------------
 
@@ -506,7 +500,6 @@ int SabreRouter::estimate_swap_count(
 
 // ---------------------------------------------------------------------------
 // find_constrained_swaps (A* over k-dimensional state space)
-// Port of find_constrained_swaps_partial from PartAM_utils.py
 // ---------------------------------------------------------------------------
 
 std::pair<std::vector<std::pair<int,int>>, std::vector<int>>
@@ -970,7 +963,8 @@ std::vector<std::pair<int,int>> SabreRouter::generate_extended_set(
         if (static_cast<int>(E.size()) >= config_.max_E_size) break;
 
         std::deque<BFSNode> queue;
-        // EXACT Python logic: No pre-checks before pushing!
+        // Push without pre-checking; eligibility is tested when popped so a
+        // single-qubit partition can act as a transparent transit node.
         for (int child : children_graph[front_idx]) {
             queue.push_back({child, 1});
         }
@@ -992,7 +986,8 @@ std::vector<std::pair<int,int>> SabreRouter::generate_extended_set(
             if (!parents_ok) continue;
 
             if (layout_partitions_[part].is_single) {
-                // EXACT Python logic: blindly push grandchildren!
+                // Single-qubit partitions act as transparent transit nodes:
+                // forward their grandchildren at the same depth.
                 for (int child : children_graph[part]) {
                     queue.push_back({child, depth});
                 }
@@ -1604,7 +1599,6 @@ size_t SabreRouter::boundary_beam_select_index(
 }
 
 // ---------------------------------------------------------------------------
-// ---------------------------------------------------------------------------
 // heuristic_search (main loop)
 // ---------------------------------------------------------------------------
 
@@ -1815,7 +1809,7 @@ std::pair<std::vector<int>, double> SabreRouter::heuristic_search(
                 for (int par : pg[child]) {
                     if (!resolved[par]) { parents_ok = false; break; }
                 }
-                
+
                 if (parents_ok) {
                     if (layout_partitions_[child].is_single) {
                         resolved[child] = 1;
@@ -1830,11 +1824,11 @@ std::pair<std::vector<int>, double> SabreRouter::heuristic_search(
                         }
                         std::vector<int> stack;
                         for (int gc : cg[child]) stack.push_back(gc);
-                        
+
                         while (!stack.empty()) {
                             int gc = stack.back();
                             stack.pop_back();
-                            
+
                             if (!resolved[gc] && !in_F[gc]) {
                                 bool gc_parents_ok = true;
                                 for (int p_gc : pg[gc]) {
@@ -1927,11 +1921,12 @@ TrialResult SabreRouter::run_trial(
         }
     }
 
-    // Final evaluation pass (deterministic, no RNG)
-    auto eval_result = heuristic_search(F_fwd, pi, false, nullptr, canonical_data_fwd_, DAG_, IDAG_); // Evaluates cost using a copy under the hood
+    // Deterministic evaluation pass on a copy of pi to score the trial.
+    auto eval_result = heuristic_search(F_fwd, pi, false, nullptr, canonical_data_fwd_, DAG_, IDAG_);
     double cost = eval_result.second;
 
-    return TrialResult{std::move(pi), cost}; // Return the pi from AFTER the backward pass, BEFORE the eval pass
+    // Return the layout from AFTER the backward pass, BEFORE the eval pass.
+    return TrialResult{std::move(pi), cost};
 }
 
 } // namespace squander::routing

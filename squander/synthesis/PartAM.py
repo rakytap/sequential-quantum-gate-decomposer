@@ -172,9 +172,8 @@ class qgd_Partition_Aware_Mapping:
         self.config.setdefault('decay_delta', 0.001)  # Qiskit LightSABRE DECAY_RATE
         self.config.setdefault('swap_burst_budget', 5)  # Qiskit LightSABRE DECAY_RESET_INTERVAL
         self.config.setdefault('path_tiebreak_weight', 0.2)
-        # The neighbor heuristic is normalized to [0, 1] and added to A*'s f-value.
-        # g-deltas are integer and h-deltas are half-integer, so preserving
-        # swap-count optimality requires weight < 0.5.
+        # Neighbor tie-breaker is added to A* f-values normalised to [0, 1];
+        # must stay < 0.5 to preserve swap-count optimality.
         if self.config['path_tiebreak_weight'] >= 0.5:
             logging.warning(
                 "path_tiebreak_weight=%.3f ≥ 0.5 may override SWAP-count "
@@ -190,56 +189,29 @@ class qgd_Partition_Aware_Mapping:
         self.config.setdefault('layout_boundary_beam_depth', None)
         self.config.setdefault('routing_trace_path', None)
         self.config['partition_weight_model'] = 'window_turnover'
-        # Capacity-normalised density: block_density = k_2q / capacity[w].
-        # With CNOT-budget capacities {2:3, 3:14, 4:61}, density saturates at
-        # 1.0 for every width, so density_weight 1.0 gives a max bonus that
-        # exactly cancels the width-2 penalty (1.0). Wider widths need extra
-        # signal (triangle / discounted boundary / negative span_cost) to
-        # justify selection.
+        # ILP partition-selection weights. See _parts_to_window_turnover_weights
+        # for the full cost formula; defaults are calibrated against the
+        # synthesis-capacity / width-penalty pair below so saturation rewards
+        # match across widths.
         self.config.setdefault('partition_density_weight', 1.0)
         self.config.setdefault('partition_boundary_weight', 0.9)
         self.config.setdefault('partition_depth_balance_weight', 0.25)
-        # Shape of the depth-balance penalty: depth_balance_weight *
-        # depth_fraction**exponent * max(width_penalty, 1). 2.0 (current
-        # squared form) over-penalises tall partitions in deep circuits
-        # (qft, multiplier) so they get fragmented into shallow wide
-        # slices, creating extra boundaries and routing SWAPs. Lower to
-        # 1.0 for a linear penalty. Sweepable.
         self.config.setdefault('partition_depth_balance_exponent', 2.0)
-        # Triangle is a small tie-breaker on top of absorption-credit density
-        # and discounted boundary. A truly triangular 3q block (Toffoli, etc.)
-        # gets a modest extra reward; chain-shaped 3q blocks don't.
         self.config.setdefault('partition_triangle_weight', 1.5)
         self.config.setdefault('partition_triangle_threshold', 0.6)
         self.config.setdefault('partition_triangle_window_radius', 8)
         self.config.setdefault('partition_synthesis_cost_weight', 1.0)
-        # Calibrated so a width-3 block whose three qubits are mutually
-        # non-adjacent on a sparse grid (sum_extra ≈ 3) takes ~+1.5 cost,
-        # enough to overpower a saturated triangle bonus (≤ 2.5) and pull
-        # the ILP back to width-2 unless the block is topology-aligned.
         self.config.setdefault('partition_routing_span_weight', 2.0)
-        # Averaged turnover with DAG successor partitions: penalises blocks
-        # whose support has little qubit overlap with the candidate parts
-        # immediately downstream. Captures inter-block routing churn that
-        # routing_span (intra-block spread) misses. Linear in ILP vars
-        # since each candidate gets a precomputed scalar.
         self.config.setdefault('partition_turnover_weight', 0.5)
-        # Anti-chain penalty: a width>=3 block whose qubits are wired as a
-        # chain (low triangle density) synthesises to more body CNOTs than
-        # the equivalent 2q blocks and adds a routing boundary with no
-        # entanglement payoff. triangle_bonus only ever rewards, so without
-        # this term such blocks are picked purely on boundary absorption.
-        # 0.0 disables it (recovers prior behaviour). Sweepable.
+        # Penalises chain-shaped width>=3 blocks; 0.0 disables it.
         self.config.setdefault('partition_chain_penalty_weight', 2.0)
         self.config.setdefault('partition_min_cost', 0.05)
         self.config.setdefault(
             'partition_width_penalties',
             {1: 0.25, 2: 1.0, 3: 4.0, 4: 16.0},
         )
-        # CNOT lower-bound synthesis budgets (Vidal–Dawson for w=2,
-        # Shende–Markov–Bullock for w=3, QSD for w=4). Sets block_density
-        # to "fraction of synthesis budget used" with consistent semantics
-        # across widths — saturation reward matches across all w.
+        # CNOT lower-bound synthesis budgets (Vidal–Dawson w=2,
+        # Shende–Markov–Bullock w=3, QSD w=4).
         self.config.setdefault(
             'partition_synthesis_capacity',
             {1: 1, 2: 3, 3: 14, 4: 61},
@@ -257,7 +229,7 @@ class qgd_Partition_Aware_Mapping:
                 f"{allowed_partition_weight_models}, got "
                 f"{self.config['partition_weight_model']}."
             )
-        
+
         # Initialize caches for performance optimization
         self._topology_cache = {}  # {frozenset(edges): [topology_candidates]}
         self._swap_cache = {}     # {(pi_tuple, qbit_map_frozen): (swaps, output_perm)}
@@ -273,7 +245,7 @@ class qgd_Partition_Aware_Mapping:
         Cached version of get_subtopologies_of_type.
         Uses canonical form of mini_topology as cache key.
         """
-        
+
         # Create canonical form key
         target_qubits = set()
         for u, v in mini_topology:
@@ -281,13 +253,13 @@ class qgd_Partition_Aware_Mapping:
             target_qubits.add(v)
         if not target_qubits:
             return []
-        
+
         # Use canonical form as cache key
         canonical_key = get_canonical_form(target_qubits, mini_topology)
-        
+
         if canonical_key not in self._topology_cache:
             self._topology_cache[canonical_key] = get_subtopologies_of_type(self.topology, mini_topology)
-        
+
         return self._topology_cache[canonical_key]
 
     # ------------------------------------------------------------------------
@@ -1065,7 +1037,6 @@ class qgd_Partition_Aware_Mapping:
 
         # ---- Phase 1: Partition enumeration ----
         allparts, g, go, rgo, single_qubit_chains, gate_to_qubit, gate_to_tqubit = get_all_partitions(working_circ, self.config["max_partition_size"])
-        qbit_num_orig_circuit = working_circ.get_Qbit_Num()
         gate_dict = {i: gate for i, gate in enumerate(working_circ.get_Gates())}
 
         single_qubit_chains_pre = {x[0]: x for x in single_qubit_chains if rgo[x[0]]}
@@ -1122,19 +1093,19 @@ class qgd_Partition_Aware_Mapping:
             selected_multi = sum(
                 count for size, count in size_counts.items() if size > 1
             )
-            print(
-                "Selected partitions: "
-                f"2-qubit={size_counts.get(2, 0)}, "
-                f"3-qubit={size_counts.get(3, 0)}, "
-                f"total_multi={selected_multi}"
+            logging.info(
+                "Selected partitions: 2-qubit=%d, 3-qubit=%d, total_multi=%d",
+                size_counts.get(2, 0),
+                size_counts.get(3, 0),
+                selected_multi,
             )
 
         # ---- Phase 4: Assemble partitioned circuit from selected partitions only ----
-        partitioned_circuit = Circuit(qbit_num_orig_circuit)
+        partitioned_circuit = Circuit(qbit_num)
         params = []
 
         for gates in selected_parts_gates[:n_multi]:
-            c = Circuit(qbit_num_orig_circuit)
+            c = Circuit(qbit_num)
             for gate_idx in _get_topo_order({x: go[x] & gates for x in gates},
                                             {x: rgo[x] & gates for x in gates},
                                             gate_to_qubit):
@@ -1144,7 +1115,7 @@ class qgd_Partition_Aware_Mapping:
             partitioned_circuit.add_Circuit(c)
 
         for chain in standalone_chains:
-            c = Circuit(qbit_num_orig_circuit)
+            c = Circuit(qbit_num)
             for gate_idx in chain:
                 c.add_Gate(gate_dict[gate_idx])
                 start = gate_dict[gate_idx].get_Parameter_Start_Index()
@@ -1715,7 +1686,7 @@ class qgd_Partition_Aware_Mapping:
             for cost, pi in heuristic_ranked[actual_rank_top_k:]
         )
         return ranked
-        
+
     @staticmethod
     def _snapshot_single_qubit_circuits(optimized_partitions):
         return {
@@ -2228,6 +2199,42 @@ class qgd_Partition_Aware_Mapping:
             )
             routing_elapsed_before_cleanup = time.time() - routing_start
 
+            # Pick the best trial (already ranked by actual routing).
+            _, best_pi, _, trace_pi_init, route_steps = trial_results[0]
+
+            if route_steps is not None:
+                partition_order = self._partition_order_from_cpp_steps(
+                    route_steps,
+                    optimized_partitions,
+                    candidate_cache,
+                    N,
+                    pi_initial=trace_pi_init,
+                )
+                pi = np.asarray(best_pi, dtype=np.int64)
+                pi_initial = np.asarray(trace_pi_init, dtype=np.int64)
+                final_route_steps = route_steps
+                final_route_pi_initial = pi_initial.copy()
+            else:
+                F = self.get_initial_layer(IDAG, N, optimized_partitions)
+                partition_order, pi, pi_initial = self.Heuristic_Search(
+                    F,
+                    best_pi.copy(),
+                    DAG,
+                    IDAG,
+                    optimized_partitions,
+                    scoring_partitions,
+                    D,
+                    candidate_cache=candidate_cache,
+                )
+
+            trial_circuit, trial_params = self.Construct_circuit_from_HS(
+                partition_order, optimized_partitions, N
+            )
+            routing_swap_cnot, partition_body_cnot = (
+                self._partition_order_cnot_breakdown(partition_order)
+            )
+            pre_cleanup_cnots = trial_circuit.get_Gate_Nums().get('CNOT', 0)
+
             if do_cleanup:
                 from squander.decomposition.qgd_Wide_Circuit_Optimization import (
                     qgd_Wide_Circuit_Optimization,
@@ -2239,160 +2246,25 @@ class qgd_Partition_Aware_Mapping:
                 cleanup_config['test_subcircuits'] = False
                 cleanup_config['test_final_circuit'] = False
                 cleanup_config['global_min'] = True
-                cleanup_config['use_osr'] = 0
-                cleanup_config['use_graph_search'] = 0
-                cleanup_config['part_size_end'] = 3
-                cleanup_config['max_partition_size'] = 3
+                cleanup_config['use_osr'] = 1
+                cleanup_config['use_graph_search'] = 1
+                cleanup_config['max_partition_size'] = 4
 
                 wco = qgd_Wide_Circuit_Optimization(cleanup_config)
 
-                saved_sq_circuits = self._snapshot_single_qubit_circuits(
-                    optimized_partitions
-                )
-
-                cleanup_top_k = self.config.get('cleanup_top_k', 3)
-                top_layouts = trial_results[:cleanup_top_k]
-
-                best_circuit = None
-                best_params = None
-                best_pi_init = None
-                best_pi = None
-                best_cost = float('inf')
-                best_pre_cleanup = None
-                best_routing_swap_cnot = 0
-                best_partition_body_cnot = 0
-                best_route_steps = None
-                best_route_pi_initial = None
-
-                for _, trial_pi, _, trace_pi_init, route_steps in top_layouts:
-                    self._restore_single_qubit_circuits(
-                        optimized_partitions, saved_sq_circuits
-                    )
-                    if route_steps is not None:
-                        partition_order = self._partition_order_from_cpp_steps(
-                            route_steps,
-                            optimized_partitions,
-                            candidate_cache,
-                            N,
-                            pi_initial=trace_pi_init,
-                        )
-                        pi_out = np.asarray(trial_pi, dtype=np.int64)
-                        pi_init = np.asarray(trace_pi_init, dtype=np.int64)
-                    else:
-                        F_trial = self.get_initial_layer(
-                            IDAG, N, optimized_partitions
-                        )
-                        partition_order, pi_out, pi_init = self.Heuristic_Search(
-                            F_trial,
-                            trial_pi.copy(),
-                            DAG,
-                            IDAG,
-                            optimized_partitions,
-                            scoring_partitions,
-                            D,
-                            candidate_cache=candidate_cache,
-                        )
-
-                    trial_circuit, trial_params = self.Construct_circuit_from_HS(
-                        partition_order, optimized_partitions, N
-                    )
-                    pre_cleanup_cnots = trial_circuit.get_Gate_Nums().get(
-                        'CNOT', 0
-                    )
-                    trial_routing_cnot, trial_partition_cnot = (
-                        self._partition_order_cnot_breakdown(partition_order)
-                    )
-
-                    cleanup_t0 = time.time()
-                    cleaned_circuit, cleaned_params = wco.OptimizeWideCircuit(
-                        trial_circuit.get_Flat_Circuit(),
-                        trial_params,
-                    )
-                    cleaned_cost = cleaned_circuit.get_Gate_Nums().get(
-                        'CNOT', 0
-                    )
-                    cleanup_total += time.time() - cleanup_t0
-
-                    if cleaned_cost < best_cost:
-                        best_cost = cleaned_cost
-                        best_pre_cleanup = pre_cleanup_cnots
-                        best_circuit = cleaned_circuit
-                        best_params = cleaned_params
-                        best_pi_init = pi_init
-                        best_pi = pi_out
-                        best_routing_swap_cnot = trial_routing_cnot
-                        best_partition_body_cnot = trial_partition_cnot
-                        best_route_steps = route_steps
-                        best_route_pi_initial = (
-                            pi_init.copy()
-                            if hasattr(pi_init, "copy")
-                            else list(pi_init)
-                        )
-
-                final_cleanup_config = dict(cleanup_config)
-                final_cleanup_config['use_osr'] = 1
-                final_cleanup_config['use_graph_search'] = 1
-                final_cleanup_config['part_size_end'] = 4
-
-                wco = qgd_Wide_Circuit_Optimization(final_cleanup_config)
-
                 cleanup_t0 = time.time()
                 final_circuit, final_parameters = wco.OptimizeWideCircuit(
-                    best_circuit.get_Flat_Circuit(),
-                    best_params,
+                    trial_circuit.get_Flat_Circuit(),
+                    trial_params,
                 )
                 cleanup_total += time.time() - cleanup_t0
-                pi_initial = best_pi_init
-                pi = best_pi
-                routing_swap_cnot = best_routing_swap_cnot
-                partition_body_cnot = best_partition_body_cnot
-                final_route_steps = best_route_steps
-                final_route_pi_initial = best_route_pi_initial
-
             else:
-                _, best_pi, _, trace_pi_init, route_steps = trial_results[0]
-
-                if route_steps is not None:
-                    saved_sq_circuits = self._snapshot_single_qubit_circuits(
-                        optimized_partitions
-                    )
-                    self._restore_single_qubit_circuits(
-                        optimized_partitions, saved_sq_circuits
-                    )
-                    partition_order = self._partition_order_from_cpp_steps(
-                        route_steps,
-                        optimized_partitions,
-                        candidate_cache,
-                        N,
-                        pi_initial=trace_pi_init,
-                    )
-                    pi = np.asarray(best_pi, dtype=np.int64)
-                    pi_initial = np.asarray(trace_pi_init, dtype=np.int64)
-                    final_route_steps = route_steps
-                    final_route_pi_initial = pi_initial.copy()
-                else:
-                    F = self.get_initial_layer(IDAG, N, optimized_partitions)
-                    partition_order, pi, pi_initial = self.Heuristic_Search(
-                        F,
-                        best_pi.copy(),
-                        DAG,
-                        IDAG,
-                        optimized_partitions,
-                        scoring_partitions,
-                        D,
-                        candidate_cache=candidate_cache,
-                    )
-                final_circuit, final_parameters = self.Construct_circuit_from_HS(
-                    partition_order, optimized_partitions, N
-                )
-                routing_swap_cnot, partition_body_cnot = (
-                    self._partition_order_cnot_breakdown(partition_order)
-                )
+                final_circuit, final_parameters = trial_circuit, trial_params
 
         if do_cleanup and n_iterations > 0:
             self._routing_time = routing_elapsed_before_cleanup
             self._cleanup_time = cleanup_total
-            self._cnot_pre_cleanup = best_pre_cleanup
+            self._cnot_pre_cleanup = pre_cleanup_cnots
         else:
             self._routing_time = time.time() - routing_start
             self._cleanup_time = 0.0
@@ -3524,7 +3396,7 @@ class qgd_Partition_Aware_Mapping:
                         else:
                             F.append(child)
 
-        return pi, total_cost    
+        return pi, total_cost
     # ------------------------------------------------------------------------
     # Circuit Construction
     # ------------------------------------------------------------------------
@@ -3534,7 +3406,7 @@ class qgd_Partition_Aware_Mapping:
         final_parameters = []
         perm_count = 0
         partition_count = 0
-        
+
         for part in partition_order:
             if isinstance(part, Circuit):
                 final_circuit.add_Circuit(part)
@@ -3548,15 +3420,15 @@ class qgd_Partition_Aware_Mapping:
                 final_circuit.add_Circuit(part_circ)
                 final_parameters.append(part_parameters)
                 partition_count += 1
-        
+
         if final_parameters:
             final_parameters = np.concatenate([np.atleast_1d(p).ravel() for p in final_parameters], axis=0)
         else:
             final_parameters = np.array([])
         if not check_circuit_compatibility(final_circuit,self.topology):
-            print("ERROR: Final circuit is not compatible with device topology!")
+            logging.error("Final circuit is not compatible with device topology")
         return final_circuit, final_parameters
-    
+
     # ------------------------------------------------------------------------
     # Scoring
     # ------------------------------------------------------------------------
@@ -3803,7 +3675,7 @@ class qgd_Partition_Aware_Mapping:
     # ------------------------------------------------------------------------
     # Graph Construction
     # ------------------------------------------------------------------------
-        
+
     def get_initial_layer(self, IDAG, N, optimized_partitions):
         del N, optimized_partitions
         return [idx for idx in range(len(IDAG)) if not IDAG[idx]]
@@ -3812,7 +3684,7 @@ class qgd_Partition_Aware_Mapping:
     def get_final_layer(self, DAG, N, optimized_partitions):
         del N, optimized_partitions
         return [idx for idx in range(len(DAG) - 1, -1, -1) if not DAG[idx]]
-                
+
     def construct_DAG_and_IDAG(self, optimized_partitions):
         DAG = []
         IDAG = []
@@ -3844,7 +3716,7 @@ class qgd_Partition_Aware_Mapping:
             DAG.append(children)
             IDAG.append(parents)
         return DAG, IDAG
-    
+
     # ------------------------------------------------------------------------
     # Distance & Layout
     # ------------------------------------------------------------------------
@@ -3852,19 +3724,19 @@ class qgd_Partition_Aware_Mapping:
     def compute_distances_bfs(self, N):
         """BFS distance computation - faster than Floyd-Warshall."""
         D = np.ones((N, N)) * np.inf
-        
+
         # Build adjacency list
         adj = defaultdict(list)
         for u, v in self.config['topology']:
             adj[u].append(v)
             adj[v].append(u)
-        
+
         # BFS from each vertex
         for start in range(N):
             D[start][start] = 0
             queue = deque([(start, 0)])
             visited = {start}
-            
+
             while queue:
                 node, dist = queue.popleft()
                 for neighbor in adj[node]:
@@ -3872,7 +3744,7 @@ class qgd_Partition_Aware_Mapping:
                         visited.add(neighbor)
                         D[start][neighbor] = dist + 1
                         queue.append((neighbor, dist + 1))
-        
+
         # Store adjacency list for reuse by A* routing
         self._adj = [list(adj[i]) for i in range(N)]
 
@@ -3893,9 +3765,6 @@ class qgd_Partition_Aware_Mapping:
            retry VF2 — handles "almost perfect" embeddings.
         3. Fallback: greedy weighted-distance placement from partition weights.
         """
-        from collections import defaultdict
-        from squander.synthesis.PartAM_utils import PartitionSynthesisResult, SingleQubitPartitionResult
-
         if not self.topology:
             return np.arange(N)
 
@@ -3983,9 +3852,6 @@ class qgd_Partition_Aware_Mapping:
 
     def _greedy_seeded_layout(self, optimized_partitions, D, N):
         """Greedy weighted-distance placement (fallback when VF2 fails)."""
-        from collections import defaultdict
-        from squander.synthesis.PartAM_utils import PartitionSynthesisResult, SingleQubitPartitionResult
-
         # Build interaction weights from partitions
         interaction_weight = defaultdict(float)
         for partition in optimized_partitions:
@@ -4067,63 +3933,3 @@ class qgd_Partition_Aware_Mapping:
                 placed_physical.add(best_physical)
 
         return pi
-
-
-    def generate_DAG_levels(self, circuit):
-        """
-        Generate DAG levels - groups gates by their topological level.
-        
-        Args:
-            circuit: The quantum circuit to analyze
-            
-        Returns:
-            List of lists, where each inner list contains gate indices at the same DAG level.
-            Level 0 contains gates with no parents, level 1 contains gates whose parents
-            are all at level 0, etc.
-        """ 
-        gates = circuit.get_Gates()
-        num_gates = len(gates)
-        
-        # Build parent count for each gate
-        parent_counts = [0] * num_gates
-        children_map = [[] for _ in range(num_gates)]
-        
-        for gate_idx in range(num_gates):
-            gate = gates[gate_idx]
-            parents = circuit.get_Parents(gate)
-            parent_counts[gate_idx] = len(parents)
-            
-            # Build children map
-            children = circuit.get_Children(gate)
-            for child_idx in children:
-                children_map[gate_idx].append(child_idx)
-        
-        # Initialize level 0 with gates that have no parents
-        levels = []
-        current_level = []
-        processed = [False] * num_gates
-        
-        # Find gates with no parents (level 0)
-        for gate_idx in range(num_gates):
-            if parent_counts[gate_idx] == 0:
-                current_level.append(gate_idx)
-                processed[gate_idx] = True
-        
-        # Process levels using BFS
-        while current_level:
-            levels.append(current_level)
-            next_level = []
-            
-            # Process all gates in current level
-            for gate_idx in current_level:
-                # Decrement parent counts for children
-                for child_idx in children_map[gate_idx]:
-                    parent_counts[child_idx] -= 1
-                    # If all parents are processed, add to next level
-                    if parent_counts[child_idx] == 0 and not processed[child_idx]:
-                        next_level.append(child_idx)
-                        processed[child_idx] = True
-            
-            current_level = next_level
-        
-        return levels
