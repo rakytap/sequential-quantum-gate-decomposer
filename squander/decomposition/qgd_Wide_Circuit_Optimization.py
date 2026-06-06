@@ -29,9 +29,13 @@ from squander.synthesis.qgd_SABRE import qgd_SABRE as SABRE
 try:
     from bqskit.compiler.basepass import BasePass as _BQSKitBasePass
     from bqskit.passes.synthesis.synthesis import SynthesisPass as _BQSKitSynthesisPass
+    from bqskit.passes.synthesis.qsearch import QSearchSynthesisPass as _BQSKitQSearchSynthesisPass
+    from bqskit.passes.synthesis.leap import LEAPSynthesisPass as _BQSKitLEAPSynthesisPass
 except Exception:
     _BQSKitBasePass = object
     _BQSKitSynthesisPass = object
+    _BQSKitQSearchSynthesisPass = None
+    _BQSKitLEAPSynthesisPass = None
 
 
 _SQUANDER_BQSKIT_SYNTHESIS_CONFIG = None
@@ -69,6 +73,24 @@ def _copy_bqskit_synthesis_config(config):
 
 
 _SKIP_CONFIG_VALUE = object()
+
+
+def _bit_reversed_matrix_order(matrix, qbit_num):
+    """Convert between BQSKit/Qiskit and Squander matrix qubit ordering."""
+
+    if qbit_num <= 1:
+        return matrix
+
+    perm = []
+    for idx in range(1 << qbit_num):
+        rev_idx = 0
+        value = idx
+        for _ in range(qbit_num):
+            rev_idx = (rev_idx << 1) | (value & 1)
+            value >>= 1
+        perm.append(rev_idx)
+
+    return matrix[np.ix_(perm, perm)]
 
 
 class SquanderPartitioner(_BQSKitBasePass):
@@ -121,9 +143,16 @@ class SquanderPartitioner(_BQSKitBasePass):
 class SquanderSynthesisPass(_BQSKitSynthesisPass):
     """BQSKit synthesis pass: optimize partition blocks with Squander."""
 
+    fallback_synthesis_cls = None
+
     def __init__(self, *args, **kwargs):
         super().__init__()
         self.config = dict(_SQUANDER_BQSKIT_SYNTHESIS_CONFIG or {})
+        self.fallback_synthesis = (
+            self.fallback_synthesis_cls(*args, **kwargs)
+            if self.fallback_synthesis_cls is not None
+            else None
+        )
 
     @staticmethod
     def _data_topology(data):
@@ -135,9 +164,11 @@ class SquanderSynthesisPass(_BQSKitSynthesisPass):
         from qiskit import qasm2
         from squander import Qiskit_IO
         from bqskit.ir.lang.qasm2 import OPENQASM2Language
+        from bqskit.qis.unitary.unitarymatrix import UnitaryMatrix
 
         target_matrix = np.asarray(target)
         qbit_num = target.num_qudits
+        squander_target_matrix = _bit_reversed_matrix_order(target_matrix, qbit_num)
         mini_topology = self._data_topology(data)
 
         config = {
@@ -145,12 +176,18 @@ class SquanderSynthesisPass(_BQSKitSynthesisPass):
             "topology": mini_topology,
         }
         candidates = qgd_Wide_Circuit_Optimization.DecomposePartition(
-            target_matrix,
+            squander_target_matrix,
             config,
             mini_topology=mini_topology,
         )
         if len(candidates) == 0:
-            raise RuntimeError("Squander synthesis failed for BQSKit target.")
+            candidates = qgd_Wide_Circuit_Optimization.DecomposePartition(
+                squander_target_matrix,
+                {**config, "use_graph_search": False, "use_osr": False},
+                mini_topology=mini_topology,
+            )
+        if len(candidates) == 0:
+            return await self._fallback_synthesize(target, data)
 
         optimized_circuit, optimized_parameters = (
             qgd_Wide_Circuit_Optimization.CompareAndPickCircuits(
@@ -160,35 +197,36 @@ class SquanderSynthesisPass(_BQSKitSynthesisPass):
         )
 
         optimized_qiskit = Qiskit_IO.get_Qiskit_Circuit(
-            optimized_circuit.Remap_Qbits(
-                {idx: idx for idx in range(qbit_num)}, qbit_num
-            ).get_Flat_Circuit(),
-            np.asarray(optimized_parameters, dtype=np.float64),
-        )
-        return OPENQASM2Language().decode(qasm2.dumps(optimized_qiskit))
-
-    async def run(self, circuit, data=None):
-        from qiskit import qasm2, QuantumCircuit
-        from squander import Qiskit_IO
-        from bqskit.ir.lang.qasm2 import OPENQASM2Language
-
-        circ_qiskit = QuantumCircuit.from_qasm_str(OPENQASM2Language().encode(circuit))
-        circ, parameters = Qiskit_IO.convert_Qiskit_to_Squander(circ_qiskit)
-
-        topology = self._data_topology(data)
-        optimizer = qgd_Wide_Circuit_Optimization(
-            {**self.config, "topology": topology}
-        )
-        optimized_circuit, optimized_parameters = optimizer.OptimizeWideCircuit(
-            circ, parameters
-        )
-
-        optimized_qiskit = Qiskit_IO.get_Qiskit_Circuit(
             optimized_circuit.get_Flat_Circuit(),
             np.asarray(optimized_parameters, dtype=np.float64),
         )
-        optimized_bqskit = OPENQASM2Language().decode(qasm2.dumps(optimized_qiskit))
-        circuit.become(optimized_bqskit, False)
+        synthesized = OPENQASM2Language().decode(qasm2.dumps(optimized_qiskit))
+        target_unitary = UnitaryMatrix(target)
+        distance = target_unitary.get_distance_from(synthesized.get_unitary())
+        validation_tolerance = max(
+            self.config.get("tolerance", 1e-8),
+            self.config.get("bqskit_synthesis_validation_tolerance", 1e-4),
+        )
+        if distance > validation_tolerance:
+            return await self._fallback_synthesize(target, data)
+        return synthesized
+
+    async def _fallback_synthesize(self, target, data=None):
+        if self.fallback_synthesis is None:
+            raise RuntimeError("Squander synthesis failed for BQSKit target.")
+        return await self.fallback_synthesis.synthesize(target, data)
+
+
+class SquanderQSearchSynthesisPass(SquanderSynthesisPass):
+    """Squander synthesis wrapper with BQSKit QSearch fallback."""
+
+    fallback_synthesis_cls = _BQSKitQSearchSynthesisPass
+
+
+class SquanderLEAPSynthesisPass(SquanderSynthesisPass):
+    """Squander synthesis wrapper with BQSKit LEAP fallback."""
+
+    fallback_synthesis_cls = _BQSKitLEAPSynthesisPass
 
 
 @contextlib.contextmanager
@@ -205,8 +243,8 @@ def patched_seqpam_workflow_classes(bqskit_compile_module, use_squander_partitio
         _SQUANDER_BQSKIT_SYNTHESIS_CONFIG = _copy_bqskit_synthesis_config(config)
         if use_squander_partitioner:
             bqskit_compile_module.QuickPartitioner = SquanderPartitioner
-        bqskit_compile_module.QSearchSynthesisPass = SquanderSynthesisPass
-        bqskit_compile_module.LEAPSynthesisPass = SquanderSynthesisPass
+        bqskit_compile_module.QSearchSynthesisPass = SquanderQSearchSynthesisPass
+        bqskit_compile_module.LEAPSynthesisPass = SquanderLEAPSynthesisPass
         yield
     finally:
         bqskit_compile_module.QuickPartitioner = original_quick
@@ -2658,6 +2696,7 @@ class qgd_Wide_Circuit_Optimization:
             forced_test: If true, run the comparison even when ``test_final_circuit``
                 is false in config.
         """
+        if circ.get_Qbit_Num() <= 12: forced_test = True  # always test small circuits to catch bugs
         if self.config["test_final_circuit"] or forced_test:
             if (
                 routing
@@ -2731,7 +2770,7 @@ class qgd_Wide_Circuit_Optimization:
                     config=self.config,
                 ):
                     mainflow = build_seqpam_mapping_optimization_workflow(
-                        block_size=3 #self.config["max_partition_size"]
+                        block_size=self.config["max_partition_size"]
                     )
             elif strategy == "seqpam-quick":
                 # Keep BQSKit's QuickPartitioner, but replace QSearch/LEAP so
@@ -2742,7 +2781,7 @@ class qgd_Wide_Circuit_Optimization:
                     config=self.config,
                 ):
                     mainflow = build_seqpam_mapping_optimization_workflow(
-                        block_size=3 #self.config["max_partition_size"]
+                        block_size=self.config["max_partition_size"]
                     )
             elif strategy == "bqskit-sabre":
                 mainflow = build_sabre_mapping_workflow()
@@ -2845,7 +2884,8 @@ class qgd_Wide_Circuit_Optimization:
             Squander_remapped_circuit, self.config["topology"]
         )
 
-        print("cheking circuit after routing")
+        print("checking circuit after routing")
+        print(self.config)
         self.check_compare_circuits(
             circ,
             orig_parameters,
