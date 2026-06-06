@@ -101,7 +101,7 @@ if __name__ == "__main__":
             (a2a_time, routing_time, opt_time, elapsed),
         )
         wide_circuit_optimizer.check_compare_circuits(
-            circ, optparameters, optcirc, optparameters, routing=True
+            circ, parameters, optcirc, optparameters, routing=True
         )
         with open("results.txt", "a") as f:
             f.write(
