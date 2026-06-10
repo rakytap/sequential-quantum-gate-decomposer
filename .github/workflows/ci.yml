@@ -129,7 +129,7 @@ jobs:
         TBB_LIB_DIR: ${{ env.TBB_LIB_DIR }}
         TBB_INC_DIR: ${{ env.TBB_INC_DIR }}
       run: |
-        rm -rf _skbuild
+        python -c "import shutil; shutil.rmtree('_skbuild', ignore_errors=True)"
         python -m pip install -e . -q
 
 
