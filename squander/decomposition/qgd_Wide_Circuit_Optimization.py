@@ -1528,6 +1528,8 @@ class qgd_Wide_Circuit_Optimization:
         config.setdefault("max_partition_size", 3)
         config.setdefault("topology", None)
         config.setdefault("partition_strategy", "ilp")
+        config.setdefault("auto_expand_partition_size", True)
+        config.setdefault("force_small_circuit_validation", True)
 
         # testing the fields of config
         strategy = config["strategy"]
@@ -1574,6 +1576,16 @@ class qgd_Wide_Circuit_Optimization:
         self.config = config
 
         self.max_partition_size = max_partition_size
+
+    @staticmethod
+    def partition_tree_level_max(config, subcircuit, reduction=1):
+        """Return the tree-search depth used for partition-local rewrites."""
+
+        target_depth = max(0, CNOTGateCount(subcircuit, 0) - reduction)
+        configured_limit = config.get("partition_tree_level_max", None)
+        if configured_limit is None:
+            configured_limit = target_depth
+        return min(target_depth, int(configured_limit))
 
     def ConstructCircuitFromPartitions(
         self, circs: List[Circuit], parameter_arrs: List[List[np.ndarray]]
@@ -1815,8 +1827,8 @@ class qgd_Wide_Circuit_Optimization:
                             {
                                 **config,
                                 "stop_first_solution": True,
-                                "tree_level_max": max(
-                                    0, CNOTGateCount(subcircuit, 0) - 1
+                                "tree_level_max": qgd_Wide_Circuit_Optimization.partition_tree_level_max(
+                                    config, innercirc
                                 ),
                             },
                             structure=None,
@@ -1848,7 +1860,9 @@ class qgd_Wide_Circuit_Optimization:
                             {
                                 **config,
                                 "stop_first_solution": False,
-                                "tree_level_max": max(0, CNOTGateCount(subcircuit, 0)),
+                                "tree_level_max": qgd_Wide_Circuit_Optimization.partition_tree_level_max(
+                                    config, innercirc, reduction=0
+                                ),
                             },
                             structure=None,
                         )
@@ -2283,8 +2297,9 @@ class qgd_Wide_Circuit_Optimization:
             print("Optimizing circuit with Squander")
             part_size_start = self.max_partition_size
             part_size_end = self.max_partition_size
-            if self.config.get("use_osr", False) or self.config.get(
-                "use_graph_search", False
+            if self.config.get("auto_expand_partition_size", True) and (
+                self.config.get("use_osr", False)
+                or self.config.get("use_graph_search", False)
             ):
                 part_size_end = min(4, circ.get_Qbit_Num())
             count = CNOTGateCount(circ, 0)
@@ -2495,16 +2510,17 @@ class qgd_Wide_Circuit_Optimization:
                     # call a process to decompose a subcircuit
                     config = {
                         **self.config,
-                        "tree_level_max": max(0, CNOTGateCount(subcircuit, 0) - 1),
+                        "tree_level_max": qgd_Wide_Circuit_Optimization.partition_tree_level_max(
+                            self.config, subcircuit
+                        ),
                     }
                     fargs = (
                         self.PartitionDecompositionProcess,
                         (subcircuit, subcircuit_parameters, config, None),
                     )
                     # print("Dispatching", subcircuit.get_Involved_Qubits(), "qubits with", CNOGateCount(subcircuit, 0), "CNOT gates, partition ", partition_idx)
-                    assert pool is not None
                     async_results[partition_idx] = (
-                        fargs if in_parent else pool.apply_async(*fargs)
+                        fargs if in_parent else pool.apply_async(*fargs)  # type: ignore[union-attr]
                     )
                 if len(remaining) == len(still_remaining):
                     time.sleep(0.1)
@@ -2696,7 +2712,10 @@ class qgd_Wide_Circuit_Optimization:
             forced_test: If true, run the comparison even when ``test_final_circuit``
                 is false in config.
         """
-        if circ.get_Qbit_Num() <= 12: forced_test = True  # always test small circuits to catch bugs
+        forced_test = forced_test or (
+            self.config.get("force_small_circuit_validation", True)
+            and circ.get_Qbit_Num() <= 12
+        )
         if self.config["test_final_circuit"] or forced_test:
             if (
                 routing
