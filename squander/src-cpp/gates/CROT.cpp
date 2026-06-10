@@ -21,15 +21,27 @@ limitations under the License.
 */
 
 #include "CROT.h"
-#include "apply_large_kernel_to_input.h"
-
-#ifdef USE_AVX
-#include "apply_large_kernel_to_input_AVX.h"
-#endif
-
-static double M_PIOver2 = M_PI/2;
+#include "gate_kernel_templates.h"
 
 //static tbb::spin_mutex my_mutex;
+
+namespace {
+template<typename RealMatrixT, typename RealT>
+void read_crot_trig(
+    const RealMatrixT& precomputed_sincos,
+    RealT& s_theta,
+    RealT& c_theta,
+    RealT& s_phi,
+    RealT& c_phi) {
+
+    const int theta_offset = 0 * precomputed_sincos.stride;
+    const int phi_offset = 1 * precomputed_sincos.stride;
+    s_theta = precomputed_sincos[theta_offset + 0];
+    c_theta = precomputed_sincos[theta_offset + 1];
+    s_phi = precomputed_sincos[phi_offset + 0];
+    c_phi = precomputed_sincos[phi_offset + 1];
+}
+}
 /**
 @brief Nullary constructor of the class.
 */
@@ -46,7 +58,7 @@ CROT::CROT(){
         target_qbit = -1;
         // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gates
         control_qbit = -1;
-        parameter_num = 0;
+        parameter_num = 2;
 
         name = "CROT";
 
@@ -94,8 +106,6 @@ CROT::CROT(int qbit_num_in, int target_qbit_in, int control_qbit_in) {
         
 
         parameter_num=2;
-
-        parameters = Matrix_real(1, parameter_num);
 }
 
 /**
@@ -105,221 +115,149 @@ CROT::~CROT() {
 
 }
 
-/**
-@brief Call to retrieve the gate matrix.
-@param parameters_mtx Parameters of the CROT gate.
-@return Returns with a matrix of the gate.
-*/
 Matrix
-CROT::get_matrix( Matrix_real& parameters_mtx ) {
-    return get_matrix(parameters_mtx, 0);
-}
-
-/**
-@brief Call to retrieve the gate matrix.
-@param parameters_mtx Parameters of the CROT gate.
-@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB.
-@return Returns with a matrix of the gate.
-*/
-Matrix
-CROT::get_matrix( Matrix_real& parameters_mtx, int parallel ) {
-
-    Matrix CROT_matrix = create_identity(matrix_size);
-    apply_to(parameters_mtx, CROT_matrix, parallel);
-
-    return CROT_matrix;
-}
-
-
-/**
-@brief Call to apply the gate on the input array/matrix by U3*input
-@param parameters An array of parameters to calculate the matrix of the U3 gate.
-@param input The input array on which the gate is applied
-*/
-void 
-CROT::apply_to_list( Matrix_real& parameters_mtx, std::vector<Matrix>& input ) {
-
-
-    for ( std::vector<Matrix>::iterator it=input.begin(); it != input.end(); it++ ) {
-        apply_to( parameters_mtx, *it, 0);
-    }
-
-}
-
-/**
-@brief Call to apply the gate on the input array/matrix by U3*input
-@param parameters An array of parameters to calculate the matrix of the U3 gate.
-@param input The input array on which the gate is applied
-@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
-*/
-void 
-CROT::apply_to_list( Matrix_real& parameters_mtx, std::vector<Matrix>& inputs, int parallel ) {
-
-    int work_batch = 1;
-    if ( parallel == 0 ) {
-        work_batch = static_cast<int>(inputs.size());
-    }
-    else {
-        work_batch = 1;
-    }
-
-
-    tbb::parallel_for( tbb::blocked_range<int>(0,static_cast<int>(inputs.size()),work_batch), [&](tbb::blocked_range<int> r) {
-        for (int idx=r.begin(); idx<r.end(); ++idx) { 
-
-            Matrix* input = &inputs[idx];
-
-            apply_to( parameters_mtx, *input, parallel );
-
-        }
-
-    });
-
-}
-
-/**
-@brief Call to apply the gate on the input array/matrix by CROT3*input
-@param parameters An array of parameters to calculate the matrix of the U3 gate.
-@param input The input array on which the gate is applied
-@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
-*/
-void 
-CROT::apply_to( Matrix_real& parameters_mtx, Matrix& input, int parallel ) {
-
-
-    if (input.rows != matrix_size ) {
-	std::stringstream sstream;
-	sstream << "Wrong matrix size in CROT gate apply" << std::endl;
-        print(sstream, 0);	
-        exit(-1);
-    }
-
-
-    double ThetaOver2, Phi;
-    
-
-   ThetaOver2 = parameters_mtx[0];
-   Phi = parameters_mtx[1];
-   
-    Matrix U3_matrix = calc_one_qubit_u3(ThetaOver2, Phi-M_PIOver2, -1*Phi+M_PIOver2 );
-    Matrix U3_matrix2 = calc_one_qubit_u3(-1.*ThetaOver2, Phi-M_PIOver2, -1*Phi+M_PIOver2 );
-
-    if(parallel){
-#ifdef USE_AVX
-      apply_crot_kernel_to_matrix_input_AVX_parallel(U3_matrix2,U3_matrix, input, target_qbit, control_qbit, input.rows);
-#else
-      apply_crot_kernel_to_matrix_input(U3_matrix2,U3_matrix, input, target_qbit, control_qbit, input.rows);
-#endif
-    }
-    else{
-#ifdef USE_AVX
-      apply_crot_kernel_to_matrix_input_AVX(U3_matrix2,U3_matrix, input, target_qbit, control_qbit, input.rows);
-#else
-      apply_crot_kernel_to_matrix_input(U3_matrix2,U3_matrix, input, target_qbit, control_qbit, input.rows);
-#endif
-    }
-
-    
-
-}
-
-
-
-/**
-@brief Call to apply the gate on the input array/matrix by input*CROT
-@param parameters An array of parameters to calculate the matrix of the U3 gate.
-@param input The input array on which the gate is applied
-*/
-void 
-CROT::apply_from_right( Matrix_real& parameters, Matrix& input ) {
-
-
-
-}
-
-
-/**
-@brief Call to evaluate the derivate of the circuit on an inout with respect to all of the free parameters.
-@param parameters An array of the input parameters.
-@param input The input array on which the gate is applied
-*/
-std::vector<Matrix> 
-CROT::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input, int parallel ) {
-
-    if (input.rows != matrix_size ) {
-	std::stringstream sstream;
-	sstream << "Wrong matrix size in CROT gate apply" << std::endl;
-        print(sstream, 0);	   
-        exit(-1);
-    }
-
-    std::vector<Matrix> ret;
-
-    double ThetaOver2, Phi;
-
-
-   ThetaOver2 = parameters_mtx[0];
-
-   Phi = parameters_mtx[1];
-
-    
-
-
-
-    // the resulting matrix
-
-    //Theta derivative
-    Matrix res_mtx = input.copy();
-    Matrix U3_matrix = calc_one_qubit_u3(ThetaOver2+M_PIOver2, Phi-M_PIOver2, -1*Phi+M_PIOver2 );
-    Matrix U3_matrix2 = calc_one_qubit_u3(-1.*(ThetaOver2+M_PIOver2), Phi-M_PIOver2, -1*Phi+M_PIOver2 );
-
-    apply_crot_kernel_to_matrix_input(U3_matrix2, U3_matrix, res_mtx, target_qbit, control_qbit, res_mtx.rows);
-    ret.push_back(res_mtx);
-
-    //Phi derivative
-    Matrix res_mtx1 = input.copy();
-    U3_matrix = calc_one_qubit_u3(ThetaOver2, Phi, -1*Phi );
-    U3_matrix2 = calc_one_qubit_u3(-1.*ThetaOver2, Phi, -1*Phi );
-    U3_matrix[0].real = 0;
-    U3_matrix[0].imag = 0;
-    U3_matrix[3].real = 0;
-    U3_matrix[3].imag = 0;
-    U3_matrix2[0].real = 0;
-    U3_matrix2[0].imag = 0;
-    U3_matrix2[3].real = 0;
-    U3_matrix2[3].imag = 0;
-    apply_crot_kernel_to_matrix_input(U3_matrix2, U3_matrix, res_mtx1, target_qbit, control_qbit, res_mtx1.rows);
-    ret.push_back(res_mtx1);
-    
-
+CROT::gate_kernel(const Matrix_real& precomputed_sincos) {
+    Matrix ret;
+    gate_kernel_to(precomputed_sincos, ret);
     return ret;
-
-
 }
 
-/**
-@brief Call to set the number of qubits spanning the matrix of the gate
-@param qbit_num_in The number of qubits
-*/
-void CROT::set_qbit_num(int qbit_num_in) {
-
-        // setting the number of qubits
-        Gate::set_qbit_num(qbit_num_in);
+Matrix_float
+CROT::gate_kernel(const Matrix_real_float& precomputed_sincos) {
+    Matrix_float ret;
+    gate_kernel_to(precomputed_sincos, ret);
+    return ret;
 }
 
-
-
-/**
-@brief Call to reorder the qubits in the matrix of the gate
-@param qbit_list The reordered list of qubits spanning the matrix
-*/
-void CROT::reorder_qubits( std::vector<int> qbit_list) {
-
-    Gate::reorder_qubits(qbit_list);
-
+Matrix
+CROT::inverse_gate_kernel(const Matrix_real& precomputed_sincos) {
+    Matrix ret;
+    inverse_gate_kernel_to(precomputed_sincos, ret);
+    return ret;
 }
 
+Matrix_float
+CROT::inverse_gate_kernel(const Matrix_real_float& precomputed_sincos) {
+    Matrix_float ret;
+    inverse_gate_kernel_to(precomputed_sincos, ret);
+    return ret;
+}
 
+Matrix
+CROT::derivative_kernel(const Matrix_real& precomputed_sincos, int param_idx) {
+    Matrix ret;
+    derivative_kernel_to(precomputed_sincos, param_idx, ret);
+    return ret;
+}
+
+Matrix_float
+CROT::derivative_kernel(const Matrix_real_float& precomputed_sincos, int param_idx) {
+    Matrix_float ret;
+    derivative_kernel_to(precomputed_sincos, param_idx, ret);
+    return ret;
+}
+
+Matrix
+CROT::derivative_aux_kernel(const Matrix_real& precomputed_sincos, int param_idx) {
+    Matrix ret;
+    derivative_aux_kernel_to(precomputed_sincos, param_idx, ret);
+    return ret;
+}
+
+Matrix_float
+CROT::derivative_aux_kernel(const Matrix_real_float& precomputed_sincos, int param_idx) {
+    Matrix_float ret;
+    derivative_aux_kernel_to(precomputed_sincos, param_idx, ret);
+    return ret;
+}
+
+void
+CROT::gate_kernel_to(const Matrix_real& precomputed_sincos, Matrix& output) {
+    double s_theta, c_theta, s_phi, c_phi;
+    read_crot_trig<Matrix_real, double>(precomputed_sincos, s_theta, c_theta, s_phi, c_phi);
+    build_crot_gate_kernel_from_trig_to<Matrix, double>(output, s_theta, c_theta, s_phi, c_phi);
+}
+
+void
+CROT::gate_kernel_to(const Matrix_real_float& precomputed_sincos, Matrix_float& output) {
+    float s_theta, c_theta, s_phi, c_phi;
+    read_crot_trig<Matrix_real_float, float>(precomputed_sincos, s_theta, c_theta, s_phi, c_phi);
+    build_crot_gate_kernel_from_trig_to<Matrix_float, float>(output, s_theta, c_theta, s_phi, c_phi);
+}
+
+void
+CROT::inverse_gate_kernel_to(const Matrix_real& precomputed_sincos, Matrix& output) {
+    double s_theta, c_theta, s_phi, c_phi;
+    read_crot_trig<Matrix_real, double>(precomputed_sincos, s_theta, c_theta, s_phi, c_phi);
+    build_crot_inverse_gate_kernel_from_trig_to<Matrix, double>(output, s_theta, c_theta, s_phi, c_phi);
+}
+
+void
+CROT::inverse_gate_kernel_to(const Matrix_real_float& precomputed_sincos, Matrix_float& output) {
+    float s_theta, c_theta, s_phi, c_phi;
+    read_crot_trig<Matrix_real_float, float>(precomputed_sincos, s_theta, c_theta, s_phi, c_phi);
+    build_crot_inverse_gate_kernel_from_trig_to<Matrix_float, float>(output, s_theta, c_theta, s_phi, c_phi);
+}
+
+void
+CROT::derivative_kernel_to(const Matrix_real& precomputed_sincos, int param_idx, Matrix& output) {
+    double s_theta, c_theta, s_phi, c_phi;
+    read_crot_trig<Matrix_real, double>(precomputed_sincos, s_theta, c_theta, s_phi, c_phi);
+    if (param_idx == 0) {
+        build_crot_theta_derivative_kernel_from_trig_to<Matrix, double>(output, s_theta, c_theta, s_phi, c_phi);
+        return;
+    }
+    if (param_idx == 1) {
+        build_crot_phi_derivative_kernel_from_trig_to<Matrix, double>(output, s_theta, c_theta, s_phi, c_phi);
+        return;
+    }
+    output = Matrix();
+}
+
+void
+CROT::derivative_kernel_to(const Matrix_real_float& precomputed_sincos, int param_idx, Matrix_float& output) {
+    float s_theta, c_theta, s_phi, c_phi;
+    read_crot_trig<Matrix_real_float, float>(precomputed_sincos, s_theta, c_theta, s_phi, c_phi);
+    if (param_idx == 0) {
+        build_crot_theta_derivative_kernel_from_trig_to<Matrix_float, float>(output, s_theta, c_theta, s_phi, c_phi);
+        return;
+    }
+    if (param_idx == 1) {
+        build_crot_phi_derivative_kernel_from_trig_to<Matrix_float, float>(output, s_theta, c_theta, s_phi, c_phi);
+        return;
+    }
+    output = Matrix_float();
+}
+
+void
+CROT::derivative_aux_kernel_to(const Matrix_real& precomputed_sincos, int param_idx, Matrix& output) {
+    double s_theta, c_theta, s_phi, c_phi;
+    read_crot_trig<Matrix_real, double>(precomputed_sincos, s_theta, c_theta, s_phi, c_phi);
+    if (param_idx == 0) {
+        build_crot_theta_derivative_aux_kernel_from_trig_to<Matrix, double>(output, s_theta, c_theta, s_phi, c_phi);
+        return;
+    }
+    if (param_idx == 1) {
+        build_crot_phi_derivative_aux_kernel_from_trig_to<Matrix, double>(output, s_theta, c_theta, s_phi, c_phi);
+        return;
+    }
+    output = Matrix();
+}
+
+void
+CROT::derivative_aux_kernel_to(const Matrix_real_float& precomputed_sincos, int param_idx, Matrix_float& output) {
+    float s_theta, c_theta, s_phi, c_phi;
+    read_crot_trig<Matrix_real_float, float>(precomputed_sincos, s_theta, c_theta, s_phi, c_phi);
+    if (param_idx == 0) {
+        build_crot_theta_derivative_aux_kernel_from_trig_to<Matrix_float, float>(output, s_theta, c_theta, s_phi, c_phi);
+        return;
+    }
+    if (param_idx == 1) {
+        build_crot_phi_derivative_aux_kernel_from_trig_to<Matrix_float, float>(output, s_theta, c_theta, s_phi, c_phi);
+        return;
+    }
+    output = Matrix_float();
+}
 
 /**
 @brief Call to create a clone of the present class
@@ -337,24 +275,7 @@ CROT* CROT::clone() {
 
 }
 
-/**
-@brief Call to extract parameters from the parameter array corresponding to the circuit, in which the gate is embedded.
-@param parameters The parameter array corresponding to the circuit in which the gate is embedded
-@return Returns with the array of the extracted parameters.
-*/
-Matrix_real 
-CROT::extract_parameters( Matrix_real& parameters ) {
-
-    if ( get_parameter_start_idx() + get_parameter_num() > parameters.size()  ) {
-        std::string err("CROT::extract_parameters: Cant extract parameters, since the dinput arary has not enough elements.");
-        throw err;     
-    }
-
-    Matrix_real extracted_parameters(1,2);
-
-    extracted_parameters[0] = std::fmod( 2*parameters[ get_parameter_start_idx() ], 4*M_PI);
-    extracted_parameters[1] = std::fmod( parameters[ get_parameter_start_idx() + 1 ], 2*M_PI);
-
-    return extracted_parameters;
-
+std::vector<double>
+CROT::get_parameter_multipliers() const {
+    return {2.0, 1.0};
 }

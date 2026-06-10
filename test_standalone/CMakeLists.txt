@@ -7,9 +7,7 @@ add_test(custom_gate_structure_test custom_gate_structure_test ...)
 add_test(apply_kernel_test apply_kernel_test ...)
 add_test(matrix_test matrix_test ...)
 
-if(ENABLE_FLOAT32)
-  add_test(matrix_float_test matrix_float_test ...)
-endif()
+add_test(matrix_float_test matrix_float_test ...)
 
 
 # Add executable called "decomposition_test" that is built from the source files
@@ -19,9 +17,7 @@ add_executable (custom_gate_structure_test custom_gate_structure_test.cpp)
 add_executable(apply_kernel_test apply_kernel_test.cpp)
 add_executable(matrix_test matrix_test.cpp)
 
-if(ENABLE_FLOAT32)
-  add_executable(matrix_float_test matrix_float_test.cpp)
-endif()
+add_executable(matrix_float_test matrix_float_test.cpp)
 
 
 target_include_directories(decomposition_test PRIVATE
@@ -83,15 +79,13 @@ target_link_libraries(matrix_test
                         ${TBBMALLOC_PROXY_LIB}
                         ${TBB_LIB})
 
-if(ENABLE_FLOAT32)
-  target_include_directories(matrix_float_test PRIVATE
-                              ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/include
-                              ${EXTRA_INCLUDES})
+target_include_directories(matrix_float_test PRIVATE
+                            ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/include
+                            ${EXTRA_INCLUDES})
 
-  target_link_libraries(matrix_float_test
-                          qgd
-                          ${TBBMALLOC_LIB}
-                          ${TBBMALLOC_PROXY_LIB}
-                          ${TBB_LIB})
-endif()
+target_link_libraries(matrix_float_test
+                        qgd
+                        ${TBBMALLOC_LIB}
+                        ${TBBMALLOC_PROXY_LIB}
+                        ${TBB_LIB})
 

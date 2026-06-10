@@ -37,6 +37,7 @@ limitations under the License.
 #include <vector>
 #include <cstring>
 #include <sstream>
+#include <tbb/queuing_rw_mutex.h>
 
 
 #define DFE_LIB_9QUBITS "libqgdDFE.so"
@@ -113,6 +114,16 @@ int calcqgdKernelDFE(size_t rows, size_t cols, DFEgate_kernel_type* gates, int g
 int get_chained_gates_num();
 
 
+class DFE_Lib_Read_Lock {
+public:
+    DFE_Lib_Read_Lock();
+    ~DFE_Lib_Read_Lock();
+
+private:
+    tbb::queuing_rw_mutex::scoped_lock lock;
+};
+
+
 
 
 /**
@@ -130,21 +141,6 @@ void unload_dfe_lib();
 
 
 /**
-@brief Call to lock the access to the execution of the DFE library
-*/
-void lock_lib();
-
-
-/**
-@brief Call to unlock the access to the execution of the DFE library
-*/
-void unlock_lib();
-
-
-
-
-
-/**
 @brief Call to initialize the DFE library support and allocate the requested devices
 @param accelerator_num The number of requested devices
 @param qbit_num The number of the supported qubits
@@ -154,8 +150,12 @@ void unlock_lib();
 int init_dfe_lib( const int accelerator_num, int qbit_num, int initialize_id_in);
 
 
+/**
+@brief Initialize the DFE library if needed and upload the input matrix while holding the writer lock.
+*/
+void init_dfe_lib_and_upload(const int accelerator_num, int qbit_num, int initialize_id_in, Matrix& input);
+
 
 
 
 #endif
-

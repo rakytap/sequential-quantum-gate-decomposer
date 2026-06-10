@@ -69,6 +69,11 @@ N_Qubit_Decomposition_Tabu_Search();
 */
 N_Qubit_Decomposition_Tabu_Search( Matrix Umtx_in, int qbit_num_in, std::map<std::string, Config_Element>& config, int accelerator_num=0 );
 
+/**
+@brief Constructor of the class from a single precision unitary matrix.
+*/
+N_Qubit_Decomposition_Tabu_Search( Matrix_float Umtx_in, int qbit_num_in, std::map<std::string, Config_Element>& config, int accelerator_num=0 );
+
 
 /**
 @brief Constructor of the class.
@@ -80,6 +85,11 @@ N_Qubit_Decomposition_Tabu_Search( Matrix Umtx_in, int qbit_num_in, std::map<std
 @return An instance of the class
 */
 N_Qubit_Decomposition_Tabu_Search( Matrix Umtx_in, int qbit_num_in, std::vector<matrix_base<int>> topology_in, std::map<std::string, Config_Element>& config, int accelerator_num=0 );
+
+/**
+@brief Constructor of the class from a single precision unitary matrix.
+*/
+N_Qubit_Decomposition_Tabu_Search( Matrix_float Umtx_in, int qbit_num_in, std::vector<matrix_base<int>> topology_in, std::map<std::string, Config_Element>& config, int accelerator_num=0 );
 
 
 

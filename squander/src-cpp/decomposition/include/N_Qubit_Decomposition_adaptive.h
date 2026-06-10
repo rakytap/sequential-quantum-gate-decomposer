@@ -73,6 +73,11 @@ N_Qubit_Decomposition_adaptive();
 */
 N_Qubit_Decomposition_adaptive( Matrix Umtx_in, int qbit_num_in, int level_limit_in, int level_limit_min_in, std::map<std::string, Config_Element>& config, int accelerator_num=0 );
 
+/**
+@brief Constructor of the class from a single precision unitary matrix.
+*/
+N_Qubit_Decomposition_adaptive( Matrix_float Umtx_in, int qbit_num_in, int level_limit_in, int level_limit_min_in, std::map<std::string, Config_Element>& config, int accelerator_num=0 );
+
 
 /**
 @brief Constructor of the class.
@@ -84,6 +89,11 @@ N_Qubit_Decomposition_adaptive( Matrix Umtx_in, int qbit_num_in, int level_limit
 @return An instance of the class
 */
 N_Qubit_Decomposition_adaptive( Matrix Umtx_in, int qbit_num_in, int level_limit_in, int level_limit_min_in, std::vector<matrix_base<int>> topology_in, std::map<std::string, Config_Element>& config, int accelerator_num=0 );
+
+/**
+@brief Constructor of the class from a single precision unitary matrix.
+*/
+N_Qubit_Decomposition_adaptive( Matrix_float Umtx_in, int qbit_num_in, int level_limit_in, int level_limit_min_in, std::vector<matrix_base<int>> topology_in, std::map<std::string, Config_Element>& config, int accelerator_num=0 );
 
 
 
@@ -225,6 +235,8 @@ void set_adaptive_gate_structure( std::string filename );
  @param matrix to set unitary to
  */
  void set_unitary( Matrix& Umtx_new ) ;
+
+ void set_unitary( Matrix_float& Umtx_new ) ;
 
 /**
 @brief Call to append custom layers to the gate structure that are intended to be used in the decomposition.

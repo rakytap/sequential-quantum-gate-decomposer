@@ -25,6 +25,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 
 #include "Random_Unitary.h"
+#include "qgd_math.h"
 #include <vector>
 
 
@@ -268,16 +269,21 @@ construct_unitary_tmpl(scalar* vartheta, scalar* varphi, scalar* varkappa, int d
             const scalar phi_loc    = varphi[param_idx];
 
             // Eq (26): a = cos(θ)·exp(iφ), sign-negated per paper
+            scalar cos_theta, sin_theta, cos_phi_loc, sin_phi_loc;
+            qgd_sincos<scalar>(theta_loc, &sin_theta, &cos_theta);
+            qgd_sincos<scalar>(phi_loc, &sin_phi_loc, &cos_phi_loc);
             ComplexT a;
-            a.real = scalar(std::cos(theta_loc) * std::cos(phi_loc));
-            a.imag = scalar(std::cos(theta_loc) * std::sin(phi_loc));
+            a.real = scalar(cos_theta * cos_phi_loc);
+            a.imag = scalar(cos_theta * sin_phi_loc);
 
             // Eq (28): ε = δ(α-1,β)·κ_{α-1}; b = sin(θ)·exp̄(iε)
             const scalar varepsilon = (varalpha - 1 == varbeta)
                                       ? varkappa[varalpha - 1] : scalar(0);
+            scalar cos_epsilon, sin_epsilon;
+            qgd_sincos<scalar>(varepsilon, &sin_epsilon, &cos_epsilon);
             ComplexT b;
-            b.real = scalar(std::sin(theta_loc) * std::cos(varepsilon));
-            b.imag = scalar(std::sin(theta_loc) * std::sin(varepsilon));
+            b.real = scalar(sin_theta * cos_epsilon);
+            b.imag = scalar(sin_theta * sin_epsilon);
 
             a.real = -a.real;
             b.imag = -b.imag;

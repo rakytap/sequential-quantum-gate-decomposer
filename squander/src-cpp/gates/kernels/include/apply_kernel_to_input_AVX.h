@@ -38,6 +38,7 @@ limitations under the License.
 @param matrix_size The size of the input
 */
 void apply_kernel_to_input_AVX_small(Matrix& u3_1qbit, Matrix& input, const bool& deriv, const int& target_qbit, const int& control_qbit, const int& matrix_size);
+void apply_kernel_from_right_AVX_small(Matrix& u3_1qbit, Matrix& input, const int& target_qbit, const int& control_qbit, const int& matrix_size);
 
 
 
@@ -65,8 +66,15 @@ void apply_kernel_to_input_AVX(Matrix& u3_1qbit, Matrix& input, const bool& deri
 void apply_kernel_to_input_AVX_parallel(Matrix& u3_1qbit, Matrix& input, const bool& deriv, const int& target_qbit, const int& control_qbit, const int& matrix_size);
 
 void apply_kernel_to_input_AVX_small32(Matrix_float& u3_1qbit, Matrix_float& input, const bool& deriv, const int& target_qbit, const int& control_qbit, const int& matrix_size);
+void apply_kernel_from_right_AVX_small32(Matrix_float& u3_1qbit, Matrix_float& input, const int& target_qbit, const int& control_qbit, const int& matrix_size);
 void apply_kernel_to_input_AVX32(Matrix_float& u3_1qbit, Matrix_float& input, const bool& deriv, const int& target_qbit, const int& control_qbit, const int& matrix_size);
 void apply_kernel_to_input_AVX_parallel32(Matrix_float& u3_1qbit, Matrix_float& input, const bool& deriv, const int& target_qbit, const int& control_qbit, const int& matrix_size);
+
+// Right-apply AVX kernels: input = input * U  (row-major optimised, rows-outer loop)
+void apply_kernel_from_right_AVX(Matrix& u3_1qbit, Matrix& input, const int& target_qbit, const int& control_qbit, const int& matrix_size);
+void apply_kernel_from_right_AVX_parallel(Matrix& u3_1qbit, Matrix& input, const int& target_qbit, const int& control_qbit, const int& matrix_size);
+void apply_kernel_from_right_AVX32(Matrix_float& u3_1qbit, Matrix_float& input, const int& target_qbit, const int& control_qbit, const int& matrix_size);
+void apply_kernel_from_right_AVX_parallel32(Matrix_float& u3_1qbit, Matrix_float& input, const int& target_qbit, const int& control_qbit, const int& matrix_size);
 
 
 #endif

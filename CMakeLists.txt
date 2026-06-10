@@ -66,7 +66,6 @@ endif()
 #enable test target
 enable_testing()
 
-option(ENABLE_FLOAT32 "Enable float32 matrix support (experimental)" ON)
 option(ENABLE_AVX "Enable AVX/AVX2/AVX512 kernels and compiler flags" ON)
 
 if(SKBUILD)
@@ -424,12 +423,6 @@ else()
   list(APPEND CXX_FLAGS_RELEASE "-DBLAS=0")
 endif()
 
-# Float32 matrix support
-if(ENABLE_FLOAT32)
-  list(APPEND CXX_FLAGS_DEBUG "-DENABLE_FLOAT32")
-  list(APPEND CXX_FLAGS_RELEASE "-DENABLE_FLOAT32")
-endif()
-
 # checking for AVX/AVX2 support
 if(ENABLE_AVX)
   CHECK_FOR_AVX()
@@ -753,6 +746,8 @@ list(APPEND qgd_files
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/config_element.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/dot.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/matrix.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/matrix_float.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/matrix_real_float.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/matrix_template.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/matrix_real.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/matrix_sparse.cpp
@@ -780,8 +775,6 @@ list(APPEND qgd_files
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/CZ.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/CH.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/Gate.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/UN.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/ON.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/CROT.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/Gates_block.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/H.cpp
@@ -813,10 +806,6 @@ list(APPEND qgd_files
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/CR.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/Adaptive.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/R.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/RZ_P.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/CZ_NU.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/custom_kernel_1qubit_gate.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/Composite.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/kernels/apply_kernel_to_input.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/kernels/apply_kernel_to_state_vector_input.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/kernels/apply_large_kernel_to_input.cpp
@@ -842,13 +831,6 @@ list(APPEND qgd_files
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/random_unitary/Random_Unitary.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/random_unitary/Random_Orthogonal.cpp
 )
-
-if(ENABLE_FLOAT32)
-  list(APPEND qgd_files
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/matrix_float.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/matrix_real_float.cpp
-  )
-endif()
 
 if (${HAVE_AVX512F_EXTENSIONS})
   list(APPEND qgd_files 
