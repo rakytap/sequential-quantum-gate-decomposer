@@ -341,6 +341,27 @@ static void prepare_suffix_gates(std::vector<Gate>& suffix_gates, size_t gate_co
     }
 }
 
+/**
+ * @brief Heuristic to decide whether suffix-based derivative computation is beneficial.
+ *
+ * The prefix-suffix method is O(#gates + #params) dense matmuls, but each matmul
+ * costs ~O(4^qbit_num). The prefix-only method applies individual gates sequentially,
+ * costing ~O(#params × #gates × 2^qbit_num) but each gate is extremely cheap
+ * (CNOT = row swap, U3 = 2×2 multiply). For small qbit_num the dense matmul
+ * overhead dominates; for large qbit_num the sequential gate cost dominates.
+ *
+ * @param qbit_num       Number of qubits in the subcircuit.
+ * @param gate_count     Total number of gates.
+ * @param parameter_num  Total number of free parameters.
+ * @return true if suffix-based method should be used.
+ */
+static bool should_use_suffix(int qbit_num, size_t gate_count, int parameter_num) {
+    if (qbit_num <= 4) return false;
+    if (qbit_num >= 7) return true;
+    double m = (double)(1 << qbit_num);
+    return (double)parameter_num * (double)gate_count > ((double)gate_count + (double)parameter_num) * m;
+}
+
 static void prepare_all_qubits(std::vector<int>& qubits, int qbit_num) {
     if (qubits.size() != static_cast<size_t>(qbit_num)) {
         qubits.resize(static_cast<size_t>(qbit_num));
@@ -1013,19 +1034,27 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input, i
     forward_inputs.resize(gates.size());
     workspace.gate_gradients.resize(gates.size());
 
+    const bool use_suffix = should_use_suffix(qbit_num, gates.size(), parameter_num);
+
     if (parallel == 0 || gates.size() < 2) {
-        build_suffix_gates(gates, qbit_num, matrix_size, parameters_mtx_in, precomputed_sincos, suffix_gates, suffix_matrices, workspace.suffix_targets, workspace.suffix);
+        if (use_suffix) {
+            build_suffix_gates(gates, qbit_num, matrix_size, parameters_mtx_in, precomputed_sincos, suffix_gates, suffix_matrices, workspace.suffix_targets, workspace.suffix);
+        }
         build_forward_inputs(gates, input, parameters_mtx_in, precomputed_sincos, parallel, forward_inputs);
     }
     else {
-        tbb::parallel_invoke(
-            [&]() {
-                build_suffix_gates(gates, qbit_num, matrix_size, parameters_mtx_in, precomputed_sincos, suffix_gates, suffix_matrices, workspace.suffix_targets, workspace.suffix);
-            },
-            [&]() {
-                build_forward_inputs(gates, input, parameters_mtx_in, precomputed_sincos, parallel, forward_inputs);
-            }
-        );
+        if (use_suffix) {
+            tbb::parallel_invoke(
+                [&]() {
+                    build_suffix_gates(gates, qbit_num, matrix_size, parameters_mtx_in, precomputed_sincos, suffix_gates, suffix_matrices, workspace.suffix_targets, workspace.suffix);
+                },
+                [&]() {
+                    build_forward_inputs(gates, input, parameters_mtx_in, precomputed_sincos, parallel, forward_inputs);
+                }
+            );
+        } else {
+            build_forward_inputs(gates, input, parameters_mtx_in, precomputed_sincos, parallel, forward_inputs);
+        }
     }
 
     auto apply_derivative_for_gate = [&](size_t deriv_idx) {
@@ -1062,17 +1091,37 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input, i
         }
 
         if (deriv_idx + 1 < gates.size()) {
-            Gate& suffix_gate = suffix_gates[deriv_idx];
-            if (parallel == 0) {
-                suffix_gate.apply_to_list(grad_loc, parallel);
-            }
-            else {
-                tbb::parallel_for(tbb::blocked_range<int>(0, static_cast<int>(grad_loc.size()), 1),
-                    [&](tbb::blocked_range<int> r) {
-                        for (int grad_idx = r.begin(); grad_idx < r.end(); ++grad_idx) {
-                            suffix_gate.apply_to(grad_loc[static_cast<size_t>(grad_idx)], parallel);
+            if (use_suffix) {
+                Gate& suffix_gate = suffix_gates[deriv_idx];
+                if (parallel == 0) {
+                    suffix_gate.apply_to_list(grad_loc, parallel);
+                }
+                else {
+                    tbb::parallel_for(tbb::blocked_range<int>(0, static_cast<int>(grad_loc.size()), 1),
+                        [&](tbb::blocked_range<int> r) {
+                            for (int grad_idx = r.begin(); grad_idx < r.end(); ++grad_idx) {
+                                suffix_gate.apply_to(grad_loc[static_cast<size_t>(grad_idx)], parallel);
+                            }
+                        });
+                }
+            } else {
+                // Prefix-only: apply remaining gates sequentially using fast dedicated kernels.
+                for (size_t g = deriv_idx + 1; g < gates.size(); ++g) {
+                    Gate* op = gates[g];
+                    const int pn = op->get_parameter_num();
+                    const int ps = op->get_parameter_start_idx();
+                    if (pn == 0) {
+                        for (auto& m : grad_loc) op->apply_to(m, parallel);
+                    } else {
+                        Matrix_real pm(parameters_mtx_in.get_data() + ps, 1, pn);
+                        Matrix_real psc(precomputed_sincos.get_data() + 2 * ps, pn, 2);
+                        if (op->get_type() == ADAPTIVE_OPERATION) {
+                            for (auto& m : grad_loc) op->apply_to(pm, m, parallel);
+                        } else {
+                            for (auto& m : grad_loc) op->apply_to_inner(pm, psc, m, parallel);
                         }
-                    });
+                    }
+                }
             }
         }
         derivative_depth--;
@@ -1151,19 +1200,27 @@ Gates_block::apply_derivate_to( Matrix_real_float& parameters_mtx_in, Matrix_flo
     forward_inputs.resize(gates.size());
     workspace.gate_gradients.resize(gates.size());
 
+    const bool use_suffix = should_use_suffix(qbit_num, gates.size(), parameter_num);
+
     if (parallel == 0 || gates.size() < 2) {
-        build_suffix_gates(gates, qbit_num, matrix_size, parameters_mtx_in, precomputed_sincos, suffix_gates, suffix_matrices, workspace.suffix_targets, workspace.suffix);
+        if (use_suffix) {
+            build_suffix_gates(gates, qbit_num, matrix_size, parameters_mtx_in, precomputed_sincos, suffix_gates, suffix_matrices, workspace.suffix_targets, workspace.suffix);
+        }
         build_forward_inputs(gates, input, parameters_mtx_in, precomputed_sincos, parallel, forward_inputs);
     }
     else {
-        tbb::parallel_invoke(
-            [&]() {
-                build_suffix_gates(gates, qbit_num, matrix_size, parameters_mtx_in, precomputed_sincos, suffix_gates, suffix_matrices, workspace.suffix_targets, workspace.suffix);
-            },
-            [&]() {
-                build_forward_inputs(gates, input, parameters_mtx_in, precomputed_sincos, parallel, forward_inputs);
-            }
-        );
+        if (use_suffix) {
+            tbb::parallel_invoke(
+                [&]() {
+                    build_suffix_gates(gates, qbit_num, matrix_size, parameters_mtx_in, precomputed_sincos, suffix_gates, suffix_matrices, workspace.suffix_targets, workspace.suffix);
+                },
+                [&]() {
+                    build_forward_inputs(gates, input, parameters_mtx_in, precomputed_sincos, parallel, forward_inputs);
+                }
+            );
+        } else {
+            build_forward_inputs(gates, input, parameters_mtx_in, precomputed_sincos, parallel, forward_inputs);
+        }
     }
 
     auto apply_derivative_for_gate = [&](size_t deriv_idx) {
@@ -1200,17 +1257,37 @@ Gates_block::apply_derivate_to( Matrix_real_float& parameters_mtx_in, Matrix_flo
         }
 
         if (deriv_idx + 1 < gates.size()) {
-            Gate& suffix_gate = suffix_gates[deriv_idx];
-            if (parallel == 0) {
-                suffix_gate.apply_to_list(grad_loc, parallel);
-            }
-            else {
-                tbb::parallel_for(tbb::blocked_range<int>(0, static_cast<int>(grad_loc.size()), 1),
-                    [&](tbb::blocked_range<int> r) {
-                        for (int grad_idx = r.begin(); grad_idx < r.end(); ++grad_idx) {
-                            suffix_gate.apply_to(grad_loc[static_cast<size_t>(grad_idx)], parallel);
+            if (use_suffix) {
+                Gate& suffix_gate = suffix_gates[deriv_idx];
+                if (parallel == 0) {
+                    suffix_gate.apply_to_list(grad_loc, parallel);
+                }
+                else {
+                    tbb::parallel_for(tbb::blocked_range<int>(0, static_cast<int>(grad_loc.size()), 1),
+                        [&](tbb::blocked_range<int> r) {
+                            for (int grad_idx = r.begin(); grad_idx < r.end(); ++grad_idx) {
+                                suffix_gate.apply_to(grad_loc[static_cast<size_t>(grad_idx)], parallel);
+                            }
+                        });
+                }
+            } else {
+                // Prefix-only: apply remaining gates sequentially using fast dedicated kernels.
+                for (size_t g = deriv_idx + 1; g < gates.size(); ++g) {
+                    Gate* op = gates[g];
+                    const int pn = op->get_parameter_num();
+                    const int ps = op->get_parameter_start_idx();
+                    if (pn == 0) {
+                        for (auto& m : grad_loc) op->apply_to(m, parallel);
+                    } else {
+                        Matrix_real_float pm(parameters_mtx_in.get_data() + ps, 1, pn);
+                        Matrix_real_float psc(precomputed_sincos.get_data() + 2 * ps, pn, 2);
+                        if (op->get_type() == ADAPTIVE_OPERATION) {
+                            for (auto& m : grad_loc) op->apply_to(pm, m, parallel);
+                        } else {
+                            for (auto& m : grad_loc) op->apply_to_inner(pm, psc, m, parallel);
                         }
-                    });
+                    }
+                }
             }
         }
         derivative_depth--;
