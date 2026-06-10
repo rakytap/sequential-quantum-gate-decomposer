@@ -1507,6 +1507,50 @@ Gate::apply_kernel_to(Matrix& u3_1qbit, Matrix& input, bool deriv, int parallel,
         return;
     }
 
+    if (type == CNOT_OPERATION) {
+        std::vector<int> tqbits = {target_qbit};
+        std::vector<int> cqbits = {control_qbit};
+        switch (parallel) {
+            case 0:
+                apply_X_kernel_to_input(input, tqbits, cqbits, matrix_size); break;
+            case 1:
+                apply_X_kernel_to_input_omp(input, tqbits, cqbits, matrix_size); break;
+            case 2:
+                apply_X_kernel_to_input_tbb(input, tqbits, cqbits, matrix_size); break;
+            default:
+                apply_X_kernel_to_input(input, tqbits, cqbits, matrix_size); break;
+        }
+        return;
+    }
+
+    if (type == CZ_OPERATION) {
+        switch (parallel) {
+            case 0:
+                apply_Z_kernel_to_input(input, target_qbit, control_qbit, matrix_size); break;
+            case 1:
+                apply_Z_kernel_to_input_omp(input, target_qbit, control_qbit, matrix_size); break;
+            case 2:
+                apply_Z_kernel_to_input_tbb(input, target_qbit, control_qbit, matrix_size); break;
+            default:
+                apply_Z_kernel_to_input(input, target_qbit, control_qbit, matrix_size); break;
+        }
+        return;
+    }
+
+    if (type == CH_OPERATION) {
+        switch (parallel) {
+            case 0:
+                apply_H_kernel_to_input(input, target_qbit, control_qbit, matrix_size); break;
+            case 1:
+                apply_H_kernel_to_input_omp(input, target_qbit, control_qbit, matrix_size); break;
+            case 2:
+                apply_H_kernel_to_input_tbb(input, target_qbit, control_qbit, matrix_size); break;
+            default:
+                apply_H_kernel_to_input(input, target_qbit, control_qbit, matrix_size); break;
+        }
+        return;
+    }
+
     if (type == SYC_OPERATION) {
         switch (parallel) {
             case 0:
@@ -1753,6 +1797,50 @@ Gate::apply_kernel_to(Matrix_float& u3_1qbit, Matrix_float& input, bool deriv, i
                 apply_X_kernel_to_input_tbb(input, target_qbits, control_qbits, matrix_size); break;
             default:
                 apply_X_kernel_to_input(input, target_qbits, control_qbits, matrix_size); break;
+        }
+        return;
+    }
+
+    if (type == CNOT_OPERATION) {
+        std::vector<int> tqbits = {target_qbit};
+        std::vector<int> cqbits = {control_qbit};
+        switch (parallel) {
+            case 0:
+                apply_X_kernel_to_input(input, tqbits, cqbits, matrix_size); break;
+            case 1:
+                apply_X_kernel_to_input_omp(input, tqbits, cqbits, matrix_size); break;
+            case 2:
+                apply_X_kernel_to_input_tbb(input, tqbits, cqbits, matrix_size); break;
+            default:
+                apply_X_kernel_to_input(input, tqbits, cqbits, matrix_size); break;
+        }
+        return;
+    }
+
+    if (type == CZ_OPERATION) {
+        switch (parallel) {
+            case 0:
+                apply_Z_kernel_to_input(input, target_qbit, control_qbit, matrix_size); break;
+            case 1:
+                apply_Z_kernel_to_input_omp(input, target_qbit, control_qbit, matrix_size); break;
+            case 2:
+                apply_Z_kernel_to_input_tbb(input, target_qbit, control_qbit, matrix_size); break;
+            default:
+                apply_Z_kernel_to_input(input, target_qbit, control_qbit, matrix_size); break;
+        }
+        return;
+    }
+
+    if (type == CH_OPERATION) {
+        switch (parallel) {
+            case 0:
+                apply_H_kernel_to_input(input, target_qbit, control_qbit, matrix_size); break;
+            case 1:
+                apply_H_kernel_to_input_omp(input, target_qbit, control_qbit, matrix_size); break;
+            case 2:
+                apply_H_kernel_to_input_tbb(input, target_qbit, control_qbit, matrix_size); break;
+            default:
+                apply_H_kernel_to_input(input, target_qbit, control_qbit, matrix_size); break;
         }
         return;
     }
@@ -2011,6 +2099,35 @@ Gate::apply_kernel_from_right( Matrix& u3_1qbit, Matrix& input, const Matrix* al
         return;
     }
 
+    if (type == CNOT_OPERATION) {
+        std::vector<int> tqbits = {target_qbit};
+        std::vector<int> cqbits = {control_qbit};
+        if (qbit_num < 10) {
+            apply_X_kernel_from_right(input, tqbits, cqbits, matrix_size);
+        } else {
+            apply_X_kernel_from_right_tbb(input, tqbits, cqbits, matrix_size);
+        }
+        return;
+    }
+
+    if (type == CZ_OPERATION) {
+        if (qbit_num < 10) {
+            apply_Z_kernel_from_right(input, target_qbit, control_qbit, matrix_size);
+        } else {
+            apply_Z_kernel_from_right_tbb(input, target_qbit, control_qbit, matrix_size);
+        }
+        return;
+    }
+
+    if (type == CH_OPERATION) {
+        if (qbit_num < 10) {
+            apply_H_kernel_from_right(input, target_qbit, control_qbit, matrix_size);
+        } else {
+            apply_H_kernel_from_right_tbb(input, target_qbit, control_qbit, matrix_size);
+        }
+        return;
+    }
+
     if (type == SYC_OPERATION) {
         apply_SYC_kernel_from_right(input, target_qbit, control_qbit, matrix_size);
         return;
@@ -2185,6 +2302,35 @@ Gate::apply_kernel_from_right( Matrix_float& u3_1qbit, Matrix_float& input, cons
             apply_X_kernel_from_right(input, target_qbits, control_qbits, matrix_size);
         } else {
             apply_X_kernel_from_right_tbb(input, target_qbits, control_qbits, matrix_size);
+        }
+        return;
+    }
+
+    if (type == CNOT_OPERATION) {
+        std::vector<int> tqbits = {target_qbit};
+        std::vector<int> cqbits = {control_qbit};
+        if (qbit_num < 10) {
+            apply_X_kernel_from_right(input, tqbits, cqbits, matrix_size);
+        } else {
+            apply_X_kernel_from_right_tbb(input, tqbits, cqbits, matrix_size);
+        }
+        return;
+    }
+
+    if (type == CZ_OPERATION) {
+        if (qbit_num < 10) {
+            apply_Z_kernel_from_right(input, target_qbit, control_qbit, matrix_size);
+        } else {
+            apply_Z_kernel_from_right_tbb(input, target_qbit, control_qbit, matrix_size);
+        }
+        return;
+    }
+
+    if (type == CH_OPERATION) {
+        if (qbit_num < 10) {
+            apply_H_kernel_from_right(input, target_qbit, control_qbit, matrix_size);
+        } else {
+            apply_H_kernel_from_right_tbb(input, target_qbit, control_qbit, matrix_size);
         }
         return;
     }
