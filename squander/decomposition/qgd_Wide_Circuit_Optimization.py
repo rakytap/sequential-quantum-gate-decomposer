@@ -141,18 +141,23 @@ class SquanderPartitioner(_BQSKitBasePass):
 
 
 class SquanderSynthesisPass(_BQSKitSynthesisPass):
-    """BQSKit synthesis pass: optimize partition blocks with Squander."""
+    """BQSKit synthesis pass: optimize partition blocks with Squander.
 
-    fallback_synthesis_cls = None
+    If Squander synthesis fails, the original partition block is kept unchanged.
+    No fallback to QSearch, LEAP, or alternative Squander strategies.
+    """
 
     def __init__(self, *args, **kwargs):
         super().__init__()
         self.config = dict(_SQUANDER_BQSKIT_SYNTHESIS_CONFIG or {})
-        self.fallback_synthesis = (
-            self.fallback_synthesis_cls(*args, **kwargs)
-            if self.fallback_synthesis_cls is not None
-            else None
-        )
+
+    async def run(self, circuit, data):
+        """Override to keep the original circuit on synthesis failure."""
+        try:
+            synthesized = await self.synthesize(data.target, data)
+            circuit.become(synthesized)
+        except Exception:
+            pass  # Keep original partition block unchanged
 
     @staticmethod
     def _data_topology(data):
@@ -181,13 +186,10 @@ class SquanderSynthesisPass(_BQSKitSynthesisPass):
             mini_topology=mini_topology,
         )
         if len(candidates) == 0:
-            candidates = qgd_Wide_Circuit_Optimization.DecomposePartition(
-                squander_target_matrix,
-                {**config, "use_graph_search": False, "use_osr": False},
-                mini_topology=mini_topology,
+            raise RuntimeError(
+                "Squander synthesis failed for BQSKit target — "
+                "keeping original circuit."
             )
-        if len(candidates) == 0:
-            return await self._fallback_synthesize(target, data)
 
         optimized_circuit, optimized_parameters = (
             qgd_Wide_Circuit_Optimization.CompareAndPickCircuits(
@@ -208,25 +210,18 @@ class SquanderSynthesisPass(_BQSKitSynthesisPass):
             self.config.get("bqskit_synthesis_validation_tolerance", 1e-4),
         )
         if distance > validation_tolerance:
-            return await self._fallback_synthesize(target, data)
+            raise RuntimeError(
+                f"Squander synthesis validation failed "
+                f"(distance {distance:.2e} > tolerance {validation_tolerance:.2e}) — "
+                f"keeping original circuit."
+            )
         return synthesized
 
-    async def _fallback_synthesize(self, target, data=None):
-        if self.fallback_synthesis is None:
-            raise RuntimeError("Squander synthesis failed for BQSKit target.")
-        return await self.fallback_synthesis.synthesize(target, data)
 
-
-class SquanderQSearchSynthesisPass(SquanderSynthesisPass):
-    """Squander synthesis wrapper with BQSKit QSearch fallback."""
-
-    fallback_synthesis_cls = _BQSKitQSearchSynthesisPass
-
-
-class SquanderLEAPSynthesisPass(SquanderSynthesisPass):
-    """Squander synthesis wrapper with BQSKit LEAP fallback."""
-
-    fallback_synthesis_cls = _BQSKitLEAPSynthesisPass
+# No-op subclasses — both use the same one-shot Squander-only behavior.
+# (Previously these had QSearch/LEAP fallback, which we no longer want.)
+SquanderQSearchSynthesisPass = SquanderSynthesisPass
+SquanderLEAPSynthesisPass = SquanderSynthesisPass
 
 
 @contextlib.contextmanager
