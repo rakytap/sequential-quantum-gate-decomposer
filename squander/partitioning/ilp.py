@@ -68,6 +68,7 @@ def topo_sort_partitions(c, parts):
             parts (list[frozenset[int]]): Final partition assignments (topologically sorted).
     """
     gatedict = {i: gate for i, gate in enumerate(c.get_Gates())}
+    gate_to_qubit = {i: get_qubits(g) for i, g in gatedict.items()}
     partdict = {gate: i for i, part in enumerate(parts) for gate in part}
     g, rg = {i: set() for i in range(len(parts))}, {i: set() for i in range(len(parts))}
     for gate in gatedict:
@@ -75,16 +76,22 @@ def topo_sort_partitions(c, parts):
             if partdict[gate] == partdict[child]: continue
             g[partdict[gate]].add(partdict[child])
             rg[partdict[child]].add(partdict[gate])
-    L, S = [], {m for m in rg if len(rg[m]) == 0}
-    while len(S) != 0:
-        n = S.pop()
+    # Stable key per partition: sorted tuple of all qubits touched by its gates.
+    part_qubits = {
+        i: tuple(sorted(set.union(*(gate_to_qubit[g] for g in part))))
+        for i, part in enumerate(parts)
+    }
+    L, S = [], [(part_qubits[m], m) for m in rg if len(rg[m]) == 0]
+    heapq.heapify(S)
+    while S:
+        n = heapq.heappop(S)[1]
         L.append(n)
         assert len(rg[n]) == 0
         for m in set(g[n]):
             g[n].remove(m)
             rg[m].remove(n)
             if len(rg[m]) == 0:
-                S.add(m)
+                heapq.heappush(S, (part_qubits[m], m))
     assert len(L) == len(parts), (len(L), len(parts), g, rg, partdict)
     return L
 
