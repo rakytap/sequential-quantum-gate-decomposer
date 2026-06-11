@@ -69,5 +69,37 @@ void apply_kernel_to_state_vector_input_AVX32(Matrix_float& u3_1qbit, Matrix_flo
 void apply_kernel_to_state_vector_input_parallel_OpenMP_AVX32(Matrix_float& u3_1qbit, Matrix_float& input, const bool& deriv, const int& target_qbit, const int& control_qbit, const int& matrix_size);
 void apply_kernel_to_state_vector_input_parallel_AVX32(Matrix_float& u3_1qbit, Matrix_float& input, const bool& deriv, const int& target_qbit, const int& control_qbit, const int& matrix_size);
 
+void apply_2qbit_kernel_to_state_vector_input_AVX(Matrix& two_qbit_unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size);
+void apply_2qbit_kernel_to_state_vector_input_AVX_OpenMP(Matrix& two_qbit_unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size);
+void apply_2qbit_kernel_to_state_vector_input_AVX_TBB(Matrix& two_qbit_unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size);
+
+void apply_3qbit_kernel_to_state_vector_input_AVX(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size);
+void apply_3qbit_kernel_to_state_vector_input_AVX_OpenMP(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size);
+void apply_3qbit_kernel_to_state_vector_input_AVX_TBB(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size);
+
+void apply_4qbit_kernel_to_state_vector_input_AVX(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size);
+void apply_4qbit_kernel_to_state_vector_input_AVX_OpenMP(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size);
+void apply_4qbit_kernel_to_state_vector_input_AVX_TBB(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size);
+
+void apply_5qbit_kernel_to_state_vector_input_AVX(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size);
+void apply_5qbit_kernel_to_state_vector_input_AVX_OpenMP(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size);
+void apply_5qbit_kernel_to_state_vector_input_AVX_TBB(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size);
+
+void apply_2qbit_kernel_to_state_vector_input_AVX32(Matrix_float& two_qbit_unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size);
+void apply_2qbit_kernel_to_state_vector_input_AVX_OpenMP32(Matrix_float& two_qbit_unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size);
+void apply_2qbit_kernel_to_state_vector_input_AVX_TBB32(Matrix_float& two_qbit_unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size);
+
+void apply_3qbit_kernel_to_state_vector_input_AVX32(Matrix_float& unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size);
+void apply_3qbit_kernel_to_state_vector_input_AVX_OpenMP32(Matrix_float& unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size);
+void apply_3qbit_kernel_to_state_vector_input_AVX_TBB32(Matrix_float& unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size);
+
+void apply_4qbit_kernel_to_state_vector_input_AVX32(Matrix_float& unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size);
+void apply_4qbit_kernel_to_state_vector_input_AVX_OpenMP32(Matrix_float& unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size);
+void apply_4qbit_kernel_to_state_vector_input_AVX_TBB32(Matrix_float& unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size);
+
+void apply_5qbit_kernel_to_state_vector_input_AVX32(Matrix_float& unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size);
+void apply_5qbit_kernel_to_state_vector_input_AVX_OpenMP32(Matrix_float& unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size);
+void apply_5qbit_kernel_to_state_vector_input_AVX_TBB32(Matrix_float& unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size);
+
 
 #endif

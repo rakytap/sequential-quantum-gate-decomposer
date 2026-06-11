@@ -7,6 +7,7 @@
 #include "matrix.h"
 #include "Gates_block.h"
 #include "common.h"
+#include "apply_kernel_to_state_vector_input.h"
 #include "apply_large_kernel_to_input.h"
 #include "apply_large_kernel_to_input_AVX.h"
 #include "apply_kernel_to_input.h"
@@ -429,7 +430,7 @@ void testNQubitGate_Parallel_GHZ() {
     GHZ_circ_mini.add_cnot(2,0);
 
     GHZ_circ_mini.apply_to(params,Umtx);
-    apply_nqbit_unitary_AVX(Umtx, test_state, qubits, 1 << num_qubits);
+    apply_large_kernel_to_input_AVX(Umtx, test_state, qubits, 1 << num_qubits);
     double fid = fidelity(state, test_state);
     std::cout << num_qubits <<"-qubit GHZ gate fidelity: " << fid << std::endl;
     assert(std::abs(fid - 1.0) < 1e-10);

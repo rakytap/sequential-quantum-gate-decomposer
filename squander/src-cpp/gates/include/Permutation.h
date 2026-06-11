@@ -49,6 +49,9 @@ public:
     Matrix get_matrix(int parallel);
     void apply_to(Matrix& input, int parallel);
     void apply_to(Matrix& input);
+    void apply_from_right(Matrix& input);
+    void apply_to(Matrix_float& input, int parallel);
+    void apply_from_right(Matrix_float& input);
     void apply_to_list(std::vector<Matrix>& inputs, int parallel);
     std::vector<int> get_pattern();
     void set_pattern(const std::vector<int>& pattern_in);

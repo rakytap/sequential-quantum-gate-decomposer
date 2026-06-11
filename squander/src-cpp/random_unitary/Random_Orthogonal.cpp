@@ -25,6 +25,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 
 #include "Random_Orthogonal.h"
+#include "qgd_math.h"
 #include "logging.h"
 
 
@@ -255,6 +256,9 @@ Random_Orthogonal::Construct_Orthogonal_Matrix( Matrix_real_float &vargamma ) {
         tn[ndx*tn.stride -1] = 1.0f;
 
         // construct matrix Tn from Eq (14) in  https://doi.org/10.1002/qua.560040725
+        // Pre-compute sincos for the k=0 angle (constant across all col_idx)
+        float c0_gamma, s0_gamma;
+        qgd_sincos<float>(vargamma_mtx[ndx-1], &s0_gamma, &c0_gamma);
         for ( int col_idx=0; col_idx<ndx; col_idx++) {
 
             // allocate a column in matrix s defined by Eq (15)
@@ -264,19 +268,23 @@ Random_Orthogonal::Construct_Orthogonal_Matrix( Matrix_real_float &vargamma ) {
             sl[0] = -tn[col_idx*tn.stride + ndx-1];
 
             // k = 0 case in Eq (14)
-            Tn_new[col_idx] = tn[col_idx]*std::cos(vargamma_mtx[ndx-1]) - sl[0]*std::sin(vargamma_mtx[ndx-1]);
+            Tn_new[col_idx] = tn[col_idx]*c0_gamma - sl[0]*s0_gamma;
 
             // k > 0 case in Eq (14), (15)
             for ( int row_idx=1; row_idx<ndx; row_idx++) {
 
                 int kdx = row_idx-1;
-                sl[row_idx] = tn[kdx*tn.stride+col_idx] * std::sin(vargamma_mtx[kdx*dim+ndx-1]) + sl[kdx] * std::cos(vargamma_mtx[kdx*dim+ndx-1]);
+                float c_k, s_k;
+                qgd_sincos<float>(vargamma_mtx[kdx*dim+ndx-1], &s_k, &c_k);
+                sl[row_idx] = tn[kdx*tn.stride+col_idx] * s_k + sl[kdx] * c_k;
 
                 if ( row_idx == ndx-1 ) {
                     Tn_new[row_idx*Tn_new.stride + col_idx] = -sl[row_idx];
                 }
                 else {
-                    Tn_new[row_idx*Tn_new.stride + col_idx] = tn[row_idx*tn.stride + col_idx] * std::cos(vargamma_mtx[row_idx*dim+ndx-1]) - sl[row_idx] * std::sin(vargamma_mtx[row_idx*dim+ndx-1]);
+                    float c_r, s_r;
+                    qgd_sincos<float>(vargamma_mtx[row_idx*dim+ndx-1], &s_r, &c_r);
+                    Tn_new[row_idx*Tn_new.stride + col_idx] = tn[row_idx*tn.stride + col_idx] * c_r - sl[row_idx] * s_r;
                 }
 
             }

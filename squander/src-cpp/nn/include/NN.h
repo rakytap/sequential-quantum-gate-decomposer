@@ -42,10 +42,7 @@ limitations under the License.
 #include "CRY.h"
 #include "RZ.h"
 #include "SYC.h"
-#include "UN.h"
-#include "ON.h"
 #include "Adaptive.h"
-#include "Composite.h"
 #include <map>
 #include <cstdlib>
 #include <time.h>

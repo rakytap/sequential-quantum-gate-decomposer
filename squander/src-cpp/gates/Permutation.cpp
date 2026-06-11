@@ -97,6 +97,68 @@ void Permutation::apply_to(Matrix& input){
     apply_Permutation_kernel_to_input(input, pattern, matrix_size, cycles_cache);
 }
 
+// Apply the permutation from the right (input @ P) by permuting the columns of
+// the input. The column swaps are applied in reverse cycle order so the result
+// matches input * get_matrix(). This acts row-independently, so the input may
+// have any number of rows as long as its column count equals matrix_size.
+template<typename MatrixType>
+static void permute_columns_from_cycles(MatrixType& input, const std::vector<std::vector<int>>& cycles){
+    auto* data = input.get_data();
+    for (const auto& cycle : cycles) {
+        for (int idx = (int)cycle.size() - 2; idx >= 0; --idx) {
+            int c0 = cycle[idx];
+            int c1 = cycle[idx + 1];
+            for (int row = 0; row < input.rows; ++row) {
+                auto tmp = data[row * input.stride + c0];
+                data[row * input.stride + c0] = data[row * input.stride + c1];
+                data[row * input.stride + c1] = tmp;
+            }
+        }
+    }
+}
+
+void Permutation::apply_from_right(Matrix& input){
+    if (input.cols != matrix_size) {
+        std::string err("Permutation::apply_from_right: Wrong input size in Permutation gate apply");
+        throw err;
+    }
+    if (!cycles_cache_valid || cycles_cache_matrix_size != matrix_size) {
+        build_cycles_cache();
+    }
+    permute_columns_from_cycles(input, cycles_cache);
+}
+
+void Permutation::apply_to(Matrix_float& input, int parallel){
+    if (input.rows != matrix_size) {
+        std::string err("Permutation::apply_to: Wrong input size in Permutation gate apply");
+        throw err;
+    }
+
+    if (!cycles_cache_valid || cycles_cache_matrix_size != matrix_size) {
+        build_cycles_cache();
+    }
+    if (parallel == 2) {
+        apply_Permutation_kernel_to_input_tbb(input, pattern, matrix_size, cycles_cache);
+    }
+    else if (parallel == 1) {
+        apply_Permutation_kernel_to_input_omp(input, pattern, matrix_size, cycles_cache);
+    }
+    else {
+        apply_Permutation_kernel_to_input(input, pattern, matrix_size, cycles_cache);
+    }
+}
+
+void Permutation::apply_from_right(Matrix_float& input){
+    if (input.cols != matrix_size) {
+        std::string err("Permutation::apply_from_right: Wrong input size in Permutation gate apply");
+        throw err;
+    }
+    if (!cycles_cache_valid || cycles_cache_matrix_size != matrix_size) {
+        build_cycles_cache();
+    }
+    permute_columns_from_cycles(input, cycles_cache);
+}
+
 void Permutation::apply_to_list(std::vector<Matrix>& inputs, int parallel){
     int work_batch = 1;
     if ( parallel == 0 ) {

@@ -19,10 +19,10 @@ limitations under the License.
 #define matrix_BASE_H
 
 #include "QGDTypes.h"
+#include <atomic>
 #include <cstring>
 #include <iostream>
 #include <tbb/scalable_allocator.h>
-#include <tbb/spin_mutex.h>
 
 
 
@@ -55,10 +55,8 @@ protected:
   bool transposed;
   /// logical value indicating whether the class instance is the owner of the stored data or not. (If true, the data array is released in the destructor)
   bool owner;
-  /// mutual exclusion to count the references for class instances referring to the same data.
-  tbb::spin_mutex* reference_mutex;
   /// the number of the current references of the present object
-  int64_t* references;
+  std::atomic<int64_t>* references;
 
 
 
@@ -84,10 +82,7 @@ matrix_base() {
   transposed = false;
   // logical value indicating whether the class instance is the owner of the stored data or not. (If true, the data array is released in the destructor)
   owner = false;
-  // mutual exclusion to count the references for class instances referring to the same data.
-  reference_mutex = new tbb::spin_mutex();
-  references = new int64_t;
-  (*references)=1;
+  references = new std::atomic<int64_t>(1);
 }
 
 
@@ -114,10 +109,7 @@ matrix_base( scalar* data_in, int rows_in, int cols_in) {
   transposed = false;
   // logical value indicating whether the class instance is the owner of the stored data or not. (If true, the data array is released in the destructor)
   owner = false;
-  // mutual exclusion to count the references for class instances referring to the same data.
-  reference_mutex = new tbb::spin_mutex();
-  references = new int64_t;
-  (*references)=1;
+  references = new std::atomic<int64_t>(1);
 }
 
 
@@ -146,10 +138,7 @@ matrix_base( scalar* data_in, int rows_in, int cols_in, int stride_in) {
   transposed = false;
   // logical value indicating whether the class instance is the owner of the stored data or not. (If true, the data array is released in the destructor)
   owner = false;
-  // mutual exclusion to count the references for class instances referring to the same data.
-  reference_mutex = new tbb::spin_mutex();
-  references = new int64_t;
-  (*references)=1;
+  references = new std::atomic<int64_t>(1);
 }
 
 
@@ -177,10 +166,7 @@ matrix_base( int rows_in, int cols_in) {
   transposed = false;
   // logical value indicating whether the class instance is the owner of the stored data or not. (If true, the data array is released in the destructor)
   owner = true;
-  // mutual exclusion to count the references for class instances referring to the same data.
-  reference_mutex = new tbb::spin_mutex();
-  references = new int64_t;
-  (*references)=1;
+  references = new std::atomic<int64_t>(1);
 
 
 }
@@ -212,10 +198,7 @@ matrix_base( int rows_in, int cols_in, int stride_in) {
   transposed = false;
   // logical value indicating whether the class instance is the owner of the stored data or not. (If true, the data array is released in the destructor)
   owner = true;
-  // mutual exclusion to count the references for class instances referring to the same data.
-  reference_mutex = new tbb::spin_mutex();
-  references = new int64_t;
-  (*references)=1;
+  references = new std::atomic<int64_t>(1);
 
 
 }
@@ -236,12 +219,10 @@ matrix_base(const matrix_base<scalar> &in) {
     conjugated = in.conjugated;
     owner = in.owner;
 
-    reference_mutex = in.reference_mutex;
-      references = in.references;
+    references = in.references;
 
-    {
-      tbb::spin_mutex::scoped_lock my_lock{*reference_mutex};
-      (*references)++;
+    if (references != NULL) {
+      references->fetch_add(1, std::memory_order_relaxed);
     }
 
 
@@ -319,10 +300,7 @@ void replace_data( scalar* data_in, bool owner_in) {
     data = data_in;
     owner = owner_in;
 
-    // mutual exclusion to count the references for class instances referring to the same data.
-    reference_mutex = new tbb::spin_mutex();
-    references = new int64_t;
-    (*references)=1;
+    references = new std::atomic<int64_t>(1);
 
 }
 
@@ -332,38 +310,21 @@ void replace_data( scalar* data_in, bool owner_in) {
 */
 void release_data() {
 
-    if (references==NULL) return;
-    bool call_delete = false;
+    if (references == NULL) return;
 
-{
-
-    tbb::spin_mutex::scoped_lock my_lock{*reference_mutex};
-
-    if (references==NULL) return;
-    call_delete = ((*references)==1);
-
-
-    if (call_delete) {
-      // release the data when matrix is the owner
-      if (owner) {
-        scalable_aligned_free(data);
-      }
-      delete references;
-    }
-    else {
-        (*references)--;
-    }
+    std::atomic<int64_t>* references_loc = references;
+    scalar* data_loc = data;
+    const bool owner_loc = owner;
 
     data = NULL;
     references = NULL;
 
-}
-
-  if ( call_delete && reference_mutex !=NULL) {
-    reference_mutex->~spin_mutex();
-    delete reference_mutex;
-    reference_mutex=NULL;
-  }
+    if (references_loc->fetch_sub(1, std::memory_order_acq_rel) == 1) {
+      if (owner_loc) {
+        scalable_aligned_free(data_loc);
+      }
+      delete references_loc;
+    }
 
 }
 
@@ -404,12 +365,10 @@ void operator= (const matrix_base& mtx ) {
   // logical value indicating whether the class instance is the owner of the stored data or not. (If true, the data array is released in the destructor)
   owner = mtx.owner;
 
-  reference_mutex = mtx.reference_mutex;
   references = mtx.references;
 
-  {
-      tbb::spin_mutex::scoped_lock my_lock{*reference_mutex};
-      (*references)++;
+    if (references != NULL) {
+      references->fetch_add(1, std::memory_order_relaxed);
   }
 
 }
@@ -462,6 +421,27 @@ matrix_base<scalar> copy() const {
   memcpy( ret.data, data, rows*stride*sizeof(scalar));
 
   return ret;
+
+}
+
+/**
+@brief Copy the current matrix storage into a reusable target matrix.
+The target is reallocated when dimensions or stride differ; otherwise its
+existing allocation is reused.
+@param target The matrix receiving a deep copy of the current storage.
+*/
+void copy_to(matrix_base<scalar>& target) const {
+
+  if (target.rows != rows || target.cols != cols || target.stride != stride) {
+    target = matrix_base<scalar>(rows, cols, stride);
+  }
+
+  if (data != NULL && target.data != data) {
+    memcpy(target.data, data, rows*stride*sizeof(scalar));
+  }
+
+  target.conjugated = conjugated;
+  target.transposed = transposed;
 
 }
 

@@ -377,6 +377,14 @@ N_Qubit_Decomposition_Tree_Search::N_Qubit_Decomposition_Tree_Search(Matrix Umtx
     : N_Qubit_Decomposition_Tree_Search(Umtx_in, qbit_num_in, {}, config, accelerator_num) {}
 
 /**
+@brief Constructor of the class from a single precision unitary matrix.
+*/
+N_Qubit_Decomposition_Tree_Search::N_Qubit_Decomposition_Tree_Search(Matrix_float Umtx_in, int qbit_num_in,
+                                                                     std::map<std::string, Config_Element>& config,
+                                                                     int accelerator_num)
+    : N_Qubit_Decomposition_Tree_Search(Umtx_in, qbit_num_in, {}, config, accelerator_num) {}
+
+/**
 @brief Constructor of the class.
 @param Umtx_in The unitary matrix to be decomposed
 @param qbit_num_in The number of qubits spanning the unitary Umtx
@@ -386,6 +394,82 @@ N_Qubit_Decomposition_Tree_Search::N_Qubit_Decomposition_Tree_Search(Matrix Umtx
 @return An instance of the class
 */
 N_Qubit_Decomposition_Tree_Search::N_Qubit_Decomposition_Tree_Search(Matrix Umtx_in, int qbit_num_in,
+                                                                     std::vector<matrix_base<int>> topology_in,
+                                                                     std::map<std::string, Config_Element>& config,
+                                                                     int accelerator_num)
+    : Optimization_Interface(Umtx_in, qbit_num_in, false, config, RANDOM, accelerator_num) {
+
+    // set the level limit
+    level_limit = 0;
+
+    // Maximal number of iterations in the optimization process
+    max_outer_iterations = 1;
+
+    // setting the topology
+    topology = topology_in;
+
+    if (topology.size() == 0) {
+        for (int qbit1 = 0; qbit1 < qbit_num; qbit1++) {
+            for (int qbit2 = qbit1 + 1; qbit2 < qbit_num; qbit2++) {
+                matrix_base<int> edge(2, 1);
+                edge[0] = qbit1;
+                edge[1] = qbit2;
+
+                topology.push_back(edge);
+            }
+        }
+    } else {
+        for (size_t idx = 0; idx < topology.size(); idx++) {
+            if (topology[idx].size() != 2) {
+                std::string error("invalid topology: each element should be a pair of integers");
+                throw error;
+            }
+            if (topology[idx][0] < 0 || topology[idx][0] >= qbit_num || topology[idx][1] < 0 || topology[idx][1] >= qbit_num) {
+                std::string error("invalid topology: qubit indices should be between 0 and qbit_num-1");
+                throw error;
+            }
+            if (topology[idx][0] == topology[idx][1]) {
+                std::string error("invalid topology: target and control qubits should be different");
+                throw error;
+            }
+            if (topology[idx][0] > topology[idx][1]) {
+                std::swap(topology[idx][0], topology[idx][1]);
+            }
+        }
+    }
+
+    // construct the possible CNOT combinations within a single level
+    // the number of possible CNOT connections netween the qubits (including topology constraints)
+    int n_ary_limit_max = static_cast<int>(topology.size());
+
+    possible_target_qbits = matrix_base<int>(1, n_ary_limit_max);
+    possible_control_qbits = matrix_base<int>(1, n_ary_limit_max);
+    for (int element_idx = 0; element_idx < n_ary_limit_max; element_idx++) {
+
+        matrix_base<int>& edge = topology[element_idx];
+        possible_target_qbits[element_idx] = edge[0];
+        possible_control_qbits[element_idx] = edge[1];
+    }
+
+    // BFGS is better for smaller problems, while ADAM for larger ones
+    if (qbit_num <= 5) {
+        alg = BFGS;
+
+        // Maximal number of iterations in the optimization process
+        max_outer_iterations = 4;
+        max_inner_iterations = 10000;
+    } else {
+        alg = ADAM;
+
+        // Maximal number of iterations in the optimization process
+        max_outer_iterations = 1;
+    }
+}
+
+/**
+@brief Constructor of the class from a single precision unitary matrix.
+*/
+N_Qubit_Decomposition_Tree_Search::N_Qubit_Decomposition_Tree_Search(Matrix_float Umtx_in, int qbit_num_in,
                                                                      std::vector<matrix_base<int>> topology_in,
                                                                      std::map<std::string, Config_Element>& config,
                                                                      int accelerator_num)
@@ -672,6 +756,7 @@ Gates_block* N_Qubit_Decomposition_Tree_Search::determine_gate_structure(Matrix_
             if (current_minimum_tmp < current_minimum) {
                 current_minimum = current_minimum_tmp;
                 optimized_parameters_mtx = cDecomp_custom_random.get_optimized_parameters().copy();
+                sync_optimized_parameters_float();
                 best_solution = solution;
             }
             if (current_minimum < optimization_tolerance_loc && stop_first_solution) {
@@ -705,6 +790,9 @@ SearchNode N_Qubit_Decomposition_Tree_Search::evaluate_path(
     }
     cDecomp_custom_random.set_optimized_parameters(optimized_parameters.data(),
                                                     static_cast<int>(optimized_parameters.size()));
+    Matrix U;
+    Matrix_float U_float;
+    Matrix_real_float params_float;
     for (const std::vector<int>& cut : all_cuts) {
         if (cut.size() != 1) continue;
         int max_rank = 2*(int)std::min(cut.size(), qbit_num-cut.size());
@@ -714,14 +802,26 @@ SearchNode N_Qubit_Decomposition_Tree_Search::evaluate_path(
             cDecomp_custom_random.set_osr_params({cut}, rank, false);
             //cDecomp_custom_random.set_osr_params(all_cuts, rank, true);
             cDecomp_custom_random.start_decomposition();
-            Matrix U = Umtx.copy();
             Matrix_real params = cDecomp_custom_random.get_optimized_parameters();
-            cDecomp_custom_random.apply_to(params, U);
+            if ( use_float ) {
+                params.copy_to(params_float);
+                Umtx_float.copy_to(U_float);
+                cDecomp_custom_random.apply_to(params_float, U_float);
+            }
+            else {
+                Umtx.copy_to(U);
+                cDecomp_custom_random.apply_to(params, U);
+            }
             std::vector<std::pair<int, double>> osr_result;
             osr_result.reserve(all_cuts.size());
             int newrank = rank;
             for (const std::vector<int>& eval_cut : all_cuts) {
-                osr_result.emplace_back(operator_schmidt_rank(U, qbit_num, eval_cut, Fnorm, osr_tol));
+                if ( use_float ) {
+                    osr_result.emplace_back(operator_schmidt_rank(U_float, qbit_num, eval_cut, Fnorm, osr_tol));
+                }
+                else {
+                    osr_result.emplace_back(operator_schmidt_rank(U, qbit_num, eval_cut, Fnorm, osr_tol));
+                }
                 if (cut == eval_cut) newrank = osr_result.back().first;
                 //newrank = std::max(newrank, osr_result.back().first);
             }
@@ -1051,80 +1151,85 @@ TreeSearchResult N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_struct
 
     int parallel = get_parallel_configuration();
 
-    int64_t work_batch = 1;
-    if (parallel == 0) {
-        work_batch = concurrency;
-    }
+    auto process_job_range = [&](int64_t begin, int64_t end) {
+        N_Qubit_Decomposition_custom&& cDecomp_custom_random = perform_optimization(nullptr);
+        cDecomp_custom_random.set_cost_function_variant(OSR_ENTANGLEMENT);
+        std::mt19937 ts_gen(std::random_device{}());
 
-    // std::cout << "levels " << level_num << std::endl;
-    tbb::parallel_for(
-        tbb::blocked_range<int64_t>((int64_t)0, concurrency, work_batch), [&](tbb::blocked_range<int64_t> r) {
-            N_Qubit_Decomposition_custom&& cDecomp_custom_random = perform_optimization(nullptr);
-            cDecomp_custom_random.set_cost_function_variant(OSR_ENTANGLEMENT);
-            std::mt19937 ts_gen(std::random_device{}());
+        for (int64_t job_idx = begin; job_idx < end; ++job_idx) {
 
-            for (int64_t job_idx = r.begin(); job_idx < r.end(); ++job_idx) {
+            // for( int64_t job_idx=0; job_idx<concurrency; job_idx++ ) {
 
-                // for( int64_t job_idx=0; job_idx<concurrency; job_idx++ ) {
+            // initial offset and upper boundary of the gray code counter
+            int64_t work_batch = iteration_max / concurrency;
+            int64_t initial_offset = job_idx * work_batch;
+            int64_t offset_max = (job_idx + 1) * work_batch - 1;
 
-                // initial offset and upper boundary of the gray code counter
-                int64_t work_batch = iteration_max / concurrency;
-                int64_t initial_offset = job_idx * work_batch;
-                int64_t offset_max = (job_idx + 1) * work_batch - 1;
+            if (job_idx == concurrency - 1) {
+                offset_max = iteration_max - 1;
+            }
 
-                if (job_idx == concurrency - 1) {
-                    offset_max = iteration_max - 1;
+            // std::cout << initial_offset << " " << offset_max << " " << iteration_max << " " << work_batch << " "
+            // << concurrency << std::endl;
+
+            for (int64_t iter_idx = initial_offset; iter_idx < offset_max + 1; iter_idx++) {
+                if (stop_first_solution && found_optimal_solution) {
+                    break;
                 }
+                const GrayCodeCNOT& solution = all_pairs[iter_idx];
 
-                // std::cout << initial_offset << " " << offset_max << " " << iteration_max << " " << work_batch << " "
-                // << concurrency << std::endl;
+                SearchNode sn = evaluate_path(cDecomp_custom_random, osr_bound_solver, all_cuts, Fnorm, osr_tol, distrib_real, ts_gen, solution);
+                increment_num_iters(
+                    cDecomp_custom_random
+                        .get_num_iters()); // retrieve the number of iterations spent on optimization
 
-                for (int64_t iter_idx = initial_offset; iter_idx < offset_max + 1; iter_idx++) {
-                    if (stop_first_solution && found_optimal_solution) {
+                const std::tuple<int, double, std::vector<int>, std::vector<std::pair<int, double>>>& osr_result = sn.get_best_osr_result();
+                bool isWorse = false;
+                for (int idx = 0; idx < solution.size(); idx++) {
+                    const GrayCodeCNOT& prefix = solution.remove_Digit(idx);
+                    std::map<GrayCodeCNOT, SearchNode>::const_iterator prefix_it = prefixes.find(prefix);
+                    if (prefix_it == prefixes.end()) {
+                        isWorse = true;
                         break;
                     }
-                    const GrayCodeCNOT& solution = all_pairs[iter_idx];
-
-                    SearchNode sn = evaluate_path(cDecomp_custom_random, osr_bound_solver, all_cuts, Fnorm, osr_tol, distrib_real, ts_gen, solution);
-                    number_of_iters +=
-                        cDecomp_custom_random
-                            .get_num_iters(); // retrieve the number of iterations spent on optimization
-
-                    const std::tuple<int, double, std::vector<int>, std::vector<std::pair<int, double>>>& osr_result = sn.get_best_osr_result();
-                    bool isWorse = false;
-                    for (int idx = 0; idx < solution.size(); idx++) {
-                        const GrayCodeCNOT& prefix = solution.remove_Digit(idx);
-                        std::map<GrayCodeCNOT, SearchNode>::const_iterator prefix_it = prefixes.find(prefix);
-                        if (prefix_it == prefixes.end()) {
-                            isWorse = true;
-                            break;
-                        }
-                        //if (sn > *prefix_it)
-                        const std::tuple<int, double, std::vector<int>, std::vector<std::pair<int, double>>>& prefix_osr_result = prefix_it->second.get_best_osr_result();
-                        if (std::get<0>(osr_result) > std::get<0>(prefix_osr_result) ||
-                                   (std::get<0>(osr_result) == std::get<0>(prefix_osr_result) &&
-                                    std::get<1>(osr_result) + 1e-3 < std::get<1>(prefix_osr_result))) {
-                            isWorse = true;
-                            break;
-                        }
+                    //if (sn > *prefix_it)
+                    const std::tuple<int, double, std::vector<int>, std::vector<std::pair<int, double>>>& prefix_osr_result = prefix_it->second.get_best_osr_result();
+                    if (std::get<0>(osr_result) > std::get<0>(prefix_osr_result) ||
+                               (std::get<0>(osr_result) == std::get<0>(prefix_osr_result) &&
+                                std::get<1>(osr_result) + 1e-3 < std::get<1>(prefix_osr_result))) {
+                        isWorse = true;
+                        break;
                     }
-                    int cnot_lower_bound = std::get<0>(osr_result);
-                    if (cnot_lower_bound <= level_limit - level_num && !isWorse) {
-                        tbb::spin_mutex::scoped_lock tree_search_lock{tree_search_mutex};
-                        all_osr_results.emplace(std::move(sn));
-                        if (cnot_lower_bound == 0) {
-                            found_optimal_solution = true;
-                            successful_solutions.push_back(solution.copy());
-                        }
-                    }
-
-                    /*for( int gcode_idx=0; gcode_idx<solution.size(); gcode_idx++ ) {
-                        std::cout << solution[gcode_idx] << ", ";
-                    }
-                    std::cout << current_minimum << std::endl;*/
                 }
+                int cnot_lower_bound = std::get<0>(osr_result);
+                if (cnot_lower_bound <= level_limit - level_num && !isWorse) {
+                    tbb::spin_mutex::scoped_lock tree_search_lock{tree_search_mutex};
+                    all_osr_results.emplace(std::move(sn));
+                    if (cnot_lower_bound == 0) {
+                        found_optimal_solution = true;
+                        successful_solutions.push_back(solution.copy());
+                    }
+                }
+
+                /*for( int gcode_idx=0; gcode_idx<solution.size(); gcode_idx++ ) {
+                    std::cout << solution[gcode_idx] << ", ";
+                }
+                std::cout << current_minimum << std::endl;*/
             }
+        }
+    };
+
+    if (parallel == 0) {
+        process_job_range(0, concurrency);
+    }
+    else {
+        int64_t work_batch = 1;
+        // std::cout << "levels " << level_num << std::endl;
+        tbb::parallel_for(
+            tbb::blocked_range<int64_t>((int64_t)0, concurrency, work_batch), [&](tbb::blocked_range<int64_t> r) {
+                process_job_range(r.begin(), r.end());
         });
+    }
 
     long long beam_width = all_osr_results.size();
     if (config.count("beam") > 0) {
@@ -1184,8 +1289,8 @@ GrayCodeCNOT N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures
 
         N_Qubit_Decomposition_custom&& cDecomp_custom_random = perform_optimization(gate_structure_loc);
 
-        number_of_iters +=
-            cDecomp_custom_random.get_num_iters(); // retrieve the number of iterations spent on optimization
+        increment_num_iters(
+            cDecomp_custom_random.get_num_iters()); // retrieve the number of iterations spent on optimization
 
         double current_minimum_tmp = cDecomp_custom_random.get_current_minimum();
         sstream.str("");
@@ -1195,6 +1300,7 @@ GrayCodeCNOT N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures
         if (current_minimum_tmp < current_minimum) {
             current_minimum = current_minimum_tmp;
             optimized_parameters_mtx = cDecomp_custom_random.get_optimized_parameters();
+            sync_optimized_parameters_float();
         }
 
         // std::cout << "iiiiiiiiiiiiiiiiii " << current_minimum_tmp << std::endl;
@@ -1228,105 +1334,110 @@ GrayCodeCNOT N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures
 
     int parallel = get_parallel_configuration();
 
+    auto process_job_range = [&](int64_t begin, int64_t end) {
+        for (int64_t job_idx = begin; job_idx < end; ++job_idx) {
 
-    int64_t work_batch = 1;
-    if (parallel == 0) {
-        work_batch = concurrency;
-    }
+            // for( int64_t job_idx=0; job_idx<concurrency; job_idx++ ) {
 
-    // std::cout << "levels " << level_num << std::endl;
-    tbb::parallel_for(
-        tbb::blocked_range<int64_t>((int64_t)0, concurrency, work_batch), [&](tbb::blocked_range<int64_t> r) {
-            for (int64_t job_idx = r.begin(); job_idx < r.end(); ++job_idx) {
+            // initial offset and upper boundary of the gray code counter
+            int64_t work_batch = iteration_max / concurrency;
+            int64_t initial_offset = job_idx * work_batch;
+            int64_t offset_max = (job_idx + 1) * work_batch - 1;
 
-                // for( int64_t job_idx=0; job_idx<concurrency; job_idx++ ) {
+            if (job_idx == concurrency - 1) {
+                offset_max = iteration_max - 1;
+            }
 
-                // initial offset and upper boundary of the gray code counter
-                int64_t work_batch = iteration_max / concurrency;
-                int64_t initial_offset = job_idx * work_batch;
-                int64_t offset_max = (job_idx + 1) * work_batch - 1;
+            // std::cout << initial_offset << " " << offset_max << " " << iteration_max << " " << work_batch << " "
+            // << concurrency << std::endl;
 
-                if (job_idx == concurrency - 1) {
-                    offset_max = iteration_max - 1;
+            n_aryGrayCodeCounter gcode_counter(
+                n_ary_limits, initial_offset); // see piquassoboost for details of the implementation
+            gcode_counter.set_offset_max(offset_max);
+            GrayCodeCNOT gcode(n_ary_limits_int8);
+
+            for (int64_t iter_idx = initial_offset; iter_idx < offset_max + 1; iter_idx++) {
+
+                if (found_optimal_solution) {
+                    return;
                 }
 
-                // std::cout << initial_offset << " " << offset_max << " " << iteration_max << " " << work_batch << " "
-                // << concurrency << std::endl;
+                GrayCode&& gcodeint = gcode_counter.get();
+                std::transform(gcodeint.data, gcodeint.data + gcodeint.size(), gcode.data,
+                               [](int val) { return static_cast<int8_t>(val); });
 
-                n_aryGrayCodeCounter gcode_counter(
-                    n_ary_limits, initial_offset); // see piquassoboost for details of the implementation
-                gcode_counter.set_offset_max(offset_max);
-                GrayCodeCNOT gcode(n_ary_limits_int8);
+                if (!is_unique_structure(gcode, topology)) continue;
 
-                for (int64_t iter_idx = initial_offset; iter_idx < offset_max + 1; iter_idx++) {
+                Gates_block* gate_structure_loc = construct_gate_structure_from_Gray_code(gcode);
 
-                    if (found_optimal_solution) {
-                        return;
+                // ----------- start the decomposition -----------
+
+                std::stringstream sstream;
+                sstream << "Starting optimization with " << gate_structure_loc->get_gate_num()
+                        << " decomposing layers." << std::endl;
+                print(sstream, 1);
+
+                N_Qubit_Decomposition_custom&& cDecomp_custom_random = perform_optimization(gate_structure_loc);
+
+                delete (gate_structure_loc);
+                gate_structure_loc = NULL;
+
+                increment_num_iters(cDecomp_custom_random
+                                       .get_num_iters()); // retrieve the number of iterations spent on optimization
+
+                double current_minimum_tmp = cDecomp_custom_random.get_current_minimum();
+                sstream.str("");
+                sstream << "Optimization with " << level_num << " levels converged to " << current_minimum_tmp;
+                print(sstream, 1);
+
+                // std::cout << "Optimization with " << level_num << " levels converged to " << current_minimum_tmp
+                // << std::endl;
+
+                {
+                    tbb::spin_mutex::scoped_lock tree_search_lock{tree_search_mutex};
+
+                    if (current_minimum_tmp < current_minimum && !found_optimal_solution) {
+
+                        current_minimum = current_minimum_tmp;
+                        gcode_best_solution = gcode;
+
+                        optimized_parameters_mtx = cDecomp_custom_random.get_optimized_parameters();
+                        sync_optimized_parameters_float();
                     }
 
-                    GrayCode&& gcodeint = gcode_counter.get();
-                    std::transform(gcodeint.data, gcodeint.data + gcodeint.size(), gcode.data,
-                                   [](int val) { return static_cast<int8_t>(val); });
-
-                    if (!is_unique_structure(gcode, topology)) continue;
-
-                    Gates_block* gate_structure_loc = construct_gate_structure_from_Gray_code(gcode);
-
-                    // ----------- start the decomposition -----------
-
-                    std::stringstream sstream;
-                    sstream << "Starting optimization with " << gate_structure_loc->get_gate_num()
-                            << " decomposing layers." << std::endl;
-                    print(sstream, 1);
-
-                    N_Qubit_Decomposition_custom&& cDecomp_custom_random = perform_optimization(gate_structure_loc);
-
-                    delete (gate_structure_loc);
-                    gate_structure_loc = NULL;
-
-                    number_of_iters += cDecomp_custom_random
-                                           .get_num_iters(); // retrieve the number of iterations spent on optimization
-
-                    double current_minimum_tmp = cDecomp_custom_random.get_current_minimum();
-                    sstream.str("");
-                    sstream << "Optimization with " << level_num << " levels converged to " << current_minimum_tmp;
-                    print(sstream, 1);
-
-                    // std::cout << "Optimization with " << level_num << " levels converged to " << current_minimum_tmp
-                    // << std::endl;
-
-                    {
-                        tbb::spin_mutex::scoped_lock tree_search_lock{tree_search_mutex};
-
-                        if (current_minimum_tmp < current_minimum && !found_optimal_solution) {
-
-                            current_minimum = current_minimum_tmp;
-                            gcode_best_solution = gcode;
-
-                            optimized_parameters_mtx = cDecomp_custom_random.get_optimized_parameters();
-                        }
-
-                        if (current_minimum < optimization_tolerance_loc && !found_optimal_solution) {
-                            found_optimal_solution = true;
-                        }
+                    if (current_minimum < optimization_tolerance_loc && !found_optimal_solution) {
+                        found_optimal_solution = true;
                     }
+                }
 
-                    /*
-                    for( int gcode_idx=0; gcode_idx<gcode.size(); gcode_idx++ ) {
-                        std::cout << gcode[gcode_idx] << ", ";
-                    }
-                    std::cout << current_minimum_tmp  << std::endl;
-                    */
+                /*
+                for( int gcode_idx=0; gcode_idx<gcode.size(); gcode_idx++ ) {
+                    std::cout << gcode[gcode_idx] << ", ";
+                }
+                std::cout << current_minimum_tmp  << std::endl;
+                */
 
-                    // iterate the Gray code to the next element
-                    int changed_index, value_prev, value;
-                    if (gcode_counter.next(changed_index, value_prev, value)) {
-                        // exit from the for loop if no further gcode is present
-                        break;
-                    }
+                // iterate the Gray code to the next element
+                int changed_index, value_prev, value;
+                if (gcode_counter.next(changed_index, value_prev, value)) {
+                    // exit from the for loop if no further gcode is present
+                    break;
                 }
             }
+        }
+    };
+
+    if (parallel == 0) {
+        process_job_range(0, concurrency);
+    }
+    else {
+        int64_t work_batch = 1;
+        // std::cout << "levels " << level_num << std::endl;
+        tbb::parallel_for(
+            tbb::blocked_range<int64_t>((int64_t)0, concurrency, work_batch), [&](tbb::blocked_range<int64_t> r) {
+                process_job_range(r.begin(), r.end());
         });
+    }
 
     return gcode_best_solution;
 }
@@ -1345,8 +1456,15 @@ N_Qubit_Decomposition_custom N_Qubit_Decomposition_Tree_Search::perform_optimiza
         optimization_tolerance_loc = optimization_tolerance;
     }
 
-    N_Qubit_Decomposition_custom cDecomp_custom_random =
-        N_Qubit_Decomposition_custom(Umtx.copy(), qbit_num, false, config, RANDOM, accelerator_num);
+    N_Qubit_Decomposition_custom cDecomp_custom_random;
+    if ( use_float ) {
+        cDecomp_custom_random =
+            N_Qubit_Decomposition_custom(Umtx_float.copy(), qbit_num, false, config, RANDOM, accelerator_num);
+    }
+    else {
+        cDecomp_custom_random =
+            N_Qubit_Decomposition_custom(Umtx.copy(), qbit_num, false, config, RANDOM, accelerator_num);
+    }
     if (gate_structure_loc != nullptr) {
         cDecomp_custom_random.set_custom_gate_structure(gate_structure_loc);
         cDecomp_custom_random.set_optimization_blocks(gate_structure_loc->get_gate_num());
@@ -1500,4 +1618,14 @@ void N_Qubit_Decomposition_Tree_Search::add_finalyzing_layer(Gates_block* gate_s
 void N_Qubit_Decomposition_Tree_Search::set_unitary(Matrix& Umtx_new) {
 
     Umtx = Umtx_new;
+    if ( use_float ) {
+        Umtx_float = Umtx_new.to_float32();
+    }
+}
+
+void N_Qubit_Decomposition_Tree_Search::set_unitary(Matrix_float& Umtx_new) {
+
+    Umtx_float = Umtx_new;
+    Umtx = Umtx_new.to_float64();
+    use_float = true;
 }
