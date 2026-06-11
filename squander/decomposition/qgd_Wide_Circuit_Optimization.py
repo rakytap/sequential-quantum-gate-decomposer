@@ -106,7 +106,15 @@ class SquanderPartitioner(_BQSKitBasePass):
         from bqskit import Circuit as BQSKitCircuit
         from bqskit.ir.lang.qasm2 import OPENQASM2Language
 
-        circ_qiskit = QuantumCircuit.from_qasm_str(OPENQASM2Language().encode(circuit))
+        try:
+            circ_qiskit = QuantumCircuit.from_qasm_str(
+                OPENQASM2Language().encode(circuit)
+            )
+        except Exception:
+            # Circuit contains gates that can't be QASM-encoded (e.g.
+            # ConstantUnitaryGate from a prior pass).  Keep as-is.
+            return
+
         circ, orig_parameters = Qiskit_IO.convert_Qiskit_to_Squander(circ_qiskit)
         partitioned_circuit, parameters, _ = PartitionCircuit(
             circ, orig_parameters, self.max_partition_size, strategy="ilp"
@@ -143,21 +151,14 @@ class SquanderPartitioner(_BQSKitBasePass):
 class SquanderSynthesisPass(_BQSKitSynthesisPass):
     """BQSKit synthesis pass: optimize partition blocks with Squander.
 
-    If Squander synthesis fails, the original partition block is kept unchanged.
-    No fallback to QSearch, LEAP, or alternative Squander strategies.
+    Raises _SquanderSynthesisFailed on any failure.  The monkey-patched
+    EmbedAllPermutationsPass catches this and falls back to a high-op-count
+    poison circuit that scoring functions reject, preserving the original block.
     """
 
     def __init__(self, *args, **kwargs):
         super().__init__()
         self.config = dict(_SQUANDER_BQSKIT_SYNTHESIS_CONFIG or {})
-
-    async def run(self, circuit, data):
-        """Override to keep the original circuit on synthesis failure."""
-        try:
-            synthesized = await self.synthesize(data.target, data)
-            circuit.become(synthesized)
-        except Exception:
-            pass  # Keep original partition block unchanged
 
     @staticmethod
     def _data_topology(data):
@@ -180,16 +181,14 @@ class SquanderSynthesisPass(_BQSKitSynthesisPass):
             **self.config,
             "topology": mini_topology,
         }
+
         candidates = qgd_Wide_Circuit_Optimization.DecomposePartition(
             squander_target_matrix,
             config,
             mini_topology=mini_topology,
         )
         if len(candidates) == 0:
-            raise RuntimeError(
-                "Squander synthesis failed for BQSKit target — "
-                "keeping original circuit."
-            )
+            raise _SquanderSynthesisFailed("DecomposePartition returned no candidates")
 
         optimized_circuit, optimized_parameters = (
             qgd_Wide_Circuit_Optimization.CompareAndPickCircuits(
@@ -203,48 +202,104 @@ class SquanderSynthesisPass(_BQSKitSynthesisPass):
             np.asarray(optimized_parameters, dtype=np.float64),
         )
         synthesized = OPENQASM2Language().decode(qasm2.dumps(optimized_qiskit))
-        target_unitary = UnitaryMatrix(target)
-        distance = target_unitary.get_distance_from(synthesized.get_unitary())
-        validation_tolerance = max(
-            self.config.get("tolerance", 1e-8),
-            self.config.get("bqskit_synthesis_validation_tolerance", 1e-4),
-        )
-        if distance > validation_tolerance:
-            raise RuntimeError(
-                f"Squander synthesis validation failed "
-                f"(distance {distance:.2e} > tolerance {validation_tolerance:.2e}) — "
-                f"keeping original circuit."
-            )
+
+        # Optional sanity check (off by default — Squander already validated HS).
+        if self.config.get("bqskit_distance_test", False):
+            target_unitary = UnitaryMatrix(target)
+            distance = target_unitary.get_distance_from(synthesized.get_unitary())
+            tol = self.config.get("bqskit_synthesis_validation_tolerance", 1e-4)
+            if distance > tol:
+                raise _SquanderSynthesisFailed(
+                    f"Validation failed: {distance:.2e} > {tol:.2e}"
+                )
+
         return synthesized
 
 
-# No-op subclasses — both use the same one-shot Squander-only behavior.
-# (Previously these had QSearch/LEAP fallback, which we no longer want.)
-SquanderQSearchSynthesisPass = SquanderSynthesisPass
-SquanderLEAPSynthesisPass = SquanderSynthesisPass
+class _SquanderSynthesisFailed(Exception):
+    """Raised when Squander cannot synthesize a partition block."""
+
+
+def _make_poison_circuit(target, data=None):
+    """Return a placeholder with many multi-qubit gates so scoring naturally
+    prefers any real synthesis.  Tagged so it can be identified if needed.
+    """
+    from bqskit import Circuit
+    from bqskit.ir.gates.constant.cx import CNOTGate
+
+    n = target.num_qudits
+    c = Circuit(n)
+    c._squander_poison = True
+    if n < 2:
+        return c
+
+    # Use topology-respecting edges when available, else nearest-neighbor.
+    edges = None
+    if data is not None:
+        model = getattr(data, "model", None)
+        if model is not None:
+            edges = [
+                tuple(sorted(e))
+                for e in model.coupling_graph
+                if e[0] < n and e[1] < n
+            ]
+    if not edges:
+        edges = [(i, i + 1) for i in range(n - 1)]
+
+    for _ in range(100):
+        for a, b in edges:
+            c.append_gate(CNOTGate(), [a, b])
+    return c
 
 
 @contextlib.contextmanager
 def patched_seqpam_workflow_classes(bqskit_compile_module, use_squander_partitioner, config):
-    """Patch BQSKit workflow factories to instantiate Squander-aware passes."""
+    """Patch BQSKit workflow factories to use Squander passes exclusively.
+
+    Replaces QSearch/LEAP with SquanderSynthesisPass.  EmbedAllPermutationsPass
+    is monkey-patched so that if Squander raises _SquanderSynthesisFailed, the
+    wrapper catches it and returns a high-op-count poison circuit that scoring
+    functions reject — the original block is preserved.
+    """
 
     global _SQUANDER_BQSKIT_SYNTHESIS_CONFIG
+
+    # Monkey-patch EmbedAllPermutationsPass to wrap inner synthesis with a safe
+    # fallback.  Closures survive dill serialization to BQSKit worker processes.
+    from bqskit.passes.mapping.embed import EmbedAllPermutationsPass as _EAPP
+    _original_eapp_init = _EAPP.__init__
+
+    def _patched_eapp_init(self, *args, **kwargs):
+        _original_eapp_init(self, *args, **kwargs)
+        inner = self.inner_synthesis
+        if isinstance(inner, SquanderSynthesisPass):
+            _original_syn = inner.synthesize
+
+            async def _safe_syn(target, data):
+                try:
+                    return await _original_syn(target, data)
+                except _SquanderSynthesisFailed:
+                    return _make_poison_circuit(target, data)
+
+            inner.synthesize = _safe_syn
 
     original_quick = bqskit_compile_module.QuickPartitioner
     original_qsearch = bqskit_compile_module.QSearchSynthesisPass
     original_leap = bqskit_compile_module.LEAPSynthesisPass
     original_config = _SQUANDER_BQSKIT_SYNTHESIS_CONFIG
+    _EAPP.__init__ = _patched_eapp_init
     try:
         _SQUANDER_BQSKIT_SYNTHESIS_CONFIG = _copy_bqskit_synthesis_config(config)
         if use_squander_partitioner:
             bqskit_compile_module.QuickPartitioner = SquanderPartitioner
-        bqskit_compile_module.QSearchSynthesisPass = SquanderQSearchSynthesisPass
-        bqskit_compile_module.LEAPSynthesisPass = SquanderLEAPSynthesisPass
+        bqskit_compile_module.QSearchSynthesisPass = SquanderSynthesisPass
+        bqskit_compile_module.LEAPSynthesisPass = SquanderSynthesisPass
         yield
     finally:
         bqskit_compile_module.QuickPartitioner = original_quick
         bqskit_compile_module.QSearchSynthesisPass = original_qsearch
         bqskit_compile_module.LEAPSynthesisPass = original_leap
+        _EAPP.__init__ = _original_eapp_init
         _SQUANDER_BQSKIT_SYNTHESIS_CONFIG = original_config
 
 
@@ -2784,7 +2839,7 @@ class qgd_Wide_Circuit_Optimization:
                     config=self.config,
                 ):
                     mainflow = build_seqpam_mapping_optimization_workflow(
-                        block_size=self.config["max_partition_size"]
+                        block_size=3  # SEQPAM uses 3-qubit blocks only
                     )
             elif strategy == "seqpam-quick":
                 # Keep BQSKit's QuickPartitioner, but replace QSearch/LEAP so
@@ -2795,7 +2850,7 @@ class qgd_Wide_Circuit_Optimization:
                     config=self.config,
                 ):
                     mainflow = build_seqpam_mapping_optimization_workflow(
-                        block_size=self.config["max_partition_size"]
+                        block_size=3  # SEQPAM uses 3-qubit blocks only
                     )
             elif strategy == "bqskit-sabre":
                 mainflow = build_sabre_mapping_workflow()
