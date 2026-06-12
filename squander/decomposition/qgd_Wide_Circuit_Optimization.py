@@ -220,36 +220,21 @@ class _SquanderSynthesisFailed(Exception):
     """Raised when Squander cannot synthesize a partition block."""
 
 
-def _make_poison_circuit(target, data=None):
-    """Return a placeholder with many multi-qubit gates so scoring naturally
-    prefers any real synthesis.  Tagged so it can be identified if needed.
+def _perm_to_swaps(p):
+    """Decompose a permutation tuple into adjacent SWAP pairs.
+
+    Returns a list of (i, i+1) pairs that, applied in order, implement *p*.
     """
-    from bqskit import Circuit
-    from bqskit.ir.gates.constant.cx import CNOTGate
-
-    n = target.num_qudits
-    c = Circuit(n)
-    c._squander_poison = True
-    if n < 2:
-        return c
-
-    # Use topology-respecting edges when available, else nearest-neighbor.
-    edges = None
-    if data is not None:
-        model = getattr(data, "model", None)
-        if model is not None:
-            edges = [
-                tuple(sorted(e))
-                for e in model.coupling_graph
-                if e[0] < n and e[1] < n
-            ]
-    if not edges:
-        edges = [(i, i + 1) for i in range(n - 1)]
-
-    for _ in range(100):
-        for a, b in edges:
-            c.append_gate(CNOTGate(), [a, b])
-    return c
+    arr = list(range(len(p)))
+    swaps = []
+    for i in range(len(p)):
+        target_val = p[i]
+        j = arr.index(target_val)
+        while j > i:
+            arr[j], arr[j - 1] = arr[j - 1], arr[j]
+            swaps.append((j - 1, j))
+            j -= 1
+    return swaps
 
 
 @contextlib.contextmanager
@@ -257,15 +242,13 @@ def patched_seqpam_workflow_classes(bqskit_compile_module, use_squander_partitio
     """Patch BQSKit workflow factories to use Squander passes exclusively.
 
     Replaces QSearch/LEAP with SquanderSynthesisPass.  EmbedAllPermutationsPass
-    is monkey-patched so that if Squander raises _SquanderSynthesisFailed, the
-    wrapper catches it and returns a high-op-count poison circuit that scoring
-    functions reject — the original block is preserved.
+    is monkey-patched so that if Squander raises _SquanderSynthesisFailed, a
+    SWAP-based fallback preserves the original block under the requested
+    input/output permutation.
     """
 
     global _SQUANDER_BQSKIT_SYNTHESIS_CONFIG
 
-    # Monkey-patch EmbedAllPermutationsPass to wrap inner synthesis with a safe
-    # fallback.  Closures survive dill serialization to BQSKit worker processes.
     from bqskit.passes.mapping.embed import EmbedAllPermutationsPass as _EAPP
     _original_eapp_init = _EAPP.__init__
 
@@ -279,9 +262,49 @@ def patched_seqpam_workflow_classes(bqskit_compile_module, use_squander_partitio
                 try:
                     return await _original_syn(target, data)
                 except _SquanderSynthesisFailed:
-                    return _make_poison_circuit(target, data)
+                    # Sentinel — _safe_run will replace with SWAP-based fallback.
+                    from bqskit import Circuit as _BQCircuit
+                    c = _BQCircuit(target.num_qudits)
+                    c._squander_fallback = True
+                    return c
 
             inner.synthesize = _safe_syn
+
+            # Monkey-patch run to replace failed syntheses with
+            # SWAP + original-block + SWAP  so the block is preserved
+            # under the requested permutation.
+            _original_run = self.run
+
+            async def _safe_run(circuit, data):
+                from bqskit.ir.gates.constant.swap import SwapGate
+                from bqskit import Circuit as _BQCircuit
+
+                await _original_run(circuit, data)
+
+                pd = data.get("permutation_data", {})
+                for graph in list(pd.keys()):
+                    graph_data = pd[graph]
+                    for perm_key in list(graph_data.keys()):
+                        c = graph_data[perm_key]
+                        if not getattr(c, "_squander_fallback", False):
+                            continue
+
+                        pi, po = perm_key
+                        width = circuit.num_qudits
+                        new_c = _BQCircuit(width)
+
+                        # Input permutation Pi
+                        for a, b in _perm_to_swaps(pi):
+                            new_c.append_gate(SwapGate(), [a, b])
+                        # Original block
+                        new_c.append_circuit(circuit.copy(), list(range(width)))
+                        # Output permutation Po^{-1}  (reverse of Po's swaps)
+                        for a, b in reversed(_perm_to_swaps(po)):
+                            new_c.append_gate(SwapGate(), [a, b])
+
+                        graph_data[perm_key] = new_c
+
+            self.run = _safe_run
 
     original_quick = bqskit_compile_module.QuickPartitioner
     original_qsearch = bqskit_compile_module.QSearchSynthesisPass
