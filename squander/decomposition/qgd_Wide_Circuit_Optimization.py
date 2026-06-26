@@ -279,9 +279,13 @@ def patched_seqpam_workflow_classes(bqskit_compile_module, use_squander_partitio
                 from bqskit.ir.gates.constant.swap import SwapGate
                 from bqskit import Circuit as _BQCircuit
 
+                # Save original block BEFORE _original_run mutates circuit in-place
+                original_block = circuit.copy()
+
                 await _original_run(circuit, data)
 
                 pd = data.get("permutation_data", {})
+
                 for graph in list(pd.keys()):
                     graph_data = pd[graph]
                     for perm_key in list(graph_data.keys()):
@@ -290,17 +294,16 @@ def patched_seqpam_workflow_classes(bqskit_compile_module, use_squander_partitio
                             continue
 
                         pi, po = perm_key
-                        width = circuit.num_qudits
+                        width = original_block.num_qudits
                         new_c = _BQCircuit(width)
 
-                        # Undo input permutation: pi → identity
-                        # _perm_to_swaps(p) maps identity → p, so reverse gives p → identity
-                        for a, b in reversed(_perm_to_swaps(pi)):
+                        # Input permutation Pi
+                        for a, b in _perm_to_swaps(pi):
                             new_c.append_gate(SwapGate(), [a, b])
-                        # Original block (expects identity mapping: logical i at physical i)
-                        new_c.append_circuit(circuit.copy(), list(range(width)))
-                        # Apply output permutation: identity → po
-                        for a, b in _perm_to_swaps(po):
+                        # Original block (saved before _original_run mutated it)
+                        new_c.append_circuit(original_block.copy(), list(range(width)))
+                        # Output permutation Po^{-1}  (reverse of Po's swaps)
+                        for a, b in reversed(_perm_to_swaps(po)):
                             new_c.append_gate(SwapGate(), [a, b])
 
                         graph_data[perm_key] = new_c
