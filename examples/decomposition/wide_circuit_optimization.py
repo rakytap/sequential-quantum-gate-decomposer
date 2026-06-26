@@ -35,13 +35,14 @@ if __name__ == "__main__":
         "strategy": "TreeSearch",  # possible values: "TreeSearch", "qiskit", "bqskit", "TabuSearch"
         "test_subcircuits": False,
         "test_final_circuit": False,
-        "max_partition_size": 3,
+        "max_partition_size": 4,
         "beam": None,
         "use_osr": True,
         "use_graph_search": True,
         "pre-opt-strategy": "TreeSearch",  # possible values: "TreeSearch", "qiskit", "bqskit", "TabuSearch"
         "routing-strategy": "seqpam-ilp",  # possible values: "sabre", "light-sabre", "bqskit-sabre", "seqpam-quick", "seqpam-ilp"
         "tolerance": 1e-10,
+        "use_float": True,  # whether to use single precision for the optimization (experimental, may cause instability in some cases, but can significantly reduce optimization time and memory usage for large circuits)
         # **{'use_basin_hopping': True, 'bh_T': 1.1822334624366124, 'bh_stepsize': 0.9020671823381502, 'bh_interval': 165, 'bh_target_accept_rate': 0.7037812116166546, 'bh_stepwise_factor': 0.8254028860713254}
     }
 
@@ -49,9 +50,26 @@ if __name__ == "__main__":
 
     files = [os.path.join(Path(__file__).resolve().parent, "bv_n14.qasm")]
 
-    results = {}
+    # JSON results file with resume support
+    RESULTS_FILE = "results.json"
+    import json
+
+    # Load existing results to skip already-processed circuits
+    existing_results = {}
+    if os.path.exists(RESULTS_FILE):
+        with open(RESULTS_FILE) as f:
+            existing_results = json.load(f)
+        print(f"Loaded {len(existing_results)} existing results; will skip already-processed circuits.")
+
+    results = existing_results  # merge new results into existing
     for filename in files:
+        fname = os.path.basename(filename)
+        if fname in results:
+            print(f"Skipping already processed: {fname}")
+            continue
+
         print(f"executing optimization of circuit: {filename}")
+        #if not filename.endswith("_n140.qasm"): continue
 
         # load the circuit from a file
         circ, parameters, _ = utils.qasm_to_squander_circuit(filename)
@@ -60,6 +78,9 @@ if __name__ == "__main__":
                 circ.get_Qbit_Num()
             )
         )
+
+        # pre-optimization stats
+        init_stats = CircuitGateStats(circ)
 
         # run circuit optimization
         wide_circuit_optimizer = (
@@ -70,42 +91,57 @@ if __name__ == "__main__":
             circ, parameters
         )
         elapsed = time.time() - start_time
-        init_cnot_count = CNOTGateCount(circ, 0)
-        cnot_count, opt_time = CNOTGateCount(
-            optcirc, 0
-        ), wide_circuit_optimizer.config.get("optimization_time", None)
-        a2a_cnot_count, routed_cnot_count = None, None
-        a2a_time, routing_time = 0.0, 0.0
 
+        # post-optimization stats
+        opt_stats = CircuitGateStats(optcirc)
+        opt_time = wide_circuit_optimizer.config.get("optimization_time", None)
+
+        # routing stats (if routing was needed)
+        a2a_stats = None
+        routed_stats = None
+        a2a_time = routing_time = None
         if wide_circuit_optimizer.config.get("routed_circuit", None) is not None:
-            init_map, final_map = (
-                wide_circuit_optimizer.config["initial_mapping"],
-                wide_circuit_optimizer.config["final_mapping"],
-            )
-            a2acirc, a2aparams = (
-                wide_circuit_optimizer.config["all_to_all_circuit"],
-                wide_circuit_optimizer.config["all_to_all_parameters"],
-            )
-            routedcirc, routedparams = (
-                wide_circuit_optimizer.config["routed_circuit"],
-                wide_circuit_optimizer.config["routed_parameters"],
-            )
-            a2a_cnot_count = CNOTGateCount(a2acirc, 0)
-            routed_cnot_count = CNOTGateCount(routedcirc, 0)
-            a2a_time = wide_circuit_optimizer.config.get(
-                "all_to_all_optimization_time", None
-            )
+            a2acirc = wide_circuit_optimizer.config["all_to_all_circuit"]
+            routedcirc = wide_circuit_optimizer.config["routed_circuit"]
+            a2a_stats = CircuitGateStats(a2acirc)
+            routed_stats = CircuitGateStats(routedcirc)
+            a2a_time = wide_circuit_optimizer.config.get("all_to_all_optimization_time", None)
             routing_time = wide_circuit_optimizer.config.get("routing_time", None)
-        results[os.path.basename(filename)] = (
-            (init_cnot_count, a2a_cnot_count, routed_cnot_count, cnot_count),
-            (a2a_time, routing_time, opt_time, elapsed),
-        )
+
+        result_entry = {
+            "file": fname,
+            "strategy": config["strategy"],
+            "pre_opt_strategy": config["pre-opt-strategy"],
+            "routing_strategy": config["routing-strategy"],
+            "init": init_stats,
+            "final": opt_stats,
+            "timing": {
+                "a2a": round(a2a_time, 2) if a2a_time else None,
+                "routing": round(routing_time, 2) if routing_time else None,
+                "optimization": round(opt_time, 2) if opt_time else None,
+                "total": round(elapsed, 2),
+            },
+        }
+        if a2a_stats:
+            result_entry["all_to_all"] = a2a_stats
+        if routed_stats:
+            result_entry["routed"] = routed_stats
+
+        results[fname] = result_entry
+
+        # save after each circuit so we don't lose progress
+        with open(RESULTS_FILE, "w") as f:
+            json.dump(results, f, indent=2)
+
         wide_circuit_optimizer.check_compare_circuits(
             circ, parameters, optcirc, optparameters, routing=True
         )
-        with open("results.txt", "a") as f:
-            f.write(
-                f"{os.path.basename(filename)}: {config['pre-opt-strategy']}, {config['routing-strategy']}, {config['strategy']} CNOT count = {init_cnot_count, a2a_cnot_count, routed_cnot_count, cnot_count}, elapsed time = {a2a_time:.2f} + {routing_time:.2f} + {opt_time:.2f} = {elapsed:.2f} seconds\n"
-            )
+
+        print(f"  init: {init_stats['cnot_equiv']} CNOT, {init_stats['single_qubit']} 1q, "
+              f"{init_stats['total_raw']} total, {init_stats['qubits']}q")
+        print(f"  final: {opt_stats['cnot_equiv']} CNOT, {opt_stats['single_qubit']} 1q, "
+              f"{opt_stats['total_raw']} total")
+        print(f"  time: {elapsed:.2f}s")
+        print(f"--- {len(results)}/{len(files)} circuits processed ---")
 
         print("--- %s seconds elapsed during optimization ---" % elapsed)
