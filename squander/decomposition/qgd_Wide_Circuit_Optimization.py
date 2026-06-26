@@ -293,13 +293,14 @@ def patched_seqpam_workflow_classes(bqskit_compile_module, use_squander_partitio
                         width = circuit.num_qudits
                         new_c = _BQCircuit(width)
 
-                        # Input permutation Pi
-                        for a, b in _perm_to_swaps(pi):
+                        # Undo input permutation: pi → identity
+                        # _perm_to_swaps(p) maps identity → p, so reverse gives p → identity
+                        for a, b in reversed(_perm_to_swaps(pi)):
                             new_c.append_gate(SwapGate(), [a, b])
-                        # Original block
+                        # Original block (expects identity mapping: logical i at physical i)
                         new_c.append_circuit(circuit.copy(), list(range(width)))
-                        # Output permutation Po^{-1}  (reverse of Po's swaps)
-                        for a, b in reversed(_perm_to_swaps(po)):
+                        # Apply output permutation: identity → po
+                        for a, b in _perm_to_swaps(po):
                             new_c.append_gate(SwapGate(), [a, b])
 
                         graph_data[perm_key] = new_c
@@ -344,25 +345,51 @@ def extract_subtopology(involved_qbits, qbit_map, config):
     return mini_topology
 
 
-CNOT_COUNT_DICT = {
-    "CNOT": 1,
-    "CH": 1,
-    "CZ": 1,
-    "SYC": 3,
-    "CRY": 2,
-    "CU": 2,
-    "CR": 2,
-    "CROT": 2,
-    "CRX": 2,
-    "CRZ": 2,
-    "CP": 2,
-    "CCX": 6,
-    "CSWAP": 7,
-    "SWAP": 3,
-    "RXX": 2,
-    "RYY": 2,
-    "RZZ": 2,
+# Universal gate decomposition dictionary.
+# Each gate maps to its exact breakdown into {CNOT, H, RX, RY, RZ, ...} basis
+# as defined by circuit_to_CNOT_basis in squander/utils.py.
+# Native single-qubit gates and CNOT map to themselves with count 1.
+_GATE_DECOMPOSITION = {
+    # --- native gates (do not decompose) ---
+    "CNOT":  {"CNOT": 1},
+    "H":     {"H": 1},
+    "X":     {"X": 1},
+    "Y":     {"Y": 1},
+    "Z":     {"Z": 1},
+    "S":     {"S": 1},
+    "Sdg":   {"Sdg": 1},
+    "T":     {"T": 1},
+    "Tdg":   {"Tdg": 1},
+    "SX":    {"SX": 1},
+    "SXdg":  {"SXdg": 1},
+    "RX":    {"RX": 1},
+    "RY":    {"RY": 1},
+    "RZ":    {"RZ": 1},
+    "R":     {"R": 1},
+    "U1":    {"U1": 1},
+    "U2":    {"U2": 1},
+    "U3":    {"U3": 1},
+    # --- decomposed gates (counts from circuit_to_CNOT_basis) ---
+    "CH":    {"CNOT": 1, "RY": 2},                                    # RY + CNOT + RY
+    "CZ":    {"CNOT": 1, "H": 2},                                      # H + CNOT + H
+    "SYC":   {"CNOT": 3, "U1": 3},                                     # U1 + U1 + CNOT + U1 + CNOT + CNOT
+    "CRY":   {"CNOT": 2, "RY": 2},                                     # CNOT + RY + CNOT + RY
+    "CU":    {"CNOT": 2, "U1": 1, "RZ": 3, "RY": 2},                  # U1 + RZ + RY + CNOT + RY + RZ + CNOT + RZ
+    "CR":    {"CNOT": 2, "RZ": 2, "RY": 2},                            # RZ + CNOT + RY + CNOT + RY + RZ
+    "CROT":  {"CNOT": 2, "RZ": 3, "RY": 2},                            # RZ + RY + CNOT + RZ + CNOT + RY + RZ
+    "CRX":   {"CNOT": 2, "H": 2, "RZ": 2},                             # H + CNOT + RZ + CNOT + RZ + H
+    "CRZ":   {"CNOT": 2, "RZ": 2},                                     # CNOT + RZ + CNOT + RZ
+    "CP":    {"CNOT": 2, "U1": 3},                                     # U1 + CNOT + U1 + CNOT + U1
+    "CCX":   {"CNOT": 6, "H": 2, "T": 4, "Tdg": 3},                   # standard Toffoli: 7 CNOTs + 8 single-qubit
+    "CSWAP": {"CNOT": 7, "H": 1, "T": 5, "Tdg": 2, "SX": 1, "Sdg": 1, "S": 1},  # Fredkin
+    "SWAP":  {"CNOT": 3},                                              # CNOT + CNOT + CNOT
+    "RXX":   {"CNOT": 2, "RX": 1},                                     # CNOT + RX + CNOT
+    "RYY":   {"CNOT": 2, "RX": 4, "RZ": 1},                            # RX + RX + CNOT + RZ + CNOT + RX + RX
+    "RZZ":   {"CNOT": 2, "RZ": 1},                                     # CNOT + RZ + CNOT
 }
+
+# Backward-compatible: CNOT-equivalent cost (number of CNOTs in decomposition).
+CNOT_COUNT_DICT = {g: d.get("CNOT", 0) for g, d in _GATE_DECOMPOSITION.items()}
 
 
 def CNOTGateCount(circ: Circuit, max_gates: int = 0) -> int:
@@ -379,21 +406,74 @@ def CNOTGateCount(circ: Circuit, max_gates: int = 0) -> int:
     Returns:
         Integer gate-cost score used by optimization heuristics.
     """
-
-    assert isinstance(
-        circ, Circuit
-    ), "The input parameters should be an instance of Squander Circuit"
-
+    assert isinstance(circ, Circuit), \
+        "The input parameters should be an instance of Squander Circuit"
     gate_counts = circ.get_Gate_Nums()
     num_cnots = sum(
         CNOT_COUNT_DICT.get(gate, 0) * count for gate, count in gate_counts.items()
     )
-
     if max_gates > 0:
         return num_cnots * max_gates + sum(
-            y for x, y in gate_counts.items() if x not in CNOT_COUNT_DICT
+            y for x, y in gate_counts.items() if CNOT_COUNT_DICT.get(x, -1) <= 0
         )
     return num_cnots
+
+
+def SingleQubitGateCount(circ: Circuit) -> int:
+    """Count single-qubit gates in a circuit (U3, H, RX, RY, RZ, etc.).
+
+    Uses _GATE_DECOMPOSITION to count non-CNOT gates in each gate's breakdown.
+
+    Args:
+        circ: Squander circuit representation.
+
+    Returns:
+        Total number of single-qubit gate operations when fully decomposed.
+    """
+    gate_counts = circ.get_Gate_Nums()
+    total = 0
+    for gate, count in gate_counts.items():
+        decomp = _GATE_DECOMPOSITION.get(gate, {})
+        total += count * sum(v for k, v in decomp.items() if k != "CNOT")
+    return total
+
+
+def TotalRawGateCount(circ: Circuit) -> int:
+    """Total number of raw gate operations (single-qubit + multi-qubit).
+
+    Args:
+        circ: Squander circuit representation.
+
+    Returns:
+        Total gate operation count.
+    """
+    return sum(circ.get_Gate_Nums().values())
+
+
+def CircuitGateStats(circ: Circuit) -> dict:
+    """Return comprehensive gate statistics for a circuit.
+
+    Uses _GATE_DECOMPOSITION to compute fully-decomposed gate counts.
+
+    Returns dict with keys: cnot_equiv, single_qubit, total_raw, qubits,
+    and gate_breakdown (per-gate-type raw counts).
+    """
+    gate_counts = circ.get_Gate_Nums()
+    cnot_equiv = sum(
+        CNOT_COUNT_DICT.get(g, 0) * c for g, c in gate_counts.items()
+    )
+    single = 0
+    for g, c in gate_counts.items():
+        decomp = _GATE_DECOMPOSITION.get(g, {})
+        single += c * sum(v for k, v in decomp.items() if k != "CNOT")
+    total = sum(gate_counts.values())
+    return {
+        "cnot_equiv": cnot_equiv,
+        "single_qubit": single,
+        "total_raw": total,
+        "qubits": circ.get_Qbit_Num(),
+        "gate_breakdown": dict(gate_counts),
+    }
 
 
 class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
@@ -2191,7 +2271,7 @@ class qgd_Wide_Circuit_Optimization:
             recombine_info
         )
         max_gates = sum(
-            sum(y for x, y in c.get_Gate_Nums().items() if x not in CNOT_COUNT_DICT)
+            sum(y for x, y in c.get_Gate_Nums().items() if CNOT_COUNT_DICT.get(x, -1) <= 0)
             for c in optimized_subcircuits[: len(allparts)]
         )
         weights = [
@@ -2254,7 +2334,8 @@ class qgd_Wide_Circuit_Optimization:
             self.config["routed_circuit"] = circ
             self.config["routed_parameters"] = parameters
         else:
-            print("No additional routing is needed on the circuit")
+            if self.config["topology"] is not None:
+                print("No additional routing is needed on the circuit")
 
         start_time = time.time()
         if self.config["strategy"] == "bqskit":
@@ -2418,7 +2499,7 @@ class qgd_Wide_Circuit_Optimization:
 
         circ, orig_parameters = circuit_to_CNOT_basis(circ, orig_parameters)
         max_gates = sum(
-            y for x, y in circ.get_Gate_Nums().items() if x not in CNOT_COUNT_DICT
+            y for x, y in circ.get_Gate_Nums().items() if CNOT_COUNT_DICT.get(x, -1) <= 0
         )
 
         global_min = self.config.get("global_min", True)
