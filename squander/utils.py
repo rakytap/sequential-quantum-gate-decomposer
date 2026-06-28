@@ -155,7 +155,7 @@ def CompareCircuits(
     circ2: Circuit,
     parameters2: np.ndarray,
     parallel: int = 1,
-    tolerance: float = 1e-5,
+    tolerance: float = 1e-10,
     initial_mapping=None,
     final_mapping=None,
 ):
