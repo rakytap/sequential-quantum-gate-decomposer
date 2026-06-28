@@ -36,15 +36,16 @@ IBM_EAGLE_BASIS = ["cx", "rz", "sx", "x"]
 
 
 def transpile_to_ibm_eagle(qasm_path_or_circ, parameters=None):
-    """Transpile a circuit to IBM Eagle's native gate set and return gate counts.
+    """Transpile a circuit to IBM Eagle's native gate set and return consistent
+    gate stats via Squander's CircuitGateStats.
 
     Args:
         qasm_path_or_circ: Either a path to a .qasm file, or a Squander Circuit.
         parameters: Required if passing a Squander Circuit.
 
     Returns:
-        dict with keys 'cx', 'rz', 'sx', 'x' and their counts after transpilation
-        with optimization_level=0 (pure basis translation, no peephole).
+        dict from CircuitGateStats, using the same decomposition as the main
+        benchmark pipeline.
     """
     from qiskit import QuantumCircuit, transpile
 
@@ -57,8 +58,8 @@ def transpile_to_ibm_eagle(qasm_path_or_circ, parameters=None):
         )
 
     transpiled = transpile(qc, basis_gates=IBM_EAGLE_BASIS, optimization_level=0)
-    counts = Counter(instr.operation.name for instr in transpiled.data)
-    return {gate: counts.get(gate, 0) for gate in IBM_EAGLE_BASIS}
+    eagle_circ, eagle_params = Qiskit_IO.convert_Qiskit_to_Squander(transpiled)
+    return CircuitGateStats(eagle_circ)
 
 
 if __name__ == "__main__":
