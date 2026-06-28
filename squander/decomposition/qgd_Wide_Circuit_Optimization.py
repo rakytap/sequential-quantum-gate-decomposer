@@ -29,16 +29,51 @@ from squander.synthesis.qgd_SABRE import qgd_SABRE as SABRE
 try:
     from bqskit.compiler.basepass import BasePass as _BQSKitBasePass
     from bqskit.passes.synthesis.synthesis import SynthesisPass as _BQSKitSynthesisPass
-    from bqskit.passes.synthesis.qsearch import QSearchSynthesisPass as _BQSKitQSearchSynthesisPass
-    from bqskit.passes.synthesis.leap import LEAPSynthesisPass as _BQSKitLEAPSynthesisPass
 except Exception:
     _BQSKitBasePass = object
     _BQSKitSynthesisPass = object
-    _BQSKitQSearchSynthesisPass = None
-    _BQSKitLEAPSynthesisPass = None
 
 
 _SQUANDER_BQSKIT_SYNTHESIS_CONFIG = None
+
+SQUANDER_FLOAT64_TOLERANCE = 1e-10
+SQUANDER_FLOAT32_TOLERANCE = 1e-5
+BQSKIT_FLOAT64_SYNTHESIS_VALIDATION_TOLERANCE = 1e-8
+BQSKIT_FLOAT32_SYNTHESIS_VALIDATION_TOLERANCE = 1e-4
+
+
+def _config_uses_float32(config):
+    return bool(config.get("use_float", False))
+
+
+def _default_squander_tolerance(config):
+    return (
+        SQUANDER_FLOAT32_TOLERANCE
+        if _config_uses_float32(config)
+        else SQUANDER_FLOAT64_TOLERANCE
+    )
+
+
+def _default_bqskit_synthesis_validation_tolerance(config):
+    return (
+        BQSKIT_FLOAT32_SYNTHESIS_VALIDATION_TOLERANCE
+        if _config_uses_float32(config)
+        else BQSKIT_FLOAT64_SYNTHESIS_VALIDATION_TOLERANCE
+    )
+
+
+def _squander_validation_tolerance(config):
+    return config.get(
+        "squander_validation_tolerance",
+        config.get("tolerance", _default_squander_tolerance(config)),
+    )
+
+
+def _bqskit_synthesis_validation_tolerance(config):
+    return config.get(
+        "bqskit_synthesis_validation_tolerance",
+        _default_bqskit_synthesis_validation_tolerance(config),
+    )
 
 
 def _copy_bqskit_synthesis_config(config):
@@ -75,22 +110,387 @@ def _copy_bqskit_synthesis_config(config):
 _SKIP_CONFIG_VALUE = object()
 
 
-def _bit_reversed_matrix_order(matrix, qbit_num):
-    """Convert between BQSKit/Qiskit and Squander matrix qubit ordering."""
+# ---------------------------------------------------------------------------
+# Module-level EAPP monkey-patch for SWAP fallback.
+# BQSKit's Compiler starts a runtime server via Popen([sys.executable, ...]),
+# a fresh Python process.  Class-level monkey-patches applied in the parent
+# are invisible there.  We use an environment variable that the Popen child
+# inherits; when this module is imported inside a worker, the env var triggers
+# the patch.
+# ---------------------------------------------------------------------------
+def _append_topology_safe(new_c, op, topo_edges, width):
+    """Append *op* to *new_c*, using SWAP bridges for edges not in *topo_edges*.
 
-    if qbit_num <= 1:
-        return matrix
+    For gates with ≥3 qubits, decomposes via :func:`squander.utils.circuit_to_CNOT_basis`
+    and recurses on each resulting gate.
+    """
+    from bqskit.ir.gates.constant.swap import SwapGate
 
-    perm = []
-    for idx in range(1 << qbit_num):
-        rev_idx = 0
-        value = idx
-        for _ in range(qbit_num):
-            rev_idx = (rev_idx << 1) | (value & 1)
-            value >>= 1
-        perm.append(rev_idx)
+    loc = list(op.location)
+    gate = op.gate
+    params = list(op.params) if op.params else None
 
-    return matrix[np.ix_(perm, perm)]
+    if gate.num_qudits == 1:
+        if params:
+            new_c.append_gate(gate, loc, params)
+        else:
+            new_c.append_gate(gate, loc)
+        return
+
+    if gate.num_qudits == 2:
+        u, v = loc[0], loc[1]
+        if (u, v) in topo_edges:
+            if params:
+                new_c.append_gate(gate, [u, v], params)
+            else:
+                new_c.append_gate(gate, [u, v])
+            return
+        # Edge not in topology — find shortest SWAP path u↔v via BFS.
+        adj = {i: set() for i in range(width)}
+        for a, b in topo_edges:
+            adj[a].add(b)
+            adj[b].add(a)
+        from collections import deque
+        parent = {v: None}
+        q = deque([v])
+        while q:
+            node = q.popleft()
+            if node == u:
+                break
+            for nb in adj.get(node, set()):
+                if nb not in parent:
+                    parent[nb] = node
+                    q.append(nb)
+        if u not in parent:
+            # Cannot bridge this edge on the given topology.
+            raise ValueError(f"Cannot bridge ({u},{v}) on topology")
+        # Reconstruct path v -> ... -> u, then SWAP v along the path until it
+        # is adjacent to u, apply the gate, and unwind those same SWAPs.
+        path = [u]
+        node = u
+        while parent[node] is not None:
+            node = parent[node]
+            path.append(node)
+        path = list(reversed(path))
+        swaps = list(zip(path[:-2], path[1:-1]))
+        cur = v
+        for a, b in swaps:
+            new_c.append_gate(SwapGate(), [a, b])
+            cur = b
+        if params:
+            new_c.append_gate(gate, [u, cur], params)
+        else:
+            new_c.append_gate(gate, [u, cur])
+        for a, b in reversed(swaps):
+            new_c.append_gate(SwapGate(), [a, b])
+        return
+
+    # gate.num_qudits >= 3: decompose to CNOT basis via Squander's utility
+    from bqskit.ir.lang.qasm2 import OPENQASM2Language
+    from qiskit import qasm2
+
+    # 1) Build a minimal BQSKit circuit containing just this gate
+    from bqskit import Circuit as _BQCircuit
+    tmp_bq = _BQCircuit(width)
+    if params:
+        tmp_bq.append_gate(gate, loc, params)
+    else:
+        tmp_bq.append_gate(gate, loc)
+
+    # 2) Encode to QASM, then decode via Squander
+    qasm_str = OPENQASM2Language().encode(tmp_bq)
+    from squander import Qiskit_IO as _QIO
+    qiskit_tmp = qasm2.loads(qasm_str)
+    sq_tmp, sq_params = _QIO.convert_Qiskit_to_Squander(qiskit_tmp)
+
+    # 3) Decompose to CNOT basis
+    from squander.utils import circuit_to_CNOT_basis
+    sq_decomp, sq_decomp_params = circuit_to_CNOT_basis(sq_tmp, sq_params)
+
+    # 4) Convert back to BQSKit and recurse on each gate
+    qiskit_decomp = _QIO.get_Qiskit_Circuit(sq_decomp, sq_decomp_params)
+    bq_decomp = OPENQASM2Language().decode(qasm2.dumps(qiskit_decomp))
+    for bq_op in bq_decomp:
+        _append_topology_safe(new_c, bq_op, topo_edges, width)
+
+
+def _bqskit_location_respects_topology(location, topo_edges):
+    """Return true if ``location`` can be hosted by ``topo_edges``."""
+    loc = tuple(int(q) for q in location)
+    if len(loc) <= 1:
+        return True
+    if len(loc) == 2:
+        return (loc[0], loc[1]) in topo_edges or (loc[1], loc[0]) in topo_edges
+
+    wanted = set(loc)
+    seen = {loc[0]}
+    stack = [loc[0]]
+    adjacency = {q: set() for q in wanted}
+    for u, v in topo_edges:
+        if u in wanted and v in wanted:
+            adjacency[u].add(v)
+            adjacency[v].add(u)
+    while stack:
+        cur = stack.pop()
+        for nxt in adjacency.get(cur, ()):
+            if nxt not in seen:
+                seen.add(nxt)
+                stack.append(nxt)
+    return wanted <= seen
+
+
+def _bqskit_circuit_respects_topology(circuit, topo_edges):
+    """Return true if every multi-qudit operation respects ``topo_edges``."""
+    for op in circuit:
+        if op.gate.num_qudits <= 1:
+            continue
+        if not _bqskit_location_respects_topology(op.location, topo_edges):
+            return False
+    return True
+
+
+def _ensure_bqskit_circuit_respects_topology(circuit, topo_edges, label):
+    """Raise _SquanderSynthesisFailed if ``circuit`` violates ``topo_edges``."""
+    for op in circuit:
+        if op.gate.num_qudits <= 1:
+            continue
+        if not _bqskit_location_respects_topology(op.location, topo_edges):
+            raise _SquanderSynthesisFailed(
+                f"{label} contains {op.gate.name} on {list(op.location)}, "
+                f"outside topology {sorted(topo_edges)}."
+            )
+
+
+def _fallback_circuit_for_permutation(original_circuit, graph, pi, po):
+    """Build a topology-valid fallback for ``Po.T @ U @ Pi``.
+
+    ``original_circuit`` is the block circuit passed into BQSKit's
+    EmbedAllPermutationsPass.  ``graph`` is the block-local coupling graph
+    selected by EAPP for this synthesis attempt.
+    """
+    from bqskit import Circuit as _BQCircuit
+    from bqskit.ir.gates.constant.swap import SwapGate
+
+    width = original_circuit.num_qudits
+    if len(pi) != width or len(po) != width:
+        raise _SquanderSynthesisFailed(
+            f"Permutation width mismatch for fallback: {pi}, {po}, width={width}."
+        )
+
+    topo_edges = set()
+    for u, v in graph:
+        topo_edges.add((u, v))
+        topo_edges.add((v, u))
+
+    fallback = _BQCircuit(width, original_circuit.radixes)
+
+    for a, b in _topo_perm_to_swaps(pi, topo_edges, width):
+        if (a, b) not in topo_edges:
+            raise _SquanderSynthesisFailed(
+                f"Cannot realize input permutation {pi} on topology {sorted(topo_edges)}."
+            )
+        fallback.append_gate(SwapGate(), [a, b])
+
+    for op in original_circuit:
+        _append_topology_safe(fallback, op, topo_edges, width)
+
+    po_inv = tuple(po.index(k) for k in range(width))
+    for a, b in _topo_perm_to_swaps(po_inv, topo_edges, width):
+        if (a, b) not in topo_edges:
+            raise _SquanderSynthesisFailed(
+                f"Cannot realize output permutation {po} on topology {sorted(topo_edges)}."
+            )
+        fallback.append_gate(SwapGate(), [a, b])
+
+    _ensure_bqskit_circuit_respects_topology(fallback, topo_edges, "SWAP fallback")
+    return fallback
+
+
+async def _squander_synthesize_or_fallback(
+    inner_synthesis,
+    target,
+    target_data,
+    original_circuit,
+    graph,
+    pi,
+    po,
+):
+    """Run Squander synthesis, falling back only for explicit Squander misses."""
+    try:
+        return await inner_synthesis.synthesize(target, target_data)
+    except _SquanderSynthesisFailed:
+        return _fallback_circuit_for_permutation(original_circuit, graph, pi, po)
+
+
+def _patch_eapp_if_needed():
+    """Monkey-patch EAPP.run to catch Squander OSR failures per permutation.
+
+    IMPORTANT: This patch fully replaces ``EmbedAllPermutationsPass.run``.
+    It was written against BQSKit's internal EAPP implementation as of
+    the pip-installed version (see pyproject.toml / requirements for the
+    exact version).  If BQSKit changes its EAPP internals (scoring function,
+    subtopology selection, permutation handling, or pass data keys), this
+    patch may silently diverge and should be re-audited against the new
+    BQSKit source.
+    """
+    import os as _os
+    if not _os.environ.get('_SQUANDER_EAPP_FALLBACK_PATCH'):
+        return
+
+    from bqskit.passes.mapping.embed import EmbedAllPermutationsPass as __EAPP
+    if getattr(__EAPP.run, "_squander_fallback_patch", False):
+        return
+
+    async def __patched_eapp_run(self, circuit, data):
+        import copy as _copy
+        import itertools as _it
+        import logging as _logging
+        from bqskit.compiler.machine import MachineModel as _MachineModel
+        from bqskit.passes.mapping.topology import SubtopologySelectionPass as _STSP
+        from bqskit.qis.graph import CouplingGraph as _CouplingGraph
+        from bqskit.qis.permutation import PermutationMatrix as _PermutationMatrix
+        from bqskit.runtime import get_runtime as _get_runtime
+
+        _logger = _logging.getLogger("bqskit.passes.mapping.embed")
+        utry = data.target
+
+        if not all(r == utry.radixes[0] for r in utry.radixes):
+            raise NotImplementedError(
+                'PermutationAwareSynthesisPass only supports unitaries '
+                'with the same radix on all qudits currently.',
+            )
+
+        width = utry.num_qudits
+        perms = list(_it.permutations(range(width)))
+        no_perm = [tuple(range(width))]
+        Pis = [
+            _PermutationMatrix.from_qudit_location(width, utry.radixes[0], p)
+            for p in perms
+        ]
+        Pos = [
+            _PermutationMatrix.from_qudit_location(width, utry.radixes[0], p)
+            for p in perms
+        ]
+
+        if self.input_perm and self.output_perm:
+            permsbyperms = list(_it.product(perms, perms))
+            targets = [Po.T @ utry @ Pi for Pi, Po in _it.product(Pis, Pos)]
+        elif self.input_perm:
+            permsbyperms = list(_it.product(perms, no_perm))
+            targets = [utry @ Pi for Pi in Pis]
+        elif self.output_perm:
+            permsbyperms = list(_it.product(no_perm, perms))
+            targets = [Po.T @ utry for Po in Pos]
+        else:
+            _logger.warning('No permutation is being used in PAS.')
+            permsbyperms = list(_it.product(no_perm, no_perm))
+            targets = [utry]
+
+        if self.vary_topology and width != 1:
+            if _STSP.key not in data:
+                raise RuntimeError(
+                    'Cannot find subtopologies, try running a'
+                    ' SubtopologySelectionPass first.',
+                )
+            if width not in data[_STSP.key]:
+                raise RuntimeError(
+                    'Subtopology information for block size'
+                    f' {width} is not available.',
+                )
+            graphs = data[_STSP.key][width]
+        else:
+            graphs = [_CouplingGraph.all_to_all(width)]
+
+        datas = []
+        for graph in graphs:
+            model = _MachineModel(
+                circuit.num_qudits, graph,
+                data.gate_set, data.model.radixes,
+            )
+            target_data = _copy.deepcopy(data)
+            target_data.model = model
+            datas.append(target_data)
+
+        extended_targets = []
+        extended_datas = []
+        extended_graphs = []
+        extended_perms = []
+        original_circuits = []
+        for target_index, target in enumerate(targets):
+            for graph_index, graph in enumerate(graphs):
+                extended_targets.append(target)
+                extended_datas.append(datas[graph_index])
+                extended_graphs.append(graph)
+                extended_perms.append(permsbyperms[target_index])
+                original_circuits.append(circuit)
+
+        circuits = await _get_runtime().map(
+            _squander_synthesize_or_fallback,
+            [self.inner_synthesis] * len(extended_targets),
+            extended_targets,
+            extended_datas,
+            original_circuits,
+            extended_graphs,
+            [perm[0] for perm in extended_perms],
+            [perm[1] for perm in extended_perms],
+        )
+
+        perm_data = {}
+        all_perms = list(_it.permutations(range(width)))
+        for i, synthesized in enumerate(circuits):
+            graph = extended_graphs[i]
+            perm = extended_perms[i]
+
+            if graph not in perm_data:
+                perm_data[graph] = {}
+
+            if perm in perm_data[graph]:
+                s1 = self.scoring_fn(perm_data[graph][perm])
+                s2 = self.scoring_fn(synthesized)
+                if s2 < s1:
+                    perm_data[graph][perm] = synthesized
+            else:
+                perm_data[graph][perm] = synthesized
+
+            for univ_perm in all_perms[1:]:
+                renumber_c = synthesized.copy()
+                renumber_c.renumber_qudits(univ_perm)
+                new_pi = tuple(univ_perm[j] for j in perm[0])
+                new_pf = tuple(univ_perm[j] for j in perm[1])
+                new_graph = renumber_c.coupling_graph
+                if new_graph not in perm_data:
+                    perm_data[new_graph] = {}
+
+                new_perm = (new_pi, new_pf)
+                if new_perm not in perm_data[new_graph]:
+                    perm_data[new_graph][new_perm] = renumber_c
+                else:
+                    s1 = self.scoring_fn(perm_data[new_graph][new_perm])
+                    s2 = self.scoring_fn(renumber_c)
+                    if s2 < s1:
+                        perm_data[new_graph][new_perm] = renumber_c
+
+        if circuit.gate_set.issubset(data.model.gate_set):
+            for univ_perm in _it.permutations(range(width)):
+                uperm = (univ_perm, univ_perm)
+                renumber_c = circuit.copy()
+                renumber_c.renumber_qudits(univ_perm)
+                new_graph = renumber_c.coupling_graph
+                new_score = self.scoring_fn(renumber_c)
+                for graph, graph_data in perm_data.items():
+                    if all(e in graph for e in new_graph):
+                        if uperm not in graph_data:
+                            graph_data[uperm] = renumber_c
+                        elif new_score < self.scoring_fn(graph_data[uperm]):
+                            graph_data[uperm] = renumber_c
+
+        data['permutation_data'] = perm_data
+
+    __patched_eapp_run._squander_fallback_patch = True
+    __EAPP.run = __patched_eapp_run
+
+
+_patch_eapp_if_needed()
 
 
 class SquanderPartitioner(_BQSKitBasePass):
@@ -151,20 +551,61 @@ class SquanderPartitioner(_BQSKitBasePass):
 class SquanderSynthesisPass(_BQSKitSynthesisPass):
     """BQSKit synthesis pass: optimize partition blocks with Squander.
 
-    Raises _SquanderSynthesisFailed on any failure.  The monkey-patched
-    EmbedAllPermutationsPass catches this and falls back to a high-op-count
-    poison circuit that scoring functions reject, preserving the original block.
+    Raises _SquanderSynthesisFailed when the configured Squander synthesis
+    strategy cannot produce a valid circuit for the requested subtopology. The
+    monkey-patched EmbedAllPermutationsPass catches this and installs a
+    SWAP-correct original-block fallback.
     """
 
     def __init__(self, *args, **kwargs):
         super().__init__()
-        self.config = dict(_SQUANDER_BQSKIT_SYNTHESIS_CONFIG or {})
+        cfg = _SQUANDER_BQSKIT_SYNTHESIS_CONFIG
+        if not cfg:
+            # Workers spawned via Popen inherit env vars but not Python
+            # globals.  The main process serializes the config to
+            # _SQUANDER_BQSKIT_CONFIG before spawning workers.
+            import os as _os, json as _json
+            _env = _os.environ.get('_SQUANDER_BQSKIT_CONFIG')
+            if _env:
+                cfg = _json.loads(_env)
+        self.config = dict(cfg or {})
 
     @staticmethod
-    def _data_topology(data):
-        if data is not None and getattr(data, "model", None) is not None:
-            return list(data.model.coupling_graph)
-        return None
+    def _data_topology(data, qbit_num):
+        """Return block subtopology from *data*.
+
+        BQSKit labels are reversed when circuits are converted through
+        Squander/Qiskit, so the topology supplied to Squander is reversed too.
+        """
+        if data is None or getattr(data, "model", None) is None:
+            return None
+
+        edges = []
+        for u, v in data.model.coupling_graph:
+            if u == v:
+                continue
+            edges.append((qbit_num - 1 - int(u), qbit_num - 1 - int(v)))
+
+        all_edges = {
+            frozenset((i, j))
+            for i in range(qbit_num)
+            for j in range(i + 1, qbit_num)
+        }
+        edge_set = {frozenset(edge) for edge in edges}
+        if edge_set == all_edges:
+            return None
+        return edges
+
+    @staticmethod
+    def _topology_edges_from_data(data):
+        """Return directed topology edges from BQSKit pass data."""
+        if data is None or getattr(data, "model", None) is None:
+            return None
+        topo_edges = set()
+        for u, v in data.model.coupling_graph:
+            topo_edges.add((int(u), int(v)))
+            topo_edges.add((int(v), int(u)))
+        return topo_edges
 
     async def synthesize(self, target, data=None):
         from qiskit import qasm2
@@ -174,8 +615,7 @@ class SquanderSynthesisPass(_BQSKitSynthesisPass):
 
         target_matrix = np.asarray(target)
         qbit_num = target.num_qudits
-        squander_target_matrix = _bit_reversed_matrix_order(target_matrix, qbit_num)
-        mini_topology = self._data_topology(data)
+        mini_topology = self._data_topology(data, qbit_num)
 
         config = {
             **self.config,
@@ -183,12 +623,16 @@ class SquanderSynthesisPass(_BQSKitSynthesisPass):
         }
 
         candidates = qgd_Wide_Circuit_Optimization.DecomposePartition(
-            squander_target_matrix,
+            target_matrix,
             config,
             mini_topology=mini_topology,
         )
         if len(candidates) == 0:
-            raise _SquanderSynthesisFailed("DecomposePartition returned no candidates")
+            tolerance = config.get("tolerance", _default_squander_tolerance(config))
+            raise _SquanderSynthesisFailed(
+                f"Squander synthesis failed for {qbit_num}-qubit block "
+                f"at tolerance {tolerance}."
+            )
 
         optimized_circuit, optimized_parameters = (
             qgd_Wide_Circuit_Optimization.CompareAndPickCircuits(
@@ -203,15 +647,31 @@ class SquanderSynthesisPass(_BQSKitSynthesisPass):
         )
         synthesized = OPENQASM2Language().decode(qasm2.dumps(optimized_qiskit))
 
-        # Optional sanity check (off by default — Squander already validated HS).
-        if self.config.get("bqskit_distance_test", False):
-            target_unitary = UnitaryMatrix(target)
-            distance = target_unitary.get_distance_from(synthesized.get_unitary())
-            tol = self.config.get("bqskit_synthesis_validation_tolerance", 1e-4)
-            if distance > tol:
-                raise _SquanderSynthesisFailed(
-                    f"Validation failed: {distance:.2e} > {tol:.2e}"
-                )
+        # The QASM round-trip preserves qubit labels but changes the physical
+        # interpretation (Squander MSB=0 → BQSKit LSB=0).  Renumber qudits to
+        # compensate: Squander qubit k (MSB=0) → BQSKit qubit (qbit_num-1-k).
+        if qbit_num > 1:
+            synthesized.renumber_qudits(
+                [qbit_num - 1 - i for i in range(qbit_num)]
+            )
+
+        topo_edges = self._topology_edges_from_data(data)
+        if topo_edges is not None and not _bqskit_circuit_respects_topology(
+            synthesized,
+            topo_edges,
+        ):
+            raise _SquanderSynthesisFailed(
+                "Squander synthesis produced a circuit outside the "
+                "requested BQSKit subtopology."
+            )
+
+        target_unitary = UnitaryMatrix(target)
+        distance = target_unitary.get_distance_from(synthesized.get_unitary())
+        tol = _bqskit_synthesis_validation_tolerance(self.config)
+        if distance > tol:
+            raise _SquanderSynthesisFailed(
+                f"BQSKit synthesis validation failed: {distance:.2e} > {tol:.2e}"
+            )
 
         return synthesized
 
@@ -220,103 +680,83 @@ class _SquanderSynthesisFailed(Exception):
     """Raised when Squander cannot synthesize a partition block."""
 
 
-def _perm_to_swaps(p):
-    """Decompose a permutation tuple into adjacent SWAP pairs.
+def _topo_perm_to_swaps(pi, topo_edges, width):
+    """Decompose permutation *pi* into SWAPs using only edges in *topo_edges*.
 
-    Returns a list of (i, i+1) pairs that, applied in order, implement *p*.
+    Uses BFS on the topology graph to find a SWAP sequence that implements
+    the permutation.  Returns a list of (u, v) pairs valid in *topo_edges*.
     """
-    arr = list(range(len(p)))
+    # Build adjacency list from topo_edges (undirected)
+    adj = {i: set() for i in range(width)}
+    for u, v in topo_edges:
+        adj[u].add(v)
+        adj[v].add(u)
+
+    # Greedy: for each position i, bring the target qubit pi[i] to position i
+    # by routing through the topology graph.
+    current = list(range(width))  # current[pos] = which qubit is at pos
     swaps = []
-    for i in range(len(p)):
-        target_val = p[i]
-        j = arr.index(target_val)
-        while j > i:
-            arr[j], arr[j - 1] = arr[j - 1], arr[j]
-            swaps.append((j - 1, j))
-            j -= 1
+    for i in range(width):
+        target = pi[i]
+        if current[i] == target:
+            continue
+        # Find where target currently is
+        target_pos = current.index(target)
+        # BFS from target_pos to i, finding shortest path of SWAPs
+        from collections import deque
+        parent = {target_pos: None}
+        q = deque([target_pos])
+        while q:
+            u = q.popleft()
+            if u == i:
+                break
+            for v in adj[u]:
+                if v not in parent:
+                    parent[v] = u
+                    q.append(v)
+        # Reconstruct path and apply SWAPs
+        if i not in parent:
+            raise _SquanderSynthesisFailed(
+                f"Cannot realize permutation {pi} on disconnected topology "
+                f"{sorted(topo_edges)}."
+            )
+        path = []
+        v = i
+        while parent[v] is not None:
+            path.append(v)
+            v = parent[v]
+        path.append(target_pos)
+        # Apply SWAPs along the path (reverse order to bring target to i)
+        for k in range(len(path) - 1, 0, -1):
+            a, b = path[k], path[k - 1]
+            swaps.append((a, b))
+            # Update current positions
+            current[a], current[b] = current[b], current[a]
     return swaps
 
 
 @contextlib.contextmanager
 def patched_seqpam_workflow_classes(bqskit_compile_module, use_squander_partitioner, config):
-    """Patch BQSKit workflow factories to use Squander passes exclusively.
+    """Patch BQSKit workflow factories to use Squander passes.
 
-    Replaces QSearch/LEAP with SquanderSynthesisPass.  EmbedAllPermutationsPass
-    is monkey-patched so that if Squander raises _SquanderSynthesisFailed, a
-    SWAP-based fallback preserves the original block under the requested
-    input/output permutation.
+    Replaces QSearch/LEAP with SquanderSynthesisPass.  Squander failures are
+    caught by the EAPP patch and replaced with SWAP-correct fallbacks.
     """
 
     global _SQUANDER_BQSKIT_SYNTHESIS_CONFIG
 
-    from bqskit.passes.mapping.embed import EmbedAllPermutationsPass as _EAPP
-    _original_eapp_init = _EAPP.__init__
-
-    def _patched_eapp_init(self, *args, **kwargs):
-        _original_eapp_init(self, *args, **kwargs)
-        inner = self.inner_synthesis
-        if isinstance(inner, SquanderSynthesisPass):
-            _original_syn = inner.synthesize
-
-            async def _safe_syn(target, data):
-                try:
-                    return await _original_syn(target, data)
-                except _SquanderSynthesisFailed:
-                    # Sentinel — _safe_run will replace with SWAP-based fallback.
-                    from bqskit import Circuit as _BQCircuit
-                    c = _BQCircuit(target.num_qudits)
-                    c._squander_fallback = True
-                    return c
-
-            inner.synthesize = _safe_syn
-
-            # Monkey-patch run to replace failed syntheses with
-            # SWAP + original-block + SWAP  so the block is preserved
-            # under the requested permutation.
-            _original_run = self.run
-
-            async def _safe_run(circuit, data):
-                from bqskit.ir.gates.constant.swap import SwapGate
-                from bqskit import Circuit as _BQCircuit
-
-                # Save original block BEFORE _original_run mutates circuit in-place
-                original_block = circuit.copy()
-
-                await _original_run(circuit, data)
-
-                pd = data.get("permutation_data", {})
-
-                for graph in list(pd.keys()):
-                    graph_data = pd[graph]
-                    for perm_key in list(graph_data.keys()):
-                        c = graph_data[perm_key]
-                        if not getattr(c, "_squander_fallback", False):
-                            continue
-
-                        pi, po = perm_key
-                        width = original_block.num_qudits
-                        new_c = _BQCircuit(width)
-
-                        # Input permutation Pi
-                        for a, b in _perm_to_swaps(pi):
-                            new_c.append_gate(SwapGate(), [a, b])
-                        # Original block (saved before _original_run mutated it)
-                        new_c.append_circuit(original_block.copy(), list(range(width)))
-                        # Output permutation Po^{-1}  (reverse of Po's swaps)
-                        for a, b in reversed(_perm_to_swaps(po)):
-                            new_c.append_gate(SwapGate(), [a, b])
-
-                        graph_data[perm_key] = new_c
-
-            self.run = _safe_run
+    import os as _os, json as _json
 
     original_quick = bqskit_compile_module.QuickPartitioner
     original_qsearch = bqskit_compile_module.QSearchSynthesisPass
     original_leap = bqskit_compile_module.LEAPSynthesisPass
     original_config = _SQUANDER_BQSKIT_SYNTHESIS_CONFIG
-    _EAPP.__init__ = _patched_eapp_init
+    original_config_env = _os.environ.get('_SQUANDER_BQSKIT_CONFIG')
     try:
-        _SQUANDER_BQSKIT_SYNTHESIS_CONFIG = _copy_bqskit_synthesis_config(config)
+        cfg = _copy_bqskit_synthesis_config(config)
+        _SQUANDER_BQSKIT_SYNTHESIS_CONFIG = cfg
+        # Also store in env var so worker processes (Popen) inherit it
+        _os.environ['_SQUANDER_BQSKIT_CONFIG'] = _json.dumps(cfg)
         if use_squander_partitioner:
             bqskit_compile_module.QuickPartitioner = SquanderPartitioner
         bqskit_compile_module.QSearchSynthesisPass = SquanderSynthesisPass
@@ -326,8 +766,11 @@ def patched_seqpam_workflow_classes(bqskit_compile_module, use_squander_partitio
         bqskit_compile_module.QuickPartitioner = original_quick
         bqskit_compile_module.QSearchSynthesisPass = original_qsearch
         bqskit_compile_module.LEAPSynthesisPass = original_leap
-        _EAPP.__init__ = _original_eapp_init
         _SQUANDER_BQSKIT_SYNTHESIS_CONFIG = original_config
+        if original_config_env is None:
+            _os.environ.pop('_SQUANDER_BQSKIT_CONFIG', None)
+        else:
+            _os.environ['_SQUANDER_BQSKIT_CONFIG'] = original_config_env
 
 
 def extract_subtopology(involved_qbits, qbit_map, config):
@@ -1410,7 +1853,10 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
         if finalizing:
             params = self.get_Optimized_Parameters()
             self.err = self.Optimization_Problem(params)
-            return self.err < self.config.get("tolerance", 1e-8)
+            return self.err < self.config.get(
+                "tolerance",
+                _default_squander_tolerance(self.config),
+            )
 
     @staticmethod
     def generate_insertions(curpath, topology, num_cnot):
@@ -1678,7 +2124,12 @@ class qgd_Wide_Circuit_Optimization:
         config.setdefault("strategy", "TreeSearch")
         config.setdefault("parallel", 0)
         config.setdefault("verbosity", 0)
-        config.setdefault("tolerance", 1e-8)
+        config.setdefault("use_float", False)
+        config.setdefault("tolerance", _default_squander_tolerance(config))
+        config.setdefault(
+            "bqskit_synthesis_validation_tolerance",
+            _default_bqskit_synthesis_validation_tolerance(config),
+        )
         config.setdefault("test_subcircuits", False)
         config.setdefault("test_final_circuit", True)
         config.setdefault("max_partition_size", 3)
@@ -1716,6 +2167,30 @@ class qgd_Wide_Circuit_Optimization:
         tolerance = config["tolerance"]
         if not isinstance(tolerance, float):
             raise Exception(f"The tolerance parameter should be a float.")
+
+        use_float = config["use_float"]
+        if not isinstance(use_float, bool):
+            raise Exception(f"The use_float parameter should be a bool.")
+
+        bqskit_synthesis_validation_tolerance = config[
+            "bqskit_synthesis_validation_tolerance"
+        ]
+        if not isinstance(bqskit_synthesis_validation_tolerance, float):
+            raise Exception(
+                "The bqskit_synthesis_validation_tolerance parameter should be a float."
+            )
+
+        squander_validation_tolerance = config.get(
+            "squander_validation_tolerance",
+            None,
+        )
+        if squander_validation_tolerance is not None and not isinstance(
+            squander_validation_tolerance,
+            float,
+        ):
+            raise Exception(
+                "The squander_validation_tolerance parameter should be a float."
+            )
 
         test_subcircuits = config["test_subcircuits"]
         if not isinstance(test_subcircuits, bool):
@@ -2844,9 +3319,19 @@ class qgd_Wide_Circuit_Optimization:
     @staticmethod
     def check_valid_routing(wide_circuit, topo):
         """Assert ``is_valid_routing``; raises if any gate violates ``topo``."""
-        assert qgd_Wide_Circuit_Optimization.is_valid_routing(
-            wide_circuit, topo
-        ), "Final circuit contains gates that do not respect the routing constraints."
+        if not qgd_Wide_Circuit_Optimization.is_valid_routing(wide_circuit, topo):
+            import itertools, sys
+            topo_set = {frozenset(e) for e in topo}
+            for gate in wide_circuit.get_Flat_Circuit().get_Gates():
+                qbits = gate.get_Involved_Qbits()
+                if len(qbits) <= 1:
+                    continue
+                edges = {frozenset((q1,q2)) for q1,q2 in itertools.combinations(qbits,2) if frozenset((q1,q2)) in topo_set}
+                if not edges:
+                    sys.stderr.write(f'ROUTING_VIOLATION: {type(gate).__name__} on {qbits} topo={topo}\n')
+                    sys.stderr.flush()
+                    break
+            raise AssertionError("Final circuit contains gates that do not respect the routing constraints.")
 
     def check_compare_circuits(
         self,
@@ -2874,6 +3359,7 @@ class qgd_Wide_Circuit_Optimization:
             and circ.get_Qbit_Num() <= 12
         )
         if self.config["test_final_circuit"] or forced_test:
+            tolerance = _squander_validation_tolerance(self.config)
             if (
                 routing
                 and self.config.get("initial_mapping", None) is not None
@@ -2886,10 +3372,14 @@ class qgd_Wide_Circuit_Optimization:
                     wide_parameters,
                     initial_mapping=self.config["initial_mapping"],
                     final_mapping=self.config["final_mapping"],
+                    tolerance=tolerance,
                     parallel=0,
                 )
             else:
-                CompareCircuits(circ, orig_parameters, wide_circuit, wide_parameters)
+                CompareCircuits(
+                    circ, orig_parameters, wide_circuit, wide_parameters,
+                    tolerance=tolerance,
+                )
 
     def route_circuit(self, circ: Circuit, orig_parameters: np.ndarray):
         """Map ``circ`` onto ``self.config['topology']`` using the configured router.
@@ -2969,10 +3459,30 @@ class qgd_Wide_Circuit_Optimization:
                 mainflow,
             ]
 
-            with Compiler() as compiler:
-                routed_bqskit_circ, pass_data = compiler.compile(
-                    bqskit_circ, routing_workflow, True
-                )
+            # EAPP monkey-patch catches Squander OSR failures per permutation
+            # and installs a SWAP-correct fallback in BQSKit worker processes.
+            import os as _os, json as _json
+            old_patch_env = _os.environ.get('_SQUANDER_EAPP_FALLBACK_PATCH')
+            old_config_env = _os.environ.get('_SQUANDER_BQSKIT_CONFIG')
+            _os.environ['_SQUANDER_EAPP_FALLBACK_PATCH'] = '1'
+            _os.environ['_SQUANDER_BQSKIT_CONFIG'] = _json.dumps(
+                _copy_bqskit_synthesis_config(self.config)
+            )
+            _patch_eapp_if_needed()
+            try:
+                with Compiler() as compiler:
+                    routed_bqskit_circ, pass_data = compiler.compile(
+                        bqskit_circ, routing_workflow, True
+                    )
+            finally:
+                if old_patch_env is None:
+                    _os.environ.pop('_SQUANDER_EAPP_FALLBACK_PATCH', None)
+                else:
+                    _os.environ['_SQUANDER_EAPP_FALLBACK_PATCH'] = old_patch_env
+                if old_config_env is None:
+                    _os.environ.pop('_SQUANDER_BQSKIT_CONFIG', None)
+                else:
+                    _os.environ['_SQUANDER_BQSKIT_CONFIG'] = old_config_env
 
             # Convert back: BQSKit → Qiskit → Squander
             circuit_qiskit_routed = QuantumCircuit.from_qasm_str(
@@ -2981,15 +3491,8 @@ class qgd_Wide_Circuit_Optimization:
             Squander_remapped_circuit, parameters_remapped_circuit = (
                 Qiskit_IO.convert_Qiskit_to_Squander(circuit_qiskit_routed)
             )
-            Squander_remapped_circuit = Squander_remapped_circuit.Remap_Qbits(
-                {i: j for i, j in enumerate(pass_data.placement)}
-            )
-            self.config["initial_mapping"] = list(
-                pass_data.placement[x] for x in pass_data.initial_mapping
-            )
-            self.config["final_mapping"] = list(
-                pass_data.placement[x] for x in pass_data.final_mapping
-            )
+            self.config["initial_mapping"] = list(pass_data.initial_mapping)
+            self.config["final_mapping"] = list(pass_data.final_mapping)
 
         elif strategy == "light-sabre":
             from squander import Qiskit_IO
