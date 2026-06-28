@@ -21,12 +21,44 @@ limitations under the License.
 ## \brief Simple example python code demonstrating a wide circuit optimization
 
 import squander.decomposition.qgd_Wide_Circuit_Optimization as Wide_Circuit_Optimization
-from squander.decomposition.qgd_Wide_Circuit_Optimization import CNOTGateCount
+from squander.decomposition.qgd_Wide_Circuit_Optimization import (
+    CNOTGateCount, SingleQubitGateCount, TotalRawGateCount, CircuitGateStats,
+)
 from squander.gates.qgd_Circuit import qgd_Circuit as Circuit
 from squander import utils
 from squander import Qiskit_IO
-import time, requests, os, zipfile, tempfile
+import time, requests, os, zipfile, tempfile, json, numpy as np
 from pathlib import Path
+from collections import Counter
+
+# IBM Eagle native gate set (QMill benchmark basis)
+IBM_EAGLE_BASIS = ["cx", "rz", "sx", "x"]
+
+
+def transpile_to_ibm_eagle(qasm_path_or_circ, parameters=None):
+    """Transpile a circuit to IBM Eagle's native gate set and return gate counts.
+
+    Args:
+        qasm_path_or_circ: Either a path to a .qasm file, or a Squander Circuit.
+        parameters: Required if passing a Squander Circuit.
+
+    Returns:
+        dict with keys 'cx', 'rz', 'sx', 'x' and their counts after transpilation
+        with optimization_level=0 (pure basis translation, no peephole).
+    """
+    from qiskit import QuantumCircuit, transpile
+
+    if isinstance(qasm_path_or_circ, str):
+        qc = QuantumCircuit.from_qasm_file(qasm_path_or_circ)
+    else:
+        qc = Qiskit_IO.get_Qiskit_Circuit(
+            qasm_path_or_circ,
+            np.asarray(parameters if parameters is not None else [], dtype=np.float64),
+        )
+
+    transpiled = transpile(qc, basis_gates=IBM_EAGLE_BASIS, optimization_level=0)
+    counts = Counter(instr.operation.name for instr in transpiled.data)
+    return {gate: counts.get(gate, 0) for gate in IBM_EAGLE_BASIS}
 
 
 if __name__ == "__main__":
@@ -41,7 +73,7 @@ if __name__ == "__main__":
         "use_graph_search": True,
         "pre-opt-strategy": "TreeSearch",  # possible values: "TreeSearch", "qiskit", "bqskit", "TabuSearch"
         "routing-strategy": "seqpam-ilp",  # possible values: "sabre", "light-sabre", "bqskit-sabre", "seqpam-quick", "seqpam-ilp"
-        "tolerance": 1e-10,
+        "tolerance": 1e-5, #1e-5 for use_float and 1e-10 if not are sensible
         "use_float": True,  # whether to use single precision for the optimization (experimental, may cause instability in some cases, but can significantly reduce optimization time and memory usage for large circuits)
         # **{'use_basin_hopping': True, 'bh_T': 1.1822334624366124, 'bh_stepsize': 0.9020671823381502, 'bh_interval': 165, 'bh_target_accept_rate': 0.7037812116166546, 'bh_stepwise_factor': 0.8254028860713254}
     }
@@ -81,6 +113,7 @@ if __name__ == "__main__":
 
         # pre-optimization stats
         init_stats = CircuitGateStats(circ)
+        init_ibm_eagle = transpile_to_ibm_eagle(filename)
 
         # run circuit optimization
         wide_circuit_optimizer = (
@@ -94,6 +127,7 @@ if __name__ == "__main__":
 
         # post-optimization stats
         opt_stats = CircuitGateStats(optcirc)
+        final_ibm_eagle = transpile_to_ibm_eagle(optcirc, optparameters)
         opt_time = wide_circuit_optimizer.config.get("optimization_time", None)
 
         # routing stats (if routing was needed)
@@ -114,7 +148,9 @@ if __name__ == "__main__":
             "pre_opt_strategy": config["pre-opt-strategy"],
             "routing_strategy": config["routing-strategy"],
             "init": init_stats,
+            "init_ibm_eagle": init_ibm_eagle,
             "final": opt_stats,
+            "final_ibm_eagle": final_ibm_eagle,
             "timing": {
                 "a2a": round(a2a_time, 2) if a2a_time else None,
                 "routing": round(routing_time, 2) if routing_time else None,
