@@ -111,6 +111,19 @@ _SKIP_CONFIG_VALUE = object()
 
 
 # ---------------------------------------------------------------------------
+# Helper: insert a SWAP as 3 CNOTs so BQSKit's scoring function weights
+# them honestly (3 two-qubit ops instead of 1).  SEQPAM then avoids
+# unnecessary SWAP insertions.
+# ---------------------------------------------------------------------------
+def _add_swap_as_cnots(circuit, a, b):
+    """Append CNOT(a,b); CNOT(b,a); CNOT(a,b) — equivalent to SWAP(a,b)."""
+    from bqskit.ir.gates import CNOTGate
+    circuit.append_gate(CNOTGate(), [a, b])
+    circuit.append_gate(CNOTGate(), [b, a])
+    circuit.append_gate(CNOTGate(), [a, b])
+
+
+# ---------------------------------------------------------------------------
 # Module-level EAPP monkey-patch for SWAP fallback.
 # BQSKit's Compiler starts a runtime server via Popen([sys.executable, ...]),
 # a fresh Python process.  Class-level monkey-patches applied in the parent
@@ -124,7 +137,6 @@ def _append_topology_safe(new_c, op, topo_edges, width):
     For gates with ≥3 qubits, decomposes via :func:`squander.utils.circuit_to_CNOT_basis`
     and recurses on each resulting gate.
     """
-    from bqskit.ir.gates.constant.swap import SwapGate
 
     loc = list(op.location)
     gate = op.gate
@@ -175,14 +187,14 @@ def _append_topology_safe(new_c, op, topo_edges, width):
         swaps = list(zip(path[:-2], path[1:-1]))
         cur = v
         for a, b in swaps:
-            new_c.append_gate(SwapGate(), [a, b])
+            _add_swap_as_cnots(new_c, a, b)
             cur = b
         if params:
             new_c.append_gate(gate, [u, cur], params)
         else:
             new_c.append_gate(gate, [u, cur])
         for a, b in reversed(swaps):
-            new_c.append_gate(SwapGate(), [a, b])
+            _add_swap_as_cnots(new_c, a, b)
         return
 
     # gate.num_qudits >= 3: decompose to CNOT basis via Squander's utility
@@ -269,7 +281,6 @@ def _fallback_circuit_for_permutation(original_circuit, graph, pi, po):
     selected by EAPP for this synthesis attempt.
     """
     from bqskit import Circuit as _BQCircuit
-    from bqskit.ir.gates.constant.swap import SwapGate
 
     width = original_circuit.num_qudits
     if len(pi) != width or len(po) != width:
@@ -289,7 +300,7 @@ def _fallback_circuit_for_permutation(original_circuit, graph, pi, po):
             raise _SquanderSynthesisFailed(
                 f"Cannot realize input permutation {pi} on topology {sorted(topo_edges)}."
             )
-        fallback.append_gate(SwapGate(), [a, b])
+        _add_swap_as_cnots(fallback, a, b)
 
     for op in original_circuit:
         _append_topology_safe(fallback, op, topo_edges, width)
@@ -300,7 +311,7 @@ def _fallback_circuit_for_permutation(original_circuit, graph, pi, po):
             raise _SquanderSynthesisFailed(
                 f"Cannot realize output permutation {po} on topology {sorted(topo_edges)}."
             )
-        fallback.append_gate(SwapGate(), [a, b])
+        _add_swap_as_cnots(fallback, a, b)
 
     _ensure_bqskit_circuit_respects_topology(fallback, topo_edges, "SWAP fallback")
     return fallback
