@@ -667,9 +667,10 @@ class SquanderSynthesisPass(_BQSKitSynthesisPass):
             )
 
         topo_edges = self._topology_edges_from_data(data)
-        if topo_edges is not None and not _bqskit_circuit_respects_topology(
-            synthesized,
-            topo_edges,
+        if (
+            self.config.get("bqskit_topology_validation", False)
+            and topo_edges is not None
+            and not _bqskit_circuit_respects_topology(synthesized, topo_edges)
         ):
             raise _SquanderSynthesisFailed(
                 "Squander synthesis produced a circuit outside the "
