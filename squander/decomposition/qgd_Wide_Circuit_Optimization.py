@@ -251,24 +251,19 @@ def _bqskit_location_respects_topology(location, topo_edges):
     return wanted <= seen
 
 
-def _bqskit_circuit_respects_topology(circuit, topo_edges):
-    """Return true if every multi-qudit operation respects ``topo_edges``."""
+def _assert_circuit_respects_topology(circuit, topo_edges):
+    """Raise AssertionError if ``circuit`` violates ``topo_edges``.
+
+    Topology violations indicate a critical logic bug — the circuit cannot
+    physically execute on the target hardware.  Execution must stop
+    immediately so the root cause can be investigated and fixed.
+    """
     for op in circuit:
         if op.gate.num_qudits <= 1:
             continue
         if not _bqskit_location_respects_topology(op.location, topo_edges):
-            return False
-    return True
-
-
-def _ensure_bqskit_circuit_respects_topology(circuit, topo_edges, label):
-    """Raise _SquanderSynthesisFailed if ``circuit`` violates ``topo_edges``."""
-    for op in circuit:
-        if op.gate.num_qudits <= 1:
-            continue
-        if not _bqskit_location_respects_topology(op.location, topo_edges):
-            raise _SquanderSynthesisFailed(
-                f"{label} contains {op.gate.name} on {list(op.location)}, "
+            raise AssertionError(
+                f"BUG: circuit contains {op.gate.name} on {list(op.location)}, "
                 f"outside topology {sorted(topo_edges)}."
             )
 
@@ -313,7 +308,7 @@ def _fallback_circuit_for_permutation(original_circuit, graph, pi, po):
             )
         _add_swap_as_cnots(fallback, a, b)
 
-    _ensure_bqskit_circuit_respects_topology(fallback, topo_edges, "SWAP fallback")
+    _assert_circuit_respects_topology(fallback, topo_edges)
     return fallback
 
 
@@ -667,23 +662,17 @@ class SquanderSynthesisPass(_BQSKitSynthesisPass):
             )
 
         topo_edges = self._topology_edges_from_data(data)
-        if (
-            self.config.get("bqskit_topology_validation", False)
-            and topo_edges is not None
-            and not _bqskit_circuit_respects_topology(synthesized, topo_edges)
-        ):
-            raise _SquanderSynthesisFailed(
-                "Squander synthesis produced a circuit outside the "
-                "requested BQSKit subtopology."
-            )
+        if topo_edges is not None:
+            _assert_circuit_respects_topology(synthesized, topo_edges)
 
-        target_unitary = UnitaryMatrix(target)
-        distance = target_unitary.get_distance_from(synthesized.get_unitary())
-        tol = _bqskit_synthesis_validation_tolerance(self.config)
-        if distance > tol:
-            raise _SquanderSynthesisFailed(
-                f"BQSKit synthesis validation failed: {distance:.2e} > {tol:.2e}"
-            )
+        if self.config.get("bqskit_distance_test", False):
+            target_unitary = UnitaryMatrix(target)
+            distance = target_unitary.get_distance_from(synthesized.get_unitary())
+            tol = _bqskit_synthesis_validation_tolerance(self.config)
+            if distance > tol:
+                raise _SquanderSynthesisFailed(
+                    f"BQSKit synthesis validation failed: {distance:.2e} > {tol:.2e}"
+                )
 
         return synthesized
 
