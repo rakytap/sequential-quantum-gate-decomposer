@@ -47,6 +47,17 @@ else:
     from qiskit.quantum_info import Operator
 
 
+def _tensor_perm_from_logical_to_physical(mapping, invert=False):
+    """Return tensor-axis permutation for a logical-to-physical qubit map."""
+    if invert:
+        from squander.synthesis.qgd_SABRE import qgd_SABRE
+
+        mapping = qgd_SABRE.get_inverse_pi(mapping)
+
+    qbit_num = len(mapping)
+    return [qbit_num - 1 - p for p in reversed(mapping)]
+
+
 ##
 # @brief Call to retrieve the unitary from QISKIT circuit
 def get_unitary_from_qiskit_circuit(circuit: QuantumCircuit):
@@ -209,12 +220,10 @@ def CompareCircuits(
 
     circ1.apply_to(parameters1, transformed_state_1, parallel=parallel)
     if initial_mapping is not None:
-        from squander.synthesis.qgd_SABRE import qgd_SABRE
-
-        tensor_perm = [
-            qbit_num2 - 1 - p
-            for p in reversed(qgd_SABRE.get_inverse_pi(initial_mapping))
-        ]
+        tensor_perm = _tensor_perm_from_logical_to_physical(
+            initial_mapping,
+            invert=True,
+        )
         transformed_state_2 = (
             transformed_state_2.reshape([2] * qbit_num2)
             .transpose(tensor_perm)
@@ -223,7 +232,7 @@ def CompareCircuits(
         )
     circ2.apply_to(parameters2, transformed_state_2, parallel=parallel)
     if final_mapping is not None:
-        tensor_perm = [qbit_num2 - 1 - p for p in reversed(final_mapping)]
+        tensor_perm = _tensor_perm_from_logical_to_physical(final_mapping)
         transformed_state_2 = (
             transformed_state_2.reshape([2] * qbit_num2)
             .transpose(tensor_perm)
