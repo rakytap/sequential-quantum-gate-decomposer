@@ -171,7 +171,13 @@ if __name__ == "__main__":
             json.dump(results, f, indent=2)
 
         wide_circuit_optimizer.check_compare_circuits(
-            circ, parameters, optcirc, optparameters, routing=True
+            circ,
+            parameters,
+            optcirc,
+            optparameters,
+            routing=wide_circuit_optimizer.config.get("routed_circuit", None) is not None,
+            forced_test=True,
+            label="example final original-to-output",
         )
 
         print(f"  init: {init_stats['cnot_equiv']} CNOT, {init_stats['single_qubit']} 1q, "
