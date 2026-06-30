@@ -3191,9 +3191,12 @@ class qgd_Wide_Circuit_Optimization:
         qgd_Wide_Circuit_Optimization.check_valid_routing(
             wide_circuit, self.config["topology"]
         )
-        print("InnerOptimizeWideCircuit: check_compare_circuits")
         self.check_compare_circuits(
-            circ, orig_parameters, wide_circuit, wide_parameters
+            circ,
+            orig_parameters,
+            wide_circuit,
+            wide_parameters,
+            label="InnerOptimizeWideCircuit",
         )
 
         return wide_circuit, wide_parameters
@@ -3342,6 +3345,7 @@ class qgd_Wide_Circuit_Optimization:
         wide_parameters,
         routing=False,
         forced_test=False,
+        label=None,
     ):
         """Optionally verify equivalence of ``circ`` and ``wide_circuit`` via ``CompareCircuits``.
 
@@ -3360,6 +3364,8 @@ class qgd_Wide_Circuit_Optimization:
             and circ.get_Qbit_Num() <= 12
         )
         if self.config["test_final_circuit"] or forced_test:
+            if label is not None:
+                print(f"{label}: check_compare_circuits")
             tolerance = _squander_validation_tolerance(self.config)
             if (
                 routing
@@ -3572,5 +3578,7 @@ class qgd_Wide_Circuit_Optimization:
             Squander_remapped_circuit,
             parameters_remapped_circuit,
             routing=True,
+            forced_test=True,
+            label="route_circuit",
         )
         return Squander_remapped_circuit, parameters_remapped_circuit
