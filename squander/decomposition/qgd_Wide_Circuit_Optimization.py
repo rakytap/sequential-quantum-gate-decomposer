@@ -2554,6 +2554,7 @@ class qgd_Wide_Circuit_Optimization:
                     new_subcircuit,
                     decomposed_parameters,
                     parallel=config["parallel"],
+                    is_f32=config.get("use_float", False),
                 )
 
             new_subcircuit = new_subcircuit.get_Flat_Circuit()
@@ -3381,11 +3382,16 @@ class qgd_Wide_Circuit_Optimization:
                     final_mapping=self.config["final_mapping"],
                     tolerance=tolerance,
                     parallel=0,
+                    is_f32=self.config.get("use_float", False),
                 )
             else:
                 CompareCircuits(
-                    circ, orig_parameters, wide_circuit, wide_parameters,
+                    circ,
+                    orig_parameters,
+                    wide_circuit,
+                    wide_parameters,
                     tolerance=tolerance,
+                    is_f32=self.config.get("use_float", False),
                 )
 
     def route_circuit(self, circ: Circuit, orig_parameters: np.ndarray):
