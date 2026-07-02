@@ -3382,7 +3382,6 @@ class qgd_Wide_Circuit_Optimization:
                     final_mapping=self.config["final_mapping"],
                     tolerance=tolerance,
                     parallel=0,
-                    is_f32=self.config.get("use_float", False),
                 )
             else:
                 CompareCircuits(
@@ -3391,7 +3390,6 @@ class qgd_Wide_Circuit_Optimization:
                     wide_circuit,
                     wide_parameters,
                     tolerance=tolerance,
-                    is_f32=self.config.get("use_float", False),
                 )
 
     def route_circuit(self, circ: Circuit, orig_parameters: np.ndarray):
