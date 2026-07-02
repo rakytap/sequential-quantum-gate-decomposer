@@ -169,6 +169,7 @@ def CompareCircuits(
     tolerance: float = 1e-10,
     initial_mapping=None,
     final_mapping=None,
+    is_f32: bool = False,
 ):
     """
     Call to test if the two circuits give the same state transformation upon a random input state
@@ -187,6 +188,8 @@ def CompareCircuits(
         parallel (int, optional) Set 0 for sequential evaluation, 1 for using TBB parallelism or 2 for using openMP
 
         tolerance ( float, optional) The tolerance of the comparision when the inner product of the resulting states is matched to unity.
+
+        is_f32 ( bool, optional) Use float32/complex64 state evolution.
 
 
     Return:
@@ -214,11 +217,20 @@ def CompareCircuits(
         + initial_state_imag * initial_state_imag
     )
     initial_state = initial_state / np.sqrt(norm)
+    initial_state = initial_state.astype(np.complex64 if is_f32 else np.complex128)
+
+    parameters1 = np.asarray(parameters1, dtype=np.float32 if is_f32 else np.float64)
+    parameters2 = np.asarray(parameters2, dtype=np.float32 if is_f32 else np.float64)
 
     transformed_state_1 = initial_state.copy()
     transformed_state_2 = initial_state
 
-    circ1.apply_to(parameters1, transformed_state_1, parallel=parallel)
+    circ1.apply_to(
+        parameters1,
+        transformed_state_1,
+        parallel=parallel,
+        is_f32=is_f32,
+    )
     if initial_mapping is not None:
         tensor_perm = _tensor_perm_from_logical_to_physical(
             initial_mapping,
@@ -230,7 +242,12 @@ def CompareCircuits(
             .copy()
             .reshape((matrix_size,))
         )
-    circ2.apply_to(parameters2, transformed_state_2, parallel=parallel)
+    circ2.apply_to(
+        parameters2,
+        transformed_state_2,
+        parallel=parallel,
+        is_f32=is_f32,
+    )
     if final_mapping is not None:
         tensor_perm = _tensor_perm_from_logical_to_physical(final_mapping)
         transformed_state_2 = (
