@@ -64,8 +64,8 @@ def _default_bqskit_synthesis_validation_tolerance(config):
 
 def _squander_validation_tolerance(config):
     return config.get(
-        "squander_validation_tolerance",
-        config.get("tolerance", _default_squander_tolerance(config)),
+        "tolerance",
+        _default_squander_tolerance(config),
     )
 
 
@@ -992,7 +992,7 @@ class qgd_Wide_Circuit_Optimization:
             )
 
         squander_validation_tolerance = config.get(
-            "squander_validation_tolerance",
+            "tolerance",
             None,
         )
         if squander_validation_tolerance is not None and not isinstance(
@@ -1255,6 +1255,7 @@ class qgd_Wide_Circuit_Optimization:
                     new_subcircuit,
                     decomposed_parameters,
                     parallel=config["parallel"],
+                    tolerance=_squander_validation_tolerance(config)
                 )
 
             new_subcircuit = new_subcircuit.get_Flat_Circuit()
