@@ -1230,7 +1230,9 @@ class qgd_Wide_Circuit_Optimization:
             structure = structure.Remap_Qbits(qbit_map, qbit_num)
 
         # get the unitary representing the circuit
-        unitary = remapped_subcircuit.get_Matrix(subcircuit_parameters)
+        unitary = remapped_subcircuit.get_Matrix(
+            np.asarray(subcircuit_parameters, dtype=np.float64)
+        )
 
         # decompose a small unitary into a new circuit
         all_decomposed = qgd_Wide_Circuit_Optimization.DecomposePartition(
