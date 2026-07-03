@@ -641,7 +641,12 @@ double Optimization_Interface::optimization_problem( Matrix_real& parameters ) {
         throw err;
     }  
     
-    if ( use_float ) {
+    // Float32 circuit application is useful for experimental hot paths, but
+    // optimizer cost values must stay in double precision.  The objective and
+    // gradients guide convergence and fidelity; evaluating them through
+    // Matrix_float introduces enough drift to steer the solver to bad minima.
+    const bool use_float_cost_path = false;
+    if ( use_float_cost_path && use_float ) {
         static tbb::enumerable_thread_specific<Matrix_real_float> parameters_float_tls;
         static tbb::enumerable_thread_specific<Matrix_float> matrix_new_tls;
         Matrix_real_float& parameters_float = parameters_float_tls.local();
@@ -730,6 +735,9 @@ double Optimization_Interface::calculate_cost_function( Matrix& matrix_new, Matr
 
 double Optimization_Interface::calculate_cost_function( Matrix_float& matrix_new, Matrix_float* ret_temp ) {
 
+    // Experimental helper only.  Optimizer objective/gradient callbacks must
+    // use calculate_cost_function(Matrix&, ...) so the solver is guided by
+    // double precision cost values.
     switch (cost_fnc) {
     case FROBENIUS_NORM:
         return get_cost_function(matrix_new, trace_offset);
@@ -1037,7 +1045,12 @@ double Optimization_Interface::optimization_problem( Matrix_real parameters, voi
     Optimization_Interface* instance = reinterpret_cast<Optimization_Interface*>(void_instance);
     instance->increment_num_iters();
 
-    if ( instance->get_use_float() ) {
+    // Keep the Matrix_float path compiled for experiments, but never use it
+    // for optimizer objective evaluations.  Cost/trace calculations need
+    // double precision even when float32 circuit application is enabled
+    // elsewhere.
+    const bool use_float_cost_path = false;
+    if ( use_float_cost_path && instance->get_use_float() ) {
         static tbb::enumerable_thread_specific<Matrix_real_float> parameters_float_tls;
         static tbb::enumerable_thread_specific<Matrix_float> matrix_new_tls;
         static tbb::enumerable_thread_specific<Matrix_float> ret_temp_float_tls;
@@ -1146,7 +1159,12 @@ void Optimization_Interface::optimization_problem_combined_non_static( Matrix_re
     int qbit_num = instance->get_qbit_num();
     int trace_offset_loc = instance->get_trace_offset();
 
-    if ( instance->get_use_float() ) {
+    // Gradient-driven optimization is sensitive to low-precision objective
+    // values.  Leave this float32 combined path in place as experimental code,
+    // but force production optimizer cost/gradient evaluation through the
+    // double precision branch below.
+    const bool use_float_combined_cost_path = false;
+    if ( use_float_combined_cost_path && instance->get_use_float() ) {
         static tbb::enumerable_thread_specific<Matrix_real_float> parameters_float_tls;
         Matrix_real_float& parameters_float = parameters_float_tls.local();
         parameters.copy_to(parameters_float);
