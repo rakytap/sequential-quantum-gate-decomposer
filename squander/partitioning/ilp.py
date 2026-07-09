@@ -1,6 +1,57 @@
 import os, heapq
 from squander.partitioning.tools import get_qubits, build_dependency, parts_to_float_ops, total_float_ops
 
+_GUROBI_FALLBACK_WARNING_PRINTED = False
+_GUROBI_AVAILABLE = None
+_GUROBI_AVAILABILITY_ERROR = None
+
+
+def _print_gurobi_fallback_warning(exc):
+    global _GUROBI_FALLBACK_WARNING_PRINTED
+    if _GUROBI_FALLBACK_WARNING_PRINTED:
+        return
+    _GUROBI_FALLBACK_WARNING_PRINTED = True
+    print(
+        "Warning: Gurobi ILP solver is unavailable; falling back to CBC. "
+        "This can be significantly slower. For best performance, install a "
+        "valid Gurobi license in your home directory or under /opt/gurobi/ "
+        "as described in the Gurobi documentation. "
+        f"Original Gurobi error: {exc}"
+    )
+
+
+def _check_gurobi_available():
+    global _GUROBI_AVAILABLE, _GUROBI_AVAILABILITY_ERROR
+    if _GUROBI_AVAILABLE is False:
+        raise _GUROBI_AVAILABILITY_ERROR
+    if _GUROBI_AVAILABLE is True:
+        return
+    import gurobipy as gp
+    try:
+        env = gp.Env(params={"OutputFlag": 0})
+        env.dispose()
+        _GUROBI_AVAILABLE = True
+    except Exception as exc:
+        _GUROBI_AVAILABLE = False
+        _GUROBI_AVAILABILITY_ERROR = exc
+        raise
+
+
+def _solve_pulp_with_gurobi_or_cbc(prob, pulp, callback=None, **gurobi_kwargs):
+    try:
+        _check_gurobi_available()
+        solver = pulp.GUROBI(manageEnv=True, msg=False, **gurobi_kwargs)
+        if callback is None:
+            prob.solve(solver)
+        else:
+            prob.solve(solver, callback=callback)
+        return "gurobi"
+    except Exception as exc:
+        _print_gurobi_fallback_warning(exc)
+        prob.solve(pulp.PULP_CBC_CMD(msg=False))
+        return "cbc"
+
+
 def topo_sort_partitions(c, parts):
     """
     Topologically sort partition groups and re-partition with Kahn’s algorithm.
@@ -17,6 +68,7 @@ def topo_sort_partitions(c, parts):
             parts (list[frozenset[int]]): Final partition assignments (topologically sorted).
     """
     gatedict = {i: gate for i, gate in enumerate(c.get_Gates())}
+    gate_to_qubit = {i: get_qubits(g) for i, g in gatedict.items()}
     partdict = {gate: i for i, part in enumerate(parts) for gate in part}
     g, rg = {i: set() for i in range(len(parts))}, {i: set() for i in range(len(parts))}
     for gate in gatedict:
@@ -24,16 +76,22 @@ def topo_sort_partitions(c, parts):
             if partdict[gate] == partdict[child]: continue
             g[partdict[gate]].add(partdict[child])
             rg[partdict[child]].add(partdict[gate])
-    L, S = [], {m for m in rg if len(rg[m]) == 0}
-    while len(S) != 0:
-        n = S.pop()
+    # Stable key per partition: sorted tuple of all qubits touched by its gates.
+    part_qubits = {
+        i: tuple(sorted(set.union(*(gate_to_qubit[g] for g in part))))
+        for i, part in enumerate(parts)
+    }
+    L, S = [], [(part_qubits[m], m) for m in rg if len(rg[m]) == 0]
+    heapq.heapify(S)
+    while S:
+        n = heapq.heappop(S)[1]
         L.append(n)
         assert len(rg[n]) == 0
         for m in set(g[n]):
             g[n].remove(m)
             rg[m].remove(n)
             if len(rg[m]) == 0:
-                S.add(m)
+                heapq.heappush(S, (part_qubits[m], m))
     assert len(L) == len(parts), (len(L), len(parts), g, rg, partdict)
     return L
 
@@ -109,7 +167,7 @@ def find_next_biggest_partition(c, max_qubits_per_partition, prevparts=None):
     prob.setObjective(-pulp.lpSum(x[i] for i in range(num_gates)))
     #from gurobilic import get_gurobi_options
     #prob.solve(pulp.GUROBI(manageEnv=True, msg=False, envOptions=get_gurobi_options()))
-    prob.solve(pulp.GUROBI(manageEnv=True, msg=False, timeLimit=180, Threads=os.cpu_count()))
+    _solve_pulp_with_gurobi_or_cbc(prob, pulp, timeLimit=180, Threads=os.cpu_count())
     #prob.solve(pulp.PULP_CBC_CMD(msg=False))
     gates = {i for i in range(num_gates) if int(pulp.value(x[i]))}
     #qubits = set.union(*(get_qubits(gatedict[i]) for i in gates))
@@ -762,20 +820,32 @@ def ilp_global_optimal(allparts, g, weighted_info=None, gurobi_direct=False, use
             if not single_qubit_chains_post[s][0] in noprepost:
                 S.append((1-post[s])*(2**max_qubits_per_partition * (2 * (4 + 2) + 2)))
         prob.setObjective(pulp.lpSum(S)*N+pulp.lpSum(x[i] for i in range(N)))
+    use_gurobi = True
     while True:
-        from gurobipy import GRB
-        import gurobipy as gp
-        def cb(m, where):
-            if where == GRB.Callback.MIPSOL:
-                xg = [m.getVarByName(x[i].name) for i in range(N)]
-                x_val = m.cbGetSolution([xg[i] for i in range(N)])
-                badsccs = sol_to_badsccs(g, allparts, [i for i, xv in enumerate(x_val) if int(round(xv))])
-                for badscc in badsccs:
-                    #print([(allparts[x], [g[y] for y in allparts[x]]) for x in badscc]) #canonical partitions {1, 3} and {2, 4} with edges 1->{3, 4}, 2->{3, 4}
-                    m.cbLazy(gp.quicksum(xg[j] for j in badscc) <= len(badscc) - 1) #remove at least one partition from the SCC
+        cb = None
+        if use_gurobi:
+            try:
+                from gurobipy import GRB
+                import gurobipy as gp
+                def cb(m, where):
+                    if where == GRB.Callback.MIPSOL:
+                        xg = [m.getVarByName(x[i].name) for i in range(N)]
+                        x_val = m.cbGetSolution([xg[i] for i in range(N)])
+                        badsccs = sol_to_badsccs(g, allparts, [i for i, xv in enumerate(x_val) if int(round(xv))])
+                        for badscc in badsccs:
+                            #print([(allparts[x], [g[y] for y in allparts[x]]) for x in badscc]) #canonical partitions {1, 3} and {2, 4} with edges 1->{3, 4}, 2->{3, 4}
+                            m.cbLazy(gp.quicksum(xg[j] for j in badscc) <= len(badscc) - 1) #remove at least one partition from the SCC
+            except Exception as exc:
+                _print_gurobi_fallback_warning(exc)
+                use_gurobi = False
         #from gurobilic import get_gurobi_options
         #prob.solve(pulp.GUROBI(manageEnv=True, msg=False, envOptions=get_gurobi_options()))
-        prob.solve(pulp.GUROBI(manageEnv=True, msg=False, timeLimit=180, Threads=os.cpu_count(), IntegralityFocus=1, LazyConstraints=1), callback=cb)
+        if use_gurobi:
+            solver = _solve_pulp_with_gurobi_or_cbc(prob, pulp, callback=cb, timeLimit=180, Threads=os.cpu_count(), IntegralityFocus=1, LazyConstraints=1)
+            if solver == "cbc":
+                use_gurobi = False
+        else:
+            prob.solve(pulp.PULP_CBC_CMD(msg=False))
         #prob.solve(pulp.PULP_CBC_CMD(msg=False))
         #print(f"Status: {pulp.LpStatus[prob.status]}")
         L = [i for i in range(N) if int(round(pulp.value(x[i])))]

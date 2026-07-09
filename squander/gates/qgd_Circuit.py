@@ -525,6 +525,11 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
             numpy.ndarray: The matrix representation of the circuit
         """
 
+        parameters_mtx = np.asarray(
+            parameters_mtx,
+            dtype=np.float32 if is_f32 else np.float64,
+        )
+
         # call the C wrapper function
         return super().get_Matrix(parameters_mtx, is_f32=is_f32)
 

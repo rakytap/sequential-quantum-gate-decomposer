@@ -23,7 +23,8 @@ version = "1.9.6"
 description = "C++ library with Python interface to train quantum circuits, quantum gate synthesis and state preparation."
 readme = "README.md"
 requires-python = ">=3.8"
-license = {text = "Apache-2.0"}
+license = "Apache-2.0"
+license-files = ["LICENSE"]
 authors = [
     {name = "Peter Rakyta", email = "peter.rakyta@ttk.elte.hu"}
 ]
@@ -33,7 +34,6 @@ classifiers = [
     "Natural Language :: English",
     "Programming Language :: C",
     "Programming Language :: C++",
-    "License :: OSI Approved :: Apache Software License",
 ]
 
 dependencies = [

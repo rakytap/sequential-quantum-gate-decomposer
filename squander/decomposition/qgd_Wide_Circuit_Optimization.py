@@ -26,6 +26,753 @@ from squander.partitioning.partition import PartitionCircuit
 from squander.partitioning.tools import translate_param_order, build_dependency
 from squander.synthesis.qgd_SABRE import qgd_SABRE as SABRE
 
+try:
+    from bqskit.compiler.basepass import BasePass as _BQSKitBasePass
+    from bqskit.passes.synthesis.synthesis import SynthesisPass as _BQSKitSynthesisPass
+except Exception:
+    _BQSKitBasePass = object
+    _BQSKitSynthesisPass = object
+
+
+_SQUANDER_BQSKIT_SYNTHESIS_CONFIG = None
+
+SQUANDER_FLOAT64_TOLERANCE = 1e-10
+SQUANDER_FLOAT32_TOLERANCE = 1e-5
+BQSKIT_FLOAT64_SYNTHESIS_VALIDATION_TOLERANCE = 1e-8
+BQSKIT_FLOAT32_SYNTHESIS_VALIDATION_TOLERANCE = 1e-4
+
+
+def _config_uses_float32(config):
+    return bool(config.get("use_float", False))
+
+
+def _default_squander_tolerance(config):
+    return (
+        SQUANDER_FLOAT32_TOLERANCE
+        if _config_uses_float32(config)
+        else SQUANDER_FLOAT64_TOLERANCE
+    )
+
+
+def _default_bqskit_synthesis_validation_tolerance(config):
+    return (
+        BQSKIT_FLOAT32_SYNTHESIS_VALIDATION_TOLERANCE
+        if _config_uses_float32(config)
+        else BQSKIT_FLOAT64_SYNTHESIS_VALIDATION_TOLERANCE
+    )
+
+
+def _squander_validation_tolerance(config):
+    return config.get(
+        "tolerance",
+        _default_squander_tolerance(config),
+    )
+
+
+def _bqskit_synthesis_validation_tolerance(config):
+    return config.get(
+        "bqskit_synthesis_validation_tolerance",
+        _default_bqskit_synthesis_validation_tolerance(config),
+    )
+
+
+def _copy_bqskit_synthesis_config(config):
+    """Copy only plain data needed by BQSKit worker processes."""
+
+    def copy_value(value):
+        if value is None or isinstance(value, (bool, int, float, str)):
+            return value
+        if isinstance(value, np.generic):
+            return value.item()
+        if isinstance(value, tuple):
+            copied = [copy_value(item) for item in value]
+            return tuple(item for item in copied if item is not _SKIP_CONFIG_VALUE)
+        if isinstance(value, list):
+            copied = [copy_value(item) for item in value]
+            return [item for item in copied if item is not _SKIP_CONFIG_VALUE]
+        if isinstance(value, dict):
+            copied = {}
+            for key, item in value.items():
+                copied_item = copy_value(item)
+                if copied_item is not _SKIP_CONFIG_VALUE:
+                    copied[key] = copied_item
+            return copied
+        return _SKIP_CONFIG_VALUE
+
+    copied_config = {}
+    for key, value in config.items():
+        copied_value = copy_value(value)
+        if copied_value is not _SKIP_CONFIG_VALUE:
+            copied_config[key] = copied_value
+    return copied_config
+
+
+_SKIP_CONFIG_VALUE = object()
+
+
+# ---------------------------------------------------------------------------
+# Helper: insert a SWAP as 3 CNOTs so BQSKit's scoring function weights
+# them honestly (3 two-qubit ops instead of 1).  SEQPAM then avoids
+# unnecessary SWAP insertions.
+# ---------------------------------------------------------------------------
+def _add_swap_as_cnots(circuit, a, b):
+    """Append CNOT(a,b); CNOT(b,a); CNOT(a,b) — equivalent to SWAP(a,b)."""
+    from bqskit.ir.gates import CNOTGate
+    circuit.append_gate(CNOTGate(), [a, b])
+    circuit.append_gate(CNOTGate(), [b, a])
+    circuit.append_gate(CNOTGate(), [a, b])
+
+
+# ---------------------------------------------------------------------------
+# Module-level EAPP monkey-patch for SWAP fallback.
+# BQSKit's Compiler starts a runtime server via Popen([sys.executable, ...]),
+# a fresh Python process.  Class-level monkey-patches applied in the parent
+# are invisible there.  We use an environment variable that the Popen child
+# inherits; when this module is imported inside a worker, the env var triggers
+# the patch.
+# ---------------------------------------------------------------------------
+def _append_topology_safe(new_c, op, topo_edges, width):
+    """Append *op* to *new_c*, using SWAP bridges for edges not in *topo_edges*.
+
+    For gates with ≥3 qubits, decomposes via :func:`squander.utils.circuit_to_CNOT_basis`
+    and recurses on each resulting gate.
+    """
+
+    loc = list(op.location)
+    gate = op.gate
+    params = list(op.params) if op.params else None
+
+    if gate.num_qudits == 1:
+        if params:
+            new_c.append_gate(gate, loc, params)
+        else:
+            new_c.append_gate(gate, loc)
+        return
+
+    if gate.num_qudits == 2:
+        u, v = loc[0], loc[1]
+        if (u, v) in topo_edges:
+            if params:
+                new_c.append_gate(gate, [u, v], params)
+            else:
+                new_c.append_gate(gate, [u, v])
+            return
+        # Edge not in topology — find shortest SWAP path u↔v via BFS.
+        adj = {i: set() for i in range(width)}
+        for a, b in topo_edges:
+            adj[a].add(b)
+            adj[b].add(a)
+        from collections import deque
+        parent = {v: None}
+        q = deque([v])
+        while q:
+            node = q.popleft()
+            if node == u:
+                break
+            for nb in adj.get(node, set()):
+                if nb not in parent:
+                    parent[nb] = node
+                    q.append(nb)
+        if u not in parent:
+            # Cannot bridge this edge on the given topology.
+            raise ValueError(f"Cannot bridge ({u},{v}) on topology")
+        # Reconstruct path v -> ... -> u, then SWAP v along the path until it
+        # is adjacent to u, apply the gate, and unwind those same SWAPs.
+        path = [u]
+        node = u
+        while parent[node] is not None:
+            node = parent[node]
+            path.append(node)
+        path = list(reversed(path))
+        swaps = list(zip(path[:-2], path[1:-1]))
+        cur = v
+        for a, b in swaps:
+            _add_swap_as_cnots(new_c, a, b)
+            cur = b
+        if params:
+            new_c.append_gate(gate, [u, cur], params)
+        else:
+            new_c.append_gate(gate, [u, cur])
+        for a, b in reversed(swaps):
+            _add_swap_as_cnots(new_c, a, b)
+        return
+
+    # gate.num_qudits >= 3: decompose to CNOT basis via Squander's utility
+    from bqskit.ir.lang.qasm2 import OPENQASM2Language
+    from qiskit import qasm2
+
+    # 1) Build a minimal BQSKit circuit containing just this gate
+    from bqskit import Circuit as _BQCircuit
+    tmp_bq = _BQCircuit(width)
+    if params:
+        tmp_bq.append_gate(gate, loc, params)
+    else:
+        tmp_bq.append_gate(gate, loc)
+
+    # 2) Encode to QASM, then decode via Squander
+    qasm_str = OPENQASM2Language().encode(tmp_bq)
+    from squander import Qiskit_IO as _QIO
+    qiskit_tmp = qasm2.loads(qasm_str)
+    sq_tmp, sq_params = _QIO.convert_Qiskit_to_Squander(qiskit_tmp)
+
+    # 3) Decompose to CNOT basis
+    from squander.utils import circuit_to_CNOT_basis
+    sq_decomp, sq_decomp_params = circuit_to_CNOT_basis(sq_tmp, sq_params)
+
+    # 4) Convert back to BQSKit and recurse on each gate
+    qiskit_decomp = _QIO.get_Qiskit_Circuit(sq_decomp, sq_decomp_params)
+    bq_decomp = OPENQASM2Language().decode(qasm2.dumps(qiskit_decomp))
+    for bq_op in bq_decomp:
+        _append_topology_safe(new_c, bq_op, topo_edges, width)
+
+
+def _bqskit_location_respects_topology(location, topo_edges):
+    """Return true if ``location`` can be hosted by ``topo_edges``."""
+    loc = tuple(int(q) for q in location)
+    if len(loc) <= 1:
+        return True
+    if len(loc) == 2:
+        return (loc[0], loc[1]) in topo_edges or (loc[1], loc[0]) in topo_edges
+
+    wanted = set(loc)
+    seen = {loc[0]}
+    stack = [loc[0]]
+    adjacency = {q: set() for q in wanted}
+    for u, v in topo_edges:
+        if u in wanted and v in wanted:
+            adjacency[u].add(v)
+            adjacency[v].add(u)
+    while stack:
+        cur = stack.pop()
+        for nxt in adjacency.get(cur, ()):
+            if nxt not in seen:
+                seen.add(nxt)
+                stack.append(nxt)
+    return wanted <= seen
+
+
+def _assert_circuit_respects_topology(circuit, topo_edges):
+    """Raise AssertionError if ``circuit`` violates ``topo_edges``.
+
+    Topology violations indicate a critical logic bug — the circuit cannot
+    physically execute on the target hardware.  Execution must stop
+    immediately so the root cause can be investigated and fixed.
+    """
+    for op in circuit:
+        if op.gate.num_qudits <= 1:
+            continue
+        if not _bqskit_location_respects_topology(op.location, topo_edges):
+            raise AssertionError(
+                f"BUG: circuit contains {op.gate.name} on {list(op.location)}, "
+                f"outside topology {sorted(topo_edges)}."
+            )
+
+
+def _fallback_circuit_for_permutation(original_circuit, graph, pi, po):
+    """Build a topology-valid fallback for ``Po.T @ U @ Pi``.
+
+    ``original_circuit`` is the block circuit passed into BQSKit's
+    EmbedAllPermutationsPass.  ``graph`` is the block-local coupling graph
+    selected by EAPP for this synthesis attempt.
+    """
+    from bqskit import Circuit as _BQCircuit
+
+    width = original_circuit.num_qudits
+    if len(pi) != width or len(po) != width:
+        raise _SquanderSynthesisFailed(
+            f"Permutation width mismatch for fallback: {pi}, {po}, width={width}."
+        )
+
+    topo_edges = set()
+    for u, v in graph:
+        topo_edges.add((u, v))
+        topo_edges.add((v, u))
+
+    fallback = _BQCircuit(width, original_circuit.radixes)
+
+    for a, b in _topo_perm_to_swaps(pi, topo_edges, width):
+        if (a, b) not in topo_edges:
+            raise _SquanderSynthesisFailed(
+                f"Cannot realize input permutation {pi} on topology {sorted(topo_edges)}."
+            )
+        _add_swap_as_cnots(fallback, a, b)
+
+    for op in original_circuit:
+        _append_topology_safe(fallback, op, topo_edges, width)
+
+    po_inv = tuple(po.index(k) for k in range(width))
+    for a, b in _topo_perm_to_swaps(po_inv, topo_edges, width):
+        if (a, b) not in topo_edges:
+            raise _SquanderSynthesisFailed(
+                f"Cannot realize output permutation {po} on topology {sorted(topo_edges)}."
+            )
+        _add_swap_as_cnots(fallback, a, b)
+
+    _assert_circuit_respects_topology(fallback, topo_edges)
+    return fallback
+
+
+async def _squander_synthesize_or_fallback(
+    inner_synthesis,
+    target,
+    target_data,
+    original_circuit,
+    graph,
+    pi,
+    po,
+):
+    """Run Squander synthesis, falling back only for explicit Squander misses."""
+    try:
+        return await inner_synthesis.synthesize(target, target_data)
+    except _SquanderSynthesisFailed:
+        return _fallback_circuit_for_permutation(original_circuit, graph, pi, po)
+
+
+def _patch_eapp_if_needed():
+    """Monkey-patch EAPP.run to catch Squander OSR failures per permutation.
+
+    IMPORTANT: This patch fully replaces ``EmbedAllPermutationsPass.run``.
+    It was written against BQSKit's internal EAPP implementation as of
+    the pip-installed version (see pyproject.toml / requirements for the
+    exact version).  If BQSKit changes its EAPP internals (scoring function,
+    subtopology selection, permutation handling, or pass data keys), this
+    patch may silently diverge and should be re-audited against the new
+    BQSKit source.
+    """
+    import os as _os
+    if not _os.environ.get('_SQUANDER_EAPP_FALLBACK_PATCH'):
+        return
+
+    from bqskit.passes.mapping.embed import EmbedAllPermutationsPass as __EAPP
+    if getattr(__EAPP.run, "_squander_fallback_patch", False):
+        return
+
+    async def __patched_eapp_run(self, circuit, data):
+        import copy as _copy
+        import itertools as _it
+        import logging as _logging
+        from bqskit.compiler.machine import MachineModel as _MachineModel
+        from bqskit.passes.mapping.topology import SubtopologySelectionPass as _STSP
+        from bqskit.qis.graph import CouplingGraph as _CouplingGraph
+        from bqskit.qis.permutation import PermutationMatrix as _PermutationMatrix
+        from bqskit.runtime import get_runtime as _get_runtime
+
+        _logger = _logging.getLogger("bqskit.passes.mapping.embed")
+        utry = data.target
+
+        if not all(r == utry.radixes[0] for r in utry.radixes):
+            raise NotImplementedError(
+                'PermutationAwareSynthesisPass only supports unitaries '
+                'with the same radix on all qudits currently.',
+            )
+
+        width = utry.num_qudits
+        perms = list(_it.permutations(range(width)))
+        no_perm = [tuple(range(width))]
+        Pis = [
+            _PermutationMatrix.from_qudit_location(width, utry.radixes[0], p)
+            for p in perms
+        ]
+        Pos = [
+            _PermutationMatrix.from_qudit_location(width, utry.radixes[0], p)
+            for p in perms
+        ]
+
+        if self.input_perm and self.output_perm:
+            permsbyperms = list(_it.product(perms, perms))
+            targets = [Po.T @ utry @ Pi for Pi, Po in _it.product(Pis, Pos)]
+        elif self.input_perm:
+            permsbyperms = list(_it.product(perms, no_perm))
+            targets = [utry @ Pi for Pi in Pis]
+        elif self.output_perm:
+            permsbyperms = list(_it.product(no_perm, perms))
+            targets = [Po.T @ utry for Po in Pos]
+        else:
+            _logger.warning('No permutation is being used in PAS.')
+            permsbyperms = list(_it.product(no_perm, no_perm))
+            targets = [utry]
+
+        if self.vary_topology and width != 1:
+            if _STSP.key not in data:
+                raise RuntimeError(
+                    'Cannot find subtopologies, try running a'
+                    ' SubtopologySelectionPass first.',
+                )
+            if width not in data[_STSP.key]:
+                raise RuntimeError(
+                    'Subtopology information for block size'
+                    f' {width} is not available.',
+                )
+            graphs = data[_STSP.key][width]
+        else:
+            graphs = [_CouplingGraph.all_to_all(width)]
+
+        datas = []
+        for graph in graphs:
+            model = _MachineModel(
+                circuit.num_qudits, graph,
+                data.gate_set, data.model.radixes,
+            )
+            target_data = _copy.deepcopy(data)
+            target_data.model = model
+            datas.append(target_data)
+
+        extended_targets = []
+        extended_datas = []
+        extended_graphs = []
+        extended_perms = []
+        original_circuits = []
+        for target_index, target in enumerate(targets):
+            for graph_index, graph in enumerate(graphs):
+                extended_targets.append(target)
+                extended_datas.append(datas[graph_index])
+                extended_graphs.append(graph)
+                extended_perms.append(permsbyperms[target_index])
+                original_circuits.append(circuit)
+
+        circuits = await _get_runtime().map(
+            _squander_synthesize_or_fallback,
+            [self.inner_synthesis] * len(extended_targets),
+            extended_targets,
+            extended_datas,
+            original_circuits,
+            extended_graphs,
+            [perm[0] for perm in extended_perms],
+            [perm[1] for perm in extended_perms],
+        )
+
+        perm_data = {}
+        all_perms = list(_it.permutations(range(width)))
+        for i, synthesized in enumerate(circuits):
+            graph = extended_graphs[i]
+            perm = extended_perms[i]
+
+            if graph not in perm_data:
+                perm_data[graph] = {}
+
+            if perm in perm_data[graph]:
+                s1 = self.scoring_fn(perm_data[graph][perm])
+                s2 = self.scoring_fn(synthesized)
+                if s2 < s1:
+                    perm_data[graph][perm] = synthesized
+            else:
+                perm_data[graph][perm] = synthesized
+
+            for univ_perm in all_perms[1:]:
+                renumber_c = synthesized.copy()
+                renumber_c.renumber_qudits(univ_perm)
+                new_pi = tuple(univ_perm[j] for j in perm[0])
+                new_pf = tuple(univ_perm[j] for j in perm[1])
+                new_graph = renumber_c.coupling_graph
+                if new_graph not in perm_data:
+                    perm_data[new_graph] = {}
+
+                new_perm = (new_pi, new_pf)
+                if new_perm not in perm_data[new_graph]:
+                    perm_data[new_graph][new_perm] = renumber_c
+                else:
+                    s1 = self.scoring_fn(perm_data[new_graph][new_perm])
+                    s2 = self.scoring_fn(renumber_c)
+                    if s2 < s1:
+                        perm_data[new_graph][new_perm] = renumber_c
+
+        if circuit.gate_set.issubset(data.model.gate_set):
+            for univ_perm in _it.permutations(range(width)):
+                uperm = (univ_perm, univ_perm)
+                renumber_c = circuit.copy()
+                renumber_c.renumber_qudits(univ_perm)
+                new_graph = renumber_c.coupling_graph
+                new_score = self.scoring_fn(renumber_c)
+                for graph, graph_data in perm_data.items():
+                    if all(e in graph for e in new_graph):
+                        if uperm not in graph_data:
+                            graph_data[uperm] = renumber_c
+                        elif new_score < self.scoring_fn(graph_data[uperm]):
+                            graph_data[uperm] = renumber_c
+
+        data['permutation_data'] = perm_data
+
+    __patched_eapp_run._squander_fallback_patch = True
+    __EAPP.run = __patched_eapp_run
+
+
+_patch_eapp_if_needed()
+
+
+class SquanderPartitioner(_BQSKitBasePass):
+    """BQSKit pass: replace circuit body with Squander ILP partition blocks."""
+
+    def __init__(self, max_partition_size):
+        super().__init__()
+        self.max_partition_size = max_partition_size
+
+    async def run(self, circuit, data=None):
+        from qiskit import qasm2, QuantumCircuit
+        from squander import Qiskit_IO
+        from bqskit import Circuit as BQSKitCircuit
+        from bqskit.ir.lang.qasm2 import OPENQASM2Language
+
+        try:
+            circ_qiskit = QuantumCircuit.from_qasm_str(
+                OPENQASM2Language().encode(circuit)
+            )
+        except Exception:
+            # Circuit contains gates that can't be QASM-encoded (e.g.
+            # ConstantUnitaryGate from a prior pass).  Keep as-is.
+            return
+
+        circ, orig_parameters = Qiskit_IO.convert_Qiskit_to_Squander(circ_qiskit)
+        partitioned_circuit, parameters, _ = PartitionCircuit(
+            circ, orig_parameters, self.max_partition_size, strategy="ilp"
+        )
+        partitioned_circuit_bqskit = BQSKitCircuit(circ.get_Qbit_Num())
+        for subcircuit in partitioned_circuit.get_Gates():
+            if not isinstance(subcircuit, Circuit):
+                raise RuntimeError(
+                    "Squander ILP partitioning returned a non-block gate; "
+                    "BQSKit SEQPAM requires partition blocks."
+                )
+
+            involved_qbits = sorted(subcircuit.get_Qbits())
+            qbit_map = {qbit: idx for idx, qbit in enumerate(involved_qbits)}
+            subcircuit_parameters = parameters[
+                subcircuit.get_Parameter_Start_Index() :
+                subcircuit.get_Parameter_Start_Index() + subcircuit.get_Parameter_Num()
+            ]
+            remapped_subcircuit = subcircuit.Remap_Qbits(qbit_map, len(involved_qbits))
+            subcircuit_qiskit = Qiskit_IO.get_Qiskit_Circuit(
+                remapped_subcircuit.get_Flat_Circuit(),
+                np.asarray(subcircuit_parameters, dtype=np.float64),
+            )
+            subcircuit_bqskit = OPENQASM2Language().decode(qasm2.dumps(subcircuit_qiskit))
+            partitioned_circuit_bqskit.append_circuit(
+                subcircuit_bqskit,
+                involved_qbits,
+                True,
+                True,
+            )
+        circuit.become(partitioned_circuit_bqskit, False)
+
+
+class SquanderSynthesisPass(_BQSKitSynthesisPass):
+    """BQSKit synthesis pass: optimize partition blocks with Squander.
+
+    Raises _SquanderSynthesisFailed when the configured Squander synthesis
+    strategy cannot produce a valid circuit for the requested subtopology. The
+    monkey-patched EmbedAllPermutationsPass catches this and installs a
+    SWAP-correct original-block fallback.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__()
+        cfg = _SQUANDER_BQSKIT_SYNTHESIS_CONFIG
+        if not cfg:
+            # Workers spawned via Popen inherit env vars but not Python
+            # globals.  The main process serializes the config to
+            # _SQUANDER_BQSKIT_CONFIG before spawning workers.
+            import os as _os, json as _json
+            _env = _os.environ.get('_SQUANDER_BQSKIT_CONFIG')
+            if _env:
+                cfg = _json.loads(_env)
+        self.config = dict(cfg or {})
+
+    @staticmethod
+    def _data_topology(data, qbit_num):
+        """Return block subtopology from *data*.
+
+        BQSKit labels are reversed when circuits are converted through
+        Squander/Qiskit, so the topology supplied to Squander is reversed too.
+        """
+        if data is None or getattr(data, "model", None) is None:
+            return None
+
+        edges = []
+        for u, v in data.model.coupling_graph:
+            if u == v:
+                continue
+            edges.append((qbit_num - 1 - int(u), qbit_num - 1 - int(v)))
+
+        all_edges = {
+            frozenset((i, j))
+            for i in range(qbit_num)
+            for j in range(i + 1, qbit_num)
+        }
+        edge_set = {frozenset(edge) for edge in edges}
+        if edge_set == all_edges:
+            return None
+        return edges
+
+    @staticmethod
+    def _topology_edges_from_data(data):
+        """Return directed topology edges from BQSKit pass data."""
+        if data is None or getattr(data, "model", None) is None:
+            return None
+        topo_edges = set()
+        for u, v in data.model.coupling_graph:
+            topo_edges.add((int(u), int(v)))
+            topo_edges.add((int(v), int(u)))
+        return topo_edges
+
+    async def synthesize(self, target, data=None):
+        from qiskit import qasm2
+        from squander import Qiskit_IO
+        from bqskit.ir.lang.qasm2 import OPENQASM2Language
+        from bqskit.qis.unitary.unitarymatrix import UnitaryMatrix
+
+        target_matrix = np.asarray(target)
+        qbit_num = target.num_qudits
+        mini_topology = self._data_topology(data, qbit_num)
+
+        config = {
+            **self.config,
+            "topology": mini_topology,
+        }
+
+        candidates = qgd_Wide_Circuit_Optimization.DecomposePartition(
+            target_matrix,
+            config,
+            mini_topology=mini_topology,
+        )
+        if len(candidates) == 0:
+            tolerance = config.get("tolerance", _default_squander_tolerance(config))
+            raise _SquanderSynthesisFailed(
+                f"Squander synthesis failed for {qbit_num}-qubit block "
+                f"at tolerance {tolerance}."
+            )
+
+        optimized_circuit, optimized_parameters = (
+            qgd_Wide_Circuit_Optimization.CompareAndPickCircuits(
+                [candidate[0] for candidate in candidates],
+                [candidate[1] for candidate in candidates],
+            )
+        )
+
+        optimized_qiskit = Qiskit_IO.get_Qiskit_Circuit(
+            optimized_circuit.get_Flat_Circuit(),
+            np.asarray(optimized_parameters, dtype=np.float64),
+        )
+        synthesized = OPENQASM2Language().decode(qasm2.dumps(optimized_qiskit))
+
+        # The QASM round-trip preserves qubit labels but changes the physical
+        # interpretation (Squander MSB=0 → BQSKit LSB=0).  Renumber qudits to
+        # compensate: Squander qubit k (MSB=0) → BQSKit qubit (qbit_num-1-k).
+        if qbit_num > 1:
+            synthesized.renumber_qudits(
+                [qbit_num - 1 - i for i in range(qbit_num)]
+            )
+
+        topo_edges = self._topology_edges_from_data(data)
+        if topo_edges is not None:
+            _assert_circuit_respects_topology(synthesized, topo_edges)
+
+        if self.config.get("bqskit_distance_test", False):
+            target_unitary = UnitaryMatrix(target)
+            distance = target_unitary.get_distance_from(synthesized.get_unitary())
+            tol = _bqskit_synthesis_validation_tolerance(self.config)
+            if distance > tol:
+                raise _SquanderSynthesisFailed(
+                    f"BQSKit synthesis validation failed: {distance:.2e} > {tol:.2e}"
+                )
+
+        return synthesized
+
+
+class _SquanderSynthesisFailed(Exception):
+    """Raised when Squander cannot synthesize a partition block."""
+
+
+def _topo_perm_to_swaps(pi, topo_edges, width):
+    """Decompose permutation *pi* into SWAPs using only edges in *topo_edges*.
+
+    Uses BFS on the topology graph to find a SWAP sequence that implements
+    the permutation.  Returns a list of (u, v) pairs valid in *topo_edges*.
+    """
+    # Build adjacency list from topo_edges (undirected)
+    adj = {i: set() for i in range(width)}
+    for u, v in topo_edges:
+        adj[u].add(v)
+        adj[v].add(u)
+
+    # Greedy: for each position i, bring the target qubit pi[i] to position i
+    # by routing through the topology graph.
+    current = list(range(width))  # current[pos] = which qubit is at pos
+    swaps = []
+    for i in range(width):
+        target = pi[i]
+        if current[i] == target:
+            continue
+        # Find where target currently is
+        target_pos = current.index(target)
+        # BFS from target_pos to i, finding shortest path of SWAPs
+        from collections import deque
+        parent = {target_pos: None}
+        q = deque([target_pos])
+        while q:
+            u = q.popleft()
+            if u == i:
+                break
+            for v in adj[u]:
+                if v not in parent:
+                    parent[v] = u
+                    q.append(v)
+        # Reconstruct path and apply SWAPs
+        if i not in parent:
+            raise _SquanderSynthesisFailed(
+                f"Cannot realize permutation {pi} on disconnected topology "
+                f"{sorted(topo_edges)}."
+            )
+        path = []
+        v = i
+        while parent[v] is not None:
+            path.append(v)
+            v = parent[v]
+        path.append(target_pos)
+        # Apply SWAPs along the path (reverse order to bring target to i)
+        for k in range(len(path) - 1, 0, -1):
+            a, b = path[k], path[k - 1]
+            swaps.append((a, b))
+            # Update current positions
+            current[a], current[b] = current[b], current[a]
+    return swaps
+
+
+@contextlib.contextmanager
+def patched_seqpam_workflow_classes(bqskit_compile_module, use_squander_partitioner, config):
+    """Patch BQSKit workflow factories to use Squander passes.
+
+    Replaces QSearch/LEAP with SquanderSynthesisPass.  Squander failures are
+    caught by the EAPP patch and replaced with SWAP-correct fallbacks.
+    """
+
+    global _SQUANDER_BQSKIT_SYNTHESIS_CONFIG
+
+    import os as _os, json as _json
+
+    original_quick = bqskit_compile_module.QuickPartitioner
+    original_qsearch = bqskit_compile_module.QSearchSynthesisPass
+    original_leap = bqskit_compile_module.LEAPSynthesisPass
+    original_config = _SQUANDER_BQSKIT_SYNTHESIS_CONFIG
+    original_config_env = _os.environ.get('_SQUANDER_BQSKIT_CONFIG')
+    try:
+        cfg = _copy_bqskit_synthesis_config(config)
+        _SQUANDER_BQSKIT_SYNTHESIS_CONFIG = cfg
+        # Also store in env var so worker processes (Popen) inherit it
+        _os.environ['_SQUANDER_BQSKIT_CONFIG'] = _json.dumps(cfg)
+        if use_squander_partitioner:
+            bqskit_compile_module.QuickPartitioner = SquanderPartitioner
+        bqskit_compile_module.QSearchSynthesisPass = SquanderSynthesisPass
+        bqskit_compile_module.LEAPSynthesisPass = SquanderSynthesisPass
+        yield
+    finally:
+        bqskit_compile_module.QuickPartitioner = original_quick
+        bqskit_compile_module.QSearchSynthesisPass = original_qsearch
+        bqskit_compile_module.LEAPSynthesisPass = original_leap
+        _SQUANDER_BQSKIT_SYNTHESIS_CONFIG = original_config
+        if original_config_env is None:
+            _os.environ.pop('_SQUANDER_BQSKIT_CONFIG', None)
+        else:
+            _os.environ['_SQUANDER_BQSKIT_CONFIG'] = original_config_env
+
 
 def extract_subtopology(involved_qbits, qbit_map, config):
     """Return topology edges restricted to ``involved_qbits``, with indices remapped via ``qbit_map``.
@@ -45,25 +792,51 @@ def extract_subtopology(involved_qbits, qbit_map, config):
     return mini_topology
 
 
-CNOT_COUNT_DICT = {
-    "CNOT": 1,
-    "CH": 1,
-    "CZ": 1,
-    "SYC": 3,
-    "CRY": 2,
-    "CU": 2,
-    "CR": 2,
-    "CROT": 2,
-    "CRX": 2,
-    "CRZ": 2,
-    "CP": 2,
-    "CCX": 6,
-    "CSWAP": 7,
-    "SWAP": 3,
-    "RXX": 2,
-    "RYY": 2,
-    "RZZ": 2,
+# Universal gate decomposition dictionary.
+# Each gate maps to its exact breakdown into {CNOT, H, RX, RY, RZ, ...} basis
+# as defined by circuit_to_CNOT_basis in squander/utils.py.
+# Native single-qubit gates and CNOT map to themselves with count 1.
+_GATE_DECOMPOSITION = {
+    # --- native gates (do not decompose) ---
+    "CNOT":  {"CNOT": 1},
+    "H":     {"H": 1},
+    "X":     {"X": 1},
+    "Y":     {"Y": 1},
+    "Z":     {"Z": 1},
+    "S":     {"S": 1},
+    "Sdg":   {"Sdg": 1},
+    "T":     {"T": 1},
+    "Tdg":   {"Tdg": 1},
+    "SX":    {"SX": 1},
+    "SXdg":  {"SXdg": 1},
+    "RX":    {"RX": 1},
+    "RY":    {"RY": 1},
+    "RZ":    {"RZ": 1},
+    "R":     {"R": 1},
+    "U1":    {"U1": 1},
+    "U2":    {"U2": 1},
+    "U3":    {"U3": 1},
+    # --- decomposed gates (counts from circuit_to_CNOT_basis) ---
+    "CH":    {"CNOT": 1, "RY": 2},                                    # RY + CNOT + RY
+    "CZ":    {"CNOT": 1, "H": 2},                                      # H + CNOT + H
+    "SYC":   {"CNOT": 3, "U1": 3},                                     # U1 + U1 + CNOT + U1 + CNOT + CNOT
+    "CRY":   {"CNOT": 2, "RY": 2},                                     # CNOT + RY + CNOT + RY
+    "CU":    {"CNOT": 2, "U1": 1, "RZ": 3, "RY": 2},                  # U1 + RZ + RY + CNOT + RY + RZ + CNOT + RZ
+    "CR":    {"CNOT": 2, "RZ": 2, "RY": 2},                            # RZ + CNOT + RY + CNOT + RY + RZ
+    "CROT":  {"CNOT": 2, "RZ": 3, "RY": 2},                            # RZ + RY + CNOT + RZ + CNOT + RY + RZ
+    "CRX":   {"CNOT": 2, "H": 2, "RZ": 2},                             # H + CNOT + RZ + CNOT + RZ + H
+    "CRZ":   {"CNOT": 2, "RZ": 2},                                     # CNOT + RZ + CNOT + RZ
+    "CP":    {"CNOT": 2, "U1": 3},                                     # U1 + CNOT + U1 + CNOT + U1
+    "CCX":   {"CNOT": 6, "H": 2, "T": 4, "Tdg": 3},                   # standard Toffoli: 7 CNOTs + 8 single-qubit
+    "CSWAP": {"CNOT": 7, "H": 1, "T": 5, "Tdg": 2, "SX": 1, "Sdg": 1, "S": 1},  # Fredkin
+    "SWAP":  {"CNOT": 3},                                              # CNOT + CNOT + CNOT
+    "RXX":   {"CNOT": 2, "RX": 1},                                     # CNOT + RX + CNOT
+    "RYY":   {"CNOT": 2, "RX": 4, "RZ": 1},                            # RX + RX + CNOT + RZ + CNOT + RX + RX
+    "RZZ":   {"CNOT": 2, "RZ": 1},                                     # CNOT + RZ + CNOT
 }
+
+# Backward-compatible: CNOT-equivalent cost (number of CNOTs in decomposition).
+CNOT_COUNT_DICT = {g: d.get("CNOT", 0) for g, d in _GATE_DECOMPOSITION.items()}
 
 
 def CNOTGateCount(circ: Circuit, max_gates: int = 0) -> int:
@@ -80,1209 +853,76 @@ def CNOTGateCount(circ: Circuit, max_gates: int = 0) -> int:
     Returns:
         Integer gate-cost score used by optimization heuristics.
     """
-
-    assert isinstance(
-        circ, Circuit
-    ), "The input parameters should be an instance of Squander Circuit"
-
+    assert isinstance(circ, Circuit), \
+        "The input parameters should be an instance of Squander Circuit"
     gate_counts = circ.get_Gate_Nums()
     num_cnots = sum(
         CNOT_COUNT_DICT.get(gate, 0) * count for gate, count in gate_counts.items()
     )
-
     if max_gates > 0:
         return num_cnots * max_gates + sum(
-            y for x, y in gate_counts.items() if x not in CNOT_COUNT_DICT
+            y for x, y in gate_counts.items() if CNOT_COUNT_DICT.get(x, -1) <= 0
         )
     return num_cnots
 
 
-class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
-    """Tree-guided multi-qubit decomposition using operator Schmidt rank (OSR) style costs."""
+def SingleQubitGateCount(circ: Circuit) -> int:
+    """Count single-qubit gates in a circuit (U3, H, RX, RY, RZ, etc.).
 
-    def __init__(
-        self, Umtx, config, accelerator_num, topology, paramspace=None, paramscale=None
-    ):
-        """Initialize guided tree search over a unitary (or list of unitaries) and hardware topology.
+    Uses _GATE_DECOMPOSITION to count non-CNOT gates in each gate's breakdown.
 
-        Args:
-            Umtx: Complex unitary matrix, or list of such matrices (already conjugate-transposed per caller).
-            config: Decomposition / search configuration dict.
-            accelerator_num: Number of accelerators for the base decomposer.
-            topology: List of undirected coupler pairs ``(i, j)``; default is all-to-all.
-            paramspace: Optional per-parameter affine scaling space for ``params_to_mat``.
-            paramscale: Optional scaling denominators paired with ``paramspace``.
-        """
-        super().__init__(
-            Umtx[0] if isinstance(Umtx, list) else Umtx,
-            config=config,
-            accelerator_num=accelerator_num,
-        )
-        self.Umtx = (
-            Umtx if isinstance(Umtx, list) else [Umtx]
-        )  # already conjugate transposed
-        self.qbit_num = self.Umtx[0].shape[0].bit_length() - 1
-        self.config = config
-        self.accelerator_num = accelerator_num
-        self.paramspace = paramspace
-        self.paramscale = () if paramscale is None else paramscale
-        # self.set_Cost_Function_Variant( 0 )	 #0 is Frobenius, 3 is HS, 10 is OSR
-        if topology is None:
-            topology = [
-                (i, j)
-                for i in range(self.qbit_num)
-                for j in range(i + 1, self.qbit_num)
-            ]
-        self.topology = topology
+    Args:
+        circ: Squander circuit representation.
 
-    @staticmethod
-    def enumerate_unordered_cnot_BFS(n: int, topology=None, use_gl=True):
-        """Yield successive BFS levels of CNOT-reachable GL(n,2) states (see ``enumerate_unordered_cnot_BFS_level``).
-
-        Args:
-            n: Number of qubits.
-            topology: Allowed unordered CNOT pairs; default all pairs.
-            use_gl: If True, use GL-style column updates; else restricted enumeration.
-
-        Yields:
-            Each level's list of ``(state_key, seq_pairs, seq_directed)`` discoveries.
-        """
-        # Precompute unordered pairs
-        topology = (
-            [(i, j) for i in range(n) for j in range(i + 1, n)]
-            if topology is None
-            else topology
-        )
-        prior_level_info: Union[tuple[Any, Any, Any, Any], None] = None
-        while True:
-            visited, seq_pairs_of, seq_dir_of, res = (
-                N_Qubit_Decomposition_Guided_Tree.enumerate_unordered_cnot_BFS_level(
-                    n, topology, prior_level_info, use_gl=use_gl
-                )
-            )
-            if not res:
-                break
-            yield res
-            prior_level_info = (
-                visited,
-                seq_pairs_of,
-                seq_dir_of,
-                list(x[0] for x in reversed(res)),
-            )
-
-    @staticmethod
-    def canonical_prefix_ok(seq):
-        """Check whether a sequence of unordered pair steps has a canonical topological order.
-
-        Returns:
-            ``-1`` if the prefix is OK; otherwise the first index where canonical order fails.
-        """
-        m = len(seq)
-        if m <= 1:
-            return -1
-        succ = {}
-        indeg = {}
-        last_on = {}
-        for k in range(m):
-            for q in seq[k]:
-                if q in last_on:
-                    p = last_on[q]
-                    succ.setdefault(p, []).append(k)
-                    indeg[k] = indeg.get(k, 0) + 1
-                last_on[q] = k
-        import heapq
-
-        pq = [(seq[x], x) for x in range(m) if indeg.get(x, 0) == 0]
-        heapq.heapify(pq)
-        for pos in range(m):
-            # Kahn's algorithm
-            if len(pq) == 0:
-                return pos  # malformed (shouldn't happen)
-            u = heapq.heappop(pq)
-            if u[1] != pos:
-                return pos  # deviation: not canonical
-            for v in succ.get(u[1], ()):
-                indeg[v] -= 1
-                if indeg[v] == 0:
-                    heapq.heappush(pq, (seq[v], v))
-        return -1
-
-    @staticmethod
-    def enumerate_unordered_cnot_BFS_level(
-        n: int,
-        topology: Optional[List[Tuple[int, int]]] = None,
-        prior_level_info: Optional[
-            Tuple[
-                Set[Tuple[int, ...]],
-                Dict[Tuple[int, ...], List[Tuple[int, int]]],
-                Dict[Tuple[int, ...], List[Tuple[int, int]]],
-                List[
-                    Tuple[Tuple[int, ...], List[Tuple[int, int]], List[Tuple[int, int]]]
-                ],
-            ]
-        ] = None,
-        use_gl=True,
-    ):
-        """Enumerate GL(n,2) states at the next BFS depth from ``prior_level_info``.
-
-        Moves are *recorded* as unordered pairs (structure view); each expansion
-        may try both CNOT directions internally when ``use_gl`` is True.
-
-        Returns:
-            Tuple ``(visited, seq_pairs_of, seq_dir_of, res)`` where ``res`` is a
-            list of ``(A, seq_pairs, seq_directed)`` for newly discovered states
-            ``A``: ``seq_pairs`` is the unordered-pair history; ``seq_directed`` is
-            a consistent directed realization. On the first call, pass
-            ``prior_level_info=None`` to obtain the root state only.
-        """
-        if prior_level_info is None:
-            # Initial state
-            start_key = tuple(1 << i for i in range(n))
-
-            # Visited: we only need to mark states once (minimal depth)
-            visited = {start_key}
-
-            # We also keep *one* representative sequence per state (unordered + directed)
-            seq_pairs_of = {start_key: []}
-            seq_dir_of = {start_key: []}
-
-            # Yield the root
-            return visited, seq_pairs_of, seq_dir_of, [(start_key, [], [])]
-        else:
-            visited, seq_pairs_of, seq_dir_of, q = prior_level_info
-        res = []
-        new_seq_pairs_of = {}
-        new_seq_dir_of = {}
-
-        while q:
-            A = q.pop()
-            last_pairs = seq_pairs_of[A]
-            last_dirs = seq_dir_of[A]
-            assert topology is not None
-            for p in topology:
-                if not use_gl:
-                    if len(last_pairs) >= 3 and all(p == x for x in last_pairs[-3:]):
-                        continue  # avoid more than 3 repeated CNOTs
-                    if (
-                        N_Qubit_Decomposition_Guided_Tree.canonical_prefix_ok(
-                            last_pairs + [p]
-                        )
-                        >= 0
-                    ):
-                        continue  # not canonical prefix
-                # Try both directions, but record the *same* unordered step 'p'
-                for mv in (p, (p[1], p[0])) if use_gl else (p,):
-                    # CNOT left
-                    if use_gl:
-                        if mv[0] == mv[1]:
-                            B = A
-                        else:
-                            B = list(A)
-                            B[mv[1]] ^= B[mv[0]]
-                            B = tuple(B)
-
-                        if B in visited:
-                            continue  # already discovered at minimal depth
-                    else:
-                        B = tuple(last_dirs + [p])
-
-                    visited.add(B)
-                    new_seq_pairs_of[B] = last_pairs + [p]
-                    new_seq_dir_of[B] = last_dirs + [mv]
-
-                    # Emit as soon as we discover the state (BFS → minimal depth)
-                    res.append((B, new_seq_pairs_of[B], new_seq_dir_of[B]))
-        return visited, new_seq_pairs_of, new_seq_dir_of, res
-
-    @staticmethod
-    def build_sequence(stop: int = 5, ordered: bool = True, use_gl: bool = True):
-        """Debug helper: print distribution of minimal CNOT sequence lengths by qubit count (up to ``stop``).
-
-        See OEIS A002884 for related enumeration context. Not used in production optimization paths.
-        """
-        # https://oeis.org/A002884
-        # unordered sequence: 1, 1, 4, 88, 9556, 4526605
-        # unordered at 5 qubits: {0: 1, 1: 10, 2: 85, 3: 650, 4: 4475, 5: 27375, 6: 142499, 7: 580482, 8: 1501297, 9: 1738232, 10: 517884, 11: 13591, 12: 24}
-        for i in range(2, stop + 1):
-            d = {}
-            for z in N_Qubit_Decomposition_Guided_Tree.enumerate_unordered_cnot_BFS(
-                i, use_gl=use_gl
-            ):
-                for x in (list if ordered else set)(tuple(x[1]) for x in z):
-                    d[len(x)] = d.get(len(x), 0) + 1
-                if not use_gl and len(d) > 5:
-                    break
-            print({x: d[x] for x in sorted(d)}, sum(d.values()))
-
-    @staticmethod
-    def extract_bits(x, pos):
-        """Pack bits of integer ``x`` at positions ``pos`` into a smaller integer (LSB-first order)."""
-        return sum(((x >> p) & 1) << i for i, p in enumerate(pos))
-
-    @staticmethod
-    def build_osr_matrix(U, n, A):
-        """Reshape unitary ``U`` (size ``2^n``) into the OSR matrix for bipartition ``A`` vs complement.
-
-        Args:
-            U: Flattened ``2^n x 2^n`` unitary (row-major).
-            n: Qubit count.
-            A: Tuple of qubit indices on subsystem A.
-
-        Returns:
-            Matrix of shape ``(2^{|A|})^2 x (2^{|B|})^2`` for Schmidt analysis.
-        """
-        A = list(reversed(A))
-        B = list(sorted(set(range(n)) - set(A), reverse=True))
-        A, B = [n - 1 - q for q in A], [n - 1 - q for q in B]
-        dA = 1 << len(A)
-        dB = 1 << len(B)
-        return (
-            U.reshape([2] * (2 * n))
-            .transpose(
-                tuple(A) + tuple(t + n for t in A) + tuple(B) + tuple(t + n for t in B)
-            )
-            .reshape(dA * dA, dB * dB)
-        )
-
-    @staticmethod
-    def accumulate_grad_for_cut(U, G, Umat, VTmat, n, A):  # qubits on A
-        """Accumulate gradient ``G * Umat @ VTmat`` from an SVD triplet back into full ``U`` layout for cut ``A``."""
-        A = list(reversed(A))
-        B = list(sorted(set(range(n)) - set(A), reverse=True))
-        A, B = [n - 1 - q for q in A], [n - 1 - q for q in B]
-        mat = np.array(G) * Umat @ VTmat  # reconstruct U from its dyadic decomposition
-        revmap = [None] * (2 * n)
-        for i, x in enumerate(
-            tuple(A) + tuple(t + n for t in A) + tuple(B) + tuple(t + n for t in B)
-        ):
-            revmap[x] = i
-        U += mat.reshape([2] * (2 * n)).transpose(tuple(revmap)).reshape(*U.shape)
-        return U
-
-    @staticmethod
-    def trace_out_qubits(U, n, A):
-        """Trace out complement of subsystem ``A`` and return a unitary polar factor on ``A`` (2^{|A|} x 2^{|A|})."""
-        M = N_Qubit_Decomposition_Guided_Tree.build_osr_matrix(U, n, A)
-        M = np.linalg.svd(M, compute_uv=True, full_matrices=False)[0][:, 0].reshape(
-            1 << len(A), 1 << len(A)
-        )
-        return N_Qubit_Decomposition_Guided_Tree._polar_unitary(M)
-
-    @staticmethod
-    def numerical_rank_osr(M, Fnorm, tol=1e-10):
-        """Count singular values of ``M/Fnorm`` above ``tol`` relative to the largest; returns ``(rank, s)``."""
-        s = np.linalg.svd(M, full_matrices=False, compute_uv=False) / Fnorm
-        # print(s)
-        return int(np.sum(s >= s[0] * tol)), s
-
-    @staticmethod
-    def operator_schmidt_rank(U, n, A, Fnorm, tol=1e-10):
-        """Operator Schmidt rank of ``U`` across cut ``A`` (via OSR matrix), using ``numerical_rank_osr``."""
-        return N_Qubit_Decomposition_Guided_Tree.numerical_rank_osr(
-            N_Qubit_Decomposition_Guided_Tree.build_osr_matrix(U, n, A), Fnorm, tol
-        )
-
-    @staticmethod
-    def unique_cuts(n):
-        """Yield all nontrivial unordered bipartitions of ``n`` qubits (each complement pair once)."""
-        import itertools
-
-        qubits = tuple(range(n))
-        for r in range(1, n // 2 + 1):  # only up to half
-            for S in itertools.combinations(qubits, r):
-                if r < n - r:
-                    yield S
-                else:  # r == n-r (only possible when n even): tie-break
-                    comp = tuple(q for q in qubits if q not in S)
-                    if S < comp:  # lexicographically smaller tuple wins
-                        yield S
-
-    def get_circuit_from_pairs(self, pairs, finalizing=True):
-        """Build a layer of U3–U3–CNOT per pair, optionally followed by trailing U3 on every qubit."""
-        circ = Circuit(self.qbit_num)
-        for pair in pairs:
-            circ.add_U3(pair[0])
-            circ.add_U3(pair[1])
-            circ.add_CNOT(pair[0], pair[1])
-        if finalizing:
-            for qbit in range(self.qbit_num):
-                circ.add_U3(qbit)
-        return circ
-
-    @staticmethod
-    def ceil_log2(x):
-        """Ceiling of log2 for nonnegative integer ``x``; ``0`` maps to ``0``."""
-        return 0 if x == 0 else (x - 1).bit_length()
-
-    @staticmethod
-    def logsumexp_smoothmax(Lc, tau=1e-2):
-        """Smooth maximum of list ``Lc``: ``tau * log(sum exp(v/tau)) + max``, stable implementation."""
-        if not Lc:
-            return 0.0
-        if tau <= 0.0:
-            raise RuntimeError("tau must be > 0")
-        m = max(Lc)
-        acc = 0.0
-        for v in Lc:
-            acc += np.exp((v - m) / tau)
-        return tau * np.log(acc) + m
-
-    @staticmethod
-    def dyadic_loss(S, max_dyadic, rho=0.9, tol=1e-4):
-        """Weighted loss on dyadic singular-value indices (powers of two) of normalized spectrum ``S``."""
-        tot_dyadic = N_Qubit_Decomposition_Guided_Tree.ceil_log2(len(S))
-        w = 1.0
-        acc = 0.0
-        for k in range(max_dyadic - 1, -1, -1):
-            if k < tot_dyadic:
-                val = S[1 << k] - S[0] * tol
-                acc += w * val * val
-            w *= rho
-        return acc
-
-    @staticmethod
-    def avg_loss(cuts_S, rho=0.9):
-        """Average ``dyadic_loss`` over a list of singular-value spectra ``cuts_S``."""
-        max_dyadic = N_Qubit_Decomposition_Guided_Tree.ceil_log2(
-            max(len(S) for S in cuts_S)
-        )
-        total_loss = 0.0
-        for S in cuts_S:
-            total_loss += N_Qubit_Decomposition_Guided_Tree.dyadic_loss(
-                S, max_dyadic, rho
-            )
-        return total_loss / len(cuts_S)
-
-    # Aggregated cost over cuts: softmax (log-sum-exp) of per-cut dyadic losses
-    @staticmethod
-    def cuts_softmax_dyadic_cost(cuts_S, rho=0.1, tau=1e-2):
-        """Log-sum-exp aggregate of per-cut dyadic losses (temperature ``tau``)."""
-        if tau <= 0.0:
-            raise RuntimeError("tau must be > 0")
-        Lc = []
-        max_dyadic = N_Qubit_Decomposition_Guided_Tree.ceil_log2(
-            max(len(S) for S in cuts_S)
-        )
-        for S in cuts_S:
-            Lc.append(N_Qubit_Decomposition_Guided_Tree.dyadic_loss(S, max_dyadic, rho))
-        return N_Qubit_Decomposition_Guided_Tree.logsumexp_smoothmax(Lc, tau)
-
-    # Gradient w.r.t. the singular values (diagonal of dL/dΣ):
-    @staticmethod
-    def dyadic_loss_grad_diag(S, max_dyadic, Fnorm, rho=0.1, tol=1e-4):
-        """Diagonal gradient of ``dyadic_loss`` w.r.t. singular values (dyadic indices only)."""
-        n = len(S)
-        # c_k = rho^k / Mk  for k=1..n-1, then prefix sum C_j = sum_{k=1}^j c_k
-        tot_dyadic = N_Qubit_Decomposition_Guided_Tree.ceil_log2(n)
-        grad = [0.0] * tot_dyadic
-        w = 1.0
-        for k in range(max_dyadic - 1, -1, -1):
-            if k < tot_dyadic:
-                idx = 1 << k
-                grad[k] = (
-                    2.0 * w * S[idx] * (1.0 - tol) / Fnorm
-                )  # 1-tol not needed if using stop-grad
-            w *= rho  # w = rho^k
-        return grad
-
-    @staticmethod
-    def cuts_avg_dyadic_grad(cuts_S, Fnorm, rho=0.1):
-        """Per-cut gradients for the average dyadic loss (list parallel to ``cuts_S``)."""
-        C = len(cuts_S)
-        max_dyadic = N_Qubit_Decomposition_Guided_Tree.ceil_log2(
-            max(len(S) for S in cuts_S)
-        )
-        Lc = []
-        for c in range(C):
-            Lc.append(
-                N_Qubit_Decomposition_Guided_Tree.dyadic_loss_grad_diag(
-                    cuts_S[c], max_dyadic, Fnorm * C, rho
-                )
-            )
-        return Lc
-
-    # Gradient w.r.t. singular values (same length as S).
-    # Only dyadic positions (1,2,4,...) get nonzero entries; others are 0.
-    @staticmethod
-    def cuts_softmax_tail_grad(cuts_S, Fnorm, rho=0.1, tau=1e-2):
-        """Gradient of softmax-of-dyadic-losses w.r.t. each cut's singular values."""
-        C = len(cuts_S)
-        if C == 0:
-            return []
-        max_dyadic = N_Qubit_Decomposition_Guided_Tree.ceil_log2(
-            max(len(S) for S in cuts_S)
-        )
-        # 1) per-cut losses
-        Lc = [
-            N_Qubit_Decomposition_Guided_Tree.dyadic_loss(cuts_S[c], max_dyadic, rho)
-            for c in range(C)
-        ]
-
-        # 2) softmax weights w_c = exp((Lc - m)/tau) / Z
-        m = max(Lc)
-        w = [np.exp((Lc[c] - m) / tau) for c in range(C)]
-        Z = np.sum(w)
-        for c in range(C):
-            w[c] /= Z if Z > 0.0 else 1.0
-
-        # 3) dL/dS^{(c)} = w_c * dL_c/dS^{(c)}
-        return [
-            [
-                v * w[c]
-                for v in N_Qubit_Decomposition_Guided_Tree.dyadic_loss_grad_diag(
-                    cuts_S[c], max_dyadic, Fnorm, rho
-                )
-            ]
-            for c in range(C)
-        ]
-
-    @staticmethod
-    def loss_for_rank(S, rank):
-        """Sum of squares of singular values from index ``2**rank`` onward (tail beyond target rank)."""
-        start = 1 << rank
-        if start >= len(S):
-            return 0.0
-        return sum(x * x for x in S[start:])
-
-    @staticmethod
-    def avg_loss_for_rank(cuts_S, rank):
-        """Average ``loss_for_rank`` over cuts."""
-        if not cuts_S:
-            return 0.0
-        total_loss = 0.0
-        for S in cuts_S:
-            total_loss += N_Qubit_Decomposition_Guided_Tree.loss_for_rank(S, rank)
-        return total_loss / len(cuts_S)
-
-    # Aggregated cost over cuts: softmax (log-sum-exp) of per-cut dyadic losses
-    @staticmethod
-    def cuts_softmax_rank_cost(cuts_S, rank, tau=1e-2):
-        """Softmax aggregate of per-cut ``loss_for_rank`` (temperature ``tau``)."""
-        Lc = []
-        for S in cuts_S:
-            Lc.append(N_Qubit_Decomposition_Guided_Tree.loss_for_rank(S, rank))
-        return N_Qubit_Decomposition_Guided_Tree.logsumexp_smoothmax(Lc, tau)
-
-    # Gradient w.r.t. the singular values (diagonal of dL/dΣ):
-    @staticmethod
-    def loss_for_rank_grad_diag(S, rank, Fnorm):
-        """
-        Gradient of a single-cut tail loss with respect to the RAW singular values,
-        assuming S is already normalized and Fnorm is treated as constant.
-
-        If S = sigma / Fnorm, then d/dsigma_i sum_{j>=r} S_j^2 = 2*S_i/Fnorm on tail.
-        """
-        n = len(S)
-        start = 1 << rank
-        grad = [0.0] * n
-        if start >= n:
-            return grad
-        invF = 1.0 / Fnorm
-        for i in range(start, n):
-            grad[i] = 2.0 * S[i] * invF
-        return grad
-
-    @staticmethod
-    def cuts_avg_rank_grad(cuts_S, rank, Fnorm):
-        """
-        Gradient of average tail loss across cuts.
-        Returns one gradient vector per cut, same length as that cut's S.
-        """
-        C = len(cuts_S)
-        if C == 0:
-            return []
-        scale = 1.0 / C
-        out = []
-        for S in cuts_S:
-            g = N_Qubit_Decomposition_Guided_Tree.loss_for_rank_grad_diag(
-                S, rank, Fnorm
-            )
-            out.append([scale * v for v in g])
-        return out
-
-    # Gradient w.r.t. singular values (same length as S).
-    @staticmethod
-    def cuts_softmax_rank_grad(cuts_S, rank, Fnorm, tau=1e-2):
-        """
-        Gradient of smooth-max across cuts:
-            L = tau * log(sum_c exp(L_c / tau))
-        so
-            dL = sum_c softmax_c * dL_c
-        """
-        C = len(cuts_S)
-        if C == 0:
-            return []
-        if tau <= 0.0:
-            raise RuntimeError("tau must be > 0")
-
-        Lc = [N_Qubit_Decomposition_Guided_Tree.loss_for_rank(S, rank) for S in cuts_S]
-
-        m = max(Lc)
-        w = [np.exp((v - m) / tau) for v in Lc]
-        Z = np.sum(w)
-        if Z <= 0.0:
-            Z = 1.0
-        w = [x / Z for x in w]
-
-        out = []
-        for c, S in enumerate(cuts_S):
-            g = N_Qubit_Decomposition_Guided_Tree.loss_for_rank_grad_diag(
-                S, rank, Fnorm
-            )
-            out.append([w[c] * v for v in g])
-        return out
-
-    # Build M with build_osr_matrix, then SVD (econ) and grab top triplet.
-    @staticmethod
-    def top_k_triplet_for_cut(
-        U,  # (N x N), row-major, N = 1<<q
-        q,  # number of qubits
-        A,  # qubits on side A
-        Fnorm,  # e.g., sqrt(N)
-    ):
-        """SVD of OSR matrix for cut ``A``: returns normalized singular values and ``U``, ``Vh``."""
-        # 1) Build M for this cut
-        M = N_Qubit_Decomposition_Guided_Tree.build_osr_matrix(U, q, A)
-        k = min(M.shape)
-
-        # 2) SVD: M = U * diag(S) * VT  (VT = V^H)
-        # Row-major API handles leading dims as col counts.
-        res = np.linalg.svd(M, full_matrices=False, compute_uv=True)
-        return res.S / Fnorm, res.U, res.Vh  # normalized singular value
-
-    @staticmethod
-    def get_deriv_osr_entanglement(matrix, use_cuts, rank, use_softmax):
-        """Gradient of rank / softmax-rank entanglement cost w.r.t. unitary ``matrix`` entries."""
-        qbit_num = len(matrix).bit_length() - 1
-        cuts = (
-            list(N_Qubit_Decomposition_Guided_Tree.unique_cuts(qbit_num))
-            if len(use_cuts) == 0
-            else use_cuts
-        )
-        Fnorm = np.sqrt(len(matrix))
-        deriv = np.zeros(matrix.shape, dtype=complex)
-        # Compute the derivative of the OSR entanglement cost function
-        triplets = []
-        allS = []
-        for cut in cuts:
-            # 1) top k triplet on the normalized reshape M_c
-            S, Umat, VTmat = N_Qubit_Decomposition_Guided_Tree.top_k_triplet_for_cut(
-                matrix, qbit_num, cut, Fnorm
-            )
-            triplets.append(([], Umat, VTmat))
-            allS.append(S)
-        if use_softmax:
-            allS = N_Qubit_Decomposition_Guided_Tree.cuts_softmax_rank_grad(
-                allS, rank, Fnorm
-            )
-        else:
-            allS = N_Qubit_Decomposition_Guided_Tree.cuts_avg_rank_grad(
-                allS, rank, Fnorm
-            )
-        for i in range(len(cuts)):
-            triplets[i] = (allS[i], triplets[i][1], triplets[i][2])
-        for i in range(len(cuts)):
-            G, Umat, VTmat = triplets[i]
-            N_Qubit_Decomposition_Guided_Tree.accumulate_grad_for_cut(
-                deriv, G, Umat, VTmat, qbit_num, cuts[i]
-            )
-        return deriv
-
-    # Compute grad component = Re Tr( A^† B ) for A = dL/dU, B = dU/dθ
-    # A and B are (rows x cols) with row-major leading dimension.
-    @staticmethod
-    def real_trace_conj_dot(A, B):
-        """Return ``Re Tr(A† B)`` for complex matrices ``A``, ``B`` (row-major storage)."""
-        return np.sum(A.real * B.real + A.imag * B.imag)  # Re Tr(A^† B)
-
-    @staticmethod
-    def param_derivs(circ, Umtx, x):
-        """Finite-difference / shift-style partial derivatives ``∂U/∂θ_i`` for each gate parameter in ``x``."""
-        n = len(x)
-        derivs = [None] * n
-        for i in range(n):
-            kind = i % 3
-            if kind == 0:  # d/dt:  ∂U/∂t = U(t+π/2, φ, λ)
-                x_shift = x.copy()
-                x_shift[i] += np.pi / 2
-                Ui = Umtx.copy()
-                circ.apply_to(x_shift, Ui)
-                derivs[i] = Ui
-            else:  # d/dφ or d/dλ: ∂U/∂p = 0.5*(U(p+π/2) - U(p-π/2))
-                xp = x.copy()
-                xp[i] += np.pi / 2
-                xm = x.copy()
-                xm[i] -= np.pi / 2
-                Up = Umtx.copy()
-                Um = Umtx.copy()
-                circ.apply_to(xp, Up)
-                circ.apply_to(xm, Um)
-                derivs[i] = 0.5 * (Up - Um)
-        return derivs
-
-    @staticmethod
-    def _global_phase_fix(U):
-        """Remove global phase from square unitary ``U`` using determinant normalization."""
-        return U / (np.linalg.det(U) ** (1 / len(U)))
-
-    @staticmethod
-    def _polar_unitary(X):
-        """Nearest unitary to ``X`` via polar decomposition (SVD)."""
-        U, _, Vh = np.linalg.svd(X, full_matrices=False)
-        return U @ Vh
-
-    @staticmethod
-    def su2_to_u3_zyz(U):
-        """
-        Decompose a 2x2 unitary (det=1) into Qiskit U3: Rz(phi) @ Ry(theta) @ Rz(lam).
-        Returns (theta, phi, lam) in radians.
-        """
-        U = N_Qubit_Decomposition_Guided_Tree._global_phase_fix(U)
-        # Handle numeric edge cases robustly
-        a = U[0, 0]
-        b = U[0, 1]
-        c = U[1, 0]
-        d = U[1, 1]
-        # Prefer arccos for theta; it's stable when |a| is not tiny
-        ca = np.clip(np.abs(a), 0.0, 1.0)
-        theta = 2.0 * np.arccos(ca)
-        # If sin(theta/2) ~ 0, collapse to Z rotations
-        eps = 1e-12
-        if abs(np.sin(theta / 2)) < eps:
-            # Then c≈0, b≈0; only Z phases matter: U ≈ e^{iα} Rz(phi+lam)
-            # Choose phi=0, lam = arg(d) - arg(a)
-            phi = 0.0
-            lam = np.angle(d) - np.angle(a)
-            # Normalize to [-pi,pi)
-            lam = (lam + np.pi) % (2 * np.pi) - np.pi
-            return float(theta), float(phi), float(lam)
-
-        # Otherwise, phases from elements and normalize
-        phi = np.angle(c) - np.angle(a)
-        phi = (phi + np.pi) % (2 * np.pi) - np.pi
-        lam = np.angle(b) - np.angle(a) - np.pi
-        lam = (lam + np.pi) % (2 * np.pi) - np.pi
-        return float(theta), float(phi), float(lam)
-
-    @staticmethod
-    def _A_from_c(c1, c2, c3):
-        """Two-qubit canonical interaction ``exp(-i/2 * (c1 XX + c2 YY + c3 ZZ))`` as a unitary."""
-        X = np.array([[0, 1], [1, 0]], complex)
-        Y = np.array([[0, -1j], [1j, 0]], complex)
-        Z = np.array([[1, 0], [0, -1]], complex)
-        XX = np.kron(X, X)
-        YY = np.kron(Y, Y)
-        ZZ = np.kron(Z, Z)
-        H = c1 * XX + c2 * YY + c3 * ZZ
-        # use exp via eig (4x4) for robustness
-        ew, EV = np.linalg.eig(1j * H)
-        A = EV @ np.diag(np.exp(ew)) @ np.linalg.inv(EV)
-        # project back to unitary (remove numeric drift)
-        return N_Qubit_Decomposition_Guided_Tree._polar_unitary(A)
-
-    # Factor K1, K2 → (2x2 ⊗ 2x2)
-    @staticmethod
-    def factor_local(K):
-        """Factor 4x4 unitary ``K`` into Kronecker product of two 2x2 unitaries (SVD on reshaped tensor)."""
-        # reshape to (2,2,2,2), SVD the (a,c ; b,d) unfolding
-        M = K.reshape(2, 2, 2, 2).transpose(0, 2, 1, 3).reshape(4, 4)
-        U, _, Vh = np.linalg.svd(M, full_matrices=False)
-        A = U[:, 0].reshape(2, 2)
-        B = Vh.conj().T[:, 0].reshape(2, 2)
-        return N_Qubit_Decomposition_Guided_Tree._polar_unitary(
-            A
-        ), N_Qubit_Decomposition_Guided_Tree._polar_unitary(B)
-
-    @staticmethod
-    def _magic_basis_plusYY():
-        """Magic basis matrix for two-qubit canonical form (Bell-like columns)."""
-        # Complex magic basis (matches A(c)=exp(-i/2*(c1 XX + c2 YY + c3 ZZ)) below)
-        # Columns are (|Φ+>, i|Φ->, i|Ψ+>, |Ψ->) up to harmless phases
-        return (1 / np.sqrt(2)) * np.array(
-            [[1, 0, 0, 1j], [0, 1j, 1, 0], [0, 1j, -1, 0], [1j, 0, 0, -1]],
-            dtype=complex,
-        )
-
-    @staticmethod
-    def _project_to_SO4(O):
-        """Nearest proper SO(4) rotation to real matrix ``O`` (SVD with det fix)."""
-        # nearest real orthogonal with det=+1
-        O = np.real_if_close(O, tol=1e5)
-        U, _, Vt = np.linalg.svd(O)
-        O = U @ Vt
-        if np.linalg.det(O) < 0:
-            O[:, 0] *= -1
-        return O
-
-    @staticmethod
-    def _clean_col_phases(W):
-        """Remove column-wise global phases from matrix ``W`` (largest-magnitude entry per column)."""
-        Wc = W.copy()
-        for j in range(Wc.shape[1]):
-            col = Wc[:, j]
-            k = np.argmax(np.abs(col))
-            if np.abs(col[k]) > 1e-14:
-                Wc[:, j] *= np.exp(-1j * np.angle(col[k]))
-        return Wc
-
-    @staticmethod
-    def closest_local_product(W4):
-        """Best product of single-qubit unitaries approximating 4x4 ``W4`` (via ``factor_local``)."""
-        A, B = N_Qubit_Decomposition_Guided_Tree.factor_local(W4)
-        return N_Qubit_Decomposition_Guided_Tree._global_phase_fix(
-            A
-        ), N_Qubit_Decomposition_Guided_Tree._global_phase_fix(B)
-
-    @staticmethod
-    def kak_u3s_around_cx(U, n, c, t, iters=3):
-        """KAK-style two-qubit block on control ``c`` and target ``t``: Weyl angles and U3 params (debug helper)."""
-        U4 = N_Qubit_Decomposition_Guided_Tree.trace_out_qubits(U, n, (c, t))
-        U4 = N_Qubit_Decomposition_Guided_Tree._global_phase_fix(U4)
-        from qiskit.synthesis import TwoQubitWeylDecomposition
-
-        twd = TwoQubitWeylDecomposition(U4)
-        c1, c2, c3 = twd.a, twd.b, twd.c
-        K1A, K1B, K2A, K2B = twd.K1l, twd.K1r, twd.K2l, twd.K2r
-        A = N_Qubit_Decomposition_Guided_Tree._A_from_c(c1, c2, c3)
-        U_rec = np.kron(K1A, K1B) @ A @ np.kron(K2A, K2B)
-        z = np.trace(U_rec.conj().T @ U4)
-        U_rec *= np.exp(1j * np.angle(z))
-        print("Frob err:", np.linalg.norm(U_rec - U4), c1, c2, c3)
-        thA_pre, phA_pre, laA_pre = N_Qubit_Decomposition_Guided_Tree.su2_to_u3_zyz(
-            K2A.conj().T
-        )
-        thB_pre, phB_pre, laB_pre = N_Qubit_Decomposition_Guided_Tree.su2_to_u3_zyz(
-            K2B.conj().T
-        )
-        thA_post, phA_post, laA_post = N_Qubit_Decomposition_Guided_Tree.su2_to_u3_zyz(
-            K1A.conj().T
-        )  # left-apply ⇒ take dagger on outputs
-        thB_post, phB_post, laB_post = N_Qubit_Decomposition_Guided_Tree.su2_to_u3_zyz(
-            K1B.conj().T
-        )
-        return {
-            "c": (c1, c2, c3),
-            "pre": {
-                "A": (thA_pre / 2, phA_pre, laA_pre),
-                "B": (thB_pre / 2, phB_pre, laB_pre),
-            },
-            "post": {
-                "A": (thA_post / 2, phA_post, laA_post),
-                "B": (thB_post / 2, phB_post, laB_post),
-            },
-        }
-
-    def params_to_mat(self, params):
-        """Apply current gate structure to each target unitary with (optional) affine parameter scaling."""
-        allU = []
-        for U, pspace in zip(
-            self.Umtx, [None] if self.paramspace is None else self.paramspace
-        ):
-            U = U.copy()
-            scaled_params = (
-                np.sum(
-                    params.reshape(-1, 1 + len(pspace)) * np.array((1.0,) + pspace),
-                    axis=1,
-                )
-                if pspace is not None
-                else params
-            )
-            self.get_Circuit().apply_to(
-                scaled_params if pspace is not None else params, U
-            )
-            allU.append(U)
-        return allU
-
-    def OSR_with_local_alignment(
-        self, pairs, cuts, Fnorm, tol, rank, use_softmax, method="dual_annealing"
-    ):
-        """Optimize gate parameters to reduce OSR-based entanglement across ``cuts`` (optionally softmax-aggregated).
-
-        Uses cost variant 10 during optimization, then restores variant 3. Returns list of
-        ``(ceil_log2(rank), singular_spectrum)``-style entries per unitary and cut.
-        """
-        if len(pairs) != 0:
-            self.set_Cost_Function_Variant(10)
-            # self.Run_Decomposition(pairs, False)
-            self.set_Gate_Structure(self.get_circuit_from_pairs(pairs, False))
-            import scipy
-
-            param_bound = np.array(
-                ([2 * np.pi] + [1 / x for x in self.paramscale])
-                * self.get_Parameter_Num()
-            )
-
-            def cost(x):
-                allU = self.params_to_mat(x)
-                S = [
-                    N_Qubit_Decomposition_Guided_Tree.operator_schmidt_rank(
-                        U, self.qbit_num, cut, Fnorm, tol
-                    )[1]
-                    for U in allU
-                    for cut in cuts
-                ]
-                if use_softmax:
-                    return N_Qubit_Decomposition_Guided_Tree.cuts_softmax_rank_cost(
-                        S, rank
-                    )
-                else:
-                    return N_Qubit_Decomposition_Guided_Tree.avg_loss_for_rank(S, rank)
-
-            def jacobian(x):
-                allU = self.params_to_mat(x)
-                grad = np.zeros(len(x), dtype=float)
-                for Ubase, U, pspace in zip(
-                    self.Umtx,
-                    allU,
-                    [None] if self.paramspace is None else self.paramspace,
-                ):
-                    dL = N_Qubit_Decomposition_Guided_Tree.get_deriv_osr_entanglement(
-                        U, cuts, rank, use_softmax
-                    )
-                    basevec = np.array((1.0,) if pspace is None else (1.0,) + pspace)
-                    scaled_params = (
-                        np.sum(x.reshape(-1, 1 + len(pspace)) * basevec, axis=1)
-                        if pspace is not None
-                        else x
-                    )
-                    derivs = N_Qubit_Decomposition_Guided_Tree.param_derivs(
-                        self.get_Circuit(), Ubase, scaled_params
-                    )
-                    newgrad = np.array(
-                        [
-                            N_Qubit_Decomposition_Guided_Tree.real_trace_conj_dot(
-                                dL, deriv
-                            )
-                            for deriv in derivs
-                        ]
-                    )
-                    if pspace is not None:
-                        newgrad = (np.array(newgrad)[:, np.newaxis] * basevec).reshape(
-                            -1
-                        )
-                    grad += newgrad
-                return grad / len(self.Umtx)
-
-            if method == "differential_evolution":
-                best = scipy.optimize.differential_evolution(
-                    cost, [(0, x) for x in param_bound], maxiter=100, polish=False
-                )
-                best = scipy.optimize.minimize(
-                    cost, best.x, method="BFGS", jac=jacobian, options={"maxiter": 200}
-                )
-            elif method == "dual_annealing":
-                best = None
-                for seed in range(20):
-                    res = scipy.optimize.dual_annealing(
-                        cost, [(0, x) for x in param_bound], maxiter=100
-                    )  # , minimizer_kwargs={'jac': jacobian})
-                    if best is None or res.fun < best.fun:
-                        best = res
-            elif method == "basinhopping":
-                best = scipy.optimize.basinhopping(
-                    cost,
-                    np.random.rand(len(param_bound)) * param_bound,
-                    niter=50,
-                    stepsize=np.pi / 2,
-                    minimizer_kwargs={"jac": jacobian},
-                )
-            else:
-                best = min(
-                    [
-                        scipy.optimize.minimize(
-                            cost,
-                            np.random.rand(len(param_bound)) * param_bound,
-                            method="BFGS",
-                            jac=jacobian,
-                            options={"maxiter": 200},
-                        )
-                        for _ in range(20)
-                    ],
-                    key=lambda r: r.fun,
-                )
-            # print(best)
-            self.set_Cost_Function_Variant(3)
-            assert best is not None
-            allU = self.params_to_mat(best.x)
-        else:
-            allU = self.Umtx
-        return [
-            (N_Qubit_Decomposition_Guided_Tree.ceil_log2(rank), s)
-            for U in allU
-            for cut in cuts
-            for rank, s in (
-                N_Qubit_Decomposition_Guided_Tree.operator_schmidt_rank(
-                    U, self.qbit_num, cut, Fnorm, tol
-                ),
-            )
-        ]
-
-    def Run_Decomposition(self, pairs, finalizing=True):
-        """Run BFGS decomposition for CNOT structure ``pairs``; set ``self.err`` and return success vs tolerance."""
-        circ = self.get_circuit_from_pairs(pairs, finalizing)
-        self.set_Gate_Structure(circ)
-        self.set_Optimized_Parameters(
-            np.random.rand(self.get_Parameter_Num()) * (2 * np.pi)
-        )
-        super().Start_Decomposition()
-        if finalizing:
-            params = self.get_Optimized_Parameters()
-            self.err = self.Optimization_Problem(params)
-            return self.err < self.config.get("tolerance", 1e-8)
-
-    @staticmethod
-    def generate_insertions(curpath, topology, num_cnot):
-        """Yield CNOT insertion patterns: insert ``num_cnot`` topology pairs into sequence ``curpath``."""
-        import itertools
-
-        n = len(curpath)
-        nslots = n + 1
-        for places in itertools.combinations_with_replacement(range(nslots), num_cnot):
-            for pairs in itertools.product(topology, repeat=num_cnot):
-                out = []
-                j = 0  # index into inserted pairs
-                for slot in range(nslots):
-                    while j < num_cnot and places[j] == slot:
-                        out.append(pairs[j])
-                        j += 1
-                    if slot < n:
-                        out.append(curpath[slot])
-                yield tuple(out)
-
-    def Start_Decomposition(self):
-        """Beam-style search over CNOT prefixes guided by OSR stats; collects solutions in ``self.all_solutions``."""
-        import heapq, itertools
-
-        self.all_solutions = []
-        self.err = 1.0
-        stop_first_solution = self.config.get("stop_first_solution", True)
-        cuts = list(N_Qubit_Decomposition_Guided_Tree.unique_cuts(self.qbit_num))
-        # because we have U already conjugate transposed, must use prefix order
-        B = self.config.get("beam", None)  # 8*len(self.topology))
-        max_depth = self.config.get("tree_level_max", 14)
-        tol = 1e-3
-        Fnorm = np.sqrt(1 << self.qbit_num)
-        best = []
-        visited = set()
-        all_ranks = list(range(min(2, self.qbit_num - 1)))
-
-        def get_osr_stats(path, rank, use_softmax):
-            """Return ``(min_cnots, rank_kappa_metric, raw_osr_list)`` for prefix ``path``."""
-            h = self.OSR_with_local_alignment(
-                path,
-                cuts,
-                Fnorm,
-                tol=tol,
-                rank=rank,
-                use_softmax=use_softmax,
-                method="basin_hopping",
-            )
-            min_cnots = max((x[0] for x in h), default=0)
-            ranktot = sum(x[0] for x in h)
-            kappa = sum(sum(y * y for y in x[1][1:]) for x in h)
-            return min_cnots, ranktot + kappa, h
-
-        def add_to_heap(path, parent_stats):
-            """Push ``path`` onto search heap if within depth and OSR bounds improve on ``parent_stats``."""
-            if len(path) > max_depth:
-                return False
-            if path in visited:
-                return False
-            visited.add(path)
-            if self.qbit_num > 1:
-                min_cnots, rankkappa = min(
-                    get_osr_stats(path, rank, use_sm)[:2]
-                    for (rank, use_sm) in itertools.product(all_ranks, (False,))
-                )  # (False, True)
-            else:
-                min_cnots, rankkappa = 0, 0.0
-            if parent_stats is not None and (min_cnots, rankkappa) >= parent_stats:
-                return False
-            heapq.heappush(best, (min_cnots, rankkappa, path))
-            return True
-
-        add_to_heap((), None)
-        while best:
-            # print(best[0])
-            min_cnots, rankkappa, curpath = heapq.heappop(best)
-            if min_cnots == 0:
-                # print(path)
-                for i in range(10):
-                    if self.Run_Decomposition(curpath):
-                        self.all_solutions.append(
-                            (self.get_Circuit(), self.get_Optimized_Parameters())
-                        )
-                        if stop_first_solution:
-                            return
-                        break
-                    # print("Looping", h)
-            num_cnot = 1
-            while True:
-                any_added = False
-                for newpath in N_Qubit_Decomposition_Guided_Tree.generate_insertions(
-                    curpath, self.topology, num_cnot
-                ):
-                    if add_to_heap(newpath, (min_cnots, rankkappa)):
-                        any_added = True
-                if any_added:
-                    break
-                num_cnot += 1
-                if len(curpath) + num_cnot > max_depth:
-                    break
-        self.set_Gate_Structure(Circuit(self.qbit_num))
-        self.set_Optimized_Parameters(np.array([]))
-        # print("No decomposition found within the given CNOT limit.")
-
+    Returns:
+        Total number of single-qubit gate operations when fully decomposed.
     """
-    def Start_Decomposition(self):
-        self.all_solutions = []
-        self.err = 1.0
-        stop_first_solution = self.config.get("stop_first_solution", True)
-        cuts = list(N_Qubit_Decomposition_Guided_Tree.unique_cuts(self.qbit_num))
-        if self.topology is None:
-            self.topology = [(i, j) for i in range(self.qbit_num) for j in range(i+1, self.qbit_num)]
-        pair_affects = {
-            pair: [i for i,A in enumerate(cuts) if (pair[0] in A) ^ (pair[1] in A)]
-            for pair in self.topology
-        }
-        #because we have U already conjugate transposed, must use prefix order
-        B = self.config.get('beam', None)#8*len(self.topology))
-        max_depth = self.config.get('tree_level_max', 14)
-        tol = 1e-3
-        Fnorm = np.sqrt(1<<self.qbit_num)
-        prior_level_info = None
-        for depth in range(max_depth+1):
-            remaining = max_depth - depth
-            visited, seq_pairs_of, seq_dir_of, res = N_Qubit_Decomposition_Guided_Tree.enumerate_unordered_cnot_BFS_level(self.qbit_num, self.topology, prior_level_info, use_gl=False)
-            nextprefixes = []
-            for path in set(tuple(x[1]) for x in res):
-                curh = None if len(path)==0 else prefixes[path[:-1]]
-                check_cuts = pair_affects[tuple(sorted(path[-1]))] if not curh is None else range(len(cuts))
-                #samples = [max(x[0] for x in self.OSR_with_local_alignment(path, cuts, Fnorm, tol=tol)) for _ in range(5)]
-                #if len(set(samples)) != 1: print(samples)
-                h = self.OSR_with_local_alignment(path, cuts, Fnorm, tol=tol, use_softmax=False, method="dual_annealing")
-                min_cnots = max((x[0] for x in h), default=0)
-                print(path, h, N_Qubit_Decomposition_Guided_Tree.avg_loss([x[1] for x in h]), remaining, min_cnots)
-                if min_cnots == 0:
-                    #print(path)
-                    for i in range(10):
-                        if self.Run_Decomposition(path):
-                            self.all_solutions.append((self.get_Circuit(), self.get_Optimized_Parameters()))
-                            if stop_first_solution: return
-                            break
-                        #print("Looping", h)
-                if min_cnots > remaining: continue
-                if not curh is None:
-                    #print(path, [(h[i], curh[i]) for i in check_cuts])
-                    #if any(h[i][0] > curh[i][0] for i in check_cuts): continue
-                    if max((x[0] for x in curh), default=0) < min_cnots: continue
-                nextprefixes.append((path, h))
-            nextprefixes.sort(key=lambda t: (max((x[0] for x in t[1]), default=0), sum(x[0] for x in t[1]), N_Qubit_Decomposition_Guided_Tree.avg_loss([x[1] for x in t[1]])))
-            prefixes = {x[0]: x[1] for x in nextprefixes[:B]}
-            prior_level_info = (visited, seq_pairs_of, seq_dir_of, list(x[0] for x in reversed(res) if tuple(x[1]) in prefixes))
-        self.set_Gate_Structure(Circuit(self.qbit_num))
-        self.set_Optimized_Parameters(np.array([]))
-        #print("No decomposition found within the given CNOT limit.")
+    gate_counts = circ.get_Gate_Nums()
+    total = 0
+    for gate, count in gate_counts.items():
+        decomp = _GATE_DECOMPOSITION.get(gate, {})
+        total += count * sum(v for k, v in decomp.items() if k != "CNOT")
+    return total
+
+
+def TotalRawGateCount(circ: Circuit) -> int:
+    """Total number of raw gate operations (single-qubit + multi-qubit).
+
+    Args:
+        circ: Squander circuit representation.
+
+    Returns:
+        Total gate operation count.
     """
-
-    def get_Decomposition_Error(self):
-        """Last decomposition error (Frobenius / cost) from guided search or ``Run_Decomposition``."""
-        return self.err
-
-    @staticmethod
-    def compositions(total, parts):
-        """
-        All nonnegative integer tuples of length `parts` summing to `total`.
-        """
-        if parts == 1:
-            yield (total,)
-            return
-        for x in range(total + 1):
-            for rest in N_Qubit_Decomposition_Guided_Tree.compositions(
-                total - x, parts - 1
-            ):
-                yield (x,) + rest
-
-    @staticmethod
-    def solve_best_min_cnots(num_qubits, cuts, rank_kappa, topology, use_surplus=True):
-        """Minimize total CNOT count subject to per-cut edge coverage vs ``rank_kappa`` bounds; return best kappa."""
-        m = len(topology)
-        cut_to_edges = [
-            [i for i, z in enumerate(topology) if (z[0] in cut) != (z[1] in cut)]
-            for cut in cuts
-        ]
-        total = 0
-        best_kappa = None
-        while True:
-            for edge_counts in N_Qubit_Decomposition_Guided_Tree.compositions(total, m):
-                if all(
-                    sum(edge_counts[j] for j in cut_to_edge) >= cut_bound[0]
-                    for cut_to_edge, cut_bound in zip(cut_to_edges, rank_kappa)
-                ):
-                    new_kappa = 0.0
-                    for cut_to_edge, cut_bound in zip(cut_to_edges, rank_kappa):
-                        coverage = sum(edge_counts[j] for j in cut_to_edge)
-                        if use_surplus:
-                            new_kappa += cut_bound[1] * (coverage - cut_bound[0])
-                        else:
-                            new_kappa += cut_bound[1] * coverage
-                    best_kappa = (
-                        new_kappa if best_kappa is None else max(best_kappa, new_kappa)
-                    )
-            if best_kappa is not None:
-                break
-            total += 1
-        return total, best_kappa
-
-    @staticmethod
-    def solve_min_cnots(num_qubits, cuts, cut_bounds, topology):
-        """Smallest total CNOT budget such that each cut's crossing edges meet ``cut_bounds``."""
-        m = len(topology)
-        cut_to_edges = [
-            [i for i, z in enumerate(topology) if (z[0] in cut) != (z[1] in cut)]
-            for cut in cuts
-        ]
-        total = 0
-        while True:
-            for edge_counts in N_Qubit_Decomposition_Guided_Tree.compositions(total, m):
-                if all(
-                    sum(edge_counts[j] for j in cut_to_edge) >= cut_bound
-                    for cut_to_edge, cut_bound in zip(cut_to_edges, cut_bounds)
-                ):
-                    return total
-            total += 1
-
-    @staticmethod
-    def gen_all_min_cnots(
-        num_qbits, topology=None
-    ):  # OSR tells min CNOTs at most for 3 qubits 3, 4 qubits 6, 5 qubits 7
-        """Debug: print min CNOT solutions for all combinations of per-cut bounds (see ``solve_min_cnots``)."""
-        import itertools
-
-        cuts = list(N_Qubit_Decomposition_Guided_Tree.unique_cuts(num_qbits))
-        min_cnot_bounds = [
-            2 * min(cut_size, num_qbits - cut_size)
-            for cut_size in (len(cut) for cut in cuts)
-        ]
-        if topology is None:
-            topology = [
-                (i, j) for i in range(num_qbits) for j in range(i + 1, num_qbits)
-            ]
-        for cnot_bounds in itertools.product(
-            *(range(bound + 1) for bound in min_cnot_bounds)
-        ):
-            # if tuple(sorted(cnot_bounds)) != cnot_bounds: continue
-            print(
-                cnot_bounds,
-                N_Qubit_Decomposition_Guided_Tree.solve_min_cnots(
-                    num_qbits, cuts, cnot_bounds, topology
-                ),
-            )
+    return sum(circ.get_Gate_Nums().values())
 
 
-# N_Qubit_Decomposition_Guided_Tree.gen_all_min_cnots(3); assert False
-# N_Qubit_Decomposition_Guided_Tree.build_sequence(); assert False
-# print(len(list(N_Qubit_Decomposition_Guided_Tree.enumerate_unordered_cnot_BFS(3, [(0,1),(1,2),])))); assert False
+def CircuitGateStats(circ: Circuit) -> dict:
+    """Return comprehensive gate statistics for a circuit.
+
+    Uses _GATE_DECOMPOSITION to compute fully-decomposed gate counts.
+
+    Returns dict with keys: cnot_equiv, single_qubit, total_raw, qubits,
+    and gate_breakdown (per-gate-type raw counts).
+    """
+    gate_counts = circ.get_Gate_Nums()
+    cnot_equiv = sum(
+        CNOT_COUNT_DICT.get(g, 0) * c for g, c in gate_counts.items()
+    )
+    single = 0
+    for g, c in gate_counts.items():
+        decomp = _GATE_DECOMPOSITION.get(g, {})
+        single += c * sum(v for k, v in decomp.items() if k != "CNOT")
+    total = sum(gate_counts.values())
+    return {
+        "cnot_equiv": cnot_equiv,
+        "single_qubit": single,
+        "total_raw": total,
+        "qubits": circ.get_Qbit_Num(),
+        "gate_breakdown": dict(gate_counts),
+    }
+
+
 class qgd_Wide_Circuit_Optimization:
     """Optimize wide (many-qubit) circuits via partitioning and subcircuit decomposition.
 
@@ -1296,12 +936,19 @@ class qgd_Wide_Circuit_Optimization:
         config.setdefault("strategy", "TreeSearch")
         config.setdefault("parallel", 0)
         config.setdefault("verbosity", 0)
-        config.setdefault("tolerance", 1e-8)
+        config.setdefault("use_float", False)
+        config.setdefault("tolerance", _default_squander_tolerance(config))
+        config.setdefault(
+            "bqskit_synthesis_validation_tolerance",
+            _default_bqskit_synthesis_validation_tolerance(config),
+        )
         config.setdefault("test_subcircuits", False)
         config.setdefault("test_final_circuit", True)
         config.setdefault("max_partition_size", 3)
         config.setdefault("topology", None)
         config.setdefault("partition_strategy", "ilp")
+        config.setdefault("auto_expand_partition_size", True)
+        config.setdefault("force_small_circuit_validation", True)
 
         # testing the fields of config
         strategy = config["strategy"]
@@ -1309,7 +956,6 @@ class qgd_Wide_Circuit_Optimization:
             "TreeSearch",
             "TabuSearch",
             "Adaptive",
-            "TreeGuided",
             "qiskit",
             "bqskit",
         ]
@@ -1333,6 +979,30 @@ class qgd_Wide_Circuit_Optimization:
         if not isinstance(tolerance, float):
             raise Exception(f"The tolerance parameter should be a float.")
 
+        use_float = config["use_float"]
+        if not isinstance(use_float, bool):
+            raise Exception(f"The use_float parameter should be a bool.")
+
+        bqskit_synthesis_validation_tolerance = config[
+            "bqskit_synthesis_validation_tolerance"
+        ]
+        if not isinstance(bqskit_synthesis_validation_tolerance, float):
+            raise Exception(
+                "The bqskit_synthesis_validation_tolerance parameter should be a float."
+            )
+
+        squander_validation_tolerance = config.get(
+            "tolerance",
+            None,
+        )
+        if squander_validation_tolerance is not None and not isinstance(
+            squander_validation_tolerance,
+            float,
+        ):
+            raise Exception(
+                "The squander_validation_tolerance parameter should be a float."
+            )
+
         test_subcircuits = config["test_subcircuits"]
         if not isinstance(test_subcircuits, bool):
             raise Exception(f"The test_subcircuits parameter should be a bool.")
@@ -1348,6 +1018,16 @@ class qgd_Wide_Circuit_Optimization:
         self.config = config
 
         self.max_partition_size = max_partition_size
+
+    @staticmethod
+    def partition_tree_level_max(config, subcircuit, reduction=1):
+        """Return the tree-search depth used for partition-local rewrites."""
+
+        target_depth = max(0, CNOTGateCount(subcircuit, 0) - reduction)
+        configured_limit = config.get("partition_tree_level_max", None)
+        if configured_limit is None:
+            configured_limit = target_depth
+        return min(target_depth, int(configured_limit))
 
     def ConstructCircuitFromPartitions(
         self, circs: List[Circuit], parameter_arrs: List[List[np.ndarray]]
@@ -1420,10 +1100,6 @@ class qgd_Wide_Circuit_Optimization:
                 level_limit_max=5,
                 level_limit_min=1,
                 topology=mini_topology,
-            )
-        elif strategy == "TreeGuided":
-            cDecompose = N_Qubit_Decomposition_Guided_Tree(
-                Umtx.conj().T, config=config, accelerator_num=0, topology=mini_topology
             )
         elif strategy == "Custom":
             cDecompose = N_Qubit_Decomposition_custom(
@@ -1523,9 +1199,6 @@ class qgd_Wide_Circuit_Optimization:
     ) -> Tuple[Circuit, np.ndarray]:
         """Decompose one partition subcircuit (multiprocessing-safe entry point).
 
-        For ``TreeGuided`` on large registers, may recursively partition and
-        enumerate combinations before returning remapped results.
-
         Args:
             subcircuit: Subcircuit acting on a subset of the wide register.
             subcircuit_parameters: Flat parameter vector slice for ``subcircuit``.
@@ -1553,116 +1226,18 @@ class qgd_Wide_Circuit_Optimization:
         # remap the subcircuit to a smaller qubit register
         remapped_subcircuit = subcircuit.Remap_Qbits(qbit_map, qbit_num)
 
-        if (
-            qbit_num > 3
-            and structure is None
-            and config.get("strategy", "") == "TreeGuided"
-        ):
-            circo = Circuit(qbit_num)
-            for gate in remapped_subcircuit.get_Gates():
-                circo.add_Gate(gate)
-            remapped_subcircuit = circo
-            partitioned_circuit, params, recombine_info, _ = (
-                qgd_Wide_Circuit_Optimization.make_all_partition_circuit(
-                    remapped_subcircuit, subcircuit_parameters, 3
-                )
-            )
-            optimized_circuits = []
-            subcircs = partitioned_circuit.get_Gates()
-            # first find the optimal CNOT decomposition
-            for innercirc in subcircs:
-                start_idx = innercirc.get_Parameter_Start_Index()
-                innercirc_parameters = params[
-                    start_idx : start_idx + innercirc.get_Parameter_Num()
-                ]
-                callback_fnc = (
-                    lambda x: qgd_Wide_Circuit_Optimization.CompareAndPickCircuits(
-                        [innercirc, *(z[0] for z in x)],
-                        [innercirc_parameters, *(z[1] for z in x)],
-                    )
-                )
-                optimized_circuits.append(
-                    callback_fnc(
-                        qgd_Wide_Circuit_Optimization.PartitionDecompositionProcess(
-                            innercirc,
-                            innercirc_parameters,
-                            {
-                                **config,
-                                "stop_first_solution": True,
-                                "tree_level_max": max(
-                                    0, CNOTGateCount(subcircuit, 0) - 1
-                                ),
-                            },
-                            structure=None,
-                        )
-                    )
-                )
-            parts, struct_idxs = (
-                qgd_Wide_Circuit_Optimization.recombine_all_partition_circuit(
-                    remapped_subcircuit,
-                    [x[0] for x in optimized_circuits],
-                    params,
-                    recombine_info,
-                )
-            )
-            # enumerate all solutions for each subcircuit in the optimal
-            all_sol_for_idx = []
-            for idx in struct_idxs:
-                innercirc = subcircs[idx]
-                start_idx = innercirc.get_Parameter_Start_Index()
-                innercirc_parameters = params[
-                    start_idx : start_idx + innercirc.get_Parameter_Num()
-                ]
-                callback_fnc = lambda x: x + [(innercirc, innercirc_parameters)]
-                all_sol_for_idx.append(
-                    callback_fnc(
-                        qgd_Wide_Circuit_Optimization.PartitionDecompositionProcess(
-                            innercirc,
-                            innercirc_parameters,
-                            {
-                                **config,
-                                "stop_first_solution": False,
-                                "tree_level_max": max(0, CNOTGateCount(subcircuit, 0)),
-                            },
-                            structure=None,
-                        )
-                    )
-                )
-            all_decomposed = []
-            import itertools
+        if not structure is None:
+            structure = structure.Remap_Qbits(qbit_map, qbit_num)
 
-            opt = qgd_Wide_Circuit_Optimization({**config, "max_partition_size": 3})
-            if np.prod([len(x) for x in all_sol_for_idx]) > 32:
-                import random
+        # get the unitary representing the circuit
+        unitary = remapped_subcircuit.get_Matrix(
+            np.asarray(subcircuit_parameters, dtype=np.float64)
+        )
 
-                trycombs = [
-                    [random.choice(x) for x in all_sol_for_idx] for _ in range(32)
-                ]
-            else:
-                trycombs = itertools.product(*all_sol_for_idx)
-            for combination in trycombs:
-                structures = [
-                    qgd_Wide_Circuit_Optimization.copy_circuit_structure(x[0])
-                    for x in combination
-                ]
-                optcirc, optparams = opt._OptimizeWideCircuit(
-                    remapped_subcircuit, subcircuit_parameters, False, parts, structures
-                )
-                reoptcirc, reoptparams = opt._OptimizeWideCircuit(
-                    optcirc.get_Flat_Circuit(), optparams
-                )
-                all_decomposed.append((reoptcirc.get_Flat_Circuit(), reoptparams))
-        else:
-            if not structure is None:
-                structure = structure.Remap_Qbits(qbit_map, qbit_num)
-
-            # get the unitary representing the circuit
-            unitary = remapped_subcircuit.get_Matrix(subcircuit_parameters)
-
-            # decompose a small unitary into a new circuit
-            all_decomposed = qgd_Wide_Circuit_Optimization.DecomposePartition(
-                unitary, config, mini_topology, structure=structure
-            )
+        # decompose a small unitary into a new circuit
+        all_decomposed = qgd_Wide_Circuit_Optimization.DecomposePartition(
+            unitary, config, mini_topology, structure=structure
+        )
         # create inverse qbit map:
         inverse_qbit_map = {}
         for key, value in qbit_map.items():
@@ -1682,6 +1257,7 @@ class qgd_Wide_Circuit_Optimization:
                     new_subcircuit,
                     decomposed_parameters,
                     parallel=config["parallel"],
+                    tolerance=_squander_validation_tolerance(config)
                 )
 
             new_subcircuit = new_subcircuit.get_Flat_Circuit()
@@ -1878,7 +1454,7 @@ class qgd_Wide_Circuit_Optimization:
             recombine_info
         )
         max_gates = sum(
-            sum(y for x, y in c.get_Gate_Nums().items() if x not in CNOT_COUNT_DICT)
+            sum(y for x, y in c.get_Gate_Nums().items() if CNOT_COUNT_DICT.get(x, -1) <= 0)
             for c in optimized_subcircuits[: len(allparts)]
         )
         weights = [
@@ -1941,7 +1517,8 @@ class qgd_Wide_Circuit_Optimization:
             self.config["routed_circuit"] = circ
             self.config["routed_parameters"] = parameters
         else:
-            print("No additional routing is needed on the circuit")
+            if self.config["topology"] is not None:
+                print("No additional routing is needed on the circuit")
 
         start_time = time.time()
         if self.config["strategy"] == "bqskit":
@@ -1968,7 +1545,9 @@ class qgd_Wide_Circuit_Optimization:
 
             # Convert squander circuit → qiskit → BQSKit
             # (BQSKit has a from_qiskit helper if you go via Qiskit IR)
-            circo = Qiskit_IO.get_Qiskit_Circuit(circ, parameters)
+            circo = Qiskit_IO.get_Qiskit_Circuit(
+                circ, np.asarray(parameters, dtype=np.float64)
+            )
 
             bqskit_circ = OPENQASM2Language().decode(qasm2.dumps(circo))
 
@@ -2027,7 +1606,9 @@ class qgd_Wide_Circuit_Optimization:
                 and issubclass(getattr(gate, n), gate.Gate)
                 and n not in ("Gate", "CROT", "CR", "SYC", "CCX", "CSWAP")
             }
-            circo = Qiskit_IO.get_Qiskit_Circuit(circ, parameters)
+            circo = Qiskit_IO.get_Qiskit_Circuit(
+                circ, np.asarray(parameters, dtype=np.float64)
+            )
             coupling_map = (
                 None
                 if self.config["topology"] is None
@@ -2053,8 +1634,9 @@ class qgd_Wide_Circuit_Optimization:
             print("Optimizing circuit with Squander")
             part_size_start = self.max_partition_size
             part_size_end = self.max_partition_size
-            if self.config.get("use_osr", False) or self.config.get(
-                "use_graph_search", False
+            if self.config.get("auto_expand_partition_size", True) and (
+                self.config.get("use_osr", False)
+                or self.config.get("use_graph_search", False)
             ):
                 part_size_end = min(4, circ.get_Qbit_Num())
             count = CNOTGateCount(circ, 0)
@@ -2100,7 +1682,7 @@ class qgd_Wide_Circuit_Optimization:
 
         circ, orig_parameters = circuit_to_CNOT_basis(circ, orig_parameters)
         max_gates = sum(
-            y for x, y in circ.get_Gate_Nums().items() if x not in CNOT_COUNT_DICT
+            y for x, y in circ.get_Gate_Nums().items() if CNOT_COUNT_DICT.get(x, -1) <= 0
         )
 
         global_min = self.config.get("global_min", True)
@@ -2265,16 +1847,17 @@ class qgd_Wide_Circuit_Optimization:
                     # call a process to decompose a subcircuit
                     config = {
                         **self.config,
-                        "tree_level_max": max(0, CNOTGateCount(subcircuit, 0) - 1),
+                        "tree_level_max": qgd_Wide_Circuit_Optimization.partition_tree_level_max(
+                            self.config, subcircuit
+                        ),
                     }
                     fargs = (
                         self.PartitionDecompositionProcess,
                         (subcircuit, subcircuit_parameters, config, None),
                     )
                     # print("Dispatching", subcircuit.get_Involved_Qubits(), "qubits with", CNOGateCount(subcircuit, 0), "CNOT gates, partition ", partition_idx)
-                    assert pool is not None
                     async_results[partition_idx] = (
-                        fargs if in_parent else pool.apply_async(*fargs)
+                        fargs if in_parent else pool.apply_async(*fargs)  # type: ignore[union-attr]
                     )
                 if len(remaining) == len(still_remaining):
                     time.sleep(0.1)
@@ -2312,9 +1895,12 @@ class qgd_Wide_Circuit_Optimization:
         qgd_Wide_Circuit_Optimization.check_valid_routing(
             wide_circuit, self.config["topology"]
         )
-        print("InnerOptimizeWideCircuit: check_compare_circuits")
         self.check_compare_circuits(
-            circ, orig_parameters, wide_circuit, wide_parameters
+            circ,
+            orig_parameters,
+            wide_circuit,
+            wide_parameters,
+            label="InnerOptimizeWideCircuit",
         )
 
         return wide_circuit, wide_parameters
@@ -2441,9 +2027,19 @@ class qgd_Wide_Circuit_Optimization:
     @staticmethod
     def check_valid_routing(wide_circuit, topo):
         """Assert ``is_valid_routing``; raises if any gate violates ``topo``."""
-        assert qgd_Wide_Circuit_Optimization.is_valid_routing(
-            wide_circuit, topo
-        ), "Final circuit contains gates that do not respect the routing constraints."
+        if not qgd_Wide_Circuit_Optimization.is_valid_routing(wide_circuit, topo):
+            import itertools, sys
+            topo_set = {frozenset(e) for e in topo}
+            for gate in wide_circuit.get_Flat_Circuit().get_Gates():
+                qbits = gate.get_Involved_Qbits()
+                if len(qbits) <= 1:
+                    continue
+                edges = {frozenset((q1,q2)) for q1,q2 in itertools.combinations(qbits,2) if frozenset((q1,q2)) in topo_set}
+                if not edges:
+                    sys.stderr.write(f'ROUTING_VIOLATION: {type(gate).__name__} on {qbits} topo={topo}\n')
+                    sys.stderr.flush()
+                    break
+            raise AssertionError("Final circuit contains gates that do not respect the routing constraints.")
 
     def check_compare_circuits(
         self,
@@ -2453,6 +2049,7 @@ class qgd_Wide_Circuit_Optimization:
         wide_parameters,
         routing=False,
         forced_test=False,
+        label=None,
     ):
         """Optionally verify equivalence of ``circ`` and ``wide_circuit`` via ``CompareCircuits``.
 
@@ -2466,7 +2063,14 @@ class qgd_Wide_Circuit_Optimization:
             forced_test: If true, run the comparison even when ``test_final_circuit``
                 is false in config.
         """
+        forced_test = forced_test or (
+            self.config.get("force_small_circuit_validation", True)
+            and circ.get_Qbit_Num() <= 12
+        )
         if self.config["test_final_circuit"] or forced_test:
+            if label is not None:
+                print(f"{label}: check_compare_circuits")
+            tolerance = _squander_validation_tolerance(self.config)
             if (
                 routing
                 and self.config.get("initial_mapping", None) is not None
@@ -2479,10 +2083,17 @@ class qgd_Wide_Circuit_Optimization:
                     wide_parameters,
                     initial_mapping=self.config["initial_mapping"],
                     final_mapping=self.config["final_mapping"],
+                    tolerance=tolerance,
                     parallel=0,
                 )
             else:
-                CompareCircuits(circ, orig_parameters, wide_circuit, wide_parameters)
+                CompareCircuits(
+                    circ,
+                    orig_parameters,
+                    wide_circuit,
+                    wide_parameters,
+                    tolerance=tolerance,
+                )
 
     def route_circuit(self, circ: Circuit, orig_parameters: np.ndarray):
         """Map ``circ`` onto ``self.config['topology']`` using the configured router.
@@ -2503,49 +2114,16 @@ class qgd_Wide_Circuit_Optimization:
 
         if strategy in ("seqpam-ilp", "seqpam-quick", "bqskit-sabre"):
             from squander import Qiskit_IO
-            from bqskit import Circuit as BQSKitCircuit, compile
+            import bqskit.compiler.compile as bqskit_compile_module
             from bqskit.compiler import Compiler
             from bqskit.compiler.compile import (
+                build_sabre_mapping_workflow,
                 build_seqpam_mapping_optimization_workflow,
             )
-            from bqskit.compiler.basepass import BasePass
-
-            class SquanderPartitioner(BasePass):
-                """BQSKit pass: replace circuit body with Squander ILP partition blocks (QASM round-trip)."""
-
-                def __init__(self, max_partition_size):
-                    super().__init__()
-                    self.max_partition_size = max_partition_size
-
-                async def run(self, circuit: BQSKitCircuit, data=None):
-                    from squander import Qiskit_IO
-                    from squander.partitioning.partition import PartitionCircuit
-
-                    circ_qiskit = QuantumCircuit.from_qasm_str(
-                        OPENQASM2Language().encode(circuit)
-                    )
-                    circ, orig_parameters = Qiskit_IO.convert_Qiskit_to_Squander(
-                        circ_qiskit
-                    )
-                    partitioned_circuit, parameters, _ = PartitionCircuit(
-                        circ, orig_parameters, self.max_partition_size, strategy="ilp"
-                    )
-                    partitioned_circuit_qiskit = Qiskit_IO.get_Qiskit_Circuit(
-                        partitioned_circuit, parameters
-                    )
-                    partitioned_circuit_bqskit = OPENQASM2Language().decode(
-                        qasm2.dumps(partitioned_circuit_qiskit)
-                    )
-                    circuit.become(partitioned_circuit_bqskit, False)
 
             from bqskit.passes import (
-                GeneralizedSabreLayoutPass,
-                GeneralizedSabreRoutingPass,
                 SetModelPass,
-                IfThenElsePass,
-                QuickPartitioner,
             )
-            from bqskit.ir.gates import CNOTGate  # example; extend as needed
             from bqskit.compiler.machine import MachineModel
             from bqskit.ir.lang.qasm2 import OPENQASM2Language
             from qiskit import qasm2, QuantumCircuit
@@ -2555,40 +2133,70 @@ class qgd_Wide_Circuit_Optimization:
 
             # Convert squander circuit → qiskit → BQSKit
             # (BQSKit has a from_qiskit helper if you go via Qiskit IR)
-            circo = Qiskit_IO.get_Qiskit_Circuit(circ, orig_parameters)
+            circo = Qiskit_IO.get_Qiskit_Circuit(
+                circ, np.asarray(orig_parameters, dtype=np.float64)
+            )
 
             bqskit_circ = OPENQASM2Language().decode(qasm2.dumps(circo))
             # Customizable knobs
 
-            # Routing-only pass pipeline — NO optimization passes
-            mainflow = build_seqpam_mapping_optimization_workflow(
-                block_size=self.config["max_partition_size"]
-            )
             if strategy == "seqpam-ilp":
-                for curpass in mainflow._passes:
-                    if isinstance(curpass, IfThenElsePass):
-                        for i in range(len(curpass.on_true._passes)):
-                            if isinstance(curpass.on_true._passes[i], QuickPartitioner):
-                                curpass.on_true._passes[i] = SquanderPartitioner(
-                                    self.config["max_partition_size"]
-                                )
+                # Routing-only SEQPAM pass pipeline. Patch the classes BQSKit's
+                # workflow factory instantiates, so we do not depend on the private
+                # shape of the returned Workflow.
+                with patched_seqpam_workflow_classes(
+                    bqskit_compile_module,
+                    use_squander_partitioner=True,
+                    config=self.config,
+                ):
+                    mainflow = build_seqpam_mapping_optimization_workflow(
+                        block_size=3  # SEQPAM uses 3-qubit blocks only
+                    )
+            elif strategy == "seqpam-quick":
+                # Keep BQSKit's QuickPartitioner, but replace QSearch/LEAP so
+                # routing does not synthesize/decompose partition blocks.
+                with patched_seqpam_workflow_classes(
+                    bqskit_compile_module,
+                    use_squander_partitioner=False,
+                    config=self.config,
+                ):
+                    mainflow = build_seqpam_mapping_optimization_workflow(
+                        block_size=3  # SEQPAM uses 3-qubit blocks only
+                    )
+            elif strategy == "bqskit-sabre":
+                mainflow = build_sabre_mapping_workflow()
+            else:
+                raise ValueError(f"Unsupported BQSKit routing strategy: {strategy}")
 
             routing_workflow = [
                 SetModelPass(model),  # attach hardware model to circuit
-                *(
-                    (build_seqpam_mapping_optimization_workflow(),)
-                    if strategy != "bqskit-sabre"
-                    else (
-                        GeneralizedSabreLayoutPass(),  # SABRE-style layout
-                        GeneralizedSabreRoutingPass(),
-                    )
-                ),  # SABRE-style routing
+                mainflow,
             ]
 
-            with Compiler() as compiler:
-                routed_bqskit_circ, pass_data = compiler.compile(
-                    bqskit_circ, routing_workflow, True
-                )
+            # EAPP monkey-patch catches Squander OSR failures per permutation
+            # and installs a SWAP-correct fallback in BQSKit worker processes.
+            import os as _os, json as _json
+            old_patch_env = _os.environ.get('_SQUANDER_EAPP_FALLBACK_PATCH')
+            old_config_env = _os.environ.get('_SQUANDER_BQSKIT_CONFIG')
+            _os.environ['_SQUANDER_EAPP_FALLBACK_PATCH'] = '1'
+            _os.environ['_SQUANDER_BQSKIT_CONFIG'] = _json.dumps(
+                _copy_bqskit_synthesis_config(self.config)
+            )
+            _patch_eapp_if_needed()
+            try:
+                with Compiler() as compiler:
+                    routed_bqskit_circ, pass_data = compiler.compile(
+                        bqskit_circ, routing_workflow, True
+                    )
+            finally:
+                if old_patch_env is None:
+                    _os.environ.pop('_SQUANDER_EAPP_FALLBACK_PATCH', None)
+                else:
+                    _os.environ['_SQUANDER_EAPP_FALLBACK_PATCH'] = old_patch_env
+                if old_config_env is None:
+                    _os.environ.pop('_SQUANDER_BQSKIT_CONFIG', None)
+                else:
+                    _os.environ['_SQUANDER_BQSKIT_CONFIG'] = old_config_env
 
             # Convert back: BQSKit → Qiskit → Squander
             circuit_qiskit_routed = QuantumCircuit.from_qasm_str(
@@ -2597,15 +2205,8 @@ class qgd_Wide_Circuit_Optimization:
             Squander_remapped_circuit, parameters_remapped_circuit = (
                 Qiskit_IO.convert_Qiskit_to_Squander(circuit_qiskit_routed)
             )
-            Squander_remapped_circuit = Squander_remapped_circuit.Remap_Qbits(
-                {i: j for i, j in enumerate(pass_data.placement)}
-            )
-            self.config["initial_mapping"] = list(
-                pass_data.placement[x] for x in pass_data.initial_mapping
-            )
-            self.config["final_mapping"] = list(
-                pass_data.placement[x] for x in pass_data.final_mapping
-            )
+            self.config["initial_mapping"] = list(pass_data.initial_mapping)
+            self.config["final_mapping"] = list(pass_data.final_mapping)
 
         elif strategy == "light-sabre":
             from squander import Qiskit_IO
@@ -2618,7 +2219,9 @@ class qgd_Wide_Circuit_Optimization:
             from squander.gates import gates_Wrapper as gate
 
             # SUPPORTED_GATES_NAMES = {n.lower().replace("cnot", "cx") for n in dir(gate) if not n.startswith("_") and issubclass(getattr(gate, n), gate.Gate) and n not in ("Gate", "CROT", "CR", "SYC", "CCX", "CSWAP")}
-            circo = Qiskit_IO.get_Qiskit_Circuit(circ, orig_parameters)
+            circo = Qiskit_IO.get_Qiskit_Circuit(
+                circ, np.asarray(orig_parameters, dtype=np.float64)
+            )
             coupling_map = [[i, j] for i, j in self.config["topology"]]
             # circuit_qiskit_sabre = transpile(circo, basis_gates=SUPPORTED_GATES_NAMES, coupling_map=coupling_map, optimization_level=0)
             coupling_map = CouplingMap(coupling_map)
@@ -2674,12 +2277,15 @@ class qgd_Wide_Circuit_Optimization:
             Squander_remapped_circuit, self.config["topology"]
         )
 
-        print("cheking circuit after routing")
+        print("checking circuit after routing")
+        print(self.config)
         self.check_compare_circuits(
             circ,
             orig_parameters,
             Squander_remapped_circuit,
             parameters_remapped_circuit,
             routing=True,
+            forced_test=True,
+            label="route_circuit",
         )
         return Squander_remapped_circuit, parameters_remapped_circuit
