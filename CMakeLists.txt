@@ -806,6 +806,7 @@ list(APPEND qgd_files
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/CR.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/Adaptive.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/R.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/Permutation.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/kernels/apply_kernel_to_input.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/kernels/apply_kernel_to_state_vector_input.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/kernels/apply_large_kernel_to_input.cpp
@@ -1039,6 +1040,12 @@ add_subdirectory (squander/VQA)
 # ===================================================================
 
 add_subdirectory (squander/src-cpp/density_matrix)
+
+# ===================================================================
+# SABRE Router Module
+# ===================================================================
+
+add_subdirectory (squander/src-cpp/sabre_router)
 
 if(DEFINED ENV{QGD_CTEST})
     # adding CMAKE files for executables

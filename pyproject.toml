@@ -40,13 +40,13 @@ dependencies = [
     "numpy",
     "scipy",
     "networkx",
+    "tqdm",
 ]
 
 [project.optional-dependencies]
 dev = [
     "pytest",
 ]
-
 
 
 

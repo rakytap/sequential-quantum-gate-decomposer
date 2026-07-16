@@ -2129,10 +2129,10 @@ class qgd_Wide_Circuit_Optimization:
     def route_circuit(self, circ: Circuit, orig_parameters: np.ndarray):
         """Map ``circ`` onto ``self.config['topology']`` using the configured router.
 
-        The strategy is ``self.config['routing-strategy']``, e.g. ``seqpam-ilp``,
-        ``seqpam-quick``, ``bqskit-sabre``, ``light-sabre`` (Qiskit), or ``sabre``
-        (Squander). Writes ``initial_mapping`` and ``final_mapping`` into
-        ``self.config`` when the backend provides them.
+        The strategy is ``self.config['routing-strategy']``, e.g. ``partam``,
+        ``seqpam-ilp``, ``seqpam-quick``, ``bqskit-sabre``, ``light-sabre``
+        (Qiskit), or ``sabre`` (Squander). Writes ``initial_mapping`` and
+        ``final_mapping`` into ``self.config`` when the backend provides them.
 
         Args:
             circ: Circuit before routing.
@@ -2143,7 +2143,34 @@ class qgd_Wide_Circuit_Optimization:
         """
         strategy = self.config.get("routing-strategy", "seqpam-ilp")
 
-        if strategy in ("seqpam-ilp", "seqpam-quick", "bqskit-sabre"):
+        if strategy in ("partam", "seqpam_partam"):
+            from squander.synthesis.PartAM import qgd_Partition_Aware_Mapping
+
+            partam_config = dict(self.config)
+            partam_config["topology"] = self.config["topology"]
+            partam_config["strategy"] = self.config.get(
+                "partam-strategy", "TreeSearch"
+            )
+            mapper = qgd_Partition_Aware_Mapping(partam_config)
+            (
+                Squander_remapped_circuit,
+                parameters_remapped_circuit,
+                initial_mapping,
+                final_mapping,
+            ) = mapper.Partition_Aware_Mapping(
+                circ,
+                np.asarray(orig_parameters, dtype=np.float64),
+            )
+            self.config["initial_mapping"] = [int(q) for q in initial_mapping]
+            self.config["final_mapping"] = [int(q) for q in final_mapping]
+            self.config["partam_routing_swap_cnot"] = getattr(
+                mapper, "_routing_swap_cnot", None
+            )
+            self.config["partam_partition_body_cnot"] = getattr(
+                mapper, "_partition_body_cnot", None
+            )
+
+        elif strategy in ("seqpam-ilp", "seqpam-quick", "bqskit-sabre"):
             from squander import Qiskit_IO
             import bqskit.compiler.compile as bqskit_compile_module
             from bqskit.compiler import Compiler

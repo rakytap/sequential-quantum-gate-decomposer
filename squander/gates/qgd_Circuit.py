@@ -80,6 +80,11 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
         # call the constructor of the wrapper class
         super().__init__(qbit_num)
 
+    def copy(self):
+        """Return a deep copy of this circuit."""
+
+        return super().copy()
+
     def add_U1(self, target_qbit):
         """Add a U1 gate to the front of the gate structure.
 
@@ -381,6 +386,11 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
 
         # call the C wrapper function
         super(qgd_Circuit, self).add_CP(target_qbit, control_qbit)
+
+    def add_Permutation(self, pattern):
+        """Add a qubit permutation described by ``pattern``."""
+
+        super(qgd_Circuit, self).add_Permutation(pattern)
 
     def add_SWAP(self, target_qbits, target_qbit2=-1):
         """Add a SWAP gate to the front of the gate structure.
