@@ -9,8 +9,7 @@ requires = [
     "tbb-devel; platform_machine == 'x86' or platform_machine == 'x86_64'",
     "cmake>=3.10.2",
     "networkx",
-    "qiskit",
-    "tqdm"
+    "qiskit"
 ]
 build-backend = "setuptools.build_meta"
 
@@ -41,13 +40,13 @@ dependencies = [
     "numpy",
     "scipy",
     "networkx",
+    "tqdm",
 ]
 
 [project.optional-dependencies]
 dev = [
     "pytest",
 ]
-
 
 
 
