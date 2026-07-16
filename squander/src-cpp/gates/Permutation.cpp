@@ -170,7 +170,7 @@ void Permutation::apply_to_list(std::vector<Matrix>& inputs, int parallel){
 
 
     tbb::parallel_for( tbb::blocked_range<int>(0,inputs.size(),work_batch), [&](tbb::blocked_range<int> r) {
-        for (int idx=r.begin(); idx<r.end(); ++idx) { 
+        for (int idx=r.begin(); idx<r.end(); ++idx) {
 
             Matrix* input = &inputs[idx];
 

@@ -251,12 +251,10 @@ class Test_Decomposition:
         data = loadmat('data/Umtx.mat')  
         # The unitary to be decomposed  
         Umtx = data['Umtx']
-        #turn off OSR
-        config = {"use_osr":0}
-
+        
 
         # creating a class to decompose the unitary
-        cDecompose = N_Qubit_Decomposition_Tree_Search( Umtx.conj().T, config = config )
+        cDecompose = N_Qubit_Decomposition_Tree_Search( Umtx.conj().T )
 
 
         # setting the verbosity of the decomposition
@@ -307,11 +305,10 @@ class Test_Decomposition:
         data = loadmat('data/Umtx.mat')  
         # The unitary to be decomposed  
         Umtx = data['Umtx']
-        #turn off OSR
-        config = {"use_osr":0}
+        
 
         # creating a class to decompose the unitary
-        cDecompose = N_Qubit_Decomposition_Tabu_Search( Umtx.conj().T,config=config )
+        cDecompose = N_Qubit_Decomposition_Tabu_Search( Umtx.conj().T )
 
 
         # setting the verbosity of the decomposition

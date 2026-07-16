@@ -30,7 +30,7 @@ limitations under the License.
 #include <sstream>
 #include <tbb/enumerable_thread_specific.h>
 
-#ifdef USE_AVX 
+#ifdef USE_AVX
 #include "apply_kernel_to_input_AVX.h"
 #include "apply_kernel_to_state_vector_input_AVX.h"
 #include "apply_large_kernel_to_input_AVX.h"
@@ -197,7 +197,7 @@ Gate::Gate(int qbit_num_in, const std::vector<int>& target_qbits_in, const std::
     if (qbit_num<31){
         matrix_size = Power_of_2(qbit_num);
     }
-   
+
     // A string describing the type of the operation
     type = GENERAL_OPERATION;
     // The number of parameters
@@ -251,8 +251,8 @@ void Gate::set_qbit_num( int qbit_num_in ) {
 
 
     if ( qbit_num_in <= target_qbit || qbit_num_in <= control_qbit ) {
-        std::string err("Gate::set_qbit_num: The number of qbits is too small, conflicting with either target_qbit os control_qbit"); 
-        throw err;   
+        std::string err("Gate::set_qbit_num: The number of qbits is too small, conflicting with either target_qbit os control_qbit");
+        throw err;
     }
 
 
@@ -321,7 +321,7 @@ Gate::get_matrix( Matrix_real_float& parameters, int parallel ) {
 @param inputs The input array on which the gate is applied
 @param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 */
-void 
+void
 Gate::apply_to_list( std::vector<Matrix>& inputs, int parallel ) {
 
     if (parallel == 0) {
@@ -333,7 +333,7 @@ Gate::apply_to_list( std::vector<Matrix>& inputs, int parallel ) {
 
     int work_batch = 1;
     tbb::parallel_for( tbb::blocked_range<int>(0,static_cast<int>(inputs.size()),work_batch), [&](tbb::blocked_range<int> r) {
-        for (int idx=r.begin(); idx<r.end(); ++idx) { 
+        for (int idx=r.begin(); idx<r.end(); ++idx) {
 
             Matrix* input = &inputs[idx];
 
@@ -356,7 +356,7 @@ Gate::apply_to_list( std::vector<Matrix>& inputs, int parallel ) {
 @param inputs The input array on which the gate is applied
 @param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 */
-void 
+void
 Gate::apply_to_list( Matrix_real& parameters_mtx, std::vector<Matrix>& inputs, int parallel ) {
 
     if (parallel == 0) {
@@ -434,7 +434,7 @@ Gate::apply_to_list( Matrix_real_float& parameters_mtx, std::vector<Matrix_float
 @param input The input array on which the gate is applied
 @param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 */
-void 
+void
 Gate::apply_to( Matrix& input, int parallel ) {
 
    if (input.rows != matrix_size ) {
@@ -502,7 +502,7 @@ Gate::apply_to( Matrix_float& input, int parallel ) {
 @param input The input array on which the gate is applied
 @param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 */
-void 
+void
 Gate::apply_to( Matrix_real& parameter_mtx, Matrix& input, int parallel ) {
 
     if (input.rows != matrix_size) {
@@ -785,7 +785,7 @@ Gate::apply_derivative_to_precomputed(const Matrix_real_float& precomputed_sinco
 }
 
 
-std::vector<Matrix> 
+std::vector<Matrix>
 Gate::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input, int parallel ) {
 
     Matrix_real precomputed_sincos = precompute_sincos(parameters_mtx_in);
@@ -920,7 +920,7 @@ Gate::apply_to_combined_inner( Matrix_real_float& parameters_mtx_in, const Matri
 @brief Call to apply the gate on the input array/matrix by input*Gate
 @param input The input array on which the gate is applied
 */
-void 
+void
 Gate::apply_from_right( Matrix& input ) {
 
     if (input.cols != matrix_size ) {
@@ -951,7 +951,7 @@ Gate::apply_from_right( Matrix_float& input ) {
 @param parameter_mtx The gate parameters.
 @param input The input array on which the gate is applied
 */
-void 
+void
 Gate::apply_from_right( Matrix_real& parameter_mtx, Matrix& input ) {
 
     if (input.cols != matrix_size ) {
@@ -1246,7 +1246,7 @@ std::vector<int> Gate::get_involved_qubits(bool only_target) {
 
 
 /**
-@brief Call to add a parent gate to the current gate 
+@brief Call to add a parent gate to the current gate
 @param parent The parent gate of the current gate.
 */
 void Gate::add_parent( Gate* parent ) {
@@ -1255,7 +1255,7 @@ void Gate::add_parent( Gate* parent ) {
     if ( std::count(parents.begin(), parents.end(), parent) > 0 ) {
         return;
     }
-    
+
     parents.push_back( parent );
 
 }
@@ -1263,7 +1263,7 @@ void Gate::add_parent( Gate* parent ) {
 
 
 /**
-@brief Call to add a child gate to the current gate 
+@brief Call to add a child gate to the current gate
 @param child The parent gate of the current gate.
 */
 void Gate::add_child( Gate* child ) {
@@ -1272,7 +1272,7 @@ void Gate::add_child( Gate* child ) {
     if ( std::count(children.begin(), children.end(), child) > 0 ) {
         return;
     }
-    
+
     children.push_back( child );
 
 }
@@ -1362,7 +1362,7 @@ Gate* Gate::clone() {
     else {
         ret->set_matrix( matrix_alloc );
     }
-    
+
     ret->set_parameter_start_idx( get_parameter_start_idx() );
     ret->set_parents( parents );
     ret->set_children( children );
@@ -1479,7 +1479,7 @@ Gate::precompute_sincos(const Matrix_real_float& parameters) const {
 @param deriv Set true to apply parallel kernels, false otherwise (optional)
 @param parallel Set 0 for sequential execution (default), 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 */
-void 
+void
 Gate::apply_kernel_to(Matrix& u3_1qbit, Matrix& input, bool deriv, int parallel, const Matrix* alt_kernel) {
 
     (void)deriv;
@@ -1508,6 +1508,50 @@ Gate::apply_kernel_to(Matrix& u3_1qbit, Matrix& input, bool deriv, int parallel,
                 apply_X_kernel_to_input_tbb(input, target_qbits, control_qbits, matrix_size); break;
             default:
                 apply_X_kernel_to_input(input, target_qbits, control_qbits, matrix_size); break;
+        }
+        return;
+    }
+
+    if (type == CNOT_OPERATION) {
+        std::vector<int> tqbits = {target_qbit};
+        std::vector<int> cqbits = {control_qbit};
+        switch (parallel) {
+            case 0:
+                apply_X_kernel_to_input(input, tqbits, cqbits, matrix_size); break;
+            case 1:
+                apply_X_kernel_to_input_omp(input, tqbits, cqbits, matrix_size); break;
+            case 2:
+                apply_X_kernel_to_input_tbb(input, tqbits, cqbits, matrix_size); break;
+            default:
+                apply_X_kernel_to_input(input, tqbits, cqbits, matrix_size); break;
+        }
+        return;
+    }
+
+    if (type == CZ_OPERATION) {
+        switch (parallel) {
+            case 0:
+                apply_Z_kernel_to_input(input, target_qbit, control_qbit, matrix_size); break;
+            case 1:
+                apply_Z_kernel_to_input_omp(input, target_qbit, control_qbit, matrix_size); break;
+            case 2:
+                apply_Z_kernel_to_input_tbb(input, target_qbit, control_qbit, matrix_size); break;
+            default:
+                apply_Z_kernel_to_input(input, target_qbit, control_qbit, matrix_size); break;
+        }
+        return;
+    }
+
+    if (type == CH_OPERATION) {
+        switch (parallel) {
+            case 0:
+                apply_H_kernel_to_input(input, target_qbit, control_qbit, matrix_size); break;
+            case 1:
+                apply_H_kernel_to_input_omp(input, target_qbit, control_qbit, matrix_size); break;
+            case 2:
+                apply_H_kernel_to_input_tbb(input, target_qbit, control_qbit, matrix_size); break;
+            default:
+                apply_H_kernel_to_input(input, target_qbit, control_qbit, matrix_size); break;
         }
         return;
     }
@@ -1680,7 +1724,7 @@ Gate::apply_kernel_to(Matrix& u3_1qbit, Matrix& input, bool deriv, int parallel,
             apply_kernel_to_state_vector_input_parallel_AVX(u3_1qbit, input, deriv, target_qbit, control_qbit, matrix_size);
         }
         else {
-            std::string err("Gate::apply_kernel_to: the argument parallel should be either 0,1 or 2. Set 0 for sequential execution (default), 1 for parallel execution with OpenMP and 2 for parallel with TBB"); 
+            std::string err("Gate::apply_kernel_to: the argument parallel should be either 0,1 or 2. Set 0 for sequential execution (default), 1 for parallel execution with OpenMP and 2 for parallel with TBB");
             throw err;
         }
         return;
@@ -1717,10 +1761,10 @@ Gate::apply_kernel_to(Matrix& u3_1qbit, Matrix& input, bool deriv, int parallel,
 
 
     // apply kernel on unitary
-    apply_kernel_to_input(u3_1qbit, input, deriv, target_qbit, control_qbit, matrix_size); 
+    apply_kernel_to_input(u3_1qbit, input, deriv, target_qbit, control_qbit, matrix_size);
 
 
-   
+
 
 
 #endif // USE_AVX
@@ -1758,6 +1802,50 @@ Gate::apply_kernel_to(Matrix_float& u3_1qbit, Matrix_float& input, bool deriv, i
                 apply_X_kernel_to_input_tbb(input, target_qbits, control_qbits, matrix_size); break;
             default:
                 apply_X_kernel_to_input(input, target_qbits, control_qbits, matrix_size); break;
+        }
+        return;
+    }
+
+    if (type == CNOT_OPERATION) {
+        std::vector<int> tqbits = {target_qbit};
+        std::vector<int> cqbits = {control_qbit};
+        switch (parallel) {
+            case 0:
+                apply_X_kernel_to_input(input, tqbits, cqbits, matrix_size); break;
+            case 1:
+                apply_X_kernel_to_input_omp(input, tqbits, cqbits, matrix_size); break;
+            case 2:
+                apply_X_kernel_to_input_tbb(input, tqbits, cqbits, matrix_size); break;
+            default:
+                apply_X_kernel_to_input(input, tqbits, cqbits, matrix_size); break;
+        }
+        return;
+    }
+
+    if (type == CZ_OPERATION) {
+        switch (parallel) {
+            case 0:
+                apply_Z_kernel_to_input(input, target_qbit, control_qbit, matrix_size); break;
+            case 1:
+                apply_Z_kernel_to_input_omp(input, target_qbit, control_qbit, matrix_size); break;
+            case 2:
+                apply_Z_kernel_to_input_tbb(input, target_qbit, control_qbit, matrix_size); break;
+            default:
+                apply_Z_kernel_to_input(input, target_qbit, control_qbit, matrix_size); break;
+        }
+        return;
+    }
+
+    if (type == CH_OPERATION) {
+        switch (parallel) {
+            case 0:
+                apply_H_kernel_to_input(input, target_qbit, control_qbit, matrix_size); break;
+            case 1:
+                apply_H_kernel_to_input_omp(input, target_qbit, control_qbit, matrix_size); break;
+            case 2:
+                apply_H_kernel_to_input_tbb(input, target_qbit, control_qbit, matrix_size); break;
+            default:
+                apply_H_kernel_to_input(input, target_qbit, control_qbit, matrix_size); break;
         }
         return;
     }
@@ -1995,7 +2083,7 @@ Gate::apply_kernel_to(Matrix_float& u3_1qbit, Matrix_float& input, bool deriv, i
 @param input The input matrix on which the transformation is applied
 @param deriv Set true to apply derivate transformation, false otherwise
 */
-void 
+void
 Gate::apply_kernel_from_right( Matrix& u3_1qbit, Matrix& input, const Matrix* alt_kernel ) {
 
     if (type == SWAP_OPERATION || type == CSWAP_OPERATION) {
@@ -2012,6 +2100,35 @@ Gate::apply_kernel_from_right( Matrix& u3_1qbit, Matrix& input, const Matrix* al
             apply_X_kernel_from_right(input, target_qbits, control_qbits, matrix_size);
         } else {
             apply_X_kernel_from_right_tbb(input, target_qbits, control_qbits, matrix_size);
+        }
+        return;
+    }
+
+    if (type == CNOT_OPERATION) {
+        std::vector<int> tqbits = {target_qbit};
+        std::vector<int> cqbits = {control_qbit};
+        if (qbit_num < 10) {
+            apply_X_kernel_from_right(input, tqbits, cqbits, matrix_size);
+        } else {
+            apply_X_kernel_from_right_tbb(input, tqbits, cqbits, matrix_size);
+        }
+        return;
+    }
+
+    if (type == CZ_OPERATION) {
+        if (qbit_num < 10) {
+            apply_Z_kernel_from_right(input, target_qbit, control_qbit, matrix_size);
+        } else {
+            apply_Z_kernel_from_right_tbb(input, target_qbit, control_qbit, matrix_size);
+        }
+        return;
+    }
+
+    if (type == CH_OPERATION) {
+        if (qbit_num < 10) {
+            apply_H_kernel_from_right(input, target_qbit, control_qbit, matrix_size);
+        } else {
+            apply_H_kernel_from_right_tbb(input, target_qbit, control_qbit, matrix_size);
         }
         return;
     }
@@ -2194,6 +2311,35 @@ Gate::apply_kernel_from_right( Matrix_float& u3_1qbit, Matrix_float& input, cons
         return;
     }
 
+    if (type == CNOT_OPERATION) {
+        std::vector<int> tqbits = {target_qbit};
+        std::vector<int> cqbits = {control_qbit};
+        if (qbit_num < 10) {
+            apply_X_kernel_from_right(input, tqbits, cqbits, matrix_size);
+        } else {
+            apply_X_kernel_from_right_tbb(input, tqbits, cqbits, matrix_size);
+        }
+        return;
+    }
+
+    if (type == CZ_OPERATION) {
+        if (qbit_num < 10) {
+            apply_Z_kernel_from_right(input, target_qbit, control_qbit, matrix_size);
+        } else {
+            apply_Z_kernel_from_right_tbb(input, target_qbit, control_qbit, matrix_size);
+        }
+        return;
+    }
+
+    if (type == CH_OPERATION) {
+        if (qbit_num < 10) {
+            apply_H_kernel_from_right(input, target_qbit, control_qbit, matrix_size);
+        } else {
+            apply_H_kernel_from_right_tbb(input, target_qbit, control_qbit, matrix_size);
+        }
+        return;
+    }
+
     if (type == SYC_OPERATION) {
         apply_SYC_kernel_from_right(input, target_qbit, control_qbit, matrix_size);
         return;
@@ -2355,7 +2501,7 @@ Gate::apply_kernel_from_right( Matrix_float& u3_1qbit, Matrix_float& input, cons
 @brief Call to set the starting index of the parameters in the parameter array corresponding to the circuit in which the current gate is incorporated
 @param start_idx The starting index
 */
-void 
+void
 Gate::set_parameter_start_idx(int start_idx) {
 
     parameter_start_idx = start_idx;
@@ -2366,7 +2512,7 @@ Gate::set_parameter_start_idx(int start_idx) {
 @brief Call to set the parents of the current gate
 @param parents_ the list of the parents
 */
-void 
+void
 Gate::set_parents( std::vector<Gate*>& parents_ ) {
 
     parents = parents_;
@@ -2378,7 +2524,7 @@ Gate::set_parents( std::vector<Gate*>& parents_ ) {
 @brief Call to set the children of the current gate
 @param children_ the list of the children
 */
-void 
+void
 Gate::set_children( std::vector<Gate*>& children_ ) {
 
     children = children_;
@@ -2390,11 +2536,11 @@ Gate::set_children( std::vector<Gate*>& children_ ) {
 @brief Call to get the starting index of the parameters in the parameter array corresponding to the circuit in which the current gate is incorporated
 @param start_idx The starting index
 */
-int 
+int
 Gate::get_parameter_start_idx() {
 
     return parameter_start_idx;
-    
+
 }
 
 
@@ -2534,7 +2680,7 @@ Gate::calc_one_qubit_u3(float ThetaOver2, float Phi, float Lambda) {
        Uses get_parameter_multipliers() to apply fmod wrapping generically.
        Multiplier m → extracted[i] = fmod(m * params[start+i], m * 2π).
 */
-Matrix_real 
+Matrix_real
 Gate::extract_parameters( Matrix_real& parameters ) {
 
     const std::vector<double> mults = get_parameter_multipliers();
@@ -2595,7 +2741,7 @@ Gate::extract_parameters( Matrix_real_float& parameters ) {
 @brief Call to get the name label of the gate.
 @return Returns with the name label of the gate
 */
-std::string 
+std::string
 Gate::get_name() {
 
     return name;

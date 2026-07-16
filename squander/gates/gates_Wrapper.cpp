@@ -98,7 +98,7 @@ Gate* create_controlled_gate( int qbit_num, int target_qbit, int control_qbit ) 
 
     GateT* gate = new GateT( qbit_num, target_qbit, control_qbit );
     return static_cast<Gate*>( gate );
-        
+
 }
 
 template<typename GateT>
@@ -158,18 +158,18 @@ static PyObject *
 {
 
     static char *kwlist[] = {(char*)"qbit_num", NULL};
-    int qbit_num = -1; 
+    int qbit_num = -1;
 
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i", kwlist, &qbit_num)) {
         std::string err( "Unable to parse arguments");
         PyErr_SetString(PyExc_Exception, err.c_str());
-        return NULL;   
+        return NULL;
     }
 
     if (qbit_num == -1){
         PyErr_SetString(PyExc_ValueError, "Qubit_num must be set!");
-        return NULL;   
+        return NULL;
     }
 
 
@@ -197,23 +197,23 @@ static PyObject *
 {
 
     static char *kwlist[] = {(char*)"qbit_num", (char*)"target_qbit", NULL};
-    int qbit_num = -1; 
+    int qbit_num = -1;
     int target_qbit = -1;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|ii", kwlist, &qbit_num, &target_qbit)) {
         std::string err( "Unable to parse arguments");
         PyErr_SetString(PyExc_Exception, err.c_str());
-        return NULL;   
+        return NULL;
     }
 
     if (qbit_num == -1 || target_qbit == -1){
         PyErr_SetString(PyExc_ValueError, "Qubit_num and target_qubit all must be set!");
-        return NULL;   
+        return NULL;
     }
 
     if (qbit_num <= target_qbit ){
         PyErr_SetString(PyExc_ValueError, "Target_qubit cannot be larger or equal than qubit_num!");
-        return NULL;   
+        return NULL;
     }
     Gate_Wrapper *self;
     self = (Gate_Wrapper *) type->tp_alloc(type, 0);
@@ -270,7 +270,7 @@ static PyObject *
  controlled_gate_Wrapper_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
     static char *kwlist[] = {(char*)"qbit_num", (char*)"target_qbit", (char*)"control_qbit", NULL};
-    int qbit_num = -1; 
+    int qbit_num = -1;
     int target_qbit = -1;
     int control_qbit = -1;
 
@@ -278,17 +278,17 @@ static PyObject *
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|iii", kwlist, &qbit_num, &target_qbit, &control_qbit)) {
         std::string err( "Unable to parse arguments");
         PyErr_SetString(PyExc_Exception, err.c_str());
-        return NULL;   
+        return NULL;
     }
 
     if ((qbit_num == -1 || target_qbit == -1) || control_qbit == -1){
         PyErr_SetString(PyExc_ValueError, "Qubit_num, target_qubit and control_qubit all must be set!");
-        return NULL;   
+        return NULL;
     }
-    
+
     if (qbit_num <= target_qbit || qbit_num <= control_qbit ){
         PyErr_SetString(PyExc_ValueError, "Target_qubit or control_qbit cannot be larger or equal than qubit_num!");
-        return NULL;   
+        return NULL;
     }
 
     Gate_Wrapper *self;
@@ -298,7 +298,7 @@ static PyObject *
     }
 
     return (PyObject *) self;
-    
+
 }
 
 /**
@@ -538,7 +538,7 @@ static PyObject *
         if (created_list) {
             Py_DECREF(pattern_list);
         }
-        std::string err = "Pattern size " + std::to_string(pattern_size) + 
+        std::string err = "Pattern size " + std::to_string(pattern_size) +
                          " does not match qubit number " + std::to_string(qbit_num);
         PyErr_SetString(PyExc_ValueError, err.c_str());
         return NULL;
@@ -561,7 +561,7 @@ static PyObject *
             if (created_list) {
                 Py_DECREF(pattern_list);
             }
-            std::string err = "Pattern qubit index " + std::to_string(qbit) + 
+            std::string err = "Pattern qubit index " + std::to_string(qbit) +
                              " out of range [0, " + std::to_string(qbit_num - 1) + "]";
             PyErr_SetString(PyExc_ValueError, err.c_str());
             return NULL;
@@ -609,7 +609,7 @@ static int
  Gate_Wrapper_init(Gate_Wrapper *self, PyObject *args, PyObject *kwds)
 {
 
-    
+
 
     return 0;
 }
@@ -1886,8 +1886,8 @@ Gate_Wrapper_get_Gate_Kernel( Gate_Wrapper *self, PyObject *args, PyObject *kwds
     static char *kwlist[] = {(char*)"ThetaOver2", (char*)"Phi", (char*)"Lambda", NULL};
 
     double ThetaOver2;
-    double Phi; 
-    double Lambda; 
+    double Phi;
+    double Lambda;
 
 
     try {
@@ -1895,7 +1895,7 @@ Gate_Wrapper_get_Gate_Kernel( Gate_Wrapper *self, PyObject *args, PyObject *kwds
         Phi = 0.0;
         Lambda = 0.0;
     }
-    catch (std::string err) {    
+    catch (std::string err) {
         PyErr_SetString(PyExc_Exception, err.c_str());
         return NULL;
     }
@@ -1932,7 +1932,7 @@ Gate_Wrapper_get_Gate_Kernel( Gate_Wrapper *self, PyObject *args, PyObject *kwds
 
     }
 
- 
+
     PyObject *CH_1qbit = matrix_to_numpy( CH_1qbit_ );
 
     return CH_1qbit;
@@ -1954,7 +1954,7 @@ Gate_Wrapper_get_Parameter_Num( Gate_Wrapper *self ) {
     try {
         parameter_num = self->gate->get_parameter_num();
     }
-    catch (std::string err) {    
+    catch (std::string err) {
         PyErr_SetString(PyExc_Exception, err.c_str());
         return NULL;
     }
@@ -1983,7 +1983,7 @@ Gate_Wrapper_get_Parameter_Start_Index( Gate_Wrapper *self ) {
     try {
         start_index = self->gate->get_parameter_start_idx();
     }
-    catch (std::string err) {    
+    catch (std::string err) {
         PyErr_SetString(PyExc_Exception, err.c_str());
         return NULL;
     }
@@ -2012,7 +2012,7 @@ Gate_Wrapper_get_Target_Qbit( Gate_Wrapper *self ) {
     try {
         target_qbit = self->gate->get_target_qbit();
     }
-    catch (std::string err) {    
+    catch (std::string err) {
         PyErr_SetString(PyExc_Exception, err.c_str());
         return NULL;
     }
@@ -2038,7 +2038,7 @@ Gate_Wrapper_get_Control_Qbit( Gate_Wrapper *self ) {
     try {
         control_qbit = self->gate->get_control_qbit();
     }
-    catch (std::string err) {    
+    catch (std::string err) {
         PyErr_SetString(PyExc_Exception, err.c_str());
         return NULL;
     }
@@ -2050,7 +2050,7 @@ Gate_Wrapper_get_Control_Qbit( Gate_Wrapper *self ) {
 
     return Py_BuildValue("i", control_qbit);
 
-} 
+}
 
 /**
 @brief Call to set the target qbit
@@ -2063,7 +2063,7 @@ Gate_Wrapper_set_Target_Qbit( Gate_Wrapper *self, PyObject *args ) {
         std::string err( "Unable to parse arguments");
         return NULL;
     }
-        
+
     try{
         self->gate->set_target_qbit(target_qbit_in);
     }
@@ -2093,7 +2093,7 @@ Gate_Wrapper_set_Control_Qbit( Gate_Wrapper *self, PyObject *args ) {
         std::string err( "Unable to parse arguments");
         return NULL;
     }
-        
+
     try{
         self->gate->set_control_qbit(control_qbit_in);
     }
@@ -2325,7 +2325,7 @@ Gate_Wrapper_Extract_Parameters( Gate_Wrapper *self, PyObject *args ) {
         PyErr_SetString(PyExc_TypeError, "Parameter array must contain double values");
         return NULL;
     }
-    
+
     if ( PyArray_IS_C_CONTIGUOUS(parameters_arr) ) {
         Py_INCREF(parameters_arr);
     }
@@ -2379,7 +2379,7 @@ Gate_Wrapper_Extract_Parameters( Gate_Wrapper *self, PyObject *args ) {
         Py_DECREF(parameters_arr);
         return NULL;
     }
-   
+
     Py_DECREF(parameters_arr);
     return extracted_parameters_py_flatten;
 }
@@ -2592,7 +2592,7 @@ static PyObject * Gate_Wrapper_set_Pattern( Gate_Wrapper *self, PyObject *args )
         PyErr_SetString(PyExc_TypeError, err.c_str());
         return NULL;
     }
-    
+
     // Cast to Permutation* to access pattern methods and get qbit_num
     Permutation* perm_gate = dynamic_cast<Permutation*>(self->gate);
     if (perm_gate == nullptr) {
@@ -2602,25 +2602,25 @@ static PyObject * Gate_Wrapper_set_Pattern( Gate_Wrapper *self, PyObject *args )
         PyErr_SetString(PyExc_TypeError, "Gate is not a Permutation gate");
         return NULL;
     }
-    
+
     int qbit_num = perm_gate->get_qbit_num();
     std::vector<int> pattern;
     Py_ssize_t pattern_size = PyList_Size(pattern_list);
-    
+
     // Check pattern size matches qbit_num
     if (pattern_size != qbit_num) {
         if (created_list) {
             Py_DECREF(pattern_list);
         }
-        std::string err = "Pattern size " + std::to_string(pattern_size) + 
+        std::string err = "Pattern size " + std::to_string(pattern_size) +
                          " does not match qubit number " + std::to_string(qbit_num);
         PyErr_SetString(PyExc_ValueError, err.c_str());
         return NULL;
     }
-    
+
     // Track which values we've seen to validate it's a permutation
     std::vector<bool> seen(qbit_num, false);
-    
+
     for (Py_ssize_t i = 0; i < pattern_size; i++) {
         PyObject* item = PyList_GetItem(pattern_list, i);
         if (!PyLong_Check(item)) {
@@ -2636,7 +2636,7 @@ static PyObject * Gate_Wrapper_set_Pattern( Gate_Wrapper *self, PyObject *args )
             if (created_list) {
                 Py_DECREF(pattern_list);
             }
-            std::string err = "Pattern qubit index " + std::to_string(qbit) + 
+            std::string err = "Pattern qubit index " + std::to_string(qbit) +
                              " out of range [0, " + std::to_string(qbit_num - 1) + "]";
             PyErr_SetString(PyExc_ValueError, err.c_str());
             return NULL;
@@ -2652,12 +2652,12 @@ static PyObject * Gate_Wrapper_set_Pattern( Gate_Wrapper *self, PyObject *args )
         seen[qbit] = true;
         pattern.push_back(qbit);
     }
-    
+
     // Release the pattern_list reference (only if we created it from a tuple)
     if (created_list) {
         Py_DECREF(pattern_list);
     }
-    
+
     try {
         perm_gate->set_pattern(pattern);
     }
@@ -2676,7 +2676,7 @@ static PyObject * Gate_Wrapper_set_Pattern( Gate_Wrapper *self, PyObject *args )
 /**
 @brief Call to set the state of quantum gate from a human-readable data serialized and pickle-able format
 */
-static PyObject * 
+static PyObject *
 Gate_Wrapper_setstate( Gate_Wrapper *self, PyObject *args ) {
 
 
@@ -2688,25 +2688,25 @@ Gate_Wrapper_setstate( Gate_Wrapper *self, PyObject *args ) {
         PyErr_SetString(PyExc_ValueError, "Unable to parse arguments");
         return NULL;
     }
-    
+
     if( !PyDict_Check( gate_state ) ) {
         std::string err( "Gate state should be given by a dictionary");
         PyErr_SetString(PyExc_Exception, err.c_str());
         return NULL;
-    }   
-    
-    PyObject* qbit_num_key = Py_BuildValue( "s", "qbit_num" );    
+    }
+
+    PyObject* qbit_num_key = Py_BuildValue( "s", "qbit_num" );
     if ( PyDict_Contains(gate_state, qbit_num_key) == 0 ) {
         std::string err( "Gate state should contain the number of qubits");
         PyErr_SetString(PyExc_Exception, err.c_str());
 
         Py_DECREF( qbit_num_key );
         return NULL;
-    }    
+    }
     PyObject* qbit_num_py = PyDict_GetItem(gate_state, qbit_num_key); // borrowed reference
     Py_DECREF( qbit_num_key );
-    
-    
+
+
     PyObject* target_qbit_key = Py_BuildValue( "s", "target_qbit" );
     if ( PyDict_Contains(gate_state, target_qbit_key) == 0 ) {
         std::string err( "Gate state should contain a target qubit");
@@ -2714,11 +2714,11 @@ Gate_Wrapper_setstate( Gate_Wrapper *self, PyObject *args ) {
 
         Py_DECREF( target_qbit_key );
         return NULL;
-    }    
+    }
     PyObject* target_qbit_py = PyDict_GetItem(gate_state, target_qbit_key); // borrowed reference
     Py_DECREF( target_qbit_key );
-    
-    
+
+
     PyObject* control_qbit_key = Py_BuildValue( "s", "control_qbit" );
     if ( PyDict_Contains(gate_state, control_qbit_key) == 0 ) {
         std::string err( "Gate state should contain a control qubit (-1 for gates with no control qubits)");
@@ -2726,7 +2726,7 @@ Gate_Wrapper_setstate( Gate_Wrapper *self, PyObject *args ) {
 
         Py_DECREF( control_qbit_key );
         return NULL;
-    }    
+    }
     PyObject* control_qbit_py = PyDict_GetItem(gate_state, control_qbit_key); // borrowed reference
     Py_DECREF( control_qbit_key );
 
@@ -2741,7 +2741,7 @@ Gate_Wrapper_setstate( Gate_Wrapper *self, PyObject *args ) {
 
         Py_DECREF( type_key );
         return NULL;
-    }    
+    }
     PyObject* type_py = PyDict_GetItem(gate_state, type_key); // borrowed reference
     Py_DECREF( type_key );
 
@@ -2792,88 +2792,88 @@ Gate_Wrapper_setstate( Gate_Wrapper *self, PyObject *args ) {
     case CNOT_OPERATION: {
         gate = create_controlled_gate<CNOT>( qbit_num, target_qbit, control_qbit );
         break;
-    }    
+    }
     case CZ_OPERATION:
     {
         gate = create_controlled_gate<CZ>( qbit_num, target_qbit, control_qbit );
         break;
-    }    
+    }
     case CH_OPERATION: {
         gate = create_controlled_gate<CH>( qbit_num, target_qbit, control_qbit );
         break;
-    }     
+    }
     case SYC_OPERATION: {
         gate = create_controlled_gate<SYC>( qbit_num, target_qbit, control_qbit );
         break;
-    }    
+    }
     case X_OPERATION: {
         gate = create_gate<X>( qbit_num, target_qbit );
         break;
-    }    
+    }
     case Y_OPERATION: {
         gate = create_gate<Y>( qbit_num, target_qbit );
         break;
-    }    
+    }
     case Z_OPERATION: {
         gate = create_gate<Z>( qbit_num, target_qbit );
         break;
-    }    
+    }
     case S_OPERATION: {
         gate = create_gate<S>( qbit_num, target_qbit );
         break;
-    }   
+    }
     case SDG_OPERATION: {
         gate = create_gate<SDG>( qbit_num, target_qbit );
         break;
-    }    
+    }
     case SX_OPERATION: {
         gate = create_gate<SX>( qbit_num, target_qbit );
         break;
-    }    
+    }
     case SXDG_OPERATION: {
         gate = create_gate<SXdg>( qbit_num, target_qbit );
         break;
-    }    
+    }
     case T_OPERATION: {
         gate = create_gate<T>( qbit_num, target_qbit );
         break;
-    }    
+    }
     case TDG_OPERATION: {
         gate = create_gate<Tdg>( qbit_num, target_qbit );
         break;
-    }    
+    }
     case H_OPERATION: {
         gate = create_gate<H>( qbit_num, target_qbit );
         break;
-    }  
+    }
     case U1_OPERATION: {
         gate = create_gate<U1>( qbit_num, target_qbit );
         break;
-    }    
+    }
     case U2_OPERATION: {
         gate = create_gate<U2>( qbit_num, target_qbit );
         break;
-    }      
+    }
     case U3_OPERATION: {
         gate = create_gate<U3>( qbit_num, target_qbit );
-        break; 
+        break;
     }
     case CU_OPERATION: {
         gate = create_controlled_gate<CU>( qbit_num, target_qbit, control_qbit );
-        break; 
+        break;
     }
     case R_OPERATION: {
         gate = create_gate<R>( qbit_num, target_qbit );
         break;
-    }    
+    }
     case RX_OPERATION: {
         gate = create_gate<RX>( qbit_num, target_qbit );
         break;
-    }    
+    }
     case RY_OPERATION: {
         gate = create_gate<RY>( qbit_num, target_qbit );
         break;
-    }    
+    }
     case CRX_OPERATION: {
         gate = create_controlled_gate<CRX>( qbit_num, target_qbit, control_qbit );
         break;
@@ -2881,19 +2881,19 @@ Gate_Wrapper_setstate( Gate_Wrapper *self, PyObject *args ) {
     case CRZ_OPERATION: {
         gate = create_controlled_gate<CRZ>( qbit_num, target_qbit, control_qbit );
         break;
-    }  
+    }
     case CP_OPERATION: {
         gate = create_controlled_gate<CP>( qbit_num, target_qbit, control_qbit );
         break;
-    }   
+    }
     case CRY_OPERATION: {
         gate = create_controlled_gate<CRY>( qbit_num, target_qbit, control_qbit );
         break;
-    }       
+    }
     case CROT_OPERATION: {
         gate = create_controlled_gate<CROT>( qbit_num, target_qbit, control_qbit );
         break;
-    }    
+    }
     case CR_OPERATION: {
         gate = create_controlled_gate<CR>( qbit_num, target_qbit, control_qbit );
         break;
@@ -3031,7 +3031,7 @@ Gate_Wrapper_setstate( Gate_Wrapper *self, PyObject *args ) {
         return NULL;
     }
 
-    
+
     return Py_BuildValue("");
 
 }
@@ -3137,9 +3137,9 @@ struct Gate_Wrapper_Type_tmp : PyTypeObject {
 
 
     Gate_Wrapper_Type_tmp() {
-    
+
         //PyVarObject tt = { PyVarObject_HEAD_INIT(NULL, 0) };
-    
+
         ob_base.ob_size = 0;
         tp_name      = "Gate";
         tp_basicsize = sizeof(Gate_Wrapper);
@@ -3151,7 +3151,7 @@ struct Gate_Wrapper_Type_tmp : PyTypeObject {
         tp_init      = (initproc)  Gate_Wrapper_init;
         tp_new       = generic_Gate_Wrapper_new;
     }
-    
+
 
 };
 
@@ -3362,9 +3362,9 @@ PyInit_gates_Wrapper(void)
         PyType_Ready(&CU_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&X_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&Y_Wrapper_Type_ins) < 0 ||
-        PyType_Ready(&Z_Wrapper_Type_ins) < 0 || 
-        PyType_Ready(&S_Wrapper_Type_ins) < 0 || 
-        PyType_Ready(&SDG_Wrapper_Type_ins) < 0 || 
+        PyType_Ready(&Z_Wrapper_Type_ins) < 0 ||
+        PyType_Ready(&S_Wrapper_Type_ins) < 0 ||
+        PyType_Ready(&SDG_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&T_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&Tdg_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&CR_Wrapper_Type_ins) < 0 ||
@@ -3413,7 +3413,7 @@ PyInit_gates_Wrapper(void)
     Py_INCREF_template(RZZ);
 
     Py_INCREF_template(RY);
-    
+
     Py_INCREF_template(RZ);
 
     Py_INCREF_template(SX);
@@ -3429,7 +3429,7 @@ PyInit_gates_Wrapper(void)
     Py_INCREF_template(CU);
 
     Py_INCREF_template(X);
-    
+
     Py_INCREF_template(Y);
 
     Py_INCREF_template(Z);
@@ -3460,9 +3460,9 @@ PyInit_gates_Wrapper(void)
     }
 
     Py_INCREF_template(R);
-    
+
     Py_INCREF_template(CR);
-    
+
     Py_INCREF_template(CROT);
 
     Py_INCREF_template(CCX);

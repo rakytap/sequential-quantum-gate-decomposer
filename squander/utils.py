@@ -47,6 +47,17 @@ else:
     from qiskit.quantum_info import Operator
 
 
+def _tensor_perm_from_logical_to_physical(mapping, invert=False):
+    """Return tensor-axis permutation for a logical-to-physical qubit map."""
+    if invert:
+        from squander.synthesis.qgd_SABRE import qgd_SABRE
+
+        mapping = qgd_SABRE.get_inverse_pi(mapping)
+
+    qbit_num = len(mapping)
+    return [qbit_num - 1 - p for p in reversed(mapping)]
+
+
 ##
 # @brief Call to retrieve the unitary from QISKIT circuit
 def get_unitary_from_qiskit_circuit(circuit: QuantumCircuit):
@@ -155,9 +166,10 @@ def CompareCircuits(
     circ2: Circuit,
     parameters2: np.ndarray,
     parallel: int = 1,
-    tolerance: float = 1e-5,
+    tolerance: float = 1e-10,
     initial_mapping=None,
     final_mapping=None,
+    is_f32: bool = False,
 ):
     """
     Call to test if the two circuits give the same state transformation upon a random input state
@@ -176,6 +188,8 @@ def CompareCircuits(
         parallel (int, optional) Set 0 for sequential evaluation, 1 for using TBB parallelism or 2 for using openMP
 
         tolerance ( float, optional) The tolerance of the comparision when the inner product of the resulting states is matched to unity.
+
+        is_f32 ( bool, optional) Use float32/complex64 state evolution.
 
 
     Return:
@@ -203,27 +217,39 @@ def CompareCircuits(
         + initial_state_imag * initial_state_imag
     )
     initial_state = initial_state / np.sqrt(norm)
+    initial_state = initial_state.astype(np.complex64 if is_f32 else np.complex128)
+
+    parameters1 = np.asarray(parameters1, dtype=np.float32 if is_f32 else np.float64)
+    parameters2 = np.asarray(parameters2, dtype=np.float32 if is_f32 else np.float64)
 
     transformed_state_1 = initial_state.copy()
     transformed_state_2 = initial_state
 
-    circ1.apply_to(parameters1, transformed_state_1, parallel=parallel)
+    circ1.apply_to(
+        parameters1,
+        transformed_state_1,
+        parallel=parallel,
+        is_f32=is_f32,
+    )
     if initial_mapping is not None:
-        from squander.synthesis.qgd_SABRE import qgd_SABRE
-
-        tensor_perm = [
-            qbit_num2 - 1 - p
-            for p in reversed(qgd_SABRE.get_inverse_pi(initial_mapping))
-        ]
+        tensor_perm = _tensor_perm_from_logical_to_physical(
+            initial_mapping,
+            invert=True,
+        )
         transformed_state_2 = (
             transformed_state_2.reshape([2] * qbit_num2)
             .transpose(tensor_perm)
             .copy()
             .reshape((matrix_size,))
         )
-    circ2.apply_to(parameters2, transformed_state_2, parallel=parallel)
+    circ2.apply_to(
+        parameters2,
+        transformed_state_2,
+        parallel=parallel,
+        is_f32=is_f32,
+    )
     if final_mapping is not None:
-        tensor_perm = [qbit_num2 - 1 - p for p in reversed(final_mapping)]
+        tensor_perm = _tensor_perm_from_logical_to_physical(final_mapping)
         transformed_state_2 = (
             transformed_state_2.reshape([2] * qbit_num2)
             .transpose(tensor_perm)

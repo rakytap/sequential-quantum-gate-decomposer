@@ -1,23 +1,25 @@
 from squander.partitioning.tools import build_dependency
+import heapq
 
-def _get_topo_order(g, rg):
+def _get_topo_order(g, rg, gate_to_qubit):
     g = { x: set(y) for x, y in g.items() }
     rg = { x: set(y) for x, y in rg.items() }
-    S = {m for m in rg if len(rg[m]) == 0}
+    S = [(tuple(sorted(gate_to_qubit[m])), m) for m in rg if len(rg[m]) == 0]
+    heapq.heapify(S)
     L = []
     while S:
-        n = S.pop()
+        n = heapq.heappop(S)[1]
         L.append(n)
         assert not rg[n]
         for m in set(g[n]):
             g[n].remove(m)
             rg[m].remove(n)
             if not rg[m]:
-                S.add(m)
+                heapq.heappush(S, (tuple(sorted(gate_to_qubit[m])), m))
     return L
 
-def _get_balanced_initial_partitions(g, rg):
-    topo = _get_topo_order(g, rg)
+def _get_balanced_initial_partitions(g, rg, gate_to_qubit):
+    topo = _get_topo_order(g, rg, gate_to_qubit)
     mid = len(topo)//2
     return set(topo[:mid]), set(topo[mid:])
 
@@ -79,7 +81,7 @@ def _do_split_partitions(g, rg, gate_to_qubit, splitfunc, max_qubit):
         if _check_qubits(part, gate_to_qubit, max_qubit): output.append(part)
         else:
             gpart, rgpart = {x: g[x] & part for x in part}, {x: rg[x] & part for x in part}
-            A, B = splitfunc(gpart, rgpart, *_get_balanced_initial_partitions(gpart, rgpart))
+            A, B = splitfunc(gpart, rgpart, *_get_balanced_initial_partitions(gpart, rgpart, gate_to_qubit))
             worklist.append(B)
             worklist.append(A)
     return output

@@ -21,63 +21,170 @@ limitations under the License.
 ## \brief Simple example python code demonstrating a wide circuit optimization
 
 import squander.decomposition.qgd_Wide_Circuit_Optimization as Wide_Circuit_Optimization
-from squander import Partition_Aware_Mapping
+from squander.decomposition.qgd_Wide_Circuit_Optimization import (
+    CNOTGateCount, SingleQubitGateCount, TotalRawGateCount, CircuitGateStats,
+)
+from squander.gates.qgd_Circuit import qgd_Circuit as Circuit
 from squander import utils
 from squander import Qiskit_IO
-import time
-from squander import Circuit
-import numpy as np
-from qiskit import transpile
-def generate_star_topology(num_qubits):
-    return [(0, i) for i in range(1, num_qubits)]
-def extract_two_qubit_gate_count(gate_nums_dict):
+import time, requests, os, zipfile, tempfile, json, numpy as np
+from pathlib import Path
+from collections import Counter
 
-    # List of two-qubit gate names
-    two_qubit_gates = ['CNOT', 'CZ', 'CU', 'CH', 'SYC', 'CRY', 'CRZ', 'CRX', 'CP', 'SWAP', 'CSWAP']
-    
-    total_two_qubit = 0
-    for gate_name in two_qubit_gates:
-        total_two_qubit += gate_nums_dict.get(gate_name, 0)
-    return total_two_qubit
-if __name__ == '__main__':
+# IBM Eagle native gate set (QMill benchmark basis)
+IBM_EAGLE_BASIS = ["cx", "rz", "sx", "x"]
 
-    use_qiskit_sabre = False
-    config = {  
-            'strategy': "TreeSearch", 
-            'test_subcircuits': False,
-            'test_final_circuit': True,
-            'max_partition_size': 3,
-            'beam': 16,
-            "use_gl": True,
-            'tolerance': 1e-10,
+
+def transpile_to_ibm_eagle(qasm_path_or_circ, parameters=None):
+    """Transpile a circuit to IBM Eagle's native gate set and return consistent
+    gate stats via Squander's CircuitGateStats.
+
+    Args:
+        qasm_path_or_circ: Either a path to a .qasm file, or a Squander Circuit.
+        parameters: Required if passing a Squander Circuit.
+
+    Returns:
+        dict from CircuitGateStats, using the same decomposition as the main
+        benchmark pipeline.
+    """
+    from qiskit import QuantumCircuit, transpile
+
+    if isinstance(qasm_path_or_circ, str):
+        qc = QuantumCircuit.from_qasm_file(qasm_path_or_circ)
+    else:
+        qc = Qiskit_IO.get_Qiskit_Circuit(
+            qasm_path_or_circ,
+            np.asarray(parameters if parameters is not None else [], dtype=np.float64),
+        )
+
+    transpiled = transpile(qc, basis_gates=IBM_EAGLE_BASIS, optimization_level=0)
+    eagle_circ, eagle_params = Qiskit_IO.convert_Qiskit_to_Squander(transpiled)
+    return CircuitGateStats(eagle_circ)
+
+
+if __name__ == "__main__":
+
+    config = {
+        "strategy": "TreeSearch",  # possible values: "TreeSearch", "qiskit", "bqskit", "TabuSearch"
+        "test_subcircuits": False,
+        "test_final_circuit": False,
+        "max_partition_size": 4,
+        "beam": None,
+        "use_osr": True,
+        "use_graph_search": True,
+        "pre-opt-strategy": "TreeSearch",  # possible values: "TreeSearch", "qiskit", "bqskit", "TabuSearch"
+        "routing-strategy": "seqpam-ilp",  # possible values: "sabre", "light-sabre", "bqskit-sabre", "seqpam-quick", "seqpam-ilp"
+        "tolerance": 1e-5, #1e-5 for use_float and 1e-10 if not are sensible
+        "use_float": True,  # whether to use single precision for the optimization (experimental, may cause instability in some cases, but can significantly reduce optimization time and memory usage for large circuits)
+        # **{'use_basin_hopping': True, 'bh_T': 1.1822334624366124, 'bh_stepsize': 0.9020671823381502, 'bh_interval': 165, 'bh_target_accept_rate': 0.7037812116166546, 'bh_stepwise_factor': 0.8254028860713254}
     }
 
-    filename = "benchmarks/qfast/5q/vqe.qasm"
-    start_time = time.time()
+    import os
 
-    # load the circuit from a file
-    circ_orig, parameters_orig = utils.qasm_to_squander_circuit(filename)
-    N = circ_orig.get_Qbit_Num()
-    # instantiate the object for optimizing wide circuits
-    wide_circuit_optimizer = Wide_Circuit_Optimization.qgd_Wide_Circuit_Optimization( config )
+    files = [os.path.join(Path(__file__).resolve().parent, "bv_n14.qasm")]
 
-    # run circuti optimization
-    circ_flat, parameters = wide_circuit_optimizer.OptimizeWideCircuit( circ_orig, parameters_orig, True )
+    # JSON results file with resume support
+    RESULTS_FILE = "results.json"
+    import json
 
-    config['topology'] = generate_star_topology(N)
-    circo = Qiskit_IO.get_Qiskit_Circuit(circ_flat.get_Flat_Circuit(),parameters)
-    if use_qiskit_sabre:
-        coupling_map = [[i,j] for i,j in config['topology']]
-        circuit_qiskit_sabre = transpile(circo, coupling_map=coupling_map)
-        circ, parameters = Qiskit_IO.convert_Qiskit_to_Squander(circuit_qiskit_sabre)
-        config['routed']= True
-        wide_circuit_optimizer = Wide_Circuit_Optimization.qgd_Wide_Circuit_Optimization( config )
-    else:
-        wide_circuit_optimizer = Wide_Circuit_Optimization.qgd_Wide_Circuit_Optimization( config )
-        # run circuti optimization
-        circ, parameters = Qiskit_IO.convert_Qiskit_to_Squander(circo)
-    circ, parameters = wide_circuit_optimizer.OptimizeWideCircuit( circ, parameters, True )
-    print(f"Two qubit gate count: {extract_two_qubit_gate_count(circ.get_Gate_Nums())}")
-    print("--- %s seconds elapsed during optimization ---" % (time.time() - start_time))
+    # Load existing results to skip already-processed circuits
+    existing_results = {}
+    if os.path.exists(RESULTS_FILE):
+        with open(RESULTS_FILE) as f:
+            existing_results = json.load(f)
+        print(f"Loaded {len(existing_results)} existing results; will skip already-processed circuits.")
 
+    results = existing_results  # merge new results into existing
+    for filename in files:
+        fname = os.path.basename(filename)
+        if fname in results:
+            print(f"Skipping already processed: {fname}")
+            continue
 
+        print(f"executing optimization of circuit: {filename}")
+        #if not filename.endswith("_n140.qasm"): continue
+
+        # load the circuit from a file
+        circ, parameters, _ = utils.qasm_to_squander_circuit(filename)
+        config["topology"] = (
+            Wide_Circuit_Optimization.qgd_Wide_Circuit_Optimization.linear_topology(
+                circ.get_Qbit_Num()
+            )
+        )
+
+        # pre-optimization stats
+        init_stats = CircuitGateStats(circ)
+        init_ibm_eagle = transpile_to_ibm_eagle(filename)
+
+        # run circuit optimization
+        wide_circuit_optimizer = (
+            Wide_Circuit_Optimization.qgd_Wide_Circuit_Optimization({**config})
+        )
+        start_time = time.time()
+        optcirc, optparameters = wide_circuit_optimizer.OptimizeWideCircuit(
+            circ, parameters
+        )
+        elapsed = time.time() - start_time
+
+        # post-optimization stats
+        opt_stats = CircuitGateStats(optcirc)
+        final_ibm_eagle = transpile_to_ibm_eagle(optcirc, optparameters)
+        opt_time = wide_circuit_optimizer.config.get("optimization_time", None)
+
+        # routing stats (if routing was needed)
+        a2a_stats = None
+        routed_stats = None
+        a2a_time = routing_time = None
+        if wide_circuit_optimizer.config.get("routed_circuit", None) is not None:
+            a2acirc = wide_circuit_optimizer.config["all_to_all_circuit"]
+            routedcirc = wide_circuit_optimizer.config["routed_circuit"]
+            a2a_stats = CircuitGateStats(a2acirc)
+            routed_stats = CircuitGateStats(routedcirc)
+            a2a_time = wide_circuit_optimizer.config.get("all_to_all_optimization_time", None)
+            routing_time = wide_circuit_optimizer.config.get("routing_time", None)
+
+        result_entry = {
+            "file": fname,
+            "strategy": config["strategy"],
+            "pre_opt_strategy": config["pre-opt-strategy"],
+            "routing_strategy": config["routing-strategy"],
+            "init": init_stats,
+            "init_ibm_eagle": init_ibm_eagle,
+            "final": opt_stats,
+            "final_ibm_eagle": final_ibm_eagle,
+            "timing": {
+                "a2a": round(a2a_time, 2) if a2a_time else None,
+                "routing": round(routing_time, 2) if routing_time else None,
+                "optimization": round(opt_time, 2) if opt_time else None,
+                "total": round(elapsed, 2),
+            },
+        }
+        if a2a_stats:
+            result_entry["all_to_all"] = a2a_stats
+        if routed_stats:
+            result_entry["routed"] = routed_stats
+
+        results[fname] = result_entry
+
+        # save after each circuit so we don't lose progress
+        with open(RESULTS_FILE, "w") as f:
+            json.dump(results, f, indent=2)
+
+        wide_circuit_optimizer.check_compare_circuits(
+            circ,
+            parameters,
+            optcirc,
+            optparameters,
+            routing=wide_circuit_optimizer.config.get("routed_circuit", None) is not None,
+            forced_test=True,
+            label="example final original-to-output",
+        )
+
+        print(f"  init: {init_stats['cnot_equiv']} CNOT, {init_stats['single_qubit']} 1q, "
+              f"{init_stats['total_raw']} total, {init_stats['qubits']}q")
+        print(f"  final: {opt_stats['cnot_equiv']} CNOT, {opt_stats['single_qubit']} 1q, "
+              f"{opt_stats['total_raw']} total")
+        print(f"  time: {elapsed:.2f}s")
+        print(f"--- {len(results)}/{len(files)} circuits processed ---")
+
+        print("--- %s seconds elapsed during optimization ---" % elapsed)
