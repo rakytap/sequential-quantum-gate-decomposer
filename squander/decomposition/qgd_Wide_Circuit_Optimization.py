@@ -36,10 +36,16 @@ except Exception:
 
 _SQUANDER_BQSKIT_SYNTHESIS_CONFIG = None
 
+_SQUANDER_NATIVE_STRATEGIES = frozenset(
+    ("TreeSearch", "TabuSearch", "Adaptive", "Custom")
+)
+
 SQUANDER_FLOAT64_TOLERANCE = 1e-10
-SQUANDER_FLOAT32_TOLERANCE = 1e-5
+SQUANDER_FLOAT32_TOLERANCE = 1e-8
 BQSKIT_FLOAT64_SYNTHESIS_VALIDATION_TOLERANCE = 1e-8
-BQSKIT_FLOAT32_SYNTHESIS_VALIDATION_TOLERANCE = 1e-4
+BQSKIT_FLOAT32_SYNTHESIS_VALIDATION_TOLERANCE = 1e-8
+CIRCUIT_FLOAT64_VALIDATION_TOLERANCE = 1e-8
+CIRCUIT_FLOAT32_VALIDATION_TOLERANCE = 1e-6
 
 
 def _config_uses_float32(config):
@@ -62,10 +68,27 @@ def _default_bqskit_synthesis_validation_tolerance(config):
     )
 
 
+def _default_circuit_validation_tolerance(config):
+    return (
+        CIRCUIT_FLOAT32_VALIDATION_TOLERANCE
+        if _config_uses_float32(config)
+        else CIRCUIT_FLOAT64_VALIDATION_TOLERANCE
+    )
+
+
 def _squander_validation_tolerance(config):
     return config.get(
         "tolerance",
         _default_squander_tolerance(config),
+    )
+
+
+def _circuit_validation_tolerance(config):
+    """Return the allowed whole-circuit infidelity for state-vector checks."""
+
+    return config.get(
+        "circuit_validation_tolerance",
+        _default_circuit_validation_tolerance(config),
     )
 
 
@@ -740,8 +763,12 @@ def _topo_perm_to_swaps(pi, topo_edges, width):
 def patched_seqpam_workflow_classes(bqskit_compile_module, use_squander_partitioner, config):
     """Patch BQSKit workflow factories to use Squander passes.
 
-    Replaces QSearch/LEAP with SquanderSynthesisPass.  Squander failures are
-    caught by the EAPP patch and replaced with SWAP-correct fallbacks.
+    Replaces QSearch/LEAP with ``SquanderSynthesisPass`` only when the selected
+    decomposition strategy is Squander-native. External strategies such as
+    ``bqskit`` and ``qiskit`` keep BQSKit's synthesis passes; otherwise they
+    would be forwarded to Squander's ``DecomposePartition`` and fail as
+    unsupported. Squander failures are caught by the EAPP patch and replaced
+    with SWAP-correct fallbacks.
     """
 
     global _SQUANDER_BQSKIT_SYNTHESIS_CONFIG
@@ -760,8 +787,9 @@ def patched_seqpam_workflow_classes(bqskit_compile_module, use_squander_partitio
         _os.environ['_SQUANDER_BQSKIT_CONFIG'] = _json.dumps(cfg)
         if use_squander_partitioner:
             bqskit_compile_module.QuickPartitioner = SquanderPartitioner
-        bqskit_compile_module.QSearchSynthesisPass = SquanderSynthesisPass
-        bqskit_compile_module.LEAPSynthesisPass = SquanderSynthesisPass
+        if config.get("strategy") in _SQUANDER_NATIVE_STRATEGIES:
+            bqskit_compile_module.QSearchSynthesisPass = SquanderSynthesisPass
+            bqskit_compile_module.LEAPSynthesisPass = SquanderSynthesisPass
         yield
     finally:
         bqskit_compile_module.QuickPartitioner = original_quick
@@ -939,6 +967,10 @@ class qgd_Wide_Circuit_Optimization:
         config.setdefault("use_float", False)
         config.setdefault("tolerance", _default_squander_tolerance(config))
         config.setdefault(
+            "circuit_validation_tolerance",
+            _default_circuit_validation_tolerance(config),
+        )
+        config.setdefault(
             "bqskit_synthesis_validation_tolerance",
             _default_bqskit_synthesis_validation_tolerance(config),
         )
@@ -991,16 +1023,10 @@ class qgd_Wide_Circuit_Optimization:
                 "The bqskit_synthesis_validation_tolerance parameter should be a float."
             )
 
-        squander_validation_tolerance = config.get(
-            "tolerance",
-            None,
-        )
-        if squander_validation_tolerance is not None and not isinstance(
-            squander_validation_tolerance,
-            float,
-        ):
+        circuit_validation_tolerance = config["circuit_validation_tolerance"]
+        if not isinstance(circuit_validation_tolerance, float):
             raise Exception(
-                "The squander_validation_tolerance parameter should be a float."
+                "The circuit_validation_tolerance parameter should be a float."
             )
 
         test_subcircuits = config["test_subcircuits"]
@@ -2062,6 +2088,11 @@ class qgd_Wide_Circuit_Optimization:
                 pass them to ``CompareCircuits`` for layout-aware comparison.
             forced_test: If true, run the comparison even when ``test_final_circuit``
                 is false in config.
+
+        ``self.config['circuit_validation_tolerance']`` is an infidelity
+        threshold for this whole-circuit state-vector check. It is deliberately
+        separate from ``self.config['tolerance']``, which controls block
+        synthesis and block-level validation.
         """
         forced_test = forced_test or (
             self.config.get("force_small_circuit_validation", True)
@@ -2070,7 +2101,7 @@ class qgd_Wide_Circuit_Optimization:
         if self.config["test_final_circuit"] or forced_test:
             if label is not None:
                 print(f"{label}: check_compare_circuits")
-            tolerance = _squander_validation_tolerance(self.config)
+            tolerance = _circuit_validation_tolerance(self.config)
             if (
                 routing
                 and self.config.get("initial_mapping", None) is not None
@@ -2153,8 +2184,8 @@ class qgd_Wide_Circuit_Optimization:
                         block_size=3  # SEQPAM uses 3-qubit blocks only
                     )
             elif strategy == "seqpam-quick":
-                # Keep BQSKit's QuickPartitioner, but replace QSearch/LEAP so
-                # routing does not synthesize/decompose partition blocks.
+                # Keep BQSKit's QuickPartitioner. QSearch/LEAP are replaced
+                # only when the configured optimizer is Squander-native.
                 with patched_seqpam_workflow_classes(
                     bqskit_compile_module,
                     use_squander_partitioner=False,
