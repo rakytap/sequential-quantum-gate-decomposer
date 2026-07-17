@@ -15,6 +15,7 @@ dependencies:
   - scikit-build
   - numpy
   - scipy
+  - pybind11
   - tbb-devel
   - pip:
       - gurobipy
