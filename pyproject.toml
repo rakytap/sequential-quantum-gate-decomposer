@@ -40,6 +40,7 @@ dependencies = [
     "numpy",
     "scipy",
     "networkx",
+    "pybind11",
 ]
 
 [project.optional-dependencies]

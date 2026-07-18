@@ -141,10 +141,25 @@ endif()
 
 message("Include paths: " ${CMAKE_REQUIRED_INCLUDES})
 
-set(NUMPY_INC_DIR ${NumPy_INCLUDE_DIR})
+# Prefer NumPy headers from the active PYTHON_EXECUTABLE. FindNumPy can resolve to
+# a stale system path such as /usr/include -> python3.9 numpy 1.x while the env
+# runs NumPy 2.x, which then fails at import with ABI/_ARRAY_API errors.
+execute_process(
+    COMMAND ${PYTHON_EXECUTABLE} -c "import numpy; print(numpy.get_include())"
+    OUTPUT_VARIABLE NUMPY_INC_DIR_FROM_PYTHON
+    RESULT_VARIABLE NUMPY_GET_INCLUDE_FAILED
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+if(NOT NUMPY_GET_INCLUDE_FAILED AND NOT "${NUMPY_INC_DIR_FROM_PYTHON}" STREQUAL "")
+    set(NUMPY_INC_DIR ${NUMPY_INC_DIR_FROM_PYTHON})
+    message(STATUS "Using NumPy include from PYTHON_EXECUTABLE: ${NUMPY_INC_DIR}")
+else()
+    set(NUMPY_INC_DIR ${NumPy_INCLUDE_DIR})
+    message(STATUS "Using NumPy include from FindNumPy: ${NUMPY_INC_DIR}")
+endif()
 
 
-if(NOT NumPy_FOUND)
+if(NOT NumPy_FOUND AND NUMPY_GET_INCLUDE_FAILED)
     message(FATAL_ERROR "NumPy headers not found")
 endif()
 
