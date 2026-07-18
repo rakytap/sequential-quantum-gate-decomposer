@@ -30,7 +30,9 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include <ctime>
 #include "common.h"
 #include "matrix.h"
+#include "matrix_float.h"
 #include "matrix_real.h"
+#include "matrix_real_float.h"
 #include "logging.h"
 
 
@@ -71,6 +73,13 @@ Matrix Construct_Orthogonal_Matrix();
 @return Returns with a pointer to the generated unitary
 */
 Matrix Construct_Orthogonal_Matrix( Matrix_real &vargamma );
+
+/**
+@brief Generates an orthogonal matrix from float32 parameters.
+@param vargamma array of dim*(dim-1)/2 elements
+@return Returns with the generated float32 orthogonal matrix.
+*/
+Matrix_float Construct_Orthogonal_Matrix( Matrix_real_float &vargamma );
 
 };
 

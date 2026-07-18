@@ -30,9 +30,7 @@ limitations under the License.
 
 extern template class Matrix_T<QGD_Complex16>;
 
-#ifdef ENABLE_FLOAT32
 class Matrix_float;
-#endif
 
 /**
 @brief Double-precision complex matrix (float64). Class to store data of complex arrays and its properties. Compatible with the Picasso numpy interface.
@@ -60,7 +58,6 @@ public:
         return Matrix(Matrix_T<QGD_Complex16>::copy());
     }
 
-    #ifdef ENABLE_FLOAT32
     /**
     @brief Convert to single precision
     @return Matrix_float with converted data
@@ -68,7 +65,6 @@ public:
     @note Values outside [-FLT_MAX, FLT_MAX] saturate to infinity per IEEE 754
     */
     Matrix_float to_float32() const;
-    #endif
 };
 
 // ABI compatibility check

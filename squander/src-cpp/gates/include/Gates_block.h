@@ -25,8 +25,11 @@ limitations under the License.
 
 #include <vector>
 #include <map>
+#include <tbb/spin_mutex.h>
 #include "common.h"
 #include "matrix_real.h"
+#include "matrix_real_any.h"
+#include "matrix_any.h"
 #include "CROT.h"
 #include "Gate.h"
 #include "utils.hpp"
@@ -51,6 +54,13 @@ protected:
     /// maximal number of qubits in partitions
     int min_fusion;
     SmartAtomicPtr<Gates_block> fusion_block;
+    mutable bool involved_qubits_cache_valid;
+    mutable bool involved_target_qubits_cache_valid;
+    mutable std::vector<int> involved_qubits_cache;
+    mutable std::vector<int> involved_target_qubits_cache;
+    mutable std::shared_ptr<tbb::spin_mutex> involved_qubits_cache_mutex;
+
+    void invalidate_structure_cache();
 
 public:
 
@@ -69,7 +79,7 @@ Gates_block(int qbit_num_in);
 /**
 @brief Destructor of the class.
 */
-virtual ~Gates_block();
+~Gates_block() override;
 
 /**
 @brief Call to release the stored gates
@@ -86,7 +96,7 @@ void release_gate( int idx);
 @param parameters An array pointing to the parameters of the gates
 @return Returns with the gate matrix
 */
-Matrix get_matrix( Matrix_real& parameters );
+Matrix get_matrix( Matrix_real& parameters ) override;
 
 /**
 @brief Call to retrieve the gate matrix (Which is the product of all the gate matrices stored in the gate block)
@@ -94,7 +104,11 @@ Matrix get_matrix( Matrix_real& parameters );
 @param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 @return Returns with the gate matrix
 */
-Matrix get_matrix( Matrix_real& parameters, int parallel );
+Matrix get_matrix( Matrix_real& parameters, int parallel ) override;
+
+Matrix_float get_matrix( Matrix_real_float& parameters );
+
+Matrix_float get_matrix( Matrix_real_float& parameters, int parallel ) override;
 
 
 /**
@@ -103,7 +117,9 @@ Matrix get_matrix( Matrix_real& parameters, int parallel );
 @param inputs The input array on which the gate is applied
 @param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 */
-void apply_to_list( Matrix_real& parameters, std::vector<Matrix>& inputs, int parallel );
+void apply_to_list( Matrix_real& parameters, std::vector<Matrix>& inputs, int parallel ) override;
+
+void apply_to_list( Matrix_real_float& parameters, std::vector<Matrix_float>& inputs, int parallel ) override;
 
 /**
 @brief Call to apply the gate on the input array/matrix Gates_block*input
@@ -111,7 +127,23 @@ void apply_to_list( Matrix_real& parameters, std::vector<Matrix>& inputs, int pa
 @param input The input array on which the gate is applied
 @param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 */
-virtual void apply_to( Matrix_real& parameters_mtx, Matrix& input, int parallel=0 );
+virtual void apply_to( Matrix_real& parameters_mtx, Matrix& input, int parallel=0 ) override;
+
+virtual void apply_to_inner( Matrix_real& parameters_mtx, const Matrix_real& precomputed_sincos, Matrix& input, int parallel=0 ) override;
+
+virtual void apply_to( Matrix_float& input, int parallel=0 ) override;
+
+virtual void apply_to( Matrix_real_float& parameters_mtx, Matrix_float& input, int parallel=0 ) override;
+
+virtual void apply_to_inner( Matrix_real_float& parameters_mtx, const Matrix_real_float& precomputed_sincos, Matrix_float& input, int parallel=0 ) override;
+
+/**
+@brief Precision-agnostic apply entry point for float32/float64 execution.
+@param parameters_mtx Precision-tagged parameter matrix carrier
+@param input Precision-tagged matrix/state carrier
+@param parallel Set 0 for sequential execution, 1 for OpenMP and 2 for TBB
+*/
+virtual void apply_to( Matrix_real_any& parameters_mtx, Matrix_any& input, int parallel=0 );
 
 
 
@@ -120,7 +152,13 @@ virtual void apply_to( Matrix_real& parameters_mtx, Matrix& input, int parallel=
 @brief Call to apply the gate on the input array/matrix by input*CNOT
 @param input The input array on which the gate is applied
 */
-virtual void apply_from_right( Matrix_real& parameters_mtx, Matrix& input );
+virtual void apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) override;
+
+virtual void apply_from_right_inner( Matrix_real& parameters_mtx, const Matrix_real& precomputed_sincos, Matrix& input ) override;
+
+virtual void apply_from_right( Matrix_real_float& parameters_mtx, Matrix_float& input ) override;
+
+virtual void apply_from_right_inner( Matrix_real_float& parameters_mtx, const Matrix_real_float& precomputed_sincos, Matrix_float& input ) override;
 
 
 /**
@@ -129,7 +167,33 @@ virtual void apply_from_right( Matrix_real& parameters_mtx, Matrix& input );
 @param input The input array on which the gate is applied
 @param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP (NOT IMPLEMENTED YET) and 2 for parallel with TBB (optional)
 */
-virtual std::vector<Matrix> apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input, int parallel );
+virtual std::vector<Matrix> apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input, int parallel ) override;
+
+virtual void apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input, int parallel, std::vector<Matrix>& output ) override;
+
+void apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input, int parallel, std::vector<Matrix>& output, size_t output_offset, bool resize_output );
+
+virtual std::vector<Matrix_float> apply_derivate_to( Matrix_real_float& parameters_mtx, Matrix_float& input, int parallel ) override;
+
+virtual void apply_derivate_to( Matrix_real_float& parameters_mtx, Matrix_float& input, int parallel, std::vector<Matrix_float>& output ) override;
+
+void apply_derivate_to( Matrix_real_float& parameters_mtx, Matrix_float& input, int parallel, std::vector<Matrix_float>& output, size_t output_offset, bool resize_output );
+
+virtual std::vector<Matrix> apply_to_combined( Matrix_real& parameters_mtx, Matrix& input, int parallel ) override;
+
+virtual void apply_to_combined( Matrix_real& parameters_mtx, Matrix& input, int parallel, std::vector<Matrix>& output ) override;
+
+virtual std::vector<Matrix> apply_to_combined_inner( Matrix_real& parameters_mtx, const Matrix_real& precomputed_sincos, Matrix& input, int parallel ) override;
+
+virtual void apply_to_combined_inner( Matrix_real& parameters_mtx, const Matrix_real& precomputed_sincos, Matrix& input, int parallel, std::vector<Matrix>& output ) override;
+
+virtual std::vector<Matrix_float> apply_to_combined( Matrix_real_float& parameters_mtx, Matrix_float& input, int parallel ) override;
+
+virtual void apply_to_combined( Matrix_real_float& parameters_mtx, Matrix_float& input, int parallel, std::vector<Matrix_float>& output ) override;
+
+virtual std::vector<Matrix_float> apply_to_combined_inner( Matrix_real_float& parameters_mtx, const Matrix_real_float& precomputed_sincos, Matrix_float& input, int parallel ) override;
+
+virtual void apply_to_combined_inner( Matrix_real_float& parameters_mtx, const Matrix_real_float& precomputed_sincos, Matrix_float& input, int parallel, std::vector<Matrix_float>& output ) override;
 
 /**
 @brief Append a U1 gate to the list of gates
@@ -319,24 +383,6 @@ void add_cr(int target_qbit, int control_qbit);
 void add_cr_to_front(int target_qbit, int control_qbit);
 
 /**
-@brief Append a CZ_NU gate to the list of gates
-@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
-@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
-*/
-void add_cz_nu(int target_qbit, int control_qbit);
-
-
-
-/**
-@brief Add a CZ_NU gate to the front of the list of gates
-@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
-@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
-*/
-void add_cz_nu_to_front(int target_qbit, int control_qbit );
-
-
-
-/**
 @brief Append a RZ gate to the list of gates
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
 */
@@ -347,6 +393,7 @@ void add_rz(int target_qbit);
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
 */
 void add_rz_to_front(int target_qbit);
+
 
 
 
@@ -620,39 +667,6 @@ void add_syc_to_front( int target_qbit, int control_qbit );
 
 
 /**
-@brief Append a UN gate to the list of gates
-*/
-void add_un();
-
-/**
-@brief Add a UN gate to the front of the list of gates
-*/
-void add_un_to_front();
-
-
-/**
-@brief Append a ON gate to the list of gates
-*/
-void add_on();
-
-/**
-@brief Add a OUN gate to the front of the list of gates
-*/
-void add_on_to_front();
-
-
-/**
-@brief Append a Composite gate to the list of gates
-*/
-void add_composite();
-
-/**
-@brief Add a Composite gate to the front of the list of gates
-*/
-void add_composite_to_front();
-
-
-/**
 @brief Append a Adaptive gate to the list of gates
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
 @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
@@ -688,6 +702,18 @@ void add_gates_to_front( std::vector<Gate*> gates_in );
 void add_gate( Gate* gate );
 
 /**
+@brief Append a GENERAL_OPERATION gate with an explicitly provided matrix.
+@param operation_mtx The operation matrix. Must be matrix_size x matrix_size.
+@param target_qbits Optional metadata for target qubits involved in this gate.
+@param control_qbits Optional metadata for control qubits involved in this gate.
+*/
+void add_general_operation(
+    const Matrix& operation_mtx,
+    const std::vector<int>& target_qbits = std::vector<int>(),
+    const std::vector<int>& control_qbits = std::vector<int>()
+);
+
+/**
 @brief Add an gate to the front of the list of gates
 @param gate A pointer to a class Gate describing an gate.
 */
@@ -720,7 +746,7 @@ std::map<std::string, int> get_gate_nums();
 @brief Call to get the number of free parameters
 @return Return with the number of parameters of the gates grouped in the gate block.
 */
-int get_parameter_num();
+int get_parameter_num() override;
 
 
 
@@ -760,14 +786,14 @@ Gates_block* create_remapped_circuit( const std::map<int, int>& qbit_map, const 
 @brief Call to reorder the qubits in the matrix of the gates (Obsolete function)
 @param qbit_list The reordered list of qubits spanning the matrix
 */
-virtual void reorder_qubits( std::vector<int> qbit_list );
+virtual void reorder_qubits( std::vector<int> qbit_list ) override;
 
 
 /**
 @brief Call to get the qubits involved in the gates stored in the block of gates.
 @return Return with a list of the involved qubits
 */
-std::vector<int> get_involved_qubits(bool only_target=false);
+std::vector<int> get_involved_qubits(bool only_target=false) override;
 
 /**
 @brief Call to get the gates stored in the class.
@@ -796,14 +822,14 @@ void set_min_fusion( int min_fusion );
 @brief Set the number of qubits spanning the matrix of the gates stored in the block of gates.
 @param qbit_num_in The number of qubits spanning the matrices.
 */
-virtual void set_qbit_num( int qbit_num_in );
+virtual void set_qbit_num( int qbit_num_in ) override;
 
 
 /**
 @brief Create a clone of the present class.
 @return Return with a pointer pointing to the cloned object.
 */
-virtual Gates_block* clone();
+virtual Gates_block* clone() override;
 
 /**
 @brief Call to extract the gates stored in the class.
@@ -941,7 +967,7 @@ Gates_block* get_flat_circuit();
 @param parameters The parameter array corresponding to the circuit in which the gate is embedded
 @return Returns with the array of the extracted parameters.
 */
-virtual Matrix_real extract_parameters( Matrix_real& parameters );
+virtual Matrix_real extract_parameters( Matrix_real& parameters ) override;
 
 };
 
@@ -997,4 +1023,3 @@ Matrix_real reverse_parameters( const Matrix_real& v_in, std::vector<Gate*>::ite
 Matrix_real inverse_reverse_parameters( const Matrix_real& v_in, std::vector<Gate*>::iterator gates_it, int num_of_gates );
 
 #endif //GATES_BLOCK,
-

@@ -62,6 +62,13 @@ from squander.gates.qgd_Circuit import qgd_Circuit as Circuit
 #SABRE
 from squander.synthesis.qgd_SABRE import qgd_SABRE as SABRE
 
+# Partitioning
+from squander.partitioning.partition import (
+    PartitionCircuit,
+    PartitionStrategy,
+    PARTITION_FUNCTIONS,
+)
+
 # Qiskit IO
 from squander.IO_interfaces import Qiskit_IO
 

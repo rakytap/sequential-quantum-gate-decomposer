@@ -55,7 +55,7 @@ CRY(int qbit_num_in, int target_qbit_in, int control_qbit_in);
 /**
 @brief Destructor of the class
 */
-virtual ~CRY();
+~CRY() override;
 
 
 

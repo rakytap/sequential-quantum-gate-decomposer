@@ -554,7 +554,7 @@ void DensityMatrix::apply_local_unitary(
     const matrix_base<QGD_Complex16> &u_kernel,
     const std::vector<int> &target_qbits) {
   
-  int k = target_qbits.size();
+  int k = static_cast<int>(target_qbits.size());
   
   if (k == 0) {
     return;  // Nothing to do
@@ -662,7 +662,7 @@ DensityMatrix::partial_trace(const std::vector<int> &trace_out) const {
   }
 
   // Calculate dimensions
-  int trace_out_num = trace_out.size();
+  int trace_out_num = static_cast<int>(trace_out.size());
   int keep_num = qbit_num_ - trace_out_num;
 
   if (keep_num < 1) {

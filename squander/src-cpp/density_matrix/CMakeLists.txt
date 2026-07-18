@@ -71,6 +71,9 @@ target_include_directories(density_matrix_core
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include/squander/density_matrix>
+    PRIVATE
+        ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/include
+        ${TBB_INC_DIR}
 )
 
 # Link against INTERFACE library and main SQUANDER library
@@ -92,7 +95,6 @@ target_compile_options(density_matrix_core PRIVATE
         $<$<CONFIG:Debug>:-g -O0>
     >
     $<$<CXX_COMPILER_ID:MSVC>:
-        /W4
         $<$<CONFIG:Release>:/O2>
         $<$<CONFIG:Debug>:/Od /Zi>
     >
@@ -109,6 +111,11 @@ set_target_properties(density_matrix_core PROPERTIES
 
 pybind11_add_module(_density_matrix_cpp MODULE
     ../../density_matrix/bindings.cpp
+)
+
+target_include_directories(_density_matrix_cpp PRIVATE
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/include
+    ${TBB_INC_DIR}
 )
 
 # Link against C++ library

@@ -22,6 +22,7 @@ limitations under the License.
 */
 
 #include "matrix_real.h"
+#include "matrix_real_float.h"
 #include <cstring>
 #include <iostream>
 #include "tbb/tbb.h"
@@ -127,6 +128,36 @@ Matrix_real::copy() const {
 
 }
 
+void
+Matrix_real::copy_to(Matrix_real& target) const {
+
+  matrix_base<double>::copy_to(target);
+
+}
+
+void
+Matrix_real::copy_to(Matrix_real_float& target) const {
+
+  if (target.rows != rows || target.cols != cols || target.stride != stride) {
+    target = Matrix_real_float(rows, cols, stride);
+  }
+
+  for (int row=0; row<rows; row++) {
+    for (int col=0; col<cols; col++) {
+      const int idx = row*stride + col;
+      target[idx] = static_cast<float>(data[idx]);
+    }
+  }
+
+  if (target.is_conjugated() != conjugated) {
+    target.conjugate();
+  }
+  if (target.is_transposed() != transposed) {
+    target.transpose();
+  }
+
+}
+
 
 /**
 @brief Call to check the array for NaN entries.
@@ -145,7 +176,6 @@ Matrix_real::isnan() {
 
 
 }
-
 
 
 

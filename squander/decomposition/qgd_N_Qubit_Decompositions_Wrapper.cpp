@@ -22,6 +22,8 @@
 #endif
 
 #include "numpy_interface.h"
+#include "matrix_any.h"
+#include "matrix_real_any.h"
 #include "N_Qubit_Decomposition.h"
 #include "N_Qubit_Decomposition_adaptive.h"
 #include "N_Qubit_Decomposition_Tree_Search.h"
@@ -64,6 +66,74 @@ Matrix extract_matrix(PyObject* Umtx_arg, PyArrayObject** store_ref) {
         std::cout << "Warning: Umtx is not memory contiguous" << std::endl;
     }
     return numpy2matrix(*store_ref);
+}
+
+/**
+ * @brief Extract complex64/complex128 numpy input without rejecting float32 callers.
+ */
+void extract_matrix_any(PyObject* matrix_arg, PyArrayObject** store_ref, Matrix& matrix64, Matrix_float& matrix32, bool& is_float32) {
+    if (!matrix_arg) {
+        throw std::runtime_error("matrix argument is NULL");
+    }
+
+    int requested_type = NPY_COMPLEX128;
+    if (PyArray_Check(matrix_arg) && PyArray_TYPE(reinterpret_cast<PyArrayObject*>(matrix_arg)) == NPY_COMPLEX64) {
+        requested_type = NPY_COMPLEX64;
+    }
+
+    *store_ref = (PyArrayObject*)PyArray_FROM_OTF(matrix_arg, requested_type, NPY_ARRAY_IN_ARRAY);
+    if (!*store_ref) {
+        throw std::runtime_error("Failed to convert matrix argument");
+    }
+    if (!PyArray_IS_C_CONTIGUOUS(*store_ref)) {
+        std::cout << "Warning: matrix argument is not memory contiguous" << std::endl;
+    }
+
+    is_float32 = PyArray_TYPE(*store_ref) == NPY_COMPLEX64;
+    if (is_float32) {
+        matrix32 = numpy2matrix_float(*store_ref);
+    }
+    else {
+        matrix64 = numpy2matrix(*store_ref);
+    }
+}
+
+/**
+ * @brief Extract real float32/float64 parameters without forced precision conversion.
+ */
+void extract_parameters_any(PyObject* parameters_arg, PyArrayObject** store_ref, Matrix_real& parameters64, Matrix_real_float& parameters32, bool& is_float32) {
+    if (!parameters_arg) {
+        throw std::runtime_error("parameters argument is NULL");
+    }
+
+    int requested_type = NPY_FLOAT64;
+    if (PyArray_Check(parameters_arg) && PyArray_TYPE(reinterpret_cast<PyArrayObject*>(parameters_arg)) == NPY_FLOAT32) {
+        requested_type = NPY_FLOAT32;
+    }
+
+    *store_ref = (PyArrayObject*)PyArray_FROM_OTF(parameters_arg, requested_type, NPY_ARRAY_IN_ARRAY);
+    if (!*store_ref) {
+        throw std::runtime_error("Failed to convert parameters argument");
+    }
+
+    is_float32 = PyArray_TYPE(*store_ref) == NPY_FLOAT32;
+    if (is_float32) {
+        parameters32 = numpy2matrix_real_float(*store_ref);
+    }
+    else {
+        parameters64 = numpy2matrix_real(*store_ref);
+    }
+}
+
+Matrix_real parameters_float_to_double(Matrix_real_float& parameters32) {
+    Matrix_real parameters64(parameters32.rows, parameters32.cols, parameters32.stride);
+    for (int row=0; row<parameters32.rows; row++) {
+        for (int col=0; col<parameters32.cols; col++) {
+            int idx = row*parameters32.stride + col;
+            parameters64[idx] = static_cast<double>(parameters32[idx]);
+        }
+    }
+    return parameters64;
 }
 
 /**
@@ -133,7 +203,9 @@ std::map<std::string, Config_Element> extract_config(PyObject* config_arg) {
     while (PyDict_Next(config_arg, &pos, &key, &value)) {
         std::string key_str = PyUnicode_AsUTF8(key);
         Config_Element element;
-        if (PyLong_Check(value)) {
+        if (PyBool_Check(value)) {
+            element.set_property(key_str, value == Py_True);
+        } else if (PyLong_Check(value)) {
             element.set_property(key_str, PyLong_AsLongLong(value));
         } else if (PyFloat_Check(value)) {
             element.set_property(key_str, PyFloat_AsDouble(value));
@@ -143,6 +215,14 @@ std::map<std::string, Config_Element> extract_config(PyObject* config_arg) {
     return config;
 }
 
+static bool config_requests_float(std::map<std::string, Config_Element>& config) {
+    bool use_float = false;
+    if (config.count("use_float") > 0) {
+        config["use_float"].get_property(use_float);
+    }
+    return use_float;
+}
+
 //////////////////////////////////////////////////////////////////
 
 static int 
@@ -150,31 +230,43 @@ qgd_N_Qubit_Decomposition_Wrapper_init(qgd_N_Qubit_Decomposition_Wrapper* self, 
 {
     static char* kwlist[] = {
         (char*)"Umtx", (char*)"qbit_num", (char*)"optimize_layer_num", 
-        (char*)"initial_guess", NULL
+        (char*)"initial_guess", (char*)"config", NULL
     };
     
-    PyObject *Umtx_arg = NULL, *initial_guess = NULL; 
+    PyObject *Umtx_arg = NULL, *initial_guess = NULL, *config_arg = NULL;
     int qbit_num = -1;
     bool optimize_layer_num = false;
     
     if (!PyArg_ParseTupleAndKeywords(
-        args, kwds, "O|ibO", kwlist,
-        &Umtx_arg, &qbit_num, &optimize_layer_num, &initial_guess)
+        args, kwds, "O|ibOO", kwlist,
+        &Umtx_arg, &qbit_num, &optimize_layer_num, &initial_guess, &config_arg)
     ) {
         return -1;
     }
 
     try {
-        Matrix Umtx_mtx = extract_matrix(Umtx_arg, &self->Umtx);
+        Matrix Umtx_mtx;
+        Matrix_float Umtx_mtx_float;
+        bool Umtx_is_float32 = false;
+        extract_matrix_any(Umtx_arg, &self->Umtx, Umtx_mtx, Umtx_mtx_float, Umtx_is_float32);
         // calculate qbit_num from matrix size if not provided
         if (qbit_num == -1) {
-            qbit_num = (int)std::round(std::log2(Umtx_mtx.rows));
+            qbit_num = (int)std::round(std::log2(Umtx_is_float32 ? Umtx_mtx_float.rows : Umtx_mtx.rows));
         }
         
         guess_type guess = extract_guess_type(initial_guess);
-        std::map<std::string, Config_Element> config; // empty for base
+        auto config = extract_config(config_arg);
+        const bool use_float_constructor = Umtx_is_float32 || config_requests_float(config);
+        if (use_float_constructor && !Umtx_is_float32) {
+            Umtx_mtx_float = Umtx_mtx.to_float32();
+        }
 
-        self->decomp = new N_Qubit_Decomposition(Umtx_mtx, qbit_num, optimize_layer_num, config, guess);
+        if (use_float_constructor) {
+            self->decomp = new N_Qubit_Decomposition(Umtx_mtx_float, qbit_num, optimize_layer_num, config, guess);
+        }
+        else {
+            self->decomp = new N_Qubit_Decomposition(Umtx_mtx, qbit_num, optimize_layer_num, config, guess);
+        }
 
         return 0;
     } catch (const std::exception& e) {
@@ -202,30 +294,47 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_init(qgd_N_Qubit_Decomposition_Wrappe
     }
 
     try {
-        Matrix Umtx_mtx = extract_matrix(Umtx_arg, &self->Umtx);
+        Matrix Umtx_mtx;
+        Matrix_float Umtx_mtx_float;
+        bool Umtx_is_float32 = false;
+        extract_matrix_any(Umtx_arg, &self->Umtx, Umtx_mtx, Umtx_mtx_float, Umtx_is_float32);
+        const int Umtx_rows = Umtx_is_float32 ? Umtx_mtx_float.rows : Umtx_mtx.rows;
+        const int Umtx_cols = Umtx_is_float32 ? Umtx_mtx_float.cols : Umtx_mtx.cols;
         
         // For state vector input: State Preparation passes (State, level_limit_max, level_limit_min, ...)
         // without qbit_num, so we calculate qbit_num from state size and interpret the qbit_num 
         // position as level_limit_max. Example: (State_16x1, 5, 0) -> qbit_num=4, level_limit_max=5
-        if (Umtx_mtx.cols == 1 && qbit_num > 0) {
+        if (Umtx_cols == 1 && qbit_num > 0) {
             int level_limit_max_in = qbit_num;
-            qbit_num = (int)std::round(std::log2(Umtx_mtx.rows));
+            qbit_num = (int)std::round(std::log2(Umtx_rows));
             level_limit = level_limit_max_in;
         }
         else {
             // For Unitary decomposition, calculate qbit_num from matrix size if not provided
             if (qbit_num == -1) {
-                qbit_num = (int)std::round(std::log2(Umtx_mtx.rows));
+                qbit_num = (int)std::round(std::log2(Umtx_rows));
             }
         }
         
         auto topology_cpp = extract_topology(topology);
         auto config = extract_config(config_arg);
-        
-        self->decomp = new N_Qubit_Decomposition_adaptive(
-            Umtx_mtx, qbit_num, level_limit, level_limit_min, 
-            topology_cpp, config, accelerator_num
-        );
+        const bool use_float_constructor = Umtx_is_float32 || config_requests_float(config);
+        if (use_float_constructor && !Umtx_is_float32) {
+            Umtx_mtx_float = Umtx_mtx.to_float32();
+        }
+
+        if (use_float_constructor) {
+            self->decomp = new N_Qubit_Decomposition_adaptive(
+                Umtx_mtx_float, qbit_num, level_limit, level_limit_min,
+                topology_cpp, config, accelerator_num
+            );
+        }
+        else {
+            self->decomp = new N_Qubit_Decomposition_adaptive(
+                Umtx_mtx, qbit_num, level_limit, level_limit_min,
+                topology_cpp, config, accelerator_num
+            );
+        }
         
         return 0;
     } catch (const std::exception& e) {
@@ -253,16 +362,28 @@ qgd_N_Qubit_Decomposition_custom_Wrapper_init(qgd_N_Qubit_Decomposition_Wrapper*
     }
 
     try {
-        Matrix Umtx_mtx = extract_matrix(Umtx_arg, &self->Umtx);
+        Matrix Umtx_mtx;
+        Matrix_float Umtx_mtx_float;
+        bool Umtx_is_float32 = false;
+        extract_matrix_any(Umtx_arg, &self->Umtx, Umtx_mtx, Umtx_mtx_float, Umtx_is_float32);
         // calculate qbit_num from matrix size if not provided
         if (qbit_num == -1) {
-            qbit_num = (int)std::round(std::log2(Umtx_mtx.rows));
+            qbit_num = (int)std::round(std::log2(Umtx_is_float32 ? Umtx_mtx_float.rows : Umtx_mtx.rows));
         }
         
         guess_type guess = extract_guess_type(initial_guess);
         auto config = extract_config(config_arg);
-        
-        self->decomp = new N_Qubit_Decomposition_custom(Umtx_mtx, qbit_num, false, config, guess, accelerator_num);
+        const bool use_float_constructor = Umtx_is_float32 || config_requests_float(config);
+        if (use_float_constructor && !Umtx_is_float32) {
+            Umtx_mtx_float = Umtx_mtx.to_float32();
+        }
+
+        if (use_float_constructor) {
+            self->decomp = new N_Qubit_Decomposition_custom(Umtx_mtx_float, qbit_num, false, config, guess, accelerator_num);
+        }
+        else {
+            self->decomp = new N_Qubit_Decomposition_custom(Umtx_mtx, qbit_num, false, config, guess, accelerator_num);
+        }
         
         return 0;
     } catch (const std::exception& e) {
@@ -290,16 +411,28 @@ static int search_wrapper_init(qgd_N_Qubit_Decomposition_Wrapper* self, PyObject
     }
     
     try {
-        Matrix Umtx_mtx = extract_matrix(Umtx_arg, &self->Umtx);
+        Matrix Umtx_mtx;
+        Matrix_float Umtx_mtx_float;
+        bool Umtx_is_float32 = false;
+        extract_matrix_any(Umtx_arg, &self->Umtx, Umtx_mtx, Umtx_mtx_float, Umtx_is_float32);
         // calculate qbit_num from matrix size if not provided
         if (qbit_num == -1) {
-            qbit_num = (int)std::round(std::log2(Umtx_mtx.rows));
+            qbit_num = (int)std::round(std::log2(Umtx_is_float32 ? Umtx_mtx_float.rows : Umtx_mtx.rows));
         }
         
         auto topology_cpp = extract_topology(topology);
         auto config = extract_config(config_arg);
-        
-        self->decomp = new DecompT(Umtx_mtx, qbit_num, topology_cpp, config, accelerator_num);
+        const bool use_float_constructor = Umtx_is_float32 || config_requests_float(config);
+        if (use_float_constructor && !Umtx_is_float32) {
+            Umtx_mtx_float = Umtx_mtx.to_float32();
+        }
+
+        if (use_float_constructor) {
+            self->decomp = new DecompT(Umtx_mtx_float, qbit_num, topology_cpp, config, accelerator_num);
+        }
+        else {
+            self->decomp = new DecompT(Umtx_mtx, qbit_num, topology_cpp, config, accelerator_num);
+        }
         
         return 0;
     } catch (const std::exception& e) {
@@ -425,6 +558,12 @@ qgd_N_Qubit_Decomposition_Wrapper_get_Gate_Num(qgd_N_Qubit_Decomposition_Wrapper
 static PyObject *
 qgd_N_Qubit_Decomposition_Wrapper_get_Optimized_Parameters(qgd_N_Qubit_Decomposition_Wrapper *self)
 {
+    if (self->decomp->get_use_float()) {
+        Matrix_real_float parameters_mtx = self->decomp->get_optimized_parameters_float();
+        parameters_mtx.set_owner(false);
+        return matrix_real_float_to_numpy( parameters_mtx );
+    }
+
     Matrix_real parameters_mtx = self->decomp->get_optimized_parameters();
 
     // convert to numpy array
@@ -843,20 +982,21 @@ qgd_N_Qubit_Decomposition_Wrapper_get_Parameter_Num(qgd_N_Qubit_Decomposition_Wr
 static PyObject *
 qgd_N_Qubit_Decomposition_Wrapper_set_Optimized_Parameters(qgd_N_Qubit_Decomposition_Wrapper *self, PyObject *args)
 {
+    PyObject* parameters_obj = NULL;
     PyArrayObject* parameters_arr = NULL;
     // parsing input arguments
-    if (!PyArg_ParseTuple(args, "|O", &parameters_arr )) {
+    if (!PyArg_ParseTuple(args, "|O", &parameters_obj )) {
         return Py_BuildValue("i", -1);
     }
-    
-    if ( PyArray_IS_C_CONTIGUOUS(parameters_arr) ) {
-        Py_INCREF(parameters_arr);
-    } else {
-        parameters_arr = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
-    }
 
-    Matrix_real parameters_mtx = numpy2matrix_real( parameters_arr );
+    Matrix_real parameters_mtx;
+    Matrix_real_float parameters_mtx_float;
+    bool parameters_is_float32 = false;
     try {
+        extract_parameters_any(parameters_obj, &parameters_arr, parameters_mtx, parameters_mtx_float, parameters_is_float32);
+        if (parameters_is_float32) {
+            parameters_mtx = parameters_float_to_double(parameters_mtx_float);
+        }
         self->decomp->set_optimized_parameters(parameters_mtx.get_data(), parameters_mtx.size());
     }
     catch (std::string err ) {
@@ -1009,6 +1149,24 @@ qgd_N_Qubit_Decomposition_Wrapper_apply_Global_Phase_Factor(qgd_N_Qubit_Decompos
 static PyObject *
 qgd_N_Qubit_Decomposition_Wrapper_get_Unitary(qgd_N_Qubit_Decomposition_Wrapper *self)
 {
+    if (self->decomp->get_use_float()) {
+        Matrix_float Unitary_mtx;
+        try {
+            Unitary_mtx = self->decomp->get_Umtx_float().copy();
+        }
+        catch (std::string err) {
+            PyErr_SetString(PyExc_Exception, err.c_str());
+            return NULL;
+        }
+        catch (...) {
+            std::string err("Invalid pointer to decomposition class");
+            PyErr_SetString(PyExc_Exception, err.c_str());
+            return NULL;
+        }
+        Unitary_mtx.set_owner(false);
+        return matrix_float_to_numpy(Unitary_mtx);
+    }
+
     Matrix Unitary_mtx;
     try {
         Unitary_mtx = self->decomp->get_Umtx().copy();
@@ -1144,29 +1302,44 @@ qgd_N_Qubit_Decomposition_Wrapper_set_Max_Iterations(qgd_N_Qubit_Decomposition_W
 static PyObject *
 qgd_N_Qubit_Decomposition_Wrapper_get_Matrix(qgd_N_Qubit_Decomposition_Wrapper *self, PyObject *args, PyObject *kwds)
 {
+    PyObject* parameters_obj = NULL;
     PyArrayObject* parameters_arr = NULL;
 
     // parsing input arguments
-    if (!PyArg_ParseTuple(args, "|O", &parameters_arr))
+    if (!PyArg_ParseTuple(args, "|O", &parameters_obj))
         return Py_BuildValue("i", -1);
 
-    if (PyArray_IS_C_CONTIGUOUS(parameters_arr)) {
-        Py_INCREF(parameters_arr);
+    Matrix_real parameters_mtx;
+    Matrix_real_float parameters_mtx_float;
+    bool parameters_is_float32 = false;
+    try {
+        extract_parameters_any(parameters_obj, &parameters_arr, parameters_mtx, parameters_mtx_float, parameters_is_float32);
+    }
+    catch (std::exception& e) {
+        PyErr_SetString(PyExc_Exception, e.what());
+        return NULL;
+    }
+
+    PyObject *unitary_py = NULL;
+    if (parameters_is_float32 || self->decomp->get_use_float()) {
+        if (!parameters_is_float32) {
+            parameters_mtx_float = Matrix_real_float(parameters_mtx.rows, parameters_mtx.cols, parameters_mtx.stride);
+            for (int row=0; row<parameters_mtx.rows; row++) {
+                for (int col=0; col<parameters_mtx.cols; col++) {
+                    int idx = row*parameters_mtx.stride + col;
+                    parameters_mtx_float[idx] = static_cast<float>(parameters_mtx[idx]);
+                }
+            }
+        }
+        Matrix_float unitary_mtx = self->decomp->get_matrix(parameters_mtx_float);
+        unitary_mtx.set_owner(false);
+        unitary_py = matrix_float_to_numpy(unitary_mtx);
     }
     else {
-        parameters_arr = (PyArrayObject*)PyArray_FROM_OTF((PyObject*)parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+        Matrix unitary_mtx = self->decomp->get_matrix(parameters_mtx);
+        unitary_mtx.set_owner(false);
+        unitary_py = matrix_to_numpy(unitary_mtx);
     }
-
-    // get the C++ wrapper around the data
-    Matrix_real&& parameters_mtx = numpy2matrix_real(parameters_arr);
-
-    Matrix unitary_mtx;
-
-    unitary_mtx = self->decomp->get_matrix(parameters_mtx);
-
-    // convert to numpy array
-    unitary_mtx.set_owner(false);
-    PyObject *unitary_py = matrix_to_numpy(unitary_mtx);
 
     Py_DECREF(parameters_arr);
 
@@ -1222,33 +1395,31 @@ qgd_N_Qubit_Decomposition_Wrapper_set_Cost_Function_Variant(qgd_N_Qubit_Decompos
 static PyObject *
 qgd_N_Qubit_Decomposition_Wrapper_Optimization_Problem(qgd_N_Qubit_Decomposition_Wrapper *self, PyObject *args)
 {
+    PyObject* parameters_obj = NULL;
     PyArrayObject* parameters_arg = NULL;
 
     // parsing input arguments
-    if (!PyArg_ParseTuple(args, "|O", &parameters_arg)) {
+    if (!PyArg_ParseTuple(args, "|O", &parameters_obj)) {
         std::string err("Unsuccessful argument parsing not ");
         PyErr_SetString(PyExc_Exception, err.c_str());
         return NULL;
     }
 
-    // establish memory contiguous arrays for C calculations
-    if (PyArray_IS_C_CONTIGUOUS(parameters_arg) && PyArray_TYPE(parameters_arg) == NPY_FLOAT64) {
-        Py_INCREF(parameters_arg);
-    }
-    else if (PyArray_TYPE(parameters_arg) == NPY_FLOAT64) {
-        parameters_arg = (PyArrayObject*)PyArray_FROM_OTF((PyObject*)parameters_arg, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
-    }
-    else {
-        std::string err("Parameters should be should be real (given in float64 format)");
-        PyErr_SetString(PyExc_Exception, err.c_str());
-        return NULL;
-    }
-
-    Matrix_real parameters_mtx = numpy2matrix_real(parameters_arg);
+    Matrix_real parameters_mtx;
+    Matrix_real_float parameters_mtx_float;
+    bool parameters_is_float32 = false;
     double f0;
 
     try {
+        extract_parameters_any(parameters_obj, &parameters_arg, parameters_mtx, parameters_mtx_float, parameters_is_float32);
+        if (parameters_is_float32) {
+            parameters_mtx = parameters_float_to_double(parameters_mtx_float);
+        }
         f0 = self->decomp->optimization_problem(parameters_mtx);
+    }
+    catch (std::exception& e) {
+        PyErr_SetString(PyExc_Exception, e.what());
+        return NULL;
     }
     catch (std::string err) {
         PyErr_SetString(PyExc_Exception, err.c_str());
@@ -1274,34 +1445,32 @@ qgd_N_Qubit_Decomposition_Wrapper_Optimization_Problem(qgd_N_Qubit_Decomposition
 static PyObject *
 qgd_N_Qubit_Decomposition_Wrapper_Optimization_Problem_Combined_Unitary(qgd_N_Qubit_Decomposition_Wrapper *self, PyObject *args)
 {
+    PyObject* parameters_obj = NULL;
     PyArrayObject* parameters_arg = NULL;
 
     // parsing input arguments
-    if (!PyArg_ParseTuple(args, "|O", &parameters_arg)) {
+    if (!PyArg_ParseTuple(args, "|O", &parameters_obj)) {
         std::string err("Unsuccessful argument parsing not ");
         PyErr_SetString(PyExc_Exception, err.c_str());
         return NULL;
     }
 
-    // establish memory contiguous arrays for C calculations
-    if (PyArray_IS_C_CONTIGUOUS(parameters_arg) && PyArray_TYPE(parameters_arg) == NPY_FLOAT64) {
-        Py_INCREF(parameters_arg);
-    }
-    else if (PyArray_TYPE(parameters_arg) == NPY_FLOAT64) {
-        parameters_arg = (PyArrayObject*)PyArray_FROM_OTF((PyObject*)parameters_arg, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
-    }
-    else {
-        std::string err("Parameters should be should be real (given in float64 format)");
-        PyErr_SetString(PyExc_Exception, err.c_str());
-        return NULL;
-    }
-
-    Matrix_real parameters_mtx = numpy2matrix_real(parameters_arg);
+    Matrix_real parameters_mtx;
+    Matrix_real_float parameters_mtx_float;
+    bool parameters_is_float32 = false;
     Matrix Umtx;
     std::vector<Matrix> Umtx_deriv;
 
     try {
+        extract_parameters_any(parameters_obj, &parameters_arg, parameters_mtx, parameters_mtx_float, parameters_is_float32);
+        if (parameters_is_float32) {
+            parameters_mtx = parameters_float_to_double(parameters_mtx_float);
+        }
         self->decomp->optimization_problem_combined_unitary(parameters_mtx, Umtx, Umtx_deriv);
+    }
+    catch (std::exception& e) {
+        PyErr_SetString(PyExc_Exception, e.what());
+        return NULL;
     }
     catch (std::string err) {
         PyErr_SetString(PyExc_Exception, err.c_str());
@@ -1339,33 +1508,32 @@ qgd_N_Qubit_Decomposition_Wrapper_Optimization_Problem_Combined_Unitary(qgd_N_Qu
 static PyObject *
 qgd_N_Qubit_Decomposition_Wrapper_Optimization_Problem_Grad(qgd_N_Qubit_Decomposition_Wrapper *self, PyObject *args)
 {
+    PyObject* parameters_obj = NULL;
     PyArrayObject* parameters_arg = NULL;
 
     // parsing input arguments
-    if (!PyArg_ParseTuple(args, "|O", &parameters_arg)) {
+    if (!PyArg_ParseTuple(args, "|O", &parameters_obj)) {
         std::string err("Unsuccessful argument parsing not ");
         PyErr_SetString(PyExc_Exception, err.c_str());
         return NULL;
     }
 
-    // establish memory contiguous arrays for C calculations
-    if (PyArray_IS_C_CONTIGUOUS(parameters_arg) && PyArray_TYPE(parameters_arg) == NPY_FLOAT64) {
-        Py_INCREF(parameters_arg);
-    }
-    else if (PyArray_TYPE(parameters_arg) == NPY_FLOAT64) {
-        parameters_arg = (PyArrayObject*)PyArray_FROM_OTF((PyObject*)parameters_arg, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
-    }
-    else {
-        std::string err("Parameters should be should be real (given in float64 format)");
-        PyErr_SetString(PyExc_Exception, err.c_str());
-        return NULL;
-    }
-
-    Matrix_real parameters_mtx = numpy2matrix_real(parameters_arg);
+    Matrix_real parameters_mtx;
+    Matrix_real_float parameters_mtx_float;
+    bool parameters_is_float32 = false;
     Matrix_real grad_mtx(parameters_mtx.size(), 1);
 
     try {
+        extract_parameters_any(parameters_obj, &parameters_arg, parameters_mtx, parameters_mtx_float, parameters_is_float32);
+        if (parameters_is_float32) {
+            parameters_mtx = parameters_float_to_double(parameters_mtx_float);
+        }
+        grad_mtx = Matrix_real(parameters_mtx.size(), 1);
         self->decomp->optimization_problem_grad(parameters_mtx, self->decomp, grad_mtx);
+    }
+    catch (std::exception& e) {
+        PyErr_SetString(PyExc_Exception, e.what());
+        return NULL;
     }
     catch (std::string err) {
         PyErr_SetString(PyExc_Exception, err.c_str());
@@ -1378,8 +1546,22 @@ qgd_N_Qubit_Decomposition_Wrapper_Optimization_Problem_Grad(qgd_N_Qubit_Decompos
     }
 
     // convert to numpy array
-    grad_mtx.set_owner(false);
-    PyObject *grad_py = matrix_real_to_numpy(grad_mtx);
+    PyObject *grad_py = NULL;
+    if (parameters_is_float32 || self->decomp->get_use_float()) {
+        Matrix_real_float grad_float(grad_mtx.rows, grad_mtx.cols, grad_mtx.stride);
+        for (int row=0; row<grad_mtx.rows; row++) {
+            for (int col=0; col<grad_mtx.cols; col++) {
+                int idx = row*grad_mtx.stride + col;
+                grad_float[idx] = static_cast<float>(grad_mtx[idx]);
+            }
+        }
+        grad_float.set_owner(false);
+        grad_py = matrix_real_float_to_numpy(grad_float);
+    }
+    else {
+        grad_mtx.set_owner(false);
+        grad_py = matrix_real_to_numpy(grad_mtx);
+    }
 
     Py_DECREF(parameters_arg);
 
@@ -1395,34 +1577,33 @@ qgd_N_Qubit_Decomposition_Wrapper_Optimization_Problem_Grad(qgd_N_Qubit_Decompos
 static PyObject *
 qgd_N_Qubit_Decomposition_Wrapper_Optimization_Problem_Combined(qgd_N_Qubit_Decomposition_Wrapper *self, PyObject *args)
 {
+    PyObject* parameters_obj = NULL;
     PyArrayObject* parameters_arg = NULL;
 
     // parsing input arguments
-    if (!PyArg_ParseTuple(args, "|O", &parameters_arg)) {
+    if (!PyArg_ParseTuple(args, "|O", &parameters_obj)) {
         std::string err("Unsuccessful argument parsing not ");
         PyErr_SetString(PyExc_Exception, err.c_str());
         return NULL;
     }
 
-    // establish memory contiguous arrays for C calculations
-    if (PyArray_IS_C_CONTIGUOUS(parameters_arg) && PyArray_TYPE(parameters_arg) == NPY_FLOAT64) {
-        Py_INCREF(parameters_arg);
-    }
-    else if (PyArray_TYPE(parameters_arg) == NPY_FLOAT64) {
-        parameters_arg = (PyArrayObject*)PyArray_FROM_OTF((PyObject*)parameters_arg, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
-    }
-    else {
-        std::string err("Parameters should be should be real (given in float64 format)");
-        PyErr_SetString(PyExc_Exception, err.c_str());
-        return NULL;
-    }
-
-    Matrix_real parameters_mtx = numpy2matrix_real(parameters_arg);
+    Matrix_real parameters_mtx;
+    Matrix_real_float parameters_mtx_float;
+    bool parameters_is_float32 = false;
     Matrix_real grad_mtx(parameters_mtx.size(), 1);
     double f0;
 
     try {
+        extract_parameters_any(parameters_obj, &parameters_arg, parameters_mtx, parameters_mtx_float, parameters_is_float32);
+        if (parameters_is_float32) {
+            parameters_mtx = parameters_float_to_double(parameters_mtx_float);
+        }
+        grad_mtx = Matrix_real(parameters_mtx.size(), 1);
         self->decomp->optimization_problem_combined(parameters_mtx, &f0, grad_mtx);
+    }
+    catch (std::exception& e) {
+        PyErr_SetString(PyExc_Exception, e.what());
+        return NULL;
     }
     catch (std::string err) {
         PyErr_SetString(PyExc_Exception, err.c_str());
@@ -1435,8 +1616,22 @@ qgd_N_Qubit_Decomposition_Wrapper_Optimization_Problem_Combined(qgd_N_Qubit_Deco
     }
 
     // convert to numpy array
-    grad_mtx.set_owner(false);
-    PyObject *grad_py = matrix_real_to_numpy(grad_mtx);
+    PyObject *grad_py = NULL;
+    if (parameters_is_float32 || self->decomp->get_use_float()) {
+        Matrix_real_float grad_float(grad_mtx.rows, grad_mtx.cols, grad_mtx.stride);
+        for (int row=0; row<grad_mtx.rows; row++) {
+            for (int col=0; col<grad_mtx.cols; col++) {
+                int idx = row*grad_mtx.stride + col;
+                grad_float[idx] = static_cast<float>(grad_mtx[idx]);
+            }
+        }
+        grad_float.set_owner(false);
+        grad_py = matrix_real_float_to_numpy(grad_float);
+    }
+    else {
+        grad_mtx.set_owner(false);
+        grad_py = matrix_real_to_numpy(grad_mtx);
+    }
 
     Py_DECREF(parameters_arg);
 
@@ -1454,38 +1649,36 @@ qgd_N_Qubit_Decomposition_Wrapper_Optimization_Problem_Combined(qgd_N_Qubit_Deco
 static PyObject *
 qgd_N_Qubit_Decomposition_Wrapper_Optimization_Problem_Batch(qgd_N_Qubit_Decomposition_Wrapper *self, PyObject *args)
 {
+    PyObject* parameters_obj = NULL;
     PyArrayObject* parameters_arg = NULL;
 
     // parsing input arguments
-    if (!PyArg_ParseTuple(args, "|O", &parameters_arg)) {
+    if (!PyArg_ParseTuple(args, "|O", &parameters_obj)) {
         std::string err("Unsuccessful argument parsing not ");
         PyErr_SetString(PyExc_Exception, err.c_str());
         return NULL;
     }
 
-    // establish memory contiguous arrays for C calculations
-    if (PyArray_IS_C_CONTIGUOUS(parameters_arg) && PyArray_TYPE(parameters_arg) == NPY_FLOAT64) {
-        Py_INCREF(parameters_arg);
-    }
-    else if (PyArray_TYPE(parameters_arg) == NPY_FLOAT64) {
-        parameters_arg = (PyArrayObject*)PyArray_FROM_OTF((PyObject*)parameters_arg, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
-    }
-    else {
-        std::string err("Parameters should be should be real (given in float64 format)");
-        PyErr_SetString(PyExc_Exception, err.c_str());
-        return NULL;
-    }
-
-    Matrix_real parameters_mtx = numpy2matrix_real(parameters_arg);
+    Matrix_real parameters_mtx;
+    Matrix_real_float parameters_mtx_float;
+    bool parameters_is_float32 = false;
     Matrix_real result_mtx;
 
     try {
+        extract_parameters_any(parameters_obj, &parameters_arg, parameters_mtx, parameters_mtx_float, parameters_is_float32);
+        if (parameters_is_float32) {
+            parameters_mtx = parameters_float_to_double(parameters_mtx_float);
+        }
         std::vector<Matrix_real> parameters_vec;
         parameters_vec.resize(parameters_mtx.rows);
         for (int row_idx = 0; row_idx < parameters_mtx.rows; row_idx++) {
             parameters_vec[row_idx] = Matrix_real(parameters_mtx.get_data() + row_idx * parameters_mtx.stride, 1, parameters_mtx.cols, parameters_mtx.stride);
         }
         result_mtx = self->decomp->optimization_problem_batched(parameters_vec);
+    }
+    catch (std::exception& e) {
+        PyErr_SetString(PyExc_Exception, e.what());
+        return NULL;
     }
     catch (std::string err) {
         PyErr_SetString(PyExc_Exception, err.c_str());
@@ -1498,8 +1691,22 @@ qgd_N_Qubit_Decomposition_Wrapper_Optimization_Problem_Batch(qgd_N_Qubit_Decompo
     }
 
     // convert to numpy array
-    result_mtx.set_owner(false);
-    PyObject *result_py = matrix_real_to_numpy(result_mtx);
+    PyObject *result_py = NULL;
+    if (parameters_is_float32 || self->decomp->get_use_float()) {
+        Matrix_real_float result_float(result_mtx.rows, result_mtx.cols, result_mtx.stride);
+        for (int row=0; row<result_mtx.rows; row++) {
+            for (int col=0; col<result_mtx.cols; col++) {
+                int idx = row*result_mtx.stride + col;
+                result_float[idx] = static_cast<float>(result_mtx[idx]);
+            }
+        }
+        result_float.set_owner(false);
+        result_py = matrix_real_float_to_numpy(result_float);
+    }
+    else {
+        result_mtx.set_owner(false);
+        result_py = matrix_real_to_numpy(result_mtx);
+    }
 
     Py_DECREF(parameters_arg);
 
@@ -1626,40 +1833,54 @@ qgd_N_Qubit_Decomposition_Wrapper_get_Decomposition_Error(qgd_N_Qubit_Decomposit
 static PyObject *
 qgd_N_Qubit_Decomposition_Wrapper_get_Second_Renyi_Entropy(qgd_N_Qubit_Decomposition_Wrapper *self, PyObject *args)
 {
+    PyObject *parameters_obj = NULL, *input_state_obj = NULL;
     PyArrayObject *parameters_arr = NULL, *input_state_arg = NULL;
     PyObject *qubit_list_arg = NULL;
 
     // Parse input arguments
-    if (!PyArg_ParseTuple(args, "|OOO", &parameters_arr, &input_state_arg, &qubit_list_arg)) {
+    if (!PyArg_ParseTuple(args, "|OOO", &parameters_obj, &input_state_obj, &qubit_list_arg)) {
         return Py_BuildValue("i", -1);
     }
 
-    // Ensure parameters array is C-contiguous
-    if (PyArray_IS_C_CONTIGUOUS(parameters_arr)) {
-        Py_INCREF(parameters_arr);
-    } else {
-        parameters_arr = (PyArrayObject*)PyArray_FROM_OTF((PyObject*)parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+    Matrix_real parameters_mtx;
+    Matrix_real_float parameters_mtx_float;
+    bool parameters_is_float32 = false;
+    try {
+        extract_parameters_any(parameters_obj, &parameters_arr, parameters_mtx, parameters_mtx_float, parameters_is_float32);
+        if (parameters_is_float32) {
+            parameters_mtx = parameters_float_to_double(parameters_mtx_float);
+        }
+    }
+    catch (std::exception& e) {
+        PyErr_SetString(PyExc_Exception, e.what());
+        return NULL;
     }
 
-    // Get C++ wrapper around the parameters data
-    Matrix_real&& parameters_mtx = numpy2matrix_real(parameters_arr);
-
     // Convert input state array
-    if (input_state_arg == NULL) {
+    if (input_state_obj == NULL) {
         PyErr_SetString(PyExc_Exception, "Input matrix was not given");
         return NULL;
     }
 
-    PyArrayObject* input_state = (PyArrayObject*)PyArray_FROM_OTF((PyObject*)input_state_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
-
-    // Test C-style contiguous memory allocation
-    if (!PyArray_IS_C_CONTIGUOUS(input_state)) {
-        PyErr_SetString(PyExc_Exception, "Input matrix is not memory contiguous");
+    Matrix input_state_mtx;
+    Matrix_float input_state_mtx_float;
+    bool input_state_is_float32 = false;
+    try {
+        extract_matrix_any(input_state_obj, &input_state_arg, input_state_mtx, input_state_mtx_float, input_state_is_float32);
+        if (input_state_is_float32) {
+            input_state_mtx = input_state_mtx_float.to_float64();
+        }
+    }
+    catch (std::exception& e) {
+        PyErr_SetString(PyExc_Exception, e.what());
         return NULL;
     }
 
-    // Create QGD version of the input matrix
-    Matrix input_state_mtx = numpy2matrix(input_state);
+    // Test C-style contiguous memory allocation
+    if (!PyArray_IS_C_CONTIGUOUS(input_state_arg)) {
+        PyErr_SetString(PyExc_Exception, "Input matrix is not memory contiguous");
+        return NULL;
+    }
 
     // Check qubit list argument
     if (qubit_list_arg == NULL || !PyList_Check(qubit_list_arg)) {
@@ -1693,7 +1914,7 @@ qgd_N_Qubit_Decomposition_Wrapper_get_Second_Renyi_Entropy(qgd_N_Qubit_Decomposi
 
     // Clean up references
     Py_DECREF(parameters_arr);
-    Py_DECREF(input_state);
+    Py_DECREF(input_state_arg);
 
     PyObject* p = Py_BuildValue("d", entropy);
     return p;
@@ -2021,39 +2242,55 @@ qgd_N_Qubit_Decomposition_Wrapper_set_Unitary(qgd_N_Qubit_Decomposition_Wrapper 
         self->Umtx = NULL;
     }
 
-    PyArrayObject *Umtx_arg = NULL;
+    PyObject *Umtx_obj = NULL;
     //Parse arguments 
-    if (!PyArg_ParseTuple(args, "|O", &Umtx_arg )) {
+    if (!PyArg_ParseTuple(args, "|O", &Umtx_obj )) {
         return Py_BuildValue("i", -1);
     }
     
     // convert python object array to numpy C API array
-    if ( Umtx_arg == NULL ) {
+    if ( Umtx_obj == NULL ) {
         PyErr_SetString(PyExc_Exception, "Umtx argument in empty");
         return NULL;
     }
-	
-	self->Umtx = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)Umtx_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
 
-	// test C-style contiguous memory allocation of the array
-	if ( !PyArray_IS_C_CONTIGUOUS(self->Umtx) ) {
-	    std::cout << "Umtx is not memory contiguous" << std::endl;
-	}
-
-	// create QGD version of the Umtx
-	Matrix Umtx_mtx = numpy2matrix(self->Umtx);
+    Matrix Umtx_mtx;
+    Matrix_float Umtx_mtx_float;
+    bool Umtx_is_float32 = false;
+    try {
+        extract_matrix_any(Umtx_obj, &self->Umtx, Umtx_mtx, Umtx_mtx_float, Umtx_is_float32);
+    }
+    catch (std::exception& e) {
+        PyErr_SetString(PyExc_Exception, e.what());
+        return NULL;
+    }
     
     // Try each decomposition type that supports set_unitary
     if (N_Qubit_Decomposition_adaptive* p = dynamic_cast<N_Qubit_Decomposition_adaptive*>(self->decomp)) {
-        p->set_unitary(Umtx_mtx);
+        if (Umtx_is_float32) {
+            p->set_unitary(Umtx_mtx_float);
+        }
+        else {
+            p->set_unitary(Umtx_mtx);
+        }
         return Py_BuildValue("i", 0);
     }
     if (N_Qubit_Decomposition_Tree_Search* p = dynamic_cast<N_Qubit_Decomposition_Tree_Search*>(self->decomp)) {
-        p->set_unitary(Umtx_mtx);
+        if (Umtx_is_float32) {
+            p->set_unitary(Umtx_mtx_float);
+        }
+        else {
+            p->set_unitary(Umtx_mtx);
+        }
         return Py_BuildValue("i", 0);
     }
     if (N_Qubit_Decomposition_Tabu_Search* p = dynamic_cast<N_Qubit_Decomposition_Tabu_Search*>(self->decomp)) {
-        p->set_unitary(Umtx_mtx);
+        if (Umtx_is_float32) {
+            p->set_unitary(Umtx_mtx_float);
+        }
+        else {
+            p->set_unitary(Umtx_mtx);
+        }
         return Py_BuildValue("i", 0);
     }
 
@@ -2091,8 +2328,6 @@ qgd_N_Qubit_Decomposition_Wrapper_get_Gates(qgd_N_Qubit_Decomposition_Wrapper* s
         const char* type_str = nullptr;
         switch(gate->get_type()) {
             case GENERAL_OPERATION: type_str = "GENERAL"; break;
-            case UN_OPERATION: type_str = "UN"; break;
-            case ON_OPERATION: type_str = "ON"; break;
             case CZ_OPERATION: type_str = "CZ"; break;
             case CNOT_OPERATION: type_str = "CNOT"; break;
             case CH_OPERATION: type_str = "CH"; break;
@@ -2100,13 +2335,11 @@ qgd_N_Qubit_Decomposition_Wrapper_get_Gates(qgd_N_Qubit_Decomposition_Wrapper* s
             case RY_OPERATION: type_str = "RY"; break;
             case RX_OPERATION: type_str = "RX"; break;
             case RZ_OPERATION: type_str = "RZ"; break;
-            case RZ_P_OPERATION: type_str = "RZ_P"; break;
             case X_OPERATION: type_str = "X"; break;
             case SX_OPERATION: type_str = "SX"; break;
             case CRY_OPERATION: type_str = "CRY"; break;
             case SYC_OPERATION: type_str = "SYC"; break;
             case BLOCK_OPERATION: type_str = "BLOCK"; break;
-            case COMPOSITE_OPERATION: type_str = "COMPOSITE"; break;
             case ADAPTIVE_OPERATION: type_str = "ADAPTIVE"; break;
             case DECOMPOSITION_BASE_CLASS: type_str = "DECOMPOSITION_BASE_CLASS"; break;
             case SUB_MATRIX_DECOMPOSITION_CLASS: type_str = "SUB_MATRIX_DECOMPOSITION_CLASS"; break;
@@ -2115,7 +2348,6 @@ qgd_N_Qubit_Decomposition_Wrapper_get_Gates(qgd_N_Qubit_Decomposition_Wrapper* s
             case Y_OPERATION: type_str = "Y"; break;
             case Z_OPERATION: type_str = "Z"; break;
             case H_OPERATION: type_str = "H"; break;
-            case CZ_NU_OPERATION: type_str = "CZ_NU"; break;
             case CROT_OPERATION: type_str = "CROT"; break;
             case R_OPERATION: type_str = "R"; break;
             case T_OPERATION: type_str = "T"; break;
@@ -2126,7 +2358,6 @@ qgd_N_Qubit_Decomposition_Wrapper_get_Gates(qgd_N_Qubit_Decomposition_Wrapper* s
             case S_OPERATION: type_str = "S"; break;
             case SDG_OPERATION: type_str = "SDG"; break;
             case CU_OPERATION: type_str = "CU"; break;
-            case CUSTOM_KERNEL_1QUBIT_GATE_OPERATION: type_str = "CUSTOM_KERNEL_1QUBIT_GATE"; break;
             case CP_OPERATION: type_str = "CP"; break;
             case CRX_OPERATION: type_str = "CRX"; break;
             case CRZ_OPERATION: type_str = "CRZ"; break;

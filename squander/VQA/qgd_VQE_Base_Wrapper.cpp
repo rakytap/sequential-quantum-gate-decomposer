@@ -197,7 +197,11 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_init(qgd_Variational_Quantum_Ei
         std::string key_Cpp( key_C );
         Config_Element element;
 
-        if ( PyLong_Check( value ) ) { 
+        if (PyBool_Check(value)) {
+            element.set_property(key_Cpp, value == Py_True);
+            config[key_Cpp] = element;
+        }
+        else if ( PyLong_Check( value ) ) { 
             element.set_property( key_Cpp, PyLong_AsLongLong( value ) );
             config[ key_Cpp ] = element;
         }

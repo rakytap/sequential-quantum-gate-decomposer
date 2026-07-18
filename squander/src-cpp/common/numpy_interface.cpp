@@ -19,7 +19,9 @@ limitations under the License.
 #include <Python.h>
 #include <numpy/arrayobject.h>
 #include "matrix.h"
+#include "matrix_float.h"
 #include "matrix_real.h"
+#include "matrix_real_float.h"
 
 
 /**
@@ -89,6 +91,26 @@ PyObject* matrix_to_numpy( Matrix &mtx ) {
 }
 
 
+/**
+@brief Call to make a numpy array from an instance of matrix_float class.
+@param mtx a matrix instance
+*/
+PyObject* matrix_float_to_numpy( Matrix_float &mtx ) {
+    // initialize Numpy API
+    import_array();
+
+
+    npy_intp shape[2];
+    shape[0] = (npy_intp) mtx.rows;
+    shape[1] = (npy_intp) mtx.cols;
+
+    QGD_Complex8* data = mtx.get_data();
+    return array_from_ptr( (void*) data, 2, shape, NPY_COMPLEX64);
+
+
+}
+
+
 
 /**
 @brief Call to make a numpy array from an instance of matrix class.
@@ -119,6 +141,38 @@ PyObject* matrix_real_to_numpy( Matrix_real &mtx ) {
 
         double* data = mtx.get_data();
         return array_from_ptr( (void*) data, dims, shape, NPY_DOUBLE);
+
+
+}
+
+
+/**
+@brief Call to make a numpy array from an instance of matrix_real_float class.
+@param mtx a matrix instance
+*/
+PyObject* matrix_real_float_to_numpy( Matrix_real_float &mtx ) {
+        // initialize Numpy API
+        import_array();
+
+        npy_intp shape[2];
+
+        int dims;
+        if ( mtx.rows == 1 ) {
+            dims = 1;
+            shape[0] = mtx.cols;
+        }
+        else if ( mtx.cols == 1 ) {
+            dims = 1;
+            shape[0] = mtx.rows;
+        }
+        else {
+            dims = 2;
+            shape[0] = (npy_intp) mtx.rows;
+            shape[1] = (npy_intp) mtx.cols;
+        }
+
+        float* data = mtx.get_data();
+        return array_from_ptr( (void*) data, dims, shape, NPY_FLOAT32);
 
 
 }
@@ -190,6 +244,40 @@ numpy2matrix(PyArrayObject* arr) {
 
 
 /**
+@brief Call to create a matrix_float representation of a numpy array
+*/
+Matrix_float
+numpy2matrix_float(PyArrayObject* arr) {
+
+    if ( (PyObject*)arr == Py_None ) {
+        return Matrix_float(0,0);
+    }
+
+#ifdef DEBUG
+    assert( PyArray_IS_C_CONTIGUOUS(arr) && "array is not memory contiguous" );
+#endif
+
+    QGD_Complex8* data = (QGD_Complex8*)PyArray_DATA(arr);
+
+    int dim_num = PyArray_NDIM( arr );
+    npy_intp* dims = PyArray_DIMS(arr);
+
+    if (dim_num == 2) {
+        Matrix_float mtx = Matrix_float(data, static_cast<int>(dims[0]), static_cast<int>(dims[1]));
+        return mtx;
+    }
+    else if (dim_num == 1) {
+        Matrix_float mtx = Matrix_float(data, static_cast<int>(dims[0]), 1);
+        return mtx;
+    }
+    else {
+        std::string err( "numpy2matrix_float: Wrong matrix dimension was given");
+        throw err;
+    }
+}
+
+
+/**
 @brief Call to create a PIC matrix_real representation of a numpy array
 */
 Matrix_real
@@ -229,6 +317,40 @@ numpy2matrix_real(PyArrayObject* arr) {
 
 
 
+}
+
+
+/**
+@brief Call to create a PIC matrix_real_float representation of a numpy array
+*/
+Matrix_real_float
+numpy2matrix_real_float(PyArrayObject* arr) {
+
+    if ( (PyObject*)arr == Py_None ) {
+        return Matrix_real_float(0,0);
+    }
+
+#ifdef DEBUG
+    assert( PyArray_IS_C_CONTIGUOUS(arr) && "array is not memory contiguous" );
+#endif
+
+    float *data = (float *)PyArray_DATA(arr);
+
+    int dim_num = PyArray_NDIM( arr );
+    npy_intp* dims = PyArray_DIMS(arr);
+
+    if (dim_num == 2) {
+        Matrix_real_float mtx = Matrix_real_float(data, static_cast<int>(dims[0]), static_cast<int>(dims[1]));
+        return mtx;
+    }
+    else if (dim_num == 1) {
+        Matrix_real_float mtx = Matrix_real_float(data, static_cast<int>(dims[0]), 1);
+        return mtx;
+    }
+    else {
+        std::string err( "numpy2matrix_real_float: Wrong matrix dimension was given");
+        throw err;
+    }
 }
 
 

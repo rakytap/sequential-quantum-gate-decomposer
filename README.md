@@ -280,6 +280,19 @@ If you use SQUANDER in your research, please cite the following publications:
 
 ---
 
+## Posters and Conference Presentations
+
+- **Conference talk.** Péter Rakyta. *Efficient quantum gate decomposition via adaptive circuit compression.* GPU Day 2022 - Massive parallel computing for science and industrial application. June 21, 2022, 10:10-10:40. <https://gpuday.com/gpu-day-2022>
+- **Conference talk.** Péter Rakyta. *Simulation of quantum computers on tensor streaming processors.* GPU Day 2023. Budapest, Hungary, May 15-16, 2023. <https://gpuday.com/gpu-day-2023>
+- **Conference talk (QCW track).** Gregory Morse, Peter Rakyta, Tamás Kozsik. *Simulation of quantum computers on tensor streaming processors.* ICCS 2023 (International Conference on Computational Science), Quantum Computing Workshop (QCW), Prague, Czech Republic. July 3, 2023, 17:40. Program link: <https://easychair.org/smart-program/ICCS2023/2023-07-03.html#talk:223488>
+- **Workshop talk.** Péter Rakyta. *SQUANDER: a classical framework to train quantum circuits.* Workshop on Methods and Applications of Quantum Computing with Light and Qubits. Faculty of Nuclear Sciences and Physical Engineering, B-111, Brehova 7, Prague. October 17, 2023, 14:45-15:30. <https://indico.fjfi.cvut.cz/event/269/contributions/4309/>
+- **Conference talk.** Péter Rakyta. *Batched Line Search Strategy for Navigating through Barren Plateaus in Quantum Circuit Training.* GPU Day 2025 - Massive parallel computing for science and industrial application. HUN-REN Centre, Budapest. May 22, 2025, 12:00-12:30. <https://gpuday.com/gpu-day-2025>
+- **Poster session.** Muhammad Al Farizi, Gregory Morse, Jakab Nádori, László Hajas, Péter Rakyta. *Scalable Quantum Circuit Design: Partitioning and Optimization Strategies.* Quantum Informatics National Laboratory Workshop 2025. Bosch Budapest Innovation Campus, June 5, 2025, 16:30-18:30. <https://qi.nemzetilabor.hu/events/quantum-information-national-laboratory-workshop-2025>
+- **Invited lecturer.** Gregory Morse. *Scalable Globally Optimal Partitioning of Quantum Circuits.* Lectures on Modern Scientific Programming 2025, HUN-REN Wigner RCP. November 25, 2025, 9:20-10:30 lecture and 14:00-15:30 hands-on session. <https://indico.wigner.hu/event/1709/>
+- **Poster session.** Zoltán Kégli, Gregory Morse, Jakab Nádori, Barna Fülöp Villám, Muhammad Al Farizi, Tamás Kozsik, Péter Rakyta. *SQUANDER: a classical technique to train quantum circuits.* The 13th International Conference on Applied Informatics (ICAI2026). Eszterházy Károly Catholic University, Eger, February 20, 2026, 10:15-11:15. <https://icai.uni-eszterhazy.hu/2026/program/>
+
+---
+
 ## Acknowledgments
 
 This project was supported by:

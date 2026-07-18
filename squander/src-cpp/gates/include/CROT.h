@@ -38,11 +38,6 @@ limitations under the License.
 class CROT: public Gate {
 
 protected:
-    
-    
-
-
-   Matrix_real parameters;
 public:
 
 /**
@@ -52,30 +47,32 @@ CROT();
 
 CROT(int qbit_num_in, int target_qbit_in, int control_qbit_in);
 
-virtual ~CROT();
+~CROT() override;
 
-void apply_to_list( Matrix_real& parameters_mtx, std::vector<Matrix>& input );
-
-void apply_to_list( Matrix_real& parameters_mtx, std::vector<Matrix>& inputs, int parallel ) override;
-
-virtual void apply_to( Matrix_real& parameters_mtx, Matrix& input, int parallel ) override;
-
-virtual void apply_from_right( Matrix_real& parameters, Matrix& input );
-
-virtual std::vector<Matrix> apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input, int parallel ) override;
-
-virtual void set_qbit_num(int qbit_num_in) override;
-
-virtual void reorder_qubits( std::vector<int> qbit_list) override;
+virtual Matrix gate_kernel(const Matrix_real& precomputed_sincos) override;
+virtual Matrix_float gate_kernel(const Matrix_real_float& precomputed_sincos) override;
+virtual Matrix inverse_gate_kernel(const Matrix_real& precomputed_sincos) override;
+virtual Matrix_float inverse_gate_kernel(const Matrix_real_float& precomputed_sincos) override;
+virtual Matrix derivative_kernel(const Matrix_real& precomputed_sincos, int param_idx) override;
+virtual Matrix_float derivative_kernel(const Matrix_real_float& precomputed_sincos, int param_idx) override;
+virtual Matrix derivative_aux_kernel(const Matrix_real& precomputed_sincos, int param_idx) override;
+virtual Matrix_float derivative_aux_kernel(const Matrix_real_float& precomputed_sincos, int param_idx) override;
+virtual void gate_kernel_to(const Matrix_real& precomputed_sincos, Matrix& output) override;
+virtual void gate_kernel_to(const Matrix_real_float& precomputed_sincos, Matrix_float& output) override;
+virtual void inverse_gate_kernel_to(const Matrix_real& precomputed_sincos, Matrix& output) override;
+virtual void inverse_gate_kernel_to(const Matrix_real_float& precomputed_sincos, Matrix_float& output) override;
+virtual void derivative_kernel_to(const Matrix_real& precomputed_sincos, int param_idx, Matrix& output) override;
+virtual void derivative_kernel_to(const Matrix_real_float& precomputed_sincos, int param_idx, Matrix_float& output) override;
+virtual void derivative_aux_kernel_to(const Matrix_real& precomputed_sincos, int param_idx, Matrix& output) override;
+virtual void derivative_aux_kernel_to(const Matrix_real_float& precomputed_sincos, int param_idx, Matrix_float& output) override;
 
 virtual CROT* clone() override;
 
-virtual Matrix_real extract_parameters( Matrix_real& parameters ) override;
 
 
+std::vector<double> get_parameter_multipliers() const override;
 
 };
 
 
 #endif //CROT
-

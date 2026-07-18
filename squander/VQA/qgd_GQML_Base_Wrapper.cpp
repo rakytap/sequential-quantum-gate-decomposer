@@ -291,7 +291,11 @@ qgd_Generative_Quantum_Machine_Learning_Base_Wrapper_init(qgd_Generative_Quantum
         std::string key_Cpp( key_C );
         Config_Element element;
 
-        if ( PyLong_Check( value ) ) { 
+        if (PyBool_Check(value)) {
+            element.set_property(key_Cpp, value == Py_True);
+            config[key_Cpp] = element;
+        }
+        else if ( PyLong_Check( value ) ) { 
             element.set_property( key_Cpp, PyLong_AsLongLong( value ) );
             config[ key_Cpp ] = element;
         }

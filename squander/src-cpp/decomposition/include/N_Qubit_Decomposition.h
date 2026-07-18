@@ -75,6 +75,11 @@ N_Qubit_Decomposition();
 */
 N_Qubit_Decomposition( Matrix Umtx_in, int qbit_num_in, bool optimize_layer_num_in, std::map<std::string, Config_Element>& config, guess_type initial_guess_in );
 
+/**
+@brief Constructor of the class from a single precision unitary matrix.
+*/
+N_Qubit_Decomposition( Matrix_float Umtx_in, int qbit_num_in, bool optimize_layer_num_in, std::map<std::string, Config_Element>& config, guess_type initial_guess_in );
+
 
 
 /**

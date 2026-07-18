@@ -26,6 +26,8 @@ limitations under the License.
 #include "CRY.h"
 #include "matrix.h"
 #include "matrix_real.h"
+#include "matrix_float.h"
+#include "matrix_real_float.h"
 #define _USE_MATH_DEFINES
 #include <math.h>
 
@@ -86,6 +88,8 @@ Adaptive(int qbit_num_in, int target_qbit_in, int control_qbit_in, int limit_in)
 */
 std::vector<Matrix> apply_derivate_to( Matrix_real& parameters, Matrix& input, int parallel ) override;
 
+std::vector<Matrix_float> apply_derivate_to( Matrix_real_float& parameters, Matrix_float& input, int parallel ) override;
+
 
 
 /**
@@ -96,6 +100,12 @@ std::vector<Matrix> apply_derivate_to( Matrix_real& parameters, Matrix& input, i
 */
 virtual void apply_to( Matrix_real& parameters, Matrix& input, int parallel ) override;
 
+virtual void apply_to( Matrix_real_float& parameters, Matrix_float& input, int parallel ) override;
+
+void apply_to_inner( Matrix_real& parameters, const Matrix_real& precomputed_sincos, Matrix& input, int parallel ) override;
+
+void apply_to_inner( Matrix_real_float& parameters, const Matrix_real_float& precomputed_sincos, Matrix_float& input, int parallel ) override;
+
 
 /**
 @brief Call to apply the gate on the input array/matrix by input*U3
@@ -103,6 +113,12 @@ virtual void apply_to( Matrix_real& parameters, Matrix& input, int parallel ) ov
 @param input The input array on which the gate is applied
 */
 void apply_from_right( Matrix_real& parameters, Matrix& input ) override;
+
+void apply_from_right( Matrix_real_float& parameters, Matrix_float& input ) override;
+
+void apply_from_right_inner( Matrix_real& parameters, const Matrix_real& precomputed_sincos, Matrix& input ) override;
+
+void apply_from_right_inner( Matrix_real_float& parameters, const Matrix_real_float& precomputed_sincos, Matrix_float& input ) override;
 
 
 /**
@@ -123,13 +139,6 @@ int get_limit();
 */
 Adaptive* clone() override;
 
-
-/**
-@brief Call to extract parameters from the parameter array corresponding to the circuit, in which the gate is embedded.
-@param parameters The parameter array corresponding to the circuit in which the gate is embedded
-@return Returns with the array of the extracted parameters.
-*/
-virtual Matrix_real extract_parameters( Matrix_real& parameters ) override;
 
 };
 

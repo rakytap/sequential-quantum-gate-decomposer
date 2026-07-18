@@ -24,20 +24,22 @@ limitations under the License.
 #include "common_GROQ.h"
 #include "matrix_base.hpp"
 
-#include <atomic>
 #include <dlfcn.h>
 #include <unistd.h>
-#include <mutex>
+#include <tbb/queuing_mutex.h>
+
+namespace {
+
+tbb::queuing_mutex libmutex;
+
+void unload_groq_sv_lib_unlocked();
+int init_groq_sv_lib_unlocked(const int reserved_device_num, int initialize_id_in);
+
+}
 
 
 // pointer to the dynamically loaded groq library (sv stands for state vector)
 void* handle_sv = NULL;
-
-
-/// mutex to guard DFE lib locking and unlocking
-std::recursive_mutex libmutex; //writing mutex
-std::mutex libreadmutex; //reader mutex
-
 
 extern "C" {
 
@@ -75,13 +77,22 @@ int get_initialize_id() {
 */
 void unload_groq_sv_lib()
 {
-    const std::lock_guard<std::recursive_mutex> lock(libmutex);
-    
+    tbb::queuing_mutex::scoped_lock lock(libmutex);
+    unload_groq_sv_lib_unlocked();
+}
+
+
+namespace {
+
+void unload_groq_sv_lib_unlocked()
+{
     if (handle_sv) {
         releive_groq_sv_dll();
         dlclose(handle_sv);
         handle_sv = NULL;
     }
+}
+
 }
 
 
@@ -92,12 +103,18 @@ void unload_groq_sv_lib()
 @return Returns with 1 on success
 */
 int init_groq_sv_lib( const int reserved_device_num, int initialize_id_in )  {  
+    tbb::queuing_mutex::scoped_lock lock(libmutex);
+    return init_groq_sv_lib_unlocked(reserved_device_num, initialize_id_in);
+}
 
-    const std::lock_guard<std::recursive_mutex> lock(libmutex);
+
+namespace {
+
+int init_groq_sv_lib_unlocked( const int reserved_device_num, int initialize_id_in )  {
 
     initialize_id = initialize_id_in;
         
-    unload_groq_sv_lib();
+    unload_groq_sv_lib_unlocked();
 
 
     std::string lib_name     = DFE_LIB_SV;
@@ -123,6 +140,8 @@ int init_groq_sv_lib( const int reserved_device_num, int initialize_id_in )  {
 
 }
 
+}
+
 
 /**
 @brief Call to pefrom the state vector simulation on the Groq hardware
@@ -143,8 +162,11 @@ void apply_to_groq_sv(int reserved_device_num, int chosen_device_num, int qbit_n
     size_t matrix_size = 1 << qbit_num;
 
     // the number of chips to be allocated for the calculations
-    if (handle_sv == NULL && !init_groq_sv_lib(reserved_device_num, id_in)) {
-        throw std::string("Could not load and initialize Groq library");
+    {
+        tbb::queuing_mutex::scoped_lock lock(libmutex);
+        if (handle_sv == NULL && !init_groq_sv_lib_unlocked(reserved_device_num, id_in)) {
+            throw std::string("Could not load and initialize Groq library");
+        }
     }
 
     //struct timespec t;
@@ -153,7 +175,7 @@ void apply_to_groq_sv(int reserved_device_num, int chosen_device_num, int qbit_n
 
 
 { 
-    std::lock_guard<std::recursive_mutex> lock(libmutex);
+    tbb::queuing_mutex::scoped_lock lock(libmutex);
     
     if ( quantum_state.size() == 0 ) {
         if (load_sv_dll( NULL, qbit_num, chosen_device_num) ) {
@@ -235,4 +257,3 @@ void apply_to_groq_sv(int reserved_device_num, int chosen_device_num, int qbit_n
 
 
 }
-

@@ -25,6 +25,7 @@ limitations under the License.
 // gates acting on the N-qubit space
 
 #include "common.h"
+#include "matrix_float.h"
 #include <tbb/scalable_allocator.h>
 
 
@@ -194,6 +195,27 @@ Matrix create_identity( int matrix_size ) {
 
 }
 
+/**
+@brief Call to create a single-precision complex identity matrix
+@param matrix_size The number of rows in the resulted identity matrix
+@return Returns with a single-precision complex identity matrix.
+*/
+Matrix_float create_identity_float( int matrix_size ) {
+
+    Matrix_float mtx = Matrix_float(matrix_size, matrix_size);
+    memset(mtx.get_data(), 0, mtx.size()*sizeof(QGD_Complex8) );
+
+    // setting the diagonal elements to identity
+    for(int idx = 0; idx < matrix_size; ++idx)
+    {
+        int element_index = idx*mtx.stride + idx;
+        mtx[element_index].real = 1.0f;
+    }
+
+    return mtx;
+
+}
+
 
 
 /**
@@ -284,6 +306,22 @@ QGD_Complex16 mult( QGD_Complex16& a, QGD_Complex16& b ) {
 }
 
 /**
+@brief Call to calculate the product of two single-precision complex scalars
+@param a The firs scalar
+@param b The second scalar
+@return Returns with the calculated product.
+*/
+QGD_Complex8 mult( QGD_Complex8& a, QGD_Complex8& b ) {
+
+    QGD_Complex8 ret;
+    ret.real = a.real*b.real - a.imag*b.imag;
+    ret.imag = a.real*b.imag + a.imag*b.real;
+
+    return ret;
+
+}
+
+/**
 @brief calculate the product of a real scalar and a complex scalar
 @param a The real scalar.
 @param b The complex scalar.
@@ -292,6 +330,22 @@ QGD_Complex16 mult( QGD_Complex16& a, QGD_Complex16& b ) {
 QGD_Complex16 mult( double a, QGD_Complex16 b ) {
 
     QGD_Complex16 ret;
+    ret.real = a*b.real;
+    ret.imag = a*b.imag;
+
+    return ret;
+
+}
+
+/**
+@brief calculate the product of a real scalar and a single-precision complex scalar
+@param a The real scalar.
+@param b The complex scalar.
+@return Returns with the calculated product.
+*/
+QGD_Complex8 mult( float a, QGD_Complex8 b ) {
+
+    QGD_Complex8 ret;
     ret.real = a*b.real;
     ret.imag = a*b.imag;
 
@@ -312,6 +366,25 @@ void mult( QGD_Complex16 a, Matrix& b ) {
 
     for (int idx=0; idx<element_num; idx++) {
         QGD_Complex16 tmp = b[idx];
+        b[idx].real = a.real*tmp.real - a.imag*tmp.imag;
+        b[idx].imag = a.real*tmp.imag + a.imag*tmp.real;
+    }
+
+    return;
+
+}
+
+/**
+@brief Multiply the elements of matrix b by a scalar a.
+@param a A single-precision complex scalar.
+@param b A single-precision complex matrix.
+*/
+void mult( QGD_Complex8 a, Matrix_float& b ) {
+
+    int element_num = b.size();
+
+    for (int idx=0; idx<element_num; idx++) {
+        QGD_Complex8 tmp = b[idx];
         b[idx].real = a.real*tmp.real - a.imag*tmp.imag;
         b[idx].imag = a.real*tmp.imag + a.imag*tmp.real;
     }

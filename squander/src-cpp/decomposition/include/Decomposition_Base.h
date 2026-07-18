@@ -40,13 +40,8 @@ limitations under the License.
 #include "RY.h"
 #include "CRY.h"
 #include "RZ.h"
-#include "RZ_P.h"
 #include "SYC.h"
-#include "UN.h"
-#include "ON.h"
 #include "Adaptive.h"
-#include "CZ_NU.h"
-#include "Composite.h"
 #include <map>
 #include <cstdlib>
 #include <time.h>
@@ -119,8 +114,20 @@ protected:
     /// The unitary to be decomposed
     Matrix Umtx;
 
+    /// Float32 copy of the unitary used when config["use_float"] is true.
+    Matrix_float Umtx_float;
+
     /// The optimized parameters for the gates
     Matrix_real optimized_parameters_mtx;
+
+    /// Float32 optimized parameters used by the hot gate-application path.
+    Matrix_real_float optimized_parameters_mtx_float;
+
+    /// Selects float32 circuit application for parameter/unitary/state data.
+    bool use_float;
+
+    /// Synchronize the float32 parameter mirror from the double optimizer storage.
+    void sync_optimized_parameters_float();
 
     /// The optimized parameters for the gates
     //double* optimized_parameters;
@@ -179,6 +186,11 @@ Decomposition_Base();
 @return An instance of the class
 */
 Decomposition_Base( Matrix Umtx_in, int qbit_num_in, std::map<std::string, Config_Element>& config_in, guess_type initial_guess_in);
+
+/**
+@brief Constructor of the class from a single precision unitary matrix.
+*/
+Decomposition_Base( Matrix_float Umtx_in, int qbit_num_in, std::map<std::string, Config_Element>& config_in, guess_type initial_guess_in);
 
 /**
 @brief Destructor of the class
@@ -243,6 +255,16 @@ bool check_optimization_solution();
 Matrix get_Umtx();
 
 /**
+@brief Return the float32 unitary copy used by float execution.
+*/
+Matrix_float get_Umtx_float();
+
+/**
+@brief True when config["use_float"] requests float32 circuit execution.
+*/
+bool get_use_float() const;
+
+/**
 @brief Call to get the size of the unitary to be transformed
 @return Return with the size N of the unitary NxN
 */
@@ -253,6 +275,11 @@ int get_Umtx_size();
 @return Return with the pointer pointing to the array storing the optimized parameters
 */
 Matrix_real get_optimized_parameters();
+
+/**
+@brief Return optimized parameters in float32.
+*/
+Matrix_real_float get_optimized_parameters_float();
 
 /**
 @brief Call to get the optimized parameters.

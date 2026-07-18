@@ -23,15 +23,96 @@ limitations under the License.
 
 #include "Gate.h"
 #include "common.h"
+#include "gate_kernel_templates.h"
+#include "qgd_math.h"
+#include <algorithm>
+#include <cmath>
 #include <sstream>
+#include <tbb/enumerable_thread_specific.h>
 
 #ifdef USE_AVX 
 #include "apply_kernel_to_input_AVX.h"
 #include "apply_kernel_to_state_vector_input_AVX.h"
+#include "apply_large_kernel_to_input_AVX.h"
 #endif
 
 #include "apply_kernel_to_input.h"
 #include "apply_kernel_to_state_vector_input.h"
+#include "apply_large_kernel_to_input.h"
+#include "apply_dedicated_gate_kernel_to_input.h"
+
+namespace {
+
+struct GateKernelScratch {
+    Matrix kernel;
+    Matrix inverse_kernel;
+    Matrix aux_kernel;
+};
+
+struct GateKernelScratchFloat {
+    Matrix_float kernel;
+    Matrix_float inverse_kernel;
+    Matrix_float aux_kernel;
+};
+
+inline bool has_inplace_small_kernel(gate_type type) {
+    switch (type) {
+        case U3_OPERATION:
+        case RY_OPERATION:
+        case RX_OPERATION:
+        case RZ_OPERATION:
+        case X_OPERATION:
+        case SX_OPERATION:
+        case Y_OPERATION:
+        case Z_OPERATION:
+        case H_OPERATION:
+        case R_OPERATION:
+        case T_OPERATION:
+        case TDG_OPERATION:
+        case U1_OPERATION:
+        case U2_OPERATION:
+        case S_OPERATION:
+        case SDG_OPERATION:
+        case SXDG_OPERATION:
+        case CU_OPERATION:
+        case CROT_OPERATION:
+        case RXX_OPERATION:
+        case RYY_OPERATION:
+        case RZZ_OPERATION:
+            return true;
+        default:
+            return false;
+    }
+}
+
+template <typename ScratchT>
+class ReentrantScratchLease {
+public:
+    ReentrantScratchLease(tbb::enumerable_thread_specific<std::vector<ScratchT>>& scratch_tls_in,
+                          tbb::enumerable_thread_specific<int>& depth_tls_in)
+        : depth_tls(depth_tls_in) {
+        int& depth = depth_tls.local();
+        std::vector<ScratchT>& scratch = scratch_tls_in.local();
+        if (scratch.size() <= static_cast<size_t>(depth)) {
+            scratch.resize(static_cast<size_t>(depth) + 1);
+        }
+        ptr = &scratch[static_cast<size_t>(depth++)];
+    }
+
+    ~ReentrantScratchLease() {
+        depth_tls.local()--;
+    }
+
+    ScratchT& get() {
+        return *ptr;
+    }
+
+private:
+    tbb::enumerable_thread_specific<int>& depth_tls;
+    ScratchT* ptr;
+};
+
+}
 
 /**
 @brief Deafult constructor of the class.
@@ -58,6 +139,7 @@ Gate::Gate() {
     parameter_num = 0;
     // the index in the parameter array (corrensponding to the encapsulated circuit) where the gate parameters begin (if gates are placed into a circuit a single parameter array is used to execute the whole circuit)
     parameter_start_idx = 0;
+    matrix_alloc_float_valid = false;
 }
 
 
@@ -90,6 +172,7 @@ Gate::Gate(int qbit_num_in) {
     parameter_num = 0;
     // the index in the parameter array (corrensponding to the encapsulated circuit) where the gate parameters begin (if gates are placed into a circuit a single parameter array is used to execute the whole circuit)
     parameter_start_idx = 0;
+    matrix_alloc_float_valid = false;
 }
 
 
@@ -116,6 +199,7 @@ Gate::Gate(int qbit_num_in, const std::vector<int>& target_qbits_in, const std::
     parameter_num = 0;
     // the index in the parameter array (corrensponding to the encapsulated circuit) where the gate parameters begin (if gates are placed into a circuit a single parameter array is used to execute the whole circuit)
     parameter_start_idx = 0;
+    matrix_alloc_float_valid = false;
 
     // Validate target qubits
     for (int tq : target_qbits_in) {
@@ -175,47 +259,6 @@ void Gate::set_qbit_num( int qbit_num_in ) {
 
 }
 
-
-/**
-@brief Call to retrieve the operation matrix
-@return Returns with a matrix of the operation
-*/
-Matrix
-Gate::get_matrix() {
-
-    return matrix_alloc;
-}
-
-
-/**
-@brief Call to retrieve the operation matrix
-@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
-@return Returns with the matrix of the operation
-*/
-Matrix
-Gate::get_matrix(int parallel) {
-
-    std::string err("Gate::get_matrix: Unimplemented function");
-    throw err;     
-
-}
-
-
-/**
-@brief Call to retrieve the gate matrix
-@param parameters An array of parameters to calculate the matrix of the U3 gate.
-@return Returns with a matrix of the gate
-*/
-Matrix
-Gate::get_matrix(Matrix_real& parameters ) {
-
-    std::string err("Gate::get_matrix: Unimplemented function");
-    throw err;  
-   
-}
-
-
-
 /**
 @brief Call to retrieve the gate matrix
 @param parameters An array of parameters to calculate the matrix of the U3 gate.
@@ -225,13 +268,48 @@ Gate::get_matrix(Matrix_real& parameters ) {
 Matrix
 Gate::get_matrix( Matrix_real& parameters, int parallel ) {
 
-    std::string err("Gate::get_matrix: Unimplemented function");
-    throw err;     
+    Matrix gate_matrix = create_identity(matrix_size);
+    apply_to(parameters, gate_matrix, parallel);
+    return gate_matrix;
 
 }
 
+Matrix
+Gate::get_matrix( Matrix_real& parameters ) {
+    return get_matrix(parameters, 0);
+}
+
+Matrix
+Gate::get_matrix() {
+    Matrix gate_matrix = create_identity(matrix_size);
+    apply_to(gate_matrix, 0);
+    return gate_matrix;
+}
+
+Matrix
+Gate::get_matrix( int parallel ) {
+    Matrix gate_matrix = create_identity(matrix_size);
+    apply_to(gate_matrix, parallel);
+    return gate_matrix;
+}
 
 
+/**
+@brief Float32 overload: retrieve the gate matrix.
+Base implementation creates a float32 identity and applies the gate with parallel=0
+to avoid any broken AVX path.  Derived classes should override this.
+@param parameters Float32 parameter array
+@param parallel Unused in the base implementation (always uses sequential path)
+@return Returns with a float32 matrix of the gate
+*/
+Matrix_float
+Gate::get_matrix( Matrix_real_float& parameters, int parallel ) {
+
+    Matrix_float gate_matrix = create_identity_float(matrix_size);
+    apply_to(parameters, gate_matrix, parallel);
+    return gate_matrix;
+
+}
 
 /**
 @brief Call to apply the gate on a list of inputs
@@ -241,15 +319,14 @@ Gate::get_matrix( Matrix_real& parameters, int parallel ) {
 void 
 Gate::apply_to_list( std::vector<Matrix>& inputs, int parallel ) {
 
+    if (parallel == 0) {
+        for (Matrix& input : inputs) {
+            apply_to(input, parallel);
+        }
+        return;
+    }
+
     int work_batch = 1;
-    if ( parallel == 0 ) {
-        work_batch = static_cast<int>(inputs.size());
-    }
-    else {
-        work_batch = 1;
-    }
-
-
     tbb::parallel_for( tbb::blocked_range<int>(0,static_cast<int>(inputs.size()),work_batch), [&](tbb::blocked_range<int> r) {
         for (int idx=r.begin(); idx<r.end(); ++idx) { 
 
@@ -277,7 +354,71 @@ Gate::apply_to_list( std::vector<Matrix>& inputs, int parallel ) {
 void 
 Gate::apply_to_list( Matrix_real& parameters_mtx, std::vector<Matrix>& inputs, int parallel ) {
 
-    return;
+    if (parallel == 0) {
+        for (Matrix& input : inputs) {
+            apply_to(parameters_mtx, input, parallel);
+        }
+        return;
+    }
+
+    int work_batch = 1;
+    tbb::parallel_for( tbb::blocked_range<int>(0,static_cast<int>(inputs.size()),work_batch), [&](tbb::blocked_range<int> r) {
+        for (int idx=r.begin(); idx<r.end(); ++idx) {
+            apply_to( parameters_mtx, inputs[idx], parallel );
+        }
+    });
+
+}
+
+
+/**
+@brief Float32 overload: apply gate to a list of float32 inputs without parameters.
+@param inputs Float32 input matrices/states
+@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
+*/
+void
+Gate::apply_to_list( std::vector<Matrix_float>& inputs, int parallel ) {
+
+    if (parallel == 0) {
+        for (Matrix_float& input : inputs) {
+            apply_to(input, parallel);
+        }
+        return;
+    }
+
+    int work_batch = 1;
+    tbb::parallel_for( tbb::blocked_range<int>(0,static_cast<int>(inputs.size()),work_batch), [&](tbb::blocked_range<int> r) {
+        for (int idx=r.begin(); idx<r.end(); ++idx) {
+            Matrix_float* input = &inputs[idx];
+            apply_to( *input, parallel );
+        }
+    });
+
+}
+
+
+/**
+@brief Float32 overload: apply gate to a list of float32 inputs with float32 parameters.
+@param parameters_mtx Float32 parameter matrix
+@param inputs Float32 input matrices/states
+@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
+*/
+void
+Gate::apply_to_list( Matrix_real_float& parameters_mtx, std::vector<Matrix_float>& inputs, int parallel ) {
+
+    if (parallel == 0) {
+        for (Matrix_float& input : inputs) {
+            apply_to(parameters_mtx, input, parallel);
+        }
+        return;
+    }
+
+    int work_batch = 1;
+    tbb::parallel_for( tbb::blocked_range<int>(0,static_cast<int>(inputs.size()),work_batch), [&](tbb::blocked_range<int> r) {
+        for (int idx=r.begin(); idx<r.end(); ++idx) {
+            apply_to( parameters_mtx, inputs[idx], parallel );
+        }
+    });
 
 }
 
@@ -292,13 +433,61 @@ void
 Gate::apply_to( Matrix& input, int parallel ) {
 
    if (input.rows != matrix_size ) {
-        std::string err("Gate::apply_to: Wrong matrix size in Gate gate apply.");
-        throw err;    
+        std::stringstream sstream;
+        sstream << "Gate::apply_to: Wrong matrix size in Gate gate apply."
+                << " name=" << name
+                << " type=" << type
+                << " qbit_num=" << qbit_num
+                << " matrix_size=" << matrix_size
+                << " input.rows=" << input.rows
+                << " input.cols=" << input.cols << std::endl;
+        print(sstream, 0);
+        throw sstream.str();
     }
 
-    Matrix ret = dot(matrix_alloc, input);
-    memcpy( input.get_data(), ret.get_data(), ret.size()*sizeof(QGD_Complex16) );
-    //input = ret;
+    Matrix_real empty_params(0, 0);
+    if (has_inplace_small_kernel(type)) {
+        static tbb::enumerable_thread_specific<std::vector<GateKernelScratch>> scratch_tls;
+        static tbb::enumerable_thread_specific<int> depth_tls([](){ return 0; });
+        ReentrantScratchLease<GateKernelScratch> scratch_lease(scratch_tls, depth_tls);
+        GateKernelScratch& scratch = scratch_lease.get();
+        gate_kernel_to(empty_params, scratch.kernel);
+        apply_kernel_to(scratch.kernel, input, false, parallel);
+        return;
+    }
+
+    Matrix kernel;
+    if (type != GENERAL_OPERATION && type != SWAP_OPERATION && type != CSWAP_OPERATION && type != CCX_OPERATION) {
+        kernel = gate_kernel(empty_params);
+    }
+    apply_kernel_to(kernel, input, false, parallel);
+}
+
+
+void
+Gate::apply_to( Matrix_float& input, int parallel ) {
+
+    if (input.rows != matrix_size) {
+        std::string err("Gate::apply_to(Matrix_float&): Wrong matrix size in gate apply.");
+        throw err;
+    }
+
+    Matrix_real_float empty_params(0, 0);
+    if (has_inplace_small_kernel(type)) {
+        static tbb::enumerable_thread_specific<std::vector<GateKernelScratchFloat>> scratch_tls;
+        static tbb::enumerable_thread_specific<int> depth_tls([](){ return 0; });
+        ReentrantScratchLease<GateKernelScratchFloat> scratch_lease(scratch_tls, depth_tls);
+        GateKernelScratchFloat& scratch = scratch_lease.get();
+        gate_kernel_to(empty_params, scratch.kernel);
+        apply_kernel_to(scratch.kernel, input, false, parallel);
+        return;
+    }
+
+    Matrix_float kernel;
+    if (type != GENERAL_OPERATION && type != SWAP_OPERATION && type != CSWAP_OPERATION && type != CCX_OPERATION) {
+        kernel = gate_kernel(empty_params);
+    }
+    apply_kernel_to(kernel, input, false, parallel);
 }
 
 
@@ -311,10 +500,128 @@ Gate::apply_to( Matrix& input, int parallel ) {
 void 
 Gate::apply_to( Matrix_real& parameter_mtx, Matrix& input, int parallel ) {
 
-    std::string err("Unimplemented abstract function apply_to");
-    throw( err );
+    if (input.rows != matrix_size) {
+        std::stringstream sstream;
+        sstream << "Gate::apply_to(Matrix_real&, Matrix&): Wrong matrix size in gate apply."
+                << " name=" << name
+                << " type=" << type
+                << " qbit_num=" << qbit_num
+                << " matrix_size=" << matrix_size
+                << " input.rows=" << input.rows
+                << " input.cols=" << input.cols
+                << " parameter_num=" << parameter_num
+                << " provided_params=" << parameter_mtx.size() << std::endl;
+        print(sstream, 0);
+        throw sstream.str();
+    }
 
-    return;
+    // For zero-parameter gates delegate to the no-param virtual.
+    if (parameter_num == 0) {
+        apply_to(input, parallel);
+        return;
+    }
+
+    Matrix_real precomputed_sincos = compute_precomputed_sincos(parameter_mtx);
+    apply_to_inner(parameter_mtx, precomputed_sincos, input, parallel);
+}
+
+
+void
+Gate::apply_to( Matrix_real_float& parameter_mtx, Matrix_float& input, int parallel ) {
+
+    if (input.rows != matrix_size) {
+        std::string err("Gate::apply_to(Matrix_real_float&, Matrix_float&): Wrong matrix size in gate apply.");
+        throw err;
+    }
+
+    // For zero-parameter gates delegate to the no-parameter overload.
+    if (parameter_num == 0) {
+        apply_to(input, parallel);
+        return;
+    }
+
+    Matrix_real_float precomputed_sincos = compute_precomputed_sincos(parameter_mtx);
+    apply_to_inner(parameter_mtx, precomputed_sincos, input, parallel);
+}
+
+
+void
+Gate::apply_to_inner( Matrix_real& parameter_mtx, const Matrix_real& precomputed_sincos, Matrix& input, int parallel ) {
+
+    if (parameter_num == 0) {
+        apply_to(input, parallel);
+        return;
+    }
+
+    if (has_inplace_small_kernel(type)) {
+        static tbb::enumerable_thread_specific<std::vector<GateKernelScratch>> scratch_tls;
+        static tbb::enumerable_thread_specific<int> depth_tls([](){ return 0; });
+        ReentrantScratchLease<GateKernelScratch> scratch_lease(scratch_tls, depth_tls);
+        GateKernelScratch& scratch = scratch_lease.get();
+        gate_kernel_to(precomputed_sincos, scratch.kernel);
+        inverse_gate_kernel_to(precomputed_sincos, scratch.inverse_kernel);
+        apply_kernel_to(scratch.kernel, input, false, parallel, &scratch.inverse_kernel);
+        return;
+    }
+
+    Matrix kernel = gate_kernel(precomputed_sincos);
+    Matrix inverse_kernel = inverse_gate_kernel(precomputed_sincos);
+    apply_kernel_to(kernel, input, false, parallel, &inverse_kernel);
+}
+
+
+void
+Gate::apply_to_inner( Matrix_real_float& parameter_mtx, const Matrix_real_float& precomputed_sincos, Matrix_float& input, int parallel ) {
+
+    if (parameter_num == 0) {
+        apply_to(input, parallel);
+        return;
+    }
+
+    if (has_inplace_small_kernel(type)) {
+        static tbb::enumerable_thread_specific<std::vector<GateKernelScratchFloat>> scratch_tls;
+        static tbb::enumerable_thread_specific<int> depth_tls([](){ return 0; });
+        ReentrantScratchLease<GateKernelScratchFloat> scratch_lease(scratch_tls, depth_tls);
+        GateKernelScratchFloat& scratch = scratch_lease.get();
+        gate_kernel_to(precomputed_sincos, scratch.kernel);
+        inverse_gate_kernel_to(precomputed_sincos, scratch.inverse_kernel);
+        apply_kernel_to(scratch.kernel, input, false, parallel, &scratch.inverse_kernel);
+        return;
+    }
+
+    Matrix_float kernel = gate_kernel(precomputed_sincos);
+    Matrix_float inverse_kernel = inverse_gate_kernel(precomputed_sincos);
+    apply_kernel_to(kernel, input, false, parallel, &inverse_kernel);
+}
+
+
+void
+Gate::apply_to( Matrix_any& input, int parallel ) {
+
+    if (input.is_float64()) {
+        apply_to(input.as_float64(), parallel);
+        return;
+    }
+
+    apply_to(input.as_float32(), parallel);
+}
+
+
+void
+Gate::apply_to( Matrix_real_any& parameter_mtx, Matrix_any& input, int parallel ) {
+
+    if (parameter_mtx.is_float64() && input.is_float64()) {
+        apply_to(parameter_mtx.as_float64(), input.as_float64(), parallel);
+        return;
+    }
+
+    if (parameter_mtx.is_float32() && input.is_float32()) {
+        apply_to(parameter_mtx.as_float32(), input.as_float32(), parallel);
+        return;
+    }
+
+    std::string err("Gate::apply_to(Matrix_real_any&, Matrix_any&): precision mismatch between parameters and input");
+    throw err;
 }
 
 
@@ -325,12 +632,281 @@ Gate::apply_to( Matrix_real& parameter_mtx, Matrix& input, int parallel ) {
 @param input The input array on which the gate is applied
 @param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP (NOT IMPLEMENTED YET) and 2 for parallel with TBB (optional)
 */
+std::vector<Matrix>
+Gate::apply_derivative_to_precomputed(const Matrix_real& precomputed_sincos, Matrix& input, int parallel) {
+
+    std::vector<Matrix> ret;
+    apply_derivative_to_precomputed(precomputed_sincos, input, parallel, ret);
+    return ret;
+}
+
+
+void
+Gate::apply_derivative_to_precomputed(const Matrix_real& precomputed_sincos, Matrix& input, int parallel, std::vector<Matrix>& output, size_t offset, bool resize_output) {
+
+    const int parameter_count = get_parameter_num();
+    if (parameter_count <= 0) {
+        if (resize_output) {
+            output.clear();
+        }
+        return;
+    }
+
+    const size_t required_size = offset + static_cast<size_t>(parameter_count);
+    if (resize_output) {
+        output.resize(required_size);
+    }
+    else if (output.size() < required_size) {
+        std::string err("Gate::apply_derivative_to_precomputed: output vector is too small.");
+        throw err;
+    }
+
+    auto calculate_derivative = [&](int param_idx, Matrix& result) {
+        if (has_inplace_small_kernel(type)) {
+            static tbb::enumerable_thread_specific<std::vector<GateKernelScratch>> scratch_tls;
+            static tbb::enumerable_thread_specific<int> depth_tls([](){ return 0; });
+            ReentrantScratchLease<GateKernelScratch> scratch_lease(scratch_tls, depth_tls);
+            GateKernelScratch& scratch = scratch_lease.get();
+            derivative_kernel_to(precomputed_sincos, param_idx, scratch.kernel);
+            derivative_aux_kernel_to(precomputed_sincos, param_idx, scratch.aux_kernel);
+            input.copy_to(result);
+            if (scratch.aux_kernel.size() > 0) {
+                apply_kernel_to(scratch.kernel, result, true, parallel, &scratch.aux_kernel);
+            }
+            else {
+                apply_kernel_to(scratch.kernel, result, true, parallel);
+            }
+            return;
+        }
+
+        Matrix u3 = derivative_kernel(precomputed_sincos, param_idx);
+        Matrix u3_aux = derivative_aux_kernel(precomputed_sincos, param_idx);
+
+        input.copy_to(result);
+        if (u3_aux.size() > 0) {
+            apply_kernel_to(u3, result, true, parallel, &u3_aux);
+        }
+        else {
+            apply_kernel_to(u3, result, true, parallel);
+        }
+    };
+
+    if (parallel == 0 || parameter_count == 1) {
+        for (int param_idx = 0; param_idx < parameter_count; ++param_idx) {
+            calculate_derivative(param_idx, output[offset + static_cast<size_t>(param_idx)]);
+        }
+    }
+    else {
+        tbb::parallel_for(tbb::blocked_range<int>(0, parameter_count, 1), [&](tbb::blocked_range<int> r) {
+            for (int param_idx = r.begin(); param_idx < r.end(); ++param_idx) {
+                calculate_derivative(param_idx, output[offset + static_cast<size_t>(param_idx)]);
+            }
+        });
+    }
+}
+
+
+std::vector<Matrix_float>
+Gate::apply_derivative_to_precomputed(const Matrix_real_float& precomputed_sincos, Matrix_float& input, int parallel) {
+
+    std::vector<Matrix_float> ret;
+    apply_derivative_to_precomputed(precomputed_sincos, input, parallel, ret);
+    return ret;
+}
+
+
+void
+Gate::apply_derivative_to_precomputed(const Matrix_real_float& precomputed_sincos, Matrix_float& input, int parallel, std::vector<Matrix_float>& output, size_t offset, bool resize_output) {
+
+    const int parameter_count = get_parameter_num();
+    if (parameter_count <= 0) {
+        if (resize_output) {
+            output.clear();
+        }
+        return;
+    }
+
+    const size_t required_size = offset + static_cast<size_t>(parameter_count);
+    if (resize_output) {
+        output.resize(required_size);
+    }
+    else if (output.size() < required_size) {
+        std::string err("Gate::apply_derivative_to_precomputed(Matrix_real_float): output vector is too small.");
+        throw err;
+    }
+
+    auto calculate_derivative = [&](int param_idx, Matrix_float& result) {
+        if (has_inplace_small_kernel(type)) {
+            static tbb::enumerable_thread_specific<std::vector<GateKernelScratchFloat>> scratch_tls;
+            static tbb::enumerable_thread_specific<int> depth_tls([](){ return 0; });
+            ReentrantScratchLease<GateKernelScratchFloat> scratch_lease(scratch_tls, depth_tls);
+            GateKernelScratchFloat& scratch = scratch_lease.get();
+            derivative_kernel_to(precomputed_sincos, param_idx, scratch.kernel);
+            derivative_aux_kernel_to(precomputed_sincos, param_idx, scratch.aux_kernel);
+            input.copy_to(result);
+            if (scratch.aux_kernel.size() > 0) {
+                apply_kernel_to(scratch.kernel, result, true, parallel, &scratch.aux_kernel);
+            }
+            else {
+                apply_kernel_to(scratch.kernel, result, true, parallel);
+            }
+            return;
+        }
+
+        Matrix_float u3 = derivative_kernel(precomputed_sincos, param_idx);
+        Matrix_float u3_aux = derivative_aux_kernel(precomputed_sincos, param_idx);
+
+        input.copy_to(result);
+        if (u3_aux.size() > 0) {
+            apply_kernel_to(u3, result, true, parallel, &u3_aux);
+        }
+        else {
+            apply_kernel_to(u3, result, true, parallel);
+        }
+    };
+
+    if (parallel == 0 || parameter_count == 1) {
+        for (int param_idx = 0; param_idx < parameter_count; ++param_idx) {
+            calculate_derivative(param_idx, output[offset + static_cast<size_t>(param_idx)]);
+        }
+    }
+    else {
+        tbb::parallel_for(tbb::blocked_range<int>(0, parameter_count, 1), [&](tbb::blocked_range<int> r) {
+            for (int param_idx = r.begin(); param_idx < r.end(); ++param_idx) {
+                calculate_derivative(param_idx, output[offset + static_cast<size_t>(param_idx)]);
+            }
+        });
+    }
+}
+
+
 std::vector<Matrix> 
 Gate::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input, int parallel ) {
 
-    std::vector<Matrix> ret;
-    return ret;
+    Matrix_real precomputed_sincos = precompute_sincos(parameters_mtx_in);
+    return apply_derivative_to_precomputed(precomputed_sincos, input, parallel);
+}
 
+
+void
+Gate::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input, int parallel, std::vector<Matrix>& output ) {
+
+    Matrix_real precomputed_sincos = precompute_sincos(parameters_mtx_in);
+    apply_derivative_to_precomputed(precomputed_sincos, input, parallel, output);
+}
+
+
+std::vector<Matrix_float>
+Gate::apply_derivate_to( Matrix_real_float& parameters_mtx_in, Matrix_float& input, int parallel ) {
+
+    Matrix_real_float precomputed_sincos = precompute_sincos(parameters_mtx_in);
+    return apply_derivative_to_precomputed(precomputed_sincos, input, parallel);
+}
+
+
+void
+Gate::apply_derivate_to( Matrix_real_float& parameters_mtx_in, Matrix_float& input, int parallel, std::vector<Matrix_float>& output ) {
+
+    Matrix_real_float precomputed_sincos = precompute_sincos(parameters_mtx_in);
+    apply_derivative_to_precomputed(precomputed_sincos, input, parallel, output);
+}
+
+
+std::vector<Matrix>
+Gate::apply_to_combined( Matrix_real& parameters_mtx_in, Matrix& input, int parallel ) {
+
+    Matrix_real precomputed_sincos = compute_precomputed_sincos(parameters_mtx_in);
+    return apply_to_combined_inner(parameters_mtx_in, precomputed_sincos, input, parallel);
+}
+
+
+void
+Gate::apply_to_combined( Matrix_real& parameters_mtx_in, Matrix& input, int parallel, std::vector<Matrix>& output ) {
+
+    Matrix_real precomputed_sincos = compute_precomputed_sincos(parameters_mtx_in);
+    apply_to_combined_inner(parameters_mtx_in, precomputed_sincos, input, parallel, output);
+}
+
+
+std::vector<Matrix>
+Gate::apply_to_combined_inner( Matrix_real& parameters_mtx_in, const Matrix_real& precomputed_sincos, Matrix& input, int parallel ) {
+
+    std::vector<Matrix> ret;
+    apply_to_combined_inner(parameters_mtx_in, precomputed_sincos, input, parallel, ret);
+    return ret;
+}
+
+
+void
+Gate::apply_to_combined_inner( Matrix_real& parameters_mtx_in, const Matrix_real& precomputed_sincos, Matrix& input, int parallel, std::vector<Matrix>& output ) {
+
+    const size_t output_size = static_cast<size_t>(get_parameter_num()) + 1;
+    output.resize(output_size);
+    if (parallel == 0) {
+        input.copy_to(output[0]);
+        apply_to_inner(parameters_mtx_in, precomputed_sincos, output[0], parallel);
+        apply_derivative_to_precomputed(precomputed_sincos, input, parallel, output, 1, false);
+    }
+    else {
+        tbb::parallel_invoke(
+            [&]() {
+                input.copy_to(output[0]);
+                apply_to_inner(parameters_mtx_in, precomputed_sincos, output[0], parallel);
+            },
+            [&]() {
+                apply_derivative_to_precomputed(precomputed_sincos, input, parallel, output, 1, false);
+            }
+        );
+    }
+}
+
+
+std::vector<Matrix_float>
+Gate::apply_to_combined( Matrix_real_float& parameters_mtx_in, Matrix_float& input, int parallel ) {
+
+    Matrix_real_float precomputed_sincos = compute_precomputed_sincos(parameters_mtx_in);
+    return apply_to_combined_inner(parameters_mtx_in, precomputed_sincos, input, parallel);
+}
+
+
+void
+Gate::apply_to_combined( Matrix_real_float& parameters_mtx_in, Matrix_float& input, int parallel, std::vector<Matrix_float>& output ) {
+
+    Matrix_real_float precomputed_sincos = compute_precomputed_sincos(parameters_mtx_in);
+    apply_to_combined_inner(parameters_mtx_in, precomputed_sincos, input, parallel, output);
+}
+
+
+std::vector<Matrix_float>
+Gate::apply_to_combined_inner( Matrix_real_float& parameters_mtx_in, const Matrix_real_float& precomputed_sincos, Matrix_float& input, int parallel ) {
+
+    std::vector<Matrix_float> ret;
+    apply_to_combined_inner(parameters_mtx_in, precomputed_sincos, input, parallel, ret);
+    return ret;
+}
+
+
+void
+Gate::apply_to_combined_inner( Matrix_real_float& parameters_mtx_in, const Matrix_real_float& precomputed_sincos, Matrix_float& input, int parallel, std::vector<Matrix_float>& output ) {
+
+    const size_t output_size = static_cast<size_t>(get_parameter_num()) + 1;
+    output.resize(output_size);
+    if (parallel == 0) {
+        input.copy_to(output[0]);
+        apply_to_inner(parameters_mtx_in, precomputed_sincos, output[0], parallel);
+        apply_derivative_to_precomputed(precomputed_sincos, input, parallel, output, 1, false);
+    }
+    else {
+        tbb::parallel_invoke(
+            [&]() {
+                input.copy_to(output[0]);
+                apply_to_inner(parameters_mtx_in, precomputed_sincos, output[0], parallel);
+            },
+            [&]() {
+                apply_derivative_to_precomputed(precomputed_sincos, input, parallel, output, 1, false);
+            }
+        );
+    }
 }
 
 
@@ -342,25 +918,112 @@ Gate::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input, int para
 void 
 Gate::apply_from_right( Matrix& input ) {
 
-    Matrix ret = dot(input, matrix_alloc);
-    memcpy( input.get_data(), ret.get_data(), ret.size()*sizeof(QGD_Complex16) );
+    if (input.cols != matrix_size ) {
+        std::string err("Gate::apply_from_right(Matrix&): Wrong matrix size in gate apply.");
+        throw err;
+    }
+
+    Matrix empty_kernel;
+    apply_kernel_from_right(empty_kernel, input);
 
 }
 
 
+void
+Gate::apply_from_right( Matrix_float& input ) {
+
+    if (input.cols != matrix_size ) {
+        std::string err("Gate::apply_from_right(Matrix_float&): Wrong matrix size in gate apply.");
+        throw err;
+    }
+
+    Matrix_float empty_kernel;
+    apply_kernel_from_right(empty_kernel, input);
+}
+
 /**
-@brief Call to apply the gate on the input array/matrix by input*Gate
-@param parameter_mtx An array of the input parameters.
+@brief Apply the gate on input from the right (Matrix_real version)
+@param parameter_mtx The gate parameters.
 @param input The input array on which the gate is applied
 */
 void 
 Gate::apply_from_right( Matrix_real& parameter_mtx, Matrix& input ) {
 
-    std::string err("Unimplemented abstract function apply_from_right");
-    throw( err );
-    
-    return;
+    if (input.cols != matrix_size ) {
+        std::string err("Gate::apply_from_right(Matrix_real&, Matrix&): Wrong matrix size in gate apply.");
+        throw err;
+    }
 
+    Matrix_real precomputed_sincos = compute_precomputed_sincos(parameter_mtx);
+    apply_from_right_inner(parameter_mtx, precomputed_sincos, input);
+
+}
+
+
+void
+Gate::apply_from_right( Matrix_real_float& parameter_mtx, Matrix_float& input ) {
+
+    if (input.cols != matrix_size ) {
+        std::string err("Gate::apply_from_right(Matrix_real_float&, Matrix_float&): Wrong matrix size in gate apply.");
+        throw err;
+    }
+
+    Matrix_real_float precomputed_sincos = compute_precomputed_sincos(parameter_mtx);
+    apply_from_right_inner(parameter_mtx, precomputed_sincos, input);
+}
+
+
+void
+Gate::apply_from_right_inner( Matrix_real& parameter_mtx, const Matrix_real& precomputed_sincos, Matrix& input ) {
+
+    if (has_inplace_small_kernel(type)) {
+        static tbb::enumerable_thread_specific<std::vector<GateKernelScratch>> scratch_tls;
+        static tbb::enumerable_thread_specific<int> depth_tls([](){ return 0; });
+        ReentrantScratchLease<GateKernelScratch> scratch_lease(scratch_tls, depth_tls);
+        GateKernelScratch& scratch = scratch_lease.get();
+        gate_kernel_to(precomputed_sincos, scratch.kernel);
+        inverse_gate_kernel_to(precomputed_sincos, scratch.inverse_kernel);
+        apply_kernel_from_right(scratch.kernel, input, &scratch.inverse_kernel);
+        return;
+    }
+
+    Matrix kernel = gate_kernel(precomputed_sincos);
+    Matrix inv_kernel = inverse_gate_kernel(precomputed_sincos);
+    apply_kernel_from_right(kernel, input, &inv_kernel);
+}
+
+
+void
+Gate::apply_from_right_inner( Matrix_real_float& parameter_mtx, const Matrix_real_float& precomputed_sincos, Matrix_float& input ) {
+
+    if (has_inplace_small_kernel(type)) {
+        static tbb::enumerable_thread_specific<std::vector<GateKernelScratchFloat>> scratch_tls;
+        static tbb::enumerable_thread_specific<int> depth_tls([](){ return 0; });
+        ReentrantScratchLease<GateKernelScratchFloat> scratch_lease(scratch_tls, depth_tls);
+        GateKernelScratchFloat& scratch = scratch_lease.get();
+        gate_kernel_to(precomputed_sincos, scratch.kernel);
+        inverse_gate_kernel_to(precomputed_sincos, scratch.inverse_kernel);
+        apply_kernel_from_right(scratch.kernel, input, &scratch.inverse_kernel);
+        return;
+    }
+
+    Matrix_float kernel = gate_kernel(precomputed_sincos);
+    Matrix_float inv_kernel = inverse_gate_kernel(precomputed_sincos);
+    apply_kernel_from_right(kernel, input, &inv_kernel);
+}
+
+
+Matrix_real
+Gate::compute_precomputed_sincos(const Matrix_real& parameters) const {
+
+    return precompute_sincos(parameters);
+}
+
+
+Matrix_real_float
+Gate::compute_precomputed_sincos(const Matrix_real_float& parameters) const {
+
+    return precompute_sincos(parameters);
 }
 
 
@@ -372,6 +1035,15 @@ Gate::apply_from_right( Matrix_real& parameter_mtx, Matrix& input ) {
 void
 Gate::set_matrix( Matrix input ) {
     matrix_alloc = input;
+    matrix_alloc_float = Matrix_float();
+    matrix_alloc_float_valid = false;
+}
+
+void
+Gate::set_matrix( Matrix_float input ) {
+    matrix_alloc_float = input;
+    matrix_alloc_float_valid = true;
+    matrix_alloc = Matrix();
 }
 
 
@@ -679,14 +1351,117 @@ int Gate::get_qbit_num() {
 Gate* Gate::clone() {
 
     Gate* ret = new Gate( qbit_num );
-    ret->set_matrix( matrix_alloc );
+    if (matrix_alloc_float_valid) {
+        ret->set_matrix( matrix_alloc_float );
+    }
+    else {
+        ret->set_matrix( matrix_alloc );
+    }
     
     ret->set_parameter_start_idx( get_parameter_start_idx() );
     ret->set_parents( parents );
     ret->set_children( children );
 
     return ret;
+}
 
+
+
+Matrix
+Gate::derivative_kernel(const Matrix_real& precomputed_sincos, int param_idx) {
+
+    if (param_idx < 0 || param_idx >= get_parameter_num() || precomputed_sincos.cols < 2) {
+        return Matrix();
+    }
+
+    static tbb::enumerable_thread_specific<Matrix_real> shifted_tls;
+    Matrix_real& shifted = shifted_tls.local();
+    precomputed_sincos.copy_to(shifted);
+    const int offset = param_idx * shifted.stride;
+    const double sin_theta = shifted[offset + 0];
+    const double cos_theta = shifted[offset + 1];
+
+    // sin(theta + pi/2) = cos(theta), cos(theta + pi/2) = -sin(theta)
+    shifted[offset + 0] = cos_theta;
+    shifted[offset + 1] = -sin_theta;
+
+    return gate_kernel(shifted);
+}
+
+
+Matrix_float
+Gate::derivative_kernel(const Matrix_real_float& precomputed_sincos, int param_idx) {
+
+    if (param_idx < 0 || param_idx >= get_parameter_num() || precomputed_sincos.cols < 2) {
+        return Matrix_float();
+    }
+
+    static tbb::enumerable_thread_specific<Matrix_real_float> shifted_tls;
+    Matrix_real_float& shifted = shifted_tls.local();
+    precomputed_sincos.copy_to(shifted);
+    const int offset = param_idx * shifted.stride;
+    const float sin_theta = shifted[offset + 0];
+    const float cos_theta = shifted[offset + 1];
+
+    // sin(theta + pi/2) = cos(theta), cos(theta + pi/2) = -sin(theta)
+    shifted[offset + 0] = cos_theta;
+    shifted[offset + 1] = -sin_theta;
+
+    return gate_kernel(shifted);
+}
+
+
+Matrix
+Gate::derivative_aux_kernel(const Matrix_real& precomputed_sincos, int param_idx) {
+    (void)precomputed_sincos;
+    (void)param_idx;
+    return Matrix();
+}
+
+
+Matrix_float
+Gate::derivative_aux_kernel(const Matrix_real_float& precomputed_sincos, int param_idx) {
+    (void)precomputed_sincos;
+    (void)param_idx;
+    return Matrix_float();
+}
+
+
+Matrix_real
+Gate::precompute_sincos(const Matrix_real& parameters) const {
+
+    if (parameter_num <= 0) {
+        return Matrix_real(0, 0);
+    }
+
+    if ((int)parameters.size() < parameter_num) {
+        std::string err(name + "::precompute_sincos(double): not enough parameters supplied.");
+        throw err;
+    }
+
+    Matrix_real sincos(parameter_num, 2);
+    qgd_sincos_batch<double>(parameters.get_data(), sincos.get_data(), parameter_num, sincos.stride);
+
+    return sincos;
+}
+
+
+Matrix_real_float
+Gate::precompute_sincos(const Matrix_real_float& parameters) const {
+
+    if (parameter_num <= 0) {
+        return Matrix_real_float(0, 0);
+    }
+
+    if ((int)parameters.size() < parameter_num) {
+        std::string err(name + "::precompute_sincos(float): not enough parameters supplied.");
+        throw err;
+    }
+
+    Matrix_real_float sincos(parameter_num, 2);
+    qgd_sincos_batch<float>(parameters.get_data(), sincos.get_data(), parameter_num, sincos.stride);
+
+    return sincos;
 }
 
 
@@ -700,7 +1475,234 @@ Gate* Gate::clone() {
 @param parallel Set 0 for sequential execution (default), 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 */
 void 
-Gate::apply_kernel_to(Matrix& u3_1qbit, Matrix& input, bool deriv, int parallel) {
+Gate::apply_kernel_to(Matrix& u3_1qbit, Matrix& input, bool deriv, int parallel, const Matrix* alt_kernel) {
+
+    (void)deriv;
+
+    if (type == SWAP_OPERATION || type == CSWAP_OPERATION) {
+        switch (parallel) {
+            case 0:
+                apply_SWAP_kernel_to_input(input, target_qbits, control_qbits, matrix_size); break;
+            case 1:
+                apply_SWAP_kernel_to_input_omp(input, target_qbits, control_qbits, matrix_size); break;
+            case 2:
+                apply_SWAP_kernel_to_input_tbb(input, target_qbits, control_qbits, matrix_size); break;
+            default:
+                apply_SWAP_kernel_to_input(input, target_qbits, control_qbits, matrix_size); break;
+        }
+        return;
+    }
+
+    if (type == CCX_OPERATION) {
+        switch (parallel) {
+            case 0:
+                apply_X_kernel_to_input(input, target_qbits, control_qbits, matrix_size); break;
+            case 1:
+                apply_X_kernel_to_input_omp(input, target_qbits, control_qbits, matrix_size); break;
+            case 2:
+                apply_X_kernel_to_input_tbb(input, target_qbits, control_qbits, matrix_size); break;
+            default:
+                apply_X_kernel_to_input(input, target_qbits, control_qbits, matrix_size); break;
+        }
+        return;
+    }
+
+    if (type == CNOT_OPERATION) {
+        std::vector<int> tqbits = {target_qbit};
+        std::vector<int> cqbits = {control_qbit};
+        switch (parallel) {
+            case 0:
+                apply_X_kernel_to_input(input, tqbits, cqbits, matrix_size); break;
+            case 1:
+                apply_X_kernel_to_input_omp(input, tqbits, cqbits, matrix_size); break;
+            case 2:
+                apply_X_kernel_to_input_tbb(input, tqbits, cqbits, matrix_size); break;
+            default:
+                apply_X_kernel_to_input(input, tqbits, cqbits, matrix_size); break;
+        }
+        return;
+    }
+
+    if (type == CZ_OPERATION) {
+        switch (parallel) {
+            case 0:
+                apply_Z_kernel_to_input(input, target_qbit, control_qbit, matrix_size); break;
+            case 1:
+                apply_Z_kernel_to_input_omp(input, target_qbit, control_qbit, matrix_size); break;
+            case 2:
+                apply_Z_kernel_to_input_tbb(input, target_qbit, control_qbit, matrix_size); break;
+            default:
+                apply_Z_kernel_to_input(input, target_qbit, control_qbit, matrix_size); break;
+        }
+        return;
+    }
+
+    if (type == CH_OPERATION) {
+        switch (parallel) {
+            case 0:
+                apply_H_kernel_to_input(input, target_qbit, control_qbit, matrix_size); break;
+            case 1:
+                apply_H_kernel_to_input_omp(input, target_qbit, control_qbit, matrix_size); break;
+            case 2:
+                apply_H_kernel_to_input_tbb(input, target_qbit, control_qbit, matrix_size); break;
+            default:
+                apply_H_kernel_to_input(input, target_qbit, control_qbit, matrix_size); break;
+        }
+        return;
+    }
+
+    if (type == SYC_OPERATION) {
+        switch (parallel) {
+            case 0:
+                apply_SYC_kernel_to_input(input, target_qbit, control_qbit, matrix_size); break;
+            case 1:
+                apply_SYC_kernel_to_input_omp(input, target_qbit, control_qbit, matrix_size); break;
+            case 2:
+                apply_SYC_kernel_to_input_tbb(input, target_qbit, control_qbit, matrix_size); break;
+            default:
+                apply_SYC_kernel_to_input(input, target_qbit, control_qbit, matrix_size); break;
+        }
+        return;
+    }
+
+    if (type == CROT_OPERATION && alt_kernel != nullptr) {
+        Matrix branch0 = alt_kernel->copy();
+        Matrix branch1 = u3_1qbit.copy();
+#ifdef USE_AVX
+        if (parallel) {
+            apply_crot_kernel_to_matrix_input_AVX_parallel(branch0, branch1, input, target_qbit, control_qbit, input.rows);
+        } else {
+            apply_crot_kernel_to_matrix_input_AVX(branch0, branch1, input, target_qbit, control_qbit, input.rows);
+        }
+#else
+        apply_crot_kernel_to_matrix_input(branch0, branch1, input, target_qbit, control_qbit, input.rows);
+#endif
+        return;
+    }
+
+    if (type == GENERAL_OPERATION) {
+        if (matrix_alloc_float_valid && matrix_alloc.rows == 0 && matrix_alloc_float.rows > 0) {
+            matrix_alloc = matrix_alloc_float.to_float64();
+        }
+        const std::vector<int> involved_qbits = get_involved_qubits();
+        const bool has_any_control = (control_qbit >= 0) || !control_qbits.empty();
+        const bool is_state_vector = (input.cols == 1);
+        const int involved_qbit_num = static_cast<int>(involved_qbits.size());
+        const bool has_full_matrix = matrix_alloc.rows == matrix_size && matrix_alloc.cols == matrix_size;
+        const bool has_local_matrix = involved_qbit_num > 0
+            && matrix_alloc.rows == Power_of_2(involved_qbit_num)
+            && matrix_alloc.cols == Power_of_2(involved_qbit_num);
+        const bool can_use_large_kernel = !has_any_control
+            && ((is_state_vector && involved_qbit_num >= 2 && involved_qbit_num <= 5)
+                || (!is_state_vector && involved_qbit_num >= 2 && involved_qbit_num <= 5));
+
+        if (has_full_matrix) {
+            if (can_use_large_kernel) {
+                switch (parallel) {
+                    case 0:
+                        apply_large_kernel_to_input(matrix_alloc, input, involved_qbits, matrix_size);
+                        break;
+                    case 1:
+#ifdef USE_AVX
+                        apply_large_kernel_to_input_AVX_OpenMP(matrix_alloc, input, involved_qbits, matrix_size);
+#else
+                        apply_large_kernel_to_input(matrix_alloc, input, involved_qbits, matrix_size);
+#endif
+                        break;
+                    case 2:
+#ifdef USE_AVX
+                        apply_large_kernel_to_input_AVX_TBB(matrix_alloc, input, involved_qbits, matrix_size);
+#else
+                        apply_large_kernel_to_input(matrix_alloc, input, involved_qbits, matrix_size);
+#endif
+                        break;
+                    default:
+                        apply_large_kernel_to_input(matrix_alloc, input, involved_qbits, matrix_size);
+                }
+            }
+            else {
+                Matrix transformed = dot(matrix_alloc, input);
+                memcpy(input.get_data(), transformed.get_data(), transformed.size() * sizeof(QGD_Complex16));
+            }
+            return;
+        }
+
+        if (has_local_matrix && matrix_alloc.rows == 2 && matrix_alloc.cols == 2 && involved_qbit_num == 1) {
+            u3_1qbit = matrix_alloc;
+        }
+        else if (has_local_matrix && can_use_large_kernel) {
+            switch (parallel) {
+                case 0:
+                    apply_large_kernel_to_input(matrix_alloc, input, involved_qbits, matrix_size);
+                    break;
+                case 1:
+#ifdef USE_AVX
+                    apply_large_kernel_to_input_AVX_OpenMP(matrix_alloc, input, involved_qbits, matrix_size);
+#else
+                    apply_large_kernel_to_input(matrix_alloc, input, involved_qbits, matrix_size);
+#endif
+                    break;
+                case 2:
+#ifdef USE_AVX
+                    apply_large_kernel_to_input_AVX_TBB(matrix_alloc, input, involved_qbits, matrix_size);
+#else
+                    apply_large_kernel_to_input(matrix_alloc, input, involved_qbits, matrix_size);
+#endif
+                    break;
+                default:
+                    apply_large_kernel_to_input(matrix_alloc, input, involved_qbits, matrix_size);
+            }
+            return;
+        }
+        else {
+            std::string err("Gate::apply_kernel_to(Matrix&): unsupported GENERAL_OPERATION dispatch for stored matrix size.");
+            throw err;
+        }
+    }
+
+    if (u3_1qbit.rows != 2 || u3_1qbit.cols != 2) {
+        const std::vector<int> involved_qbits = get_involved_qubits();
+        const bool has_any_control = (control_qbit >= 0) || !control_qbits.empty();
+        const bool is_state_vector = (input.cols == 1);
+        const int involved_qbit_num = static_cast<int>(involved_qbits.size());
+        const bool can_use_large_kernel = !has_any_control
+            && ((is_state_vector && involved_qbit_num >= 2 && involved_qbit_num <= 5)
+                || (!is_state_vector && involved_qbit_num >= 2 && involved_qbit_num <= 5));
+
+        if (can_use_large_kernel) {
+            switch (parallel) {
+                case 0:
+                    apply_large_kernel_to_input(u3_1qbit, input, involved_qbits, matrix_size);
+                    break;
+                case 1:
+#ifdef USE_AVX
+                    apply_large_kernel_to_input_AVX_OpenMP(u3_1qbit, input, involved_qbits, matrix_size);
+#else
+                    apply_large_kernel_to_input(u3_1qbit, input, involved_qbits, matrix_size);
+#endif
+                    break;
+                case 2:
+#ifdef USE_AVX
+                    apply_large_kernel_to_input_AVX_TBB(u3_1qbit, input, involved_qbits, matrix_size);
+#else
+                    apply_large_kernel_to_input(u3_1qbit, input, involved_qbits, matrix_size);
+#endif
+                    break;
+                default:
+                    apply_large_kernel_to_input(u3_1qbit, input, involved_qbits, matrix_size);
+            }
+            return;
+        }
+
+        if (u3_1qbit.rows == matrix_size && u3_1qbit.cols == matrix_size) {
+            Matrix transformed = dot(u3_1qbit, input);
+            memcpy(input.get_data(), transformed.get_data(), transformed.size() * sizeof(QGD_Complex16));
+            return;
+        }
+
+        std::string err("Gate::apply_kernel_to(Matrix&): unsupported non-2x2 kernel dispatch for this configuration.");
+        throw err;
+    }
 
 #ifdef USE_AVX
 
@@ -766,6 +1768,307 @@ Gate::apply_kernel_to(Matrix& u3_1qbit, Matrix& input, bool deriv, int parallel)
 }
 
 
+void
+Gate::apply_kernel_to(Matrix_float& u3_1qbit, Matrix_float& input, bool deriv, int parallel, const Matrix_float* alt_kernel) {
+
+    (void)deriv;
+
+    if (type == SWAP_OPERATION || type == CSWAP_OPERATION) {
+        switch (parallel) {
+            case 0:
+                apply_SWAP_kernel_to_input(input, target_qbits, control_qbits, matrix_size); break;
+            case 1:
+                apply_SWAP_kernel_to_input_omp(input, target_qbits, control_qbits, matrix_size); break;
+            case 2:
+                apply_SWAP_kernel_to_input_tbb(input, target_qbits, control_qbits, matrix_size); break;
+            default:
+                apply_SWAP_kernel_to_input(input, target_qbits, control_qbits, matrix_size); break;
+        }
+        return;
+    }
+
+    if (type == CCX_OPERATION) {
+        switch (parallel) {
+            case 0:
+                apply_X_kernel_to_input(input, target_qbits, control_qbits, matrix_size); break;
+            case 1:
+                apply_X_kernel_to_input_omp(input, target_qbits, control_qbits, matrix_size); break;
+            case 2:
+                apply_X_kernel_to_input_tbb(input, target_qbits, control_qbits, matrix_size); break;
+            default:
+                apply_X_kernel_to_input(input, target_qbits, control_qbits, matrix_size); break;
+        }
+        return;
+    }
+
+    if (type == CNOT_OPERATION) {
+        std::vector<int> tqbits = {target_qbit};
+        std::vector<int> cqbits = {control_qbit};
+        switch (parallel) {
+            case 0:
+                apply_X_kernel_to_input(input, tqbits, cqbits, matrix_size); break;
+            case 1:
+                apply_X_kernel_to_input_omp(input, tqbits, cqbits, matrix_size); break;
+            case 2:
+                apply_X_kernel_to_input_tbb(input, tqbits, cqbits, matrix_size); break;
+            default:
+                apply_X_kernel_to_input(input, tqbits, cqbits, matrix_size); break;
+        }
+        return;
+    }
+
+    if (type == CZ_OPERATION) {
+        switch (parallel) {
+            case 0:
+                apply_Z_kernel_to_input(input, target_qbit, control_qbit, matrix_size); break;
+            case 1:
+                apply_Z_kernel_to_input_omp(input, target_qbit, control_qbit, matrix_size); break;
+            case 2:
+                apply_Z_kernel_to_input_tbb(input, target_qbit, control_qbit, matrix_size); break;
+            default:
+                apply_Z_kernel_to_input(input, target_qbit, control_qbit, matrix_size); break;
+        }
+        return;
+    }
+
+    if (type == CH_OPERATION) {
+        switch (parallel) {
+            case 0:
+                apply_H_kernel_to_input(input, target_qbit, control_qbit, matrix_size); break;
+            case 1:
+                apply_H_kernel_to_input_omp(input, target_qbit, control_qbit, matrix_size); break;
+            case 2:
+                apply_H_kernel_to_input_tbb(input, target_qbit, control_qbit, matrix_size); break;
+            default:
+                apply_H_kernel_to_input(input, target_qbit, control_qbit, matrix_size); break;
+        }
+        return;
+    }
+
+    if (type == SYC_OPERATION) {
+        switch (parallel) {
+            case 0:
+                apply_SYC_kernel_to_input(input, target_qbit, control_qbit, matrix_size); break;
+            case 1:
+                apply_SYC_kernel_to_input_omp(input, target_qbit, control_qbit, matrix_size); break;
+            case 2:
+                apply_SYC_kernel_to_input_tbb(input, target_qbit, control_qbit, matrix_size); break;
+            default:
+                apply_SYC_kernel_to_input(input, target_qbit, control_qbit, matrix_size); break;
+        }
+        return;
+    }
+
+    if (type == CROT_OPERATION && alt_kernel != nullptr) {
+        Matrix_float branch0 = alt_kernel->copy();
+        Matrix_float branch1 = u3_1qbit.copy();
+        if (input.cols != 1) {
+            for (int col_idx = 0; col_idx < input.cols; ++col_idx) {
+                Matrix_float col_mtx(input.rows, 1);
+                for (int row_idx = 0; row_idx < input.rows; ++row_idx) {
+                    col_mtx[row_idx * col_mtx.stride] = input[row_idx * input.stride + col_idx];
+                }
+
+                Matrix_float col_branch0 = branch0.copy();
+                Matrix_float col_branch1 = branch1.copy();
+#ifdef USE_AVX
+                if (parallel) {
+                    apply_crot_kernel_to_matrix_input_AVX_parallel32(col_branch0, col_branch1, col_mtx, target_qbit, control_qbit, col_mtx.rows);
+                } else {
+                    apply_crot_kernel_to_matrix_input_AVX32(col_branch0, col_branch1, col_mtx, target_qbit, control_qbit, col_mtx.rows);
+                }
+#else
+                apply_crot_kernel_to_matrix_input(col_branch0, col_branch1, col_mtx, target_qbit, control_qbit, col_mtx.rows);
+#endif
+
+                for (int row_idx = 0; row_idx < input.rows; ++row_idx) {
+                    input[row_idx * input.stride + col_idx] = col_mtx[row_idx * col_mtx.stride];
+                }
+            }
+        } else {
+#ifdef USE_AVX
+            if (parallel) {
+                apply_crot_kernel_to_matrix_input_AVX_parallel32(branch0, branch1, input, target_qbit, control_qbit, input.rows);
+            } else {
+                apply_crot_kernel_to_matrix_input_AVX32(branch0, branch1, input, target_qbit, control_qbit, input.rows);
+            }
+#else
+            apply_crot_kernel_to_matrix_input(branch0, branch1, input, target_qbit, control_qbit, input.rows);
+#endif
+        }
+        return;
+    }
+
+    if (type == GENERAL_OPERATION) {
+        const std::vector<int> involved_qbits = get_involved_qubits();
+        const bool has_any_control = (control_qbit >= 0) || !control_qbits.empty();
+        const bool is_state_vector = (input.cols == 1);
+        const int involved_qbit_num = static_cast<int>(involved_qbits.size());
+        Matrix_float matrix_alloc32;
+        if (matrix_alloc_float_valid) {
+            matrix_alloc32 = matrix_alloc_float;
+        }
+        else {
+            matrix_alloc32 = matrix_alloc.to_float32();
+        }
+        const bool has_full_matrix = matrix_alloc32.rows == matrix_size && matrix_alloc32.cols == matrix_size;
+        const bool has_local_matrix = involved_qbit_num > 0
+            && matrix_alloc32.rows == Power_of_2(involved_qbit_num)
+            && matrix_alloc32.cols == Power_of_2(involved_qbit_num);
+        const bool can_use_large_kernel = !has_any_control
+            && ((is_state_vector && involved_qbit_num >= 2 && involved_qbit_num <= 5)
+                || (!is_state_vector && involved_qbit_num >= 2 && involved_qbit_num <= 5));
+
+        if (has_full_matrix) {
+            if (can_use_large_kernel) {
+#ifdef USE_AVX
+                switch (parallel) {
+                    case 0:
+                        apply_large_kernel_to_input_AVX32(matrix_alloc32, input, involved_qbits, matrix_size);
+                        break;
+                    case 1:
+                        apply_large_kernel_to_input_AVX_OpenMP32(matrix_alloc32, input, involved_qbits, matrix_size);
+                        break;
+                    case 2:
+                        apply_large_kernel_to_input_AVX_TBB32(matrix_alloc32, input, involved_qbits, matrix_size);
+                        break;
+                    default:
+                        apply_large_kernel_to_input_AVX32(matrix_alloc32, input, involved_qbits, matrix_size);
+                }
+#else
+                apply_large_kernel_to_input(matrix_alloc32, input, involved_qbits, matrix_size);
+#endif
+            }
+            else {
+                Matrix_float transformed = dot(matrix_alloc32, input);
+                memcpy(input.get_data(), transformed.get_data(), transformed.size() * sizeof(QGD_Complex8));
+            }
+            return;
+        }
+
+        if (has_local_matrix && matrix_alloc32.rows == 2 && matrix_alloc32.cols == 2 && involved_qbit_num == 1) {
+            u3_1qbit = matrix_alloc32;
+        }
+        else if (has_local_matrix && can_use_large_kernel) {
+#ifdef USE_AVX
+            switch (parallel) {
+                case 0:
+                    apply_large_kernel_to_input_AVX32(matrix_alloc32, input, involved_qbits, matrix_size);
+                    break;
+                case 1:
+                    apply_large_kernel_to_input_AVX_OpenMP32(matrix_alloc32, input, involved_qbits, matrix_size);
+                    break;
+                case 2:
+                    apply_large_kernel_to_input_AVX_TBB32(matrix_alloc32, input, involved_qbits, matrix_size);
+                    break;
+                default:
+                    apply_large_kernel_to_input_AVX32(matrix_alloc32, input, involved_qbits, matrix_size);
+            }
+#else
+            apply_large_kernel_to_input(matrix_alloc32, input, involved_qbits, matrix_size);
+#endif
+            return;
+        }
+        else {
+            std::string err("Gate::apply_kernel_to(Matrix_float&): unsupported GENERAL_OPERATION dispatch for stored matrix size.");
+            throw err;
+        }
+    }
+
+    if (u3_1qbit.rows != 2 || u3_1qbit.cols != 2) {
+        const std::vector<int> involved_qbits = get_involved_qubits();
+        const bool has_any_control = (control_qbit >= 0) || !control_qbits.empty();
+        const bool is_state_vector = (input.cols == 1);
+        const int involved_qbit_num = static_cast<int>(involved_qbits.size());
+        const bool can_use_large_kernel = !has_any_control
+            && ((is_state_vector && involved_qbit_num >= 2 && involved_qbit_num <= 5)
+                || (!is_state_vector && involved_qbit_num >= 2 && involved_qbit_num <= 5));
+
+        if (can_use_large_kernel) {
+#ifdef USE_AVX
+            switch (parallel) {
+                case 0:
+                    apply_large_kernel_to_input_AVX32(u3_1qbit, input, involved_qbits, matrix_size);
+                    break;
+                case 1:
+                    apply_large_kernel_to_input_AVX_OpenMP32(u3_1qbit, input, involved_qbits, matrix_size);
+                    break;
+                case 2:
+                    apply_large_kernel_to_input_AVX_TBB32(u3_1qbit, input, involved_qbits, matrix_size);
+                    break;
+                default:
+                    apply_large_kernel_to_input_AVX32(u3_1qbit, input, involved_qbits, matrix_size);
+            }
+#else
+            apply_large_kernel_to_input(u3_1qbit, input, involved_qbits, matrix_size);
+#endif
+            return;
+        }
+
+        if (u3_1qbit.rows == matrix_size && u3_1qbit.cols == matrix_size) {
+            Matrix_float transformed = dot(u3_1qbit, input);
+            memcpy(input.get_data(), transformed.get_data(), transformed.size() * sizeof(QGD_Complex8));
+            return;
+        }
+
+        std::string err("Gate::apply_kernel_to(Matrix_float&): unsupported non-2x2 kernel dispatch for this configuration.");
+        throw err;
+    }
+
+#ifdef USE_AVX
+
+    // apply kernel on state vector
+    if ( input.cols == 1 && (qbit_num<14 || !parallel) ) {
+        apply_kernel_to_state_vector_input_AVX32(u3_1qbit, input, deriv, target_qbit, control_qbit, matrix_size);
+        return;
+    }
+    else if ( input.cols == 1 ) {
+        if ( parallel == 1 ) {
+            apply_kernel_to_state_vector_input_parallel_OpenMP_AVX32(u3_1qbit, input, deriv, target_qbit, control_qbit, matrix_size);
+        }
+        else if ( parallel == 2 ) {
+            apply_kernel_to_state_vector_input_parallel_AVX32(u3_1qbit, input, deriv, target_qbit, control_qbit, matrix_size);
+        }
+        else {
+            std::string err("Gate::apply_kernel_to(Matrix_float&): the argument parallel should be either 0,1 or 2.");
+            throw err;
+        }
+        return;
+    }
+
+    // unitary transform kernels
+    if ( qbit_num < 4 ) {
+        apply_kernel_to_input_AVX_small32(u3_1qbit, input, deriv, target_qbit, control_qbit, matrix_size);
+        return;
+    }
+    else if ( qbit_num < 10 || !parallel) {
+        apply_kernel_to_input_AVX32(u3_1qbit, input, deriv, target_qbit, control_qbit, matrix_size);
+        return;
+     }
+    else {
+        apply_kernel_to_input_AVX_parallel32(u3_1qbit, input, deriv, target_qbit, control_qbit, matrix_size);
+        return;
+     }
+
+#else
+
+    // apply kernel on state vector
+    if ( input.cols == 1 && (qbit_num < 10 || !parallel) ) {
+        apply_kernel_to_state_vector_input(u3_1qbit, input, deriv, target_qbit, control_qbit, matrix_size);
+        return;
+    }
+    else if ( input.cols == 1 ) {
+        apply_kernel_to_state_vector_input_parallel(u3_1qbit, input, deriv, target_qbit, control_qbit, matrix_size);
+        return;
+    }
+
+    apply_kernel_to_input(u3_1qbit, input, deriv, target_qbit, control_qbit, matrix_size);
+
+#endif // USE_AVX
+
+}
+
+
 
 
 
@@ -776,164 +2079,418 @@ Gate::apply_kernel_to(Matrix& u3_1qbit, Matrix& input, bool deriv, int parallel)
 @param deriv Set true to apply derivate transformation, false otherwise
 */
 void 
-Gate::apply_kernel_from_right( Matrix& u3_1qbit, Matrix& input ) {
+Gate::apply_kernel_from_right( Matrix& u3_1qbit, Matrix& input, const Matrix* alt_kernel ) {
 
-   
-    int index_step_target = 1 << target_qbit;
-    int current_idx = 0;
-    int current_idx_pair = current_idx+index_step_target;
+    if (type == SWAP_OPERATION || type == CSWAP_OPERATION) {
+        if (qbit_num < 10) {
+            apply_SWAP_kernel_from_right(input, target_qbits, control_qbits, matrix_size);
+        } else {
+            apply_SWAP_kernel_from_right_tbb(input, target_qbits, control_qbits, matrix_size);
+        }
+        return;
+    }
 
-//std::cout << "target qbit: " << target_qbit << std::endl;
+    if (type == CCX_OPERATION) {
+        if (qbit_num < 10) {
+            apply_X_kernel_from_right(input, target_qbits, control_qbits, matrix_size);
+        } else {
+            apply_X_kernel_from_right_tbb(input, target_qbits, control_qbits, matrix_size);
+        }
+        return;
+    }
 
-    while ( current_idx_pair < input.cols ) {
+    if (type == CNOT_OPERATION) {
+        std::vector<int> tqbits = {target_qbit};
+        std::vector<int> cqbits = {control_qbit};
+        if (qbit_num < 10) {
+            apply_X_kernel_from_right(input, tqbits, cqbits, matrix_size);
+        } else {
+            apply_X_kernel_from_right_tbb(input, tqbits, cqbits, matrix_size);
+        }
+        return;
+    }
 
-        for(int idx=0; idx<index_step_target; idx++) { 
-        //tbb::parallel_for(0, index_step_target, 1, [&](int idx) {  
+    if (type == CZ_OPERATION) {
+        if (qbit_num < 10) {
+            apply_Z_kernel_from_right(input, target_qbit, control_qbit, matrix_size);
+        } else {
+            apply_Z_kernel_from_right_tbb(input, target_qbit, control_qbit, matrix_size);
+        }
+        return;
+    }
 
-            int current_idx_loc = current_idx + idx;
-            int current_idx_pair_loc = current_idx_pair + idx;
+    if (type == CH_OPERATION) {
+        if (qbit_num < 10) {
+            apply_H_kernel_from_right(input, target_qbit, control_qbit, matrix_size);
+        } else {
+            apply_H_kernel_from_right_tbb(input, target_qbit, control_qbit, matrix_size);
+        }
+        return;
+    }
 
-            // determine the action according to the state of the control qubit
-            if ( control_qbit<0 || ((current_idx_loc >> control_qbit) & 1) ) {
+    if (type == SYC_OPERATION) {
+        apply_SYC_kernel_from_right(input, target_qbit, control_qbit, matrix_size);
+        return;
+    }
 
-                for ( int row_idx=0; row_idx<matrix_size; row_idx++) {
+    if (type == CROT_OPERATION && alt_kernel != nullptr) {
+        Matrix branch0 = alt_kernel->copy();
+        Matrix branch1 = u3_1qbit.copy();
+#ifdef USE_AVX
+        if (qbit_num < 10) {
+            apply_crot_kernel_to_matrix_input_from_right_AVX(branch0, branch1, input, target_qbit, control_qbit, input.rows);
+        } else {
+            apply_crot_kernel_to_matrix_input_from_right_AVX_parallel(branch0, branch1, input, target_qbit, control_qbit, input.rows);
+        }
+#else
+        apply_crot_kernel_to_matrix_input_from_right(branch0, branch1, input, target_qbit, control_qbit, input.rows);
+#endif
+        return;
+    }
 
-                    int row_offset = row_idx*input.stride;
-
-
-                    int index      = row_offset+current_idx_loc;
-                    int index_pair = row_offset+current_idx_pair_loc;
-
-                    QGD_Complex16 element      = input[index];
-                    QGD_Complex16 element_pair = input[index_pair];
-
-                    QGD_Complex16 tmp1 = mult(u3_1qbit[0], element);
-                    QGD_Complex16 tmp2 = mult(u3_1qbit[2], element_pair);
-                    input[index].real = tmp1.real + tmp2.real;
-                    input[index].imag = tmp1.imag + tmp2.imag;
-
-                    tmp1 = mult(u3_1qbit[1], element);
-                    tmp2 = mult(u3_1qbit[3], element_pair);
-                    input[index_pair].real = tmp1.real + tmp2.real;
-                    input[index_pair].imag = tmp1.imag + tmp2.imag;
-
-                }
-
-            }
-            else {
-                // leave the state as it is
-                continue;
-            }        
-
-
-//std::cout << current_idx_target << " " << current_idx_target_pair << std::endl;
-
-
-        //});
+    if (type == GENERAL_OPERATION) {
+        if (matrix_alloc_float_valid && matrix_alloc.rows == 0 && matrix_alloc_float.rows > 0) {
+            matrix_alloc = matrix_alloc_float.to_float64();
         }
 
+        const std::vector<int> involved_qbits = get_involved_qubits();
+        const int involved_qbit_num = static_cast<int>(involved_qbits.size());
+        const bool has_any_control = (control_qbit >= 0) || !control_qbits.empty();
+        const bool has_full_matrix = matrix_alloc.rows == matrix_size && matrix_alloc.cols == matrix_size;
+        const bool has_local_matrix = involved_qbit_num > 0
+            && matrix_alloc.rows == Power_of_2(involved_qbit_num)
+            && matrix_alloc.cols == Power_of_2(involved_qbit_num);
+        const bool can_use_large_kernel_from_right = !has_any_control
+            && input.cols != 1
+            && involved_qbit_num >= 2
+            && involved_qbit_num <= 5;
 
-        current_idx = current_idx + (index_step_target << 1);
-        current_idx_pair = current_idx_pair + (index_step_target << 1);
+        if (has_full_matrix) {
+            if (can_use_large_kernel_from_right) {
+#ifdef USE_AVX
+                if (involved_qbit_num == 2 && qbit_num < 10) {
+                    apply_large_kernel_from_right_AVX(matrix_alloc, input, involved_qbits, matrix_size);
+                }
+                else if (involved_qbit_num == 2) {
+                    apply_large_kernel_from_right_AVX_TBB(matrix_alloc, input, involved_qbits, matrix_size);
+                }
+                else {
+                    apply_large_kernel_from_right(matrix_alloc, input, involved_qbits, matrix_size);
+                }
+#else
+                apply_large_kernel_from_right(matrix_alloc, input, involved_qbits, matrix_size);
+#endif
+            }
+            else {
+                Matrix transformed = dot(input, matrix_alloc);
+                memcpy(input.get_data(), transformed.get_data(), transformed.size() * sizeof(QGD_Complex16));
+            }
+            return;
+        }
 
+        if (has_local_matrix && matrix_alloc.rows == 2 && matrix_alloc.cols == 2 && involved_qbit_num == 1) {
+            u3_1qbit = matrix_alloc;
+        }
+        else if (has_local_matrix && can_use_large_kernel_from_right) {
+#ifdef USE_AVX
+            if (involved_qbit_num == 2 && qbit_num < 10) {
+                apply_large_kernel_from_right_AVX(matrix_alloc, input, involved_qbits, matrix_size);
+            }
+            else if (involved_qbit_num == 2) {
+                apply_large_kernel_from_right_AVX_TBB(matrix_alloc, input, involved_qbits, matrix_size);
+            }
+            else {
+                apply_large_kernel_from_right(matrix_alloc, input, involved_qbits, matrix_size);
+            }
+#else
+            apply_large_kernel_from_right(matrix_alloc, input, involved_qbits, matrix_size);
+#endif
+            return;
+        }
+        else {
+            std::string err("Gate::apply_kernel_from_right(Matrix&): unsupported GENERAL_OPERATION dispatch for stored matrix size.");
+            throw err;
+        }
+    }
 
+    if (u3_1qbit.rows == 0 || u3_1qbit.cols == 0) {
+        Matrix gate_matrix = create_identity(matrix_size);
+        apply_to(gate_matrix, 0);
+        Matrix ret = dot(input, gate_matrix);
+        memcpy(input.get_data(), ret.get_data(), ret.size() * sizeof(QGD_Complex16));
+        return;
+    }
+
+    if (type == CROT_OPERATION || u3_1qbit.rows != 2 || u3_1qbit.cols != 2) {
+        const std::vector<int> involved_qbits = get_involved_qubits();
+        const int involved_qbit_num = static_cast<int>(involved_qbits.size());
+        const bool has_any_control = (control_qbit >= 0) || !control_qbits.empty();
+        const bool can_use_large_kernel_from_right = !has_any_control
+            && input.cols != 1
+            && involved_qbit_num >= 2
+            && involved_qbit_num <= 5;
+
+        if (u3_1qbit.rows != 2 || u3_1qbit.cols != 2) {
+            if (can_use_large_kernel_from_right) {
+#ifdef USE_AVX
+                if (involved_qbit_num == 2 && qbit_num < 10) {
+                    apply_large_kernel_from_right_AVX(u3_1qbit, input, involved_qbits, matrix_size);
+                }
+                else if (involved_qbit_num == 2) {
+                    apply_large_kernel_from_right_AVX_TBB(u3_1qbit, input, involved_qbits, matrix_size);
+                }
+                else {
+                    apply_large_kernel_from_right(u3_1qbit, input, involved_qbits, matrix_size);
+                }
+#else
+                apply_large_kernel_from_right(u3_1qbit, input, involved_qbits, matrix_size);
+#endif
+                return;
+            }
+
+            if (u3_1qbit.rows == matrix_size && u3_1qbit.cols == matrix_size) {
+                Matrix transformed = dot(input, u3_1qbit);
+                memcpy(input.get_data(), transformed.get_data(), transformed.size() * sizeof(QGD_Complex16));
+                return;
+            }
+        }
+
+        Matrix gate_matrix = create_identity(matrix_size);
+        Matrix kernel_copy = u3_1qbit.copy();
+        if (alt_kernel != nullptr) {
+            Matrix alt_copy = alt_kernel->copy();
+            apply_kernel_to(kernel_copy, gate_matrix, false, 0, &alt_copy);
+        } else {
+            apply_kernel_to(kernel_copy, gate_matrix, false, 0);
+        }
+        Matrix ret = dot(input, gate_matrix);
+        memcpy(input.get_data(), ret.get_data(), ret.size() * sizeof(QGD_Complex16));
+        return;
     }
 
 
-}
-
-#ifdef _WIN32
-void sincos(double x, double *s, double *c)
-{
-	*s = sin(x), *c = cos(x);
-}
+#ifdef USE_AVX
+    if (qbit_num < 4) {
+        apply_kernel_from_right_AVX_small(u3_1qbit, input, target_qbit, control_qbit, matrix_size);
+    } else if (qbit_num < 10) {
+        apply_kernel_from_right_AVX(u3_1qbit, input, target_qbit, control_qbit, matrix_size);
+    } else {
+        apply_kernel_from_right_AVX_parallel(u3_1qbit, input, target_qbit, control_qbit, matrix_size);
+    }
+#else
+    ::apply_kernel_from_right(u3_1qbit, input, target_qbit, control_qbit, matrix_size);
 #endif
 
-/**
-@brief Calculate the matrix of a U3 gate gate corresponding to the given parameters acting on a single qbit space.
-@param ThetaOver2 Real parameter standing for the parameter theta.
-@param Phi Real parameter standing for the parameter phi.
-@param Lambda Real parameter standing for the parameter lambda.
-@return Returns with the matrix of the one-qubit matrix.
-*/
-Matrix Gate::calc_one_qubit_u3(double ThetaOver2, double Phi, double Lambda ) {
-
-    Matrix u3_1qbit = Matrix(2,2); 
-#ifdef DEBUG
-    	if (isnan(ThetaOver2)) {
-            std::stringstream sstream;
-	    sstream << "Matrix U3::calc_one_qubit_u3: ThetaOver2 is NaN." << std::endl;
-            print(sstream, 1);	    
-        }
-    	if (isnan(Phi)) {
-            std::stringstream sstream;
-	    sstream << "Matrix U3::calc_one_qubit_u3: Phi is NaN." << std::endl;
-            print(sstream, 1);	     
-        }
-     	if (isnan(Lambda)) {
-            std::stringstream sstream;
-	    sstream << "Matrix U3::calc_one_qubit_u3: Lambda is NaN." << std::endl;
-            print(sstream, 1);	   
-        }
-#endif // DEBUG
-		
-		double cos_theta = 1.0, sin_theta = 0.0;
-		double cos_phi = 1.0, sin_phi = 0.0;
-		double cos_lambda = 1.0, sin_lambda = 0.0;
-
-		if (ThetaOver2!=0.0) sincos(ThetaOver2, &sin_theta, &cos_theta);
-		if (Phi!=0.0) sincos(Phi, &sin_phi, &cos_phi);
-		if (Lambda!=0.0) sincos(Lambda, &sin_lambda, &cos_lambda);
-
-        // the 1,1 element
-        u3_1qbit[0].real = cos_theta;
-        u3_1qbit[0].imag = 0;
-        // the 1,2 element
-        u3_1qbit[1].real = -cos_lambda*sin_theta;
-        u3_1qbit[1].imag = -sin_lambda*sin_theta;
-        // the 2,1 element
-        u3_1qbit[2].real = cos_phi*sin_theta;
-        u3_1qbit[2].imag = sin_phi*sin_theta;
-        // the 2,2 element
-        //cos(a+b)=cos(a)cos(b)-sin(a)sin(b)
-        //sin(a+b)=sin(a)cos(b)+cos(a)sin(b)
-        u3_1qbit[3].real = (cos_phi*cos_lambda-sin_phi*sin_lambda)*cos_theta;
-        u3_1qbit[3].imag = (sin_phi*cos_lambda+cos_phi*sin_lambda)*cos_theta;
-        //u3_1qbit[3].real = cos(Phi+Lambda)*cos_theta;
-        //u3_1qbit[3].imag = sin(Phi+Lambda)*cos_theta;
-
-
-  return u3_1qbit;
 
 }
 
-/**
-@brief Calculate the matrix of the constans gates.
-@return Returns with the matrix of the one-qubit matrix.
-*/
-Matrix Gate::calc_one_qubit_u3( ) {
 
-    std::string err("Gate::calc_one_qubit_u3: Unimplemented abstract function"); 
-    throw err;   
-
-    Matrix u3_1qbit = Matrix(2,2); 
-    return u3_1qbit;
-
-}
-
-/**
-@brief Set static values for the angles and constans parameters for calculating the matrix of the gates.
-@param ThetaOver2 Real parameter standing for the parameter theta.
-@param Phi Real parameter standing for the parameter phi.
-@param Lambda Real parameter standing for the parameter lambda.
-*/
 void
-Gate::parameters_for_calc_one_qubit(double& ThetaOver2, double& Phi, double& Lambda  ) {
+Gate::apply_kernel_from_right( Matrix_float& u3_1qbit, Matrix_float& input, const Matrix_float* alt_kernel ) {
 
- return;
+    if (type == SWAP_OPERATION || type == CSWAP_OPERATION) {
+        if (qbit_num < 10) {
+            apply_SWAP_kernel_from_right(input, target_qbits, control_qbits, matrix_size);
+        } else {
+            apply_SWAP_kernel_from_right_tbb(input, target_qbits, control_qbits, matrix_size);
+        }
+        return;
+    }
+
+    if (type == CCX_OPERATION) {
+        if (qbit_num < 10) {
+            apply_X_kernel_from_right(input, target_qbits, control_qbits, matrix_size);
+        } else {
+            apply_X_kernel_from_right_tbb(input, target_qbits, control_qbits, matrix_size);
+        }
+        return;
+    }
+
+    if (type == CNOT_OPERATION) {
+        std::vector<int> tqbits = {target_qbit};
+        std::vector<int> cqbits = {control_qbit};
+        if (qbit_num < 10) {
+            apply_X_kernel_from_right(input, tqbits, cqbits, matrix_size);
+        } else {
+            apply_X_kernel_from_right_tbb(input, tqbits, cqbits, matrix_size);
+        }
+        return;
+    }
+
+    if (type == CZ_OPERATION) {
+        if (qbit_num < 10) {
+            apply_Z_kernel_from_right(input, target_qbit, control_qbit, matrix_size);
+        } else {
+            apply_Z_kernel_from_right_tbb(input, target_qbit, control_qbit, matrix_size);
+        }
+        return;
+    }
+
+    if (type == CH_OPERATION) {
+        if (qbit_num < 10) {
+            apply_H_kernel_from_right(input, target_qbit, control_qbit, matrix_size);
+        } else {
+            apply_H_kernel_from_right_tbb(input, target_qbit, control_qbit, matrix_size);
+        }
+        return;
+    }
+
+    if (type == SYC_OPERATION) {
+        apply_SYC_kernel_from_right(input, target_qbit, control_qbit, matrix_size);
+        return;
+    }
+
+    if (type == CROT_OPERATION && alt_kernel != nullptr) {
+        Matrix_float branch0 = alt_kernel->copy();
+        Matrix_float branch1 = u3_1qbit.copy();
+#ifdef USE_AVX
+        if (qbit_num < 10) {
+            apply_crot_kernel_to_matrix_input_from_right_AVX32(branch0, branch1, input, target_qbit, control_qbit, input.rows);
+        } else {
+            apply_crot_kernel_to_matrix_input_from_right_AVX_parallel32(branch0, branch1, input, target_qbit, control_qbit, input.rows);
+        }
+#else
+        apply_crot_kernel_to_matrix_input_from_right(branch0, branch1, input, target_qbit, control_qbit, input.rows);
+#endif
+        return;
+    }
+
+    if (type == GENERAL_OPERATION) {
+        const std::vector<int> involved_qbits = get_involved_qubits();
+        const int involved_qbit_num = static_cast<int>(involved_qbits.size());
+        const bool has_any_control = (control_qbit >= 0) || !control_qbits.empty();
+        Matrix_float matrix_alloc32;
+        if (matrix_alloc_float_valid) {
+            matrix_alloc32 = matrix_alloc_float;
+        }
+        else {
+            matrix_alloc32 = matrix_alloc.to_float32();
+        }
+        const bool has_full_matrix = matrix_alloc32.rows == matrix_size && matrix_alloc32.cols == matrix_size;
+        const bool has_local_matrix = involved_qbit_num > 0
+            && matrix_alloc32.rows == Power_of_2(involved_qbit_num)
+            && matrix_alloc32.cols == Power_of_2(involved_qbit_num);
+        const bool can_use_large_kernel_from_right = !has_any_control
+            && input.cols != 1
+            && involved_qbit_num >= 2
+            && involved_qbit_num <= 5;
+
+        if (has_full_matrix) {
+            if (can_use_large_kernel_from_right) {
+#ifdef USE_AVX
+                if (involved_qbit_num == 2 && qbit_num < 10) {
+                    apply_large_kernel_from_right_AVX32(matrix_alloc32, input, involved_qbits, matrix_size);
+                }
+                else if (involved_qbit_num == 2) {
+                    apply_large_kernel_from_right_AVX_TBB32(matrix_alloc32, input, involved_qbits, matrix_size);
+                }
+                else {
+                    apply_large_kernel_from_right(matrix_alloc32, input, involved_qbits, matrix_size);
+                }
+#else
+                apply_large_kernel_from_right(matrix_alloc32, input, involved_qbits, matrix_size);
+#endif
+            }
+            else {
+                Matrix_float transformed = dot(input, matrix_alloc32);
+                memcpy(input.get_data(), transformed.get_data(), transformed.size() * sizeof(QGD_Complex8));
+            }
+            return;
+        }
+
+        if (has_local_matrix && matrix_alloc32.rows == 2 && matrix_alloc32.cols == 2 && involved_qbit_num == 1) {
+            u3_1qbit = matrix_alloc32;
+        }
+        else if (has_local_matrix && can_use_large_kernel_from_right) {
+#ifdef USE_AVX
+            if (involved_qbit_num == 2 && qbit_num < 10) {
+                apply_large_kernel_from_right_AVX32(matrix_alloc32, input, involved_qbits, matrix_size);
+            }
+            else if (involved_qbit_num == 2) {
+                apply_large_kernel_from_right_AVX_TBB32(matrix_alloc32, input, involved_qbits, matrix_size);
+            }
+            else {
+                apply_large_kernel_from_right(matrix_alloc32, input, involved_qbits, matrix_size);
+            }
+#else
+            apply_large_kernel_from_right(matrix_alloc32, input, involved_qbits, matrix_size);
+#endif
+            return;
+        }
+        else {
+            std::string err("Gate::apply_kernel_from_right(Matrix_float&): unsupported GENERAL_OPERATION dispatch for stored matrix size.");
+            throw err;
+        }
+    }
+
+    if (u3_1qbit.rows == 0 || u3_1qbit.cols == 0) {
+        Matrix_float gate_matrix = create_identity_float(matrix_size);
+        apply_to(gate_matrix, 0);
+        Matrix_float ret = dot(input, gate_matrix);
+        memcpy(input.get_data(), ret.get_data(), ret.size() * sizeof(QGD_Complex8));
+        return;
+    }
+
+    if (type == CROT_OPERATION || u3_1qbit.rows != 2 || u3_1qbit.cols != 2) {
+        const std::vector<int> involved_qbits = get_involved_qubits();
+        const int involved_qbit_num = static_cast<int>(involved_qbits.size());
+        const bool has_any_control = (control_qbit >= 0) || !control_qbits.empty();
+        const bool can_use_large_kernel_from_right = !has_any_control
+            && input.cols != 1
+            && involved_qbit_num >= 2
+            && involved_qbit_num <= 5;
+
+        if (u3_1qbit.rows != 2 || u3_1qbit.cols != 2) {
+            if (can_use_large_kernel_from_right) {
+#ifdef USE_AVX
+                if (involved_qbit_num == 2 && qbit_num < 10) {
+                    apply_large_kernel_from_right_AVX32(u3_1qbit, input, involved_qbits, matrix_size);
+                }
+                else if (involved_qbit_num == 2) {
+                    apply_large_kernel_from_right_AVX_TBB32(u3_1qbit, input, involved_qbits, matrix_size);
+                }
+                else {
+                    apply_large_kernel_from_right(u3_1qbit, input, involved_qbits, matrix_size);
+                }
+#else
+                apply_large_kernel_from_right(u3_1qbit, input, involved_qbits, matrix_size);
+#endif
+                return;
+            }
+
+            if (u3_1qbit.rows == matrix_size && u3_1qbit.cols == matrix_size) {
+                Matrix_float transformed = dot(input, u3_1qbit);
+                memcpy(input.get_data(), transformed.get_data(), transformed.size() * sizeof(QGD_Complex8));
+                return;
+            }
+        }
+
+        Matrix_float gate_matrix = create_identity_float(matrix_size);
+        Matrix_float kernel_copy = u3_1qbit.copy();
+        if (alt_kernel != nullptr) {
+            Matrix_float alt_copy = alt_kernel->copy();
+            apply_kernel_to(kernel_copy, gate_matrix, false, 0, &alt_copy);
+        } else {
+            apply_kernel_to(kernel_copy, gate_matrix, false, 0);
+        }
+        Matrix_float ret = dot(input, gate_matrix);
+        memcpy(input.get_data(), ret.get_data(), ret.size() * sizeof(QGD_Complex8));
+        return;
+    }
+
+#ifdef USE_AVX
+    if (qbit_num < 4) {
+        apply_kernel_from_right_AVX_small32(u3_1qbit, input, target_qbit, control_qbit, matrix_size);
+    } else if (qbit_num < 10) {
+        apply_kernel_from_right_AVX32(u3_1qbit, input, target_qbit, control_qbit, matrix_size);
+    } else {
+        apply_kernel_from_right_AVX_parallel32(u3_1qbit, input, target_qbit, control_qbit, matrix_size);
+    }
+#else
+    ::apply_kernel_from_right(u3_1qbit, input, target_qbit, control_qbit, matrix_size);
+#endif
 
 }
-
 
 /**
 @brief Call to set the starting index of the parameters in the parameter array corresponding to the circuit in which the current gate is incorporated
@@ -982,21 +2539,201 @@ Gate::get_parameter_start_idx() {
 }
 
 
+/**
+@brief Default gate_kernel: throws if not overridden.
+*/
+Matrix
+Gate::gate_kernel(const Matrix_real& /*precomputed_sincos*/) {
+    std::string err(name + "::gate_kernel(double) not implemented");
+    throw err;
+    return Matrix(0, 0);
+}
+
+Matrix_float
+Gate::gate_kernel(const Matrix_real_float& /*precomputed_sincos*/) {
+    std::string err(name + "::gate_kernel(float) not implemented");
+    throw err;
+    return Matrix_float(0, 0);
+}
+
+Matrix
+Gate::inverse_gate_kernel(const Matrix_real& precomputed_sincos) {
+    Matrix fwd = gate_kernel(precomputed_sincos);
+    Matrix inv(fwd.rows, fwd.cols);
+    for (int row_idx = 0; row_idx < fwd.rows; ++row_idx) {
+        const int row_offset = row_idx * fwd.stride;
+        for (int col_idx = 0; col_idx < fwd.cols; ++col_idx) {
+            const QGD_Complex16& src = fwd[row_offset + col_idx];
+            QGD_Complex16& dst = inv[col_idx * inv.stride + row_idx];
+            dst.real = src.real;
+            dst.imag = -src.imag;
+        }
+    }
+    return inv;
+}
+
+Matrix_float
+Gate::inverse_gate_kernel(const Matrix_real_float& precomputed_sincos) {
+    Matrix_float fwd = gate_kernel(precomputed_sincos);
+    Matrix_float inv(fwd.rows, fwd.cols);
+    for (int row_idx = 0; row_idx < fwd.rows; ++row_idx) {
+        const int row_offset = row_idx * fwd.stride;
+        for (int col_idx = 0; col_idx < fwd.cols; ++col_idx) {
+            const QGD_Complex8& src = fwd[row_offset + col_idx];
+            QGD_Complex8& dst = inv[col_idx * inv.stride + row_idx];
+            dst.real = src.real;
+            dst.imag = -src.imag;
+        }
+    }
+    return inv;
+}
+
+
+void
+Gate::gate_kernel_to(const Matrix_real& precomputed_sincos, Matrix& output) {
+    output = gate_kernel(precomputed_sincos);
+}
+
+
+void
+Gate::gate_kernel_to(const Matrix_real_float& precomputed_sincos, Matrix_float& output) {
+    output = gate_kernel(precomputed_sincos);
+}
+
+
+void
+Gate::inverse_gate_kernel_to(const Matrix_real& precomputed_sincos, Matrix& output) {
+    output = inverse_gate_kernel(precomputed_sincos);
+}
+
+
+void
+Gate::inverse_gate_kernel_to(const Matrix_real_float& precomputed_sincos, Matrix_float& output) {
+    output = inverse_gate_kernel(precomputed_sincos);
+}
+
+
+void
+Gate::derivative_kernel_to(const Matrix_real& precomputed_sincos, int param_idx, Matrix& output) {
+    output = derivative_kernel(precomputed_sincos, param_idx);
+}
+
+
+void
+Gate::derivative_kernel_to(const Matrix_real_float& precomputed_sincos, int param_idx, Matrix_float& output) {
+    output = derivative_kernel(precomputed_sincos, param_idx);
+}
+
+
+void
+Gate::derivative_aux_kernel_to(const Matrix_real& precomputed_sincos, int param_idx, Matrix& output) {
+    output = derivative_aux_kernel(precomputed_sincos, param_idx);
+}
+
+
+void
+Gate::derivative_aux_kernel_to(const Matrix_real_float& precomputed_sincos, int param_idx, Matrix_float& output) {
+    output = derivative_aux_kernel(precomputed_sincos, param_idx);
+}
 
 /**
-@brief Call to extract parameters from the parameter array corresponding to the circuit, in which the gate is incorporated in.
-@return Returns with the array of the extracted parameters.
+@brief Returns the per-parameter multipliers relative to 2π.
+       Default implementation: empty (zero-parameter gate).
+*/
+std::vector<double>
+Gate::get_parameter_multipliers() const {
+    return {};
+}
+
+
+Matrix
+Gate::calc_one_qubit_u3(double ThetaOver2, double Phi, double Lambda) {
+    double sin_theta, cos_theta;
+    double sin_phi, cos_phi;
+    double sin_lambda, cos_lambda;
+    qgd_sincos<double>(ThetaOver2, &sin_theta, &cos_theta);
+    qgd_sincos<double>(Phi, &sin_phi, &cos_phi);
+    qgd_sincos<double>(Lambda, &sin_lambda, &cos_lambda);
+    return calc_one_qubit_u3_from_trig<Matrix, double>(sin_theta, cos_theta, sin_phi, cos_phi, sin_lambda, cos_lambda);
+}
+
+
+Matrix_float
+Gate::calc_one_qubit_u3(float ThetaOver2, float Phi, float Lambda) {
+    float sin_theta, cos_theta;
+    float sin_phi, cos_phi;
+    float sin_lambda, cos_lambda;
+    qgd_sincos<float>(ThetaOver2, &sin_theta, &cos_theta);
+    qgd_sincos<float>(Phi, &sin_phi, &cos_phi);
+    qgd_sincos<float>(Lambda, &sin_lambda, &cos_lambda);
+    return calc_one_qubit_u3_from_trig<Matrix_float, float>(sin_theta, cos_theta, sin_phi, cos_phi, sin_lambda, cos_lambda);
+}
+
+
+/**
+@brief Call to extract parameters from the parameter array corresponding to the circuit, in which the gate is embedded.
+       Uses get_parameter_multipliers() to apply fmod wrapping generically.
+       Multiplier m → extracted[i] = fmod(m * params[start+i], m * 2π).
 */
 Matrix_real 
 Gate::extract_parameters( Matrix_real& parameters ) {
 
-    return Matrix_real(0,0);
+    const std::vector<double> mults = get_parameter_multipliers();
+
+    if (mults.empty()) {
+        return Matrix_real(0, 0);
+    }
+
+    const int n = static_cast<int>(mults.size());
+    if ( get_parameter_start_idx() + n > (int)parameters.size() ) {
+        std::string err(name + "::extract_parameters: Can't extract parameters, input array has not enough elements.");
+        throw err;
+    }
+
+    Matrix_real extracted_parameters(1, n);
+    const int start = get_parameter_start_idx();
+    for (int i = 0; i < n; ++i) {
+        const double m = mults[i];
+        extracted_parameters[i] = std::fmod(m * parameters[start + i], m * 2.0 * M_PI);
+    }
+
+    return extracted_parameters;
 
 }
 
 
 /**
-@brief Call to get the name label of the gate
+@brief Float32 overload of extract_parameters. Uses get_parameter_multipliers() identically.
+       Multiplier m → extracted[i] = fmodf(m * params[start+i], m * 2π).
+*/
+Matrix_real_float
+Gate::extract_parameters( Matrix_real_float& parameters ) {
+
+    const std::vector<double> mults = get_parameter_multipliers();
+
+    if (mults.empty()) {
+        return Matrix_real_float(0, 0);
+    }
+
+    const int n = static_cast<int>(mults.size());
+    if ( get_parameter_start_idx() + n > (int)parameters.size() ) {
+        std::string err(name + "::extract_parameters: Can't extract parameters, input array has not enough elements.");
+        throw err;
+    }
+
+    Matrix_real_float extracted_parameters(1, n);
+    const int start = get_parameter_start_idx();
+    for (int i = 0; i < n; ++i) {
+        const float m = static_cast<float>(mults[i]);
+        extracted_parameters[i] = std::fmod(m * parameters[start + i], m * static_cast<float>(2.0 * M_PI));
+    }
+
+    return extracted_parameters;
+
+}
+
+/**
+@brief Call to get the name label of the gate.
 @return Returns with the name label of the gate
 */
 std::string 
@@ -1005,4 +2742,3 @@ Gate::get_name() {
     return name;
 
 }
-
