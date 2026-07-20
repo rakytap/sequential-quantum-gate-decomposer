@@ -36,6 +36,7 @@ limitations under the License.
 
 #include <fstream>
 #include <tbb/enumerable_thread_specific.h>
+#include <tbb/tick_count.h>
 
 extern "C" int LAPACKE_dgesv( 	int  matrix_layout, int n, int nrhs, double *a, int lda, int *ipiv, double *b, int ldb); 	
 
@@ -938,17 +939,19 @@ Optimization_Interface::optimization_problem_batched_Groq( std::vector<Matrix_re
 Matrix_real 
 Optimization_Interface::optimization_problem_batched( std::vector<Matrix_real>& parameters_vec) {
 
+    tbb::tick_count t0_circuit_simulation = tbb::tick_count::now();
 
-
-
-             
 #if defined __DFE__
     if ( Umtx.cols == Umtx.rows && get_accelerator_num() > 0 ) {
-        return optimization_problem_batched_DFE( parameters_vec );
+        Matrix_real cost_fnc_mtx = optimization_problem_batched_DFE( parameters_vec );
+        circuit_simulation_time += (tbb::tick_count::now() - t0_circuit_simulation).seconds();
+        return cost_fnc_mtx;
     }
 #elif defined __GROQ__
     if ( Umtx.cols == 1 && get_accelerator_num() > 0 ) {
-        return optimization_problem_batched_Groq( parameters_vec );
+        Matrix_real cost_fnc_mtx = optimization_problem_batched_Groq( parameters_vec );
+        circuit_simulation_time += (tbb::tick_count::now() - t0_circuit_simulation).seconds();
+        return cost_fnc_mtx;
     }
 #endif 
 
@@ -1023,8 +1026,8 @@ Optimization_Interface::optimization_problem_batched( std::vector<Matrix_real>& 
 
 
 #endif  // __MPI__
-       
-     
+
+    circuit_simulation_time += (tbb::tick_count::now() - t0_circuit_simulation).seconds();
     return cost_fnc_mtx;
         
 }
