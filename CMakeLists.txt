@@ -453,7 +453,7 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   # using Clang
   message("-- Using Clang compiler")
   # setting basic compile flags for Clang
-  list(APPEND CXX_FLAGS_DEBUG "-Wall" "-Wpedantic" "-Wextra" "-fexceptions" "-DDEBUG" "-fno-builtin-malloc" "-fno-builtin-calloc" "-fno-builtin-realloc" "-fno-builtin-free" "-fpermissive")
+  list(APPEND CXX_FLAGS_DEBUG "-Wall" "-Wpedantic" "-Wextra" "-fexceptions" "-DDEBUG" "-fno-builtin-malloc" "-fno-builtin-calloc" "-fno-builtin-realloc" "-fno-builtin-free" "-fpermissive" "-g")
   list(APPEND CXX_FLAGS_RELEASE "-Wall" "-O3" "-m64" "-ggdb" "-DNDEBUG" "-fno-builtin-malloc" "-fno-builtin-calloc" "-fno-builtin-realloc" "-fno-builtin-free" "-fpermissive")
 
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")

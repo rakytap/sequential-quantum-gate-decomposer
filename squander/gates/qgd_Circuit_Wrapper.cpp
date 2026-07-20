@@ -2125,6 +2125,8 @@ get_gate( Gates_block* circuit, int &idx ) {
         PyErr_SetString(PyExc_Exception, "Module import error: squander.gates.gates_Wrapper" );
         return NULL;
     }
+
+
     if (gate->get_type() == CNOT_OPERATION) {
 
 
@@ -2155,6 +2157,15 @@ get_gate( Gates_block* circuit, int &idx ) {
     get_gate_template_two_qubit(CR)
     get_gate_template_two_qubit(CROT)
     get_gate_template_two_qubit(CP)
+    else if (gate->get_type() == ADAPTIVE_OPERATION) {
+        PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
+        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "CRY");
+        PyObject* gate_input = Py_BuildValue("(OOO)", qbit_num, target_qbit, control_qbit);
+        py_gate              = PyObject_CallObject(py_gate_class, gate_input);
+        qgd_Gate* py_gate_C = reinterpret_cast<qgd_Gate*>( py_gate );
+        delete( py_gate_C->gate );
+        py_gate_C->gate = static_cast<Gate*>( gate->clone() );
+    }
     else if (gate->get_type() == SWAP_OPERATION){
         // SWAP now uses vector-based interface
         std::vector<int> target_qbits_vec = gate->get_target_qbits();
@@ -2553,9 +2564,9 @@ qgd_Circuit_Wrapper_get_gates( qgd_Circuit_Wrapper *self ) {
 
         // adding gate information to the tuple
         PyTuple_SetItem( ret, (Py_ssize_t) idx, gate );
+    
 
     }
-
 
     return ret;
 
