@@ -27,6 +27,22 @@ limitations under the License.
 // default layer numbers
 std::map<int,int> Decomposition_Base::max_layer_num_def;
 
+namespace {
+
+std::mt19937 make_decomposition_generator(
+    std::map<std::string, Config_Element>* config = nullptr) {
+
+    if (config != nullptr && config->count("random_seed") > 0) {
+        long long seed;
+        (*config)["random_seed"].get_property(seed);
+        return std::mt19937(static_cast<std::mt19937::result_type>(seed));
+    }
+
+    return std::mt19937(std::random_device{}());
+}
+
+}
+
 
 /** Nullary constructor of the class
 @return An instance of the class
@@ -92,11 +108,7 @@ Decomposition_Base::Decomposition_Base() {
     std::string projectname = "";
 
 
-    // Will be used to obtain a seed for the random number engine
-    std::random_device rd;  
-
-    // seedign the random generator
-    gen = std::mt19937(rd());
+    gen = make_decomposition_generator();
 
 #if CBLAS==1
     num_threads = mkl_get_max_threads();
@@ -184,16 +196,15 @@ Decomposition_Base::Decomposition_Base( Matrix Umtx_in, int qbit_num_in, std::ma
     if ( config.count("use_float") > 0 ) {
         config["use_float"].get_property( use_float );
     }
+    if ( config.count("convergence_threshold") > 0 ) {
+        config["convergence_threshold"].get_property( convergence_threshold );
+    }
 
     if ( use_float ) {
         Umtx_float = Umtx.to_float32();
     }
 
-    // Will be used to obtain a seed for the random number engine
-    std::random_device rd;  
-
-    // seedign the random generator
-    gen = std::mt19937(rd());
+    gen = make_decomposition_generator(&config);
 
 #if CBLAS==1
     num_threads = mkl_get_max_threads();
@@ -275,12 +286,11 @@ Decomposition_Base::Decomposition_Base( Matrix_float Umtx_in, int qbit_num_in, s
     // config maps
     config = config_in;
     use_float = true;
+    if ( config.count("convergence_threshold") > 0 ) {
+        config["convergence_threshold"].get_property( convergence_threshold );
+    }
 
-    // Will be used to obtain a seed for the random number engine
-    std::random_device rd;
-
-    // seedign the random generator
-    gen = std::mt19937(rd());
+    gen = make_decomposition_generator(&config);
 
 #if CBLAS==1
     num_threads = mkl_get_max_threads();
