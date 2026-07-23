@@ -26,6 +26,7 @@ limitations under the License.
 #include "n_aryGrayCodeCounter.h"
 
 #include <algorithm>
+#include <atomic>
 #include <chrono>
 #include <cmath>
 #include <iostream>
@@ -1124,7 +1125,7 @@ TreeSearchResult N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_struct
         config["stop_first_solution"].get_property(stop_first_solution);
     }
     GrayCodeCNOT best_solution;
-    volatile bool found_optimal_solution = false;
+    std::atomic<bool> found_optimal_solution{false};
 
     LevelResult level_result = level_num == 0 ? enumerate_unordered_cnot_BFS_level_init(qbit_num)
                                               : enumerate_unordered_cnot_BFS_level_step(li, topology, false);
@@ -1147,14 +1148,13 @@ TreeSearchResult N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_struct
     unsigned int nthreads = std::thread::hardware_concurrency();
     int64_t concurrency = (int64_t)nthreads;
     concurrency = concurrency < iteration_max ? concurrency : iteration_max;
-    std::uniform_real_distribution<> distrib_real(0.0, 2 * M_PI);
-
     int parallel = get_parallel_configuration();
 
     auto process_job_range = [&](int64_t begin, int64_t end) {
         N_Qubit_Decomposition_custom&& cDecomp_custom_random = perform_optimization(nullptr);
         cDecomp_custom_random.set_cost_function_variant(OSR_ENTANGLEMENT);
         std::mt19937 ts_gen(std::random_device{}());
+        std::uniform_real_distribution<> distrib_real(0.0, 2 * M_PI);
 
         for (int64_t job_idx = begin; job_idx < end; ++job_idx) {
 
@@ -1173,7 +1173,8 @@ TreeSearchResult N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_struct
             // << concurrency << std::endl;
 
             for (int64_t iter_idx = initial_offset; iter_idx < offset_max + 1; iter_idx++) {
-                if (stop_first_solution && found_optimal_solution) {
+                if (stop_first_solution &&
+                    found_optimal_solution.load(std::memory_order_acquire)) {
                     break;
                 }
                 const GrayCodeCNOT& solution = all_pairs[iter_idx];
@@ -1206,7 +1207,7 @@ TreeSearchResult N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_struct
                     tbb::spin_mutex::scoped_lock tree_search_lock{tree_search_mutex};
                     all_osr_results.emplace(std::move(sn));
                     if (cnot_lower_bound == 0) {
-                        found_optimal_solution = true;
+                        found_optimal_solution.store(true, std::memory_order_release);
                         successful_solutions.push_back(solution.copy());
                     }
                 }
@@ -1309,7 +1310,7 @@ GrayCodeCNOT N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures
     }
 
     GrayCodeCNOT gcode_best_solution;
-    bool found_optimal_solution = false;
+    std::atomic<bool> found_optimal_solution{false};
 
     // set the limits for the N-ary Gray counter
 
@@ -1358,7 +1359,7 @@ GrayCodeCNOT N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures
 
             for (int64_t iter_idx = initial_offset; iter_idx < offset_max + 1; iter_idx++) {
 
-                if (found_optimal_solution) {
+                if (found_optimal_solution.load(std::memory_order_acquire)) {
                     return;
                 }
 
@@ -1396,7 +1397,8 @@ GrayCodeCNOT N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures
                 {
                     tbb::spin_mutex::scoped_lock tree_search_lock{tree_search_mutex};
 
-                    if (current_minimum_tmp < current_minimum && !found_optimal_solution) {
+                    if (current_minimum_tmp < current_minimum &&
+                        !found_optimal_solution.load(std::memory_order_relaxed)) {
 
                         current_minimum = current_minimum_tmp;
                         gcode_best_solution = gcode;
@@ -1405,8 +1407,9 @@ GrayCodeCNOT N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures
                         sync_optimized_parameters_float();
                     }
 
-                    if (current_minimum < optimization_tolerance_loc && !found_optimal_solution) {
-                        found_optimal_solution = true;
+                    if (current_minimum < optimization_tolerance_loc &&
+                        !found_optimal_solution.load(std::memory_order_relaxed)) {
+                        found_optimal_solution.store(true, std::memory_order_release);
                     }
                 }
 
