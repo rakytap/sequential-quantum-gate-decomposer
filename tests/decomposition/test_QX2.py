@@ -25,101 +25,88 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 
 
-# cerate unitary q-bit matrix
-from scipy.stats import unitary_group
 import numpy as np
+from scipy.stats import unitary_group
+
 from squander import utils
-
-
-try:
-    from mpi4py import MPI
-    MPI_imported = True
-except ModuleNotFoundError:
-    MPI_imported = False
-
-
 
 
 class Test_Decomposition:
     """This is a test class of the python iterface to the decompsition classes of the QGD package"""
 
-
-      
-
-
     def test_N_Qubit_Decomposition_QX2(self):
         r"""
-        This method is called by pytest. 
-        Test to define custom gate structure in the decomposition
+        Test a custom QX2 gate structure in a four-qubit decomposition.
 
+        Both the target and optimizer are seeded because convergence time for
+        this strong numerical test otherwise varies by thousands of optimizer
+        iterations.
         """
 
         from squander import N_Qubit_Decomposition
 
-        # the number of qubits spanning the unitary
         qbit_num = 4
+        matrix_size = 2**qbit_num
 
-        # determine the soze of the unitary to be decomposed
-        matrix_size = int(2**qbit_num)
-   
-        # creating a random unitary to be decomposed
-        Umtx = unitary_group.rvs(matrix_size)
-    
-        # creating an instance of the C++ class
-        decomp = N_Qubit_Decomposition( Umtx.conj().T )
+        # Keep both halves of the stochastic workload reproducible.
+        Umtx = unitary_group.rvs(matrix_size, random_state=0)
+        decomp = N_Qubit_Decomposition(
+            Umtx.conj().T,
+            config={
+                "random_seed": 1,
+                "max_outer_iterations": 600,
+                # The explicit iteration cap bounds runtime; do not let the
+                # looser stagnation heuristic pre-empt the 1e-7 tolerance.
+                "convergence_threshold": 0.0,
+            },
+        )
 
-        # list of reordered qubits (original: (0,1,2,3) )
-        reordered_qbits = (2,3,1,0)
-
-        # adding custom gate structure to the decomposition
-        decomp.Reorder_Qubits( reordered_qbits )
-
-       
-        # create custom gate structure
-        gate_structure = { 4: self.create_custom_gate_structure_QX2(4), 3: self.create_custom_gate_structure_QX2(3)}        
-
-
-        # adding custom gate structure to the decomposition
-        decomp.set_Gate_Structure( gate_structure )
-
-
-        # set the maximal number of layers in the decomposition
-        decomp.set_Max_Layer_Num( {4: 60, 3:16} )
-
-        # set the number of block to be optimized in one shot
-        decomp.set_Optimization_Blocks( 20 )
-
-        # starting the decomposition
+        reordered_qbits = (2, 3, 1, 0)
+        decomp.Reorder_Qubits(reordered_qbits)
+        decomp.set_Gate_Structure(
+            {
+                4: self.create_custom_gate_structure_QX2(4),
+                3: self.create_custom_gate_structure_QX2(3),
+            }
+        )
+        decomp.set_Max_Layer_Num({4: 60, 3: 16})
+        decomp.set_Optimization_Blocks(20)
+        decomp.set_Optimization_Tolerance(1e-7)
         decomp.Start_Decomposition()
 
-        # list of reordered qubits to revert the initial order
-        revert_qbits = (3,2,0,1)            
+        assert decomp.get_Decomposition_Error() < 1e-7
 
-        # adding custom gate structure to the decomposition
-        decomp.Reorder_Qubits( revert_qbits )
-
-        # list the decomposing operations
-        decomp.List_Gates()
-
-        # get the decomposing operations
+        revert_qbits = (3, 2, 0, 1)
+        decomp.Reorder_Qubits(revert_qbits)
         quantum_circuit = decomp.get_Qiskit_Circuit()
 
-        import numpy.linalg as LA
-    
-        # test the decomposition of the matrix
-        # the unitary matrix from the result object
-        decomposed_matrix = np.asarray( utils.get_unitary_from_qiskit_circuit( quantum_circuit ) )
-        product_matrix = np.dot(Umtx,decomposed_matrix.conj().T)
-        phase = np.angle(product_matrix[0,0])
-        product_matrix = product_matrix*np.exp(-1j*phase)
-    
-        product_matrix = np.eye(matrix_size)*2 - product_matrix - product_matrix.conj().T
-        # the error of the decomposition
-        decomposition_error = (np.real(np.trace(product_matrix)))/2
-       
-        print('The error of the decomposition is ' + str(decomposition_error))
+        decomposed_matrix = np.asarray(
+            utils.get_unitary_from_qiskit_circuit(quantum_circuit)
+        )
+        product_matrix = Umtx @ decomposed_matrix.conj().T
+        phase = np.angle(product_matrix[0, 0])
+        product_matrix *= np.exp(-1j * phase)
+        product_matrix = (
+            np.eye(matrix_size) * 2
+            - product_matrix
+            - product_matrix.conj().T
+        )
+        decomposition_error = np.real(np.trace(product_matrix)) / 2
 
-        assert( decomposition_error < 1e-3 )
+        assert decomposition_error < 1e-3
+
+    def test_custom_gate_structure_QX2_couplings(self):
+        """Validate every QX2 coupling independently of optimizer convergence."""
+
+        gate_structure = self.create_custom_gate_structure_QX2(4)
+        cnot_qbits = [
+            tuple(gate.get_Involved_Qbits())
+            for layer in gate_structure.get_Gates()
+            for gate in layer.get_Gates()
+            if gate.get_Name() == "CNOT"
+        ]
+
+        assert cnot_qbits == [(0, 3), (0, 1), (2, 3)]
 
 
     def create_custom_gate_structure_QX2(self, qbit_num):
@@ -133,15 +120,12 @@ class Test_Decomposition:
         # creating an instance of the wrapper class Circuit
         Circuit_ret = Circuit( qbit_num )
 
-        disentangle_qbit = qbit_num - 1 
-
-        
+        disentangle_qbit = qbit_num - 1
 
         for qbit in range(0, disentangle_qbit ):
 
             # creating an instance of the wrapper class Circuit
             Layer = Circuit( qbit_num )
-
 
             if qbit == 0:
 
@@ -172,12 +156,6 @@ class Test_Decomposition:
                 # add CNOT gate to the block
                 Layer.add_CNOT( 2, disentangle_qbit )
 
-         
-
             Circuit_ret.add_Circuit( Layer )
 
         return Circuit_ret
-
-
-
-
