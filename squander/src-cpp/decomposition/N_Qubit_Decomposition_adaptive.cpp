@@ -552,7 +552,7 @@ void N_Qubit_Decomposition_adaptive::finalize_circuit() {
     sstream << "cost function value before replacing trivial CRY gates: " << optimization_problem(optimized_parameters_mtx.get_data()) << std::endl;
     print(sstream, 3);	
     	
-    Gates_block* gate_structure_tmp = replace_trivial_CRY_gates( gate_structure_loc, optimized_parameters_mtx );
+    Gates_block* gate_structure_tmp = replace_CRY_gates( gate_structure_loc, optimized_parameters_mtx );
     Matrix_real optimized_parameters_save = optimized_parameters_mtx;
 
     release_gates();
@@ -1141,7 +1141,7 @@ N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_struc
             gate_structure_tmp = gate_structure_reduced->clone();
         }
         else {
-            gate_structure_tmp = remove_trivial_gates( gate_structure_reduced, optimized_parameters_loc, current_minimum_loc ); //TODO: reverse gate order
+            gate_structure_tmp = remove_trivial_CRY_gates( gate_structure_reduced, optimized_parameters_loc, current_minimum_loc ); //TODO: reverse gate order
         }
       
         panelties[idx]                = get_panelty(gate_structure_tmp, optimized_parameters_loc);
@@ -1395,7 +1395,9 @@ N_Qubit_Decomposition_adaptive::get_panelty( Gates_block* gate_structure, Matrix
 @param optimized_parameters A matrix containing the  parameters
 */
 Gates_block* 
-N_Qubit_Decomposition_adaptive::replace_trivial_CRY_gates( Gates_block* gate_structure, Matrix_real& optimized_parameters ) {
+N_Qubit_Decomposition_adaptive::replace_CRY_gates( Gates_block* gate_structure, Matrix_real& optimized_parameters ) {
+
+    remove_trivial_CRY_gates();
 
     Gates_block* gate_structure_ret = new Gates_block(qbit_num);
 
@@ -1415,7 +1417,7 @@ N_Qubit_Decomposition_adaptive::replace_trivial_CRY_gates( Gates_block* gate_str
         Gate* gate = gate_structure->get_gate(idx);
 
         if ( gate->get_type() != BLOCK_OPERATION ) {
-           std::string err = "N_Qubit_Decomposition_adaptive::replace_trivial_adaptive_gates: Only block gates are accepted in this conversion.";
+           std::string err = "N_Qubit_Decomposition_adaptive::replace_CRY_gates: Only block gates are accepted in this conversion.";
            throw( err );
         }
 
@@ -1574,6 +1576,50 @@ N_Qubit_Decomposition_adaptive::replace_trivial_CRY_gates( Gates_block* gate_str
 
 }
 
+
+/**
+@brief Remove blocks containing a trivial CRY gate from the circuit stored by the class.
+Trivial CRY gates are those whose activated parameter is close to identity; U3 gates are merged with subsequent gates.
+*/
+void N_Qubit_Decomposition_adaptive::remove_trivial_CRY_gates() {
+
+    if ( gates.size() == 0 ) {
+        std::stringstream sstream;
+        sstream << "No circuit initalised." << std::endl;
+        print(sstream, 1);
+        return;
+    }
+
+    int parameter_num_before = optimized_parameters_mtx.size();
+    int gate_num_before = get_gate_num();
+
+    Gates_block* gate_structure_loc = static_cast<Gates_block*>(this)->clone();
+    double current_minimum_loc = current_minimum;
+
+    while (true) {
+        int layers_before = gate_structure_loc->get_gate_num();
+        Gates_block* gate_structure_tmp = remove_trivial_CRY_gates( gate_structure_loc, optimized_parameters_mtx, current_minimum_loc );
+        delete( gate_structure_loc );
+        gate_structure_loc = gate_structure_tmp;
+        if ( gate_structure_loc->get_gate_num() >= layers_before ) {
+            break;
+        }
+    }
+
+    release_gates();
+    combine( gate_structure_loc );
+    delete( gate_structure_loc );
+
+    current_minimum = current_minimum_loc;
+
+    std::stringstream sstream;
+    sstream << "Circuit after removing trivial CRY gates: "
+            << gate_num_before << " -> " << get_gate_num() << " layer(s), "
+            << parameter_num_before << " -> " << optimized_parameters_mtx.size() << " parameter(s)." << std::endl;
+    print(sstream, 1);
+
+}
+
 /**
 @brief Call to remove those blocks from the circuit that contain a trivial CRY gate (i.e. CRY gate close to be an identity.) The U3 gates are merged with subsequent gates.
 @param gate_structure The gate structure to be optimized
@@ -1581,7 +1627,7 @@ N_Qubit_Decomposition_adaptive::replace_trivial_CRY_gates( Gates_block* gate_str
 @param current_minimum_loc (out) The current minimum that has been achieved.
 */
 Gates_block*
-N_Qubit_Decomposition_adaptive::remove_trivial_gates( Gates_block* gate_structure, Matrix_real& optimized_parameters, double& current_minimum_loc ) {
+N_Qubit_Decomposition_adaptive::remove_trivial_CRY_gates( Gates_block* gate_structure, Matrix_real& optimized_parameters, double& current_minimum_loc ) {
 
     int layer_num = gate_structure->get_gate_num();
 
@@ -1657,7 +1703,7 @@ N_Qubit_Decomposition_adaptive::remove_trivial_gates( Gates_block* gate_structur
 
                 if ( found_match == false ) {
                     // TODO: append a matching U3 gate to the very end of the circuit
-                    std::string err("N_Qubit_Decomposition_adaptive::remove_trivial_gates: No matching U3 gate was found. Need to append a U3 gate to the end, but this functionality is not developed yet."); 
+                    std::string err("N_Qubit_Decomposition_adaptive::remove_trivial_CRY_gates: No matching U3 gate was found. Need to append a U3 gate to the end, but this functionality is not developed yet."); 
                     throw err;       
                 }
 
@@ -1721,7 +1767,7 @@ N_Qubit_Decomposition_adaptive::remove_trivial_gates( Gates_block* gate_structur
 
 
             std::stringstream sstream;
-            sstream << "N_Qubit_Decomposition_adaptive::remove_trivial_gates: Removing trivial gateblock" << std::endl;
+            sstream << "N_Qubit_Decomposition_adaptive::remove_trivial_CRY_gates: Removing trivial gateblock" << std::endl;
             print(sstream, 3);
 	    
                
@@ -1750,7 +1796,7 @@ N_Qubit_Decomposition_adaptive::remove_trivial_gates( Gates_block* gate_structur
         
     }
     
-//std::cout << "N_Qubit_Decomposition_adaptive::remove_trivial_gates :" << gate_structure->get_gate_num() << " reduced to " << gate_structure_loc->get_gate_num() << std::endl;
+//std::cout << "N_Qubit_Decomposition_adaptive::remove_trivial_CRY_gates :" << gate_structure->get_gate_num() << " reduced to " << gate_structure_loc->get_gate_num() << std::endl;
     return gate_structure_loc;
 
 
@@ -1987,6 +2033,45 @@ N_Qubit_Decomposition_adaptive::set_adaptive_gate_structure( std::string filenam
     Gates_block* gate_structure = import_gate_list_from_binary(optimized_parameters_mtx, filename, verbose);
     combine( gate_structure );
     delete gate_structure;
+
+}
+
+
+/**
+@brief Call to set the gate structure from a circuit (qgd_Circuit / Gates_block).
+@param gate_structure Pointer to the circuit to be set
+@param parameters Parameter array associated with the circuit
+*/
+void
+N_Qubit_Decomposition_adaptive::set_gate_structure( Gates_block* gate_structure, Matrix_real& parameters ) {
+
+    if ( gate_structure == NULL ) {
+        std::string err("N_Qubit_Decomposition_adaptive::set_gate_structure: gate_structure is NULL.");
+        throw err;
+    }
+
+    if ( gate_structure->get_qbit_num() != qbit_num ) {
+        std::string err("N_Qubit_Decomposition_adaptive::set_gate_structure: number of qubits in the circuit (" +
+                        std::to_string(gate_structure->get_qbit_num()) + ") must equal the stored number of qubits (" +
+                        std::to_string(qbit_num) + ").");
+        throw err;
+    }
+
+    if ( parameters.size() != gate_structure->get_parameter_num() ) {
+        std::string err("N_Qubit_Decomposition_adaptive::set_gate_structure: number of parameters (" +
+                        std::to_string(parameters.size()) + ") must equal the number of free parameters in the circuit (" +
+                        std::to_string(gate_structure->get_parameter_num()) + ").");
+        throw err;
+    }
+
+    if ( gates.size() > 0  ) {
+        release_gates();
+        optimized_parameters_mtx = Matrix_real(0,0);
+        sync_optimized_parameters_float();
+    }
+
+    combine( gate_structure );
+    set_optimized_parameters( parameters.get_data(), parameters.size() );
 
 }
 

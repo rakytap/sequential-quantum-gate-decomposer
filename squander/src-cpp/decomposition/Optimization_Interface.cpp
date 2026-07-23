@@ -1779,6 +1779,37 @@ Optimization_Interface::set_custom_gate_structure( Gates_block* gate_structure_i
 
 
 /**
+@brief Call to set the gate structure from a circuit together with its parameters.
+@param gate_structure_in Pointer to the circuit to be set
+@param parameters Parameter array associated with the circuit
+*/
+void
+Optimization_Interface::set_gate_structure( Gates_block* gate_structure_in, Matrix_real& parameters ) {
+
+    if ( gate_structure_in == NULL ) {
+        std::string err("Optimization_Interface::set_gate_structure: gate_structure is NULL.");
+        throw err;
+    }
+
+    if ( parameters.size() != gate_structure_in->get_parameter_num() ) {
+        std::string err("Optimization_Interface::set_gate_structure: number of parameters (" +
+                        std::to_string(parameters.size()) + ") must equal the number of free parameters in the circuit (" +
+                        std::to_string(gate_structure_in->get_parameter_num()) + ").");
+        throw err;
+    }
+
+    release_gates();
+    optimized_parameters_mtx = Matrix_real(0,0);
+    sync_optimized_parameters_float();
+
+    set_qbit_num( gate_structure_in->get_qbit_num() );
+    combine( gate_structure_in );
+    set_optimized_parameters( parameters.get_data(), parameters.size() );
+
+}
+
+
+/**
 @brief Get the trace offset used in the evaluation of the cost function
 */
 int 

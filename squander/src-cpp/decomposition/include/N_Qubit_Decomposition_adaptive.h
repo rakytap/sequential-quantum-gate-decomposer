@@ -120,6 +120,12 @@ virtual void get_initial_circuit();
 virtual void compress_circuit();
 
 /**
+@brief Remove blocks containing a trivial CRY gate from the circuit stored by the class.
+Trivial CRY gates are those whose activated parameter is close to identity; U3 gates are merged with subsequent gates.
+*/
+virtual void remove_trivial_CRY_gates();
+
+/**
 @brief Finalize the circuit
 */
 virtual void finalize_circuit();
@@ -160,7 +166,7 @@ Gates_block* compress_gate_structure( Gates_block* gate_structure, int layer_idx
 @param gate_structure The gate structure to be optimized
 @param optimized_parameters A matrix containing the initial parameters
 */
-Gates_block* replace_trivial_CRY_gates( Gates_block* gate_structure, Matrix_real& optimized_parameters );
+Gates_block* replace_CRY_gates( Gates_block* gate_structure, Matrix_real& optimized_parameters );
 
 /**
 @brief Call to get the panelty derived from the number of CRY and CNOT gates in the circuit
@@ -176,7 +182,7 @@ virtual unsigned int get_panelty( Gates_block* gate_structure, Matrix_real& opti
 @param optimized_parameters A matrix containing the initial parameters
 @param current_minimum_loc (out) The current minimum that has been achieved.
 */
-virtual Gates_block* remove_trivial_gates( Gates_block* gate_structure, Matrix_real& optimized_parameters, double& currnt_minimum_loc );
+virtual Gates_block* remove_trivial_CRY_gates( Gates_block* gate_structure, Matrix_real& optimized_parameters, double& currnt_minimum_loc );
 
 /**
 @brief Call to remove those parameters from the array, which correspond to gates that are about to be removed from the circuit.
@@ -221,6 +227,16 @@ void add_finalyzing_layer( Gates_block* gate_structure );
 @param filename
 */
 void set_adaptive_gate_structure( std::string filename );
+
+/**
+@brief Call to set the gate structure from a circuit (qgd_Circuit / Gates_block).
+Existing gates and optimized parameters are cleared before the new structure is applied.
+The number of qubits in the circuit must equal the stored qubit count, and the number of
+elements in parameters must equal the number of free parameters in the circuit.
+@param gate_structure Pointer to the circuit to be set
+@param parameters Parameter array associated with the circuit
+*/
+void set_gate_structure( Gates_block* gate_structure, Matrix_real& parameters ) override;
  
  
  /**
