@@ -163,10 +163,8 @@ Gates_block* compress_gate_structure( Gates_block* gate_structure, int layer_idx
 
 /**
 @brief Call to replace CRY gates in the circuit that are close to either an identity or to a CNOT gate.
-@param gate_structure The gate structure to be optimized
-@param optimized_parameters A matrix containing the initial parameters
 */
-Gates_block* replace_CRY_gates( Gates_block* gate_structure, Matrix_real& optimized_parameters );
+Gates_block* replace_CRY_gates();
 
 /**
 @brief Call to get the panelty derived from the number of CRY and CNOT gates in the circuit
