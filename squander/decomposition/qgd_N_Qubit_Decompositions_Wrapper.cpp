@@ -2729,6 +2729,7 @@ qgd_N_Qubit_Decomposition_Wrapper_import_Qiskit_Circuit_standard(qgd_N_Qubit_Dec
         PyErr_SetString(PyExc_ImportError, "Failed to import squander.IO_interfaces.Qiskit_IO");
         return NULL;
     }
+      
     // Get the convert_Qiskit_to_Squander function
     PyObject* convert_func = PyObject_GetAttrString(qiskit_io_module, "convert_Qiskit_to_Squander");
     Py_DECREF(qiskit_io_module);
@@ -2746,18 +2747,28 @@ qgd_N_Qubit_Decomposition_Wrapper_import_Qiskit_Circuit_standard(qgd_N_Qubit_Dec
         PyErr_SetString(PyExc_ValueError, "convert_Qiskit_to_Squander should return (circuit, parameters)");
         return NULL;
     }
-
+    
     PyObject *circuit_squander = PyTuple_GetItem(convert_result, 0), *parameters = PyTuple_GetItem(convert_result, 1);
 
-    // Set gate structure and parameters
-    PyObject* set_gate_args = PyTuple_Pack(2, circuit_squander, parameters);
+    // Set gate structure
+    PyObject* set_gate_args = PyTuple_Pack(1, circuit_squander);
     PyObject* set_gate_result = qgd_N_Qubit_Decomposition_Wrapper_set_Gate_Structure(self, set_gate_args);
     Py_DECREF(set_gate_args);
-    Py_DECREF(convert_result);
     if (!set_gate_result) {
+        Py_DECREF(convert_result);
         return NULL;
     }
     Py_DECREF(set_gate_result);
+
+    // Set optimized parameters
+    PyObject* set_params_args = PyTuple_Pack(1, parameters);
+    PyObject* set_params_result = qgd_N_Qubit_Decomposition_Wrapper_set_Optimized_Parameters(self, set_params_args);
+    Py_DECREF(set_params_args);
+    Py_DECREF(convert_result);
+    if (!set_params_result) {
+        return NULL;
+    }
+    Py_DECREF(set_params_result);
 
     Py_RETURN_NONE;
 }
@@ -3257,7 +3268,7 @@ These methods are available for all decomposition classes
     {"get_Qbit_Num", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_get_Qbit_Num, METH_NOARGS, \
      "Get the number of qubits"}, \
     {"set_Gate_Structure", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_set_Gate_Structure, METH_VARARGS, \
-     "Set custom gate structure for decomposition: set_Gate_Structure(circuit, parameters)"}, \
+     "Set custom gate structure for decomposition: set_Gate_Structure(circuit)"}, \
     {"add_Finalyzing_Layer_To_Gate_Structure", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_add_Finalyzing_Layer_To_Gate_Structure, METH_NOARGS, \
      "Add finalizing layer to gate structure"}, \
     {"get_Gates", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_get_Gates, METH_NOARGS, \
