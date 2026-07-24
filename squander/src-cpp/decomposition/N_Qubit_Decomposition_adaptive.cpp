@@ -2044,44 +2044,6 @@ N_Qubit_Decomposition_adaptive::set_adaptive_gate_structure( std::string filenam
 
 
 /**
-@brief Call to set the gate structure from a circuit (qgd_Circuit / Gates_block).
-@param gate_structure Pointer to the circuit to be set
-@param parameters Parameter array associated with the circuit
-*/
-void
-N_Qubit_Decomposition_adaptive::set_gate_structure( Gates_block* gate_structure, Matrix_real& parameters ) {
-
-    if ( gate_structure == NULL ) {
-        std::string err("N_Qubit_Decomposition_adaptive::set_gate_structure: gate_structure is NULL.");
-        throw err;
-    }
-
-    if ( gate_structure->get_qbit_num() != qbit_num ) {
-        std::string err("N_Qubit_Decomposition_adaptive::set_gate_structure: number of qubits in the circuit (" +
-                        std::to_string(gate_structure->get_qbit_num()) + ") must equal the stored number of qubits (" +
-                        std::to_string(qbit_num) + ").");
-        throw err;
-    }
-
-    if ( parameters.size() != gate_structure->get_parameter_num() ) {
-        std::string err("N_Qubit_Decomposition_adaptive::set_gate_structure: number of parameters (" +
-                        std::to_string(parameters.size()) + ") must equal the number of free parameters in the circuit (" +
-                        std::to_string(gate_structure->get_parameter_num()) + ").");
-        throw err;
-    }
-
-    if ( gates.size() > 0  ) {
-        release_gates();
-        optimized_parameters_mtx = Matrix_real(0,0);
-        sync_optimized_parameters_float();
-    }
-
-    combine( gate_structure );
-    set_optimized_parameters( parameters.get_data(), parameters.size() );
-
-}
-
-/**
 @brief set unitary matrix from binary file
 @param filename .binary file to import unitary from
 */

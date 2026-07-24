@@ -570,14 +570,6 @@ void increment_num_iters( int delta=1 );
 */
 void set_custom_gate_structure( Gates_block* gate_structure_in );
 
-/**
-@brief Call to set the gate structure from a circuit together with its parameters.
-The number of elements in parameters must equal the number of free parameters in the circuit.
-@param gate_structure_in Pointer to the circuit to be set
-@param parameters Parameter array associated with the circuit
-*/
-virtual void set_gate_structure( Gates_block* gate_structure_in, Matrix_real& parameters );
-
 
 #ifdef __DFE__
 

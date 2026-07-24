@@ -226,15 +226,6 @@ void add_finalyzing_layer( Gates_block* gate_structure );
 */
 void set_adaptive_gate_structure( std::string filename );
 
-/**
-@brief Call to set the gate structure from a circuit (qgd_Circuit / Gates_block).
-Existing gates and optimized parameters are cleared before the new structure is applied.
-The number of qubits in the circuit must equal the stored qubit count, and the number of
-elements in parameters must equal the number of free parameters in the circuit.
-@param gate_structure Pointer to the circuit to be set
-@param parameters Parameter array associated with the circuit
-*/
-void set_gate_structure( Gates_block* gate_structure, Matrix_real& parameters ) override;
  
  
  /**

@@ -900,10 +900,9 @@ qgd_N_Qubit_Decomposition_Wrapper_set_Gate_Structure(qgd_N_Qubit_Decomposition_W
 {
     // initiate variables for input arguments
     PyObject* gate_structure_py = NULL;
-    PyObject* parameters_obj = NULL;
 
     // parsing input arguments: circuit, parameters
-    if (!PyArg_ParseTuple(args, "|OO", &gate_structure_py, &parameters_obj)) {
+    if (!PyArg_ParseTuple(args, "|O", &gate_structure_py)) {
         return Py_BuildValue("i", -1);
     }
 
@@ -952,23 +951,9 @@ qgd_N_Qubit_Decomposition_Wrapper_set_Gate_Structure(qgd_N_Qubit_Decomposition_W
         return NULL;
     }
 
-    if (parameters_obj == NULL) {
-        PyErr_SetString(PyExc_TypeError, "set_Gate_Structure requires (circuit, parameters)");
-        return NULL;
-    }
-    
     qgd_Circuit_Wrapper* qgd_op_block = (qgd_Circuit_Wrapper*)gate_structure_py;
     try {
-        PyArrayObject* parameters_arr = NULL;
-        Matrix_real parameters_mtx;
-        Matrix_real_float parameters_mtx_float;
-        bool parameters_is_float32 = false;
-        extract_parameters_any(parameters_obj, &parameters_arr, parameters_mtx, parameters_mtx_float, parameters_is_float32);
-        if (parameters_is_float32) {
-            parameters_mtx = parameters_float_to_double(parameters_mtx_float);
-        }
-        self->decomp->set_gate_structure(qgd_op_block->gate, parameters_mtx);
-        Py_XDECREF(parameters_arr);
+        self->decomp->set_custom_gate_structure(qgd_op_block->gate);
         return Py_BuildValue("i", 0);
     } catch (std::string err) {
         PyErr_SetString(PyExc_Exception, err.c_str());
