@@ -67,6 +67,7 @@ endif()
 enable_testing()
 
 option(ENABLE_AVX "Enable AVX/AVX2/AVX512 kernels and compiler flags" ON)
+option(SQUANDER_PROFILE_BUILD "Build optimized binaries with profiler-friendly debug info and frame pointers" OFF)
 
 if(SKBUILD)
     message(STATUS "The project is built using scikit-build")
@@ -518,6 +519,20 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     list(APPEND CXX_FLAGS_RELEASE "/arch:AVX" "-DUSE_AVX")
   endif()
 
+endif()
+
+if(SQUANDER_PROFILE_BUILD)
+  message(STATUS "SQUANDER_PROFILE_BUILD enabled: adding optimized native profiling flags")
+  if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    list(APPEND CXX_FLAGS_RELEASE "-g" "-fno-omit-frame-pointer")
+  elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
+    list(APPEND CXX_FLAGS_RELEASE "-g" "-fno-omit-frame-pointer")
+  elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    list(APPEND CXX_FLAGS "/Zi" "/Oy-")
+    list(APPEND CXX_FLAGS_RELEASE "/Zi" "/Oy-")
+  else()
+    message(WARNING "SQUANDER_PROFILE_BUILD is enabled, but no profiler flags are known for ${CMAKE_CXX_COMPILER_ID}")
+  endif()
 endif()
 
 
