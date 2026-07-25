@@ -2023,7 +2023,6 @@ N_Qubit_Decomposition_adaptive::add_finalyzing_layer() {
 void 
 N_Qubit_Decomposition_adaptive::add_finalyzing_layer( Gates_block* gate_structure ) {
 
-
     // creating block of gates
     Gates_block* block = new Gates_block( qbit_num );
 
@@ -2041,6 +2040,12 @@ N_Qubit_Decomposition_adaptive::add_finalyzing_layer( Gates_block* gate_structur
         gate_structure->add_gate( block );
     }
 
+    if ( optimized_parameters_mtx.size() > 0 ) {
+        Matrix_real optimized_parameters_mtx_tmp = Matrix_real(1, get_parameter_num());
+        memset(optimized_parameters_mtx_tmp.get_data(), 0, optimized_parameters_mtx_tmp.size()*sizeof(double));
+        memcpy(optimized_parameters_mtx_tmp.get_data(), optimized_parameters_mtx.get_data(), optimized_parameters_mtx.size()*sizeof(double));
+        optimized_parameters_mtx = optimized_parameters_mtx_tmp;
+    }
 
 }
 
