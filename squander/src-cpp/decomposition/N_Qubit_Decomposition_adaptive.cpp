@@ -1641,8 +1641,11 @@ N_Qubit_Decomposition_adaptive::remove_trivial_CRY_gates( Gates_block* gate_stru
 
         // create new layer if needed to add to the gate structure
         Gates_block* new_layer = NULL;
-
-
+        
+        if ( layer->get_gate_num() < 3 ) {
+            continue;
+        }
+     
         Gate* gate_adaptive = layer->get_gate(2);
         double parameter = optimized_parameters_loc[layer->get_parameter_start_idx() + gate_adaptive->get_parameter_start_idx()]; // parameter for adaptive gate        
         parameter = activation_function(parameter, 1);//limit_max);
