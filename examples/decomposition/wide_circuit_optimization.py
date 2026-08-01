@@ -159,6 +159,10 @@ if __name__ == "__main__":
     if os.path.exists(RESULTS_FILE):
         with open(RESULTS_FILE) as f:
             existing_results = json.load(f)
+        for entry in existing_results.values():
+            if isinstance(entry, dict):
+                entry.pop("init_ibm_eagle", None)
+                entry.pop("final_ibm_eagle", None)
         print(f"Loaded {len(existing_results)} existing results; will skip already-processed circuits.")
 
     results = existing_results  # merge new results into existing
@@ -186,7 +190,6 @@ if __name__ == "__main__":
 
         # pre-optimization stats
         init_stats = CircuitGateStats(circ)
-        init_ibm_eagle = transpile_to_ibm_eagle(filename)
 
         # run circuit optimization
         wide_circuit_optimizer = (
@@ -200,7 +203,6 @@ if __name__ == "__main__":
 
         # post-optimization stats
         opt_stats = CircuitGateStats(optcirc)
-        final_ibm_eagle = transpile_to_ibm_eagle(optcirc, optparameters)
         opt_time = wide_circuit_optimizer.config.get("optimization_time", None)
 
         # routing stats (if routing was needed)
@@ -223,9 +225,7 @@ if __name__ == "__main__":
             "pre_opt_strategy": config["pre-opt-strategy"],
             "routing_strategy": config["routing-strategy"],
             "init": init_stats,
-            "init_ibm_eagle": init_ibm_eagle,
             "final": opt_stats,
-            "final_ibm_eagle": final_ibm_eagle,
             "timing": {
                 "a2a": round(a2a_time, 2) if a2a_time else None,
                 "routing": round(routing_time, 2) if routing_time else None,
