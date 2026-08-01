@@ -33,6 +33,25 @@ def test_RoutingWeightsPreferBalancedEntanglerDepth():
     assert balanced_cover < unbalanced_cover
 
 
+def test_RoutingWeightsPreferCompactGateSpans():
+    """Equal-count covers should avoid interleaving distant circuit regions."""
+    allparts = [
+        frozenset({0, 2}),
+        frozenset({1, 3}),
+        frozenset({0, 1}),
+        frozenset({2, 3}),
+    ]
+    dependencies = {gate: set() for gate in range(4)}
+    gate_to_qubit = {gate: {0, 1} for gate in dependencies}
+    weights = routing_partition_weights(
+        allparts, dependencies, gate_to_qubit
+    )
+
+    interleaved_cover = weights[0] + weights[1]
+    compact_cover = weights[2] + weights[3]
+    assert compact_cover < interleaved_cover
+
+
 @pytest.mark.parametrize("max_qubits", [3, 4, 5])
 def test_PartitionEmptyCircuit(max_qubits):
     """

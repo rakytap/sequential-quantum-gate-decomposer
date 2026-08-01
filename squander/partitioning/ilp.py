@@ -937,17 +937,23 @@ def get_all_partitions(c, max_qubits_per_partition):
 def routing_partition_weights(allparts, g, gate_to_qubit):
     """Return additive weights for routing-oriented exact-cover partitioning.
 
-    A candidate's secondary cost combines dependency edges crossing its
-    boundary with the square of its entangling-gate count. The square favours
-    balanced blocks: permutation synthesis is exponential in block depth, so a
-    ``1, 3`` split is generally more expensive than ``2, 2`` even though both
-    contain four entanglers.
+    Minimum partition count remains the primary objective. Among equal-count
+    covers, prefer temporally compact blocks by penalizing holes in each
+    candidate's span in original circuit order. This prevents the exact-cover
+    solver from interleaving distant, merely dependency-compatible gates into
+    blocks that look efficient abstractly but produce poor permutation
+    transitions during SEQPAM routing.
 
-    For an exact cover, selected candidates count each crossing edge twice and
-    the sum of squared entangler counts is at most ``|G|**2``. Adding one more
-    than ``2 * |E| + |G|**2`` to every candidate keeps partition count primary
-    while breaking equal-count solutions in favour of self-contained blocks
-    with lower peak synthesis depth.
+    Dependency edges crossing a block boundary and the square of its
+    entangling-gate count contribute to the same secondary score. The square
+    favours balanced blocks: permutation synthesis is exponential in block
+    depth, so a ``1, 3`` split is generally more expensive than ``2, 2`` even
+    though both contain four entanglers.
+
+    The per-partition constant is greater than an upper bound on the complete
+    secondary score, so minimum partition count is provably primary. The
+    coefficients remain quadratic in circuit size rather than using a fragile
+    product of nested lexicographic scales.
 
     Candidate-overlap conflict degree was deliberately not included: on the
     ``adder_n4`` routing regression it moved gates into deeper 3-CNOT blocks and
@@ -956,10 +962,19 @@ def routing_partition_weights(allparts, g, gate_to_qubit):
 
     No pair variables or additional constraints are introduced.
     """
+    gate_count = len(g)
     edge_count = sum(len(successors) for successors in g.values())
-    partition_cost = 2 * edge_count + len(g) ** 2 + 1
+    circuit_span = max(g) - min(g) + 1 if g else 0
+    secondary_bound = (
+        gate_count * circuit_span
+        + 2 * edge_count
+        + gate_count ** 2
+    )
+    partition_cost = secondary_bound + 1
     weights = []
     for part in allparts:
+        span = max(part) - min(part) + 1
+        holes = span - len(part)
         outgoing = sum(
             successor not in part
             for gate in part
@@ -973,7 +988,11 @@ def routing_partition_weights(allparts, g, gate_to_qubit):
         )
         entanglers = sum(len(gate_to_qubit[gate]) >= 2 for gate in part)
         weights.append(
-            partition_cost + outgoing + incoming + entanglers * entanglers
+            partition_cost
+            + holes
+            + outgoing
+            + incoming
+            + entanglers * entanglers
         )
     return weights
 
