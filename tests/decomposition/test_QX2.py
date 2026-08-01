@@ -71,7 +71,9 @@ class Test_Decomposition:
         )
         decomp.set_Max_Layer_Num({4: 60, 3: 16})
         decomp.set_Optimization_Blocks(20)
-        decomp.set_Optimization_Tolerance(1e-7)
+        # Optimize past the acceptance boundary so small BLAS/LAPACK platform
+        # differences cannot leave the recomputed final error just above it.
+        decomp.set_Optimization_Tolerance(5e-8)
         decomp.Start_Decomposition()
 
         assert decomp.get_Decomposition_Error() < 1e-7
