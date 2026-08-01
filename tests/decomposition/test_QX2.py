@@ -55,6 +55,9 @@ class Test_Decomposition:
             config={
                 "random_seed": 1,
                 "max_outer_iterations": 600,
+                # Polish all 79 final layers together. Splitting them into two
+                # blocks can reach a coordinate-wise plateau around 1e-7.
+                "optimization_block_final": 100,
                 # The explicit iteration cap bounds runtime; do not let the
                 # looser stagnation heuristic pre-empt the 1e-7 tolerance.
                 "convergence_threshold": 0.0,
@@ -73,7 +76,7 @@ class Test_Decomposition:
         decomp.set_Optimization_Blocks(20)
         # Optimize past the acceptance boundary so small BLAS/LAPACK platform
         # differences cannot leave the recomputed final error just above it.
-        decomp.set_Optimization_Tolerance(5e-8)
+        decomp.set_Optimization_Tolerance(1e-8)
         decomp.Start_Decomposition()
 
         assert decomp.get_Decomposition_Error() < 1e-7
