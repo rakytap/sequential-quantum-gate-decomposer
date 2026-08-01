@@ -455,7 +455,10 @@ class N_Qubit_Decomposition_Tree_Search : public Optimization_Interface {
     @brief Call to perform the optimization on the given gate structure
     @param gate_structure_loc The gate structure to be optimized
     */
-    N_Qubit_Decomposition_custom perform_optimization(Gates_block* gate_structure_loc);
+    N_Qubit_Decomposition_custom perform_optimization(
+        Gates_block* gate_structure_loc,
+        bool use_float_target = false
+    );
 
     // Bring base class add_finalyzing_layer into scope to avoid hiding
     using Optimization_Interface::add_finalyzing_layer;

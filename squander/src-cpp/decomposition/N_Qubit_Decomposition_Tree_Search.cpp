@@ -970,7 +970,7 @@ GrayCodeCNOT N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures
     std::set<GrayCodeCNOT> visited;
     //ForbiddenSubseqSet forbidden(topology);
 
-    N_Qubit_Decomposition_custom&& cDecomp_custom_random = perform_optimization(nullptr);
+    N_Qubit_Decomposition_custom&& cDecomp_custom_random = perform_optimization(nullptr, true);
     cDecomp_custom_random.set_cost_function_variant(OSR_ENTANGLEMENT);
     std::uniform_real_distribution<> distrib_real(0.0, 2 * M_PI);
 
@@ -1151,7 +1151,7 @@ TreeSearchResult N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_struct
     int parallel = get_parallel_configuration();
 
     auto process_job_range = [&](int64_t begin, int64_t end) {
-        N_Qubit_Decomposition_custom&& cDecomp_custom_random = perform_optimization(nullptr);
+        N_Qubit_Decomposition_custom&& cDecomp_custom_random = perform_optimization(nullptr, true);
         cDecomp_custom_random.set_cost_function_variant(OSR_ENTANGLEMENT);
         std::mt19937 ts_gen(std::random_device{}());
         std::uniform_real_distribution<> distrib_real(0.0, 2 * M_PI);
@@ -1448,9 +1448,14 @@ GrayCodeCNOT N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures
 /**
 @brief Call to perform the optimization on the given gate structure
 @param gate_structure_loc The gate structure to be optimized (can be nullptr)
+@param use_float_target If true, use the float32 target for OSR structure
+scoring. False keeps the original float64 target for Hilbert-Schmidt refinement.
 @return Returns an instance of N_Qubit_Decomposition_custom with optimized parameters
 */
-N_Qubit_Decomposition_custom N_Qubit_Decomposition_Tree_Search::perform_optimization(Gates_block* gate_structure_loc) {
+N_Qubit_Decomposition_custom N_Qubit_Decomposition_Tree_Search::perform_optimization(
+    Gates_block* gate_structure_loc,
+    bool use_float_target
+) {
 
     double optimization_tolerance_loc;
     if (config.count("optimization_tolerance") > 0) {
@@ -1459,14 +1464,24 @@ N_Qubit_Decomposition_custom N_Qubit_Decomposition_Tree_Search::perform_optimiza
         optimization_tolerance_loc = optimization_tolerance;
     }
 
+    // OSR structure scoring may use the float32 target, but Hilbert-Schmidt
+    // refinement must use the original float64 target. Promoting Umtx_float
+    // back to double leaves a slightly nonunitary, quantized target and creates
+    // an artificial fidelity floor.
+    std::map<std::string, Config_Element> optimization_config = config;
+    bool optimization_uses_float = use_float && use_float_target;
+    optimization_config["use_float"].set_property(
+        "use_float", optimization_uses_float
+    );
+
     N_Qubit_Decomposition_custom cDecomp_custom_random;
-    if ( use_float ) {
+    if ( optimization_uses_float ) {
         cDecomp_custom_random =
-            N_Qubit_Decomposition_custom(Umtx_float.copy(), qbit_num, false, config, RANDOM, accelerator_num);
+            N_Qubit_Decomposition_custom(Umtx_float.copy(), qbit_num, false, optimization_config, RANDOM, accelerator_num);
     }
     else {
         cDecomp_custom_random =
-            N_Qubit_Decomposition_custom(Umtx.copy(), qbit_num, false, config, RANDOM, accelerator_num);
+            N_Qubit_Decomposition_custom(Umtx.copy(), qbit_num, false, optimization_config, RANDOM, accelerator_num);
     }
     if (gate_structure_loc != nullptr) {
         cDecomp_custom_random.set_custom_gate_structure(gate_structure_loc);

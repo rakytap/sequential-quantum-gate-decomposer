@@ -932,7 +932,60 @@ def get_all_partitions(c, max_qubits_per_partition):
                 Ynew -= prune; Bnew -= prune
                 stack.append((Xnew, Ynew, Anew, Bnew, list(sorted(Anew, key=topo_index.__getitem__)), list(sorted(Bnew, key=topo_index.__getitem__, reverse=True)), newQ))    
     return list(allparts), g, go, rgo, single_qubit_chains, gate_to_qubit, gate_to_tqubit
-def max_partitions(c, max_qubits_per_partition, use_ilp=True, fusion_cost=False, control_aware=False):
+
+
+def routing_partition_weights(allparts, g, gate_to_qubit):
+    """Return additive weights for routing-oriented exact-cover partitioning.
+
+    A candidate's secondary cost combines dependency edges crossing its
+    boundary with the square of its entangling-gate count. The square favours
+    balanced blocks: permutation synthesis is exponential in block depth, so a
+    ``1, 3`` split is generally more expensive than ``2, 2`` even though both
+    contain four entanglers.
+
+    For an exact cover, selected candidates count each crossing edge twice and
+    the sum of squared entangler counts is at most ``|G|**2``. Adding one more
+    than ``2 * |E| + |G|**2`` to every candidate keeps partition count primary
+    while breaking equal-count solutions in favour of self-contained blocks
+    with lower peak synthesis depth.
+
+    Candidate-overlap conflict degree was deliberately not included: on the
+    ``adder_n4`` routing regression it moved gates into deeper 3-CNOT blocks and
+    worsened the routed result from 13 to 17 CNOTs. Summed gate-intersection
+    cardinality is also constant for every exact cover and cannot break ties.
+
+    No pair variables or additional constraints are introduced.
+    """
+    edge_count = sum(len(successors) for successors in g.values())
+    partition_cost = 2 * edge_count + len(g) ** 2 + 1
+    weights = []
+    for part in allparts:
+        outgoing = sum(
+            successor not in part
+            for gate in part
+            for successor in g[gate]
+        )
+        incoming = sum(
+            successor in part
+            for gate, successors in g.items()
+            if gate not in part
+            for successor in successors
+        )
+        entanglers = sum(len(gate_to_qubit[gate]) >= 2 for gate in part)
+        weights.append(
+            partition_cost + outgoing + incoming + entanglers * entanglers
+        )
+    return weights
+
+
+def max_partitions(
+    c,
+    max_qubits_per_partition,
+    use_ilp=True,
+    fusion_cost=False,
+    control_aware=False,
+    routing_cost=False,
+):
     """
     Enumerate feasible parts and select a maximum/optimal partitioning of a circuit.
 
@@ -943,6 +996,8 @@ def max_partitions(c, max_qubits_per_partition, use_ilp=True, fusion_cost=False,
         fusion_cost (bool): If True, include FLOP-based cost with fusion/controls.
         control_aware (bool): If True and fusion_cost, treat single-qubit chains as
             pre/post relative to targets.
+        routing_cost (bool): If True, keep minimum partition count primary and
+            use dependency cuts plus balanced entangler depth as a tie-breaker.
 
     Returns:
         tuple: (partitioned_circ, param_order, parts)
@@ -952,7 +1007,14 @@ def max_partitions(c, max_qubits_per_partition, use_ilp=True, fusion_cost=False,
     """
     allparts, g, go, rgo, single_qubit_chains, gate_to_qubit, gate_to_tqubit = get_all_partitions(c, max_qubits_per_partition)
     if use_ilp:
-        weights = parts_to_float_ops(max_qubits_per_partition, gate_to_qubit, None, allparts) if fusion_cost and not control_aware else None
+        if routing_cost and (fusion_cost or control_aware):
+            raise ValueError(
+                "Routing-oriented partitioning cannot be combined with fusion costs."
+            )
+        if routing_cost:
+            weights = routing_partition_weights(allparts, g, gate_to_qubit)
+        else:
+            weights = parts_to_float_ops(max_qubits_per_partition, gate_to_qubit, None, allparts) if fusion_cost and not control_aware else None
         L, fusion_info = ilp_global_optimal(allparts, g, (single_qubit_chains, max_qubits_per_partition, go, rgo, gate_to_qubit, gate_to_tqubit) if control_aware else None, weights=weights)
     else:
         L, excluded = [], set()

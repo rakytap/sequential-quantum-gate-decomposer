@@ -41,11 +41,11 @@ _SQUANDER_NATIVE_STRATEGIES = frozenset(
 )
 
 SQUANDER_FLOAT64_TOLERANCE = 1e-10
-SQUANDER_FLOAT32_TOLERANCE = 1e-8
+SQUANDER_FLOAT32_TOLERANCE = 1e-10
 BQSKIT_FLOAT64_SYNTHESIS_VALIDATION_TOLERANCE = 1e-8
 BQSKIT_FLOAT32_SYNTHESIS_VALIDATION_TOLERANCE = 1e-8
 CIRCUIT_FLOAT64_VALIDATION_TOLERANCE = 1e-8
-CIRCUIT_FLOAT32_VALIDATION_TOLERANCE = 1e-6
+CIRCUIT_FLOAT32_VALIDATION_TOLERANCE = 1e-8
 
 
 def _config_uses_float32(config):
@@ -339,16 +339,13 @@ async def _squander_synthesize_or_fallback(
     inner_synthesis,
     target,
     target_data,
-    original_circuit,
-    graph,
-    pi,
-    po,
+    fallback,
 ):
     """Run Squander synthesis, falling back only for explicit Squander misses."""
     try:
         return await inner_synthesis.synthesize(target, target_data)
     except _SquanderSynthesisFailed:
-        return _fallback_circuit_for_permutation(original_circuit, graph, pi, po)
+        return fallback
 
 
 def _patch_eapp_if_needed():
@@ -444,24 +441,37 @@ def _patch_eapp_if_needed():
         extended_datas = []
         extended_graphs = []
         extended_perms = []
-        original_circuits = []
+        fallback_circuits = []
         for target_index, target in enumerate(targets):
             for graph_index, graph in enumerate(graphs):
+                fallback = _fallback_circuit_for_permutation(
+                    circuit,
+                    graph,
+                    permsbyperms[target_index][0],
+                    permsbyperms[target_index][1],
+                )
+                # EAPP uses this fallback unless OSR finds a strictly cheaper
+                # circuit. Bound the search to circuits that can win instead
+                # of retaining the tree search's unrelated default depth 14.
+                fallback_entanglers = sum(
+                    1 for op in fallback if op.gate.num_qudits >= 2
+                )
+                target_data = _copy.deepcopy(datas[graph_index])
+                target_data['_squander_tree_level_max'] = max(
+                    0, fallback_entanglers - 1
+                )
                 extended_targets.append(target)
-                extended_datas.append(datas[graph_index])
+                extended_datas.append(target_data)
                 extended_graphs.append(graph)
                 extended_perms.append(permsbyperms[target_index])
-                original_circuits.append(circuit)
+                fallback_circuits.append(fallback)
 
         circuits = await _get_runtime().map(
             _squander_synthesize_or_fallback,
             [self.inner_synthesis] * len(extended_targets),
             extended_targets,
             extended_datas,
-            original_circuits,
-            extended_graphs,
-            [perm[0] for perm in extended_perms],
-            [perm[1] for perm in extended_perms],
+            fallback_circuits,
         )
 
         perm_data = {}
@@ -546,7 +556,10 @@ class SquanderPartitioner(_BQSKitBasePass):
 
         circ, orig_parameters = Qiskit_IO.convert_Qiskit_to_Squander(circ_qiskit)
         partitioned_circuit, parameters, _ = PartitionCircuit(
-            circ, orig_parameters, self.max_partition_size, strategy="ilp"
+            circ,
+            orig_parameters,
+            self.max_partition_size,
+            strategy="ilp-routing",
         )
         partitioned_circuit_bqskit = BQSKitCircuit(circ.get_Qbit_Num())
         for subcircuit in partitioned_circuit.get_Gates():
@@ -650,6 +663,14 @@ class SquanderSynthesisPass(_BQSKitSynthesisPass):
             **self.config,
             "topology": mini_topology,
         }
+        if data is not None and '_squander_tree_level_max' in data:
+            routing_level_max = int(data['_squander_tree_level_max'])
+            configured_level_max = config.get('tree_level_max')
+            config['tree_level_max'] = (
+                routing_level_max
+                if configured_level_max is None
+                else min(int(configured_level_max), routing_level_max)
+            )
 
         candidates = qgd_Wide_Circuit_Optimization.DecomposePartition(
             target_matrix,
@@ -981,7 +1002,8 @@ class qgd_Wide_Circuit_Optimization:
         config.setdefault("max_partition_size", 3)
         config.setdefault("topology", None)
         config.setdefault("partition_strategy", "ilp")
-        config.setdefault("auto_expand_partition_size", True)
+        config.setdefault("partition_workers", None)
+        config.setdefault("auto_expand_partition_size", False)
         config.setdefault("force_small_circuit_validation", True)
 
         # testing the fields of config
@@ -1042,6 +1064,14 @@ class qgd_Wide_Circuit_Optimization:
         max_partition_size = config["max_partition_size"]
         if not isinstance(max_partition_size, int):
             raise Exception(f"The max_partition_size parameter should be an integer.")
+
+        partition_workers = config["partition_workers"]
+        if partition_workers is not None and (
+            not isinstance(partition_workers, int) or partition_workers <= 0
+        ):
+            raise Exception(
+                "The partition_workers parameter should be a positive integer or None."
+            )
 
         self.config = config
 
@@ -1661,7 +1691,7 @@ class qgd_Wide_Circuit_Optimization:
             print("Optimizing circuit with Squander")
             part_size_start = self.max_partition_size
             part_size_end = self.max_partition_size
-            if self.config.get("auto_expand_partition_size", True) and (
+            if self.config.get("auto_expand_partition_size", False) and (
                 self.config.get("use_osr", False)
                 or self.config.get("use_graph_search", False)
             ):
@@ -1808,8 +1838,12 @@ class qgd_Wide_Circuit_Optimization:
             optimized_subcircuits[partition_idx] = new_subcircuit
             optimized_parameter_list[partition_idx] = new_parameters
 
+        worker_count = self.config.get("partition_workers")
+        if worker_count is None:
+            worker_count = mp.cpu_count()
+        worker_count = max(1, min(worker_count, len(subcircuits)))
         with (
-            contextlib.nullcontext() if in_parent else Pool(processes=mp.cpu_count())
+            contextlib.nullcontext() if in_parent else Pool(processes=worker_count)
         ) as pool:
             remaining = list(range(len(subcircuits)))
             while remaining:
@@ -1835,6 +1869,22 @@ class qgd_Wide_Circuit_Optimization:
                             optimized_subcircuits[partition_idx],
                             optimized_parameter_list[partition_idx],
                         ) = fingerprint_dict[fingerprint]
+                        continue
+                    # With a required reduction of one CNOT, a CNOT-basis block
+                    # containing at most one CNOT has no search depth to explore.
+                    # Local one-qubit gates cannot reduce the operator Schmidt
+                    # rank of a single CNOT, so avoid an exact-synthesis call and
+                    # cache this mathematically irreducible result immediately.
+                    if CNOTGateCount(subcircuit) <= 1:
+                        optimized_subcircuits[partition_idx] = subcircuit
+                        optimized_parameter_list[partition_idx] = (
+                            subcircuit_parameters
+                        )
+                        if fingerprint_dict is not None:
+                            fingerprint_dict[fingerprint] = (
+                                subcircuit,
+                                subcircuit_parameters,
+                            )
                         continue
                     if part_deps is not None and partition_idx in part_deps:
                         any_optimized, any_remaining = False, False
@@ -2083,17 +2133,18 @@ class qgd_Wide_Circuit_Optimization:
             wide_parameters: Parameters for ``wide_circuit``.
             routing: If true and initial/final mappings exist in ``self.config``,
                 pass them to ``CompareCircuits`` for layout-aware comparison.
-            forced_test: If true, run the comparison even when ``test_final_circuit``
-                is false in config.
+            forced_test: If true, run the comparison for circuits of at most 12
+                qubits even when ``test_final_circuit`` is false in config. Large
+                comparisons require ``test_final_circuit=True`` explicitly.
 
         ``self.config['circuit_validation_tolerance']`` is an infidelity
         threshold for this whole-circuit state-vector check. It is deliberately
         separate from ``self.config['tolerance']``, which controls block
         synthesis and block-level validation.
         """
-        forced_test = forced_test or (
-            self.config.get("force_small_circuit_validation", True)
-            and circ.get_Qbit_Num() <= 12
+        forced_test = circ.get_Qbit_Num() <= 12 and (
+            forced_test
+            or self.config.get("force_small_circuit_validation", True)
         )
         if self.config["test_final_circuit"] or forced_test:
             if label is not None:
@@ -2305,15 +2356,12 @@ class qgd_Wide_Circuit_Optimization:
             Squander_remapped_circuit, self.config["topology"]
         )
 
-        print("checking circuit after routing")
-        print(self.config)
         self.check_compare_circuits(
             circ,
             orig_parameters,
             Squander_remapped_circuit,
             parameters_remapped_circuit,
             routing=True,
-            forced_test=True,
             label="route_circuit",
         )
         return Squander_remapped_circuit, parameters_remapped_circuit

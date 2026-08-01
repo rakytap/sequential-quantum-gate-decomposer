@@ -393,7 +393,12 @@ qgd_N_Qubit_Decomposition_custom_Wrapper_init(qgd_N_Qubit_Decomposition_Wrapper*
 }
 
 template<typename DecompT>
-static int search_wrapper_init(qgd_N_Qubit_Decomposition_Wrapper* self, PyObject* args, PyObject* kwds)
+static int search_wrapper_init(
+    qgd_N_Qubit_Decomposition_Wrapper* self,
+    PyObject* args,
+    PyObject* kwds,
+    bool preserve_float64_target = false
+)
 {
     static char* kwlist[] = {
         (char*)"Umtx", (char*)"qbit_num", (char*)"topology", 
@@ -422,7 +427,9 @@ static int search_wrapper_init(qgd_N_Qubit_Decomposition_Wrapper* self, PyObject
         
         auto topology_cpp = extract_topology(topology);
         auto config = extract_config(config_arg);
-        const bool use_float_constructor = Umtx_is_float32 || config_requests_float(config);
+        const bool use_float_constructor = Umtx_is_float32 || (
+            config_requests_float(config) && !preserve_float64_target
+        );
         if (use_float_constructor && !Umtx_is_float32) {
             Umtx_mtx_float = Umtx_mtx.to_float32();
         }
@@ -443,7 +450,12 @@ static int search_wrapper_init(qgd_N_Qubit_Decomposition_Wrapper* self, PyObject
 
 static int 
 qgd_N_Qubit_Decomposition_Tree_Search_Wrapper_init(qgd_N_Qubit_Decomposition_Wrapper* self, PyObject* args, PyObject* kwds) {
-    return search_wrapper_init<N_Qubit_Decomposition_Tree_Search>(self, args, kwds);
+    // Preserve the original float64 target for final Hilbert-Schmidt
+    // refinement. The double constructor still creates Umtx_float when
+    // config["use_float"] is true, so OSR retains its float32 hot path.
+    return search_wrapper_init<N_Qubit_Decomposition_Tree_Search>(
+        self, args, kwds, true
+    );
 }
 
 static int

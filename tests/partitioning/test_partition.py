@@ -5,12 +5,32 @@ from squander import utils
 
 from squander.partitioning.partition import PartitionCircuitQasm
 from squander.partitioning.kahn import kahn_partition
+from squander.partitioning.ilp import routing_partition_weights
 from squander.partitioning.tools import get_qubits
 
 
 """
 CORRECTNESS TESTS
 """
+
+
+def test_RoutingWeightsPreferBalancedEntanglerDepth():
+    """Equal-count covers should avoid one unnecessarily deep routing block."""
+    allparts = [
+        frozenset({0}),
+        frozenset({1, 2, 3}),
+        frozenset({0, 1}),
+        frozenset({2, 3}),
+    ]
+    dependencies = {0: {1}, 1: {2}, 2: {3}, 3: set()}
+    gate_to_qubit = {gate: {0, 1} for gate in dependencies}
+    weights = routing_partition_weights(
+        allparts, dependencies, gate_to_qubit
+    )
+
+    unbalanced_cover = weights[0] + weights[1]
+    balanced_cover = weights[2] + weights[3]
+    assert balanced_cover < unbalanced_cover
 
 
 @pytest.mark.parametrize("max_qubits", [3, 4, 5])
