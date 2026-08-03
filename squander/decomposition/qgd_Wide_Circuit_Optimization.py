@@ -503,9 +503,40 @@ def _verify_bqskit_pam_replay(event, event_by_id):
             raise AssertionError("PAM choice lacks an accepted rewrite certificate.")
         from bqskit.qis.unitary.unitarymatrix import UnitaryMatrix
 
-        original_unitary = UnitaryMatrix(
-            _audit_representation_unitary(block["before"])
-        )
+        replayed_original = _audit_representation_unitary(block["before"])
+        has_recorded_original = "original_unitary" in block
+        if has_recorded_original:
+            recorded_original = _complex_matrix_from_json(
+                block["original_unitary"]
+            )
+            original_metrics = _unitary_audit_metrics(
+                replayed_original, recorded_original
+            )
+            stored_metrics = block.get("original_unitary_metrics", {})
+            for metric_name, metric_value in original_metrics.items():
+                stored_value = stored_metrics.get(metric_name)
+                stored_bits = stored_metrics.get(f"{metric_name}_bits")
+                if (
+                    stored_value is None
+                    or _float64_bits(stored_value) != stored_bits
+                    or stored_bits != _float64_bits(metric_value)
+                ):
+                    raise AssertionError(
+                        f"Stored PAM input-block {metric_name} for {point} "
+                        "is not bit-identical when recomputed."
+                    )
+            if original_metrics["process_infidelity"] > float(
+                rewrite["tolerance"]
+            ):
+                raise AssertionError(
+                    f"PAM original unitary for input block {point} does not "
+                    "match its replayed gate stream within synthesis tolerance."
+                )
+            original_unitary = UnitaryMatrix(recorded_original)
+        else:
+            # Schema-v2 audits written before original_unitary was added can
+            # only reconstruct BQSKit's cached value from the block circuit.
+            original_unitary = UnitaryMatrix(replayed_original)
         reconstructed_target = _pam_exact_target(
             original_unitary,
             choice["pre_perm_local"],
@@ -513,9 +544,20 @@ def _verify_bqskit_pam_replay(event, event_by_id):
         )
         stored_target = _audit_representation_unitary(rewrite["before"])
         if not np.array_equal(reconstructed_target, stored_target):
-            raise AssertionError(
-                f"PAM target for input block {point} is not bit-identical."
+            if has_recorded_original:
+                raise AssertionError(
+                    f"PAM target for input block {point} is not bit-identical."
+                )
+            legacy_metrics = _unitary_audit_metrics(
+                reconstructed_target, stored_target
             )
+            if legacy_metrics["process_infidelity"] > float(
+                rewrite["tolerance"]
+            ):
+                raise AssertionError(
+                    f"Legacy PAM target for input block {point} does not "
+                    "match its replayed gate stream within synthesis tolerance."
+                )
         consumed.add(point)
     if consumed != set(blocks):
         raise AssertionError("PAM replay did not consume every input block exactly once.")
@@ -1070,15 +1112,22 @@ def verify_rewrite_audit(audit_or_path, tolerance=None, expected_sha256=None):
                 input_digest = hashlib.sha256(input_bytes).hexdigest()
                 if input_digest != audit["run"].get("input_file_sha256"):
                     raise AssertionError("Archived input QASM byte hash mismatch.")
-                archived_input_state = _qasm_exact_state(
-                    input_bytes.decode("utf-8")
+                from squander import utils
+
+                source_circuit, source_parameters, _ = (
+                    utils.qasm_to_squander_circuit(archived_input_path)
                 )
-                if archived_input_state != _qasm_exact_state(
+                converted_input = _squander_audit_representation(
+                    source_circuit,
+                    source_parameters,
+                    range(source_circuit.get_Qbit_Num()),
+                )
+                if _qasm_exact_state(converted_input) != _qasm_exact_state(
                     audit["run"]["input_circuit"]
                 ):
                     raise AssertionError(
-                        "Archived input QASM is not the replay input gate and "
-                        "parameter stream."
+                        "Reparsing the archived input QASM did not reproduce "
+                        "the replay input gate and parameter stream."
                     )
     return {
         "verified_rewrites": verified,
@@ -1133,6 +1182,20 @@ def save_rewrite_audit(jsonl_path, output_path, run_metadata=None):
                 event["metrics"]["process_infidelity"]
                 <= float(event["tolerance"])
             )
+        elif event.get("kind") == "bqskit_pam_routing":
+            for block in event.get("input_blocks", []):
+                if "original_unitary" not in block:
+                    continue
+                block["original_unitary_metrics"] = _unitary_audit_metrics(
+                    _audit_representation_unitary(block["before"]),
+                    _complex_matrix_from_json(block["original_unitary"]),
+                )
+                for metric_name, metric_value in tuple(
+                    block["original_unitary_metrics"].items()
+                ):
+                    block["original_unitary_metrics"][
+                        f"{metric_name}_bits"
+                    ] = _float64_bits(metric_value)
     summary = {
         "events": len(events),
         "rewrites": sum(event.get("kind") == "rewrite" for event in events),
@@ -2076,6 +2139,9 @@ def _audited_pam_class(base_class, config):
                         ),
                     }
                 )
+            input_block_by_point = {
+                tuple(block["point"]): block for block in input_blocks
+            }
 
             await super().run(circuit, data)
             out_data = data[self.out_data_key]
@@ -2086,6 +2152,13 @@ def _audited_pam_class(base_class, config):
             for choice, (output_point, block_data) in zip(
                 self._squander_choices, out_data.items()
             ):
+                # PAM creates original_utry during its run and may evaluate it
+                # through a numerically different path than source_block.
+                # Preserve the exact target input and later certify its
+                # fidelity to the independently replayable input gate stream.
+                input_block_by_point[tuple(choice["input_point"])][
+                    "original_unitary"
+                ] = _json_complex_matrix(block_data["original_utry"])
                 output_operation = circuit[output_point]
                 selected = (
                     output_operation.gate._circuit.copy()
