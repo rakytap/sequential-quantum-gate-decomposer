@@ -318,8 +318,8 @@ def result_configuration(config, qubit_num):
     keys = (
         "max_partition_size",
         "tolerance",
+        "synthesis_acceptance_tolerance",
         "circuit_validation_tolerance",
-        "bqskit_synthesis_validation_tolerance",
         "bqskit_synthesis_epsilon",
         "use_float",
         "use_osr",
@@ -376,7 +376,8 @@ if __name__ == "__main__":
         "auto_expand_partition_size": False,
         "pre-opt-strategy": "TreeSearch",  # possible values: "TreeSearch", "qiskit", "bqskit", "TabuSearch"
         "routing-strategy": "seqpam-ilp",  # possible values: "sabre", "light-sabre", "bqskit-sabre", "seqpam-quick", "seqpam-ilp"
-        #"tolerance": 1e-8, #1e-8 for use_float and 1e-10 if not are sensible but leave to default
+        # "tolerance": 1e-14,  # Squander Hilbert-Schmidt optimization target
+        # "synthesis_acceptance_tolerance": 1e-10,  # Common block budget
         "use_float": True,  # whether to use single precision for the optimization (experimental, may cause instability in some cases, but can significantly reduce optimization time and memory usage for large circuits)
         # **{'use_basin_hopping': True, 'bh_T': 1.1822334624366124, 'bh_stepsize': 0.9020671823381502, 'bh_interval': 165, 'bh_target_accept_rate': 0.7037812116166546, 'bh_stepwise_factor': 0.8254028860713254}
     }

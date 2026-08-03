@@ -50,10 +50,15 @@ _SQUANDER_NATIVE_STRATEGIES = frozenset(
     ("TreeSearch", "TabuSearch", "Adaptive", "Custom")
 )
 
-SQUANDER_FLOAT64_TOLERANCE = 1e-10
-SQUANDER_FLOAT32_TOLERANCE = 1e-10
-CIRCUIT_FLOAT64_VALIDATION_TOLERANCE = 1e-8
-CIRCUIT_FLOAT32_VALIDATION_TOLERANCE = 1e-8
+# Squander's optimizer target and the common accepted-rewrite budget both use
+# the process-infidelity metric ``1 - F**2``, but serve different purposes.
+SQUANDER_FLOAT64_TOLERANCE = 1e-14
+# ``use_float`` selects the faster float32 OSR search, but the final
+# Hilbert-Schmidt refinement is deliberately performed in float64.
+SQUANDER_FLOAT32_TOLERANCE = SQUANDER_FLOAT64_TOLERANCE
+SYNTHESIS_ACCEPTANCE_TOLERANCE = 1e-10
+CIRCUIT_FLOAT64_VALIDATION_TOLERANCE = 1e-10
+CIRCUIT_FLOAT32_VALIDATION_TOLERANCE = 1e-10
 
 
 def _config_uses_float32(config):
@@ -68,14 +73,6 @@ def _default_squander_tolerance(config):
     )
 
 
-def _default_bqskit_synthesis_validation_tolerance(config):
-    """Use the same process-infidelity budget as Squander by default."""
-
-    return float(
-        config.get("tolerance", _default_squander_tolerance(config))
-    )
-
-
 def _default_circuit_validation_tolerance(config):
     return (
         CIRCUIT_FLOAT32_VALIDATION_TOLERANCE
@@ -84,10 +81,12 @@ def _default_circuit_validation_tolerance(config):
     )
 
 
-def _squander_validation_tolerance(config):
+def _synthesis_acceptance_tolerance(config):
+    """Return the common block-rewrite budget in the ``1 - F**2`` metric."""
+
     return config.get(
-        "tolerance",
-        _default_squander_tolerance(config),
+        "synthesis_acceptance_tolerance",
+        SYNTHESIS_ACCEPTANCE_TOLERANCE,
     )
 
 
@@ -97,15 +96,6 @@ def _circuit_validation_tolerance(config):
     return config.get(
         "circuit_validation_tolerance",
         _default_circuit_validation_tolerance(config),
-    )
-
-
-def _bqskit_synthesis_validation_tolerance(config):
-    """Return BQSKit's block budget in Squander's ``1 - F**2`` metric."""
-
-    return config.get(
-        "bqskit_synthesis_validation_tolerance",
-        _default_bqskit_synthesis_validation_tolerance(config),
     )
 
 
@@ -124,16 +114,17 @@ def _trace_infidelity_from_process_infidelity(process_infidelity):
 
 
 def _bqskit_synthesis_epsilon(config):
-    """Return BQSKit's exactly equivalent Hilbert-Schmidt cost threshold.
+    """Return BQSKit's exactly equivalent synthesis-success threshold.
 
     Squander cost-function variant 3 and the rewrite audit use
     ``1 - F**2``. BQSKit's ``HilbertSchmidtCost`` uses ``1 - F``. Here
     ``F = |Tr(U^dagger V)| / d``, so the conversion is exact and independent
-    of partition width.
+    of partition width. BQSKit calls this threshold ``synthesis_epsilon``;
+    its numerical optimizer uses separate, tighter ftol/gtol stopping tests.
     """
 
     return _trace_infidelity_from_process_infidelity(
-        _bqskit_synthesis_validation_tolerance(config)
+        _synthesis_acceptance_tolerance(config)
     )
 
 
@@ -1493,7 +1484,7 @@ async def _squander_synthesize_or_fallback(
                 "seqpam_permutation_synthesis",
                 before,
                 after,
-                _bqskit_synthesis_validation_tolerance(config),
+                _synthesis_acceptance_tolerance(config),
                 accepted=False,
                 candidate=True,
                 stage=config.get("_rewrite_audit_stage", "routing"),
@@ -1879,7 +1870,7 @@ class SquanderSynthesisPass(_BQSKitSynthesisPass):
         if self.config.get("bqskit_distance_test", False):
             target_unitary = UnitaryMatrix(target)
             distance = target_unitary.get_distance_from(synthesized.get_unitary())
-            process_tolerance = _bqskit_synthesis_validation_tolerance(
+            process_tolerance = _synthesis_acceptance_tolerance(
                 self.config
             )
             distance_tolerance = np.sqrt(process_tolerance)
@@ -2007,7 +1998,7 @@ def _audited_foreach_class(base_class, config):
                     original = BQSKitCircuit.from_operation(operation)
                 before = _bqskit_audit_representation(original)
                 after = _bqskit_audit_representation(candidate)
-                tolerance = _bqskit_synthesis_validation_tolerance(
+                tolerance = _synthesis_acceptance_tolerance(
                     configured_audit
                 )
                 event_id = _append_rewrite_audit_event(
@@ -2220,7 +2211,7 @@ def _audited_pam_class(base_class, config):
                         "bqskit_pam_selected_block",
                         target,
                         selected_representation,
-                        _bqskit_synthesis_validation_tolerance(configured_audit),
+                        _synthesis_acceptance_tolerance(configured_audit),
                         accepted=True,
                         stage=configured_audit.get("_rewrite_audit_stage"),
                         input_point=choice["input_point"],
@@ -2572,8 +2563,8 @@ class qgd_Wide_Circuit_Optimization:
             _default_circuit_validation_tolerance(config),
         )
         config.setdefault(
-            "bqskit_synthesis_validation_tolerance",
-            _default_bqskit_synthesis_validation_tolerance(config),
+            "synthesis_acceptance_tolerance",
+            SYNTHESIS_ACCEPTANCE_TOLERANCE,
         )
         config["bqskit_synthesis_epsilon"] = _bqskit_synthesis_epsilon(config)
         config.setdefault("test_subcircuits", False)
@@ -2622,17 +2613,22 @@ class qgd_Wide_Circuit_Optimization:
         if not isinstance(use_float, bool):
             raise Exception(f"The use_float parameter should be a bool.")
 
-        bqskit_synthesis_validation_tolerance = config[
-            "bqskit_synthesis_validation_tolerance"
+        synthesis_acceptance_tolerance = config[
+            "synthesis_acceptance_tolerance"
         ]
-        if not isinstance(bqskit_synthesis_validation_tolerance, float):
+        if not isinstance(synthesis_acceptance_tolerance, float):
             raise Exception(
-                "The bqskit_synthesis_validation_tolerance parameter should be a float."
+                "The synthesis_acceptance_tolerance parameter should be a float."
             )
-        if not 0.0 <= bqskit_synthesis_validation_tolerance <= 1.0:
+        if not 0.0 <= synthesis_acceptance_tolerance <= 1.0:
             raise Exception(
-                "The bqskit_synthesis_validation_tolerance parameter should "
+                "The synthesis_acceptance_tolerance parameter should "
                 "be between zero and one."
+            )
+        if synthesis_acceptance_tolerance < tolerance:
+            raise Exception(
+                "The synthesis_acceptance_tolerance parameter should not be "
+                "tighter than the optimization tolerance."
             )
 
         circuit_validation_tolerance = config["circuit_validation_tolerance"]
@@ -2763,10 +2759,11 @@ class qgd_Wide_Circuit_Optimization:
         else:
             raise Exception(f"Unsupported decomposition type: {strategy}")
 
-        tolerance = config["tolerance"]
+        optimization_tolerance = config["tolerance"]
+        acceptance_tolerance = _synthesis_acceptance_tolerance(config)
         cDecompose.set_Verbose(config["verbosity"])
         cDecompose.set_Cost_Function_Variant(3)
-        cDecompose.set_Optimization_Tolerance(tolerance)
+        cDecompose.set_Optimization_Tolerance(optimization_tolerance)
 
         # adding new layer to the decomposition until threshold
         cDecompose.set_Optimizer("BFGS")
@@ -2782,13 +2779,16 @@ class qgd_Wide_Circuit_Optimization:
             return cDecompose.all_solutions
 
         squander_circuit = cDecompose.get_Circuit()
-        parameters = cDecompose.get_Optimized_Parameters()
+        if strategy == "TreeSearch" and config.get("use_float", False):
+            parameters = cDecompose.get_Optimized_Parameters_Double()
+        else:
+            parameters = cDecompose.get_Optimized_Parameters()
         assert parameters is not None
 
         if strategy == "Custom":
             err = cDecompose.Optimization_Problem(parameters)
             it = 0
-            while err > tolerance and it < 20:
+            while err > optimization_tolerance and it < 20:
                 cDecompose.set_Optimized_Parameters(
                     np.random.rand(cDecompose.get_Parameter_Num()) * (2 * np.pi)
                 )
@@ -2796,12 +2796,23 @@ class qgd_Wide_Circuit_Optimization:
                 parameters = cDecompose.get_Optimized_Parameters()
                 err = cDecompose.Optimization_Problem(parameters)
                 it += 1
-            if err > tolerance or it != 0:
+            if err > optimization_tolerance or it != 0:
                 print("Decomposition error: ", err, it)
         else:
             err = cDecompose.get_Decomposition_Error()
-        # print( "Decomposition error: ", err )
-        if tolerance < err:
+
+        # Accept the circuit that Python actually receives, not merely the
+        # optimizer's internal error estimate. At tight tolerances, rebuilding
+        # the returned gate stream can expose rounding differences that matter
+        # to the independently replayed rewrite audit.
+        returned_unitary = squander_circuit.get_Matrix(
+            np.asarray(parameters, dtype=np.float64)
+        )
+        optimizer_reported_error = err
+        err = _unitary_audit_metrics(Umtx, returned_unitary)[
+            "process_infidelity"
+        ]
+        if acceptance_tolerance < err:
             if _rewrite_audit_enabled():
                 _append_rewrite_audit_event(
                     {
@@ -2814,7 +2825,13 @@ class qgd_Wide_Circuit_Optimization:
                             "qubits": int(round(np.log2(Umtx.shape[0]))),
                         },
                         "reported_error": float(err),
-                        "tolerance": float(tolerance),
+                        "optimizer_reported_error": float(
+                            optimizer_reported_error
+                        ),
+                        "tolerance": float(acceptance_tolerance),
+                        "optimization_tolerance": float(
+                            optimization_tolerance
+                        ),
                         "strategy": strategy,
                         "stage": config.get("_rewrite_audit_stage"),
                     }
@@ -2836,10 +2853,12 @@ class qgd_Wide_Circuit_Optimization:
                     "squander_partition_synthesis",
                     target_representation,
                     candidate_representation,
-                    tolerance,
+                    acceptance_tolerance,
                     accepted=False,
                     candidate=True,
                     reported_error=float(err),
+                    optimizer_reported_error=float(optimizer_reported_error),
+                    optimization_tolerance=float(optimization_tolerance),
                     strategy=strategy,
                     stage=config.get("_rewrite_audit_stage"),
                     subtopology=(
@@ -2950,7 +2969,7 @@ class qgd_Wide_Circuit_Optimization:
                     new_subcircuit,
                     decomposed_parameters,
                     parallel=config["parallel"],
-                    tolerance=_squander_validation_tolerance(config)
+                    tolerance=_circuit_validation_tolerance(config)
                 )
 
             new_subcircuit = new_subcircuit.get_Flat_Circuit()
@@ -3773,7 +3792,7 @@ class qgd_Wide_Circuit_Optimization:
                         "squander_selected_partition_rewrite",
                         before,
                         after,
-                        _squander_validation_tolerance(self.config),
+                        _synthesis_acceptance_tolerance(self.config),
                         accepted=True,
                         stage=self.config.get("_rewrite_audit_stage"),
                         round=audit_round,

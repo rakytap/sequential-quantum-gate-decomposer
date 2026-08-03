@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fetch archived BQSKit results and emit five OSR comparison tables."""
+"""Fetch archived BQSKit results and emit OSR comparison tables."""
 
 from __future__ import annotations
 
@@ -59,6 +59,14 @@ def parse_args() -> argparse.Namespace:
         "--no-fetch",
         action="store_true",
         help="compare the existing local BQSKit snapshots without running scp",
+    )
+    parser.add_argument(
+        "--include-4q",
+        action="store_true",
+        help=(
+            "also fetch four-qubit results and emit all five tables; by "
+            "default only the two three-qubit tables are generated"
+        ),
     )
     parser.add_argument(
         "-o",
@@ -200,11 +208,7 @@ def synthesis_process_tolerance(
     configuration = entry.get("configuration")
     if not isinstance(configuration, dict):
         raise RuntimeError(f"{method} result lacks a configuration record")
-    key = (
-        "tolerance"
-        if method == "OSR"
-        else "bqskit_synthesis_validation_tolerance"
-    )
+    key = "synthesis_acceptance_tolerance"
     value = configuration.get(key)
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         raise RuntimeError(f"{method} configuration.{key} is not numeric")
@@ -636,7 +640,8 @@ def main() -> int:
     args = parse_args()
     try:
         if not args.no_fetch:
-            for partition_size in (3, 4):
+            partition_sizes = (3, 4) if args.include_4q else (3,)
+            for partition_size in partition_sizes:
                 fetch_result_group(
                     args.root,
                     args.remote_host,
@@ -647,39 +652,61 @@ def main() -> int:
 
         osr = load_result_group(args.root, 3, args.osr_strategy)
         bqskit = load_result_group(args.root, 3, args.bqskit_strategy)
-        osr_4q = load_result_group(args.root, 4, args.osr_strategy)
-        bqskit_4q = load_result_group(args.root, 4, args.bqskit_strategy)
+        osr_4q = None
+        bqskit_4q = None
+        if args.include_4q:
+            osr_4q = load_result_group(args.root, 4, args.osr_strategy)
+            bqskit_4q = load_result_group(args.root, 4, args.bqskit_strategy)
         if args.output:
             args.output.parent.mkdir(parents=True, exist_ok=True)
             with args.output.open("w", encoding="utf-8") as stream:
                 count_3q = write_comparison_tables(
                     stream, osr, bqskit, "Three-qubit", "three-qubit"
                 )
-                print(file=stream)
-                count_4q = write_comparison_tables(
-                    stream, osr_4q, bqskit_4q, "Four-qubit", "four-qubit"
+                if args.include_4q:
+                    assert osr_4q is not None and bqskit_4q is not None
+                    print(file=stream)
+                    count_4q = write_comparison_tables(
+                        stream,
+                        osr_4q,
+                        bqskit_4q,
+                        "Four-qubit",
+                        "four-qubit",
+                    )
+                    osr_only_4q = write_four_qubit_osr_only_table(
+                        stream, osr_4q, bqskit_4q
+                    )
+            if args.include_4q:
+                print(
+                    f"Wrote five tables to {args.output}: "
+                    f"{count_3q} paired three-qubit circuits, "
+                    f"{count_4q} paired four-qubit circuits, and "
+                    f"{osr_only_4q} unpaired four-qubit OSR circuits",
+                    file=sys.stderr,
                 )
-                osr_only_4q = write_four_qubit_osr_only_table(
-                    stream, osr_4q, bqskit_4q
+            else:
+                print(
+                    f"Wrote two three-qubit tables to {args.output}: "
+                    f"{count_3q} paired circuits",
+                    file=sys.stderr,
                 )
-            print(
-                f"Wrote five tables to {args.output}: "
-                f"{count_3q} paired three-qubit circuits, "
-                f"{count_4q} paired four-qubit circuits, and "
-                f"{osr_only_4q} unpaired four-qubit OSR circuits",
-                file=sys.stderr,
-            )
         else:
             write_comparison_tables(
                 sys.stdout, osr, bqskit, "Three-qubit", "three-qubit"
             )
-            print()
-            write_comparison_tables(
-                sys.stdout, osr_4q, bqskit_4q, "Four-qubit", "four-qubit"
-            )
-            write_four_qubit_osr_only_table(
-                sys.stdout, osr_4q, bqskit_4q
-            )
+            if args.include_4q:
+                assert osr_4q is not None and bqskit_4q is not None
+                print()
+                write_comparison_tables(
+                    sys.stdout,
+                    osr_4q,
+                    bqskit_4q,
+                    "Four-qubit",
+                    "four-qubit",
+                )
+                write_four_qubit_osr_only_table(
+                    sys.stdout, osr_4q, bqskit_4q
+                )
     except RuntimeError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1
