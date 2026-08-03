@@ -27,9 +27,17 @@ from squander.decomposition.qgd_Wide_Circuit_Optimization import (
 from squander.gates.qgd_Circuit import qgd_Circuit as Circuit
 from squander import utils
 from squander import Qiskit_IO
-import time, requests, os, zipfile, tempfile, json, numpy as np
+import argparse
+import hashlib
+import json
+import multiprocessing as mp
+import os
+import queue
+import signal
+import time
+import traceback
+import numpy as np
 from pathlib import Path
-from collections import Counter
 
 # IBM Eagle native gate set (QMill benchmark basis)
 IBM_EAGLE_BASIS = ["cx", "rz", "sx", "x"]
@@ -83,24 +91,278 @@ def save_qasm2(circuit, parameters, output_path):
         temporary_path.unlink(missing_ok=True)
 
 
-def result_paths(max_partition_size):
-    """Return result directories and JSON path for a 3- or 4-qubit run."""
+def audit_paths(output_path):
+    """Return the live JSONL and compressed audit paths beside a result QASM."""
+    output_path = Path(output_path)
+    stem = output_path.with_suffix("")
+    return Path(f"{stem}.audit.jsonl"), Path(f"{stem}.audit.json.gz")
+
+
+def file_sha256(path):
+    """Return the SHA-256 digest of a file's exact bytes."""
+    digest = hashlib.sha256()
+    with open(path, "rb") as source:
+        for block in iter(lambda: source.read(1024 * 1024), b""):
+            digest.update(block)
+    return digest.hexdigest()
+
+
+def result_paths(max_partition_size, strategy):
+    """Return strategy-specific result directories and their JSON files."""
     if max_partition_size not in (3, 4):
         raise ValueError(
             "Archived wide-circuit results support max_partition_size 3 or 4, "
             f"not {max_partition_size}"
         )
-    suffix = f"{max_partition_size}qbit"
+    if (
+        not isinstance(strategy, str)
+        or not strategy
+        or not all(character.isalnum() or character in "-_" for character in strategy)
+    ):
+        raise ValueError(f"Invalid strategy name for result paths: {strategy!r}")
+    suffix = f"{max_partition_size}qbit_{strategy}"
     result_directories = {
         dataset: PARTITIONING_BENCHMARK_ROOT / f"{dataset}_results_{suffix}"
         for dataset in BENCHMARK_DATASETS
     }
     for result_directory in result_directories.values():
         result_directory.mkdir(parents=True, exist_ok=True)
-    return result_directories, REPOSITORY_ROOT / f"results_{suffix}.json"
+    result_files = {
+        dataset: result_directory / "results.json"
+        for dataset, result_directory in result_directories.items()
+    }
+    return result_directories, result_files
+
+
+def optimize_circuit_worker(config, dataset, filename, output_path, result_queue):
+    """Optimize and archive one circuit in an isolated process."""
+    old_audit_path = os.environ.get("SQUANDER_REWRITE_AUDIT_JSONL")
+    try:
+        # Give BQSKit and multiprocessing descendants a dedicated process group
+        # that the parent can terminate together on timeout.
+        if hasattr(os, "setsid"):
+            os.setsid()
+
+        filename = Path(filename)
+        output_path = Path(output_path)
+        audit_jsonl_path, audit_gzip_path = audit_paths(output_path)
+        audit_jsonl_path.unlink(missing_ok=True)
+        os.environ["SQUANDER_REWRITE_AUDIT_JSONL"] = str(audit_jsonl_path)
+        fname = filename.name
+        circ, parameters, _ = utils.qasm_to_squander_circuit(str(filename))
+        worker_config = dict(config)
+        worker_config["topology"] = (
+            Wide_Circuit_Optimization.qgd_Wide_Circuit_Optimization.linear_topology(
+                circ.get_Qbit_Num()
+            )
+        )
+
+        init_stats = CircuitGateStats(circ)
+        optimizer = Wide_Circuit_Optimization.qgd_Wide_Circuit_Optimization(
+            worker_config
+        )
+        start_time = time.monotonic()
+        optcirc, optparameters = optimizer.OptimizeWideCircuit(circ, parameters)
+        elapsed = time.monotonic() - start_time
+
+        opt_stats = CircuitGateStats(optcirc)
+        opt_time = optimizer.config.get("optimization_time")
+        a2a_stats = None
+        routed_stats = None
+        a2a_time = None
+        routing_time = None
+        routed = optimizer.config.get("routed_circuit")
+        if routed is not None:
+            a2a_stats = CircuitGateStats(optimizer.config["all_to_all_circuit"])
+            routed_stats = CircuitGateStats(routed)
+            a2a_time = optimizer.config.get("all_to_all_optimization_time")
+            routing_time = optimizer.config.get("routing_time")
+
+        result_entry = {
+            "file": fname,
+            "dataset": dataset,
+            "output_file": str(output_path.relative_to(REPOSITORY_ROOT)),
+            "status": "completed",
+            "strategy": config["strategy"],
+            "pre_opt_strategy": config["pre-opt-strategy"],
+            "routing_strategy": config["routing-strategy"],
+            "configuration": result_configuration(
+                optimizer.config, circ.get_Qbit_Num()
+            ),
+            "init": init_stats,
+            "final": opt_stats,
+            "timing": {
+                "a2a": round(a2a_time, 2) if a2a_time is not None else None,
+                "routing": (
+                    round(routing_time, 2) if routing_time is not None else None
+                ),
+                "optimization": round(opt_time, 2) if opt_time is not None else None,
+                "total": round(elapsed, 2),
+            },
+        }
+        if a2a_stats is not None:
+            result_entry["all_to_all"] = a2a_stats
+        if routed_stats is not None:
+            result_entry["routed"] = routed_stats
+
+        optimizer.check_compare_circuits(
+            circ,
+            parameters,
+            optcirc,
+            optparameters,
+            routing=routed is not None,
+            label="example final original-to-output",
+        )
+        save_qasm2(optcirc, optparameters, output_path)
+        input_representation = Wide_Circuit_Optimization._squander_audit_representation(
+            circ, parameters, range(circ.get_Qbit_Num())
+        )
+        output_representation = Wide_Circuit_Optimization._squander_audit_representation(
+            optcirc, optparameters, range(optcirc.get_Qbit_Num())
+        )
+        run_metadata = {
+            "input_file": str(filename.relative_to(REPOSITORY_ROOT)),
+            "output_file": str(output_path.relative_to(REPOSITORY_ROOT)),
+            "dataset": dataset,
+            "strategy": config["strategy"],
+            "pre_opt_strategy": config["pre-opt-strategy"],
+            "routing_strategy": config["routing-strategy"],
+            "configuration": result_entry["configuration"],
+            "initial_mapping": optimizer.config.get("initial_mapping"),
+            "final_mapping": optimizer.config.get("final_mapping"),
+            "input_circuit": input_representation,
+            "output_circuit": output_representation,
+            "input_circuit_sha256": (
+                Wide_Circuit_Optimization._exact_state_sha256(
+                    Wide_Circuit_Optimization._qasm_exact_state(
+                        input_representation
+                    )
+                )
+            ),
+            "output_circuit_sha256": (
+                Wide_Circuit_Optimization._exact_state_sha256(
+                    Wide_Circuit_Optimization._qasm_exact_state(
+                        output_representation
+                    )
+                )
+            ),
+            "input_file_sha256": file_sha256(filename),
+            "output_file_sha256": file_sha256(output_path),
+        }
+        rewrite_audit, audit_sha256 = optimizer.save_rewrite_audit(
+            audit_jsonl_path, audit_gzip_path, run_metadata
+        )
+        audit_verification = optimizer.verify_rewrite_audit(
+            audit_gzip_path, expected_sha256=audit_sha256
+        )
+        result_entry["rewrite_audit"] = {
+            "schema_version": rewrite_audit["schema_version"],
+            "file": str(audit_gzip_path.relative_to(REPOSITORY_ROOT)),
+            "sha256": audit_sha256,
+            "summary": rewrite_audit["summary"],
+            **audit_verification,
+        }
+        audit_jsonl_path.unlink(missing_ok=True)
+        result_queue.put({"ok": True, "entry": result_entry})
+    except Exception:
+        result_queue.put({"ok": False, "traceback": traceback.format_exc()})
+    finally:
+        if old_audit_path is None:
+            os.environ.pop("SQUANDER_REWRITE_AUDIT_JSONL", None)
+        else:
+            os.environ["SQUANDER_REWRITE_AUDIT_JSONL"] = old_audit_path
+
+
+def terminate_circuit_process(process, grace_seconds=5.0):
+    """Terminate a circuit worker and descendants without signaling this driver."""
+    if not process.is_alive():
+        process.join()
+        return
+
+    try:
+        process_group = os.getpgid(process.pid)
+    except (AttributeError, ProcessLookupError):
+        process_group = None
+
+    if process_group == process.pid:
+        os.killpg(process_group, signal.SIGTERM)
+    else:
+        process.terminate()
+    process.join(grace_seconds)
+
+    if process.is_alive():
+        try:
+            process_group = os.getpgid(process.pid)
+        except (AttributeError, ProcessLookupError):
+            process_group = None
+        if process_group == process.pid:
+            os.killpg(process_group, signal.SIGKILL)
+        else:
+            process.kill()
+        process.join()
+
+
+def save_results(results_file, results):
+    """Atomically save resumable benchmark metadata."""
+    temporary_path = results_file.with_suffix(results_file.suffix + ".tmp")
+    try:
+        with open(temporary_path, "w") as f:
+            json.dump(results, f, indent=2)
+        os.replace(temporary_path, results_file)
+    finally:
+        temporary_path.unlink(missing_ok=True)
+
+
+def result_configuration(config, qubit_num):
+    """Return the resolved optimization settings needed to reproduce a result."""
+    keys = (
+        "max_partition_size",
+        "tolerance",
+        "circuit_validation_tolerance",
+        "bqskit_synthesis_validation_tolerance",
+        "use_float",
+        "use_osr",
+        "use_graph_search",
+        "auto_expand_partition_size",
+        "partition_strategy",
+        "partition_workers",
+        "beam",
+    )
+    snapshot = {key: config.get(key) for key in keys}
+    partition_size = int(config["max_partition_size"])
+    partition_size_end = partition_size
+    if (
+        config.get("strategy") not in ("bqskit", "qiskit")
+        and config.get("auto_expand_partition_size", False)
+        and (config.get("use_osr", False) or config.get("use_graph_search", False))
+    ):
+        partition_size_end = min(4, qubit_num)
+    snapshot["partition_size_schedule"] = list(
+        range(partition_size, partition_size_end + 1)
+    )
+    return snapshot
 
 
 if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--timeout-hours",
+        type=float,
+        default=24.0,
+        help="Wall-clock limit per circuit; use 0 to disable (default: 24).",
+    )
+    parser.add_argument(
+        "--retry-timeouts",
+        action="store_true",
+        help="Retry circuits already recorded with status=timeout.",
+    )
+    args = parser.parse_args()
+    if args.timeout_hours < 0:
+        parser.error("--timeout-hours must be nonnegative")
+    circuit_timeout = (
+        None if args.timeout_hours == 0 else args.timeout_hours * 60.0 * 60.0
+    )
 
     config = {
         "strategy": "TreeSearch",  # possible values: "TreeSearch", "qiskit", "bqskit", "TabuSearch"
@@ -117,7 +379,9 @@ if __name__ == "__main__":
         "use_float": True,  # whether to use single precision for the optimization (experimental, may cause instability in some cases, but can significantly reduce optimization time and memory usage for large circuits)
         # **{'use_basin_hopping': True, 'bh_T': 1.1822334624366124, 'bh_stepsize': 0.9020671823381502, 'bh_interval': 165, 'bh_target_accept_rate': 0.7037812116166546, 'bh_stepwise_factor': 0.8254028860713254}
     }
-    result_directories, RESULTS_FILE = result_paths(config["max_partition_size"])
+    result_directories, result_files = result_paths(
+        config["max_partition_size"], config["strategy"]
+    )
 
     def get_circuit_stats(filepath):
         """Return (cnot_count, qubit_count) for a QASM file via squander parsing."""
@@ -151,112 +415,155 @@ if __name__ == "__main__":
     print("=" * 60)
 
 
-    # JSON results file with resume support
-    import json
+    # Each dataset directory is a self-contained archive: result circuits,
+    # rewrite audits, and its own resumable results.json.
+    results_by_dataset = {}
+    loaded_count = 0
+    for dataset, results_file in result_files.items():
+        dataset_results = {}
+        if results_file.exists():
+            with results_file.open() as stream:
+                dataset_results = json.load(stream)
+            if not isinstance(dataset_results, dict):
+                raise RuntimeError(f"{results_file} must contain a JSON object")
+            for entry in dataset_results.values():
+                if isinstance(entry, dict):
+                    entry.pop("init_ibm_eagle", None)
+                    entry.pop("final_ibm_eagle", None)
+        results_by_dataset[dataset] = dataset_results
+        loaded_count += len(dataset_results)
+    if loaded_count:
+        print(
+            f"Loaded {loaded_count} existing results; "
+            "will skip already-processed circuits."
+        )
 
-    # Load existing results to skip already-processed circuits
-    existing_results = {}
-    if os.path.exists(RESULTS_FILE):
-        with open(RESULTS_FILE) as f:
-            existing_results = json.load(f)
-        for entry in existing_results.values():
-            if isinstance(entry, dict):
-                entry.pop("init_ibm_eagle", None)
-                entry.pop("final_ibm_eagle", None)
-        print(f"Loaded {len(existing_results)} existing results; will skip already-processed circuits.")
+    def result_is_finished(dataset, fname, output_path):
+        results = results_by_dataset[dataset]
+        entry = results.get(fname)
+        if not isinstance(entry, dict):
+            return False
+        _, audit_gzip_path = audit_paths(output_path)
+        audit_entry = entry.get("rewrite_audit")
+        has_verified_audit = (
+            isinstance(audit_entry, dict)
+            and audit_gzip_path.is_file()
+            and audit_entry.get("file")
+            and audit_entry.get("schema_version")
+            == Wide_Circuit_Optimization.REWRITE_AUDIT_SCHEMA_VERSION
+        )
+        if (
+            output_path.is_file()
+            and has_verified_audit
+            and entry.get("status", "completed") == "completed"
+        ):
+            return True
+        return entry.get("status") == "timeout" and not args.retry_timeouts
 
-    results = existing_results  # merge new results into existing
     completed_count = sum(
-        1
-        for _, _, filename, output_path in files
-        if filename.name in results and output_path.is_file()
+        result_is_finished(dataset, filename.name, output_path)
+        for _, dataset, filename, output_path in files
     )
     for _, dataset, filename, output_path in files:
         fname = filename.name
-        if fname in results and output_path.is_file():
-            print(f"Skipping already processed: {fname}")
+        results = results_by_dataset[dataset]
+        results_file = result_files[dataset]
+        if result_is_finished(dataset, fname, output_path):
+            print(
+                f"Skipping already processed: {fname} "
+                f"({results[fname].get('status', 'completed')})"
+            )
             continue
 
         print(f"executing optimization of circuit: {filename}")
         #if not filename.endswith("_n140.qasm"): continue
 
-        # load the circuit from a file
-        circ, parameters, _ = utils.qasm_to_squander_circuit(str(filename))
-        config["topology"] = (
-            Wide_Circuit_Optimization.qgd_Wide_Circuit_Optimization.linear_topology(
-                circ.get_Qbit_Num()
+        context = mp.get_context("spawn")
+        result_queue = context.Queue()
+        process = context.Process(
+            target=optimize_circuit_worker,
+            args=(config, dataset, str(filename), str(output_path), result_queue),
+        )
+        process.start()
+        try:
+            process.join(circuit_timeout)
+        except KeyboardInterrupt:
+            print(f"\nInterrupted by user while processing {fname}; not recording a timeout.")
+            terminate_circuit_process(process)
+            raise
+
+        if process.is_alive():
+            terminate_circuit_process(process)
+            output_path.with_suffix(output_path.suffix + ".tmp").unlink(
+                missing_ok=True
             )
-        )
+            timeout_circuit, _, _ = utils.qasm_to_squander_circuit(str(filename))
+            timeout_config = dict(config)
+            timeout_config["topology"] = (
+                Wide_Circuit_Optimization.qgd_Wide_Circuit_Optimization.linear_topology(
+                    timeout_circuit.get_Qbit_Num()
+                )
+            )
+            resolved_timeout_config = (
+                Wide_Circuit_Optimization.qgd_Wide_Circuit_Optimization(
+                    timeout_config
+                ).config
+            )
+            result_entry = {
+                "file": fname,
+                "dataset": dataset,
+                "output_file": str(output_path.relative_to(REPOSITORY_ROOT)),
+                "status": "timeout",
+                "timeout_seconds": round(circuit_timeout, 2),
+                "strategy": config["strategy"],
+                "pre_opt_strategy": config["pre-opt-strategy"],
+                "routing_strategy": config["routing-strategy"],
+                "configuration": result_configuration(
+                    resolved_timeout_config, timeout_circuit.get_Qbit_Num()
+                ),
+                "init": CircuitGateStats(timeout_circuit),
+                "timing": {
+                    "a2a": None,
+                    "routing": None,
+                    "optimization": None,
+                    "total": round(circuit_timeout, 2),
+                },
+            }
+            results[fname] = result_entry
+            save_results(results_file, results)
+            completed_count += 1
+            print(
+                f"  timed out after {circuit_timeout / 3600.0:.2f} hours; "
+                "recorded timeout and continuing"
+            )
+            print(f"--- {completed_count}/{len(files)} circuits processed ---")
+            continue
 
-        # pre-optimization stats
-        init_stats = CircuitGateStats(circ)
+        try:
+            worker_result = result_queue.get(timeout=5.0)
+        except queue.Empty as exc:
+            raise RuntimeError(
+                f"Circuit worker for {fname} exited with code {process.exitcode} "
+                "without returning a result."
+            ) from exc
+        finally:
+            result_queue.close()
+            result_queue.join_thread()
 
-        # run circuit optimization
-        wide_circuit_optimizer = (
-            Wide_Circuit_Optimization.qgd_Wide_Circuit_Optimization({**config})
-        )
-        start_time = time.time()
-        optcirc, optparameters = wide_circuit_optimizer.OptimizeWideCircuit(
-            circ, parameters
-        )
-        elapsed = time.time() - start_time
+        if not worker_result["ok"]:
+            raise RuntimeError(
+                f"Circuit optimization failed for {fname}:\n"
+                f"{worker_result['traceback']}"
+            )
 
-        # post-optimization stats
-        opt_stats = CircuitGateStats(optcirc)
-        opt_time = wide_circuit_optimizer.config.get("optimization_time", None)
-
-        # routing stats (if routing was needed)
-        a2a_stats = None
-        routed_stats = None
-        a2a_time = routing_time = None
-        if wide_circuit_optimizer.config.get("routed_circuit", None) is not None:
-            a2acirc = wide_circuit_optimizer.config["all_to_all_circuit"]
-            routedcirc = wide_circuit_optimizer.config["routed_circuit"]
-            a2a_stats = CircuitGateStats(a2acirc)
-            routed_stats = CircuitGateStats(routedcirc)
-            a2a_time = wide_circuit_optimizer.config.get("all_to_all_optimization_time", None)
-            routing_time = wide_circuit_optimizer.config.get("routing_time", None)
-
-        result_entry = {
-            "file": fname,
-            "dataset": dataset,
-            "output_file": str(output_path.relative_to(REPOSITORY_ROOT)),
-            "strategy": config["strategy"],
-            "pre_opt_strategy": config["pre-opt-strategy"],
-            "routing_strategy": config["routing-strategy"],
-            "init": init_stats,
-            "final": opt_stats,
-            "timing": {
-                "a2a": round(a2a_time, 2) if a2a_time else None,
-                "routing": round(routing_time, 2) if routing_time else None,
-                "optimization": round(opt_time, 2) if opt_time else None,
-                "total": round(elapsed, 2),
-            },
-        }
-        if a2a_stats:
-            result_entry["all_to_all"] = a2a_stats
-        if routed_stats:
-            result_entry["routed"] = routed_stats
-
-        wide_circuit_optimizer.check_compare_circuits(
-            circ,
-            parameters,
-            optcirc,
-            optparameters,
-            routing=wide_circuit_optimizer.config.get("routed_circuit", None) is not None,
-            label="example final original-to-output",
-        )
-
-        save_qasm2(optcirc, optparameters, output_path)
-        print(f"  wrote verified result: {output_path}")
-
+        result_entry = worker_result["entry"]
         results[fname] = result_entry
+        save_results(results_file, results)
         completed_count += 1
-
-        # Save after each verified circuit so interrupted runs can resume.
-        with open(RESULTS_FILE, "w") as f:
-            json.dump(results, f, indent=2)
-
+        init_stats = result_entry["init"]
+        opt_stats = result_entry["final"]
+        elapsed = result_entry["timing"]["total"]
+        print(f"  wrote verified result: {output_path}")
         print(f"  init: {init_stats['cnot_equiv']} CNOT, {init_stats['single_qubit']} 1q, "
               f"{init_stats['total_raw']} total, {init_stats['qubits']}q")
         print(f"  final: {opt_stats['cnot_equiv']} CNOT, {opt_stats['single_qubit']} 1q, "
