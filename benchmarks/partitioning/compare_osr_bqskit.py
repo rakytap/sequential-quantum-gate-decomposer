@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
 from pathlib import Path
 import subprocess
@@ -192,6 +193,39 @@ def is_complete(entry: Any) -> bool:
     )
 
 
+def synthesis_process_tolerance(
+    entry: Dict[str, Any], method: str
+) -> float:
+    """Return and validate a result's ``1 - F**2`` block-error budget."""
+    configuration = entry.get("configuration")
+    if not isinstance(configuration, dict):
+        raise RuntimeError(f"{method} result lacks a configuration record")
+    key = (
+        "tolerance"
+        if method == "OSR"
+        else "bqskit_synthesis_validation_tolerance"
+    )
+    value = configuration.get(key)
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise RuntimeError(f"{method} configuration.{key} is not numeric")
+    tolerance = float(value)
+    if not 0.0 <= tolerance <= 1.0:
+        raise RuntimeError(f"{method} configuration.{key} is outside [0, 1]")
+    if method == "BQSKit":
+        epsilon = configuration.get("bqskit_synthesis_epsilon")
+        expected = tolerance / (1.0 + math.sqrt(1.0 - tolerance))
+        if (
+            isinstance(epsilon, bool)
+            or not isinstance(epsilon, (int, float))
+            or float(epsilon) != expected
+        ):
+            raise RuntimeError(
+                "BQSKit result lacks the exact Hilbert-Schmidt tolerance "
+                "conversion required for a fair comparison"
+            )
+    return tolerance
+
+
 def latex_escape(value: str) -> str:
     replacements = {
         "\\": r"\textbackslash{}",
@@ -267,6 +301,15 @@ def comparable_circuits(
             continue
         assert isinstance(osr_entry, dict)
         assert isinstance(bqskit_entry, dict)
+        osr_tolerance = synthesis_process_tolerance(osr_entry, "OSR")
+        bqskit_tolerance = synthesis_process_tolerance(
+            bqskit_entry, "BQSKit"
+        )
+        if osr_tolerance != bqskit_tolerance:
+            raise RuntimeError(
+                f"{name}: unmatched block process-infidelity tolerances: "
+                f"OSR={osr_tolerance:.17g}, BQSKit={bqskit_tolerance:.17g}"
+            )
         if metadata(osr_entry) != metadata(bqskit_entry):
             raise RuntimeError(
                 f"{name}: OSR metadata {metadata(osr_entry)} does not match "
@@ -370,7 +413,8 @@ def write_comparison_tables(
         stream,
         (
             f"{partition_description} partition CNOT counts for OSR and "
-            "BQSKit. Bold values are best within each paired stage."
+            "BQSKit at matched block process-infidelity tolerance. Bold "
+            "values are best within each paired stage."
         ),
         f"tab:osr-bqskit-{label_suffix}-counts",
     )
@@ -452,7 +496,8 @@ def write_comparison_tables(
         stream,
         (
             f"{partition_description} partition stage runtimes for OSR and "
-            "BQSKit, in minutes. Bold values are best within each paired stage."
+            "BQSKit at matched block process-infidelity tolerance, in minutes. "
+            "Bold values are best within each paired stage."
         ),
         f"tab:osr-bqskit-{label_suffix}-times",
     )

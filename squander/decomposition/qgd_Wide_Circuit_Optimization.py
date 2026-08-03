@@ -52,8 +52,6 @@ _SQUANDER_NATIVE_STRATEGIES = frozenset(
 
 SQUANDER_FLOAT64_TOLERANCE = 1e-10
 SQUANDER_FLOAT32_TOLERANCE = 1e-10
-BQSKIT_FLOAT64_SYNTHESIS_VALIDATION_TOLERANCE = 1e-8
-BQSKIT_FLOAT32_SYNTHESIS_VALIDATION_TOLERANCE = 1e-8
 CIRCUIT_FLOAT64_VALIDATION_TOLERANCE = 1e-8
 CIRCUIT_FLOAT32_VALIDATION_TOLERANCE = 1e-8
 
@@ -71,10 +69,10 @@ def _default_squander_tolerance(config):
 
 
 def _default_bqskit_synthesis_validation_tolerance(config):
-    return (
-        BQSKIT_FLOAT32_SYNTHESIS_VALIDATION_TOLERANCE
-        if _config_uses_float32(config)
-        else BQSKIT_FLOAT64_SYNTHESIS_VALIDATION_TOLERANCE
+    """Use the same process-infidelity budget as Squander by default."""
+
+    return float(
+        config.get("tolerance", _default_squander_tolerance(config))
     )
 
 
@@ -103,9 +101,39 @@ def _circuit_validation_tolerance(config):
 
 
 def _bqskit_synthesis_validation_tolerance(config):
+    """Return BQSKit's block budget in Squander's ``1 - F**2`` metric."""
+
     return config.get(
         "bqskit_synthesis_validation_tolerance",
         _default_bqskit_synthesis_validation_tolerance(config),
+    )
+
+
+def _trace_infidelity_from_process_infidelity(process_infidelity):
+    """Convert ``1 - F**2`` to ``1 - F`` without cancellation."""
+
+    process_infidelity = float(process_infidelity)
+    if not 0.0 <= process_infidelity <= 1.0:
+        raise ValueError(
+            "Process infidelity must be between zero and one, got "
+            f"{process_infidelity}."
+        )
+    return process_infidelity / (
+        1.0 + np.sqrt(1.0 - process_infidelity)
+    )
+
+
+def _bqskit_synthesis_epsilon(config):
+    """Return BQSKit's exactly equivalent Hilbert-Schmidt cost threshold.
+
+    Squander cost-function variant 3 and the rewrite audit use
+    ``1 - F**2``. BQSKit's ``HilbertSchmidtCost`` uses ``1 - F``. Here
+    ``F = |Tr(U^dagger V)| / d``, so the conversion is exact and independent
+    of partition width.
+    """
+
+    return _trace_infidelity_from_process_infidelity(
+        _bqskit_synthesis_validation_tolerance(config)
     )
 
 
@@ -1851,10 +1879,14 @@ class SquanderSynthesisPass(_BQSKitSynthesisPass):
         if self.config.get("bqskit_distance_test", False):
             target_unitary = UnitaryMatrix(target)
             distance = target_unitary.get_distance_from(synthesized.get_unitary())
-            tol = _bqskit_synthesis_validation_tolerance(self.config)
-            if distance > tol:
+            process_tolerance = _bqskit_synthesis_validation_tolerance(
+                self.config
+            )
+            distance_tolerance = np.sqrt(process_tolerance)
+            if distance > distance_tolerance:
                 raise _SquanderSynthesisFailed(
-                    f"BQSKit synthesis validation failed: {distance:.2e} > {tol:.2e}"
+                    "BQSKit synthesis validation failed: "
+                    f"{distance:.2e} > {distance_tolerance:.2e}"
                 )
 
         return synthesized
@@ -2543,6 +2575,7 @@ class qgd_Wide_Circuit_Optimization:
             "bqskit_synthesis_validation_tolerance",
             _default_bqskit_synthesis_validation_tolerance(config),
         )
+        config["bqskit_synthesis_epsilon"] = _bqskit_synthesis_epsilon(config)
         config.setdefault("test_subcircuits", False)
         config.setdefault("test_final_circuit", True)
         config.setdefault("max_partition_size", 3)
@@ -2580,6 +2613,10 @@ class qgd_Wide_Circuit_Optimization:
         tolerance = config["tolerance"]
         if not isinstance(tolerance, float):
             raise Exception(f"The tolerance parameter should be a float.")
+        if not 0.0 <= tolerance <= 1.0:
+            raise Exception(
+                "The tolerance parameter should be between zero and one."
+            )
 
         use_float = config["use_float"]
         if not isinstance(use_float, bool):
@@ -2592,11 +2629,21 @@ class qgd_Wide_Circuit_Optimization:
             raise Exception(
                 "The bqskit_synthesis_validation_tolerance parameter should be a float."
             )
+        if not 0.0 <= bqskit_synthesis_validation_tolerance <= 1.0:
+            raise Exception(
+                "The bqskit_synthesis_validation_tolerance parameter should "
+                "be between zero and one."
+            )
 
         circuit_validation_tolerance = config["circuit_validation_tolerance"]
         if not isinstance(circuit_validation_tolerance, float):
             raise Exception(
                 "The circuit_validation_tolerance parameter should be a float."
+            )
+        if not 0.0 <= circuit_validation_tolerance <= 1.0:
+            raise Exception(
+                "The circuit_validation_tolerance parameter should be between "
+                "zero and one."
             )
 
         test_subcircuits = config["test_subcircuits"]
@@ -3216,6 +3263,7 @@ class qgd_Wide_Circuit_Optimization:
 
             # Build BQSKit machine model from your topology
             model = MachineModel(circ.get_Qbit_Num(), self.config["topology"])
+            synthesis_epsilon = _bqskit_synthesis_epsilon(self.config)
 
             # Convert squander circuit → qiskit → BQSKit
             # (BQSKit has a from_qiskit helper if you go via Qiskit IR)
@@ -3234,16 +3282,26 @@ class qgd_Wide_Circuit_Optimization:
                 compilation_workflow = [
                     SetModelPass(model),  # attach hardware model to circuit
                     build_multi_qudit_retarget_workflow(
-                        4, max_synthesis_size=self.max_partition_size
+                        4,
+                        synthesis_epsilon=synthesis_epsilon,
+                        max_synthesis_size=self.max_partition_size,
                     ),
                     build_resynthesis_optimization_workflow(
-                        4, max_synthesis_size=self.max_partition_size, iterative=True
+                        4,
+                        synthesis_epsilon=synthesis_epsilon,
+                        max_synthesis_size=self.max_partition_size,
+                        iterative=True,
                     ),
                     build_single_qudit_retarget_workflow(
-                        4, max_synthesis_size=self.max_partition_size
+                        4,
+                        synthesis_epsilon=synthesis_epsilon,
+                        max_synthesis_size=self.max_partition_size,
                     ),
                     build_gate_deletion_optimization_workflow(
-                        4, max_synthesis_size=self.max_partition_size, iterative=True
+                        4,
+                        synthesis_epsilon=synthesis_epsilon,
+                        max_synthesis_size=self.max_partition_size,
+                        iterative=True,
                     ),
                     LogErrorPass(),
                 ]
@@ -3947,10 +4005,12 @@ class qgd_Wide_Circuit_Optimization:
                 qubits even when ``test_final_circuit`` is false in config. Large
                 comparisons require ``test_final_circuit=True`` explicitly.
 
-        ``self.config['circuit_validation_tolerance']`` is an infidelity
-        threshold for this whole-circuit state-vector check. It is deliberately
-        separate from ``self.config['tolerance']``, which controls block
-        synthesis and block-level validation.
+        ``self.config['circuit_validation_tolerance']`` bounds
+        ``1 - |<psi_original|psi_optimized>|`` for this whole-circuit random
+        state-vector check. It is deliberately separate from
+        ``self.config['tolerance']``, the per-block process infidelity
+        ``1 - |Tr(U^dagger V)/d|^2`` used by Squander and converted exactly for
+        BQSKit synthesis.
         """
         forced_test = circ.get_Qbit_Num() <= 12 and (
             forced_test
@@ -4028,6 +4088,7 @@ class qgd_Wide_Circuit_Optimization:
 
             # Build BQSKit machine model from your topology
             model = MachineModel(circ.get_Qbit_Num(), self.config["topology"])
+            synthesis_epsilon = _bqskit_synthesis_epsilon(self.config)
 
             # Convert squander circuit → qiskit → BQSKit
             # (BQSKit has a from_qiskit helper if you go via Qiskit IR)
@@ -4049,7 +4110,8 @@ class qgd_Wide_Circuit_Optimization:
                     config=self.config,
                 ):
                     mainflow = build_seqpam_mapping_optimization_workflow(
-                        block_size=3  # SEQPAM uses 3-qubit blocks only
+                        synthesis_epsilon=synthesis_epsilon,
+                        block_size=3,  # SEQPAM uses 3-qubit blocks only
                     )
             elif strategy == "seqpam-quick":
                 # Keep BQSKit's QuickPartitioner. QSearch/LEAP are replaced
@@ -4060,7 +4122,8 @@ class qgd_Wide_Circuit_Optimization:
                     config=self.config,
                 ):
                     mainflow = build_seqpam_mapping_optimization_workflow(
-                        block_size=3  # SEQPAM uses 3-qubit blocks only
+                        synthesis_epsilon=synthesis_epsilon,
+                        block_size=3,  # SEQPAM uses 3-qubit blocks only
                     )
             elif strategy == "bqskit-sabre":
                 mainflow = build_sabre_mapping_workflow()

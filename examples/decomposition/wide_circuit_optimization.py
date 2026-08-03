@@ -320,6 +320,7 @@ def result_configuration(config, qubit_num):
         "tolerance",
         "circuit_validation_tolerance",
         "bqskit_synthesis_validation_tolerance",
+        "bqskit_synthesis_epsilon",
         "use_float",
         "use_osr",
         "use_graph_search",
