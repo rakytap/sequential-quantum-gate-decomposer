@@ -99,7 +99,7 @@ CPU_time = 0.0;
         }
 
 
-        long long export_circuit_2_binary_loc;
+        bool export_circuit_2_binary_loc = false;
         if ( config.count("export_circuit_2_binary_bfgs2") > 0 ) {
              config["export_circuit_2_binary_bfgs2"].get_property( export_circuit_2_binary_loc );  
         }
@@ -107,7 +107,7 @@ CPU_time = 0.0;
              config["export_circuit_2_binary"].get_property( export_circuit_2_binary_loc );  
         }
         else {
-            export_circuit_2_binary_loc = 0;
+            export_circuit_2_binary_loc = false;
         }    
         
 
@@ -146,18 +146,20 @@ CPU_time = 0.0;
         sstream << "max_inner_iterations: " << max_inner_iterations_loc  << std::endl;
         print(sstream, 2);
 
-        long long use_basin_hopping = 0;
-        long long use_de = 0;
-        long long use_dual_annealing = 0;
+        bool use_basin_hopping = false;
+        bool use_de = false;
+        bool use_dual_annealing = false;
         if ( config.count("use_basin_hopping") > 0 ) {
             config["use_basin_hopping"].get_property( use_basin_hopping );  
-        } else if ( config.count("use_differential_evolution") > 0 ) {
+        }
+        if ( config.count("use_differential_evolution") > 0 ) {
             config["use_differential_evolution"].get_property( use_de );  
-        } else if ( config.count("use_dual_annealing") > 0 ) {
+        }
+        if ( config.count("use_dual_annealing") > 0 ) {
             config["use_dual_annealing"].get_property( use_dual_annealing );  
         }
         if (!use_basin_hopping && !use_de && !use_dual_annealing) {
-            use_dual_annealing = 1; //use_basin_hopping = 1;
+            use_dual_annealing = true; //use_basin_hopping = true;
         } 
 
         if (use_basin_hopping) {
@@ -237,7 +239,7 @@ CPU_time = 0.0;
                         sstream << "BFGS2: processed iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "%, current minimum:" << current_minimum << std::endl;
                         print(sstream, 2);  
 
-                        if ( export_circuit_2_binary_loc>0) {
+                        if ( export_circuit_2_binary_loc ) {
                             std::string filename("initial_circuit_iteration.binary");
                             if (project_name != "") { 
                                 filename=project_name+ "_"  +filename;
@@ -290,7 +292,7 @@ CPU_time = 0.0;
             double de_recombination = 0.7;     // CR
             double de_tol = 1e-6;
             long long de_init = INIT_RANDOM;    // or INIT_LHS
-            long long de_polish = 1;           // run BFGS after DE?
+            bool de_polish = true;             // run BFGS after DE?
 
 
             if (config.count("de_strategy") > 0)                 config["de_strategy"].get_property(de_strategy);
@@ -299,7 +301,7 @@ CPU_time = 0.0;
             if (config.count("de_recombination") > 0)            config["de_recombination"].get_property(de_recombination);
             if (config.count("de_tol") > 0)                      config["de_tol"].get_property(de_tol);
             if (config.count("de_init") > 0)                     config["de_init"].get_property(de_init);
-            if (config.count("de_polish") > 0) { long long v;    config["de_polish"].get_property(v); de_polish = v ? 1 : 0; }
+            if (config.count("de_polish") > 0)                    config["de_polish"].get_property(de_polish);
 
             // Sanity + derived
             if (de_mutation <= 0.0) de_mutation = 0.8;
@@ -430,7 +432,7 @@ CPU_time = 0.0;
                             << ", best=" << current_minimum << std::endl;
                     print(sstream, 2);
 
-                    if (export_circuit_2_binary_loc > 0) {
+                    if (export_circuit_2_binary_loc) {
                         std::string filename("initial_circuit_iteration.binary");
                         if (project_name != "") filename = project_name + "_" + filename;
                         export_gate_list_to_binary(optimized_parameters_mtx, this, filename, verbose);
@@ -482,7 +484,7 @@ CPU_time = 0.0;
             long long da_maxiter         = iteration_loops_max; // max temperature steps
             long long da_maxfun          = 10000000; // max function evaluations
             double da_tol                = 1e-6;     // required improvement threshold
-            long long da_no_local_search = 0;        // 0 => do local search (polish), 1 => skip
+            bool da_no_local_search = false;         // false => do local search (polish), true => skip
             if (config.count("da_initial_temp") > 0)        config["da_initial_temp"].get_property(da_initial_temp);
             if (config.count("da_restart_temp_ratio") > 0)  config["da_restart_temp_ratio"].get_property(da_restart_temp_ratio);
             if (config.count("da_visit") > 0)               config["da_visit"].get_property(da_visit);
@@ -496,10 +498,8 @@ CPU_time = 0.0;
                 da_maxfun = std::max<long long>(1, v);
             }
             if (config.count("da_tol") > 0)                 config["da_tol"].get_property(da_tol);
-            if (config.count("da_no_local_search") > 0) {
-                long long v; config["da_no_local_search"].get_property(v);
-                da_no_local_search = v ? 1 : 0;
-            }
+            if (config.count("da_no_local_search") > 0)
+                config["da_no_local_search"].get_property(da_no_local_search);
 
             // Sanity
             if (da_initial_temp <= 0.0) da_initial_temp = 5230.0;
@@ -595,7 +595,7 @@ CPU_time = 0.0;
                             << ", T=" << Tk << std::endl;
                     print(sstream, 2);
 
-                    if (export_circuit_2_binary_loc > 0) {
+                    if (export_circuit_2_binary_loc) {
                         std::string filename("initial_circuit_iteration.binary");
                         if (project_name != "") filename = project_name + "_" + filename;
                         export_gate_list_to_binary(optimized_parameters_mtx, this, filename, verbose);
@@ -645,5 +645,3 @@ CPU_time = 0.0;
         //std::cout << "bfgs2 time: " << CPU_time << " " << current_minimum << std::endl;
 
 }
-
-

@@ -96,15 +96,15 @@ Config_Element::set_property( std::string name_, bool val_ ) {
     name = name_;
 
     /// variable to store double parameter value
-    dval = 0.0;
+    dval = val_ ? 1.0 : 0.0;
     /// variable to store bool parameter value
     bval = val_;
     /// variable to store int parameter value
-    ival = 0;
+    ival = val_ ? 1L : 0L;
     /// variable to store long long parameter value
-    llval = 0;
+    llval = val_ ? 1LL : 0LL;
     /// variable to store unsigned long long parameter value
-    ullval = 0;
+    ullval = val_ ? 1ULL : 0ULL;
 
 }
 
@@ -121,15 +121,15 @@ Config_Element::set_property( std::string name_, long val_ ) {
     name = name_;
 
     /// variable to store double parameter value
-    dval = 0.0;
+    dval = static_cast<double>(val_);
     /// variable to store bool parameter value
-    bval = false;
+    bval = val_ != 0;
     /// variable to store int parameter value
     ival = val_;
     /// variable to store long long parameter value
-    llval = 0;
+    llval = static_cast<long long>(val_);
     /// variable to store unsigned long long parameter value
-    ullval = 0;
+    ullval = static_cast<unsigned long long>(val_);
 
 }
 
@@ -146,15 +146,15 @@ Config_Element::set_property( std::string name_, long long val_ ) {
     name = name_;
 
     /// variable to store double parameter value
-    dval = 0.0;
+    dval = static_cast<double>(val_);
     /// variable to store bool parameter value
-    bval = false;
+    bval = val_ != 0;
     /// variable to store int parameter value
-    ival = 0;
+    ival = static_cast<long>(val_);
     /// variable to store long long parameter value
     llval = val_;
     /// variable to store unsigned long long parameter value
-    ullval = 0;
+    ullval = static_cast<unsigned long long>(val_);
 
 }
 
@@ -172,13 +172,13 @@ Config_Element::set_property( std::string name_, unsigned long long val_ ) {
     name = name_;
 
     /// variable to store double parameter value
-    dval = 0.0;
+    dval = static_cast<double>(val_);
     /// variable to store bool parameter value
-    bval = false;
+    bval = val_ != 0;
     /// variable to store int parameter value
-    ival = 0;
+    ival = static_cast<long>(val_);
     /// variable to store long long parameter value
-    llval = 0;
+    llval = static_cast<long long>(val_);
     /// variable to store unsigned long long parameter value
     ullval = val_;
 
@@ -251,4 +251,3 @@ Config_Element::get_property( unsigned long long& val_ ) {
     val_ = ullval;
 
 }
-

@@ -581,14 +581,14 @@ void N_Qubit_Decomposition_Tree_Search::start_decomposition() {
 
     Gates_block* gate_structure_loc = determine_gate_structure(optimized_parameters_mtx);
 
-    long long export_circuit_2_binary_loc;
+    bool export_circuit_2_binary_loc = false;
     if (config.count("export_circuit_2_binary") > 0) {
         config["export_circuit_2_binary"].get_property(export_circuit_2_binary_loc);
     } else {
-        export_circuit_2_binary_loc = 0;
+        export_circuit_2_binary_loc = false;
     }
 
-    if (export_circuit_2_binary_loc > 0) {
+    if (export_circuit_2_binary_loc) {
         std::string filename("circuit_squander.binary");
         if (project_name != "") {
             filename = project_name + "_" + filename;
@@ -637,9 +637,6 @@ Gates_block* N_Qubit_Decomposition_Tree_Search::determine_gate_structure(Matrix_
     if (config.count("tree_level_max") > 0) {
         config["tree_level_max"].get_property(level_max);
     }
-    // Config_Element access is type-specific. These values originate as
-    // Python bools, so reading them through the integer overload silently
-    // returns zero and disables the requested search mode.
     bool use_osr = true;
     if (config.count("use_osr") > 0) {
         config["use_osr"].get_property(use_osr);
@@ -1072,6 +1069,14 @@ GrayCodeCNOT N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures
                     return false;
                 });
 
+            // Every generated insertion can be rejected as a duplicate or a
+            // non-unique structure. In that case no successor exists at this
+            // insertion count; do not dereference the empty greedy frontier.
+            if (top_heap == nullptr) {
+                ++num_cnot;
+                continue;
+            }
+
             //const std::tuple<int, double, std::vector<int>, std::vector<std::pair<int, double>>>& top_best_osr_result = top_heap->get_best_osr_result();
             if (*cur > *top_heap || num_cnot == std::get<0>(cur_best_osr_result)) {
             // if (std::get<0>(top_best_osr_result) < std::get<0>(cur_best_osr_result) ||
@@ -1217,8 +1222,8 @@ TreeSearchResult N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_struct
                     //if (sn > *prefix_it)
                     const std::tuple<int, double, std::vector<int>, std::vector<std::pair<int, double>>>& prefix_osr_result = prefix_it->second.get_best_osr_result();
                     if (std::get<0>(osr_result) > std::get<0>(prefix_osr_result) ||
-                               (std::get<0>(osr_result) == std::get<0>(prefix_osr_result) &&
-                                std::get<1>(osr_result) + 1e-3 < std::get<1>(prefix_osr_result))) {
+                        (std::get<0>(osr_result) == std::get<0>(prefix_osr_result) &&
+                         std::get<1>(osr_result) > std::get<1>(prefix_osr_result) + 1e-3)) {
                         isWorse = true;
                         break;
                     }

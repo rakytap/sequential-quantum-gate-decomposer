@@ -246,14 +246,17 @@ struct SearchNode {
     }
     bool operator<(const SearchNode& other) const { return other > *this; }
     bool operator>(const SearchNode& other) const {
-        // int min_cnots = get_min_cnots();
-        // int other_min_cnots = other.get_min_cnots();
-        // int tot_cnot = path.size() + min_cnots;
-        // int other_tot_cnot = other.path.size() + other_min_cnots;
-        // if (tot_cnot != other_tot_cnot)
-        //     return tot_cnot > other_tot_cnot;
-        //if (min_cnots != other_min_cnots)
-        //    return min_cnots > other_min_cnots;
+        const int min_cnots = get_min_cnots();
+        const int other_min_cnots = other.get_min_cnots();
+        const int total_cnot_bound = path.size() + min_cnots;
+        const int other_total_cnot_bound =
+            other.path.size() + other_min_cnots;
+        if (total_cnot_bound != other_total_cnot_bound) {
+            return total_cnot_bound > other_total_cnot_bound;
+        }
+        if (min_cnots != other_min_cnots) {
+            return min_cnots > other_min_cnots;
+        }
         const std::tuple<int, double, std::vector<int>, std::vector<std::pair<int, double>>>& best_osr = get_best_osr_result();
         const std::tuple<int, double, std::vector<int>, std::vector<std::pair<int, double>>>& other_best_osr = other.get_best_osr_result();
         if (std::get<0>(best_osr) != std::get<0>(other_best_osr))

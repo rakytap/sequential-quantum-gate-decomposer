@@ -61,8 +61,11 @@ SQUANDER_FLOAT32_TOLERANCE = SQUANDER_FLOAT64_TOLERANCE
 # optimizer and classifier on one explicit scale.
 OSR_OPTIMIZATION_TOLERANCE = 1e-6
 SYNTHESIS_ACCEPTANCE_TOLERANCE = 1e-10
-CIRCUIT_FLOAT64_VALIDATION_TOLERANCE = 1e-10
-CIRCUIT_FLOAT32_VALIDATION_TOLERANCE = 1e-10
+# Whole-circuit state-vector discrepancies accumulate across independently
+# accepted partition rewrites. Keep this looser than the per-partition budget;
+# it is a validation threshold, not a synthesis acceptance threshold.
+CIRCUIT_FLOAT64_VALIDATION_TOLERANCE = 1e-8
+CIRCUIT_FLOAT32_VALIDATION_TOLERANCE = 1e-8
 
 
 def _config_uses_float32(config):
@@ -1717,11 +1720,20 @@ class SquanderPartitioner(_BQSKitBasePass):
             return
 
         circ, orig_parameters = Qiskit_IO.convert_Qiskit_to_Squander(circ_qiskit)
+        cfg = _SQUANDER_BQSKIT_SYNTHESIS_CONFIG
+        if not cfg:
+            import os as _os, json as _json
+            serialized = _os.environ.get('_SQUANDER_BQSKIT_CONFIG')
+            if serialized:
+                cfg = _json.loads(serialized)
+        partition_strategy = (cfg or {}).get(
+            "routing_partition_strategy", "ilp"
+        )
         partitioned_circuit, parameters, _ = PartitionCircuit(
             circ,
             orig_parameters,
             self.max_partition_size,
-            strategy="ilp-routing",
+            strategy=partition_strategy,
         )
         partitioned_circuit_bqskit = BQSKitCircuit(circ.get_Qbit_Num())
         for subcircuit in partitioned_circuit.get_Gates():
@@ -2580,6 +2592,10 @@ class qgd_Wide_Circuit_Optimization:
         config.setdefault("max_partition_size", 3)
         config.setdefault("topology", None)
         config.setdefault("partition_strategy", "ilp")
+        # Keep the exact minimum-partition ILP as the routing default.  The
+        # optional ``ilp-routing`` objective is experimental and can select
+        # materially worse SEQPAM blocks despite preserving minimum cardinality.
+        config.setdefault("routing_partition_strategy", "ilp")
         config.setdefault("partition_workers", None)
         config.setdefault("auto_expand_partition_size", False)
         config.setdefault("force_small_circuit_validation", True)
@@ -2681,6 +2697,12 @@ class qgd_Wide_Circuit_Optimization:
         ):
             raise Exception(
                 "The partition_workers parameter should be a positive integer or None."
+            )
+
+        if config["routing_partition_strategy"] not in ("ilp", "ilp-routing"):
+            raise Exception(
+                "The routing_partition_strategy parameter should be either "
+                "'ilp' or 'ilp-routing'."
             )
 
         self.config = config

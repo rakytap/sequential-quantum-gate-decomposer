@@ -126,7 +126,7 @@ void Optimization_Interface::solve_layer_optimization_problem_AGENTS( int num_of
         }
 
         
-        long long export_circuit_2_binary_loc;
+        bool export_circuit_2_binary_loc = false;
         if ( config.count("export_circuit_2_binary_agent") > 0 ) {
              config["export_circuit_2_binary_agent"].get_property( export_circuit_2_binary_loc );  
         }
@@ -134,7 +134,7 @@ void Optimization_Interface::solve_layer_optimization_problem_AGENTS( int num_of
              config["export_circuit_2_binary"].get_property( export_circuit_2_binary_loc );  
         }
         else {
-            export_circuit_2_binary_loc = 0;
+            export_circuit_2_binary_loc = false;
         }            
 
         
@@ -781,7 +781,7 @@ exit(-1);
                         // export the parameters of the current, most successful agent
                         memcpy(optimized_parameters_mtx.get_data(), solution_guess_mtx_agent.get_data(), num_of_parameters*sizeof(double) );
 
-                        if ( export_circuit_2_binary_loc > 0 ) {
+                        if ( export_circuit_2_binary_loc ) {
                             std::string filename("initial_circuit_iteration.binary");
                             if (project_name != "") { 
                                 filename=project_name+ "_"  +filename;
@@ -934,5 +934,4 @@ void Optimization_Interface::solve_layer_optimization_problem_AGENTS_COMBINED( i
         
 
 }
-
 
