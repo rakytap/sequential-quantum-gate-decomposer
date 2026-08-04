@@ -2092,6 +2092,48 @@ def _pam_exact_target(original_unitary, pre_perm, post_perm):
     return np.asarray(exact.get_unitary(), dtype=np.complex128)
 
 
+def _cnot_aware_pam_routing_class(base_class, config):
+    """Make PAM routing value synthesized CNOTs plus three per SWAP pressure.
+
+    BQSKit's PAM objective is::
+
+        mapping_score + two_qubit_gates * gate_count_weight / len(front)
+
+    The mapping score is already averaged over the front (and extended) set.
+    Consequently, its default ``gate_count_weight=0.1`` makes the synthesized
+    block cost vanish as the frontier grows.  For Squander's CNOT-basis SEQPAM
+    candidates, multiply the objective by the positive constant ``len(front)``
+    and instead rank candidates as::
+
+        synthesized_CNOTs + swap_cnot_cost * mapping_score
+
+    ``mapping_score`` is BQSKit's estimate of future SWAP pressure.  Its natural
+    CNOT-equivalent coefficient is three because every inserted SWAP is emitted
+    as three CNOTs.  Multiplying ``_score_perm`` by the coefficient divided by
+    the frontier size implements that objective without copying BQSKit's
+    private permutation enumeration logic.
+    """
+
+    swap_cnot_cost = float(config.get("pam_swap_cnot_cost", 3.0))
+
+    class CNOTAwarePAMPass(base_class):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            # BQSKit counts all multi-qudit operations here.  Squander's EAPP
+            # candidates and topology-safe fallbacks are in the U3+CNOT basis,
+            # so this is exactly their synthesized CNOT count.
+            self.gate_count_weight = 1.0
+
+        def _score_perm(self, circuit, F, pi, D, perm, E):
+            mapping_score = super()._score_perm(circuit, F, pi, D, perm, E)
+            if not F:
+                return 0.0
+            return swap_cnot_cost * mapping_score / len(F)
+
+    CNOTAwarePAMPass.__name__ = f"CNOTAware{base_class.__name__}"
+    return CNOTAwarePAMPass
+
+
 def _audited_pam_class(base_class, config):
     """Wrap PAM routing with a complete, replayable action certificate."""
     configured_audit = _copy_bqskit_synthesis_config(config)
@@ -2376,6 +2418,13 @@ def patched_seqpam_workflow_classes(bqskit_compile_module, use_squander_partitio
         _os.environ['_SQUANDER_BQSKIT_CONFIG'] = _json.dumps(cfg)
         if use_squander_partitioner:
             bqskit_compile_module.QuickPartitioner = SquanderPartitioner
+            # Placement does not emit gates and its bidirectional search needs
+            # BQSKit's mapping-only score.  Replace only the final routing
+            # choice, where synthesized blocks and inserted SWAPs contribute
+            # directly to the emitted CNOT count.
+            bqskit_compile_module.PAMRoutingPass = _cnot_aware_pam_routing_class(
+                original_pam, config
+            )
         if config.get("strategy") in _SQUANDER_NATIVE_STRATEGIES:
             bqskit_compile_module.QSearchSynthesisPass = SquanderSynthesisPass
             bqskit_compile_module.LEAPSynthesisPass = SquanderSynthesisPass
@@ -2384,7 +2433,7 @@ def patched_seqpam_workflow_classes(bqskit_compile_module, use_squander_partitio
                 original_foreach, config
             )
             bqskit_compile_module.PAMRoutingPass = _audited_pam_class(
-                original_pam, config
+                bqskit_compile_module.PAMRoutingPass, config
             )
             bqskit_compile_module.ApplyPlacement = (
                 _audited_apply_placement_class(original_apply_placement, config)
@@ -2596,6 +2645,10 @@ class qgd_Wide_Circuit_Optimization:
         # optional ``ilp-routing`` objective is experimental and can select
         # materially worse SEQPAM blocks despite preserving minimum cardinality.
         config.setdefault("routing_partition_strategy", "ilp")
+        # PAM's mapping-distance score estimates future SWAP pressure.  Each
+        # actual SWAP is emitted as three CNOTs, so compare it against local
+        # synthesis using the same CNOT-equivalent unit.
+        config.setdefault("pam_swap_cnot_cost", 3.0)
         config.setdefault("partition_workers", None)
         config.setdefault("auto_expand_partition_size", False)
         config.setdefault("force_small_circuit_validation", True)
@@ -2704,6 +2757,12 @@ class qgd_Wide_Circuit_Optimization:
                 "The routing_partition_strategy parameter should be either "
                 "'ilp' or 'ilp-routing'."
             )
+
+        pam_swap_cnot_cost = config["pam_swap_cnot_cost"]
+        if not isinstance(pam_swap_cnot_cost, float):
+            raise Exception("The pam_swap_cnot_cost parameter should be a float.")
+        if pam_swap_cnot_cost <= 0.0:
+            raise Exception("The pam_swap_cnot_cost parameter should be positive.")
 
         self.config = config
 

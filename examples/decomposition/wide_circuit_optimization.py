@@ -327,6 +327,8 @@ def result_configuration(config, qubit_num):
         "use_graph_search",
         "auto_expand_partition_size",
         "partition_strategy",
+        "routing_partition_strategy",
+        "pam_swap_cnot_cost",
         "partition_workers",
         "beam",
     )
