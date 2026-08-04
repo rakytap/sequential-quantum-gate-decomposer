@@ -871,8 +871,10 @@ def CNOTGateCount(circ: Circuit, max_gates: int = 0) -> int:
     """Compute weighted two-qubit gate count for a circuit.
 
     The base count is the CNOT-equivalent cost derived from ``CNOT_COUNT_DICT``.
-    When ``max_gates > 0``, the function returns a lexicographic-style score:
+    When ``max_gates > 0``, the function returns a weighted scalar score:
     ``two_qubit_cost * max_gates + single_qubit_gate_count``.
+    This is lexicographic only when ``max_gates`` is strictly greater than the
+    largest possible difference in single-qubit counts.
 
     Args:
         circ: Squander circuit representation.
@@ -1186,14 +1188,15 @@ class qgd_Wide_Circuit_Optimization:
     def CompareAndPickCircuits(
         circs: List[Circuit],
         parameter_arrs: List[np.ndarray],
-        metric: Callable[[Circuit], int] = CNOTGateCount,
+        metric: Callable[[Circuit], Any] = CNOTGateCount,
     ) -> tuple[Circuit, np.ndarray]:
         """Select the circuit with the lowest ``metric`` value.
 
         Args:
             circs: Candidate Squander circuits (same length as ``parameter_arrs``).
             parameter_arrs: Parameter vectors aligned with ``circs``.
-            metric: Scalar cost functional; lower is better. Defaults to ``CNOTGateCount``.
+            metric: Comparable cost value; lower is better. Defaults to
+                ``CNOTGateCount``. Tuples may be used for lexicographic ordering.
 
         Returns:
             ``(best_circuit, best_parameters)`` for the minimizing index.
@@ -1208,11 +1211,7 @@ class qgd_Wide_Circuit_Optimization:
         if len(circs) != len(parameter_arrs):
             raise Exception("The first two arguments should be of the same length")
 
-        metrics = [metric(circ) for circ in circs]
-
-        metrics = np.array(metrics)
-
-        min_idx = np.argmin(metrics)
+        min_idx = min(range(len(circs)), key=lambda idx: metric(circs[idx]))
 
         return circs[min_idx], parameter_arrs[min_idx]
 
@@ -1450,7 +1449,7 @@ class qgd_Wide_Circuit_Optimization:
         Returns:
             Tuple usable as a dict key for memoizing decompositions.
         """
-        return tuple(
+        return (circ.get_Qbit_Num(),) + tuple(
             (gate.get_Name(), tuple(gate.get_Involved_Qbits()))
             for gate in circ.get_Gates()
         ) + tuple(params)
@@ -1479,12 +1478,14 @@ class qgd_Wide_Circuit_Optimization:
         allparts, g, go, rgo, single_qubit_chains, gate_to_qubit, gate_to_tqubit = (
             recombine_info
         )
-        max_gates = sum(
+        # One additional CNOT must cost more than every possible difference in
+        # the selected partitions' combined single-qubit count.
+        cnot_weight = 1 + sum(
             sum(y for x, y in c.get_Gate_Nums().items() if CNOT_COUNT_DICT.get(x, -1) <= 0)
             for c in optimized_subcircuits[: len(allparts)]
         )
         weights = [
-            CNOTGateCount(circ, max_gates)
+            CNOTGateCount(circ, cnot_weight)
             for circ in optimized_subcircuits[: len(allparts)]
         ]
         L, fusion_info = ilp_global_optimal(allparts, g, weights=weights)
@@ -1707,10 +1708,6 @@ class qgd_Wide_Circuit_Optimization:
         from squander.utils import circuit_to_CNOT_basis
 
         circ, orig_parameters = circuit_to_CNOT_basis(circ, orig_parameters)
-        max_gates = sum(
-            y for x, y in circ.get_Gate_Nums().items() if CNOT_COUNT_DICT.get(x, -1) <= 0
-        )
-
         global_min = self.config.get("global_min", True)
         if global_min:
             partitioned_circuit, parameters, recombine_info, part_deps = (
@@ -1770,7 +1767,7 @@ class qgd_Wide_Circuit_Optimization:
             callback_fnc = lambda x: self.CompareAndPickCircuits(
                 [subcircuit, *(z[0] for z in x)],
                 [subcircuit_parameters, *(z[1] for z in x)],
-                lambda c: CNOTGateCount(c, max_gates),
+                lambda c: (CNOTGateCount(c), SingleQubitGateCount(c)),
             )
             if fingerprint_dict is not None and fingerprint in fingerprint_dict:
                 new_subcircuit, new_parameters = fingerprint_dict[fingerprint]

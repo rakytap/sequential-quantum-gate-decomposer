@@ -57,12 +57,9 @@ def create_custom_gate_structure_QX2(qbit_num):
 
         if qbit == 0:
 
-            # add U3 gate to the block
-            Theta = True
-            Phi = False
-            Lambda = True      
-            Layer.add_U3( 0, Theta, Phi, Lambda )                 
-            Layer.add_U3( disentangle_qbit, Theta, Phi, Lambda ) 
+            # add U3 gate to the block    
+            Layer.add_U3( 0 )                 
+            Layer.add_U3( disentangle_qbit ) 
 
             # add CNOT gate to the block
             Layer.add_CNOT( 0, disentangle_qbit)
@@ -70,12 +67,9 @@ def create_custom_gate_structure_QX2(qbit_num):
         elif qbit == 1:
 
 ## [create gate struct]
-            # add U3 gate to the block
-            Theta = True
-            Phi = False
-            Lambda = True      
-            Layer.add_U3( 0, Theta, Phi, Lambda )                 
-            Layer.add_U3( 1, Theta, Phi, Lambda ) 
+            # add U3 gate to the block  
+            Layer.add_U3( 0 )                 
+            Layer.add_U3( 1 ) 
 
             # add CNOT gate to the block
             Layer.add_CNOT( 0, 1)
@@ -84,12 +78,9 @@ def create_custom_gate_structure_QX2(qbit_num):
 
         elif qbit == 2:
 
-            # add U3 gate to the block
-            Theta = True
-            Phi = False
-            Lambda = True      
-            Layer.add_U3( 2, Theta, Phi, Lambda )                 
-            Layer.add_U3( disentangle_qbit, Theta, Phi, Lambda ) 
+            # add U3 gate to the block  
+            Layer.add_U3( 2 )                 
+            Layer.add_U3( disentangle_qbit ) 
 
             # add CNOT gate to the block
             Layer.add_CNOT( 2, disentangle_qbit )

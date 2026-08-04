@@ -2184,6 +2184,8 @@ get_gate( Gates_block* circuit, int &idx ) {
         PyErr_SetString(PyExc_Exception, "Module import error: squander.gates.gates_Wrapper" );
         return NULL;
     }
+
+
     if (gate->get_type() == CNOT_OPERATION) {
 
 
@@ -2214,6 +2216,15 @@ get_gate( Gates_block* circuit, int &idx ) {
     get_gate_template_two_qubit(CR)
     get_gate_template_two_qubit(CROT)
     get_gate_template_two_qubit(CP)
+    else if (gate->get_type() == ADAPTIVE_OPERATION) {
+        PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
+        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "CRY");
+        PyObject* gate_input = Py_BuildValue("(OOO)", qbit_num, target_qbit, control_qbit);
+        py_gate              = PyObject_CallObject(py_gate_class, gate_input);
+        qgd_Gate* py_gate_C = reinterpret_cast<qgd_Gate*>( py_gate );
+        delete( py_gate_C->gate );
+        py_gate_C->gate = static_cast<Gate*>( gate->clone() );
+    }
     else if (gate->get_type() == SWAP_OPERATION){
         // SWAP now uses vector-based interface
         std::vector<int> target_qbits_vec = gate->get_target_qbits();
@@ -2639,9 +2650,9 @@ qgd_Circuit_Wrapper_get_gates( qgd_Circuit_Wrapper *self ) {
 
         // adding gate information to the tuple
         PyTuple_SetItem( ret, (Py_ssize_t) idx, gate );
+    
 
     }
-
 
     return ret;
 
@@ -2837,6 +2848,82 @@ qgd_Circuit_Wrapper_Extract_Parameters( qgd_Circuit_Wrapper *self, PyObject *arg
     return extracted_parameters_py;
 }
 
+
+
+/**
+@brief Export the circuit and its parameters into Squander binary format
+@param self A pointer pointing to an instance of the class qgd_Circuit_Wrapper
+@param args A tuple of the input arguments: filename (str), parameters (numpy array)
+@return Returns None on success
+*/
+static PyObject *
+qgd_Circuit_Wrapper_export_to_Binary( qgd_Circuit_Wrapper *self, PyObject *args ) {
+
+    PyObject* filename_py = NULL;
+    PyObject* parameters_obj = NULL;
+
+    if (!PyArg_ParseTuple(args, "OO", &filename_py, &parameters_obj)) {
+        return NULL;
+    }
+
+    PyObject* filename_string = PyObject_Str(filename_py);
+    if (filename_string == NULL) {
+        return NULL;
+    }
+    PyObject* filename_unicode = PyUnicode_AsEncodedString(filename_string, "utf-8", "~E~");
+    Py_DECREF(filename_string);
+    if (filename_unicode == NULL) {
+        return NULL;
+    }
+    const char* filename_C = PyBytes_AS_STRING(filename_unicode);
+    std::string filename_str(filename_C);
+
+    PyArrayObject* parameters_arr = NULL;
+    if ( PyArray_Check(parameters_obj) && PyArray_IS_C_CONTIGUOUS((PyArrayObject*)parameters_obj) &&
+         PyArray_TYPE((PyArrayObject*)parameters_obj) == NPY_DOUBLE ) {
+        parameters_arr = (PyArrayObject*)parameters_obj;
+        Py_INCREF(parameters_arr);
+    }
+    else {
+        parameters_arr = (PyArrayObject*)PyArray_FROM_OTF(parameters_obj, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+    }
+
+    if (parameters_arr == NULL) {
+        Py_DECREF(filename_unicode);
+        PyErr_SetString(PyExc_TypeError, "export_to_Binary: parameters must be a float64 numpy array");
+        return NULL;
+    }
+
+    Matrix_real parameters_mtx = numpy2matrix_real(parameters_arr);
+
+    try {
+        if (parameters_mtx.size() != self->circuit->get_parameter_num()) {
+            std::string err("export_to_Binary: number of parameters (" +
+                            std::to_string(parameters_mtx.size()) +
+                            ") must equal the number of free parameters in the circuit (" +
+                            std::to_string(self->circuit->get_parameter_num()) + ").");
+            throw err;
+        }
+        export_gate_list_to_binary(parameters_mtx, self->circuit, filename_str);
+    }
+    catch (std::string err) {
+        Py_DECREF(parameters_arr);
+        Py_DECREF(filename_unicode);
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+    catch (...) {
+        Py_DECREF(parameters_arr);
+        Py_DECREF(filename_unicode);
+        PyErr_SetString(PyExc_Exception, "export_to_Binary: failed to export circuit");
+        return NULL;
+    }
+
+    Py_DECREF(parameters_arr);
+    Py_DECREF(filename_unicode);
+    Py_RETURN_NONE;
+
+}
 
 
 /**
@@ -3418,6 +3505,9 @@ static PyMethodDef qgd_Circuit_Wrapper_Methods[] = {
     },
     {"Extract_Parameters", (PyCFunction) qgd_Circuit_Wrapper_Extract_Parameters, METH_VARARGS,
      "Call to extract the parameters corresponding to the gate from a parameter array associated with the circuit in which the gate is embedded."
+    },
+    {"export_to_Binary", (PyCFunction) qgd_Circuit_Wrapper_export_to_Binary, METH_VARARGS,
+     "Export the circuit and its parameters into Squander binary format. Arguments: filename (str), parameters (numpy array)."
     },
     {"get_Flat_Circuit", (PyCFunction) qgd_Circuit_Wrapper_get_Flat_Circuit, METH_NOARGS,
      "Method to generate a flat circuit. A flat circuit does not contain subcircuits: there are no Gates_block instances (containing subcircuits) in the resulting circuit. If the original circuit contains subcircuits, the gates in the subcircuits are directly incorporated in the resulting flat circuit."

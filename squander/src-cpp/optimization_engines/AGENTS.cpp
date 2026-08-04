@@ -870,8 +870,8 @@ exit(-1);
 
                 if ( iter_idx % agent_lifetime_loc == 0 && agent_idx == 0) {
                     std::stringstream sstream;
-                    sstream << "AGENTS, agent " << agent_idx << ": processed iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "%";
-                    sstream << ", current minimum of agent 0: " << current_minimum_agents[ 0 ] << " global current minimum: " << current_minimum  << " CPU time: " << CPU_time;
+                    sstream << "AGENTS " << ": processed iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "%";
+                    sstream << ", global current minimum: " << current_minimum  << " CPU time on optimization logic: " << CPU_time;
                     sstream << " circuit simulation time: " << circuit_simulation_time  << std::endl;
                     print(sstream, 3); 
                 }

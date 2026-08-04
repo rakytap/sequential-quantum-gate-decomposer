@@ -111,9 +111,9 @@ protected:
     int trace_offset;
 
 
-    /// Time spent on circuit simulation/cost function evaluation
+    /// Time spent on circuit simulation/cost function evaluation [seconds]
     double circuit_simulation_time;
-    /// time spent on optimization
+    /// Time spent on optimization [seconds]
     double CPU_time;    
 
 
