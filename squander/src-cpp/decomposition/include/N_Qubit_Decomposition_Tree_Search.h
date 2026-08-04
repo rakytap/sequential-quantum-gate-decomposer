@@ -457,7 +457,7 @@ class N_Qubit_Decomposition_Tree_Search : public Optimization_Interface {
     */
     N_Qubit_Decomposition_custom perform_optimization(
         Gates_block* gate_structure_loc,
-        bool use_float_target = false
+        bool osr_scoring = false
     );
 
     // Bring base class add_finalyzing_layer into scope to avoid hiding

@@ -38,6 +38,10 @@ limitations under the License.
 #include <time.h>
 #include <unordered_map>
 
+namespace {
+constexpr double DEFAULT_OSR_OPTIMIZATION_TOLERANCE = 1e-6;
+}
+
 /**
 @brief Structure containing the result of a BFS level enumeration.
 This structure contains the visited states, sequence pairs, and the output results from enumerating a single BFS level.
@@ -633,16 +637,19 @@ Gates_block* N_Qubit_Decomposition_Tree_Search::determine_gate_structure(Matrix_
     if (config.count("tree_level_max") > 0) {
         config["tree_level_max"].get_property(level_max);
     }
-    long long use_osr = 1;
+    // Config_Element access is type-specific. These values originate as
+    // Python bools, so reading them through the integer overload silently
+    // returns zero and disables the requested search mode.
+    bool use_osr = true;
     if (config.count("use_osr") > 0) {
         config["use_osr"].get_property(use_osr);
     }
-    long long use_graph_search = 1;
+    bool use_graph_search = true;
     if (config.count("use_graph_search") > 0) {
         config["use_graph_search"].get_property(use_graph_search);
     }
 
-    long long stop_first_solution = 1;
+    bool stop_first_solution = true;
     if (config.count("stop_first_solution") > 0) {
         config["stop_first_solution"].get_property(stop_first_solution);
     }
@@ -963,7 +970,14 @@ GrayCodeCNOT N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures
     });
     // If topology entries are actual gates, the path stores topology indices.
     double Fnorm = std::sqrt(static_cast<double>(1 << qbit_num));
-    double osr_tol = 1e-3;
+    double osr_optimization_tolerance_loc =
+        DEFAULT_OSR_OPTIMIZATION_TOLERANCE;
+    if (config.count("osr_optimization_tolerance") > 0) {
+        config["osr_optimization_tolerance"].get_property(
+            osr_optimization_tolerance_loc
+        );
+    }
+    double osr_tol = std::sqrt(osr_optimization_tolerance_loc);
     MinCnotBoundSolver osr_bound_solver(qbit_num, all_cuts, topology);
     //std::priority_queue<SearchNode, std::vector<SearchNode>, std::greater<SearchNode>> heap;
     std::unique_ptr<SearchNode> top_heap;
@@ -1120,7 +1134,7 @@ TreeSearchResult N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_struct
     } else {
         optimization_tolerance_loc = optimization_tolerance;
     }
-    long long stop_first_solution = 1;
+    bool stop_first_solution = true;
     if (config.count("stop_first_solution") > 0) {
         config["stop_first_solution"].get_property(stop_first_solution);
     }
@@ -1142,7 +1156,14 @@ TreeSearchResult N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_struct
     int64_t iteration_max = all_pairs.size();
     std::vector<GrayCodeCNOT> successful_solutions;
     double Fnorm = std::sqrt(static_cast<double>(1 << qbit_num));
-    double osr_tol = 1e-3;
+    double osr_optimization_tolerance_loc =
+        DEFAULT_OSR_OPTIMIZATION_TOLERANCE;
+    if (config.count("osr_optimization_tolerance") > 0) {
+        config["osr_optimization_tolerance"].get_property(
+            osr_optimization_tolerance_loc
+        );
+    }
+    double osr_tol = std::sqrt(osr_optimization_tolerance_loc);
 
     // determine the concurrency of the calculation
     unsigned int nthreads = std::thread::hardware_concurrency();
@@ -1448,20 +1469,33 @@ GrayCodeCNOT N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures
 /**
 @brief Call to perform the optimization on the given gate structure
 @param gate_structure_loc The gate structure to be optimized (can be nullptr)
-@param use_float_target If true, use the float32 target for OSR structure
-scoring. False keeps the original float64 target for Hilbert-Schmidt refinement.
+@param osr_scoring If true, configure this optimizer for OSR scoring, including
+the OSR convergence tolerance and optional float32 target. False configures it
+for Hilbert-Schmidt synthesis using the user-specified tolerance and float64 target.
 @return Returns an instance of N_Qubit_Decomposition_custom with optimized parameters
 */
 N_Qubit_Decomposition_custom N_Qubit_Decomposition_Tree_Search::perform_optimization(
     Gates_block* gate_structure_loc,
-    bool use_float_target
+    bool osr_scoring
 ) {
 
-    double optimization_tolerance_loc;
+    double hilbert_schmidt_tolerance_loc;
     if (config.count("optimization_tolerance") > 0) {
-        config["optimization_tolerance"].get_property(optimization_tolerance_loc);
+        config["optimization_tolerance"].get_property(hilbert_schmidt_tolerance_loc);
     } else {
-        optimization_tolerance_loc = optimization_tolerance;
+        hilbert_schmidt_tolerance_loc = optimization_tolerance;
+    }
+
+    // Only calls made for OSR cost-function scoring pass osr_scoring=true.
+    // Keep that optimizer's numerical convergence
+    // independent from the user-specified Hilbert-Schmidt synthesis target.
+    // The fixed-structure candidate optimization in determine_gate_structure
+    // calls this with false and therefore always uses the HS tolerance.
+    double cost_tolerance_loc = osr_scoring
+        ? DEFAULT_OSR_OPTIMIZATION_TOLERANCE
+        : hilbert_schmidt_tolerance_loc;
+    if (osr_scoring && config.count("osr_optimization_tolerance") > 0) {
+        config["osr_optimization_tolerance"].get_property(cost_tolerance_loc);
     }
 
     // OSR structure scoring may use the float32 target, but Hilbert-Schmidt
@@ -1469,9 +1503,12 @@ N_Qubit_Decomposition_custom N_Qubit_Decomposition_Tree_Search::perform_optimiza
     // back to double leaves a slightly nonunitary, quantized target and creates
     // an artificial fidelity floor.
     std::map<std::string, Config_Element> optimization_config = config;
-    bool optimization_uses_float = use_float && use_float_target;
+    bool optimization_uses_float = use_float && osr_scoring;
     optimization_config["use_float"].set_property(
         "use_float", optimization_uses_float
+    );
+    optimization_config["optimization_tolerance"].set_property(
+        "optimization_tolerance", cost_tolerance_loc
     );
 
     N_Qubit_Decomposition_custom cDecomp_custom_random;
@@ -1495,7 +1532,7 @@ N_Qubit_Decomposition_custom N_Qubit_Decomposition_Tree_Search::perform_optimiza
 #endif
     cDecomp_custom_random.set_cost_function_variant(cost_fnc);
     cDecomp_custom_random.set_debugfile("");
-    cDecomp_custom_random.set_optimization_tolerance(optimization_tolerance_loc);
+    cDecomp_custom_random.set_optimization_tolerance(cost_tolerance_loc);
     cDecomp_custom_random.set_trace_offset(trace_offset);
     cDecomp_custom_random.set_optimizer(alg);
     cDecomp_custom_random.set_project_name(project_name);

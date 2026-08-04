@@ -56,6 +56,10 @@ SQUANDER_FLOAT64_TOLERANCE = 1e-14
 # ``use_float`` selects the faster float32 OSR search, but the final
 # Hilbert-Schmidt refinement is deliberately performed in float64.
 SQUANDER_FLOAT32_TOLERANCE = SQUANDER_FLOAT64_TOLERANCE
+# OSR minimizes squared tail singular values. Its relative singular-value rank
+# cutoff is derived as sqrt(OSR_OPTIMIZATION_TOLERANCE) in C++, keeping the
+# optimizer and classifier on one explicit scale.
+OSR_OPTIMIZATION_TOLERANCE = 1e-6
 SYNTHESIS_ACCEPTANCE_TOLERANCE = 1e-10
 CIRCUIT_FLOAT64_VALIDATION_TOLERANCE = 1e-10
 CIRCUIT_FLOAT32_VALIDATION_TOLERANCE = 1e-10
@@ -2559,6 +2563,10 @@ class qgd_Wide_Circuit_Optimization:
         config.setdefault("use_float", False)
         config.setdefault("tolerance", _default_squander_tolerance(config))
         config.setdefault(
+            "osr_optimization_tolerance",
+            OSR_OPTIMIZATION_TOLERANCE,
+        )
+        config.setdefault(
             "circuit_validation_tolerance",
             _default_circuit_validation_tolerance(config),
         )
@@ -2607,6 +2615,19 @@ class qgd_Wide_Circuit_Optimization:
         if not 0.0 <= tolerance <= 1.0:
             raise Exception(
                 "The tolerance parameter should be between zero and one."
+            )
+
+        osr_optimization_tolerance = config[
+            "osr_optimization_tolerance"
+        ]
+        if not isinstance(osr_optimization_tolerance, float):
+            raise Exception(
+                "The osr_optimization_tolerance parameter should be a float."
+            )
+        if not 0.0 <= osr_optimization_tolerance <= 1.0:
+            raise Exception(
+                "The osr_optimization_tolerance parameter should be between "
+                "zero and one."
             )
 
         use_float = config["use_float"]
