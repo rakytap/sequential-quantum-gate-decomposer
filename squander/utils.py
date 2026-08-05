@@ -500,7 +500,7 @@ def circuit_to_CNOT_basis(circ: Circuit, parameters: np.ndarray):
                     + gate.get_Parameter_Num()
                 ],
             )
-            circuit.add_Gate(subcircuit)
+            circuit.add_Circuit(subcircuit)
             params.append(subparams)
         elif isinstance(gate, CH):
             circuit.add_RY(gate.get_Target_Qbit())
@@ -721,7 +721,7 @@ def circuit_to_CNOT_basis(circ: Circuit, parameters: np.ndarray):
                 ]
             )
 
-    return circuit, np.concatenate(params)
+    return circuit.get_Flat_Circuit(), np.concatenate(params)
 
 
 def test_circuit_to_CNOT_basis():

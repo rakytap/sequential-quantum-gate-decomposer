@@ -47,6 +47,8 @@ BENCHMARK_DATASETS = {
     "IBMEagle": PARTITIONING_BENCHMARK_ROOT / "IBMEagle",
     "QASMBenchmarks": PARTITIONING_BENCHMARK_ROOT / "QASMBenchmarks",
 }
+DATASET_STATS_CACHE = PARTITIONING_BENCHMARK_ROOT / "dataset_stats.json"
+DATASET_STATS_SCHEMA_VERSION = 1
 
 
 def transpile_to_ibm_eagle(qasm_path_or_circ, parameters=None):
@@ -105,6 +107,60 @@ def file_sha256(path):
         for block in iter(lambda: source.read(1024 * 1024), b""):
             digest.update(block)
     return digest.hexdigest()
+
+
+def load_dataset_stats_cache(cache_path=DATASET_STATS_CACHE):
+    """Load content-addressed benchmark sorting statistics."""
+    try:
+        with Path(cache_path).open() as stream:
+            cache = json.load(stream)
+    except (FileNotFoundError, json.JSONDecodeError, OSError):
+        return {}
+    if (
+        not isinstance(cache, dict)
+        or cache.get("schema_version") != DATASET_STATS_SCHEMA_VERSION
+        or not isinstance(cache.get("files"), dict)
+    ):
+        return {}
+    return cache["files"]
+
+
+def cached_circuit_stats(filepath, cache):
+    """Return sortable circuit stats, parsing only on a content cache miss."""
+    filepath = Path(filepath)
+    relative_path = filepath.relative_to(REPOSITORY_ROOT).as_posix()
+    digest = file_sha256(filepath)
+    cached = cache.get(relative_path)
+    if (
+        isinstance(cached, dict)
+        and cached.get("sha256") == digest
+        and isinstance(cached.get("cnot_count"), int)
+        and isinstance(cached.get("qubit_count"), int)
+    ):
+        return (
+            (cached["cnot_count"], cached["qubit_count"]),
+            cached,
+            True,
+        )
+
+    circ, _, _ = utils.qasm_to_squander_circuit(str(filepath))
+    entry = {
+        "sha256": digest,
+        "cnot_count": int(CNOTGateCount(circ, 0)),
+        "qubit_count": int(circ.get_Qbit_Num()),
+    }
+    return (entry["cnot_count"], entry["qubit_count"]), entry, False
+
+
+def save_dataset_stats_cache(entries, cache_path=DATASET_STATS_CACHE):
+    """Atomically store only the currently archived benchmark inputs."""
+    save_results(
+        Path(cache_path),
+        {
+            "schema_version": DATASET_STATS_SCHEMA_VERSION,
+            "files": dict(sorted(entries.items())),
+        },
+    )
 
 
 def result_paths(max_partition_size, strategy):
@@ -378,7 +434,7 @@ if __name__ == "__main__":
         "use_graph_search": True,
         "auto_expand_partition_size": False,
         "pre-opt-strategy": "TreeSearch",  # possible values: "TreeSearch", "qiskit", "bqskit", "TabuSearch"
-        "routing-strategy": "seqpam-ilp",  # possible values: "sabre", "light-sabre", "bqskit-sabre", "seqpam-quick", "seqpam-ilp"
+        "routing-strategy": "exact-osr",  # possible values: "exact-osr", "sabre", "light-sabre", "bqskit-sabre", "seqpam-quick", "seqpam-ilp"
         # "tolerance": 1e-14,  # Squander Hilbert-Schmidt optimization target
         # "osr_optimization_tolerance": 1e-6,  # squared OSR tail cost; rank cutoff is its square root (1e-3)
         # "synthesis_acceptance_tolerance": 1e-10,  # Common block budget
@@ -389,21 +445,27 @@ if __name__ == "__main__":
         config["max_partition_size"], config["strategy"]
     )
 
-    def get_circuit_stats(filepath):
-        """Return (cnot_count, qubit_count) for a QASM file via squander parsing."""
-        circ, _, _ = utils.qasm_to_squander_circuit(str(filepath))
-        return CNOTGateCount(circ, 0), circ.get_Qbit_Num()
-
     # Inputs are curated in-repository, so no generated-file or reset filtering
     # is needed here. Each final circuit is written under the same filename in
     # the dataset's corresponding result directory.
+    cached_stats = load_dataset_stats_cache()
+    current_stats = {}
+    cache_hits = 0
+    cache_misses = 0
     files = []
     for dataset, input_directory in BENCHMARK_DATASETS.items():
         result_directory = result_directories[dataset]
         for filepath in input_directory.glob("*.qasm"):
             output_path = result_directory / filepath.name
+            stats, cache_entry, cache_hit = cached_circuit_stats(
+                filepath, cached_stats
+            )
+            relative_path = filepath.relative_to(REPOSITORY_ROOT).as_posix()
+            current_stats[relative_path] = cache_entry
+            cache_hits += int(cache_hit)
+            cache_misses += int(not cache_hit)
             files.append(
-                (get_circuit_stats(filepath), dataset, filepath, output_path)
+                (stats, dataset, filepath, output_path)
             )
     files.sort(key=lambda item: item[0])
 
@@ -411,6 +473,12 @@ if __name__ == "__main__":
         raise RuntimeError(
             f"Expected 77 archived benchmark circuits, found {len(files)}"
         )
+    if cache_misses or current_stats != cached_stats:
+        save_dataset_stats_cache(current_stats)
+    print(
+        f"Dataset statistics: {cache_hits} cached, {cache_misses} parsed; "
+        f"cache={DATASET_STATS_CACHE.relative_to(REPOSITORY_ROOT)}"
+    )
 
     print("=== Running circuits in order of (CNOT_count, qubit_count) ===")
     for (cnots, qubits), dataset, filepath, _ in files:

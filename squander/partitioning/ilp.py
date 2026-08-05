@@ -48,7 +48,12 @@ def _solve_pulp_with_gurobi_or_cbc(prob, pulp, callback=None, **gurobi_kwargs):
         return "gurobi"
     except Exception as exc:
         _print_gurobi_fallback_warning(exc)
-        prob.solve(pulp.PULP_CBC_CMD(msg=False))
+        cbc_kwargs = {}
+        if gurobi_kwargs.get("timeLimit") is not None:
+            cbc_kwargs["timeLimit"] = gurobi_kwargs["timeLimit"]
+        if gurobi_kwargs.get("Threads") is not None:
+            cbc_kwargs["threads"] = gurobi_kwargs["Threads"]
+        prob.solve(pulp.PULP_CBC_CMD(msg=False, **cbc_kwargs))
         return "cbc"
 
 
