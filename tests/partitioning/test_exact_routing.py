@@ -11,7 +11,9 @@ from squander.decomposition.qgd_Wide_Circuit_Optimization import (
     qgd_Wide_Circuit_Optimization,
 )
 from squander.partitioning.routing import (
+    ExactRoutingResult,
     RoutingAlternative,
+    RoutingSelection,
     _process_infidelity,
     cnot_schmidt_lower_bound,
     permuted_partition_target,
@@ -118,6 +120,54 @@ def test_line_topology_breaks_the_initial_mapping_reflection_symmetry():
     )
 
     assert result.initial_mapping == (0, 1, 2, 3)
+
+
+def test_ilp_submits_a_feasible_sabre_incumbent_as_a_mip_start(monkeypatch):
+    import pulp
+    from squander.partitioning import ilp as partitioning_ilp
+
+    captured = {}
+
+    def solve_with_cbc(prob, _pulp, callback=None, **kwargs):
+        captured["warm_start"] = kwargs.get("warmStart")
+        captured["values"] = {
+            variable.name: variable.varValue for variable in prob.variables()
+        }
+        prob.solve(pulp.PULP_CBC_CMD(msg=False, warmStart=True))
+        return "cbc"
+
+    monkeypatch.setattr(
+        partitioning_ilp, "_solve_pulp_with_gurobi_or_cbc", solve_with_cbc
+    )
+    local = RoutingAlternative(0, (0, 1), (0, 1), (0, 1), 1)
+    sabre = RoutingAlternative(1, (0, 1), (0, 1), (0, 1), 3)
+    warm_start = ExactRoutingResult(
+        selections=(RoutingSelection(1, sabre),),
+        cnot_count=3,
+        single_qubit_count=0,
+        initial_mapping=(0, 1),
+        final_mapping=(0, 1),
+        explored_states=0,
+        master_backend="sabre-mip-start",
+        optimal=False,
+    )
+
+    result = solve_exact_routing_ilp(
+        gate_predecessors={0: ()},
+        gate_qubits={0: (0, 1)},
+        partitions=[{0}, {0}],
+        alternatives={0: [local], 1: [sabre]},
+        logical_qubit_count=2,
+        warm_start=warm_start,
+    )
+
+    assert captured["warm_start"] is True
+    assert captured["values"]["cfg_0"] == 0
+    assert captured["values"]["cfg_1"] == 1
+    assert captured["values"]["location_q0_b0_p0"] == 1
+    assert captured["values"]["location_q1_b0_p1"] == 1
+    # The seed supplies the bound; the master remains free to improve it.
+    assert result.cnot_count == 1
 
 
 def test_ilp_rejects_a_cyclic_partition_quotient():
@@ -589,7 +639,7 @@ def test_sabre_incumbent_guarantees_and_audits_a_feasible_route(
     _verify_exact_osr_routing_replay(event)
 
 
-def test_route_wide_timeout_returns_verified_sabre_incumbent():
+def test_route_wide_timeout_returns_verified_light_sabre_incumbent():
     circuit = qgd_Circuit(4)
     circuit.add_CNOT(0, 3)
     result = route_circuit_exact(
@@ -604,7 +654,7 @@ def test_route_wide_timeout_returns_verified_sabre_incumbent():
 
     assert result.timed_out is True
     assert result.solution.optimal is False
-    assert result.solution.master_backend == "sabre-timeout-incumbent"
+    assert result.solution.master_backend == "light-sabre-timeout-incumbent"
     assert (
         result.solution.selections[0].alternative.payload.certificate_kind
         == "sabre"

@@ -41,13 +41,13 @@ dependencies = [
     "scipy",
     "networkx",
     "pybind11",
+    "pulp>=2.7",
 ]
 
 [project.optional-dependencies]
 dev = [
     "pytest",
 ]
-
 
 
 

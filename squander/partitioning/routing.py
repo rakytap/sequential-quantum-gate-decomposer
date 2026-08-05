@@ -440,6 +440,143 @@ def _normalize_edges(edges: Iterable[Sequence[int]]) -> frozenset[frozenset[int]
     )
 
 
+def _path_topology_order(
+    edges: Iterable[Sequence[int]], width: int
+) -> tuple[int, ...] | None:
+    """Return a deterministic endpoint-to-endpoint order for a path topology."""
+    width = int(width)
+    if width < 2:
+        return None
+    adjacency = {physical: set() for physical in range(width)}
+    for edge in _normalize_edges(edges):
+        left, right = tuple(edge)
+        if left not in adjacency or right not in adjacency:
+            return None
+        adjacency[left].add(right)
+        adjacency[right].add(left)
+    endpoints = sorted(
+        physical
+        for physical, neighbours in adjacency.items()
+        if len(neighbours) == 1
+    )
+    if (
+        len(endpoints) != 2
+        or sum(map(len, adjacency.values())) != 2 * (width - 1)
+        or any(not 1 <= len(neighbours) <= 2 for neighbours in adjacency.values())
+    ):
+        return None
+    path = [endpoints[0]]
+    previous = None
+    while len(path) < width:
+        candidates = adjacency[path[-1]] - (
+            set() if previous is None else {previous}
+        )
+        if len(candidates) != 1:
+            return None
+        previous, current = path[-1], next(iter(candidates))
+        path.append(current)
+    return tuple(path)
+
+
+def _canonicalize_path_reflection(
+    circuit,
+    initial_mapping: Sequence[int],
+    final_mapping: Sequence[int],
+    topology: Iterable[Sequence[int]],
+):
+    """Mirror a path route when needed to satisfy the ILP symmetry anchor."""
+    initial_mapping = tuple(map(int, initial_mapping))
+    final_mapping = tuple(map(int, final_mapping))
+    width = len(initial_mapping)
+    path = _path_topology_order(topology, width)
+    if path is None:
+        return circuit, initial_mapping, final_mapping
+    position = {physical: index for index, physical in enumerate(path)}
+    midpoint = (width - 1) / 2.0
+    mirror = position[initial_mapping[0]] > midpoint
+    if (
+        not mirror
+        and width % 2 == 1
+        and width > 1
+        and position[initial_mapping[0]] == midpoint
+    ):
+        mirror = position[initial_mapping[1]] > midpoint
+    if not mirror:
+        return circuit, initial_mapping, final_mapping
+    reflection = {
+        physical: path[-1 - index] for index, physical in enumerate(path)
+    }
+    return (
+        circuit.Remap_Qbits(reflection, width).get_Flat_Circuit(),
+        tuple(reflection[physical] for physical in initial_mapping),
+        tuple(reflection[physical] for physical in final_mapping),
+    )
+
+
+def _light_sabre_route(
+    circuit,
+    parameters: np.ndarray,
+    topology: Iterable[Sequence[int]],
+    config: Mapping[str, Any],
+):
+    """Return Qiskit LightSABRE's validated routing-seed candidate."""
+    from qiskit.transpiler import CouplingMap, PassManager
+    from qiskit.transpiler.passes import SabreLayout, SabreSwap
+    from squander import Qiskit_IO
+
+    qiskit_circuit = Qiskit_IO.get_Qiskit_Circuit(
+        circuit, np.asarray(parameters, dtype=np.float64)
+    )
+    coupling_map = CouplingMap(
+        [[int(left), int(right)] for left, right in topology]
+    )
+    seed = config.get(
+        "sabre_seed", config.get("exact_routing_random_seed", 42)
+    )
+    if seed is None:
+        seed = 42
+    layout_trials = int(config.get("sabre_trials", 5))
+    swap_trials = int(config.get("sabre_swap_trials", layout_trials))
+    max_iterations = int(config.get("sabre_max_iterations", 3))
+    if layout_trials < 1 or swap_trials < 1 or max_iterations < 1:
+        raise ValueError("LightSABRE trial and iteration counts must be positive.")
+    pass_manager = PassManager(
+        [
+            SabreLayout(
+                coupling_map,
+                seed=int(seed),
+                max_iterations=max_iterations,
+                swap_trials=swap_trials,
+                layout_trials=layout_trials,
+            ),
+            SabreSwap(
+                coupling_map,
+                heuristic=config.get("sabre_heuristic", "decay"),
+                seed=int(seed),
+                trials=swap_trials,
+            ),
+        ]
+    )
+    routed_qiskit = pass_manager.run(qiskit_circuit)
+    if routed_qiskit.layout is None:
+        raise AssertionError("LightSABRE did not return routing-layout metadata.")
+    initial_mapping = tuple(
+        map(int, routed_qiskit.layout.initial_index_layout())
+    )
+    final_mapping = tuple(
+        map(int, routed_qiskit.layout.final_index_layout())
+    )
+    routed_circuit, routed_parameters = Qiskit_IO.convert_Qiskit_to_Squander(
+        routed_qiskit
+    )
+    return (
+        routed_circuit.get_Flat_Circuit(),
+        np.asarray(routed_parameters, dtype=np.float64),
+        initial_mapping,
+        final_mapping,
+    )
+
+
 def topology_automorphisms(
     edges: Iterable[Sequence[int]],
     width: int,
@@ -2642,6 +2779,7 @@ def solve_exact_routing_ilp(
     timeout_seconds: float | None = None,
     max_states: int | None = None,
     allow_suboptimal: bool = False,
+    warm_start: ExactRoutingResult | None = None,
     _model_cache: dict | None = None,
     _model_cache_key=None,
 ) -> ExactRoutingResult:
@@ -2914,52 +3052,62 @@ def solve_exact_routing_ilp(
         # representative placing logical qubit zero in the first half. For an
         # odd path, qubit zero may occupy the fixed center; qubit one then
         # breaks the remaining reflection tie.
-        adjacency = {physical: set() for physical in range(physical_qubit_count)}
-        for edge in _normalize_edges(topology):
-            left, right = tuple(edge)
-            if left in adjacency and right in adjacency:
-                adjacency[left].add(right)
-                adjacency[right].add(left)
-        endpoints = sorted(
-            physical for physical, neighbours in adjacency.items()
-            if len(neighbours) == 1
-        )
-        is_path = (
-            len(endpoints) == 2
-            and sum(len(neighbours) for neighbours in adjacency.values())
-            == 2 * (physical_qubit_count - 1)
-            and all(1 <= len(neighbours) <= 2 for neighbours in adjacency.values())
-        )
-        if is_path:
-            path = [endpoints[0]]
-            previous = None
-            while len(path) < physical_qubit_count:
-                candidates = adjacency[path[-1]] - (
-                    set() if previous is None else {previous}
-                )
-                if not candidates:
-                    break
-                previous, current = path[-1], min(candidates)
-                path.append(current)
-            if len(path) == physical_qubit_count:
-                path_position = {
-                    physical: position for position, physical in enumerate(path)
-                }
-                midpoint = (physical_qubit_count - 1) / 2.0
-                initial_position_zero = pulp.lpSum(
-                    path_position[physical] * location[0, 0, physical]
+        path = _path_topology_order(topology, physical_qubit_count)
+        if path is not None:
+            path_position = {
+                physical: position for position, physical in enumerate(path)
+            }
+            midpoint = (physical_qubit_count - 1) / 2.0
+            initial_position_zero = pulp.lpSum(
+                path_position[physical] * location[0, 0, physical]
+                for physical in range(physical_qubit_count)
+            )
+            prob += initial_position_zero <= midpoint
+            if physical_qubit_count % 2 == 1 and logical_qubit_count > 1:
+                center_physical = path[physical_qubit_count // 2]
+                initial_position_one = pulp.lpSum(
+                    path_position[physical] * location[1, 0, physical]
                     for physical in range(physical_qubit_count)
                 )
-                prob += initial_position_zero <= midpoint
-                if physical_qubit_count % 2 == 1 and logical_qubit_count > 1:
-                    center_physical = path[physical_qubit_count // 2]
-                    initial_position_one = pulp.lpSum(
-                        path_position[physical] * location[1, 0, physical]
-                        for physical in range(physical_qubit_count)
-                    )
-                    prob += initial_position_one <= midpoint + (
-                        physical_qubit_count - 1
-                    ) * (1 - location[0, 0, center_physical])
+                prob += initial_position_one <= midpoint + (
+                    physical_qubit_count - 1
+                ) * (1 - location[0, 0, center_physical])
+
+    if warm_start is not None:
+        node_by_identity = {
+            id(alternative): node for node, alternative in enumerate(nodes)
+        }
+        warm_nodes = []
+        for selection in warm_start.selections:
+            node = node_by_identity.get(id(selection.alternative))
+            if node is None:
+                raise ValueError(
+                    "Exact-routing warm start contains an unknown alternative."
+                )
+            warm_nodes.append(node)
+        warm_node_set = set(warm_nodes)
+        if len(warm_node_set) != len(warm_nodes):
+            raise ValueError("Exact-routing warm start repeats an alternative.")
+        covered = collections.Counter(
+            gate
+            for node in warm_nodes
+            for gate in partition_sets[nodes[node].partition]
+        )
+        if any(covered[gate] != 1 for gate in gate_indices):
+            raise ValueError("Exact-routing warm start is not an exact cover.")
+        for node in range(len(nodes)):
+            x[node].setInitialValue(int(node in warm_node_set))
+        for logical in range(logical_qubit_count):
+            initial_physical = int(warm_start.initial_mapping[logical])
+            final_physical = int(warm_start.final_mapping[logical])
+            last_boundary = wire_boundary_count[logical] - 1
+            for physical in range(physical_qubit_count):
+                location[logical, 0, physical].setInitialValue(
+                    int(physical == initial_physical)
+                )
+                location[logical, last_boundary, physical].setInitialValue(
+                    int(physical == final_physical)
+                )
 
     for node, alternative in enumerate(nodes):
         boundaries = partition_boundaries[alternative.partition]
@@ -3067,6 +3215,8 @@ def solve_exact_routing_ilp(
                     f"The routing ILP exceeded {timeout_seconds} seconds."
                 )
         solve_kwargs = {} if remaining is None else {"timeLimit": remaining}
+        if warm_start is not None and persistent_entry is None:
+            solve_kwargs["warmStart"] = True
         if cycle_callback is not None:
             solve_kwargs.update({"IntegralityFocus": 1, "LazyConstraints": 1})
         if persistent_entry is None:
@@ -3262,6 +3412,7 @@ def solve_exact_routing(*, backend="ilp", **kwargs) -> ExactRoutingResult:
     if backend in ("branch-and-bound", "bnb"):
         kwargs.pop("allow_suboptimal", None)
         kwargs.pop("topology", None)
+        kwargs.pop("warm_start", None)
         return solve_exact_routing_branch_and_bound(**kwargs)
     raise ValueError(
         "Unknown exact-routing master backend "
@@ -3509,7 +3660,7 @@ def route_circuit_exact(
     )
     from squander.synthesis.qgd_SABRE import qgd_SABRE as SABRE
 
-    sabre = SABRE(
+    native_sabre = SABRE(
         circuit,
         topology,
         random_seed=config.get("exact_routing_random_seed"),
@@ -3530,7 +3681,7 @@ def route_circuit_exact(
             for physical in range(circuit.get_Qbit_Num())
             if physical not in assigned
         )
-        sabre.pi = np.asarray(
+        native_sabre.pi = np.asarray(
             [
                 next(available) if value < 0 else value
                 for value in requested_initial_mapping
@@ -3538,30 +3689,94 @@ def route_circuit_exact(
             dtype=int,
         )
     (
+        native_circuit,
+        native_parameters,
+        native_initial_mapping,
+        native_final_mapping,
+        _swap_count,
+    ) = native_sabre.map_circuit(parameters)
+    seed_candidates = [
+        (
+            "sabre",
+            native_circuit.get_Flat_Circuit(),
+            np.asarray(native_parameters, dtype=np.float64),
+            tuple(map(int, native_initial_mapping)),
+            tuple(map(int, native_final_mapping)),
+        )
+    ]
+    # A caller-fixed input placement must be preserved exactly. LightSABRE's
+    # bidirectional layout search deliberately chooses its own initial layout,
+    # so it joins the normal unconstrained seed portfolio only.
+    if requested_initial_mapping is None:
+        seed_candidates.append(
+            (
+                "light-sabre",
+                *_light_sabre_route(circuit, parameters, topology, config),
+            )
+        )
+
+    normalized_candidates = []
+    expected_mapping = tuple(range(circuit.get_Qbit_Num()))
+    for (
+        seed_strategy,
+        seed_circuit,
+        seed_parameters,
+        seed_initial_mapping,
+        seed_final_mapping,
+    ) in seed_candidates:
+        seed_circuit = seed_circuit.get_Flat_Circuit()
+        seed_parameters = np.asarray(seed_parameters, dtype=np.float64)
+        seed_initial_mapping = tuple(map(int, seed_initial_mapping))
+        seed_final_mapping = tuple(map(int, seed_final_mapping))
+        _assert_local_topology(seed_circuit, topology)
+        if (
+            tuple(sorted(seed_initial_mapping)) != expected_mapping
+            or tuple(sorted(seed_final_mapping)) != expected_mapping
+        ):
+            raise AssertionError(
+                f"{seed_strategy} seed returned an invalid mapping."
+            )
+        if requested_initial_mapping is None:
+            (
+                seed_circuit,
+                seed_initial_mapping,
+                seed_final_mapping,
+            ) = _canonicalize_path_reflection(
+                seed_circuit,
+                seed_initial_mapping,
+                seed_final_mapping,
+                topology,
+            )
+            _assert_local_topology(seed_circuit, topology)
+        normalized_candidates.append(
+            (
+                CNOTGateCount(seed_circuit, 0),
+                SingleQubitGateCount(seed_circuit),
+                seed_strategy,
+                seed_circuit,
+                seed_parameters,
+                seed_initial_mapping,
+                seed_final_mapping,
+            )
+        )
+
+    (
+        _seed_cnot_count,
+        _seed_single_qubit_count,
+        seed_strategy,
         sabre_circuit,
         sabre_parameters,
         sabre_initial_mapping,
         sabre_final_mapping,
-        _swap_count,
-    ) = sabre.map_circuit(parameters)
-    sabre_circuit = sabre_circuit.get_Flat_Circuit()
-    sabre_parameters = np.asarray(sabre_parameters, dtype=np.float64)
-    _assert_local_topology(sabre_circuit, topology)
-    sabre_initial_mapping = tuple(map(int, sabre_initial_mapping))
-    sabre_final_mapping = tuple(map(int, sabre_final_mapping))
-    if (
-        tuple(sorted(sabre_initial_mapping)) != tuple(range(circuit.get_Qbit_Num()))
-        or tuple(sorted(sabre_final_mapping)) != tuple(range(circuit.get_Qbit_Num()))
-    ):
-        raise AssertionError("SABRE fallback returned an invalid mapping.")
+    ) = min(normalized_candidates, key=lambda candidate: candidate[:3])
     fallback_logical_qubits = tuple(range(circuit.get_Qbit_Num()))
     fallback_alternative = RoutingAlternative(
         partition=fallback_partition,
         logical_qubits=fallback_logical_qubits,
         input_physical=sabre_initial_mapping,
         output_physical=sabre_final_mapping,
-        cnot_count=CNOTGateCount(sabre_circuit, 0),
-        single_qubit_count=SingleQubitGateCount(sabre_circuit),
+        cnot_count=_seed_cnot_count,
+        single_qubit_count=_seed_single_qubit_count,
         payload=SynthesizedRoutingPayload(
             circuit=sabre_circuit,
             parameters=sabre_parameters,
@@ -3577,6 +3792,16 @@ def route_circuit_exact(
     )
     feasible_alternatives[fallback_partition] = (fallback_alternative,)
     optimistic_alternatives[fallback_partition] = (fallback_alternative,)
+    sabre_warm_start = ExactRoutingResult(
+        selections=(RoutingSelection(fallback_partition, fallback_alternative),),
+        cnot_count=fallback_alternative.cnot_count,
+        single_qubit_count=fallback_alternative.single_qubit_count,
+        initial_mapping=sabre_initial_mapping,
+        final_mapping=sabre_final_mapping,
+        explored_states=0,
+        master_backend=f"{seed_strategy}-mip-start",
+        optimal=False,
+    )
 
     def finish_with_timeout(solution=None):
         if solution is None:
@@ -3589,7 +3814,7 @@ def route_circuit_exact(
                 initial_mapping=sabre_initial_mapping,
                 final_mapping=sabre_final_mapping,
                 explored_states=0,
-                master_backend="sabre-timeout-incumbent",
+                master_backend=f"{seed_strategy}-timeout-incumbent",
                 optimal=False,
             )
         else:
@@ -3763,6 +3988,7 @@ def route_circuit_exact(
         "timeout_seconds": master_timeout,
         "max_states": config.get("exact_routing_max_states"),
         "allow_suboptimal": True,
+        "warm_start": sabre_warm_start,
     }
     refined_transition_groups = set()
     lazy_rounds = 0

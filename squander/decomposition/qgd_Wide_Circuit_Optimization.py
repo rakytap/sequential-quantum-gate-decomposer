@@ -5234,6 +5234,7 @@ class qgd_Wide_Circuit_Optimization:
             sabre_seed = self.config.get("sabre_seed", 42)
             sabre_trials = self.config.get("sabre_trials", 5)  # layout trials
             swap_trials = self.config.get("sabre_swap_trials", sabre_trials)
+            sabre_max_iterations = self.config.get("sabre_max_iterations", 3)
             heuristic = self.config.get(
                 "sabre_heuristic", "decay"
             )  # "basic" | "lookahead" | "decay"
@@ -5241,8 +5242,9 @@ class qgd_Wide_Circuit_Optimization:
             layout_pass = SabreLayout(
                 coupling_map,
                 seed=sabre_seed,
-                max_iterations=sabre_trials,
+                max_iterations=sabre_max_iterations,
                 swap_trials=swap_trials,
+                layout_trials=sabre_trials,
             )
             swap_pass = SabreSwap(
                 coupling_map,
