@@ -1238,7 +1238,14 @@ def _append_exact_osr_routing_event(
         output_circuit, output_parameters, range(output_circuit.get_Qbit_Num())
     )
     selections = []
-    for selection in exact_route.solution.selections:
+    transition_swaps = exact_route.solution.transition_swaps or tuple(
+        () for _selection in exact_route.solution.selections
+    )
+    if len(transition_swaps) != len(exact_route.solution.selections):
+        raise AssertionError("Exact routing SWAP certificate length mismatch.")
+    for swaps_before, selection in zip(
+        transition_swaps, exact_route.solution.selections
+    ):
         alternative = selection.alternative
         payload = alternative.payload
         if payload.source_circuit is None or payload.source_parameters is None:
@@ -1272,6 +1279,9 @@ def _append_exact_osr_routing_event(
                 "source": source,
                 "synthesized": synthesized,
                 "certificate_kind": certificate_kind,
+                "swaps_before": [
+                    [int(left), int(right)] for left, right in swaps_before
+                ],
                 "tolerance": float(tolerance),
             }
         if certificate_kind == "sabre":
@@ -1331,7 +1341,15 @@ def _append_exact_osr_routing_event(
                 exact_route.solution.single_qubit_count
             ),
             "explored_states": int(exact_route.solution.explored_states),
+            "solver_nodes": exact_route.solution.solver_nodes,
+            "solver_bound": exact_route.solution.solver_bound,
+            "solver_gap": exact_route.solution.solver_gap,
+            "solver_solutions": exact_route.solution.solver_solutions,
             "optimal": bool(exact_route.solution.optimal),
+            "cnot_optimal": bool(
+                exact_route.solution.optimal
+                or exact_route.solution.cnot_optimal
+            ),
             "timed_out": bool(exact_route.timed_out),
             "selections": selections,
         }
@@ -1355,6 +1373,19 @@ def _verify_exact_osr_routing_replay(event):
     mapping = [int(q) for q in event["initial_mapping"]]
     topology = {frozenset((int(u), int(v))) for u, v in event["topology"]}
     for selection in event["selections"]:
+        for edge in selection.get("swaps_before", []):
+            left, right = map(int, edge)
+            if frozenset((left, right)) not in topology:
+                raise AssertionError("Exact OSR transition SWAP violates topology.")
+            left_logical = mapping.index(left)
+            right_logical = mapping.index(right)
+            mapping[left_logical], mapping[right_logical] = (
+                mapping[right_logical],
+                mapping[left_logical],
+            )
+            expected_operations.append(
+                {"name": "swap", "qubits": [left, right], "params": []}
+            )
         source_indices = [int(index) for index in selection["source_gate_indices"]]
         if any(index in consumed for index in source_indices):
             raise AssertionError("Exact OSR selections overlap.")
@@ -2027,6 +2058,20 @@ def _fallback_circuit_for_permutation(original_circuit, graph, pi, po):
     for u, v in graph:
         topo_edges.add((u, v))
         topo_edges.add((v, u))
+
+    if tuple(pi) == tuple(po):
+        # Equal boundary permutations are a change of wire labels, not a
+        # physical permutation that must be implemented twice.  In
+        # particular, reversing a two-qubit CNOT remains one CNOT; encoding
+        # it as SWAP-CNOT-SWAP poisons routing costs by six CNOTs.
+        relabeled = original_circuit.copy()
+        relabeled.renumber_qudits(tuple(pi))
+        try:
+            _assert_circuit_respects_topology(relabeled, topo_edges)
+        except AssertionError:
+            pass
+        else:
+            return relabeled
 
     fallback = _BQCircuit(width, original_circuit.radixes)
 
@@ -3457,18 +3502,32 @@ class qgd_Wide_Circuit_Optimization:
         # materially worse SEQPAM blocks despite preserving minimum cardinality.
         config.setdefault("routing_partition_strategy", "ilp")
         config.setdefault("routing-strategy", "exact-osr")
-        # The exact OSR router uses the compact PuLP mapping-flow ILP unless
-        # branch-and-bound (or availability-based auto selection) is requested
-        # explicitly.
-        config.setdefault("exact_routing_master", "ilp")
+        # Use the compact PuLP/Gurobi Benders master. It separates exact-cover
+        # column choice from the complete mapping/SWAP trajectory, while the
+        # monolithic ILP remains selectable as a cross-check.
+        config.setdefault("exact_routing_master", "benders")
         # Price every symmetry-distinct boundary permutation with OSR by
         # default. The Schmidt-bound-guided lazy mode is an explicit speed
         # option rather than part of the publication-quality path.
         config.setdefault("exact_routing_lazy_osr", False)
-        # Bound the complete exact-routing stage, including OSR pricing and
-        # every master reoptimization. On expiry the router returns its
-        # verified SABRE incumbent and records that optimality was not proven.
-        config.setdefault("exact_routing_total_timeout_seconds", 20 * 60)
+        # Routing prices each symmetry-distinct permutation exactly once.
+        # Additional randomized retries multiply the dominant OSR cost and
+        # make the exhaustive global router impractical on benchmark-scale
+        # circuits. The topology-valid fallback already supplies a strict
+        # per-target CNOT ceiling to the single attempt.
+        config.setdefault("exact_routing_synthesis_restarts", 1)
+        # The former mapping-flow model is incomplete as a router because it
+        # cannot insert arbitrary inter-block SWAPs, but any solution it does
+        # find is a valid, compact MIP start for the complete staged model.
+        config.setdefault("exact_routing_flow_seed", True)
+        config.setdefault("exact_routing_flow_seed_timeout_seconds", 30.0)
+        # Bound cumulative routing-ILP time (compact master, flow certificates,
+        # and fixed-cover oracles). Partition enumeration and OSR pricing must
+        # finish so the master sees the complete column set; they are excluded.
+        config.setdefault("exact_routing_timeout_seconds", 20 * 60)
+        # CNOT count is the primary publication metric. Stop once its global
+        # lower bound closes; proving the single-qubit tie is optional.
+        config.setdefault("exact_routing_require_tiebreaker_proof", False)
         config.setdefault("seqpam_preoptimization", False)
         # PAM's mapping-distance score estimates future SWAP pressure.  Each
         # actual SWAP is emitted as three CNOTs, so compare it against local
@@ -5052,7 +5111,7 @@ class qgd_Wide_Circuit_Optimization:
                 exact_route.solution.explored_states
             )
             self.config["exact_routing_master"] = self.config.get(
-                "exact_routing_master", "ilp"
+                "exact_routing_master", "benders"
             )
             self.config["exact_routing_master_used"] = (
                 exact_route.solution.master_backend
@@ -5070,8 +5129,24 @@ class qgd_Wide_Circuit_Optimization:
             self.config["exact_routing_optimal"] = bool(
                 exact_route.solution.optimal
             )
+            self.config["exact_routing_cnot_optimal"] = bool(
+                exact_route.solution.optimal
+                or exact_route.solution.cnot_optimal
+            )
             self.config["exact_routing_timed_out"] = bool(
                 exact_route.timed_out
+            )
+            self.config["exact_routing_solver_nodes"] = (
+                exact_route.solution.solver_nodes
+            )
+            self.config["exact_routing_solver_bound"] = (
+                exact_route.solution.solver_bound
+            )
+            self.config["exact_routing_solver_gap"] = (
+                exact_route.solution.solver_gap
+            )
+            self.config["exact_routing_solver_solutions"] = (
+                exact_route.solution.solver_solutions
             )
             if _rewrite_audit_enabled():
                 _append_exact_osr_routing_event(

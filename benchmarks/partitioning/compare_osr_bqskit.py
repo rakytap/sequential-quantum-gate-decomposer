@@ -4,10 +4,12 @@
 from __future__ import annotations
 
 import argparse
+import gzip
+import hashlib
 import json
 import math
 import os
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import subprocess
 import sys
 import tempfile
@@ -25,8 +27,9 @@ TIME_FIELDS = ("a2a", "routing", "optimization")
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
-            "Fetch the in-progress BQSKit results and compare every circuit "
-            "completed by both BQSKit and OSR."
+            "Mirror the in-progress BQSKit metadata, final circuits, and "
+            "rewrite audits, then compare every circuit completed by both "
+            "BQSKit and OSR."
         )
     )
     parser.add_argument(
@@ -58,7 +61,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--no-fetch",
         action="store_true",
-        help="compare the existing local BQSKit snapshots without running scp",
+        help="compare the existing local BQSKit snapshots without running rsync",
     )
     parser.add_argument(
         "--include-4q",
@@ -118,36 +121,124 @@ def load_result_group(
     return combined
 
 
-def fetch_results(remote: str, destination: Path) -> None:
-    """Fetch to a temporary file, validate it, then replace the cached snapshot."""
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    fd, temporary_name = tempfile.mkstemp(
-        prefix=f".{destination.name}.",
-        suffix=".tmp",
-        dir=destination.parent,
-    )
-    os.close(fd)
-    temporary = Path(temporary_name)
+def fetch_files(
+    remote_directory: str,
+    destination_directory: Path,
+    files: Dict[str, Any],
+) -> Dict[str, bool]:
+    """Synchronize a basename-to-validator mapping in one rsync session.
 
+    ``--compare-dest`` compares the remote file with the existing archive by
+    checksum while receiving into a temporary directory. An unchanged file is
+    not transferred at all; a changed file is validated and atomically moved
+    into place.
+    """
+    if not files:
+        return {}
+    if any(Path(name).name != name or name in ("", ".", "..") for name in files):
+        raise RuntimeError("incremental synchronization requires safe basenames")
+    destination_directory.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(
+        prefix=".rsync.", dir=destination_directory
+    ) as temporary_directory:
+        try:
+            subprocess.run(
+                [
+                    "rsync",
+                    "--archive",
+                    "--checksum",
+                    "--protect-args",
+                    "--files-from=-",
+                    f"--compare-dest={destination_directory.resolve()}",
+                    "-e",
+                    "ssh -F /dev/null -o BatchMode=yes",
+                    f"{remote_directory.rstrip('/')}/",
+                    f"{temporary_directory}/",
+                ],
+                check=True,
+                input="".join(f"{name}\n" for name in sorted(files)),
+                text=True,
+            )
+        except FileNotFoundError as exc:
+            raise RuntimeError(
+                "rsync is required for incremental result synchronization"
+            ) from exc
+        except subprocess.CalledProcessError as exc:
+            raise RuntimeError(
+                f"rsync failed with exit status {exc.returncode}"
+            ) from exc
+
+        changed = {
+            name: (Path(temporary_directory) / name).exists() for name in files
+        }
+        for name, validator in files.items():
+            temporary = Path(temporary_directory) / name
+            destination = destination_directory / name
+            if not changed[name]:
+                if destination.exists():
+                    continue
+                raise RuntimeError(
+                    f"rsync produced no local file for missing {destination}"
+                )
+            if validator is not None:
+                validator(temporary)
+            elif temporary.stat().st_size == 0:
+                raise RuntimeError(
+                    f"downloaded empty archive file {name} from {remote_directory}"
+                )
+        # Validate every changed artifact before installing any of them.
+        for name, was_changed in changed.items():
+            if was_changed:
+                os.replace(
+                    Path(temporary_directory) / name,
+                    destination_directory / name,
+                )
+        return changed
+
+
+def fetch_file(remote: str, destination: Path, validator=None) -> bool:
+    """Synchronize one archive file through the batched rsync implementation."""
+    remote_directory, remote_name = remote.rsplit("/", 1)
+    if remote_name != destination.name:
+        raise RuntimeError("remote and local archive basenames do not match")
+    return fetch_files(
+        remote_directory,
+        destination.parent,
+        {destination.name: validator},
+    )[destination.name]
+
+
+def validate_audit(path: Path) -> None:
+    """Reject a truncated or malformed compressed rewrite audit."""
     try:
-        subprocess.run(
-            [
-                "scp",
-                "-F",
-                "/dev/null",
-                "-o",
-                "BatchMode=yes",
-                remote,
-                str(temporary),
-            ],
-            check=True,
-        )
-        load_results(temporary)
-        os.replace(temporary, destination)
-    except subprocess.CalledProcessError as exc:
-        raise RuntimeError(f"scp failed with exit status {exc.returncode}") from exc
-    finally:
-        temporary.unlink(missing_ok=True)
+        with gzip.open(path, "rt", encoding="utf-8") as stream:
+            audit = json.load(stream)
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        raise RuntimeError(f"cannot read valid audit JSON from {path}: {exc}") from exc
+    if not isinstance(audit, dict) or not isinstance(audit.get("events"), list):
+        raise RuntimeError(f"{path} is not a rewrite-audit archive")
+
+
+def validate_sha256(path: Path, expected: str) -> None:
+    """Require a downloaded artifact to match its archived digest."""
+    if not isinstance(expected, str) or len(expected) != 64:
+        raise RuntimeError(f"invalid archived SHA-256 digest: {expected!r}")
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for block in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(block)
+    if digest.hexdigest() != expected.lower():
+        raise RuntimeError(f"SHA-256 mismatch for downloaded artifact {path}")
+
+
+def archived_basename(value: Any, field: str) -> str:
+    """Return one safe archive basename stored in a results entry."""
+    if not isinstance(value, str) or not value:
+        raise RuntimeError(f"completed result lacks a valid {field}")
+    path = PurePosixPath(value)
+    if path.name in ("", ".", ".."):
+        raise RuntimeError(f"invalid {field}: {value!r}")
+    return path.name
 
 
 def fetch_result_group(
@@ -157,15 +248,61 @@ def fetch_result_group(
     partition_size: int,
     strategy: str,
 ) -> None:
-    """Fetch each dataset's results.json into its matching local archive."""
+    """Mirror metadata, final circuits, and rewrite audits for each dataset."""
     for dataset in DATASETS:
         directory = result_directory(root, dataset, partition_size, strategy)
         remote = (
             f"{remote_host}:{remote_root.rstrip('/')}/{directory.name}/results.json"
         )
         destination = directory / "results.json"
-        fetch_results(remote, destination)
-        print(f"Fetched {remote} -> {destination}", file=sys.stderr)
+        metadata_changed = fetch_file(remote, destination, load_results)
+        print(
+            f"{'Updated' if metadata_changed else 'Unchanged'} "
+            f"{remote} -> {destination}",
+            file=sys.stderr,
+        )
+        results = load_results(destination)
+        artifacts: Dict[str, Any] = {}
+        for entry in results.values():
+            if not is_complete(entry):
+                continue
+            output_name = archived_basename(entry.get("output_file"), "output_file")
+            artifacts.setdefault(output_name, None)
+            rewrite_audit = entry.get("rewrite_audit")
+            if isinstance(rewrite_audit, dict) and rewrite_audit.get("file"):
+                audit_name = archived_basename(
+                    rewrite_audit.get("file"), "rewrite_audit.file"
+                )
+                expected_digest = rewrite_audit.get("sha256")
+
+                def validate_archived_audit(path, digest=expected_digest):
+                    validate_audit(path)
+                    validate_sha256(path, digest)
+
+                artifacts.setdefault(audit_name, validate_archived_audit)
+        artifact_remote_directory = (
+            f"{remote_host}:{remote_root.rstrip('/')}/{directory.name}"
+        )
+        artifact_changes = fetch_files(
+            artifact_remote_directory,
+            directory,
+            artifacts,
+        )
+        for artifact_name, artifact_changed in artifact_changes.items():
+            if not artifact_changed:
+                continue
+            artifact_remote = f"{artifact_remote_directory}/{artifact_name}"
+            artifact_destination = directory / artifact_name
+            print(
+                f"Updated {artifact_remote} -> {artifact_destination}",
+                file=sys.stderr,
+            )
+        updated_count = sum(artifact_changes.values())
+        print(
+            f"Artifact sync for {directory.name}: {updated_count} updated, "
+            f"{len(artifact_changes) - updated_count} unchanged",
+            file=sys.stderr,
+        )
 
 
 def cnot_count(entry: Dict[str, Any], stage: str) -> Optional[int]:

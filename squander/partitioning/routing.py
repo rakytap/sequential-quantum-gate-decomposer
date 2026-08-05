@@ -6,9 +6,11 @@ with an input placement, output placement, and exact CNOT cost.  The solver then
 chooses an exact cover, an acyclic execution order, and a compatible mapping
 trajectory with minimum total CNOT count.
 
-The default global solver is a PuLP exact-cover model with mapping-compatible
-flow along each logical wire. A preserved dependency-ready branch-and-bound
-backend is available both as a fallback and as a correctness cross-check.
+The publication router uses a compact PuLP/Gurobi logic-based Benders master.
+It selects synthesis columns while a fixed-cover staged oracle prices complete
+logical-to-physical mapping trajectories and arbitrary adjacent SWAPs.  The
+monolithic staged ILP and a dependency-ready branch-and-bound backend remain
+available as correctness cross-checks.
 """
 
 from __future__ import annotations
@@ -82,10 +84,14 @@ def _call_shared_synthesis(target, config, topology):
     )
     process.start()
     child_connection.close()
-    timeout = float(config.get("routing_synthesis_timeout_seconds", 300.0))
-    deadline = time.monotonic() + timeout
+    configured_timeout = config.get("routing_synthesis_timeout_seconds")
+    deadline = (
+        None
+        if configured_timeout is None
+        else time.monotonic() + float(configured_timeout)
+    )
     message = None
-    while time.monotonic() < deadline:
+    while deadline is None or time.monotonic() < deadline:
         if parent_connection.poll(0.1):
             message = parent_connection.recv()
             break
@@ -152,10 +158,10 @@ def _call_shared_synthesis_batch(
     if configured_workers is None:
         configured_workers = mp.cpu_count()
     worker_count = max(1, min(int(configured_workers), len(targets)))
-    timeout = float(config.get("routing_synthesis_timeout_seconds", 300.0))
-    route_deadline = config.get("_exact_routing_deadline")
-    if route_deadline is not None:
-        route_deadline = float(route_deadline)
+    configured_timeout = config.get("routing_synthesis_timeout_seconds")
+    timeout = (
+        None if configured_timeout is None else float(configured_timeout)
+    )
     results = [None] * len(targets)
     pending = iter(enumerate(zip(targets, configurations)))
     active = {}
@@ -177,10 +183,7 @@ def _call_shared_synthesis_batch(
         active[index] = (
             process,
             parent_connection,
-            min(
-                time.monotonic() + timeout,
-                route_deadline if route_deadline is not None else float("inf"),
-            ),
+            None if timeout is None else time.monotonic() + timeout,
         )
 
     for _ in range(worker_count):
@@ -190,19 +193,14 @@ def _call_shared_synthesis_batch(
             break
 
     while active:
-        if route_deadline is not None and time.monotonic() >= route_deadline:
-            for process, connection, _deadline in active.values():
-                if process.is_alive():
-                    process.terminate()
-                process.join()
-                connection.close()
-            break
         progressed = False
         for index, (process, connection, deadline) in list(active.items()):
             message = None
             if connection.poll():
                 message = connection.recv()
-            elif process.is_alive() and time.monotonic() < deadline:
+            elif process.is_alive() and (
+                deadline is None or time.monotonic() < deadline
+            ):
                 continue
             if process.is_alive():
                 process.terminate()
@@ -212,11 +210,10 @@ def _call_shared_synthesis_batch(
                 results[index] = _decode_synthesis_message(message)
             del active[index]
             progressed = True
-            if route_deadline is None or time.monotonic() < route_deadline:
-                try:
-                    launch(*next(pending))
-                except StopIteration:
-                    pass
+            try:
+                launch(*next(pending))
+            except StopIteration:
+                pass
         if not progressed:
             time.sleep(0.01)
     return tuple(results)
@@ -313,20 +310,9 @@ def _call_shared_synthesis_batch_cached(
     )
     if len(configurations) != len(targets):
         raise ValueError("One synthesis config is required per target.")
-    base_seed = config.get("exact_routing_random_seed")
-    if base_seed is not None:
-        configurations = tuple(
-            {
-                **target_config,
-                "random_seed": target_config.get(
-                    "random_seed",
-                    _deterministic_synthesis_seed(
-                        target, topology, base_seed
-                    ),
-                ),
-            }
-            for target, target_config in zip(targets, configurations)
-        )
+    restart_count = int(config.get("exact_routing_synthesis_restarts", 1))
+    if restart_count < 1:
+        raise ValueError("Exact-routing synthesis restarts must be positive.")
     if cache is None:
         cache = {}
     if cache_stats is None:
@@ -349,16 +335,86 @@ def _call_shared_synthesis_batch_cached(
         missing_targets.append(target)
         missing_configs.append(target_config)
 
-    missing_results = (
-        _call_shared_synthesis_batch(
-            missing_targets,
-            config,
-            topology,
-            target_configs=missing_configs,
+    missing_results = [None] * len(missing_targets)
+    unresolved = list(range(len(missing_targets)))
+    if unresolved and restart_count == 1:
+        configured_seed = config.get("exact_routing_random_seed", 0)
+        if configured_seed is None:
+            configured_seed = 0
+        seeded_configs = []
+        for target, target_config in zip(missing_targets, missing_configs):
+            target_config = dict(target_config)
+            target_config["random_seed"] = _deterministic_synthesis_seed(
+                target,
+                topology,
+                int(configured_seed),
+            )
+            seeded_configs.append(target_config)
+        missing_results = list(
+            _call_shared_synthesis_batch(
+                missing_targets,
+                config,
+                topology,
+                target_configs=seeded_configs,
+            )
         )
-        if missing_targets
-        else ()
-    )
+        unresolved = []
+    if unresolved:
+        from squander.decomposition.qgd_Wide_Circuit_Optimization import (
+            CNOTGateCount,
+            SingleQubitGateCount,
+        )
+
+        rank_tolerance = float(config.get("routing_rank_tolerance", 1e-8))
+        lower_bounds = tuple(
+            cnot_schmidt_lower_bound(
+                target, topology, rank_tolerance=rank_tolerance
+            )
+            for target in missing_targets
+        )
+        configured_seed = config.get("exact_routing_random_seed", 0)
+        if configured_seed is None:
+            configured_seed = 0
+        for restart in range(restart_count):
+            attempt_indices = tuple(unresolved)
+            attempt_targets = tuple(missing_targets[index] for index in attempt_indices)
+            attempt_configs = []
+            for index in attempt_indices:
+                target_config = dict(missing_configs[index])
+                target_config["random_seed"] = _deterministic_synthesis_seed(
+                    missing_targets[index],
+                    topology,
+                    int(configured_seed) + restart,
+                )
+                attempt_configs.append(target_config)
+            attempt_results = _call_shared_synthesis_batch(
+                attempt_targets,
+                config,
+                topology,
+                target_configs=attempt_configs,
+            )
+            for index, result in zip(attempt_indices, attempt_results):
+                if result is None:
+                    continue
+                previous = missing_results[index]
+                result_cost = (
+                    CNOTGateCount(result.circuit, 0),
+                    SingleQubitGateCount(result.circuit),
+                )
+                if previous is None or result_cost < (
+                    CNOTGateCount(previous.circuit, 0),
+                    SingleQubitGateCount(previous.circuit),
+                ):
+                    missing_results[index] = result
+            unresolved = [
+                index
+                for index in unresolved
+                if missing_results[index] is None
+                or CNOTGateCount(missing_results[index].circuit, 0)
+                > lower_bounds[index]
+            ]
+            if not unresolved:
+                break
     for key, result in zip(missing_keys, missing_results):
         # None is intentional: a failed OSR request is final for this route.
         cache[key] = result
@@ -519,7 +575,7 @@ def _light_sabre_route(
     topology: Iterable[Sequence[int]],
     config: Mapping[str, Any],
 ):
-    """Return Qiskit LightSABRE's validated routing-seed candidate."""
+    """Return LightSABRE's route plus a source-gate/mapping trajectory."""
     from qiskit.transpiler import CouplingMap, PassManager
     from qiskit.transpiler.passes import SabreLayout, SabreSwap
     from squander import Qiskit_IO
@@ -527,6 +583,18 @@ def _light_sabre_route(
     qiskit_circuit = Qiskit_IO.get_Qiskit_Circuit(
         circuit, np.asarray(parameters, dtype=np.float64)
     )
+    source_gate_count = len(circuit.get_Gates())
+    if len(qiskit_circuit.data) != source_gate_count:
+        raise AssertionError(
+            "Qiskit export is not one instruction per Squander source gate."
+        )
+    label_prefix = "squander_exact_source_"
+    for gate_index, instruction in enumerate(tuple(qiskit_circuit.data)):
+        operation = instruction.operation.to_mutable()
+        operation.label = f"{label_prefix}{gate_index}"
+        qiskit_circuit.data[gate_index] = instruction.replace(
+            operation=operation
+        )
     coupling_map = CouplingMap(
         [[int(left), int(right)] for left, right in topology]
     )
@@ -566,6 +634,31 @@ def _light_sabre_route(
     final_mapping = tuple(
         map(int, routed_qiskit.layout.final_index_layout())
     )
+    trace = []
+    seen_source_gates = set()
+    for instruction in routed_qiskit.data:
+        label = instruction.operation.label
+        physical = tuple(
+            int(routed_qiskit.find_bit(qubit).index)
+            for qubit in instruction.qubits
+        )
+        if isinstance(label, str) and label.startswith(label_prefix):
+            gate_index = int(label[len(label_prefix) :])
+            if gate_index in seen_source_gates:
+                raise AssertionError("LightSABRE duplicated a source gate.")
+            seen_source_gates.add(gate_index)
+            trace.append(("gate", gate_index))
+        elif instruction.operation.name == "swap":
+            if len(physical) != 2:
+                raise AssertionError("LightSABRE emitted a malformed SWAP.")
+            trace.append(("swap", physical))
+        else:
+            raise AssertionError(
+                "LightSABRE emitted an untraceable routing instruction: "
+                f"{instruction.operation.name!r}."
+            )
+    if seen_source_gates != set(range(source_gate_count)):
+        raise AssertionError("LightSABRE trace does not cover every source gate.")
     routed_circuit, routed_parameters = Qiskit_IO.convert_Qiskit_to_Squander(
         routed_qiskit
     )
@@ -574,6 +667,7 @@ def _light_sabre_route(
         np.asarray(routed_parameters, dtype=np.float64),
         initial_mapping,
         final_mapping,
+        tuple(trace),
     )
 
 
@@ -1159,15 +1253,38 @@ def synthesize_partition_alternatives(
                 width,
             )
             for input_assignment, output_assignment in targets:
-                fallback = Circuit(width)
-                for edge in _permutation_swaps(
-                    _inverse_permutation(input_assignment), local_edges
-                ):
-                    fallback.add_SWAP(list(edge))
-                fallback.add_Circuit(topology_valid_source)
-                for edge in _permutation_swaps(output_assignment, local_edges):
-                    fallback.add_SWAP(list(edge))
-                fallback = fallback.get_Flat_Circuit()
+                fallback = None
+                if input_assignment == output_assignment:
+                    # P U P^-1 is a free relabeling whenever P preserves the
+                    # chosen local topology. Do not encode it as physical
+                    # SWAPs on both boundaries.
+                    relabeling = {
+                        logical_wire: physical_wire
+                        for physical_wire, logical_wire in enumerate(
+                            input_assignment
+                        )
+                    }
+                    relabeled = topology_valid_source.Remap_Qbits(
+                        relabeling, width
+                    ).get_Flat_Circuit()
+                    try:
+                        _assert_local_topology(relabeled, local_edges)
+                    except AssertionError:
+                        pass
+                    else:
+                        fallback = relabeled
+                if fallback is None:
+                    fallback = Circuit(width)
+                    for edge in _permutation_swaps(
+                        _inverse_permutation(input_assignment), local_edges
+                    ):
+                        fallback.add_SWAP(list(edge))
+                    fallback.add_Circuit(topology_valid_source)
+                    for edge in _permutation_swaps(
+                        output_assignment, local_edges
+                    ):
+                        fallback.add_SWAP(list(edge))
+                    fallback = fallback.get_Flat_Circuit()
                 error = _process_infidelity(
                     fallback.get_Matrix(source_parameters_array, is_f32=False),
                     targets[(input_assignment, output_assignment)],
@@ -1215,7 +1332,20 @@ def synthesize_partition_alternatives(
             zip(assignment_orbits, representative_targets)
         ):
             fallback_cost = fallback_costs.get(representative)
-            if fallback_cost == 0:
+            rigorous_lower_bound = cnot_schmidt_lower_bound(
+                target,
+                local_edges,
+                rank_tolerance=float(
+                    config.get("routing_rank_tolerance", 1e-8)
+                ),
+            )
+            if (
+                fallback_cost is not None
+                and fallback_cost <= rigorous_lower_bound
+            ):
+                # The validated topology fallback already saturates a
+                # rigorous entangling-gate lower bound. OSR cannot strictly
+                # improve its CNOT count, so pricing this target is pointless.
                 continue
             target_config = dict(synthesis_config)
             if fallback_cost is not None:
@@ -1379,12 +1509,18 @@ def two_qubit_passthrough_alternatives(
         for input_assignment, output_assignment in itertools.product(
             assignments, repeat=2
         ):
-            local_circuit = Circuit(2)
-            if input_assignment != (0, 1):
-                local_circuit.add_SWAP([0, 1])
-            local_circuit.add_Circuit(circuit)
-            if output_assignment != (0, 1):
-                local_circuit.add_SWAP([0, 1])
+            if input_assignment == output_assignment == (1, 0):
+                # Conjugating a two-wire block by SWAP only relabels its
+                # wires.  Materializing SWAP-U-SWAP charges six fictitious
+                # CNOTs and badly corrupts routing MIP starts.
+                local_circuit = circuit.Remap_Qbits({0: 1, 1: 0}, 2)
+            else:
+                local_circuit = Circuit(2)
+                if input_assignment != (0, 1):
+                    local_circuit.add_SWAP([0, 1])
+                local_circuit.add_Circuit(circuit)
+                if output_assignment != (0, 1):
+                    local_circuit.add_SWAP([0, 1])
             local_circuit = local_circuit.get_Flat_Circuit()
             payload = SynthesizedRoutingPayload(
                 circuit=local_circuit,
@@ -1485,6 +1621,12 @@ class ExactRoutingResult:
     explored_states: int
     master_backend: str = "unknown"
     optimal: bool = True
+    transition_swaps: tuple[tuple[Edge, ...], ...] = ()
+    solver_nodes: float | None = None
+    solver_bound: float | None = None
+    solver_gap: float | None = None
+    solver_solutions: int | None = None
+    cnot_optimal: bool | None = None
 
 
 @dataclass(frozen=True)
@@ -2766,7 +2908,7 @@ def solve_exact_routing_ilp_lazy_cuts(
     )
 
 
-def solve_exact_routing_ilp(
+def _solve_exact_routing_ilp_flow_restricted(
     *,
     gate_predecessors: Mapping[int, Iterable[int]],
     partitions: Sequence[Iterable[int]],
@@ -3262,10 +3404,16 @@ def solve_exact_routing_ilp(
                     "No compatible exact-cover routing solution exists."
                 )
             if timeout_seconds is not None:
-                raise ExactRoutingLimitExceeded(
+                error = ExactRoutingLimitExceeded(
                     f"The {solver_name} routing ILP did not prove optimality "
                     f"within {timeout_seconds} seconds; status={status}."
                 )
+                if str(solver_name).lower().startswith("gurobi"):
+                    error.solver_bound = (
+                        float(prob.solverModel.ObjBound)
+                        / max_single_qubit_cost
+                    )
+                raise error
             raise ValueError(
                 "No optimal compatible exact-cover routing solution exists: "
                 f"status={status}."
@@ -3393,22 +3541,2043 @@ def solve_exact_routing_ilp(
         explored_states=cut_rounds,
         master_backend=f"pulp-{solver_name}",
         optimal=proven_optimal,
+        solver_nodes=(
+            None
+            if not str(solver_name).lower().startswith("gurobi")
+            else float(prob.solverModel.NodeCount)
+        ),
+        solver_bound=(
+            None
+            if not str(solver_name).lower().startswith("gurobi")
+            else float(prob.solverModel.ObjBound) / max_single_qubit_cost
+        ),
+        solver_gap=(
+            None
+            if not str(solver_name).lower().startswith("gurobi")
+            else float(prob.solverModel.MIPGap)
+        ),
+        solver_solutions=(
+            None
+            if not str(solver_name).lower().startswith("gurobi")
+            else int(prob.solverModel.SolCount)
+        ),
     )
 
 
+def _path_mapping_swap_sequence(
+    source: Sequence[int], target: Sequence[int], path: Sequence[int]
+) -> tuple[Edge, ...]:
+    """Return a minimum adjacent-SWAP sequence between two path mappings."""
+    source = tuple(map(int, source))
+    target = tuple(map(int, target))
+    path = tuple(map(int, path))
+    if sorted(source) != sorted(target) or sorted(source) != sorted(path):
+        raise ValueError("Path mappings must be permutations of the device vertices.")
+    physical_to_logical = {physical: logical for logical, physical in enumerate(source)}
+    target_at_position = [
+        next(logical for logical, physical in enumerate(target) if physical == vertex)
+        for vertex in path
+    ]
+    current_at_position = [physical_to_logical[vertex] for vertex in path]
+    swaps = []
+    for destination, logical in enumerate(target_at_position):
+        source_position = current_at_position.index(logical, destination)
+        while source_position > destination:
+            left = source_position - 1
+            swaps.append((path[left], path[source_position]))
+            current_at_position[left], current_at_position[source_position] = (
+                current_at_position[source_position],
+                current_at_position[left],
+            )
+            source_position = left
+    if current_at_position != target_at_position:
+        raise AssertionError("Adjacent-SWAP construction did not reach its target.")
+    return tuple(swaps)
+
+
+def _light_sabre_structural_warm_start(
+    *,
+    trace: Sequence[tuple[str, Any]],
+    initial_mapping: Sequence[int],
+    partitions: Sequence[frozenset[int]],
+    alternatives: Mapping[int, Sequence[RoutingAlternative]],
+    topology: Iterable[Sequence[int]],
+) -> ExactRoutingResult:
+    """Express a traced LightSABRE route as a complete singleton trajectory."""
+    singleton_partition = {}
+    for partition, gate_set in enumerate(partitions):
+        if len(gate_set) == 1:
+            singleton_partition.setdefault(next(iter(gate_set)), partition)
+    mapping = list(map(int, initial_mapping))
+    seed_initial_mapping = tuple(mapping)
+    allowed_edges = {
+        frozenset((int(left), int(right))) for left, right in topology
+    }
+    selections = []
+    transition_swaps = []
+    pending_swaps = []
+    seen_gates = set()
+    initial_mapping = None
+    final_mapping = seed_initial_mapping
+    for kind, payload in trace:
+        if kind == "swap":
+            left, right = map(int, payload)
+            if frozenset((left, right)) not in allowed_edges:
+                raise AssertionError("LightSABRE warm-start SWAP violates topology.")
+            left_logical = mapping.index(left)
+            right_logical = mapping.index(right)
+            mapping[left_logical], mapping[right_logical] = (
+                mapping[right_logical],
+                mapping[left_logical],
+            )
+            pending_swaps.append((left, right))
+            continue
+        if kind != "gate":
+            raise AssertionError(f"Unknown LightSABRE trace entry {kind!r}.")
+        gate = int(payload)
+        if gate in seen_gates or gate not in singleton_partition:
+            raise AssertionError("Invalid LightSABRE source-gate trajectory.")
+        seen_gates.add(gate)
+        partition = singleton_partition[gate]
+        candidates = []
+        for alternative in alternatives[partition]:
+            placement = tuple(mapping[q] for q in alternative.logical_qubits)
+            if (
+                alternative.input_physical == placement
+                and alternative.output_physical == placement
+            ):
+                candidates.append(alternative)
+        if not candidates:
+            raise AssertionError(
+                "A LightSABRE gate placement has no singleton routing column."
+            )
+        alternative = min(
+            candidates,
+            key=lambda value: (value.cnot_count, value.single_qubit_count),
+        )
+        selections.append(RoutingSelection(partition, alternative))
+        if initial_mapping is None:
+            # The master permits a free initial layout. Any LightSABRE SWAPs
+            # before its first source gate are absorbed into that layout.
+            initial_mapping = tuple(mapping)
+            transition_swaps.append(())
+        else:
+            transition_swaps.append(tuple(pending_swaps))
+        pending_swaps.clear()
+        final_mapping = tuple(mapping)
+    if seen_gates != set(singleton_partition):
+        raise AssertionError("LightSABRE warm start does not cover every gate.")
+    # A final mapping is unconstrained, so trailing routing SWAPs can always be
+    # dropped. LightSABRE normally emits none, but they must not burden the seed.
+    return ExactRoutingResult(
+        selections=tuple(selections),
+        cnot_count=(
+            sum(value.alternative.cnot_count for value in selections)
+            + 3 * sum(len(swaps) for swaps in transition_swaps)
+        ),
+        single_qubit_count=sum(
+            value.alternative.single_qubit_count for value in selections
+        ),
+        initial_mapping=(
+            seed_initial_mapping if initial_mapping is None else initial_mapping
+        ),
+        final_mapping=final_mapping,
+        explored_states=0,
+        master_backend="light-sabre-structural-mip-start",
+        optimal=False,
+        transition_swaps=tuple(transition_swaps),
+    )
+
+
+def _greedy_selected_path_warm_start(
+    *,
+    gate_predecessors: Mapping[int, Iterable[int]],
+    partitions: Sequence[frozenset[int]],
+    alternatives: Mapping[int, Sequence[RoutingAlternative]],
+    logical_qubit_count: int,
+    path: Sequence[int],
+    initial_mapping: Sequence[int] | None = None,
+) -> ExactRoutingResult:
+    """Construct a feasible staged seed for one fixed column cover."""
+    path = tuple(map(int, path))
+    path_position = {physical: index for index, physical in enumerate(path)}
+    selected_gate_partition = {
+        gate: partition
+        for partition, gate_set in enumerate(partitions)
+        for gate in gate_set
+    }
+    successors = {partition: set() for partition in range(len(partitions))}
+    indegree = {partition: 0 for partition in range(len(partitions))}
+    for gate, predecessors in gate_predecessors.items():
+        right = selected_gate_partition[int(gate)]
+        for predecessor in map(int, predecessors):
+            left = selected_gate_partition[predecessor]
+            if left != right and right not in successors[left]:
+                successors[left].add(right)
+                indegree[right] += 1
+    ready = {partition for partition, degree in indegree.items() if degree == 0}
+    current = (
+        None if initial_mapping is None else tuple(map(int, initial_mapping))
+    )
+    initial_result = current
+    selections = []
+    transition_swaps = []
+
+    def complete_mapping(source, logicals, desired):
+        fixed = dict(zip(logicals, desired))
+        if source is None:
+            remaining_logicals = [
+                logical
+                for logical in range(logical_qubit_count)
+                if logical not in fixed
+            ]
+        else:
+            physical_to_logical = {
+                physical: logical for logical, physical in enumerate(source)
+            }
+            remaining_logicals = [
+                physical_to_logical[physical]
+                for physical in path
+                if physical_to_logical[physical] not in fixed
+            ]
+        remaining_physical = [
+            physical for physical in path if physical not in set(desired)
+        ]
+        result = [-1] * logical_qubit_count
+        for logical, physical in fixed.items():
+            result[logical] = physical
+        for logical, physical in zip(remaining_logicals, remaining_physical):
+            result[logical] = physical
+        return tuple(result)
+
+    while ready:
+        choices = []
+        for partition in sorted(ready):
+            alternative = alternatives[partition][0]
+            input_positions = tuple(
+                path_position[physical]
+                for physical in alternative.input_physical
+            )
+            output_positions = tuple(
+                path_position[physical]
+                for physical in alternative.output_physical
+            )
+            base = min(input_positions)
+            input_offsets = tuple(value - base for value in input_positions)
+            output_offsets = tuple(value - base for value in output_positions)
+            width = len(alternative.logical_qubits)
+            for start in range(logical_qubit_count - width + 1):
+                desired_input = tuple(path[start + value] for value in input_offsets)
+                mapping_in = complete_mapping(
+                    current, alternative.logical_qubits, desired_input
+                )
+                swaps = (
+                    ()
+                    if current is None
+                    else _path_mapping_swap_sequence(current, mapping_in, path)
+                )
+                desired_output = tuple(
+                    path[start + value] for value in output_offsets
+                )
+                mapping_out = list(mapping_in)
+                for logical, physical in zip(
+                    alternative.logical_qubits, desired_output
+                ):
+                    mapping_out[logical] = physical
+                translated = replace(
+                    alternative,
+                    input_physical=desired_input,
+                    output_physical=desired_output,
+                )
+                choices.append(
+                    (
+                        len(swaps),
+                        partition,
+                        start,
+                        translated,
+                        mapping_in,
+                        tuple(mapping_out),
+                        swaps,
+                    )
+                )
+        if not choices:
+            raise ValueError("Selected partition quotient contains a cycle.")
+        (
+            _swap_count,
+            partition,
+            _start,
+            alternative,
+            mapping_in,
+            mapping_out,
+            swaps,
+        ) = min(choices, key=lambda value: value[:3])
+        if initial_result is None:
+            initial_result = mapping_in
+        selections.append(RoutingSelection(partition, alternative))
+        transition_swaps.append(tuple(swaps))
+        current = mapping_out
+        ready.remove(partition)
+        for successor in successors[partition]:
+            indegree[successor] -= 1
+            if indegree[successor] == 0:
+                ready.add(successor)
+    if len(selections) != len(partitions):
+        raise ValueError("Selected partition quotient contains a cycle.")
+    return ExactRoutingResult(
+        selections=tuple(selections),
+        cnot_count=(
+            sum(value.alternative.cnot_count for value in selections)
+            + 3 * sum(len(swaps) for swaps in transition_swaps)
+        ),
+        single_qubit_count=sum(
+            value.alternative.single_qubit_count for value in selections
+        ),
+        initial_mapping=tuple(initial_result),
+        final_mapping=tuple(current),
+        explored_states=0,
+        master_backend="greedy-selected-path-mip-start",
+        optimal=False,
+        transition_swaps=tuple(transition_swaps),
+    )
+
+
+def _solve_fixed_cover_path_order_ilp(
+    *,
+    gate_predecessors,
+    partition_sets,
+    templates,
+    logical_qubit_count,
+    path,
+    initial_mapping,
+    timeout_seconds,
+    allow_suboptimal,
+    warm_start,
+):
+    """Price one exact cover using only total orders on a path.
+
+    A complete mapping onto a path is a permutation, equivalently a transitive
+    tournament over logical-qubit pairs. A local synthesis block occupies one
+    contiguous interval, permutes only the order inside that interval, and a
+    routing transition costs the Kendall distance between consecutive orders.
+    This formulation avoids the weak pair of n-by-n assignment matrices at
+    every stage in the general model.
+    """
+    import pulp
+    from squander.partitioning.ilp import _solve_pulp_with_gurobi_or_cbc
+
+    partitions = tuple(sorted(templates))
+    partition_count = len(partitions)
+    stages = range(partition_count)
+    logicals = range(logical_qubit_count)
+    pairs = tuple(itertools.combinations(logicals, 2))
+    triples = tuple(itertools.combinations(logicals, 3))
+    representatives = {
+        partition: templates[partition][0] for partition in partitions
+    }
+    gate_partition = {
+        gate: partition
+        for partition in partitions
+        for gate in partition_sets[partition]
+    }
+
+    prob = pulp.LpProblem("FixedCoverPathOrderRouting", pulp.LpMinimize)
+    at_stage = pulp.LpVariable.dicts(
+        "order_stage", (partitions, stages), cat="Binary"
+    )
+    for partition in partitions:
+        prob += pulp.lpSum(at_stage[partition][stage] for stage in stages) == 1
+    for stage in stages:
+        prob += pulp.lpSum(at_stage[partition][stage] for partition in partitions) == 1
+
+    partition_stage = {
+        partition: pulp.lpSum(
+            stage * at_stage[partition][stage] for stage in stages
+        )
+        for partition in partitions
+    }
+    precedence_edges = set()
+    for gate, predecessors in gate_predecessors.items():
+        right = gate_partition[int(gate)]
+        for predecessor in map(int, predecessors):
+            left = gate_partition[predecessor]
+            if left != right:
+                precedence_edges.add((left, right))
+    for left, right in precedence_edges:
+        prob += partition_stage[left] + 1 <= partition_stage[right]
+
+    before_in = {
+        (stage, left, right): pulp.LpVariable(
+            f"order_in_{stage}_{left}_{right}", cat="Binary"
+        )
+        for stage in stages
+        for left, right in pairs
+    }
+    before_out = {
+        (stage, left, right): pulp.LpVariable(
+            f"order_out_{stage}_{left}_{right}", cat="Binary"
+        )
+        for stage in stages
+        for left, right in pairs
+    }
+
+    def order(values, stage, left, right):
+        if left < right:
+            return values[stage, left, right]
+        return 1 - values[stage, right, left]
+
+    # Triangle facets are sufficient to make every integer tournament a total
+    # order and materially strengthen the LP relaxation used for proof.
+    for stage in stages:
+        for values in (before_in, before_out):
+            for left, middle, right in triples:
+                cycle = (
+                    values[stage, left, middle]
+                    + values[stage, middle, right]
+                    - values[stage, left, right]
+                )
+                prob += cycle >= 0
+                prob += cycle <= 1
+
+    def conditional_equal(left, right, chosen):
+        prob.addConstraint(left - right <= 1 - chosen)
+        prob.addConstraint(right - left <= 1 - chosen)
+
+    for partition in partitions:
+        input_offsets, output_offsets, representative = representatives[partition]
+        involved = tuple(map(int, representative.logical_qubits))
+        involved_set = set(involved)
+        spectators = tuple(q for q in logicals if q not in involved_set)
+        for stage in stages:
+            chosen = at_stage[partition][stage]
+            # Fix the synthesized input/output order inside the interval.
+            for local_left, local_right in itertools.combinations(
+                range(len(involved)), 2
+            ):
+                left = involved[local_left]
+                right = involved[local_right]
+                expected_in = int(
+                    input_offsets[local_left] < input_offsets[local_right]
+                )
+                expected_out = int(
+                    output_offsets[local_left] < output_offsets[local_right]
+                )
+                input_order = order(before_in, stage, left, right)
+                output_order = order(before_out, stage, left, right)
+                if expected_in:
+                    prob += input_order >= chosen
+                else:
+                    prob += input_order <= 1 - chosen
+                if expected_out:
+                    prob += output_order >= chosen
+                else:
+                    prob += output_order <= 1 - chosen
+
+            # No spectator may lie inside the selected interval: it must have
+            # the same side relationship to every involved logical qubit.
+            anchor = involved[0]
+            for spectator in spectators:
+                anchor_side = order(
+                    before_in, stage, spectator, anchor
+                )
+                for participant in involved[1:]:
+                    conditional_equal(
+                        order(before_in, stage, spectator, participant),
+                        anchor_side,
+                        chosen,
+                    )
+
+            # A local rewrite changes no order relation except those between
+            # two participating qubits.
+            for left, right in pairs:
+                if left in involved_set and right in involved_set:
+                    continue
+                conditional_equal(
+                    order(before_out, stage, left, right),
+                    order(before_in, stage, left, right),
+                    chosen,
+                )
+
+    reversals = {}
+    for stage in range(partition_count - 1):
+        for left, right in pairs:
+            reversal = pulp.LpVariable(
+                f"order_reverse_{stage}_{left}_{right}", cat="Binary"
+            )
+            reversals[stage, left, right] = reversal
+            first = before_out[stage, left, right]
+            second = before_in[stage + 1, left, right]
+            prob += reversal >= first - second
+            prob += reversal >= second - first
+
+    initial_reversals = {}
+    fixed_initial_before = {}
+    if initial_mapping is not None:
+        fixed_mapping = tuple(map(int, initial_mapping))
+        if sorted(fixed_mapping) != sorted(path):
+            raise ValueError("Initial mapping is not a path permutation.")
+        path_position = {physical: index for index, physical in enumerate(path)}
+        for left, right in pairs:
+            fixed = int(
+                path_position[fixed_mapping[left]]
+                < path_position[fixed_mapping[right]]
+            )
+            fixed_initial_before[left, right] = fixed
+            reversal = pulp.LpVariable(
+                f"order_reverse_initial_{left}_{right}", cat="Binary"
+            )
+            initial_reversals[left, right] = reversal
+            first = before_in[0, left, right]
+            prob += reversal >= first - fixed
+            prob += reversal >= fixed - first
+    elif logical_qubit_count > 1:
+        # Break the path-reflection symmetry by putting logical zero in the
+        # first half of the initial total order.
+        rank_zero = pulp.lpSum(
+            order(before_in, 0, other, 0)
+            for other in logicals
+            if other != 0
+        )
+        prob += rank_zero <= (logical_qubit_count - 1) // 2
+
+    local_cnot = sum(value[2].cnot_count for value in representatives.values())
+    local_single = sum(
+        value[2].single_qubit_count for value in representatives.values()
+    )
+    swap_count = pulp.lpSum(
+        tuple(initial_reversals.values()) + tuple(reversals.values())
+    )
+    scale = local_single + 1
+    prob.setObjective((local_cnot + 3 * swap_count) * scale + local_single)
+
+    if warm_start is not None:
+        warm_records = []
+        mapping = list(map(int, warm_start.initial_mapping))
+        swaps_by_stage = warm_start.transition_swaps or tuple(
+            () for _ in warm_start.selections
+        )
+        for swaps, selection in zip(swaps_by_stage, warm_start.selections):
+            for physical_left, physical_right in swaps:
+                logical_left = mapping.index(int(physical_left))
+                logical_right = mapping.index(int(physical_right))
+                mapping[logical_left], mapping[logical_right] = (
+                    mapping[logical_right], mapping[logical_left]
+                )
+            mapping_in = tuple(mapping)
+            for logical, physical in zip(
+                selection.alternative.logical_qubits,
+                selection.alternative.output_physical,
+            ):
+                mapping[logical] = physical
+            warm_records.append(
+                (selection.partition, mapping_in, tuple(mapping))
+            )
+        path_position = {physical: index for index, physical in enumerate(path)}
+        record_by_partition = {
+            partition: stage
+            for stage, (partition, _mapping_in, _mapping_out)
+            in enumerate(warm_records)
+        }
+        for partition in partitions:
+            for stage in stages:
+                at_stage[partition][stage].setInitialValue(
+                    int(record_by_partition[partition] == stage)
+                )
+        for stage, (_partition, mapping_in, mapping_out) in enumerate(warm_records):
+            for left, right in pairs:
+                before_in[stage, left, right].setInitialValue(
+                    int(path_position[mapping_in[left]] < path_position[mapping_in[right]])
+                )
+                before_out[stage, left, right].setInitialValue(
+                    int(path_position[mapping_out[left]] < path_position[mapping_out[right]])
+                )
+        prob += local_cnot + 3 * swap_count <= int(warm_start.cnot_count)
+
+    solve_kwargs = {}
+    if timeout_seconds is not None:
+        solve_kwargs["timeLimit"] = float(timeout_seconds)
+    if warm_start is not None:
+        solve_kwargs["warmStart"] = True
+    solver_name = _solve_pulp_with_gurobi_or_cbc(
+        prob, pulp, callback=None, **solve_kwargs
+    )
+    model = getattr(prob, "solverModel", None)
+    status = pulp.LpStatus[prob.status]
+    proven_optimal = status == "Optimal"
+    has_incumbent = bool(
+        model is not None and getattr(model, "SolCount", 0) >= 1
+    )
+    if not proven_optimal and not (allow_suboptimal and has_incumbent):
+        if status == "Infeasible":
+            raise ValueError("The fixed-cover path-order model is infeasible.")
+        raise ExactRoutingLimitExceeded(
+            f"The {solver_name} path-order oracle did not prove optimality; "
+            f"status={status}."
+        )
+
+    def mapping_from_order(values, stage):
+        ranks = []
+        for logical in logicals:
+            rank = sum(
+                int(round(pulp.value(order(values, stage, other, logical))))
+                for other in logicals
+                if other != logical
+            )
+            ranks.append(rank)
+        if sorted(ranks) != list(logicals):
+            raise AssertionError("The path-order solution is not a permutation.")
+        return tuple(path[ranks[logical]] for logical in logicals)
+
+    selections = []
+    mappings_in = []
+    mappings_out = []
+    for stage in stages:
+        partition = next(
+            p for p in partitions if pulp.value(at_stage[p][stage]) > 0.5
+        )
+        input_offsets, output_offsets, representative = representatives[partition]
+        mapping_in = mapping_from_order(before_in, stage)
+        mapping_out = mapping_from_order(before_out, stage)
+        alternative = replace(
+            representative,
+            input_physical=tuple(
+                mapping_in[logical] for logical in representative.logical_qubits
+            ),
+            output_physical=tuple(
+                mapping_out[logical] for logical in representative.logical_qubits
+            ),
+        )
+        selections.append(RoutingSelection(partition, alternative))
+        mappings_in.append(mapping_in)
+        mappings_out.append(mapping_out)
+
+    initial_result = (
+        mappings_in[0]
+        if initial_mapping is None
+        else tuple(map(int, initial_mapping))
+    )
+    transition_swaps = []
+    previous = initial_result
+    for mapping_in, mapping_out in zip(mappings_in, mappings_out):
+        transition_swaps.append(
+            _path_mapping_swap_sequence(previous, mapping_in, path)
+        )
+        previous = mapping_out
+    cnot_count = local_cnot + 3 * sum(map(len, transition_swaps))
+    objective_bound = (
+        None if model is None else float(getattr(model, "ObjBound", 0)) / scale
+    )
+    return ExactRoutingResult(
+        selections=tuple(selections),
+        cnot_count=cnot_count,
+        single_qubit_count=local_single,
+        initial_mapping=initial_result,
+        final_mapping=mappings_out[-1],
+        explored_states=int(getattr(model, "NodeCount", 0) or 0),
+        master_backend=f"pulp-{solver_name}-fixed-cover-path-order",
+        optimal=proven_optimal,
+        transition_swaps=tuple(transition_swaps),
+        solver_nodes=(None if model is None else float(getattr(model, "NodeCount", 0))),
+        solver_bound=objective_bound,
+        solver_gap=(None if model is None else float(getattr(model, "MIPGap", 0))),
+        solver_solutions=(None if model is None else int(getattr(model, "SolCount", 0))),
+    )
+
+
+def solve_exact_routing_ilp(
+    *,
+    gate_predecessors: Mapping[int, Iterable[int]],
+    partitions: Sequence[Iterable[int]],
+    alternatives: Mapping[int, Sequence[RoutingAlternative]],
+    logical_qubit_count: int,
+    gate_qubits: Mapping[int, Iterable[int]] | None = None,
+    physical_qubit_count: int | None = None,
+    topology: Iterable[Sequence[int]] | None = None,
+    initial_mapping: Sequence[int] | None = None,
+    timeout_seconds: float | None = None,
+    max_states: int | None = None,
+    allow_suboptimal: bool = False,
+    warm_start: ExactRoutingResult | None = None,
+    _model_cache: dict | None = None,
+    _model_cache_key=None,
+) -> ExactRoutingResult:
+    """Solve globally routed exact cover on a path, including arbitrary SWAPs.
+
+    Selected gate partitions are assigned to global execution stages.  Each
+    stage has a complete input and output permutation.  A local synthesis
+    changes only its participating logical qubits; the minimum transition cost
+    between consecutive complete mappings is their Kendall-tau distance, which
+    is exactly the adjacent-SWAP distance on a path.
+    """
+    del gate_qubits, _model_cache, _model_cache_key
+    if max_states is not None:
+        raise ValueError(
+            "exact_routing_max_states applies only to branch-and-bound; "
+            "use exact_routing_timeout_seconds for the ILP master."
+        )
+    import pulp
+    from squander.partitioning.ilp import _solve_pulp_with_gurobi_or_cbc
+
+    logical_qubit_count = int(logical_qubit_count)
+    physical_qubit_count = int(
+        logical_qubit_count
+        if physical_qubit_count is None
+        else physical_qubit_count
+    )
+    if physical_qubit_count != logical_qubit_count:
+        raise NotImplementedError(
+            "Globally exact path routing currently requires equal logical and "
+            "physical widths."
+        )
+    if topology is None:
+        path = tuple(range(physical_qubit_count))
+        topology = tuple(zip(path, path[1:]))
+    else:
+        topology = tuple(tuple(map(int, edge)) for edge in topology)
+        path = _path_topology_order(topology, physical_qubit_count)
+        if path is None:
+            raise NotImplementedError(
+                "Globally exact SWAP-cost routing is currently implemented for "
+                "path topologies only."
+            )
+    path = tuple(path)
+    path_position = {physical: position for position, physical in enumerate(path)}
+
+    gate_indices = sorted(map(int, gate_predecessors))
+    if gate_indices != list(range(len(gate_indices))):
+        raise ValueError("Gate indices must be contiguous from zero.")
+    gate_count = len(gate_indices)
+    if gate_count == 0:
+        identity = tuple(path)
+        return ExactRoutingResult((), 0, 0, identity, identity, 0, "pulp-path")
+    partition_sets = tuple(frozenset(map(int, part)) for part in partitions)
+    if any(not part for part in partition_sets):
+        raise ValueError("Empty routing partitions are not allowed.")
+    gate_to_partitions = [[] for _ in gate_indices]
+    for partition, gate_set in enumerate(partition_sets):
+        for gate in gate_set:
+            if gate < 0 or gate >= gate_count:
+                raise ValueError("Routing partition references an unknown gate.")
+            gate_to_partitions[gate].append(partition)
+
+    # Collapse translated embeddings of the same local synthesis transition.
+    # The path interval start remains a compact integer decision variable.
+    templates = {}
+    logicals_by_partition = {}
+    for partition, values in sorted(alternatives.items()):
+        partition = int(partition)
+        if partition < 0 or partition >= len(partition_sets):
+            raise ValueError(f"Unknown partition alternative key {partition}.")
+        grouped = {}
+        logical_set = None
+        for alternative in values:
+            if alternative.partition != partition:
+                raise ValueError("Routing alternative partition id mismatch.")
+            logical_qubits = tuple(map(int, alternative.logical_qubits))
+            if logical_set is None:
+                logical_set = logical_qubits
+            elif logical_set != logical_qubits:
+                raise ValueError(
+                    "Alternatives of one partition disagree on logical-qubit order."
+                )
+            input_positions = tuple(
+                path_position[int(value)] for value in alternative.input_physical
+            )
+            output_positions = tuple(
+                path_position[int(value)] for value in alternative.output_physical
+            )
+            occupied = sorted(input_positions)
+            if occupied != list(range(occupied[0], occupied[0] + len(occupied))):
+                raise ValueError("A path alternative does not occupy one interval.")
+            if sorted(output_positions) != occupied:
+                raise ValueError("A path alternative changes its physical support.")
+            key = (
+                tuple(value - occupied[0] for value in input_positions),
+                tuple(value - occupied[0] for value in output_positions),
+            )
+            previous = grouped.get(key)
+            if previous is None or (
+                alternative.cnot_count,
+                alternative.single_qubit_count,
+            ) < (previous.cnot_count, previous.single_qubit_count):
+                grouped[key] = alternative
+        if grouped:
+            logicals_by_partition[partition] = logical_set
+            templates[partition] = tuple(
+                (key[0], key[1], alternative)
+                for key, alternative in sorted(grouped.items())
+            )
+    if any(not any(partition in templates for partition in choices) for choices in gate_to_partitions):
+        raise ValueError("Every gate must have a synthesized routing alternative.")
+
+    partitions_with_templates = tuple(sorted(templates))
+    available_gate_partitions = {
+        gate: tuple(
+            partition
+            for partition in gate_to_partitions[gate]
+            if partition in templates
+        )
+        for gate in gate_indices
+    }
+    fixed_exact_cover = (
+        all(len(values) == 1 for values in available_gate_partitions.values())
+        and {
+            values[0] for values in available_gate_partitions.values()
+        }
+        == set(partitions_with_templates)
+    )
+    if fixed_exact_cover and all(
+        len(templates[partition]) == 1
+        for partition in partitions_with_templates
+    ):
+        return _solve_fixed_cover_path_order_ilp(
+            gate_predecessors=gate_predecessors,
+            partition_sets=partition_sets,
+            templates=templates,
+            logical_qubit_count=logical_qubit_count,
+            path=path,
+            initial_mapping=initial_mapping,
+            timeout_seconds=timeout_seconds,
+            allow_suboptimal=allow_suboptimal,
+            warm_start=warm_start,
+        )
+    # A Benders routing oracle supplies an already-selected exact cover. Its
+    # schedule has one stage per partition, not one stage per source gate.
+    # This removes the dominant O(gates * qubits^2) mapping variables without
+    # changing the complete joint model used by the standalone backend.
+    stage_count = (
+        len(partitions_with_templates) if fixed_exact_cover else gate_count
+    )
+    stages = range(stage_count)
+    prob = pulp.LpProblem("GlobalPathExactRouting", pulp.LpMinimize)
+    selected = pulp.LpVariable.dicts(
+        "selected", list(partitions_with_templates), cat="Binary"
+    )
+    at_stage = pulp.LpVariable.dicts(
+        "stage",
+        (partitions_with_templates, stages),
+        cat="Binary",
+    )
+    config = {
+        (partition, index): pulp.LpVariable(
+            f"config_{partition}_{index}", cat="Binary"
+        )
+        for partition in partitions_with_templates
+        for index in range(len(templates[partition]))
+    }
+    interval_start = {
+        partition: pulp.LpVariable(
+            f"interval_{partition}",
+            lowBound=0,
+            upBound=physical_qubit_count - len(logicals_by_partition[partition]),
+            cat="Integer",
+        )
+        for partition in partitions_with_templates
+    }
+    active = pulp.LpVariable.dicts("active", stages, cat="Binary")
+
+    for partition in partitions_with_templates:
+        prob += pulp.lpSum(at_stage[partition][stage] for stage in stages) == selected[partition]
+        prob += pulp.lpSum(
+            config[partition, index]
+            for index in range(len(templates[partition]))
+        ) == selected[partition]
+        prob += interval_start[partition] <= (
+            physical_qubit_count - len(logicals_by_partition[partition])
+        ) * selected[partition]
+        if fixed_exact_cover:
+            prob += selected[partition] == 1
+    for stage in stages:
+        prob += pulp.lpSum(
+            at_stage[partition][stage] for partition in partitions_with_templates
+        ) == active[stage]
+        if stage:
+            prob += active[stage - 1] >= active[stage]
+        if fixed_exact_cover:
+            prob += active[stage] == 1
+    prob += active[0] == 1
+    for gate in gate_indices:
+        prob += pulp.lpSum(
+            selected[partition]
+            for partition in gate_to_partitions[gate]
+            if partition in templates
+        ) == 1
+
+    gate_stage = {
+        gate: pulp.lpSum(
+            stage * at_stage[partition][stage]
+            for partition in gate_to_partitions[gate]
+            if partition in templates
+            for stage in stages
+        )
+        for gate in gate_indices
+    }
+    for gate, predecessors in gate_predecessors.items():
+        gate = int(gate)
+        for predecessor in map(int, predecessors):
+            same_block = pulp.lpSum(
+                selected[partition]
+                for partition in partitions_with_templates
+                if predecessor in partition_sets[partition]
+                and gate in partition_sets[partition]
+            )
+            prob += (
+                gate_stage[predecessor] + 1
+                <= gate_stage[gate] + stage_count * same_block
+            )
+
+    location_in = pulp.LpVariable.dicts(
+        "map_in",
+        (stages, range(logical_qubit_count), range(physical_qubit_count)),
+        cat="Binary",
+    )
+    location_out = pulp.LpVariable.dicts(
+        "map_out",
+        (stages, range(logical_qubit_count), range(physical_qubit_count)),
+        cat="Binary",
+    )
+    location_start = None
+    position_start = {}
+    if initial_mapping is not None:
+        location_start = pulp.LpVariable.dicts(
+            "map_start",
+            (range(logical_qubit_count), range(physical_qubit_count)),
+            cat="Binary",
+        )
+        for logical in range(logical_qubit_count):
+            prob += pulp.lpSum(location_start[logical]) == 1
+            position_start[logical] = pulp.lpSum(
+                path_position[physical] * location_start[logical][physical]
+                for physical in range(physical_qubit_count)
+            )
+        for physical in range(physical_qubit_count):
+            prob += pulp.lpSum(
+                location_start[logical][physical]
+                for logical in range(logical_qubit_count)
+            ) == 1
+    position_in = {}
+    position_out = {}
+    for stage in stages:
+        for logical in range(logical_qubit_count):
+            prob += pulp.lpSum(location_in[stage][logical]) == 1
+            prob += pulp.lpSum(location_out[stage][logical]) == 1
+            position_in[stage, logical] = pulp.lpSum(
+                path_position[physical] * location_in[stage][logical][physical]
+                for physical in range(physical_qubit_count)
+            )
+            position_out[stage, logical] = pulp.lpSum(
+                path_position[physical] * location_out[stage][logical][physical]
+                for physical in range(physical_qubit_count)
+            )
+        for physical in range(physical_qubit_count):
+            prob += pulp.lpSum(
+                location_in[stage][logical][physical]
+                for logical in range(logical_qubit_count)
+            ) == 1
+            prob += pulp.lpSum(
+                location_out[stage][logical][physical]
+                for logical in range(logical_qubit_count)
+            ) == 1
+        # Inactive suffix stages have no routing meaning. Canonicalize both
+        # permutations to eliminate (n!)^2 equivalent assignments per stage.
+        for logical in range(logical_qubit_count):
+            canonical_physical = path[logical]
+            for physical in range(physical_qubit_count):
+                canonical = int(physical == canonical_physical)
+                prob += (
+                    location_in[stage][logical][physical]
+                    <= active[stage] + canonical
+                )
+                prob += (
+                    location_out[stage][logical][physical]
+                    <= active[stage] + canonical
+                )
+
+    big_m = physical_qubit_count
+    partition_position_in = {}
+    partition_position_out = {}
+    for partition in partitions_with_templates:
+        involved = set(logicals_by_partition[partition])
+        for logical in involved:
+            partition_position_in[partition, logical] = pulp.LpVariable(
+                f"partition_in_{partition}_{logical}",
+                lowBound=0,
+                upBound=physical_qubit_count - 1,
+                cat="Integer",
+            )
+            partition_position_out[partition, logical] = pulp.LpVariable(
+                f"partition_out_{partition}_{logical}",
+                lowBound=0,
+                upBound=physical_qubit_count - 1,
+                cat="Integer",
+            )
+            # Likewise, an unselected partition has no placement. Pinning its
+            # auxiliary positions removes a large family of symmetric values.
+            prob += partition_position_in[partition, logical] <= (
+                physical_qubit_count - 1
+            ) * selected[partition]
+            prob += partition_position_out[partition, logical] <= (
+                physical_qubit_count - 1
+            ) * selected[partition]
+        for config_index, (
+            input_offsets,
+            output_offsets,
+            _alternative,
+        ) in enumerate(templates[partition]):
+            chosen = config[partition, config_index]
+            for local, logical in enumerate(logicals_by_partition[partition]):
+                slack = big_m * (1 - chosen)
+                prob += partition_position_in[partition, logical] - interval_start[partition] - input_offsets[local] <= slack
+                prob += interval_start[partition] + input_offsets[local] - partition_position_in[partition, logical] <= slack
+                prob += partition_position_out[partition, logical] - interval_start[partition] - output_offsets[local] <= slack
+                prob += interval_start[partition] + output_offsets[local] - partition_position_out[partition, logical] <= slack
+        for stage in stages:
+            for logical in involved:
+                slack = big_m * (1 - at_stage[partition][stage])
+                prob += position_in[stage, logical] - partition_position_in[partition, logical] <= slack
+                prob += partition_position_in[partition, logical] - position_in[stage, logical] <= slack
+                prob += position_out[stage, logical] - partition_position_out[partition, logical] <= slack
+                prob += partition_position_out[partition, logical] - position_out[stage, logical] <= slack
+
+    for stage in stages:
+        for logical in range(logical_qubit_count):
+            touches_logical = pulp.lpSum(
+                at_stage[partition][stage]
+                for partition in partitions_with_templates
+                if logical in logicals_by_partition[partition]
+            )
+            movement_slack = big_m * (1 - active[stage] + touches_logical)
+            prob += position_out[stage, logical] - position_in[stage, logical] <= movement_slack
+            prob += position_in[stage, logical] - position_out[stage, logical] <= movement_slack
+
+    if initial_mapping is not None:
+        fixed_mapping = tuple(map(int, initial_mapping))
+        if len(fixed_mapping) != logical_qubit_count:
+            raise ValueError("Initial mapping width mismatch.")
+        if any(
+            physical < -1 or physical >= physical_qubit_count
+            for physical in fixed_mapping
+        ):
+            raise ValueError("Initial mapping contains an invalid physical qubit.")
+        assigned = tuple(physical for physical in fixed_mapping if physical >= 0)
+        if len(set(assigned)) != len(assigned):
+            raise ValueError("Initial mapping assigns one physical qubit twice.")
+        for logical, physical in enumerate(fixed_mapping):
+            if physical >= 0:
+                prob += location_start[logical][physical] == 1
+    elif physical_qubit_count > 1:
+        prob += position_in[0, 0] <= (physical_qubit_count - 1) // 2
+
+    pairs = tuple(itertools.combinations(range(logical_qubit_count), 2))
+    before_start = {}
+    before_in = {}
+    before_out = {}
+    if location_start is not None:
+        for left, right in pairs:
+            before_start[left, right] = pulp.LpVariable(
+                f"before_start_{left}_{right}", cat="Binary"
+            )
+            before = before_start[left, right]
+            prob += position_start[left] - position_start[right] <= -1 + big_m * (1 - before)
+            prob += position_start[right] - position_start[left] <= -1 + big_m * before
+    for stage in stages:
+        for left, right in pairs:
+            before_in[stage, left, right] = pulp.LpVariable(
+                f"before_in_{stage}_{left}_{right}", cat="Binary"
+            )
+            before_out[stage, left, right] = pulp.LpVariable(
+                f"before_out_{stage}_{left}_{right}", cat="Binary"
+            )
+            for before, positions in (
+                (before_in[stage, left, right], position_in),
+                (before_out[stage, left, right], position_out),
+            ):
+                prob += positions[stage, left] - positions[stage, right] <= -1 + big_m * (1 - before)
+                prob += positions[stage, right] - positions[stage, left] <= -1 + big_m * before
+
+    initial_reversals = {}
+    if location_start is not None:
+        for left, right in pairs:
+            reversal = pulp.LpVariable(
+                f"reverse_initial_{left}_{right}", cat="Binary"
+            )
+            initial_reversals[left, right] = reversal
+            first = before_start[left, right]
+            second = before_in[0, left, right]
+            prob += reversal >= first - second
+            prob += reversal >= second - first
+
+    reversals = {}
+    for stage in range(stage_count - 1):
+        for left, right in pairs:
+            reversal = pulp.LpVariable(
+                f"reverse_{stage}_{left}_{right}", cat="Binary"
+            )
+            reversals[stage, left, right] = reversal
+            first = before_out[stage, left, right]
+            second = before_in[stage + 1, left, right]
+            prob += reversal >= first - second - (1 - active[stage + 1])
+            prob += reversal >= second - first - (1 - active[stage + 1])
+            prob += reversal <= active[stage + 1]
+
+    max_single_qubit_cost = 1 + sum(
+        max(
+            (template[2].single_qubit_count for template in templates[partition]),
+            default=0,
+        )
+        for partition in partitions_with_templates
+    )
+    synthesized_cnot_cost = pulp.lpSum(
+        template[2].cnot_count * config[partition, index]
+        for partition in partitions_with_templates
+        for index, template in enumerate(templates[partition])
+    )
+    swap_cnot_cost = 3 * pulp.lpSum(
+        tuple(initial_reversals.values()) + tuple(reversals.values())
+    )
+    single_qubit_cost = pulp.lpSum(
+        template[2].single_qubit_count * config[partition, index]
+        for partition in partitions_with_templates
+        for index, template in enumerate(templates[partition])
+    )
+    prob.setObjective(
+        (synthesized_cnot_cost + swap_cnot_cost) * max_single_qubit_cost
+        + single_qubit_cost
+    )
+
+    if warm_start is not None:
+        # This is a redundant but much tighter relaxation than merely passing
+        # a MIP start: no optimum can be worse than a verified feasible seed.
+        prob += synthesized_cnot_cost + swap_cnot_cost <= int(
+            warm_start.cnot_count
+        )
+        warm_swaps = warm_start.transition_swaps or tuple(
+            () for _selection in warm_start.selections
+        )
+        if len(warm_swaps) != len(warm_start.selections):
+            raise ValueError("Warm-start SWAP trajectory length mismatch.")
+        warm_mapping = list(map(int, warm_start.initial_mapping))
+        if sorted(warm_mapping) != list(range(physical_qubit_count)):
+            raise ValueError("Warm start has an invalid initial mapping.")
+        warm_records = []
+        for swaps_before, selection in zip(
+            warm_swaps, warm_start.selections
+        ):
+            for left, right in swaps_before:
+                left_logical = warm_mapping.index(int(left))
+                right_logical = warm_mapping.index(int(right))
+                warm_mapping[left_logical], warm_mapping[right_logical] = (
+                    warm_mapping[right_logical],
+                    warm_mapping[left_logical],
+                )
+            alternative = selection.alternative
+            mapping_in = tuple(warm_mapping)
+            if any(
+                mapping_in[logical] != physical
+                for logical, physical in zip(
+                    alternative.logical_qubits,
+                    alternative.input_physical,
+                )
+            ):
+                raise ValueError(
+                    "Warm-start partition input does not match its mapping."
+                )
+            for logical, physical in zip(
+                alternative.logical_qubits,
+                alternative.output_physical,
+            ):
+                warm_mapping[logical] = physical
+            mapping_out = tuple(warm_mapping)
+            warm_records.append(
+                (selection.partition, alternative, mapping_in, mapping_out)
+            )
+        if tuple(warm_mapping) != tuple(warm_start.final_mapping):
+            raise ValueError("Warm-start final mapping does not replay.")
+        if len(warm_records) > stage_count:
+            raise ValueError("Warm start uses more stages than the ILP permits.")
+
+        warm_by_partition = {
+            partition: (stage, alternative, mapping_in, mapping_out)
+            for stage, (
+                partition,
+                alternative,
+                mapping_in,
+                mapping_out,
+            ) in enumerate(warm_records)
+        }
+        if len(warm_by_partition) != len(warm_records):
+            raise ValueError("Warm start selects one partition more than once.")
+        inactive_mapping = tuple(path)
+        for partition in partitions_with_templates:
+            record = warm_by_partition.get(partition)
+            chosen_alternative = None if record is None else record[1]
+            selected[partition].setInitialValue(int(record is not None))
+            for stage in stages:
+                expected = record is not None and record[0] == stage
+                at_stage[partition][stage].setInitialValue(int(expected))
+            chosen_config = None
+            chosen_start = 0
+            if chosen_alternative is not None:
+                input_positions = tuple(
+                    path_position[physical]
+                    for physical in chosen_alternative.input_physical
+                )
+                output_positions = tuple(
+                    path_position[physical]
+                    for physical in chosen_alternative.output_physical
+                )
+                chosen_start = min(input_positions)
+                chosen_key = (
+                    tuple(value - chosen_start for value in input_positions),
+                    tuple(value - chosen_start for value in output_positions),
+                )
+                chosen_config = next(
+                    index
+                    for index, (input_offsets, output_offsets, _alternative)
+                    in enumerate(templates[partition])
+                    if (input_offsets, output_offsets) == chosen_key
+                )
+            interval_start[partition].setInitialValue(chosen_start)
+            for index in range(len(templates[partition])):
+                config[partition, index].setInitialValue(
+                    int(index == chosen_config)
+                )
+            for logical in logicals_by_partition[partition]:
+                if record is None:
+                    input_value = output_value = 0
+                else:
+                    input_value = path_position[record[2][logical]]
+                    output_value = path_position[record[3][logical]]
+                partition_position_in[partition, logical].setInitialValue(
+                    input_value
+                )
+                partition_position_out[partition, logical].setInitialValue(
+                    output_value
+                )
+
+        for stage in stages:
+            active[stage].setInitialValue(int(stage < len(warm_records)))
+            if stage < len(warm_records):
+                mapping_in = warm_records[stage][2]
+                mapping_out = warm_records[stage][3]
+            else:
+                mapping_in = mapping_out = inactive_mapping
+            for logical in range(logical_qubit_count):
+                for physical in range(physical_qubit_count):
+                    location_in[stage][logical][physical].setInitialValue(
+                        int(mapping_in[logical] == physical)
+                    )
+                    location_out[stage][logical][physical].setInitialValue(
+                        int(mapping_out[logical] == physical)
+                    )
+            for left, right in pairs:
+                before_in[stage, left, right].setInitialValue(
+                    int(path_position[mapping_in[left]] < path_position[mapping_in[right]])
+                )
+                before_out[stage, left, right].setInitialValue(
+                    int(path_position[mapping_out[left]] < path_position[mapping_out[right]])
+                )
+
+        if location_start is not None:
+            start_mapping = tuple(map(int, warm_start.initial_mapping))
+            for logical in range(logical_qubit_count):
+                for physical in range(physical_qubit_count):
+                    location_start[logical][physical].setInitialValue(
+                        int(start_mapping[logical] == physical)
+                    )
+            for left, right in pairs:
+                start_before = (
+                    path_position[start_mapping[left]]
+                    < path_position[start_mapping[right]]
+                )
+                first_before = (
+                    path_position[warm_records[0][2][left]]
+                    < path_position[warm_records[0][2][right]]
+                )
+                before_start[left, right].setInitialValue(int(start_before))
+                initial_reversals[left, right].setInitialValue(
+                    int(start_before != first_before)
+                )
+        for stage in range(stage_count - 1):
+            for left, right in pairs:
+                if stage + 1 >= len(warm_records):
+                    reversed_order = False
+                else:
+                    output_mapping = warm_records[stage][3]
+                    next_input_mapping = warm_records[stage + 1][2]
+                    reversed_order = (
+                        path_position[output_mapping[left]]
+                        < path_position[output_mapping[right]]
+                    ) != (
+                        path_position[next_input_mapping[left]]
+                        < path_position[next_input_mapping[right]]
+                    )
+                reversals[stage, left, right].setInitialValue(
+                    int(reversed_order)
+                )
+
+    solve_kwargs = {}
+    if timeout_seconds is not None:
+        solve_kwargs["timeLimit"] = float(timeout_seconds)
+    if warm_start is not None:
+        solve_kwargs["warmStart"] = True
+    solver_name = _solve_pulp_with_gurobi_or_cbc(
+        prob, pulp, callback=None, **solve_kwargs
+    )
+    status = pulp.LpStatus[prob.status]
+    model = getattr(prob, "solverModel", None)
+    has_incumbent = bool(
+        model is not None and getattr(model, "SolCount", 0) >= 1
+    )
+    proven_optimal = status == "Optimal"
+    if not proven_optimal and not (allow_suboptimal and has_incumbent):
+        if status == "Infeasible":
+            raise ValueError("No globally routed exact-cover solution exists.")
+        raise ExactRoutingLimitExceeded(
+            f"The {solver_name} global routing ILP did not prove optimality; "
+            f"status={status}."
+        )
+
+    selected_stages = []
+    for stage in stages:
+        if pulp.value(active[stage]) < 0.5:
+            break
+        partition = next(
+            partition
+            for partition in partitions_with_templates
+            if pulp.value(at_stage[partition][stage]) > 0.5
+        )
+        config_index = next(
+            index
+            for index in range(len(templates[partition]))
+            if pulp.value(config[partition, index]) > 0.5
+        )
+        input_offsets, output_offsets, representative = templates[partition][config_index]
+        start = int(round(pulp.value(interval_start[partition])))
+        input_physical = tuple(
+            path[start + input_offsets[local]]
+            for local in range(len(representative.logical_qubits))
+        )
+        output_physical = tuple(
+            path[start + output_offsets[local]]
+            for local in range(len(representative.logical_qubits))
+        )
+        alternative = replace(
+            representative,
+            input_physical=input_physical,
+            output_physical=output_physical,
+        )
+        mapping_in = tuple(
+            next(
+                physical
+                for physical in range(physical_qubit_count)
+                if pulp.value(location_in[stage][logical][physical]) > 0.5
+            )
+            for logical in range(logical_qubit_count)
+        )
+        mapping_out = tuple(
+            next(
+                physical
+                for physical in range(physical_qubit_count)
+                if pulp.value(location_out[stage][logical][physical]) > 0.5
+            )
+            for logical in range(logical_qubit_count)
+        )
+        selected_stages.append((partition, alternative, mapping_in, mapping_out))
+
+    selections = []
+    transition_swaps = []
+    if location_start is None:
+        initial_result = selected_stages[0][2]
+    else:
+        initial_result = tuple(
+            next(
+                physical
+                for physical in range(physical_qubit_count)
+                if pulp.value(location_start[logical][physical]) > 0.5
+            )
+            for logical in range(logical_qubit_count)
+        )
+    previous_mapping = initial_result
+    for partition, alternative, mapping_in, mapping_out in selected_stages:
+        swaps = _path_mapping_swap_sequence(
+            previous_mapping, mapping_in, path
+        )
+        transition_swaps.append(swaps)
+        selections.append(RoutingSelection(partition, alternative))
+        replayed = list(mapping_in)
+        for logical, physical in zip(
+            alternative.logical_qubits, alternative.output_physical
+        ):
+            replayed[logical] = physical
+        if tuple(replayed) != mapping_out:
+            raise AssertionError("Selected partition output mapping does not replay.")
+        previous_mapping = mapping_out
+
+    cnot_count = sum(value.alternative.cnot_count for value in selections) + 3 * sum(
+        len(value) for value in transition_swaps
+    )
+    return ExactRoutingResult(
+        selections=tuple(selections),
+        cnot_count=cnot_count,
+        single_qubit_count=sum(
+            value.alternative.single_qubit_count for value in selections
+        ),
+        initial_mapping=initial_result,
+        final_mapping=selected_stages[-1][3],
+        explored_states=int(getattr(model, "NodeCount", 0) or 0),
+        master_backend=f"pulp-{solver_name}-global-path",
+        optimal=proven_optimal,
+        transition_swaps=tuple(transition_swaps),
+        solver_nodes=(None if model is None else float(getattr(model, "NodeCount", 0))),
+        solver_bound=(None if model is None else float(getattr(model, "ObjBound", 0)) / max_single_qubit_cost),
+        solver_gap=(None if model is None else float(getattr(model, "MIPGap", 0))),
+        solver_solutions=(None if model is None else int(getattr(model, "SolCount", 0))),
+    )
+
+
+def solve_exact_routing_benders(
+    *,
+    gate_predecessors: Mapping[int, Iterable[int]],
+    partitions: Sequence[Iterable[int]],
+    alternatives: Mapping[int, Sequence[RoutingAlternative]],
+    logical_qubit_count: int,
+    gate_qubits: Mapping[int, Iterable[int]] | None = None,
+    physical_qubit_count: int | None = None,
+    topology: Iterable[Sequence[int]] | None = None,
+    initial_mapping: Sequence[int] | None = None,
+    timeout_seconds: float | None = None,
+    max_states: int | None = None,
+    allow_suboptimal: bool = False,
+    warm_start: ExactRoutingResult | None = None,
+    subproblem_slice_seconds: float | None = None,
+    minimum_transition_cnot_cost: int = 0,
+    zero_swap_local_cnot_lower_bound: int = 0,
+    stop_when_cnot_optimal: bool = False,
+    **_unused,
+) -> ExactRoutingResult:
+    """Solve exact routing by lazy synthesis-column/path-routing separation.
+
+    The compact master selects one relative placement/permutation column for
+    every exact-cover partition. Gurobi callbacks add dependency-cycle cuts;
+    between persistent master resumes, the staged path oracle prices an integer
+    cover and adds an exact conditional SWAP-cost cut. Thus Gurobi never starts
+    a nested optimization inside its callback, and convergence preserves the
+    same global optimum as the monolithic formulation.
+    """
+    del gate_qubits
+    if max_states is not None:
+        raise ValueError(
+            "exact_routing_max_states does not apply to the Benders master."
+        )
+    import pulp
+    import gurobipy as gp
+    from squander.partitioning.ilp import (
+        _check_gurobi_available,
+        sol_to_badsccs,
+    )
+
+    _check_gurobi_available()
+    logical_qubit_count = int(logical_qubit_count)
+    physical_qubit_count = int(
+        logical_qubit_count
+        if physical_qubit_count is None
+        else physical_qubit_count
+    )
+    if physical_qubit_count != logical_qubit_count:
+        raise NotImplementedError(
+            "The exact Benders router currently requires equal device width."
+        )
+    if topology is None:
+        path = tuple(range(physical_qubit_count))
+        topology = tuple(zip(path, path[1:]))
+    else:
+        topology = tuple(tuple(map(int, edge)) for edge in topology)
+        path = _path_topology_order(topology, physical_qubit_count)
+        if path is None:
+            raise NotImplementedError(
+                "The exact Benders router currently supports path topologies."
+            )
+    path = tuple(path)
+    path_position = {physical: index for index, physical in enumerate(path)}
+
+    gate_indices = sorted(map(int, gate_predecessors))
+    if gate_indices != list(range(len(gate_indices))):
+        raise ValueError("Gate indices must be contiguous from zero.")
+    gate_count = len(gate_indices)
+    if gate_count == 0:
+        identity = tuple(path)
+        return ExactRoutingResult((), 0, 0, identity, identity, 0, "benders")
+    partition_sets = tuple(frozenset(map(int, value)) for value in partitions)
+    gate_successors = {gate: set() for gate in gate_indices}
+    for gate, predecessors in gate_predecessors.items():
+        for predecessor in map(int, predecessors):
+            gate_successors[predecessor].add(int(gate))
+
+    # Physical translations of one relative path transition have identical
+    # synthesis cost. Keep one master column and let the routing oracle choose
+    # its interval, exactly as the staged model does.
+    nodes = []
+    nodes_by_partition = collections.defaultdict(list)
+    node_key = {}
+    for partition, values in sorted(alternatives.items()):
+        grouped = {}
+        for alternative in values:
+            positions_in = tuple(
+                path_position[int(value)] for value in alternative.input_physical
+            )
+            positions_out = tuple(
+                path_position[int(value)] for value in alternative.output_physical
+            )
+            start = min(positions_in)
+            key = (
+                tuple(map(int, alternative.logical_qubits)),
+                tuple(value - start for value in positions_in),
+                tuple(value - start for value in positions_out),
+            )
+            previous = grouped.get(key)
+            if previous is None or (
+                alternative.cnot_count,
+                alternative.single_qubit_count,
+            ) < (
+                previous.cnot_count,
+                previous.single_qubit_count,
+            ):
+                grouped[key] = alternative
+        for key, alternative in sorted(grouped.items()):
+            node = len(nodes)
+            nodes.append(alternative)
+            nodes_by_partition[int(partition)].append(node)
+            node_key[int(partition), key] = node
+    gate_to_nodes = {gate: [] for gate in gate_indices}
+    for node, alternative in enumerate(nodes):
+        for gate in partition_sets[alternative.partition]:
+            gate_to_nodes[gate].append(node)
+    if any(not values for values in gate_to_nodes.values()):
+        raise ValueError("Every gate needs at least one Benders routing column.")
+
+    minimum_transition_cnot_cost = int(minimum_transition_cnot_cost)
+    zero_swap_local_cnot_lower_bound = int(
+        zero_swap_local_cnot_lower_bound
+    )
+    if (
+        minimum_transition_cnot_cost < 0
+        or minimum_transition_cnot_cost % 3
+    ):
+        raise ValueError(
+            "The path-transition lower bound must be a nonnegative multiple "
+            "of three CNOTs."
+        )
+    if zero_swap_local_cnot_lower_bound < 0:
+        raise ValueError("The zero-SWAP local-cost bound cannot be negative.")
+    prob = pulp.LpProblem("ExactRoutingBenders", pulp.LpMinimize)
+    x = pulp.LpVariable.dicts("column", range(len(nodes)), cat="Binary")
+    swap_cost = pulp.LpVariable(
+        "transition_cnot_cost",
+        lowBound=minimum_transition_cnot_cost,
+        cat="Integer",
+    )
+    swap_count = pulp.LpVariable(
+        "transition_swap_count",
+        lowBound=minimum_transition_cnot_cost // 3,
+        cat="Integer",
+    )
+    prob += swap_cost == 3 * swap_count
+    for gate in gate_indices:
+        prob += pulp.lpSum(x[node] for node in gate_to_nodes[gate]) == 1
+    max_single = 1 + sum(
+        max(
+            (nodes[node].single_qubit_count for node in values),
+            default=0,
+        )
+        for values in nodes_by_partition.values()
+    )
+    local_cnot = pulp.lpSum(
+        alternative.cnot_count * x[node]
+        for node, alternative in enumerate(nodes)
+    )
+    local_single = pulp.lpSum(
+        alternative.single_qubit_count * x[node]
+        for node, alternative in enumerate(nodes)
+    )
+    if zero_swap_local_cnot_lower_bound:
+        # Disjunctive lower envelope: a zero-transition route costs at least Z
+        # locally; any positive path transition already costs >=3 CNOTs. This
+        # imports the compact flow model's dual certificate without excluding
+        # more expensive zero-SWAP routes.
+        prob += (
+            local_cnot
+            + (zero_swap_local_cnot_lower_bound / 3.0) * swap_cost
+            >= zero_swap_local_cnot_lower_bound
+        )
+    prob.setObjective((local_cnot + swap_cost) * max_single + local_single)
+
+    def relative_key(alternative):
+        positions_in = tuple(
+            path_position[int(value)] for value in alternative.input_physical
+        )
+        positions_out = tuple(
+            path_position[int(value)] for value in alternative.output_physical
+        )
+        start = min(positions_in)
+        return (
+            tuple(map(int, alternative.logical_qubits)),
+            tuple(value - start for value in positions_in),
+            tuple(value - start for value in positions_out),
+        )
+
+    warm_nodes = set()
+    warm_swap_cost = 0
+    if warm_start is not None:
+        for selection in warm_start.selections:
+            key = (selection.partition, relative_key(selection.alternative))
+            if key not in node_key:
+                raise ValueError("A warm-start routing column is unavailable.")
+            warm_nodes.add(node_key[key])
+        warm_swap_cost = 3 * sum(
+            len(swaps) for swaps in (warm_start.transition_swaps or ())
+        )
+        for node in range(len(nodes)):
+            x[node].setInitialValue(int(node in warm_nodes))
+        swap_cost.setInitialValue(warm_swap_cost)
+        swap_count.setInitialValue(warm_swap_cost // 3)
+        prob += local_cnot + swap_cost <= (
+            sum(nodes[node].cnot_count for node in warm_nodes)
+            + warm_swap_cost
+        )
+
+    if (
+        subproblem_slice_seconds is not None
+        and subproblem_slice_seconds <= 0
+    ):
+        raise ValueError("The Benders subproblem slice must be positive.")
+    solve_deadline = (
+        None
+        if timeout_seconds is None
+        else time.monotonic() + float(timeout_seconds)
+    )
+    callback_cache = {}
+    callback_lower_bounds = {}
+    callback_cycle_cuts = set()
+    callback_failure = [None]
+    cnot_bound_closed = [False]
+    cnot_proof_bound = [None]
+    incumbent_cost = [
+        (
+            int(warm_start.cnot_count),
+            int(warm_start.single_qubit_count),
+        )
+        if warm_start is not None
+        else (float("inf"), float("inf"))
+    ]
+    incumbent_result = [warm_start]
+
+    def seconds_remaining():
+        if solve_deadline is None:
+            return None
+        return max(0.0, solve_deadline - time.monotonic())
+
+    def record_incumbent(result):
+        value = (int(result.cnot_count), int(result.single_qubit_count))
+        if value < incumbent_cost[0]:
+            incumbent_cost[0] = value
+            incumbent_result[0] = result
+
+    def remap_oracle_result(reduced_result, original_partitions):
+        remapped_selections = tuple(
+            RoutingSelection(
+                original_partitions[selection.partition],
+                replace(
+                    selection.alternative,
+                    partition=original_partitions[selection.partition],
+                ),
+            )
+            for selection in reduced_result.selections
+        )
+        return replace(
+            reduced_result,
+            selections=remapped_selections,
+            master_backend="benders-routing-oracle",
+        )
+
+    def solve_selected_subproblem(signature):
+        if signature in callback_cache:
+            return callback_cache[signature]
+        selected_nodes = tuple(signature)
+        original_partitions = tuple(nodes[node].partition for node in selected_nodes)
+        reduced_partitions = tuple(
+            partition_sets[partition] for partition in original_partitions
+        )
+        reduced_alternatives = {
+            reduced: (
+                replace(nodes[node], partition=reduced),
+            )
+            for reduced, node in enumerate(selected_nodes)
+        }
+        # The compact flow oracle does not translate relative path columns on
+        # its own, so explicitly expose every interval only for this selected
+        # cover. This remains tiny compared with the global master.
+        expanded_alternatives = {}
+        for reduced, node in enumerate(selected_nodes):
+            alternative = nodes[node]
+            positions_in = tuple(
+                path_position[physical]
+                for physical in alternative.input_physical
+            )
+            positions_out = tuple(
+                path_position[physical]
+                for physical in alternative.output_physical
+            )
+            base = min(positions_in)
+            input_offsets = tuple(value - base for value in positions_in)
+            output_offsets = tuple(value - base for value in positions_out)
+            width = len(alternative.logical_qubits)
+            expanded_alternatives[reduced] = tuple(
+                replace(
+                    alternative,
+                    partition=reduced,
+                    input_physical=tuple(
+                        path[start + value] for value in input_offsets
+                    ),
+                    output_physical=tuple(
+                        path[start + value] for value in output_offsets
+                    ),
+                )
+                for start in range(logical_qubit_count - width + 1)
+            )
+        selected_local = sum(nodes[node].cnot_count for node in selected_nodes)
+        selected_single = sum(
+            nodes[node].single_qubit_count for node in selected_nodes
+        )
+
+        # Zero-SWAP compatibility is exactly the old compact mapping-flow
+        # problem. It is both a fast certificate and a rigorous one-SWAP
+        # lower bound when infeasible.
+        remaining = seconds_remaining()
+        if remaining is not None and remaining <= 0:
+            raise ExactRoutingLimitExceeded(
+                "The Benders routing budget was exhausted in its flow oracle."
+            )
+        try:
+            flow_result = _solve_exact_routing_ilp_flow_restricted(
+                gate_predecessors=gate_predecessors,
+                partitions=reduced_partitions,
+                alternatives=expanded_alternatives,
+                logical_qubit_count=logical_qubit_count,
+                physical_qubit_count=physical_qubit_count,
+                topology=topology,
+                initial_mapping=initial_mapping,
+                timeout_seconds=remaining,
+                allow_suboptimal=False,
+            )
+        except ValueError:
+            flow_result = None
+        if flow_result is not None:
+            result = remap_oracle_result(flow_result, original_partitions)
+            callback_cache[signature] = (0, result)
+            record_incumbent(result)
+            return callback_cache[signature]
+
+        one_swap_lower_bound = (selected_local + 3, selected_single)
+        if one_swap_lower_bound >= incumbent_cost[0]:
+            callback_cache[signature] = ("pruned", None)
+            return callback_cache[signature]
+
+        # First reject the zero-cost master incumbent with the universally
+        # valid one-SWAP lower bound.  This lets the master eliminate many
+        # covers before paying for the complete staged routing oracle.
+        if signature not in callback_lower_bounds:
+            callback_lower_bounds[signature] = 3
+            return 3, None
+
+        reduced_warm_start = _greedy_selected_path_warm_start(
+            gate_predecessors=gate_predecessors,
+            partitions=reduced_partitions,
+            alternatives=reduced_alternatives,
+            logical_qubit_count=logical_qubit_count,
+            path=path,
+            initial_mapping=initial_mapping,
+        )
+        oracle_warm_start = remap_oracle_result(
+            reduced_warm_start, original_partitions
+        )
+        record_incumbent(oracle_warm_start)
+        remaining = seconds_remaining()
+        if remaining is not None and remaining <= 0:
+            raise ExactRoutingLimitExceeded(
+                "The Benders routing budget was exhausted in its oracle."
+            )
+        if subproblem_slice_seconds is None:
+            oracle_seconds = remaining
+        elif remaining is None:
+            oracle_seconds = float(subproblem_slice_seconds)
+        else:
+            oracle_seconds = min(float(subproblem_slice_seconds), remaining)
+        reduced_result = solve_exact_routing_ilp(
+            gate_predecessors=gate_predecessors,
+            partitions=reduced_partitions,
+            alternatives=reduced_alternatives,
+            logical_qubit_count=logical_qubit_count,
+            physical_qubit_count=physical_qubit_count,
+            topology=topology,
+            initial_mapping=initial_mapping,
+            timeout_seconds=oracle_seconds,
+            allow_suboptimal=True,
+            warm_start=reduced_warm_start,
+        )
+        result = remap_oracle_result(reduced_result, original_partitions)
+        transition_cost = result.cnot_count - selected_local
+        if transition_cost < 0 or transition_cost % 3:
+            raise AssertionError("Routing oracle returned an invalid SWAP cost.")
+        record_incumbent(result)
+        if result.optimal:
+            callback_cache[signature] = (transition_cost, result)
+            return callback_cache[signature]
+
+        # An unproven combinatorial subproblem cannot validate a Benders
+        # incumbent. Preserve its replayable primal route, terminate the
+        # master, and report a bounded (not falsely optimal) result.
+        raise ExactRoutingLimitExceeded(
+            "A Benders routing oracle exhausted its solve-time budget."
+        )
+
+    def cycle_callback(model, where):
+        if where == gp.GRB.Callback.MIP:
+            if stop_when_cnot_optimal and incumbent_result[0] is not None:
+                objective_bound = (
+                    model.cbGet(gp.GRB.Callback.MIP_OBJBND) / max_single
+                )
+                if int(np.floor(objective_bound + 1e-9)) >= int(
+                    incumbent_result[0].cnot_count
+                    ):
+                        cnot_bound_closed[0] = True
+                        cnot_proof_bound[0] = objective_bound
+                        model.terminate()
+            return
+        if where != gp.GRB.Callback.MIPSOL:
+            return
+        try:
+            remaining = seconds_remaining()
+            if remaining is not None and remaining <= 0:
+                model.terminate()
+                return
+            model_x = [
+                model.getVarByName(x[node].name) for node in range(len(nodes))
+            ]
+            values = model.cbGetSolution(model_x)
+            signature = tuple(
+                node for node, value in enumerate(values) if int(round(value))
+            )
+            selected_partitions = {nodes[node].partition for node in signature}
+            bad_sccs = sol_to_badsccs(
+                gate_successors, partition_sets, selected_partitions
+            )
+            if bad_sccs:
+                for scc in bad_sccs:
+                    scc_nodes = tuple(
+                        node
+                        for partition in scc
+                        for node in nodes_by_partition[partition]
+                    )
+                    cut_signature = tuple(sorted(scc_nodes))
+                    if cut_signature in callback_cycle_cuts:
+                        continue
+                    model.cbLazy(
+                        gp.quicksum(model_x[node] for node in scc_nodes)
+                        <= len(scc) - 1
+                    )
+                    callback_cycle_cuts.add(cut_signature)
+        except BaseException as exc:
+            callback_failure[0] = exc
+            model.terminate()
+
+    def decorate_result(result, model, *, optimal):
+        solver_bound = (
+            float(getattr(model, "ObjBound", 0) or 0) / max_single
+        )
+        if not np.isfinite(solver_bound):
+            solver_bound = (
+                float(result.cnot_count)
+                + float(result.single_qubit_count) / max_single
+                if optimal
+                else float(cnot_proof_bound[0])
+                if cnot_proof_bound[0] is not None
+                else 0.0
+            )
+        incumbent_objective = (
+            float(result.cnot_count)
+            + float(result.single_qubit_count) / max_single
+        )
+        global_gap = (
+            0.0
+            if optimal
+            else max(
+                0.0,
+                (incumbent_objective - solver_bound)
+                / max(abs(incumbent_objective), 1e-12),
+            )
+        )
+        cnot_optimal = bool(
+            optimal
+            or cnot_bound_closed[0]
+            or int(np.floor(solver_bound + 1e-9))
+            >= int(result.cnot_count)
+        )
+        return replace(
+            result,
+            explored_states=int(getattr(model, "NodeCount", 0) or 0),
+            master_backend="pulp-gurobi-benders-path",
+            optimal=bool(optimal),
+            solver_nodes=float(getattr(model, "NodeCount", 0) or 0),
+            solver_bound=solver_bound,
+            solver_gap=global_gap,
+            solver_solutions=int(getattr(model, "SolCount", 0) or 0),
+            cnot_optimal=cnot_optimal,
+        )
+
+    solve_kwargs = {
+        "manageEnv": True,
+        "msg": False,
+        "LazyConstraints": 1,
+        "IntegralityFocus": 1,
+    }
+    if timeout_seconds is not None:
+        solve_kwargs["timeLimit"] = float(timeout_seconds)
+    if warm_start is not None:
+        solve_kwargs["warmStart"] = True
+    prob.solve(pulp.GUROBI(**solve_kwargs), callback=cycle_callback)
+    if callback_failure[0] is not None:
+        raise callback_failure[0]
+    model = prob.solverModel
+    model_x = [model.getVarByName(x[node].name) for node in range(len(nodes))]
+    model_swap_cost = model.getVarByName(swap_cost.name)
+    permanent_cycle_cuts = set()
+
+    def resume_master():
+        remaining = seconds_remaining()
+        if remaining is not None and remaining <= 0:
+            return False
+        if remaining is not None:
+            model.setParam("TimeLimit", remaining)
+        model.optimize(cycle_callback)
+        return True
+
+    # Logic-based Benders loop. The PuLP-built Gurobi model is retained across
+    # resumes; only the compact master is reoptimized. Gurobi does not support
+    # safely launching another optimization from a MIPSOL callback, so the
+    # exact fixed-cover oracle runs between resumes while the callback remains
+    # responsible for lazy dependency-cycle cuts.
+    while True:
+        if callback_failure[0] is not None:
+            raise callback_failure[0]
+        if model.Status != gp.GRB.OPTIMAL:
+            if (
+                model.Status == gp.GRB.INFEASIBLE
+                and incumbent_result[0] is not None
+            ):
+                # Covers whose rigorous lower bound cannot improve the verified
+                # incumbent are removed by no-good cuts. If those cuts exhaust
+                # the master, the incumbent is lexicographically optimal.
+                return decorate_result(
+                    incumbent_result[0], model, optimal=True
+                )
+            if allow_suboptimal and incumbent_result[0] is not None:
+                return decorate_result(
+                    incumbent_result[0], model, optimal=False
+                )
+            if model.Status == gp.GRB.INFEASIBLE:
+                raise ValueError("No exact Benders routing solution exists.")
+            raise ExactRoutingLimitExceeded(
+                "The Benders master exhausted its solve-time budget."
+            )
+
+        signature = tuple(
+            node for node, variable in enumerate(model_x) if variable.X > 0.5
+        )
+        selected_partitions = {nodes[node].partition for node in signature}
+        bad_sccs = sol_to_badsccs(
+            gate_successors, partition_sets, selected_partitions
+        )
+        if bad_sccs:
+            for scc in bad_sccs:
+                scc_nodes = tuple(
+                    node
+                    for partition in scc
+                    for node in nodes_by_partition[partition]
+                )
+                cut_signature = tuple(sorted(scc_nodes))
+                if cut_signature in permanent_cycle_cuts:
+                    raise AssertionError(
+                        "A permanent Benders cycle cut was not enforced."
+                    )
+                model.addConstr(
+                    gp.quicksum(model_x[node] for node in scc_nodes)
+                    <= len(scc) - 1
+                )
+                permanent_cycle_cuts.add(cut_signature)
+            if resume_master():
+                continue
+            if allow_suboptimal and incumbent_result[0] is not None:
+                return decorate_result(
+                    incumbent_result[0], model, optimal=False
+                )
+            raise ExactRoutingLimitExceeded(
+                "The Benders routing budget expired after cycle separation."
+            )
+        try:
+            transition_cost, result = solve_selected_subproblem(signature)
+            if transition_cost != "pruned" and result is None:
+                # The first positive-SWAP response is deliberately only the
+                # rigorous +3 lower bound. If the master already satisfies it
+                # (for example via the global zero-SWAP envelope), perform the
+                # exact fixed-cover pricing now before accepting the cover.
+                transition_cost, result = solve_selected_subproblem(signature)
+        except ExactRoutingLimitExceeded:
+            if allow_suboptimal and incumbent_result[0] is not None:
+                return decorate_result(
+                    incumbent_result[0], model, optimal=False
+                )
+            raise
+
+        indicator = gp.quicksum(model_x[node] for node in signature)
+        if transition_cost == "pruned":
+            model.addConstr(indicator <= len(signature) - 1)
+        elif model_swap_cost.X + 0.5 < transition_cost:
+            model.addConstr(
+                model_swap_cost
+                >= transition_cost * (indicator - len(signature) + 1)
+            )
+        else:
+            if result is None:
+                raise AssertionError(
+                    "A Benders incumbent met only an unproven routing bound."
+                )
+            return decorate_result(result, model, optimal=True)
+
+        if not resume_master():
+            if allow_suboptimal and incumbent_result[0] is not None:
+                return decorate_result(
+                    incumbent_result[0], model, optimal=False
+                )
+            raise ExactRoutingLimitExceeded(
+                "The Benders routing budget expired before proving optimality."
+            )
+
+
 def solve_exact_routing(*, backend="ilp", **kwargs) -> ExactRoutingResult:
-    """Dispatch to the PuLP mapping-flow master or preserved branch-and-bound."""
+    """Dispatch to the global path ILP or preserved branch-and-bound model."""
     backend = str(backend).lower().replace("_", "-")
     if backend == "auto":
         try:
             from squander.partitioning.ilp import _check_gurobi_available
 
             _check_gurobi_available()
-            backend = "ilp"
+            backend = "benders"
         except Exception:
             backend = "branch-and-bound"
     if backend in ("ilp", "pulp"):
         return solve_exact_routing_ilp(**kwargs)
+    if backend in ("benders", "lazy-benders"):
+        return solve_exact_routing_benders(**kwargs)
     if backend in ("branch-and-bound", "bnb"):
         kwargs.pop("allow_suboptimal", None)
         kwargs.pop("topology", None)
@@ -3416,7 +5585,8 @@ def solve_exact_routing(*, backend="ilp", **kwargs) -> ExactRoutingResult:
         return solve_exact_routing_branch_and_bound(**kwargs)
     raise ValueError(
         "Unknown exact-routing master backend "
-        f"{backend!r}; expected 'auto', 'ilp', or 'branch-and-bound'."
+        f"{backend!r}; expected 'auto', 'ilp', 'benders', or "
+        "'branch-and-bound'."
     )
 
 
@@ -3435,7 +5605,14 @@ def construct_exact_routed_circuit(
     physical_qubit_count = int(physical_qubit_count)
     routed_circuit = Circuit(physical_qubit_count)
     parameter_blocks = []
-    for selection in result.selections:
+    transition_swaps = result.transition_swaps or tuple(
+        () for _selection in result.selections
+    )
+    if len(transition_swaps) != len(result.selections):
+        raise AssertionError("Routing transition-SWAP certificate length mismatch.")
+    for swaps_before, selection in zip(transition_swaps, result.selections):
+        for edge in swaps_before:
+            routed_circuit.add_SWAP(list(edge))
         alternative = selection.alternative
         payload = alternative.payload
         if not isinstance(payload, SynthesizedRoutingPayload):
@@ -3490,26 +5667,16 @@ def route_circuit_exact(
     enumerator permits or represented as standalone candidates, so the exact
     cover is over the original gate stream rather than an approximation of it.
 
-    The combinatorial solve is exact over generated alternatives, but its
-    worst-case state space is exponential and OSR is a numerical pricing
-    oracle. This strategy is consequently experimental and should be bounded
-    with the candidate, state, and time limits for larger circuits.
+    On a path topology, the ILP includes arbitrary adjacent SWAPs between
+    selected partitions and minimizes their three-CNOT cost jointly with the
+    synthesized blocks.  It is exact over the generated OSR alternatives;
+    OSR remains a numerical pricing oracle.  The worst-case state space is
+    exponential, so the ILP solve should have a time limit on larger circuits.
     """
     from squander.gates.qgd_Circuit import qgd_Circuit as Circuit
     from squander.partitioning.ilp import get_all_partitions, _get_topo_order
 
     config = dict(config)
-    routing_started = time.monotonic()
-    total_timeout = config.get("exact_routing_total_timeout_seconds", 20 * 60)
-    if total_timeout is not None:
-        total_timeout = float(total_timeout)
-        if total_timeout <= 0:
-            raise ValueError("The exact-routing total timeout must be positive.")
-        routing_deadline = routing_started + total_timeout
-        config["_exact_routing_deadline"] = routing_deadline
-    else:
-        routing_deadline = None
-
     parameters = np.asarray(parameters, dtype=np.float64)
     max_partition_size = int(config.get("max_partition_size", 3))
     (
@@ -3554,6 +5721,12 @@ def route_circuit_exact(
             )
         )
     candidate_sets.extend(frozenset(chain) for chain in single_qubit_chains)
+    # A gate-by-gate LightSABRE trajectory must always be representable as a
+    # complete master solution, independently of which wider convex
+    # partitions the enumerator produces.
+    candidate_sets.extend(
+        frozenset((gate,)) for gate in range(len(circuit.get_Gates()))
+    )
     candidate_sets = sorted(
         set(candidate_sets), key=lambda part: (len(part), tuple(sorted(part)))
     )
@@ -3702,6 +5875,7 @@ def route_circuit_exact(
             np.asarray(native_parameters, dtype=np.float64),
             tuple(map(int, native_initial_mapping)),
             tuple(map(int, native_final_mapping)),
+            None,
         )
     ]
     # A caller-fixed input placement must be preserved exactly. LightSABRE's
@@ -3723,6 +5897,7 @@ def route_circuit_exact(
         seed_parameters,
         seed_initial_mapping,
         seed_final_mapping,
+        seed_trace,
     ) in seed_candidates:
         seed_circuit = seed_circuit.get_Flat_Circuit()
         seed_parameters = np.asarray(seed_parameters, dtype=np.float64)
@@ -3737,6 +5912,7 @@ def route_circuit_exact(
                 f"{seed_strategy} seed returned an invalid mapping."
             )
         if requested_initial_mapping is None:
+            unreflected_initial_mapping = seed_initial_mapping
             (
                 seed_circuit,
                 seed_initial_mapping,
@@ -3747,6 +5923,21 @@ def route_circuit_exact(
                 seed_final_mapping,
                 topology,
             )
+            if seed_trace is not None:
+                reflection = dict(
+                    zip(unreflected_initial_mapping, seed_initial_mapping)
+                )
+                seed_trace = tuple(
+                    (
+                        kind,
+                        (
+                            tuple(reflection[int(value)] for value in payload)
+                            if kind == "swap"
+                            else payload
+                        ),
+                    )
+                    for kind, payload in seed_trace
+                )
             _assert_local_topology(seed_circuit, topology)
         normalized_candidates.append(
             (
@@ -3757,6 +5948,7 @@ def route_circuit_exact(
                 seed_parameters,
                 seed_initial_mapping,
                 seed_final_mapping,
+                seed_trace,
             )
         )
 
@@ -3768,7 +5960,16 @@ def route_circuit_exact(
         sabre_parameters,
         sabre_initial_mapping,
         sabre_final_mapping,
+        _selected_seed_trace,
     ) = min(normalized_candidates, key=lambda candidate: candidate[:3])
+    light_sabre_seed = next(
+        (
+            candidate
+            for candidate in normalized_candidates
+            if candidate[2] == "light-sabre"
+        ),
+        None,
+    )
     fallback_logical_qubits = tuple(range(circuit.get_Qbit_Num()))
     fallback_alternative = RoutingAlternative(
         partition=fallback_partition,
@@ -3841,9 +6042,32 @@ def route_circuit_exact(
             timed_out=True,
         )
 
+    def finish_with_cnot_optimum(solution):
+        solution = replace(
+            solution,
+            master_backend=f"{solution.master_backend}-cnot-optimal",
+            optimal=False,
+            cnot_optimal=True,
+        )
+        routed_circuit, routed_parameters = construct_exact_routed_circuit(
+            solution, circuit.get_Qbit_Num()
+        )
+        return ExactCircuitRoutingResult(
+            circuit=routed_circuit,
+            parameters=routed_parameters,
+            solution=solution,
+            candidate_gate_sets=tuple(
+                tuple(sorted(part)) for part in candidate_sets
+            ),
+            candidate_gate_orders=tuple(candidate_gate_orders),
+            synthesized_partitions=len(synthesized_partitions),
+            synthesis_cache_hits=(
+                synthesis_cache_hits + target_synthesis_cache_stats[0]
+            ),
+            timed_out=False,
+        )
+
     for partition_index, gate_set in enumerate(local_candidate_sets):
-        if routing_deadline is not None and time.monotonic() >= routing_deadline:
-            return finish_with_timeout()
         involved_qubits = tuple(
             sorted(set().union(*(gate_to_qubit[gate] for gate in gate_set)))
         )
@@ -3957,23 +6181,105 @@ def route_circuit_exact(
         optimistic_alternatives[partition_index] = refined
         synthesized_partitions.add(partition_index)
 
-    if routing_deadline is not None and time.monotonic() >= routing_deadline:
-        return finish_with_timeout()
-    remaining_total = (
-        None
-        if routing_deadline is None
-        else max(0.0, routing_deadline - time.monotonic())
+    master_warm_start = sabre_warm_start
+    if light_sabre_seed is not None:
+        master_warm_start = _light_sabre_structural_warm_start(
+            trace=light_sabre_seed[7],
+            initial_mapping=light_sabre_seed[5],
+            partitions=tuple(candidate_sets),
+            alternatives=feasible_alternatives,
+            topology=topology,
+        )
+
+    configured_master_timeout = config.get(
+        "exact_routing_timeout_seconds", 20 * 60
     )
-    configured_master_timeout = config.get("exact_routing_timeout_seconds")
     if configured_master_timeout is None:
-        master_timeout = remaining_total
-    elif remaining_total is None:
-        master_timeout = float(configured_master_timeout)
+        master_seconds_remaining = None
     else:
-        master_timeout = min(float(configured_master_timeout), remaining_total)
+        master_seconds_remaining = float(configured_master_timeout)
+        if master_seconds_remaining <= 0:
+            raise ValueError("The exact-routing ILP timeout must be positive.")
+
+    master_backend = str(config.get("exact_routing_master", "ilp")).lower()
+    global_transition_cnot_lower_bound = 0
+    zero_swap_local_cnot_lower_bound = 0
+    if config.get("exact_routing_flow_seed", True) and master_backend in (
+        "ilp",
+        "pulp",
+        "benders",
+        "lazy-benders",
+    ):
+        configured_flow_seconds = float(
+            config.get("exact_routing_flow_seed_timeout_seconds", 30.0)
+        )
+        if configured_flow_seconds <= 0:
+            raise ValueError("The flow-seed ILP timeout must be positive.")
+        flow_seconds = (
+            configured_flow_seconds
+            if master_seconds_remaining is None
+            else min(configured_flow_seconds, master_seconds_remaining)
+        )
+        flow_started = time.monotonic()
+        try:
+            flow_seed = _solve_exact_routing_ilp_flow_restricted(
+                gate_predecessors={
+                    gate: predecessors[gate] for gate in range(len(gate_dict))
+                },
+                gate_qubits={
+                    gate: gate_to_qubit[gate] for gate in range(len(gate_dict))
+                },
+                partitions=candidate_sets,
+                alternatives=feasible_alternatives,
+                logical_qubit_count=circuit.get_Qbit_Num(),
+                physical_qubit_count=circuit.get_Qbit_Num(),
+                topology=topology,
+                initial_mapping=config.get("exact_routing_initial_mapping"),
+                timeout_seconds=flow_seconds,
+                allow_suboptimal=True,
+                warm_start=master_warm_start,
+            )
+            if (
+                flow_seed.cnot_count,
+                flow_seed.single_qubit_count,
+            ) < (
+                master_warm_start.cnot_count,
+                master_warm_start.single_qubit_count,
+            ):
+                master_warm_start = replace(
+                    flow_seed,
+                    master_backend=(
+                        f"{flow_seed.master_backend}-global-mip-start"
+                    ),
+                    optimal=False,
+                )
+            if flow_seed.solver_bound is not None:
+                zero_swap_local_cnot_lower_bound = max(
+                    zero_swap_local_cnot_lower_bound,
+                    int(np.floor(flow_seed.solver_bound)),
+                )
+        except ExactRoutingLimitExceeded as exc:
+            if getattr(exc, "solver_bound", None) is not None:
+                zero_swap_local_cnot_lower_bound = max(
+                    zero_swap_local_cnot_lower_bound,
+                    int(np.floor(exc.solver_bound)),
+                )
+        except ValueError:
+            # The flow-restricted model is exactly the zero-interstage-SWAP
+            # feasibility problem over the complete cover/column set. A
+            # proven infeasibility therefore certifies that every full route
+            # costs at least one adjacent SWAP, i.e. three CNOTs.
+            global_transition_cnot_lower_bound = 3
+        finally:
+            if master_seconds_remaining is not None:
+                master_seconds_remaining = max(
+                    0.0,
+                    master_seconds_remaining
+                    - (time.monotonic() - flow_started),
+                )
 
     solver_arguments = {
-        "backend": config.get("exact_routing_master", "ilp"),
+        "backend": master_backend,
         "gate_predecessors": {
             gate: predecessors[gate] for gate in range(len(gate_dict))
         },
@@ -3985,11 +6291,26 @@ def route_circuit_exact(
         "physical_qubit_count": circuit.get_Qbit_Num(),
         "topology": topology,
         "initial_mapping": config.get("exact_routing_initial_mapping"),
-        "timeout_seconds": master_timeout,
+        "timeout_seconds": master_seconds_remaining,
         "max_states": config.get("exact_routing_max_states"),
         "allow_suboptimal": True,
-        "warm_start": sabre_warm_start,
+        "warm_start": master_warm_start,
     }
+    if master_backend in ("benders", "lazy-benders"):
+        solver_arguments["subproblem_slice_seconds"] = config.get(
+            "exact_routing_benders_subproblem_slice_seconds"
+        )
+        solver_arguments["minimum_transition_cnot_cost"] = (
+            global_transition_cnot_lower_bound
+        )
+        solver_arguments["zero_swap_local_cnot_lower_bound"] = (
+            zero_swap_local_cnot_lower_bound
+        )
+        solver_arguments["stop_when_cnot_optimal"] = (
+            not bool(
+                config.get("exact_routing_require_tiebreaker_proof", False)
+            )
+        )
     refined_transition_groups = set()
     lazy_rounds = 0
     refinement_limit = int(
@@ -3998,15 +6319,51 @@ def route_circuit_exact(
             max(1, 4 * len(candidate_sets)),
         )
     )
-    try:
-        incumbent_solution = solve_exact_routing(
-            alternatives=feasible_alternatives, **solver_arguments
-        )
-    except ExactRoutingLimitExceeded:
-        return finish_with_timeout()
-    if not incumbent_solution.optimal:
-        return finish_with_timeout(incumbent_solution)
-    solution = incumbent_solution
+
+    def solve_master(alternatives, arguments):
+        """Charge only PuLP/Gurobi work against the shared master budget."""
+        nonlocal master_seconds_remaining
+        if (
+            master_seconds_remaining is not None
+            and master_seconds_remaining <= 0
+        ):
+            raise ExactRoutingLimitExceeded(
+                "The exact-routing ILP exhausted its solver-time budget."
+            )
+        call_arguments = dict(arguments)
+        call_arguments["timeout_seconds"] = master_seconds_remaining
+        master_started = time.monotonic()
+        try:
+            return solve_exact_routing(
+                alternatives=alternatives, **call_arguments
+            )
+        finally:
+            if master_seconds_remaining is not None:
+                master_seconds_remaining = max(
+                    0.0,
+                    master_seconds_remaining
+                    - (time.monotonic() - master_started),
+                )
+
+    if lazy_osr:
+        # LightSABRE already supplies a fully replayable incumbent. Start with
+        # the optimistic master and price only columns that can improve it;
+        # solving the fallback-only master first can consume the entire budget
+        # without contributing a single useful OSR synthesis target.
+        incumbent_solution = master_warm_start
+        solution = incumbent_solution
+    else:
+        try:
+            incumbent_solution = solve_master(
+                feasible_alternatives, solver_arguments
+            )
+        except ExactRoutingLimitExceeded:
+            return finish_with_timeout(master_warm_start)
+        if not incumbent_solution.optimal:
+            if incumbent_solution.cnot_optimal:
+                return finish_with_cnot_optimum(incumbent_solution)
+            return finish_with_timeout(incumbent_solution)
+        solution = incumbent_solution
     lower_master_cache = {}
     lower_solver_arguments = dict(solver_arguments)
     if str(lower_solver_arguments["backend"]).lower() in ("ilp", "pulp"):
@@ -4017,24 +6374,22 @@ def route_circuit_exact(
             }
         )
     while lazy_osr:
-        if routing_deadline is not None:
-            remaining = routing_deadline - time.monotonic()
-            if remaining <= 0:
-                return finish_with_timeout(incumbent_solution)
-            configured_timeout = config.get("exact_routing_timeout_seconds")
-            lower_solver_arguments["timeout_seconds"] = (
-                remaining
-                if configured_timeout is None
-                else min(float(configured_timeout), remaining)
-            )
         try:
-            lower_bound_solution = solve_exact_routing(
-                alternatives=optimistic_alternatives,
-                **lower_solver_arguments,
+            lower_bound_solution = solve_master(
+                optimistic_alternatives, lower_solver_arguments
             )
         except ExactRoutingLimitExceeded:
             return finish_with_timeout(incumbent_solution)
         if not lower_bound_solution.optimal:
+            if lower_bound_solution.cnot_optimal:
+                incumbent_solution = replace(
+                    incumbent_solution,
+                    solver_bound=lower_bound_solution.solver_bound,
+                    solver_gap=lower_bound_solution.solver_gap,
+                    solver_nodes=lower_bound_solution.solver_nodes,
+                    solver_solutions=lower_bound_solution.solver_solutions,
+                )
+                return finish_with_cnot_optimum(incumbent_solution)
             return finish_with_timeout(incumbent_solution)
         incumbent_cost = (
             incumbent_solution.cnot_count,

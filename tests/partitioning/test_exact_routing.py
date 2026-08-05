@@ -1,6 +1,9 @@
 import json
+import time
+from types import SimpleNamespace
 
 import numpy as np
+import pytest
 
 from squander import utils
 import squander.partitioning.routing as routing
@@ -27,13 +30,18 @@ from squander.partitioning.routing import (
 )
 
 
-def test_exact_osr_ilp_is_the_wide_router_default():
+def test_exact_osr_benders_is_the_wide_router_default():
     optimizer = qgd_Wide_Circuit_Optimization({})
 
     assert optimizer.config["routing-strategy"] == "exact-osr"
-    assert optimizer.config["exact_routing_master"] == "ilp"
+    assert optimizer.config["exact_routing_master"] == "benders"
     assert optimizer.config["exact_routing_lazy_osr"] is False
-    assert optimizer.config["exact_routing_total_timeout_seconds"] == 20 * 60
+    assert optimizer.config["exact_routing_synthesis_restarts"] == 1
+    assert optimizer.config["exact_routing_flow_seed"] is True
+    assert optimizer.config["exact_routing_flow_seed_timeout_seconds"] == 30.0
+    assert optimizer.config["exact_routing_timeout_seconds"] == 20 * 60
+    assert optimizer.config["exact_routing_require_tiebreaker_proof"] is False
+    assert "exact_routing_total_timeout_seconds" not in optimizer.config
 
 
 def test_three_qubit_topology_symmetry_counts():
@@ -85,10 +93,68 @@ def test_exact_solver_propagates_partition_output_mapping():
     )
 
 
+def test_benders_master_enforces_positive_swap_cost_when_gurobi_available():
+    try:
+        from squander.partitioning.ilp import _check_gurobi_available
+
+        _check_gurobi_available()
+    except Exception as exc:
+        pytest.skip(f"Gurobi is unavailable: {exc}")
+
+    result = solve_exact_routing(
+        backend="benders",
+        gate_predecessors={0: ()},
+        partitions=[{0}],
+        alternatives={
+            0: [RoutingAlternative(0, (0, 2), (0, 1), (0, 1), 2)]
+        },
+        logical_qubit_count=3,
+        topology=[(0, 1), (1, 2)],
+        initial_mapping=(0, 1, 2),
+        timeout_seconds=20,
+        allow_suboptimal=False,
+    )
+
+    assert result.optimal is True
+    assert result.cnot_count == 5
+    assert result.solver_bound == 5
+    assert result.transition_swaps == (((1, 2),),)
+
+    warm_alternative = RoutingAlternative(
+        0, (0, 2), (0, 1), (0, 1), 2
+    )
+    warm_start = ExactRoutingResult(
+        selections=(RoutingSelection(0, warm_alternative),),
+        cnot_count=5,
+        single_qubit_count=0,
+        initial_mapping=(0, 1, 2),
+        final_mapping=(0, 2, 1),
+        explored_states=0,
+        master_backend="test-warm-start",
+        optimal=False,
+        transition_swaps=(((1, 2),),),
+    )
+    cnot_proof = solve_exact_routing(
+        backend="benders",
+        gate_predecessors={0: ()},
+        partitions=[{0}],
+        alternatives={0: [warm_alternative]},
+        logical_qubit_count=3,
+        topology=[(0, 1), (1, 2)],
+        initial_mapping=(0, 1, 2),
+        timeout_seconds=20,
+        allow_suboptimal=True,
+        warm_start=warm_start,
+        stop_when_cnot_optimal=True,
+    )
+    assert cnot_proof.cnot_optimal is True
+    assert cnot_proof.cnot_count == 5
+
+
 def test_ilp_encodes_and_propagates_a_fixed_initial_permutation():
     alternatives = {
         0: [RoutingAlternative(0, (0, 1), (1, 0), (0, 1), 1)],
-        1: [RoutingAlternative(1, (0, 2), (0, 2), (0, 2), 1)],
+        1: [RoutingAlternative(1, (0, 2), (0, 1), (0, 1), 1)],
     }
     result = solve_exact_routing_ilp(
         gate_predecessors={0: (), 1: (0,)},
@@ -99,8 +165,97 @@ def test_ilp_encodes_and_propagates_a_fixed_initial_permutation():
     )
 
     assert result.initial_mapping == (1, 0, 2)
-    assert result.final_mapping == (0, 1, 2)
+    assert result.cnot_count == 5
+    assert len(result.transition_swaps) == 2
+    assert len(result.transition_swaps[1]) == 1
     assert [selection.partition for selection in result.selections] == [0, 1]
+
+
+def test_global_path_ilp_materializes_and_audits_interpartition_swap(
+    monkeypatch, tmp_path
+):
+    audit_path = tmp_path / "global-path-routing.jsonl"
+    monkeypatch.setenv("SQUANDER_REWRITE_AUDIT_JSONL", str(audit_path))
+    local = qgd_Circuit(2)
+    local.add_CNOT(1, 0)
+    payload = routing.SynthesizedRoutingPayload(
+        circuit=local,
+        parameters=np.empty((0,), dtype=np.float64),
+        topology=((0, 1),),
+        input_assignment=(0, 1),
+        output_assignment=(0, 1),
+        source_circuit=local,
+        source_parameters=np.empty((0,), dtype=np.float64),
+    )
+    alternatives = {
+        0: [RoutingAlternative(0, (0, 1), (0, 1), (0, 1), 1, payload=payload)],
+        1: [RoutingAlternative(1, (0, 2), (1, 2), (1, 2), 1, payload=payload)],
+    }
+
+    result = solve_exact_routing_ilp(
+        gate_predecessors={0: (), 1: (0,)},
+        partitions=[{0}, {1}],
+        alternatives=alternatives,
+        logical_qubit_count=3,
+        topology=[(0, 1), (1, 2)],
+        initial_mapping=(0, 1, 2),
+    )
+    circuit, parameters = routing.construct_exact_routed_circuit(result, 3)
+
+    assert result.cnot_count == 5
+    assert result.transition_swaps[0] == ()
+    assert len(result.transition_swaps[1]) == 1
+    assert frozenset(result.transition_swaps[1][0]) in {
+        frozenset((0, 1)),
+        frozenset((1, 2)),
+    }
+    assert circuit.get_Gate_Nums() == {"CNOT": 2, "SWAP": 1}
+    assert parameters.size == 0
+
+    source = qgd_Circuit(3)
+    source.add_CNOT(1, 0)
+    source.add_CNOT(2, 0)
+    exact_route = routing.ExactCircuitRoutingResult(
+        circuit=circuit,
+        parameters=parameters,
+        solution=result,
+        candidate_gate_sets=((0,), (1,)),
+        candidate_gate_orders=((0,), (1,)),
+    )
+    topology = [(0, 1), (1, 2)]
+    _append_exact_osr_routing_event(
+        "routing",
+        0,
+        source,
+        np.empty((0,), dtype=np.float64),
+        circuit,
+        parameters,
+        exact_route,
+        topology,
+        1e-10,
+    )
+    event = json.loads(audit_path.read_text().splitlines()[-1])
+
+    assert event["selections"][1]["swaps_before"]
+    _verify_exact_osr_routing_replay(event)
+
+
+def test_global_path_ilp_can_swap_after_a_fixed_layout_before_first_block():
+    result = solve_exact_routing_ilp(
+        gate_predecessors={0: ()},
+        partitions=[{0}],
+        alternatives={
+            0: [RoutingAlternative(0, (0, 2), (0, 1), (0, 1), 1)]
+        },
+        logical_qubit_count=3,
+        topology=[(0, 1), (1, 2)],
+        initial_mapping=(0, 1, 2),
+    )
+
+    assert result.initial_mapping == (0, 1, 2)
+    assert result.transition_swaps == (((1, 2),),)
+    assert result.cnot_count == 4
+    assert result.final_mapping == (0, 2, 1)
 
 
 def test_line_topology_breaks_the_initial_mapping_reflection_symmetry():
@@ -133,6 +288,16 @@ def test_ilp_submits_a_feasible_sabre_incumbent_as_a_mip_start(monkeypatch):
         captured["values"] = {
             variable.name: variable.varValue for variable in prob.variables()
         }
+        captured["unset"] = [
+            variable.name
+            for variable in prob.variables()
+            if variable.varValue is None
+        ]
+        captured["violated"] = [
+            name
+            for name, constraint in prob.constraints.items()
+            if not constraint.valid(1e-7)
+        ]
         prob.solve(pulp.PULP_CBC_CMD(msg=False, warmStart=True))
         return "cbc"
 
@@ -162,10 +327,17 @@ def test_ilp_submits_a_feasible_sabre_incumbent_as_a_mip_start(monkeypatch):
     )
 
     assert captured["warm_start"] is True
-    assert captured["values"]["cfg_0"] == 0
-    assert captured["values"]["cfg_1"] == 1
-    assert captured["values"]["location_q0_b0_p0"] == 1
-    assert captured["values"]["location_q1_b0_p1"] == 1
+    assert captured["unset"] == []
+    assert captured["violated"] == []
+    assert captured["values"]["selected_0"] == 0
+    assert captured["values"]["selected_1"] == 1
+    assert captured["values"]["config_1_0"] == 1
+    assert captured["values"]["stage_1_0"] == 1
+    assert captured["values"]["active_0"] == 1
+    assert captured["values"]["map_in_0_0_0"] == 1
+    assert captured["values"]["map_in_0_1_1"] == 1
+    assert captured["values"]["map_out_0_0_0"] == 1
+    assert captured["values"]["map_out_0_1_1"] == 1
     # The seed supplies the bound; the master remains free to improve it.
     assert result.cnot_count == 1
 
@@ -198,7 +370,7 @@ def test_ilp_rejects_a_cyclic_partition_quotient():
     assert {selection.partition for selection in ilp.selections} != {4, 5}
 
 
-def test_cbc_cycle_cuts_reject_a_convex_cyclic_cover(monkeypatch):
+def test_cbc_global_stages_reject_a_convex_cyclic_cover(monkeypatch):
     import pulp
     from squander.partitioning import ilp as partitioning_ilp
 
@@ -231,7 +403,6 @@ def test_cbc_cycle_cuts_reject_a_convex_cyclic_cover(monkeypatch):
         logical_qubit_count=2,
     )
 
-    assert result.explored_states >= 1
     assert {selection.partition for selection in result.selections} != {4, 5}
 
 
@@ -382,6 +553,39 @@ def test_synthesis_cache_deduplicates_and_remembers_failures(monkeypatch):
     assert stats[0] == 2
 
 
+def test_synthesis_restarts_keep_best_result_until_lower_bound(monkeypatch):
+    calls = []
+    expensive = qgd_Circuit(2)
+    expensive.add_CNOT(1, 0)
+    expensive.add_CNOT(1, 0)
+    optimal = qgd_Circuit(2)
+    optimal.add_CNOT(1, 0)
+    results = [
+        SimpleNamespace(circuit=expensive),
+        SimpleNamespace(circuit=optimal),
+    ]
+
+    def synthesize(targets, config, topology, *, target_configs=None):
+        calls.append(tuple(value["random_seed"] for value in target_configs))
+        return (results[len(calls) - 1],)
+
+    monkeypatch.setattr(routing, "_call_shared_synthesis_batch", synthesize)
+    monkeypatch.setattr(routing, "cnot_schmidt_lower_bound", lambda *args, **kwargs: 1)
+    answer = routing._call_shared_synthesis_batch_cached(
+        (np.eye(4, dtype=np.complex128),),
+        {
+            "strategy": "TreeSearch",
+            "tree_level_max": 3,
+            "exact_routing_synthesis_restarts": 3,
+        },
+        [(0, 1)],
+    )
+
+    assert len(calls) == 2
+    assert calls[0] != calls[1]
+    assert answer[0].circuit.get_Gate_Nums() == {"CNOT": 1}
+
+
 def test_global_synthesis_batch_combines_partitions_and_deduplicates(monkeypatch):
     calls = []
 
@@ -418,9 +622,11 @@ def test_global_synthesis_batch_combines_partitions_and_deduplicates(monkeypatch
 
 def test_failed_orbit_representatives_are_not_retried(monkeypatch):
     calls = []
+    seeds = []
 
     def reject_all(targets, config, topology, *, target_configs=None):
         calls.append(len(targets))
+        seeds.extend(value["random_seed"] for value in target_configs)
         return (None,) * len(targets)
 
     monkeypatch.setattr(routing, "_call_shared_synthesis_batch", reject_all)
@@ -442,7 +648,10 @@ def test_failed_orbit_representatives_are_not_retried(monkeypatch):
         source_parameters=np.empty((0,)),
     )
 
-    assert calls == [2]
+    # The identity-placement CNOT fallback already saturates its one-CNOT
+    # Schmidt lower bound. Only the nontrivial boundary transition needs OSR.
+    assert calls == [1]
+    assert len(seeds) == len(set(seeds)) == 1
     assert len(alternatives) == 4
 
 
@@ -477,9 +686,9 @@ def test_routing_search_depth_is_one_below_each_naive_fallback(monkeypatch):
         source_parameters=np.empty((0,)),
     )
 
-    # The two symmetry representatives have naive fallback costs one and
-    # four CNOTs respectively, hence exact strict-improvement depths 0 and 3.
-    assert sorted(captured_depths) == [0, 3]
+    # The one-CNOT representative saturates its rigorous lower bound and is
+    # skipped. The four-CNOT transition is searched only through depth three.
+    assert captured_depths == [3]
 
 
 def test_two_qubit_passthrough_route_replays_exactly():
@@ -509,6 +718,56 @@ def test_two_qubit_passthrough_route_replays_exactly():
     assert not any(
         isinstance(gate, qgd_Circuit) for gate in result.circuit.get_Gates()
     )
+
+
+def test_reversed_two_qubit_placement_is_a_free_relabeling():
+    circuit = qgd_Circuit(2)
+    circuit.add_CNOT(1, 0)
+    alternatives = routing.two_qubit_passthrough_alternatives(
+        partition=0,
+        circuit=circuit,
+        parameters=np.empty((0,)),
+        logical_qubits=(0, 1),
+        topology=[(0, 1)],
+        physical_qubit_count=2,
+    )
+    reversed_placement = next(
+        alternative
+        for alternative in alternatives
+        if alternative.input_physical == (1, 0)
+        and alternative.output_physical == (1, 0)
+    )
+
+    assert reversed_placement.cnot_count == 1
+    target = permuted_partition_target(
+        circuit.get_Matrix(np.empty((0,)), is_f32=False),
+        reversed_placement.payload.input_assignment,
+        reversed_placement.payload.output_assignment,
+    )
+    assert _process_infidelity(
+        target,
+        reversed_placement.payload.circuit.get_Matrix(
+            reversed_placement.payload.parameters
+        ),
+    ) < 1e-14
+
+    synthesized_alternatives = synthesize_partition_alternatives(
+        partition=0,
+        unitary=circuit.get_Matrix(np.empty((0,)), is_f32=False),
+        logical_qubits=(0, 1),
+        topology=[(0, 1)],
+        physical_qubit_count=2,
+        config={"exact_routing_eager_synthesis": False},
+        source_circuit=circuit,
+        source_parameters=np.empty((0,)),
+    )
+    synthesized_reversed = next(
+        alternative
+        for alternative in synthesized_alternatives
+        if alternative.input_physical == (1, 0)
+        and alternative.output_physical == (1, 0)
+    )
+    assert synthesized_reversed.cnot_count == 1
 
 
 def test_nested_routing_blocks_convert_to_a_flat_cnot_basis():
@@ -592,7 +851,7 @@ def test_exact_routing_audit_metric_replays_bit_identically(
     _verify_exact_osr_routing_replay(event)
 
 
-def test_sabre_incumbent_guarantees_and_audits_a_feasible_route(
+def test_exact_incumbent_guarantees_and_audits_a_feasible_route(
     monkeypatch, tmp_path
 ):
     audit_path = tmp_path / "exact-routing-sabre.jsonl"
@@ -613,11 +872,7 @@ def test_sabre_incumbent_guarantees_and_audits_a_feasible_route(
             "exact_routing_master": "branch-and-bound",
         },
     )
-    assert len(exact_route.solution.selections) == 1
-    assert (
-        exact_route.solution.selections[0].alternative.payload.certificate_kind
-        == "sabre"
-    )
+    assert exact_route.solution.selections
 
     _append_exact_osr_routing_event(
         "routing",
@@ -631,11 +886,7 @@ def test_sabre_incumbent_guarantees_and_audits_a_feasible_route(
         1e-10,
     )
     event = json.loads(audit_path.read_text())
-    assert event["selections"][0]["certificate_kind"] == "sabre"
-    assert any(
-        action["kind"] == "swap"
-        for action in event["selections"][0]["actions"]
-    )
+    assert event["cnot_count"] == exact_route.solution.cnot_count
     _verify_exact_osr_routing_replay(event)
 
 
@@ -648,14 +899,69 @@ def test_route_wide_timeout_returns_verified_light_sabre_incumbent():
         [(0, 1), (1, 2), (2, 3)],
         {
             "max_partition_size": 3,
-            "exact_routing_total_timeout_seconds": 1e-12,
+            "exact_routing_timeout_seconds": 1e-12,
         },
     )
 
     assert result.timed_out is True
     assert result.solution.optimal is False
-    assert result.solution.master_backend == "light-sabre-timeout-incumbent"
+    assert (
+        result.solution.master_backend
+        == "light-sabre-structural-mip-start-timeout-incumbent"
+    )
     assert (
         result.solution.selections[0].alternative.payload.certificate_kind
-        == "sabre"
+        == "unitary"
+    )
+
+
+def test_osr_pricing_time_does_not_consume_the_master_budget(monkeypatch):
+    captured = {}
+
+    def delayed_pricing(targets, config, topology, *, target_configs=None):
+        assert "_exact_routing_deadline" not in config
+        time.sleep(0.02)
+        return (None,) * len(targets)
+
+    def capture_master(*, alternatives, timeout_seconds, **kwargs):
+        captured["timeout_seconds"] = timeout_seconds
+        captured["warm_start"] = kwargs["warm_start"]
+        fallback_partition = max(alternatives)
+        captured["fallback_partition"] = fallback_partition
+        fallback = alternatives[fallback_partition][0]
+        return ExactRoutingResult(
+            selections=(RoutingSelection(fallback_partition, fallback),),
+            cnot_count=fallback.cnot_count,
+            single_qubit_count=fallback.single_qubit_count,
+            initial_mapping=fallback.input_physical,
+            final_mapping=fallback.output_physical,
+            explored_states=0,
+            master_backend="test-master",
+            optimal=True,
+        )
+
+    monkeypatch.setattr(routing, "_call_shared_synthesis_batch", delayed_pricing)
+    monkeypatch.setattr(routing, "solve_exact_routing", capture_master)
+    circuit = qgd_Circuit(2)
+    circuit.add_CNOT(1, 0)
+    route_circuit_exact(
+        circuit,
+        np.empty((0,)),
+        [(0, 1)],
+        {
+            "strategy": "TreeSearch",
+            "max_partition_size": 2,
+            "exact_routing_timeout_seconds": 7.0,
+            "exact_routing_flow_seed": False,
+        },
+    )
+
+    assert captured["timeout_seconds"] == 7.0
+    assert (
+        captured["warm_start"].master_backend
+        == "light-sabre-structural-mip-start"
+    )
+    assert all(
+        selection.partition != captured["fallback_partition"]
+        for selection in captured["warm_start"].selections
     )
