@@ -29,6 +29,7 @@ limitations under the License.
 #include <atomic>
 #include <chrono>
 #include <cmath>
+#include <cstdint>
 #include <iostream>
 #include <numeric>
 #include <queue>
@@ -651,7 +652,11 @@ Gates_block* N_Qubit_Decomposition_Tree_Search::determine_gate_structure(Matrix_
         config["stop_first_solution"].get_property(stop_first_solution);
     }
 
-    level_limit = std::min(std::max((int)level_max, 0), 14);
+    // Fourteen is the default when the caller supplies no bound.  An explicit
+    // tree_level_max (notably routing's fallback-CNOT-count minus one) must be
+    // honored rather than silently truncated, or the exact router can miss a
+    // valid strict improvement over its fallback.
+    level_limit = std::max((int)level_max, 0);
 
     if (level_limit < 0) {
         std::string error("please increase level limit");
@@ -1175,6 +1180,11 @@ TreeSearchResult N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_struct
     int64_t concurrency = (int64_t)nthreads;
     concurrency = concurrency < iteration_max ? concurrency : iteration_max;
     int parallel = get_parallel_configuration();
+    bool deterministic_random_seed = config.count("random_seed") > 0;
+    long long configured_random_seed = 0;
+    if (deterministic_random_seed) {
+        config["random_seed"].get_property(configured_random_seed);
+    }
 
     auto process_job_range = [&](int64_t begin, int64_t end) {
         N_Qubit_Decomposition_custom&& cDecomp_custom_random = perform_optimization(nullptr, true);
@@ -1183,6 +1193,18 @@ TreeSearchResult N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_struct
         std::uniform_real_distribution<> distrib_real(0.0, 2 * M_PI);
 
         for (int64_t job_idx = begin; job_idx < end; ++job_idx) {
+
+            if (deterministic_random_seed) {
+                std::seed_seq seed_sequence{
+                    static_cast<std::uint32_t>(configured_random_seed),
+                    static_cast<std::uint32_t>(
+                        static_cast<unsigned long long>(configured_random_seed) >> 32
+                    ),
+                    static_cast<std::uint32_t>(level_num),
+                    static_cast<std::uint32_t>(job_idx),
+                };
+                ts_gen.seed(seed_sequence);
+            }
 
             // for( int64_t job_idx=0; job_idx<concurrency; job_idx++ ) {
 

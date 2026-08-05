@@ -31,6 +31,7 @@ def test_exact_osr_ilp_is_the_wide_router_default():
     assert optimizer.config["routing-strategy"] == "exact-osr"
     assert optimizer.config["exact_routing_master"] == "ilp"
     assert optimizer.config["exact_routing_lazy_osr"] is False
+    assert optimizer.config["exact_routing_total_timeout_seconds"] == 20 * 60
 
 
 def test_three_qubit_topology_symmetry_counts():
@@ -98,6 +99,25 @@ def test_ilp_encodes_and_propagates_a_fixed_initial_permutation():
     assert result.initial_mapping == (1, 0, 2)
     assert result.final_mapping == (0, 1, 2)
     assert [selection.partition for selection in result.selections] == [0, 1]
+
+
+def test_line_topology_breaks_the_initial_mapping_reflection_symmetry():
+    alternatives = {
+        0: [
+            RoutingAlternative(0, (0, 1, 2, 3), mapping, mapping, 1)
+            for mapping in ((0, 1, 2, 3), (3, 2, 1, 0))
+        ]
+    }
+    result = solve_exact_routing_ilp(
+        gate_predecessors={0: ()},
+        gate_qubits={0: (0, 1, 2, 3)},
+        partitions=[{0}],
+        alternatives=alternatives,
+        logical_qubit_count=4,
+        topology=[(0, 1), (1, 2), (2, 3)],
+    )
+
+    assert result.initial_mapping == (0, 1, 2, 3)
 
 
 def test_ilp_rejects_a_cyclic_partition_quotient():
@@ -312,6 +332,40 @@ def test_synthesis_cache_deduplicates_and_remembers_failures(monkeypatch):
     assert stats[0] == 2
 
 
+def test_global_synthesis_batch_combines_partitions_and_deduplicates(monkeypatch):
+    calls = []
+
+    def synthesize(targets, config, topology, *, target_configs=None):
+        calls.append((len(targets), tuple(topology)))
+        return tuple(f"result-{index}" for index in range(len(targets)))
+
+    monkeypatch.setattr(routing, "_call_shared_synthesis_batch", synthesize)
+    config = {"strategy": "TreeSearch"}
+    batch = routing._GlobalRoutingSynthesisBatch(config, {}, [0])
+    first_results = []
+    second_results = []
+    first = np.eye(2, dtype=np.complex128)
+    shared = np.asarray([[0, 1], [1, 0]], dtype=np.complex128)
+    last = np.diag([1, -1]).astype(np.complex128)
+    batch.enqueue(
+        [(0, 1)],
+        (first, shared),
+        (config, config),
+        first_results.extend,
+    )
+    batch.enqueue(
+        [(0, 1)],
+        (shared, last),
+        (config, config),
+        second_results.extend,
+    )
+
+    batch.run()
+
+    assert calls == [(3, ((0, 1),))]
+    assert first_results[1] == second_results[0]
+
+
 def test_failed_orbit_representatives_are_not_retried(monkeypatch):
     calls = []
 
@@ -340,6 +394,42 @@ def test_failed_orbit_representatives_are_not_retried(monkeypatch):
 
     assert calls == [2]
     assert len(alternatives) == 4
+
+
+def test_routing_search_depth_is_one_below_each_naive_fallback(monkeypatch):
+    captured_depths = []
+
+    def reject_all(targets, config, topology, *, target_configs=None):
+        captured_depths.extend(
+            target_config["tree_level_max"] for target_config in target_configs
+        )
+        return (None,) * len(targets)
+
+    monkeypatch.setattr(routing, "_call_shared_synthesis_batch", reject_all)
+    circuit = qgd_Circuit(2)
+    circuit.add_CNOT(1, 0)
+    synthesize_partition_alternatives(
+        partition=0,
+        unitary=circuit.get_Matrix(np.empty((0,)), is_f32=False),
+        logical_qubits=(0, 1),
+        topology=[(0, 1)],
+        physical_qubit_count=2,
+        config={
+            "strategy": "TreeSearch",
+            "max_partition_size": 2,
+            "exact_routing_eager_synthesis": True,
+            "synthesis_acceptance_tolerance": 1e-10,
+            # A generic cap must not make exact routing miss a strict
+            # improvement over its known topology-valid fallback.
+            "tree_level_max": 0,
+        },
+        source_circuit=circuit,
+        source_parameters=np.empty((0,)),
+    )
+
+    # The two symmetry representatives have naive fallback costs one and
+    # four CNOTs respectively, hence exact strict-improvement depths 0 and 3.
+    assert sorted(captured_depths) == [0, 3]
 
 
 def test_two_qubit_passthrough_route_replays_exactly():
@@ -450,3 +540,72 @@ def test_exact_routing_audit_metric_replays_bit_identically(
     event = json.loads(audit_path.read_text().splitlines()[-1])
 
     _verify_exact_osr_routing_replay(event)
+
+
+def test_sabre_incumbent_guarantees_and_audits_a_feasible_route(
+    monkeypatch, tmp_path
+):
+    audit_path = tmp_path / "exact-routing-sabre.jsonl"
+    monkeypatch.setenv("SQUANDER_REWRITE_AUDIT_JSONL", str(audit_path))
+    circuit = qgd_Circuit(4)
+    circuit.add_CNOT(0, 1)
+    circuit.add_CNOT(0, 2)
+    circuit.add_CNOT(0, 3)
+    parameters = np.empty((0,))
+    topology = [(0, 1), (1, 2), (2, 3)]
+
+    exact_route = route_circuit_exact(
+        circuit,
+        parameters,
+        topology,
+        {
+            "max_partition_size": 2,
+            "exact_routing_master": "branch-and-bound",
+        },
+    )
+    assert len(exact_route.solution.selections) == 1
+    assert (
+        exact_route.solution.selections[0].alternative.payload.certificate_kind
+        == "sabre"
+    )
+
+    _append_exact_osr_routing_event(
+        "routing",
+        1,
+        circuit,
+        parameters,
+        exact_route.circuit,
+        exact_route.parameters,
+        exact_route,
+        topology,
+        1e-10,
+    )
+    event = json.loads(audit_path.read_text())
+    assert event["selections"][0]["certificate_kind"] == "sabre"
+    assert any(
+        action["kind"] == "swap"
+        for action in event["selections"][0]["actions"]
+    )
+    _verify_exact_osr_routing_replay(event)
+
+
+def test_route_wide_timeout_returns_verified_sabre_incumbent():
+    circuit = qgd_Circuit(4)
+    circuit.add_CNOT(0, 3)
+    result = route_circuit_exact(
+        circuit,
+        np.empty((0,)),
+        [(0, 1), (1, 2), (2, 3)],
+        {
+            "max_partition_size": 3,
+            "exact_routing_total_timeout_seconds": 1e-12,
+        },
+    )
+
+    assert result.timed_out is True
+    assert result.solution.optimal is False
+    assert result.solution.master_backend == "sabre-timeout-incumbent"
+    assert (
+        result.solution.selections[0].alternative.payload.certificate_kind
+        == "sabre"
+    )

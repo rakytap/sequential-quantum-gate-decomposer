@@ -483,6 +483,45 @@ def _qiskit_sabre_actions(input_state, output_state, initial_mapping, topology):
             output_index += 1
             continue
 
+        # Squander's internal SABRE represents SWAP physically as the exact
+        # primitive sequence CX(a,b) CX(b,a) CX(a,b).  Recognize it before
+        # attempting to match those CNOTs to source gates.
+        decomposed_swap = output_operations[output_index : output_index + 3]
+        if (
+            len(decomposed_swap) == 3
+            and [operation["name"] for operation in decomposed_swap]
+            == ["cx", "cx", "cx"]
+            and not any(operation["params"] for operation in decomposed_swap)
+            and not any(
+                input_state["operations"][source_index]["name"] == "cx"
+                and [
+                    mapping[int(q)]
+                    for q in input_state["operations"][source_index]["qubits"]
+                ]
+                == output_operation["qubits"]
+                for source_index in ready
+            )
+        ):
+            first = [int(q) for q in decomposed_swap[0]["qubits"]]
+            middle = [int(q) for q in decomposed_swap[1]["qubits"]]
+            last = [int(q) for q in decomposed_swap[2]["qubits"]]
+            if (
+                len(first) == 2
+                and middle == list(reversed(first))
+                and last == first
+                and frozenset(first) in topology_edges
+            ):
+                logical_a = mapping.index(first[0])
+                logical_b = mapping.index(first[1])
+                mapping[logical_a], mapping[logical_b] = (
+                    mapping[logical_b], mapping[logical_a]
+                )
+                actions.append(
+                    {"kind": "swap", "qubits": sorted(first)}
+                )
+                output_index += 3
+                continue
+
         # Squander's internal SABRE may reverse a directed CNOT with the exact
         # identity H(a) H(b) CX(b,a) H(a) H(b). Treat this as one replayable
         # source-gate action rather than five unexplained output gates.
@@ -1214,24 +1253,12 @@ def _append_exact_osr_routing_event(
             payload.parameters,
             range(len(alternative.logical_qubits)),
         )
-        # Compute the archived metric from the archived representations. The
-        # verifier reconstructs these same QASM streams; using the live native
-        # objects here can differ by a few final float64 bits after QASM gate
-        # normalization even though the represented unitary is equivalent.
-        source_unitary = _audit_representation_unitary(source)
-        target = permuted_partition_target(
-            source_unitary,
-            payload.input_assignment,
-            payload.output_assignment,
-        )
-        synthesized_unitary = _audit_representation_unitary(synthesized)
-        metrics = _unitary_audit_metrics(target, synthesized_unitary)
         embedding = [
             int(alternative.input_physical[local_logical])
             for local_logical in payload.input_assignment
         ]
-        selections.append(
-            {
+        certificate_kind = getattr(payload, "certificate_kind", "unitary")
+        archived_selection = {
                 "partition": int(selection.partition),
                 "source_gate_indices": list(
                     exact_route.candidate_gate_orders[selection.partition]
@@ -1244,16 +1271,46 @@ def _append_exact_osr_routing_event(
                 "embedding": embedding,
                 "source": source,
                 "synthesized": synthesized,
-                "metrics": {
+                "certificate_kind": certificate_kind,
+                "tolerance": float(tolerance),
+            }
+        if certificate_kind == "sabre":
+            actions, replayed_final_mapping = _qiskit_sabre_actions(
+                _qasm_exact_state(source),
+                _qasm_exact_state(synthesized),
+                alternative.input_physical,
+                topology,
+            )
+            if replayed_final_mapping != list(alternative.output_physical):
+                raise AssertionError(
+                    "Exact-router SABRE fallback mapping does not replay."
+                )
+            archived_selection["actions"] = actions
+        elif certificate_kind == "unitary":
+            # Compute the archived metric from the archived representations.
+            # The verifier reconstructs these same QASM streams; using live
+            # objects can differ in the final float64 bits after QASM gate
+            # normalization despite representing the same unitary.
+            source_unitary = _audit_representation_unitary(source)
+            target = permuted_partition_target(
+                source_unitary,
+                payload.input_assignment,
+                payload.output_assignment,
+            )
+            synthesized_unitary = _audit_representation_unitary(synthesized)
+            metrics = _unitary_audit_metrics(target, synthesized_unitary)
+            archived_selection["metrics"] = {
                     **metrics,
                     **{
                         f"{name}_bits": _float64_bits(value)
                         for name, value in metrics.items()
                     },
-                },
-                "tolerance": float(tolerance),
             }
-        )
+        else:
+            raise AssertionError(
+                f"Unknown exact-routing certificate {certificate_kind!r}."
+            )
+        selections.append(archived_selection)
     input_state = _qasm_exact_state(input_representation)
     output_state = _qasm_exact_state(output_representation)
     _append_rewrite_audit_event(
@@ -1274,6 +1331,8 @@ def _append_exact_osr_routing_event(
                 exact_route.solution.single_qubit_count
             ),
             "explored_states": int(exact_route.solution.explored_states),
+            "optimal": bool(exact_route.solution.optimal),
+            "timed_out": bool(exact_route.timed_out),
             "selections": selections,
         }
     )
@@ -1322,21 +1381,42 @@ def _verify_exact_osr_routing_replay(event):
         for logical, physical in zip(logical_qubits, output_physical):
             mapping[logical] = physical
 
-        source_unitary = _audit_representation_unitary(selection["source"])
-        synthesized_unitary = _audit_representation_unitary(
-            selection["synthesized"]
-        )
-        target = permuted_partition_target(
-            source_unitary,
-            selection["input_assignment"],
-            selection["output_assignment"],
-        )
-        metrics = _unitary_audit_metrics(target, synthesized_unitary)
-        if metrics["process_infidelity"] > float(selection["tolerance"]):
-            raise AssertionError("Exact OSR selected an inaccurate synthesis.")
-        for name, value in metrics.items():
-            if _float64_bits(value) != selection["metrics"][f"{name}_bits"]:
-                raise AssertionError("Exact OSR metric is not bit-identical.")
+        certificate_kind = selection.get("certificate_kind", "unitary")
+        if certificate_kind == "sabre":
+            actions, replayed_final_mapping = _qiskit_sabre_actions(
+                _qasm_exact_state(selection["source"]),
+                _qasm_exact_state(selection["synthesized"]),
+                input_physical,
+                event["topology"],
+            )
+            if actions != selection["actions"]:
+                raise AssertionError(
+                    "Exact-router SABRE actions are not bit-identical."
+                )
+            if replayed_final_mapping != output_physical:
+                raise AssertionError(
+                    "Exact-router SABRE final mapping does not replay."
+                )
+        elif certificate_kind == "unitary":
+            source_unitary = _audit_representation_unitary(selection["source"])
+            synthesized_unitary = _audit_representation_unitary(
+                selection["synthesized"]
+            )
+            target = permuted_partition_target(
+                source_unitary,
+                selection["input_assignment"],
+                selection["output_assignment"],
+            )
+            metrics = _unitary_audit_metrics(target, synthesized_unitary)
+            if metrics["process_infidelity"] > float(selection["tolerance"]):
+                raise AssertionError("Exact OSR selected an inaccurate synthesis.")
+            for name, value in metrics.items():
+                if _float64_bits(value) != selection["metrics"][f"{name}_bits"]:
+                    raise AssertionError("Exact OSR metric is not bit-identical.")
+        else:
+            raise AssertionError(
+                f"Unknown exact-routing certificate {certificate_kind!r}."
+            )
 
         synthesized_state = _remap_exact_state(
             _qasm_exact_state(selection["synthesized"]),
@@ -2433,13 +2513,10 @@ def synthesize_partition_with_squander(
         "topology": mini_topology,
     }
     if tree_level_max is not None:
-        routing_level_max = int(tree_level_max)
-        configured_level_max = resolved_config.get("tree_level_max")
-        resolved_config["tree_level_max"] = (
-            routing_level_max
-            if configured_level_max is None
-            else min(int(configured_level_max), routing_level_max)
-        )
+        # Routing supplies the strict-improvement bound of one fewer CNOT
+        # than its topology-valid fallback.  Do not let a generic synthesis
+        # cap silently make that exact routing search incomplete.
+        resolved_config["tree_level_max"] = int(tree_level_max)
 
     target_matrix = np.asarray(target_matrix, dtype=np.complex128)
     candidates = qgd_Wide_Circuit_Optimization.DecomposePartition(
@@ -3388,6 +3465,10 @@ class qgd_Wide_Circuit_Optimization:
         # default. The Schmidt-bound-guided lazy mode is an explicit speed
         # option rather than part of the publication-quality path.
         config.setdefault("exact_routing_lazy_osr", False)
+        # Bound the complete exact-routing stage, including OSR pricing and
+        # every master reoptimization. On expiry the router returns its
+        # verified SABRE incumbent and records that optimality was not proven.
+        config.setdefault("exact_routing_total_timeout_seconds", 20 * 60)
         config.setdefault("seqpam_preoptimization", False)
         # PAM's mapping-distance score estimates future SWAP pressure.  Each
         # actual SWAP is emitted as three CNOTs, so compare it against local
@@ -4985,6 +5066,12 @@ class qgd_Wide_Circuit_Optimization:
             )
             self.config["exact_routing_synthesis_cache_hits"] = (
                 exact_route.synthesis_cache_hits
+            )
+            self.config["exact_routing_optimal"] = bool(
+                exact_route.solution.optimal
+            )
+            self.config["exact_routing_timed_out"] = bool(
+                exact_route.timed_out
             )
             if _rewrite_audit_enabled():
                 _append_exact_osr_routing_event(

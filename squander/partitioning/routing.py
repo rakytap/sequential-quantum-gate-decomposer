@@ -16,6 +16,7 @@ from __future__ import annotations
 from dataclasses import dataclass, replace
 import collections
 import functools
+import hashlib
 import itertools
 import multiprocessing as mp
 import time
@@ -152,6 +153,9 @@ def _call_shared_synthesis_batch(
         configured_workers = mp.cpu_count()
     worker_count = max(1, min(int(configured_workers), len(targets)))
     timeout = float(config.get("routing_synthesis_timeout_seconds", 300.0))
+    route_deadline = config.get("_exact_routing_deadline")
+    if route_deadline is not None:
+        route_deadline = float(route_deadline)
     results = [None] * len(targets)
     pending = iter(enumerate(zip(targets, configurations)))
     active = {}
@@ -173,7 +177,10 @@ def _call_shared_synthesis_batch(
         active[index] = (
             process,
             parent_connection,
-            time.monotonic() + timeout,
+            min(
+                time.monotonic() + timeout,
+                route_deadline if route_deadline is not None else float("inf"),
+            ),
         )
 
     for _ in range(worker_count):
@@ -183,6 +190,13 @@ def _call_shared_synthesis_batch(
             break
 
     while active:
+        if route_deadline is not None and time.monotonic() >= route_deadline:
+            for process, connection, _deadline in active.values():
+                if process.is_alive():
+                    process.terminate()
+                process.join()
+                connection.close()
+            break
         progressed = False
         for index, (process, connection, deadline) in list(active.items()):
             message = None
@@ -198,10 +212,11 @@ def _call_shared_synthesis_batch(
                 results[index] = _decode_synthesis_message(message)
             del active[index]
             progressed = True
-            try:
-                launch(*next(pending))
-            except StopIteration:
-                pass
+            if route_deadline is None or time.monotonic() < route_deadline:
+                try:
+                    launch(*next(pending))
+                except StopIteration:
+                    pass
         if not progressed:
             time.sleep(0.01)
     return tuple(results)
@@ -264,6 +279,22 @@ def _synthesis_target_cache_key(target, config, topology):
     )
 
 
+def _deterministic_synthesis_seed(target, topology, base_seed):
+    """Derive one stable native RNG seed from an exact synthesis target."""
+    target = np.ascontiguousarray(target, dtype=np.complex128)
+    digest = hashlib.sha256()
+    digest.update(np.int64(int(base_seed)).tobytes())
+    digest.update(np.asarray(target.shape, dtype=np.int64).tobytes())
+    digest.update(target.view(np.uint8).tobytes())
+    digest.update(
+        np.asarray(
+            sorted(tuple(sorted((int(u), int(v)))) for u, v in topology),
+            dtype=np.int64,
+        ).tobytes()
+    )
+    return int.from_bytes(digest.digest()[:4], "little", signed=False)
+
+
 def _call_shared_synthesis_batch_cached(
     targets,
     config,
@@ -282,6 +313,20 @@ def _call_shared_synthesis_batch_cached(
     )
     if len(configurations) != len(targets):
         raise ValueError("One synthesis config is required per target.")
+    base_seed = config.get("exact_routing_random_seed")
+    if base_seed is not None:
+        configurations = tuple(
+            {
+                **target_config,
+                "random_seed": target_config.get(
+                    "random_seed",
+                    _deterministic_synthesis_seed(
+                        target, topology, base_seed
+                    ),
+                ),
+            }
+            for target, target_config in zip(targets, configurations)
+        )
     if cache is None:
         cache = {}
     if cache_stats is None:
@@ -318,6 +363,72 @@ def _call_shared_synthesis_batch_cached(
         # None is intentional: a failed OSR request is final for this route.
         cache[key] = result
     return tuple(cache[key] for key in keys)
+
+
+def _sorted_routing_alternatives(alternatives_by_transition):
+    return tuple(
+        sorted(
+            alternatives_by_transition.values(),
+            key=lambda value: (
+                value.cnot_count,
+                value.single_qubit_count,
+                value.input_physical,
+                value.output_physical,
+            ),
+        )
+    )
+
+
+class _DeferredRoutingAlternatives:
+    """Alternatives populated after a shared synthesis batch completes."""
+
+    def __init__(self, alternatives_by_transition):
+        self.alternatives_by_transition = alternatives_by_transition
+
+    def resolve(self):
+        return _sorted_routing_alternatives(self.alternatives_by_transition)
+
+
+class _GlobalRoutingSynthesisBatch:
+    """One deduplicated worker queue per canonical local topology."""
+
+    def __init__(self, config, cache, cache_stats):
+        self.config = dict(config)
+        self.cache = cache
+        self.cache_stats = cache_stats
+        self.requests = collections.defaultdict(list)
+
+    def enqueue(self, topology, targets, target_configs, consume):
+        topology = tuple(sorted(tuple(map(int, edge)) for edge in topology))
+        self.requests[topology].append(
+            (tuple(targets), tuple(target_configs), consume)
+        )
+
+    def run(self):
+        for topology, requests in sorted(self.requests.items()):
+            flat_targets = tuple(
+                target
+                for targets, _configs, _consume in requests
+                for target in targets
+            )
+            flat_configs = tuple(
+                target_config
+                for _targets, configs, _consume in requests
+                for target_config in configs
+            )
+            flat_results = _call_shared_synthesis_batch_cached(
+                flat_targets,
+                self.config,
+                topology,
+                target_configs=flat_configs,
+                cache=self.cache,
+                cache_stats=self.cache_stats,
+            )
+            offset = 0
+            for targets, _configs, consume in requests:
+                count = len(targets)
+                consume(flat_results[offset : offset + count])
+                offset += count
 
 
 def _normalize_edges(edges: Iterable[Sequence[int]]) -> frozenset[frozenset[int]]:
@@ -777,6 +888,7 @@ class SynthesizedRoutingPayload:
     output_assignment: Permutation
     source_circuit: Any = None
     source_parameters: Any = None
+    certificate_kind: str = "unitary"
 
 
 def synthesize_partition_alternatives(
@@ -792,7 +904,8 @@ def synthesize_partition_alternatives(
     requested_transitions=None,
     synthesis_cache=None,
     synthesis_cache_stats=None,
-) -> tuple[RoutingAlternative, ...]:
+    synthesis_batch=None,
+) -> tuple[RoutingAlternative, ...] | _DeferredRoutingAlternatives:
     """Synthesize every symmetry-distinct local routing alternative.
 
     OSR is invoked only for orbit representatives.  Circuits for the remaining
@@ -938,10 +1051,20 @@ def synthesize_partition_alternatives(
         if not config.get("exact_routing_eager_synthesis", True):
             continue
 
+        all_assignment_orbits = symmetry_reduced_assignment_orbits(
+            local_edges, width
+        )
         assignment_orbits = (
-            ()
-            if requested_transitions is not None
-            else symmetry_reduced_assignment_orbits(local_edges, width)
+            all_assignment_orbits
+            if requested_transitions is None
+            else tuple(
+                (representative, orbit)
+                for representative, orbit in all_assignment_orbits
+                if any(
+                    declared_member in requested_transitions
+                    for declared_member, _automorphism in orbit
+                )
+            )
         )
         representative_targets = tuple(
             permuted_partition_target(unitary, representative[0], representative[1])
@@ -959,138 +1082,94 @@ def synthesize_partition_alternatives(
                 continue
             target_config = dict(synthesis_config)
             if fallback_cost is not None:
-                bound = fallback_cost - 1
-                configured_bound = target_config.get("tree_level_max")
-                target_config["tree_level_max"] = (
-                    bound
-                    if configured_bound is None
-                    else min(int(configured_bound), bound)
-                )
+                # A synthesized routing alternative is useful only when it
+                # strictly improves on the topology-valid naive fallback.
+                # This bound is therefore intrinsic to the routing problem,
+                # not a generic tree-search tuning cap.
+                target_config["tree_level_max"] = fallback_cost - 1
             active_indices.append(index)
             active_targets.append(target)
             active_configs.append(target_config)
-        active_results = _call_shared_synthesis_batch_cached(
-            active_targets,
-            synthesis_config,
-            list(local_edges),
-            target_configs=active_configs,
-            cache=synthesis_cache,
-            cache_stats=synthesis_cache_stats,
-        )
-        for index, result in zip(active_indices, active_results):
-            representative_results[index] = result
-        for (_representative, orbit), synthesis_result in zip(
-            assignment_orbits, representative_results
+        def consume_results(
+            active_results,
+            *,
+            active_indices=tuple(active_indices),
+            assignment_orbits=assignment_orbits,
+            representative_results=representative_results,
+            record_local_circuit=record_local_circuit,
+            targets=targets,
+            width=width,
+            validation_tolerance=validation_tolerance,
         ):
-            if synthesis_result is None:
-                continue
-            representative_circuit = synthesis_result.circuit
-            representative_parameters = synthesis_result.parameters
-            for _declared_member, automorphism in orbit:
-                relabeling = {
-                    old: automorphism[old] for old in range(width)
-                }
-                local_circuit = representative_circuit.Remap_Qbits(
-                    relabeling, width
-                )
-                # Squander's circuit-matrix qubit convention is intentionally
-                # isolated here.  Identify the exact assignment transition
-                # represented by a symmetry-derived circuit from its small
-                # matrix, rather than trusting a fragile endian convention.
-                local_matrix = local_circuit.get_Matrix(
-                    representative_parameters, is_f32=False
-                )
-                matching_transitions = tuple(
-                    transition
-                    for transition, expected in targets.items()
-                    if _process_infidelity(local_matrix, expected)
-                    < validation_tolerance
-                )
-                if not matching_transitions:
-                    error = min(
-                        _process_infidelity(local_matrix, expected)
-                        for expected in targets.values()
-                    )
-                    raise AssertionError(
-                        "Symmetry-derived routing circuit does not implement "
-                        "any input/output assignment transition: "
-                        f"infidelity={error:.3e}."
-                    )
-                # A symmetric target may match more than one assignment pair.
-                # Preserve every such mapping transition: they are equivalent
-                # as unitaries but not equivalent to the global router.
-                record_local_circuit(
-                    local_circuit,
-                    representative_parameters,
-                    matching_transitions,
-                )
-
-        # Full pricing has already attempted every symmetry-distinct orbit
-        # representative exactly once. A rejected representative keeps its
-        # topology-valid fallback; expanding it into individual permutations
-        # and retrying would duplicate work without adding feasibility.
-        transitions_to_complete = (
-            requested_transitions if requested_transitions is not None else ()
-        )
-        direct_transitions = []
-        direct_configs = []
-        for transition in sorted(transitions_to_complete):
-            direct_config = dict(synthesis_config)
-            fallback_cost = fallback_costs.get(transition)
-            if fallback_cost is not None:
-                if fallback_cost == 0:
+            for index, result in zip(active_indices, active_results):
+                representative_results[index] = result
+            for (_representative, orbit), synthesis_result in zip(
+                assignment_orbits, representative_results
+            ):
+                if synthesis_result is None:
                     continue
-                bound = fallback_cost - 1
-                configured_bound = direct_config.get("tree_level_max")
-                direct_config["tree_level_max"] = (
-                    bound
-                    if configured_bound is None
-                    else min(int(configured_bound), bound)
+                representative_circuit = synthesis_result.circuit
+                representative_parameters = synthesis_result.parameters
+                for _declared_member, automorphism in orbit:
+                    relabeling = {
+                        old: automorphism[old] for old in range(width)
+                    }
+                    local_circuit = representative_circuit.Remap_Qbits(
+                        relabeling, width
+                    )
+                    # Identify the exact transition represented by a
+                    # symmetry-derived circuit from its small matrix rather
+                    # than relying on a fragile endian convention.
+                    local_matrix = local_circuit.get_Matrix(
+                        representative_parameters, is_f32=False
+                    )
+                    matching_transitions = tuple(
+                        transition
+                        for transition, expected in targets.items()
+                        if _process_infidelity(local_matrix, expected)
+                        < validation_tolerance
+                    )
+                    if not matching_transitions:
+                        error = min(
+                            _process_infidelity(local_matrix, expected)
+                            for expected in targets.values()
+                        )
+                        raise AssertionError(
+                            "Symmetry-derived routing circuit does not implement "
+                            "any input/output assignment transition: "
+                            f"infidelity={error:.3e}."
+                        )
+                    record_local_circuit(
+                        local_circuit,
+                        representative_parameters,
+                        matching_transitions,
+                    )
+
+        if synthesis_batch is None:
+            consume_results(
+                _call_shared_synthesis_batch_cached(
+                    active_targets,
+                    synthesis_config,
+                    list(local_edges),
+                    target_configs=active_configs,
+                    cache=synthesis_cache,
+                    cache_stats=synthesis_cache_stats,
                 )
-            direct_transitions.append(transition)
-            direct_configs.append(direct_config)
-        direct_results = _call_shared_synthesis_batch_cached(
-            [targets[transition] for transition in direct_transitions],
-            synthesis_config,
-            list(local_edges),
-            target_configs=direct_configs,
-            cache=synthesis_cache,
-            cache_stats=synthesis_cache_stats,
-        )
-        for transition, synthesis_result in zip(
-            direct_transitions, direct_results
-        ):
-            if synthesis_result is None:
-                # The fallback was recorded before OSR and already implements
-                # this exact transition on the requested subtopology.
-                continue
-            error = _process_infidelity(
-                synthesis_result.circuit.get_Matrix(
-                    synthesis_result.parameters, is_f32=False
-                ),
-                targets[transition],
             )
-            if error >= validation_tolerance:
-                raise AssertionError(
-                    "Shared synthesis callback returned an invalid routing "
-                    f"alternative: infidelity={error:.3e}."
-                )
-            record_local_circuit(
-                synthesis_result.circuit,
-                synthesis_result.parameters,
-                (transition,),
+        else:
+            synthesis_batch.enqueue(
+                local_edges,
+                active_targets,
+                active_configs,
+                consume_results,
             )
-    return tuple(
-        sorted(
-            alternatives_by_transition.values(),
-            key=lambda value: (
-                value.cnot_count,
-                value.single_qubit_count,
-                value.input_physical,
-                value.output_physical,
-            ),
-        )
-    )
+
+        # Every requested transition was priced through its canonical topology
+        # automorphism orbit above. A rejected representative keeps all of its
+        # topology-valid fallbacks; there is deliberately no direct retry.
+    if synthesis_batch is not None:
+        return _DeferredRoutingAlternatives(alternatives_by_transition)
+    return _sorted_routing_alternatives(alternatives_by_transition)
 
 
 # Compatibility name retained for callers of the initial three-qubit API.
@@ -1268,6 +1347,7 @@ class ExactRoutingResult:
     final_mapping: tuple[int, ...]
     explored_states: int
     master_backend: str = "unknown"
+    optimal: bool = True
 
 
 @dataclass(frozen=True)
@@ -1282,6 +1362,7 @@ class ExactCircuitRoutingResult:
     lazy_rounds: int = 0
     synthesized_partitions: int = 0
     synthesis_cache_hits: int = 0
+    timed_out: bool = False
 
 
 class ExactRoutingLimitExceeded(RuntimeError):
@@ -2556,9 +2637,13 @@ def solve_exact_routing_ilp(
     logical_qubit_count: int,
     gate_qubits: Mapping[int, Iterable[int]] | None = None,
     physical_qubit_count: int | None = None,
+    topology: Iterable[Sequence[int]] | None = None,
     initial_mapping: Sequence[int] | None = None,
     timeout_seconds: float | None = None,
     max_states: int | None = None,
+    allow_suboptimal: bool = False,
+    _model_cache: dict | None = None,
+    _model_cache_key=None,
 ) -> ExactRoutingResult:
     """Solve exact routing with compact logical-wire boundary mapping flow.
 
@@ -2706,9 +2791,14 @@ def solve_exact_routing_ilp(
         for logical, gates in wire_gates.items()
         for position, gate in enumerate(gates)
     }
+    wire_boundary_count = {
+        logical: max(2, len(gates) + 1)
+        for logical, gates in wire_gates.items()
+    }
 
     partition_boundaries = {}
     nonconvex_partitions = set()
+    spectator_partitions = collections.defaultdict(set)
     for partition, node_ids in enumerate(nodes_by_partition):
         if not node_ids:
             continue
@@ -2721,15 +2811,22 @@ def solve_exact_routing_ilp(
                 if logical in gate_qubits[gate]
             )
             if not positions:
-                raise ValueError(
-                    "A partition alternative contains a logical qubit unused "
-                    "by its source gates."
-                )
-            first, last = positions[0], positions[-1]
-            interval_gates = set(wire_gates[logical][first : last + 1])
-            if not interval_gates <= partition_sets[partition]:
-                nonconvex_partitions.add(partition)
-            boundaries[logical] = (first, last + 1)
+                if (
+                    wire_gates[logical]
+                    or partition_sets[partition] != frozenset(gate_indices)
+                ):
+                    raise ValueError(
+                        "Only a whole-circuit fallback may move a globally "
+                        "idle spectator qubit."
+                    )
+                boundaries[logical] = (0, 1)
+                spectator_partitions[logical].add(partition)
+            else:
+                first, last = positions[0], positions[-1]
+                interval_gates = set(wire_gates[logical][first : last + 1])
+                if not interval_gates <= partition_sets[partition]:
+                    nonconvex_partitions.add(partition)
+                boundaries[logical] = (first, last + 1)
         partition_boundaries[partition] = boundaries
 
     prob = pulp.LpProblem("WireBoundaryExactRouting", pulp.LpMinimize)
@@ -2756,7 +2853,7 @@ def solve_exact_routing_ilp(
 
     location = {}
     for logical, gates in wire_gates.items():
-        for boundary in range(len(gates) + 1):
+        for boundary in range(wire_boundary_count[logical]):
             variables = []
             for physical in range(physical_qubit_count):
                 variable = pulp.LpVariable(
@@ -2776,11 +2873,27 @@ def solve_exact_routing_ilp(
         )
         prob += (
             pulp.lpSum(
-                location[logical, len(wire_gates[logical]), physical]
+                location[logical, wire_boundary_count[logical] - 1, physical]
                 for logical in range(logical_qubit_count)
             )
             <= 1
         )
+    for logical, partitions_with_spectator in spectator_partitions.items():
+        movement_enabled = pulp.lpSum(
+            selected_partition[partition]
+            for partition in partitions_with_spectator
+        )
+        for physical in range(physical_qubit_count):
+            prob += (
+                location[logical, 0, physical]
+                - location[logical, 1, physical]
+                <= movement_enabled
+            )
+            prob += (
+                location[logical, 1, physical]
+                - location[logical, 0, physical]
+                <= movement_enabled
+            )
 
     if initial_mapping is not None:
         fixed_mapping = tuple(int(value) for value in initial_mapping)
@@ -2795,6 +2908,58 @@ def solve_exact_routing_ilp(
         for logical, physical in enumerate(fixed_mapping):
             if physical >= 0:
                 prob += location[logical, 0, physical] == 1
+    elif topology is not None and physical_qubit_count > 1:
+        # A path has one nontrivial device automorphism: reflection. Every
+        # feasible route and its mirror have identical costs, so choose the
+        # representative placing logical qubit zero in the first half. For an
+        # odd path, qubit zero may occupy the fixed center; qubit one then
+        # breaks the remaining reflection tie.
+        adjacency = {physical: set() for physical in range(physical_qubit_count)}
+        for edge in _normalize_edges(topology):
+            left, right = tuple(edge)
+            if left in adjacency and right in adjacency:
+                adjacency[left].add(right)
+                adjacency[right].add(left)
+        endpoints = sorted(
+            physical for physical, neighbours in adjacency.items()
+            if len(neighbours) == 1
+        )
+        is_path = (
+            len(endpoints) == 2
+            and sum(len(neighbours) for neighbours in adjacency.values())
+            == 2 * (physical_qubit_count - 1)
+            and all(1 <= len(neighbours) <= 2 for neighbours in adjacency.values())
+        )
+        if is_path:
+            path = [endpoints[0]]
+            previous = None
+            while len(path) < physical_qubit_count:
+                candidates = adjacency[path[-1]] - (
+                    set() if previous is None else {previous}
+                )
+                if not candidates:
+                    break
+                previous, current = path[-1], min(candidates)
+                path.append(current)
+            if len(path) == physical_qubit_count:
+                path_position = {
+                    physical: position for position, physical in enumerate(path)
+                }
+                midpoint = (physical_qubit_count - 1) / 2.0
+                initial_position_zero = pulp.lpSum(
+                    path_position[physical] * location[0, 0, physical]
+                    for physical in range(physical_qubit_count)
+                )
+                prob += initial_position_zero <= midpoint
+                if physical_qubit_count % 2 == 1 and logical_qubit_count > 1:
+                    center_physical = path[physical_qubit_count // 2]
+                    initial_position_one = pulp.lpSum(
+                        path_position[physical] * location[1, 0, physical]
+                        for physical in range(physical_qubit_count)
+                    )
+                    prob += initial_position_one <= midpoint + (
+                        physical_qubit_count - 1
+                    ) * (1 - location[0, 0, center_physical])
 
     for node, alternative in enumerate(nodes):
         boundaries = partition_boundaries[alternative.partition]
@@ -2817,16 +2982,41 @@ def solve_exact_routing_ilp(
         max((nodes[node].single_qubit_count for node in node_ids), default=0)
         for node_ids in nodes_by_partition
     )
+    objective_coefficients = tuple(
+        alternative.cnot_count * max_single_qubit_cost
+        + alternative.single_qubit_count
+        for alternative in nodes
+    )
     prob.setObjective(
         pulp.lpSum(
-            (
-                alternative.cnot_count * max_single_qubit_cost
-                + alternative.single_qubit_count
-            )
-            * x[node]
-            for node, alternative in enumerate(nodes)
+            objective_coefficients[node] * x[node]
+            for node in range(len(nodes))
         )
     )
+
+    structure_signature = tuple(
+        (
+            alternative.partition,
+            alternative.logical_qubits,
+            alternative.input_physical,
+            alternative.output_physical,
+        )
+        for alternative in nodes
+    )
+    persistent_entry = (
+        None
+        if _model_cache is None
+        else _model_cache.get(_model_cache_key)
+    )
+    if persistent_entry is not None:
+        if persistent_entry["structure_signature"] != structure_signature:
+            raise AssertionError("Persistent routing-master structure changed.")
+        prob = persistent_entry["prob"]
+        x = persistent_entry["x"]
+        location = persistent_entry["location"]
+        for node, coefficient in enumerate(objective_coefficients):
+            x[node].solverVar.Obj = coefficient
+        prob.solverModel.update()
 
     try:
         from gurobipy import GRB as _GRB
@@ -2879,11 +3069,48 @@ def solve_exact_routing_ilp(
         solve_kwargs = {} if remaining is None else {"timeLimit": remaining}
         if cycle_callback is not None:
             solve_kwargs.update({"IntegralityFocus": 1, "LazyConstraints": 1})
-        solver_name = _solve_pulp_with_gurobi_or_cbc(
-            prob, pulp, callback=cycle_callback, **solve_kwargs
-        )
+        if persistent_entry is None:
+            solver_name = _solve_pulp_with_gurobi_or_cbc(
+                prob, pulp, callback=cycle_callback, **solve_kwargs
+            )
+            if (
+                _model_cache is not None
+                and str(solver_name).lower().startswith("gurobi")
+            ):
+                persistent_entry = {
+                    "structure_signature": structure_signature,
+                    "prob": prob,
+                    "x": x,
+                    "location": location,
+                }
+                _model_cache[_model_cache_key] = persistent_entry
+        else:
+            solver_name = "gurobi-persistent"
+            model = prob.solverModel
+            if remaining is not None:
+                model.setParam("TimeLimit", remaining)
+            model.setParam("IntegralityFocus", 1)
+            model.setParam("LazyConstraints", 1)
+            model.optimize(cycle_callback)
+            prob.solver.findSolutionValues(prob)
+        if (
+            str(solver_name).lower().startswith("gurobi")
+            and prob.solverModel.Status == _GRB.INTERRUPTED
+        ):
+            raise KeyboardInterrupt
         status = pulp.LpStatus[prob.status]
-        if status != "Optimal":
+        proven_optimal = status == "Optimal"
+        has_gurobi_incumbent = (
+            str(solver_name).lower().startswith("gurobi")
+            and prob.solverModel.SolCount >= 1
+        )
+        if not proven_optimal and not (
+            allow_suboptimal and has_gurobi_incumbent
+        ):
+            if status == "Infeasible":
+                raise ValueError(
+                    "No compatible exact-cover routing solution exists."
+                )
             if timeout_seconds is not None:
                 raise ExactRoutingLimitExceeded(
                     f"The {solver_name} routing ILP did not prove optimality "
@@ -2904,15 +3131,27 @@ def solve_exact_routing_ilp(
         )
         if not bad_sccs:
             break
-        for scc in bad_sccs:
-            prob += (
-                pulp.lpSum(
-                    x[node]
-                    for partition in scc
-                    for node in nodes_by_partition[partition]
-                )
-                <= len(scc) - 1
+        if not proven_optimal:
+            raise ExactRoutingLimitExceeded(
+                "The routing ILP timed out with only cyclic incumbents."
             )
+        for scc in bad_sccs:
+            scc_nodes = tuple(
+                node
+                for partition in scc
+                for node in nodes_by_partition[partition]
+            )
+            if persistent_entry is not None:
+                prob.solverModel.addConstr(
+                    _gp.quicksum(x[node].solverVar for node in scc_nodes)
+                    <= len(scc) - 1
+                )
+                prob.solverModel.update()
+            else:
+                prob += (
+                    pulp.lpSum(x[node] for node in scc_nodes)
+                    <= len(scc) - 1
+                )
         cut_rounds += 1
 
     selected_gate_partition = {
@@ -2966,7 +3205,7 @@ def solve_exact_routing_ilp(
                 round(
                     pulp.value(
                         location[
-                            logical, len(wire_gates[logical]), physical
+                            logical, wire_boundary_count[logical] - 1, physical
                         ]
                     )
                 )
@@ -3003,6 +3242,7 @@ def solve_exact_routing_ilp(
         final_mapping=final_result,
         explored_states=cut_rounds,
         master_backend=f"pulp-{solver_name}",
+        optimal=proven_optimal,
     )
 
 
@@ -3020,6 +3260,8 @@ def solve_exact_routing(*, backend="ilp", **kwargs) -> ExactRoutingResult:
     if backend in ("ilp", "pulp"):
         return solve_exact_routing_ilp(**kwargs)
     if backend in ("branch-and-bound", "bnb"):
+        kwargs.pop("allow_suboptimal", None)
+        kwargs.pop("topology", None)
         return solve_exact_routing_branch_and_bound(**kwargs)
     raise ValueError(
         "Unknown exact-routing master backend "
@@ -3105,6 +3347,18 @@ def route_circuit_exact(
     from squander.gates.qgd_Circuit import qgd_Circuit as Circuit
     from squander.partitioning.ilp import get_all_partitions, _get_topo_order
 
+    config = dict(config)
+    routing_started = time.monotonic()
+    total_timeout = config.get("exact_routing_total_timeout_seconds", 20 * 60)
+    if total_timeout is not None:
+        total_timeout = float(total_timeout)
+        if total_timeout <= 0:
+            raise ValueError("The exact-routing total timeout must be positive.")
+        routing_deadline = routing_started + total_timeout
+        config["_exact_routing_deadline"] = routing_deadline
+    else:
+        routing_deadline = None
+
     parameters = np.asarray(parameters, dtype=np.float64)
     max_partition_size = int(config.get("max_partition_size", 3))
     (
@@ -3160,6 +3414,31 @@ def route_circuit_exact(
             f"above the configured limit {candidate_limit}."
         )
 
+    local_candidate_sets = candidate_sets
+    fallback_partition = len(local_candidate_sets)
+    fallback_gate_set = frozenset(range(len(circuit.get_Gates())))
+    candidate_sets = [*local_candidate_sets, fallback_gate_set]
+    candidate_gate_orders = []
+    for gate_set in local_candidate_sets:
+        local_successors = {
+            gate: successors[gate] & gate_set for gate in gate_set
+        }
+        local_predecessors = {
+            gate: predecessors[gate] & gate_set for gate in gate_set
+        }
+        candidate_gate_orders.append(
+            tuple(
+                _get_topo_order(
+                    local_successors,
+                    local_predecessors,
+                    gate_to_qubit,
+                )
+            )
+        )
+    candidate_gate_orders.append(
+        tuple(_get_topo_order(successors, predecessors, gate_to_qubit))
+    )
+
     gate_dict = {index: gate for index, gate in enumerate(circuit.get_Gates())}
     feasible_alternatives = {}
     optimistic_alternatives = {}
@@ -3170,7 +3449,12 @@ def route_circuit_exact(
     synthesis_cache_hits = 0
     synthesized_partitions = set()
     lazy_osr = bool(config.get("exact_routing_lazy_osr", False))
-    candidate_gate_orders = []
+    global_synthesis_batch = _GlobalRoutingSynthesisBatch(
+        config,
+        target_synthesis_cache,
+        target_synthesis_cache_stats,
+    )
+    deferred_refinements = {}
 
     def synthesis_cache_key(unitary, fallback_alternatives, requested):
         fallback_signature = tuple(
@@ -3217,7 +3501,124 @@ def route_circuit_exact(
             for alternative in cached
         )
 
-    for partition_index, gate_set in enumerate(candidate_sets):
+    # Prepare the guaranteed incumbent before expensive OSR pricing so the
+    # route-wide deadline can always return a valid, audited result.
+    from squander.decomposition.qgd_Wide_Circuit_Optimization import (
+        CNOTGateCount,
+        SingleQubitGateCount,
+    )
+    from squander.synthesis.qgd_SABRE import qgd_SABRE as SABRE
+
+    sabre = SABRE(
+        circuit,
+        topology,
+        random_seed=config.get("exact_routing_random_seed"),
+    )
+    requested_initial_mapping = config.get("exact_routing_initial_mapping")
+    if requested_initial_mapping is not None:
+        requested_initial_mapping = tuple(map(int, requested_initial_mapping))
+        if len(requested_initial_mapping) != circuit.get_Qbit_Num():
+            raise ValueError("Initial mapping width mismatch.")
+        assigned = [value for value in requested_initial_mapping if value >= 0]
+        if (
+            len(set(assigned)) != len(assigned)
+            or any(value >= circuit.get_Qbit_Num() for value in assigned)
+        ):
+            raise ValueError("Initial mapping is not an injective partial mapping.")
+        available = iter(
+            physical
+            for physical in range(circuit.get_Qbit_Num())
+            if physical not in assigned
+        )
+        sabre.pi = np.asarray(
+            [
+                next(available) if value < 0 else value
+                for value in requested_initial_mapping
+            ],
+            dtype=int,
+        )
+    (
+        sabre_circuit,
+        sabre_parameters,
+        sabre_initial_mapping,
+        sabre_final_mapping,
+        _swap_count,
+    ) = sabre.map_circuit(parameters)
+    sabre_circuit = sabre_circuit.get_Flat_Circuit()
+    sabre_parameters = np.asarray(sabre_parameters, dtype=np.float64)
+    _assert_local_topology(sabre_circuit, topology)
+    sabre_initial_mapping = tuple(map(int, sabre_initial_mapping))
+    sabre_final_mapping = tuple(map(int, sabre_final_mapping))
+    if (
+        tuple(sorted(sabre_initial_mapping)) != tuple(range(circuit.get_Qbit_Num()))
+        or tuple(sorted(sabre_final_mapping)) != tuple(range(circuit.get_Qbit_Num()))
+    ):
+        raise AssertionError("SABRE fallback returned an invalid mapping.")
+    fallback_logical_qubits = tuple(range(circuit.get_Qbit_Num()))
+    fallback_alternative = RoutingAlternative(
+        partition=fallback_partition,
+        logical_qubits=fallback_logical_qubits,
+        input_physical=sabre_initial_mapping,
+        output_physical=sabre_final_mapping,
+        cnot_count=CNOTGateCount(sabre_circuit, 0),
+        single_qubit_count=SingleQubitGateCount(sabre_circuit),
+        payload=SynthesizedRoutingPayload(
+            circuit=sabre_circuit,
+            parameters=sabre_parameters,
+            topology=tuple(
+                sorted(tuple(sorted((int(u), int(v)))) for u, v in topology)
+            ),
+            input_assignment=_inverse_permutation(sabre_initial_mapping),
+            output_assignment=_inverse_permutation(sabre_final_mapping),
+            source_circuit=circuit,
+            source_parameters=parameters,
+            certificate_kind="sabre",
+        ),
+    )
+    feasible_alternatives[fallback_partition] = (fallback_alternative,)
+    optimistic_alternatives[fallback_partition] = (fallback_alternative,)
+
+    def finish_with_timeout(solution=None):
+        if solution is None:
+            solution = ExactRoutingResult(
+                selections=(
+                    RoutingSelection(fallback_partition, fallback_alternative),
+                ),
+                cnot_count=fallback_alternative.cnot_count,
+                single_qubit_count=fallback_alternative.single_qubit_count,
+                initial_mapping=sabre_initial_mapping,
+                final_mapping=sabre_final_mapping,
+                explored_states=0,
+                master_backend="sabre-timeout-incumbent",
+                optimal=False,
+            )
+        else:
+            solution = replace(
+                solution,
+                master_backend=f"{solution.master_backend}-timeout-incumbent",
+                optimal=False,
+            )
+        routed_circuit, routed_parameters = construct_exact_routed_circuit(
+            solution, circuit.get_Qbit_Num()
+        )
+        return ExactCircuitRoutingResult(
+            circuit=routed_circuit,
+            parameters=routed_parameters,
+            solution=solution,
+            candidate_gate_sets=tuple(
+                tuple(sorted(part)) for part in candidate_sets
+            ),
+            candidate_gate_orders=tuple(candidate_gate_orders),
+            synthesized_partitions=len(synthesized_partitions),
+            synthesis_cache_hits=(
+                synthesis_cache_hits + target_synthesis_cache_stats[0]
+            ),
+            timed_out=True,
+        )
+
+    for partition_index, gate_set in enumerate(local_candidate_sets):
+        if routing_deadline is not None and time.monotonic() >= routing_deadline:
+            return finish_with_timeout()
         involved_qubits = tuple(
             sorted(set().union(*(gate_to_qubit[gate] for gate in gate_set)))
         )
@@ -3225,16 +3626,7 @@ def route_circuit_exact(
             raise AssertionError("Partition enumerator exceeded its width bound.")
         subcircuit = Circuit(circuit.get_Qbit_Num())
         parameter_blocks = []
-        local_successors = {
-            gate: successors[gate] & gate_set for gate in gate_set
-        }
-        local_predecessors = {
-            gate: predecessors[gate] & gate_set for gate in gate_set
-        }
-        gate_order = tuple(_get_topo_order(
-            local_successors, local_predecessors, gate_to_qubit
-        ))
-        candidate_gate_orders.append(gate_order)
+        gate_order = candidate_gate_orders[partition_index]
         for gate in gate_order:
             source_gate = gate_dict[gate]
             subcircuit.add_Gate(source_gate)
@@ -3308,16 +3700,12 @@ def route_circuit_exact(
                         subparameters,
                     )
                 else:
-                    cache_key = synthesis_cache_key(
-                        unitary, fallback_alternatives, None
-                    )
-                    cached = synthesis_cache.get(cache_key)
-                    if cached is None:
-                        eager_config = {
-                            **dict(config),
-                            "exact_routing_eager_synthesis": True,
-                        }
-                        refined = synthesize_partition_alternatives(
+                    eager_config = {
+                        **dict(config),
+                        "exact_routing_eager_synthesis": True,
+                    }
+                    deferred_refinements[partition_index] = (
+                        synthesize_partition_alternatives(
                             partition=partition_index,
                             unitary=unitary,
                             logical_qubits=involved_qubits,
@@ -3328,24 +3716,36 @@ def route_circuit_exact(
                             source_parameters=subparameters,
                             synthesis_cache=target_synthesis_cache,
                             synthesis_cache_stats=target_synthesis_cache_stats,
+                            synthesis_batch=global_synthesis_batch,
                         )
-                        synthesis_cache[cache_key] = refined
-                    else:
-                        synthesis_cache_hits += 1
-                        refined = rebind_cached_alternatives(
-                            cached,
-                            partition_index,
-                            involved_qubits,
-                            compact,
-                            subparameters,
-                        )
-                    feasible_alternatives[partition_index] = refined
-                    synthesized_partitions.add(partition_index)
+                    )
 
         if partition_index not in optimistic_alternatives:
             optimistic_alternatives[partition_index] = (
                 feasible_alternatives[partition_index]
             )
+
+    global_synthesis_batch.run()
+    for partition_index, deferred in deferred_refinements.items():
+        refined = deferred.resolve()
+        feasible_alternatives[partition_index] = refined
+        optimistic_alternatives[partition_index] = refined
+        synthesized_partitions.add(partition_index)
+
+    if routing_deadline is not None and time.monotonic() >= routing_deadline:
+        return finish_with_timeout()
+    remaining_total = (
+        None
+        if routing_deadline is None
+        else max(0.0, routing_deadline - time.monotonic())
+    )
+    configured_master_timeout = config.get("exact_routing_timeout_seconds")
+    if configured_master_timeout is None:
+        master_timeout = remaining_total
+    elif remaining_total is None:
+        master_timeout = float(configured_master_timeout)
+    else:
+        master_timeout = min(float(configured_master_timeout), remaining_total)
 
     solver_arguments = {
         "backend": config.get("exact_routing_master", "ilp"),
@@ -3358,9 +3758,11 @@ def route_circuit_exact(
         "partitions": candidate_sets,
         "logical_qubit_count": circuit.get_Qbit_Num(),
         "physical_qubit_count": circuit.get_Qbit_Num(),
+        "topology": topology,
         "initial_mapping": config.get("exact_routing_initial_mapping"),
-        "timeout_seconds": config.get("exact_routing_timeout_seconds"),
+        "timeout_seconds": master_timeout,
         "max_states": config.get("exact_routing_max_states"),
+        "allow_suboptimal": True,
     }
     refined_transition_groups = set()
     lazy_rounds = 0
@@ -3370,23 +3772,54 @@ def route_circuit_exact(
             max(1, 4 * len(candidate_sets)),
         )
     )
-    while True:
-        feasible_solution = solve_exact_routing(
+    try:
+        incumbent_solution = solve_exact_routing(
             alternatives=feasible_alternatives, **solver_arguments
         )
-        lower_bound_solution = solve_exact_routing(
-            alternatives=optimistic_alternatives, **solver_arguments
+    except ExactRoutingLimitExceeded:
+        return finish_with_timeout()
+    if not incumbent_solution.optimal:
+        return finish_with_timeout(incumbent_solution)
+    solution = incumbent_solution
+    lower_master_cache = {}
+    lower_solver_arguments = dict(solver_arguments)
+    if str(lower_solver_arguments["backend"]).lower() in ("ilp", "pulp"):
+        lower_solver_arguments.update(
+            {
+                "_model_cache": lower_master_cache,
+                "_model_cache_key": "optimistic",
+            }
         )
-        feasible_cost = (
-            feasible_solution.cnot_count,
-            feasible_solution.single_qubit_count,
+    while lazy_osr:
+        if routing_deadline is not None:
+            remaining = routing_deadline - time.monotonic()
+            if remaining <= 0:
+                return finish_with_timeout(incumbent_solution)
+            configured_timeout = config.get("exact_routing_timeout_seconds")
+            lower_solver_arguments["timeout_seconds"] = (
+                remaining
+                if configured_timeout is None
+                else min(float(configured_timeout), remaining)
+            )
+        try:
+            lower_bound_solution = solve_exact_routing(
+                alternatives=optimistic_alternatives,
+                **lower_solver_arguments,
+            )
+        except ExactRoutingLimitExceeded:
+            return finish_with_timeout(incumbent_solution)
+        if not lower_bound_solution.optimal:
+            return finish_with_timeout(incumbent_solution)
+        incumbent_cost = (
+            incumbent_solution.cnot_count,
+            incumbent_solution.single_qubit_count,
         )
         lower_bound_cost = (
             lower_bound_solution.cnot_count,
             lower_bound_solution.single_qubit_count,
         )
-        if lower_bound_cost >= feasible_cost:
-            solution = feasible_solution
+        if lower_bound_cost >= incumbent_cost:
+            solution = incumbent_solution
             break
         to_refine = {}
         for selection in lower_bound_solution.selections:
@@ -3430,10 +3863,25 @@ def route_circuit_exact(
             unitary, involved_qubits, compact, subparameters = (
                 synthesis_metadata[partition_index]
             )
+            priced_transitions = set()
+            local_topologies = {
+                alternative.payload.topology
+                for alternative in feasible_alternatives[partition_index]
+                if alternative.payload is not None
+            }
+            for local_edges in local_topologies:
+                for _representative, orbit in symmetry_reduced_assignment_orbits(
+                    local_edges, len(involved_qubits)
+                ):
+                    orbit_transitions = {
+                        member for member, _automorphism in orbit
+                    }
+                    if orbit_transitions & requested_transitions:
+                        priced_transitions.update(orbit_transitions)
             cache_key = synthesis_cache_key(
                 unitary,
                 feasible_alternatives[partition_index],
-                requested_transitions,
+                priced_transitions,
             )
             cached = synthesis_cache.get(cache_key)
             if cached is None:
@@ -3450,7 +3898,7 @@ def route_circuit_exact(
                     config=eager_config,
                     source_circuit=compact,
                     source_parameters=subparameters,
-                    requested_transitions=requested_transitions,
+                    requested_transitions=priced_transitions,
                     synthesis_cache=target_synthesis_cache,
                     synthesis_cache_stats=target_synthesis_cache_stats,
                 )
@@ -3471,7 +3919,7 @@ def route_circuit_exact(
                     alternative.payload.input_assignment,
                     alternative.payload.output_assignment,
                 )
-                in requested_transitions
+                in priced_transitions
             }
             feasible_by_key = {
                 (alternative.input_physical, alternative.output_physical): alternative
@@ -3490,6 +3938,16 @@ def route_circuit_exact(
             feasible_alternatives[partition_index] = tuple(
                 feasible_by_key.values()
             )
+            priced_keys = {
+                (alternative.input_physical, alternative.output_physical)
+                for alternative in feasible_by_key.values()
+                if alternative.payload is not None
+                and (
+                    alternative.payload.input_assignment,
+                    alternative.payload.output_assignment,
+                )
+                in priced_transitions
+            }
             optimistic_alternatives[partition_index] = tuple(
                 feasible_by_key.get(
                     (alternative.input_physical, alternative.output_physical),
@@ -3499,13 +3957,51 @@ def route_circuit_exact(
                     alternative.input_physical,
                     alternative.output_physical,
                 )
-                in refined_by_key
+                in priced_keys
                 else alternative
                 for alternative in optimistic_alternatives[partition_index]
             )
-            for transition in requested_transitions:
+            for transition in priced_transitions:
                 refined_transition_groups.add((partition_index, transition))
             synthesized_partitions.add(partition_index)
+
+        actual_selections = tuple(
+            RoutingSelection(
+                selection.partition,
+                next(
+                    alternative
+                    for alternative in feasible_alternatives[
+                        selection.partition
+                    ]
+                    if (
+                        alternative.input_physical,
+                        alternative.output_physical,
+                    )
+                    == (
+                        selection.alternative.input_physical,
+                        selection.alternative.output_physical,
+                    )
+                ),
+            )
+            for selection in lower_bound_solution.selections
+        )
+        actual_solution = replace(
+            lower_bound_solution,
+            selections=actual_selections,
+            cnot_count=sum(
+                selection.alternative.cnot_count
+                for selection in actual_selections
+            ),
+            single_qubit_count=sum(
+                selection.alternative.single_qubit_count
+                for selection in actual_selections
+            ),
+        )
+        if (
+            actual_solution.cnot_count,
+            actual_solution.single_qubit_count,
+        ) < incumbent_cost:
+            incumbent_solution = actual_solution
 
     routed_circuit, routed_parameters = construct_exact_routed_circuit(
         solution, circuit.get_Qbit_Num()
