@@ -1593,6 +1593,14 @@ class ExactRoutingLimitExceeded(RuntimeError):
     """Raised when an explicitly configured exact-search limit is reached."""
 
 
+def _raise_if_seed_deadline_expired(deadline, phase):
+    """Interrupt optional seed construction at its wall-clock deadline."""
+    if deadline is not None and time.monotonic() >= float(deadline):
+        raise ExactRoutingLimitExceeded(
+            f"Exact-routing {phase} seed exceeded its wall-clock budget."
+        )
+
+
 def _gate_mask(gates: Iterable[int]) -> int:
     mask = 0
     for gate in gates:
@@ -3518,22 +3526,30 @@ def _path_mapping_swap_sequence(
     path = tuple(map(int, path))
     if sorted(source) != sorted(target) or sorted(source) != sorted(path):
         raise ValueError("Path mappings must be permutations of the device vertices.")
-    physical_to_logical = {physical: logical for logical, physical in enumerate(source)}
-    target_at_position = [
-        next(logical for logical, physical in enumerate(target) if physical == vertex)
-        for vertex in path
-    ]
+    physical_to_logical = {
+        physical: logical for logical, physical in enumerate(source)
+    }
+    target_physical_to_logical = {
+        physical: logical for logical, physical in enumerate(target)
+    }
+    target_at_position = [target_physical_to_logical[vertex] for vertex in path]
     current_at_position = [physical_to_logical[vertex] for vertex in path]
+    current_position = {
+        logical: position for position, logical in enumerate(current_at_position)
+    }
     swaps = []
     for destination, logical in enumerate(target_at_position):
-        source_position = current_at_position.index(logical, destination)
+        source_position = current_position[logical]
         while source_position > destination:
             left = source_position - 1
             swaps.append((path[left], path[source_position]))
+            displaced = current_at_position[left]
             current_at_position[left], current_at_position[source_position] = (
                 current_at_position[source_position],
                 current_at_position[left],
             )
+            current_position[logical] = left
+            current_position[displaced] = source_position
             source_position = left
     if current_at_position != target_at_position:
         raise AssertionError("Adjacent-SWAP construction did not reach its target.")
@@ -3643,9 +3659,11 @@ def _greedy_selected_path_warm_start(
     path: Sequence[int],
     initial_mapping: Sequence[int] | None = None,
     lookahead: bool = True,
+    deadline=None,
 ) -> ExactRoutingResult:
     """Construct a feasible staged seed for one fixed column cover."""
     path = tuple(map(int, path))
+    _raise_if_seed_deadline_expired(deadline, "fixed-cover greedy")
     path_position = {physical: index for index, physical in enumerate(path)}
     selected_gate_partition = {
         gate: partition
@@ -3772,6 +3790,7 @@ def _greedy_selected_path_warm_start(
         return choices
 
     while ready:
+        _raise_if_seed_deadline_expired(deadline, "fixed-cover greedy")
         choices = []
         for partition in sorted(ready):
             for choice in choices_for(partition, current):
@@ -3855,11 +3874,18 @@ def _beam_selected_path_warm_start(
     initial_mapping=None,
     initial_mapping_candidates=None,
     beam_width=64,
+    translation_limit=None,
+    deadline=None,
 ):
     """Route one fixed cover with a bounded beam over complete mappings."""
     beam_width = int(beam_width)
     if beam_width < 1:
         raise ValueError("The fixed-cover mapping beam width must be positive.")
+    if translation_limit is not None:
+        translation_limit = int(translation_limit)
+        if translation_limit < 1:
+            raise ValueError("The seed translation limit must be positive.")
+    _raise_if_seed_deadline_expired(deadline, "fixed-cover beam")
     if initial_mapping_candidates is not None:
         distinct_initial_mappings = tuple(
             dict.fromkeys(
@@ -3882,6 +3908,8 @@ def _beam_selected_path_warm_start(
                         initial_mapping=initial_mapping,
                         initial_mapping_candidates=(candidate,),
                         beam_width=beam_width,
+                        translation_limit=translation_limit,
+                        deadline=deadline,
                     )
                     for candidate in distinct_initial_mappings
                 ),
@@ -3917,8 +3945,11 @@ def _beam_selected_path_warm_start(
 
     relative = {}
     for partition, values in alternatives.items():
+        _raise_if_seed_deadline_expired(deadline, "fixed-cover beam")
         grouped = {}
-        for alternative in values:
+        for alternative_index, alternative in enumerate(values):
+            if alternative_index % 256 == 0:
+                _raise_if_seed_deadline_expired(deadline, "fixed-cover beam")
             input_positions = tuple(
                 path_position[value] for value in alternative.input_physical
             )
@@ -3940,6 +3971,20 @@ def _beam_selected_path_warm_start(
             ):
                 grouped[key] = alternative
         relative[partition] = tuple(sorted(grouped.items()))
+
+    trivial_alternatives = {}
+    for partition, values in alternatives.items():
+        _raise_if_seed_deadline_expired(deadline, "fixed-cover beam")
+        if values and len(values[0].logical_qubits) == 1:
+            trivial_alternatives[partition] = min(
+                values,
+                key=lambda value: (
+                    value.cnot_count,
+                    value.single_qubit_count,
+                    value.input_physical,
+                    value.output_physical,
+                ),
+            )
 
     def complete_mapping(source, logicals, desired):
         fixed = dict(zip(logicals, desired))
@@ -3979,15 +4024,13 @@ def _beam_selected_path_warm_start(
         """Execute every ready mapping-neutral block without spending beam width."""
         cost, single, current, initial, selections, swap_blocks, completed = state
         while True:
+            _raise_if_seed_deadline_expired(deadline, "fixed-cover beam")
             ready_trivial = [
                 partition
                 for partition in range(len(partitions))
                 if not completed & (1 << partition)
                 and predecessor_masks[partition] & ~completed == 0
-                and all(
-                    len(alternative.logical_qubits) == 1
-                    for alternative in alternatives[partition]
-                )
+                and partition in trivial_alternatives
             ]
             if not ready_trivial:
                 break
@@ -3995,15 +4038,7 @@ def _beam_selected_path_warm_start(
                 ready_trivial,
                 key=lambda value: (min(partitions[value]), value),
             )
-            alternative = min(
-                alternatives[partition],
-                key=lambda value: (
-                    value.cnot_count,
-                    value.single_qubit_count,
-                    value.input_physical,
-                    value.output_physical,
-                ),
-            )
+            alternative = trivial_alternatives[partition]
             logical = alternative.logical_qubits[0]
             physical = current[logical]
             translated = replace(
@@ -4045,6 +4080,7 @@ def _beam_selected_path_warm_start(
             )
         ))
     while beam[0][6] != all_completed:
+        _raise_if_seed_deadline_expired(deadline, "fixed-cover beam")
         next_by_state = {}
         for (
             cost,
@@ -4064,7 +4100,32 @@ def _beam_selected_path_warm_start(
             for partition in ready:
                 for (input_offsets, output_offsets), alternative in relative[partition]:
                     width = len(alternative.logical_qubits)
-                    for start in range(logical_qubit_count - width + 1):
+                    starts = range(logical_qubit_count - width + 1)
+                    if (
+                        translation_limit is not None
+                        and len(starts) > translation_limit
+                    ):
+                        current_positions = tuple(
+                            path_position[current[logical]]
+                            for logical in alternative.logical_qubits
+                        )
+                        starts = sorted(
+                            starts,
+                            key=lambda start: (
+                                sum(
+                                    abs(
+                                        current_positions[index]
+                                        - (start + input_offsets[index])
+                                    )
+                                    for index in range(width)
+                                ),
+                                start,
+                            ),
+                        )[:translation_limit]
+                    for start in starts:
+                        _raise_if_seed_deadline_expired(
+                            deadline, "fixed-cover beam"
+                        )
                         desired_input = tuple(
                             path[start + value] for value in input_offsets
                         )
@@ -4137,6 +4198,7 @@ def _partition_aware_layout_seed(
     alternatives,
     logical_qubit_count,
     topology,
+    deadline=None,
 ):
     """Build a native bidirectional layout from already-priced OSR columns.
 
@@ -4145,6 +4207,7 @@ def _partition_aware_layout_seed(
     prices and caches every symmetry representative before calling this helper.
     """
     partition_sets = tuple(frozenset(map(int, part)) for part in partitions)
+    _raise_if_seed_deadline_expired(deadline, "partition-aware layout")
     gate_partition = {
         gate: partition
         for partition, gate_set in enumerate(partition_sets)
@@ -4177,6 +4240,7 @@ def _partition_aware_layout_seed(
     infinity = logical_qubit_count + 1
     distances = [[infinity] * logical_qubit_count for _ in range(logical_qubit_count)]
     for source in range(logical_qubit_count):
+        _raise_if_seed_deadline_expired(deadline, "partition-aware layout")
         distances[source][source] = 0
         queue = collections.deque((source,))
         while queue:
@@ -4188,16 +4252,19 @@ def _partition_aware_layout_seed(
     if any(infinity in row for row in distances):
         raise ValueError("Routing topology must be connected.")
 
-    logicals = {
-        partition: tuple(map(int, values[0].logical_qubits))
-        for partition, values in alternatives.items()
-    }
-    input_sets = {
-        partition: frozenset(
-            frozenset(map(int, value.input_physical)) for value in values
-        )
-        for partition, values in alternatives.items()
-    }
+    logicals = {}
+    input_sets = {}
+    for partition, values in alternatives.items():
+        _raise_if_seed_deadline_expired(deadline, "partition-aware layout")
+        logicals[partition] = tuple(map(int, values[0].logical_qubits))
+        physical_sets = set()
+        for alternative_index, value in enumerate(values):
+            if alternative_index % 256 == 0:
+                _raise_if_seed_deadline_expired(
+                    deadline, "partition-aware layout"
+                )
+            physical_sets.add(frozenset(map(int, value.input_physical)))
+        input_sets[partition] = frozenset(physical_sets)
 
     def block_distance(partition, mapping):
         locations = tuple(mapping[logical] for logical in logicals[partition])
@@ -4263,6 +4330,7 @@ def _partition_aware_layout_seed(
         swap_count = 0
         visited_since_progress = set()
         while frontier:
+            _raise_if_seed_deadline_expired(deadline, "partition-aware layout")
             runnable = tuple(
                 partition for partition in sorted(frontier)
                 if executable(partition, mapping)
@@ -4288,6 +4356,10 @@ def _partition_aware_layout_seed(
                         for alternative_index, alternative in enumerate(
                             alternatives[partition]
                         ):
+                            if alternative_index % 64 == 0:
+                                _raise_if_seed_deadline_expired(
+                                    deadline, "partition-aware layout"
+                                )
                             if frozenset(alternative.input_physical) != occupied:
                                 continue
                             candidate_mapping = list(mapping)
@@ -4331,6 +4403,9 @@ def _partition_aware_layout_seed(
             ) or edges
             swaps = []
             for edge in candidate_edges:
+                _raise_if_seed_deadline_expired(
+                    deadline, "partition-aware layout"
+                )
                 if any(
                     edge[0] in {
                         mapping[logical] for logical in logicals[partition]
@@ -4382,6 +4457,9 @@ def _cover_selection_warm_start(
     exact_refine_timeout_seconds=None,
     beam_width=None,
     beam_initial_mappings=None,
+    translation_limit=None,
+    deadline=None,
+    refine_backend="ilp",
 ):
     """Route one selected cover greedily and restore original partition ids."""
     selected_partitions = tuple(map(int, selected_partitions))
@@ -4389,13 +4467,17 @@ def _cover_selection_warm_start(
     reduced_partitions = tuple(
         partition_sets[partition] for partition in selected_partitions
     )
-    reduced_alternatives = {
-        reduced: tuple(
-            replace(value, partition=reduced)
-            for value in alternatives[original]
-        )
-        for reduced, original in enumerate(selected_partitions)
-    }
+    try:
+        reduced_alternatives = {}
+        for reduced, original in enumerate(selected_partitions):
+            reduced_values = []
+            for alternative_index, value in enumerate(alternatives[original]):
+                if alternative_index % 256 == 0:
+                    _raise_if_seed_deadline_expired(deadline, "fixed-cover")
+                reduced_values.append(replace(value, partition=reduced))
+            reduced_alternatives[reduced] = tuple(reduced_values)
+    except ExactRoutingLimitExceeded:
+        return None
     seed_arguments = {
         "gate_predecessors": gate_predecessors,
         "partitions": reduced_partitions,
@@ -4403,35 +4485,63 @@ def _cover_selection_warm_start(
         "logical_qubit_count": logical_qubit_count,
         "path": path,
         "initial_mapping": initial_mapping,
+        "deadline": deadline,
     }
-    if beam_width is None:
-        reduced = _greedy_selected_path_warm_start(
-            **seed_arguments, lookahead=lookahead
-        )
-    else:
-        forward_initial_mappings = tuple(beam_initial_mappings or (None,))
-        if initial_mapping is None:
-            partition_layout = _partition_aware_layout_seed(
-                gate_predecessors=gate_predecessors,
-                partitions=reduced_partitions,
-                alternatives=reduced_alternatives,
-                logical_qubit_count=logical_qubit_count,
-                topology=tuple(zip(path, path[1:])),
+    try:
+        _raise_if_seed_deadline_expired(deadline, "fixed-cover")
+        if beam_width is None:
+            reduced = _greedy_selected_path_warm_start(
+                **seed_arguments, lookahead=lookahead
             )
-            if partition_layout is not None:
-                forward_initial_mappings = tuple(
-                    dict.fromkeys(
-                        (*forward_initial_mappings, partition_layout)
-                    )
+        else:
+            forward_initial_mappings = tuple(beam_initial_mappings or (None,))
+            if initial_mapping is None:
+                partition_layout = _partition_aware_layout_seed(
+                    gate_predecessors=gate_predecessors,
+                    partitions=reduced_partitions,
+                    alternatives=reduced_alternatives,
+                    logical_qubit_count=logical_qubit_count,
+                    topology=tuple(zip(path, path[1:])),
+                    deadline=deadline,
                 )
-        reduced = _beam_selected_path_warm_start(
-            **seed_arguments,
-            beam_width=beam_width,
-            initial_mapping_candidates=forward_initial_mappings,
-        )
+                if partition_layout is not None:
+                    forward_initial_mappings = tuple(
+                        dict.fromkeys(
+                            (*forward_initial_mappings, partition_layout)
+                        )
+                    )
+            reduced = _beam_selected_path_warm_start(
+                **seed_arguments,
+                beam_width=beam_width,
+                initial_mapping_candidates=forward_initial_mappings,
+                translation_limit=translation_limit,
+            )
+    except ExactRoutingLimitExceeded:
+        return None
     if exact_refine_timeout_seconds is not None:
+        refine_seconds = float(exact_refine_timeout_seconds)
+        if deadline is not None:
+            refine_seconds = min(
+                refine_seconds, max(0.0, float(deadline) - time.monotonic())
+            )
+        if refine_seconds <= 0:
+            return replace(
+                reduced,
+                selections=tuple(
+                    RoutingSelection(
+                        selected_partitions[selection.partition],
+                        replace(
+                            selection.alternative,
+                            partition=selected_partitions[selection.partition],
+                        ),
+                    )
+                    for selection in reduced.selections
+                ),
+                master_backend=master_backend,
+            )
         try:
-            refined = solve_exact_routing_ilp(
+            refined = solve_exact_routing(
+                backend=refine_backend,
                 gate_predecessors=gate_predecessors,
                 partitions=reduced_partitions,
                 alternatives=reduced_alternatives,
@@ -4439,7 +4549,7 @@ def _cover_selection_warm_start(
                 physical_qubit_count=logical_qubit_count,
                 topology=tuple(zip(path, path[1:])),
                 initial_mapping=initial_mapping,
-                timeout_seconds=exact_refine_timeout_seconds,
+                timeout_seconds=refine_seconds,
                 allow_suboptimal=True,
                 warm_start=reduced,
             )
@@ -4478,6 +4588,7 @@ def _local_cost_cover_warm_start(
     path,
     initial_mapping=None,
     timeout_seconds=10.0,
+    deadline=None,
 ):
     """Find a cheap dependency-valid cover before solving mapping flow.
 
@@ -4490,6 +4601,9 @@ def _local_cost_cover_warm_start(
     except (ImportError, ModuleNotFoundError):
         return None
 
+    if deadline is None and timeout_seconds is not None:
+        deadline = time.monotonic() + float(timeout_seconds)
+    _raise_if_seed_deadline_expired(deadline, "local-cost cover")
     partition_sets = tuple(frozenset(map(int, part)) for part in partitions)
     gate_indices = tuple(sorted(map(int, gate_predecessors)))
     gate_to_partitions = {gate: [] for gate in gate_indices}
@@ -4522,8 +4636,13 @@ def _local_cost_cover_warm_start(
     with env, gp.Model(env=env) as model:
         model.Params.LazyConstraints = 1
         model.Params.IntegralityFocus = 1
-        if timeout_seconds is not None:
-            model.Params.TimeLimit = float(timeout_seconds)
+        solver_seconds = timeout_seconds
+        if deadline is not None:
+            solver_seconds = max(0.0, float(deadline) - time.monotonic())
+        if solver_seconds is not None:
+            if solver_seconds <= 0:
+                return None
+            model.Params.TimeLimit = float(solver_seconds)
         selected = model.addVars(usable, vtype=gp.GRB.BINARY, name="cover")
         for gate in gate_indices:
             model.addConstr(
@@ -4582,6 +4701,7 @@ def _local_cost_cover_warm_start(
         initial_mapping=initial_mapping,
         master_backend="local-cover-greedy-mip-start",
         lookahead=False,
+        deadline=deadline,
     )
 
 
@@ -6627,9 +6747,11 @@ def route_circuit_exact(
                 )
             )
         )
-    candidate_gate_orders.append(
-        tuple(_get_topo_order(successors, predecessors, gate_to_qubit))
-    )
+    # The whole-circuit LightSABRE fallback retains the source circuit's exact
+    # serialized gate order.  A different valid topological order is suitable
+    # for synthesized local candidates, but would associate this fallback's
+    # archived source stream with the wrong input indices during audit replay.
+    candidate_gate_orders.append(tuple(range(len(circuit.get_Gates()))))
 
     gate_dict = {index: gate for index, gate in enumerate(circuit.get_Gates())}
     feasible_alternatives = {}
@@ -7059,6 +7181,7 @@ def route_circuit_exact(
             topology=topology,
         )
 
+    master_backend = str(config.get("exact_routing_master", "ilp")).lower()
     configured_master_timeout = config.get(
         "exact_routing_timeout_seconds", 20 * 60
     )
@@ -7074,15 +7197,16 @@ def route_circuit_exact(
     )
     if configured_cover_seed_seconds <= 0:
         raise ValueError("The exact-routing cover-seed timeout must be positive.")
-    cover_seed_seconds = (
-        configured_cover_seed_seconds
-        if master_seconds_remaining is None
-        else min(configured_cover_seed_seconds, master_seconds_remaining)
-    )
+    cover_seed_seconds = configured_cover_seed_seconds
     cover_seed_started = time.monotonic()
-    try:
-        path = _path_topology_order(topology, circuit.get_Qbit_Num())
-        if path is not None:
+    cover_seed_deadline = cover_seed_started + cover_seed_seconds
+
+    def cover_seed_seconds_remaining():
+        return max(0.0, cover_seed_deadline - time.monotonic())
+
+    path = _path_topology_order(topology, circuit.get_Qbit_Num())
+    if path is not None:
+        try:
             cover_seed_arguments = {
                 "gate_predecessors": {
                     gate: predecessors[gate] for gate in range(len(gate_dict))
@@ -7093,6 +7217,13 @@ def route_circuit_exact(
                 "path": path,
                 "initial_mapping": config.get("exact_routing_initial_mapping"),
             }
+            # The synthesis-cost cover is useful but redundant with the two
+            # exact minimum-cover objectives below. Give it only the first
+            # quarter of the bounded portfolio so it cannot starve them.
+            local_cover_deadline = min(
+                cover_seed_deadline,
+                time.monotonic() + cover_seed_seconds / 4.0,
+            )
             local_cost_seed = _local_cost_cover_warm_start(
                 gate_predecessors={
                     gate: predecessors[gate] for gate in range(len(gate_dict))
@@ -7102,7 +7233,10 @@ def route_circuit_exact(
                 logical_qubit_count=circuit.get_Qbit_Num(),
                 path=path,
                 initial_mapping=config.get("exact_routing_initial_mapping"),
-                timeout_seconds=cover_seed_seconds,
+                timeout_seconds=max(
+                    0.0, local_cover_deadline - time.monotonic()
+                ),
+                deadline=local_cover_deadline,
             )
             from squander.partitioning.ilp import routing_partition_weights
 
@@ -7121,9 +7255,15 @@ def route_circuit_exact(
             distinct_covers = [("minimum-partition", plain_cover)]
             if routing_cover != plain_cover:
                 distinct_covers.append(("routing-weighted", routing_cover))
-            refine_seconds = cover_seed_seconds / len(distinct_covers)
-            cover_beam_width = int(
+            configured_cover_beam_width = int(
                 config.get("exact_routing_cover_seed_beam_width", 64)
+            )
+            cover_beam_width = min(
+                configured_cover_beam_width,
+                max(1, 1024 // circuit.get_Qbit_Num()),
+            )
+            translation_limit = int(
+                config.get("exact_routing_cover_seed_translation_limit", 8)
             )
             if requested_initial_mapping is None:
                 cover_initial_mappings = tuple(
@@ -7135,20 +7275,32 @@ def route_circuit_exact(
                 cover_initial_mappings = (
                     tuple(map(int, requested_initial_mapping)),
                 )
-            minimum_partition_seeds = [
-                _cover_selection_warm_start(
+            minimum_partition_seeds = []
+            for cover_index, (cover_name, selected_cover) in enumerate(
+                distinct_covers
+            ):
+                covers_left = len(distinct_covers) - cover_index
+                cover_deadline = time.monotonic() + (
+                    cover_seed_seconds_remaining() / covers_left
+                )
+                candidate = _cover_selection_warm_start(
                     selected_partitions=selected_cover,
                     **cover_seed_arguments,
                     master_backend=(
                         f"{cover_name}-fixed-cover-mip-start"
                     ),
                     lookahead=True,
-                    exact_refine_timeout_seconds=refine_seconds,
+                    exact_refine_timeout_seconds=max(
+                        0.0, cover_deadline - time.monotonic()
+                    ),
                     beam_width=cover_beam_width,
                     beam_initial_mappings=cover_initial_mappings,
+                    translation_limit=translation_limit,
+                    deadline=cover_deadline,
+                    refine_backend=master_backend,
                 )
-                for cover_name, selected_cover in distinct_covers
-            ]
+                if candidate is not None:
+                    minimum_partition_seeds.append(candidate)
             master_warm_start = min(
                 (
                     candidate
@@ -7165,15 +7317,11 @@ def route_circuit_exact(
                     candidate.master_backend,
                 ),
             )
-    finally:
-        if master_seconds_remaining is not None:
-            master_seconds_remaining = max(
-                0.0,
-                master_seconds_remaining
-                - (time.monotonic() - cover_seed_started),
-            )
+        except ExactRoutingLimitExceeded:
+            # LightSABRE is already a complete replayable incumbent. Optional
+            # cover seeds improve it only when they finish promptly.
+            pass
 
-    master_backend = str(config.get("exact_routing_master", "ilp")).lower()
     global_transition_cnot_lower_bound = 0
     zero_swap_local_cnot_lower_bound = 0
     if config.get("exact_routing_flow_seed", True) and master_backend in (

@@ -1237,6 +1237,7 @@ def _append_exact_osr_routing_event(
     output_representation = _squander_audit_representation(
         output_circuit, output_parameters, range(output_circuit.get_Qbit_Num())
     )
+    input_state = _qasm_exact_state(input_representation)
     selections = []
     transition_swaps = exact_route.solution.transition_swaps or tuple(
         () for _selection in exact_route.solution.selections
@@ -1250,6 +1251,7 @@ def _append_exact_osr_routing_event(
         payload = alternative.payload
         if payload.source_circuit is None or payload.source_parameters is None:
             raise AssertionError("Exact routing audit is missing its source block.")
+        logical_qubits = tuple(map(int, alternative.logical_qubits))
         source = _squander_audit_representation(
             payload.source_circuit,
             payload.source_parameters,
@@ -1265,12 +1267,37 @@ def _append_exact_osr_routing_event(
             for local_logical in payload.input_assignment
         ]
         certificate_kind = getattr(payload, "certificate_kind", "unitary")
+        source_gate_indices = tuple(
+            exact_route.candidate_gate_orders[selection.partition]
+        )
+        remapped_source_state = _remap_exact_state(
+            _qasm_exact_state(source), logical_qubits, input_state["qubits"]
+        )
+
+        def source_matches(indices):
+            return remapped_source_state["operations"] == [
+                input_state["operations"][index] for index in indices
+            ]
+
+        if not source_matches(source_gate_indices):
+            # The whole-circuit structural fallback preserves serialization
+            # order, while local synthesis candidates use their dependency-
+            # valid extraction order. Resolve this distinction before writing
+            # the archive; the verifier must never need to guess it later.
+            source_order = tuple(
+                sorted(exact_route.candidate_gate_sets[selection.partition])
+            )
+            if source_matches(source_order):
+                source_gate_indices = source_order
+            else:
+                raise AssertionError(
+                    "Exact routing source block cannot be associated with its "
+                    "input gate indices."
+                )
         archived_selection = {
                 "partition": int(selection.partition),
-                "source_gate_indices": list(
-                    exact_route.candidate_gate_orders[selection.partition]
-                ),
-                "logical_qubits": [int(q) for q in alternative.logical_qubits],
+                "source_gate_indices": list(source_gate_indices),
+                "logical_qubits": list(logical_qubits),
                 "input_physical": [int(q) for q in alternative.input_physical],
                 "output_physical": [int(q) for q in alternative.output_physical],
                 "input_assignment": [int(q) for q in payload.input_assignment],
@@ -1321,7 +1348,6 @@ def _append_exact_osr_routing_event(
                 f"Unknown exact-routing certificate {certificate_kind!r}."
             )
         selections.append(archived_selection)
-    input_state = _qasm_exact_state(input_representation)
     output_state = _qasm_exact_state(output_representation)
     _append_rewrite_audit_event(
         {
@@ -3571,6 +3597,10 @@ class qgd_Wide_Circuit_Optimization:
         config.setdefault("exact_routing_benders_stagnation_seconds", 120.0)
         config.setdefault("exact_routing_cover_seed_timeout_seconds", 10.0)
         config.setdefault("exact_routing_cover_seed_beam_width", 64)
+        # A fixed-cover warm start needs only a few promising translations of
+        # each relative OSR column. Exhaustively expanding every path interval
+        # made this optional seed superlinear and unbounded on wide circuits.
+        config.setdefault("exact_routing_cover_seed_translation_limit", 8)
         # CNOT count is the primary publication metric. Stop once its global
         # lower bound closes; proving the single-qubit tie is optional.
         config.setdefault("exact_routing_require_tiebreaker_proof", False)

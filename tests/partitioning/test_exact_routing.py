@@ -1,6 +1,7 @@
 import json
 import itertools
 import time
+from dataclasses import replace
 
 import numpy as np
 import pytest
@@ -37,6 +38,7 @@ def test_exact_osr_benders_is_the_wide_router_default():
     assert optimizer.config["exact_routing_master"] == "benders"
     assert optimizer.config["exact_routing_lazy_osr"] is False
     assert optimizer.config["exact_routing_synthesis_restarts"] == 1
+    assert optimizer.config["exact_routing_cover_seed_translation_limit"] == 8
     assert optimizer.config["exact_routing_flow_seed"] is True
     assert optimizer.config["exact_routing_flow_seed_timeout_seconds"] == 30.0
     assert optimizer.config["exact_routing_timeout_seconds"] == 20 * 60
@@ -391,6 +393,45 @@ def test_mapping_beam_gives_each_initial_layout_its_full_quota():
     )
 
     assert combined == separate
+
+
+def test_fixed_cover_seed_obeys_an_expired_wall_clock_deadline():
+    alternatives = {
+        0: (
+            RoutingAlternative(0, (0, 1), (0, 1), (0, 1), 1),
+        ),
+    }
+    result = routing._cover_selection_warm_start(
+        selected_partitions=(0,),
+        gate_predecessors={0: ()},
+        partitions=({0},),
+        alternatives=alternatives,
+        logical_qubit_count=2,
+        path=(0, 1),
+        initial_mapping=None,
+        master_backend="deadline-test",
+        beam_width=1,
+        deadline=time.monotonic() - 1.0,
+    )
+
+    assert result is None
+
+
+def test_path_mapping_swap_sequence_reaches_target():
+    source = (4, 1, 3, 0, 2)
+    target = (2, 4, 0, 3, 1)
+    mapping = list(source)
+    for left, right in routing._path_mapping_swap_sequence(
+        source, target, tuple(range(5))
+    ):
+        left_logical = mapping.index(left)
+        right_logical = mapping.index(right)
+        mapping[left_logical], mapping[right_logical] = (
+            mapping[right_logical],
+            mapping[left_logical],
+        )
+
+    assert tuple(mapping) == target
 
 
 def test_ilp_encodes_and_propagates_a_fixed_initial_permutation():
@@ -1130,6 +1171,8 @@ def test_route_wide_timeout_returns_verified_light_sabre_incumbent():
         {
             "max_partition_size": 3,
             "exact_routing_timeout_seconds": 1e-12,
+            "exact_routing_cover_seed_timeout_seconds": 1e-12,
+            "exact_routing_flow_seed": False,
         },
     )
 
@@ -1142,6 +1185,68 @@ def test_route_wide_timeout_returns_verified_light_sabre_incumbent():
     assert (
         result.solution.selections[0].alternative.payload.certificate_kind
         == "unitary"
+    )
+
+
+def test_light_sabre_fallback_audits_original_serialized_gate_order(
+    monkeypatch, tmp_path
+):
+    audit_path = tmp_path / "light-sabre-source-order.jsonl"
+    monkeypatch.setenv("SQUANDER_REWRITE_AUDIT_JSONL", str(audit_path))
+    circuit = qgd_Circuit(5)
+    # Independent one-qubit gates make multiple topological orders valid,
+    # while the structural fallback deliberately preserves this exact order.
+    circuit.add_H(4)
+    circuit.add_H(2)
+    circuit.add_CNOT(0, 4)
+    circuit.add_H(1)
+    circuit.add_CNOT(0, 2)
+    circuit.add_CNOT(0, 1)
+    parameters = np.empty((0,))
+    topology = tuple((qubit, qubit + 1) for qubit in range(4))
+    result = route_circuit_exact(
+        circuit,
+        parameters,
+        topology,
+        {
+            "max_partition_size": 3,
+            "exact_routing_timeout_seconds": 1e-12,
+            "exact_routing_cover_seed_timeout_seconds": 1e-12,
+            "exact_routing_flow_seed": False,
+            "exact_routing_initial_mapping": tuple(range(5)),
+        },
+    )
+
+    fallback = result.solution.selections[0].partition
+    assert result.candidate_gate_orders[fallback] == tuple(
+        range(len(circuit.get_Gates()))
+    )
+    # Reproduce the legacy metadata bug: the first two independent gates may
+    # be topologically exchanged even though the archived source circuit keeps
+    # its original serialized order. The writer must resolve this before save.
+    legacy_orders = list(result.candidate_gate_orders)
+    legacy_orders[fallback] = (1, 0, *range(2, len(circuit.get_Gates())))
+    result = replace(result, candidate_gate_orders=tuple(legacy_orders))
+    _append_exact_osr_routing_event(
+        "routing",
+        0,
+        circuit,
+        parameters,
+        result.circuit,
+        result.parameters,
+        result,
+        topology,
+        1e-10,
+    )
+    event = json.loads(audit_path.read_text())
+
+    assert event["selections"][0]["source_gate_indices"] == list(
+        range(len(circuit.get_Gates()))
+    )
+    _verify_exact_osr_routing_replay(event)
+    assert (
+        result.solution.selections[0].alternative.payload.certificate_kind
+        == "sabre"
     )
 
 
