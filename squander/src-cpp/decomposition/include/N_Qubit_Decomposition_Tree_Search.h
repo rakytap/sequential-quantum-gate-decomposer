@@ -101,6 +101,15 @@ public:
             }
         }
     }
+    std::vector<std::vector<int>> enumerate_cut_coverages(int total) const {
+        std::set<std::vector<int>> unique_coverages;
+        if (total < 0 || num_edges_ <= 0) return {};
+        std::vector<int> edge_counts(num_edges_, 0);
+        enumerate_cut_coverages_recursive(
+            total, edge_counts, 0, 0, unique_coverages
+        );
+        return {unique_coverages.begin(), unique_coverages.end()};
+    }
 private:
     int num_qubits_;
     int num_edges_;
@@ -167,6 +176,29 @@ private:
             }
         }
         return false;
+    }
+    void enumerate_cut_coverages_recursive(
+        int total, std::vector<int>& edge_counts, int pos, int used_sum,
+        std::set<std::vector<int>>& unique_coverages) const
+    {
+        const int m = static_cast<int>(edge_counts.size());
+        if (pos == m - 1) {
+            edge_counts[pos] = total - used_sum;
+            std::vector<int> coverage(cut_to_edges_.size(), 0);
+            for (size_t c = 0; c < cut_to_edges_.size(); ++c)
+                for (int edge_idx : cut_to_edges_[c])
+                    coverage[c] += edge_counts[edge_idx];
+            unique_coverages.emplace(std::move(coverage));
+            return;
+        }
+        const int remaining = total - used_sum;
+        for (int x = 0; x <= remaining; ++x) {
+            edge_counts[pos] = x;
+            enumerate_cut_coverages_recursive(
+                total, edge_counts, pos + 1, used_sum + x,
+                unique_coverages
+            );
+        }
     }
     bool best_feasible_for_some_composition(
         int total,

@@ -267,7 +267,6 @@ def optimize_circuit_worker(config, dataset, filename, output_path, result_queue
             optcirc,
             optparameters,
             routing=routed is not None,
-            label="example final original-to-output",
         )
         save_qasm2(optcirc, optparameters, output_path)
         input_representation = Wide_Circuit_Optimization._squander_audit_representation(
@@ -439,7 +438,19 @@ if __name__ == "__main__":
         # "osr_optimization_tolerance": 1e-6,  # squared OSR tail cost; rank cutoff is its square root (1e-3)
         # "synthesis_acceptance_tolerance": 1e-10,  # Common block budget
         "use_float": True,  # whether to use single precision for the optimization (experimental, may cause instability in some cases, but can significantly reduce optimization time and memory usage for large circuits)
-        # **{'use_basin_hopping': True, 'bh_T': 1.1822334624366124, 'bh_stepsize': 0.9020671823381502, 'bh_interval': 165, 'bh_target_accept_rate': 0.7037812116166546, 'bh_stepwise_factor': 0.8254028860713254}
+        # Minimize the complete exact-CNOT rank profile in one smooth OSR
+        # optimization.  BFGS2's small basin sample is deterministic per seed
+        # and avoids the unstable successive single-cut objective.
+        "osr_profile_temperature": 0.1,
+        # Use one smooth all-cuts objective for A2A, routing, and post-routing
+        # synthesis; no stage-specific tuning is required.
+        "osr_cut_smoothmax_temperature": 0.1,
+        "optimizer": "BFGS2",
+        "use_basin_hopping": True,
+        "use_differential_evolution": False,
+        "use_dual_annealing": False,
+        "max_iteration_loops": 8,
+        "max_inner_iterations_bfgs2": 1000,
     }
     result_directories, result_files = result_paths(
         config["max_partition_size"], config["strategy"]

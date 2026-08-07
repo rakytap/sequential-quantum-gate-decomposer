@@ -5,13 +5,68 @@ from squander import utils
 
 from squander.partitioning.partition import PartitionCircuitQasm
 from squander.partitioning.kahn import kahn_partition
-from squander.partitioning.ilp import routing_partition_weights
+from squander.partitioning.ilp import get_all_partitions, routing_partition_weights
 from squander.partitioning.tools import get_qubits
 
 
 """
 CORRECTNESS TESTS
 """
+
+
+def test_AllPartitionsMatchesExhaustiveConvexContractedSubgraphs():
+    """The optimized enumerator must not lose cores when it contracts 1q chains."""
+    circuit = Circuit(4)
+    circuit.add_CNOT(0, 1)
+    circuit.add_U3(1)
+    circuit.add_U3(1)
+    circuit.add_CNOT(1, 2)
+    circuit.add_U3(2)
+    circuit.add_CNOT(2, 3)
+    circuit.add_CNOT(0, 2)
+
+    enumerated, graph, _, _, chains, gate_qubits, _ = get_all_partitions(
+        circuit, 3
+    )
+    nodes = tuple(graph)
+
+    def descendants(start):
+        reached = set()
+        pending = list(graph[start])
+        while pending:
+            gate = pending.pop()
+            if gate not in reached:
+                reached.add(gate)
+                pending.extend(graph[gate] - reached)
+        return reached
+
+    reach = {gate: descendants(gate) for gate in nodes}
+    exhaustive = set()
+    for mask in range(1, 1 << len(nodes)):
+        part = frozenset(
+            gate for index, gate in enumerate(nodes) if mask & (1 << index)
+        )
+        qubits = set().union(*(gate_qubits[gate] for gate in part))
+        if len(qubits) > 3:
+            continue
+        convex = True
+        for left in part:
+            for right in part & reach[left]:
+                between = reach[left] & {
+                    gate
+                    for gate in nodes
+                    if gate == right or right in reach[gate]
+                }
+                if not between <= part:
+                    convex = False
+                    break
+            if not convex:
+                break
+        if convex:
+            exhaustive.add(part)
+
+    assert set(enumerated) == exhaustive
+    assert chains == {(1, 2), (4,)}
 
 
 def test_RoutingWeightsPreferBalancedEntanglerDepth():

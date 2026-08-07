@@ -146,14 +146,11 @@ std::pair<int, double> operator_schmidt_rank(const Matrix_float& U, int n,
                           const std::vector<int>& A_qubits,
                           double Fnorm, double tol = 1e-10);
 std::vector<std::vector<int>> unique_cuts(int n);
-double get_osr_entanglement_test(Matrix& matrix, std::vector<std::vector<int>> &use_cuts, int rank=-1, bool use_softmax=false);
-double get_osr_entanglement_test(Matrix_float& matrix, std::vector<std::vector<int>> &use_cuts, int rank=-1, bool use_softmax=false);
-Matrix get_deriv_osr_entanglement(Matrix &matrix, std::vector<std::vector<int>> &use_cuts, int rank=-1, bool use_softmax=false);
-Matrix_float get_deriv_osr_entanglement(Matrix_float &matrix, std::vector<std::vector<int>> &use_cuts, int rank=-1, bool use_softmax=false);
+double get_osr_entanglement_test(Matrix& matrix, std::vector<std::vector<int>>& use_cuts, const std::vector<std::vector<int>>& rank_profiles, double profile_temperature=0.1, double cut_smoothmax_temperature=0.0);
+double get_osr_entanglement_test(Matrix_float& matrix, std::vector<std::vector<int>>& use_cuts, const std::vector<std::vector<int>>& rank_profiles, double profile_temperature=0.1, double cut_smoothmax_temperature=0.0);
+Matrix get_deriv_osr_entanglement(Matrix& matrix, std::vector<std::vector<int>>& use_cuts, const std::vector<std::vector<int>>& rank_profiles, double profile_temperature=0.1, double cut_smoothmax_temperature=0.0);
+Matrix_float get_deriv_osr_entanglement(Matrix_float& matrix, std::vector<std::vector<int>>& use_cuts, const std::vector<std::vector<int>>& rank_profiles, double profile_temperature=0.1, double cut_smoothmax_temperature=0.0);
 double real_trace_conj_dot(Matrix& A, Matrix& B);
 double real_trace_conj_dot(Matrix_float& A, Matrix_float& B);
 
 #endif
-
-
-

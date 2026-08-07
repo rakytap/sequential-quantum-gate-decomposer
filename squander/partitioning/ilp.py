@@ -635,8 +635,10 @@ def ilp_global_optimal(allparts, g, weighted_info=None, gurobi_direct=False, use
     if gurobi_direct:
         from gurobipy import Env, Model, GRB
         import gurobipy as gp
-        with Env() as env:
-            env.setParam("OutputFlag", 0)
+        # OutputFlag must be supplied while constructing a WLS environment.
+        # Setting it afterward is too late to suppress credential and license
+        # initialization messages.
+        with Env(params={"OutputFlag": 0}) as env:
             with Model(env=env) as m:
                 m.setParam(GRB.Param.IntegralityFocus, 1)
                 m.setParam(GRB.Param.LazyConstraints, 1)

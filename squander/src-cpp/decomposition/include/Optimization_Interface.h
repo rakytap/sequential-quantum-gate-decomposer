@@ -89,10 +89,9 @@ protected:
     double correction2_scale;    
     /// cuts used for OSR entanglement cost function
     std::vector<std::vector<int>> use_cuts;
-    /// rank used for OSR entanglement cost function
-    int osr_rank = -1;
-    /// logical variable indicating whether to use softmax or average in the OSR entanglement cost function
-    bool use_softmax = false;
+    std::vector<std::vector<int>> osr_rank_profiles;
+    double osr_profile_temperature = 0.1;
+    double osr_cut_smoothmax_temperature = 0.0;
     
 
     /// number of iterations
@@ -587,10 +586,12 @@ void upload_Umtx_to_DFE();
 */
 int get_accelerator_num();
 
-void set_osr_params( std::vector<std::vector<int>> use_cuts_in, int osr_rank_in, bool use_softmax_in );
-
-
-
+void set_osr_params(
+    std::vector<std::vector<int>> use_cuts_in,
+    std::vector<std::vector<int>> rank_profiles_in,
+    double profile_temperature_in,
+    double cut_smoothmax_temperature_in
+);
 
 };
 

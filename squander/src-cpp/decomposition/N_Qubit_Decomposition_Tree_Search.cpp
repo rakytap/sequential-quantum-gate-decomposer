@@ -735,6 +735,14 @@ Gates_block* N_Qubit_Decomposition_Tree_Search::determine_gate_structure(Matrix_
     }
     if (use_osr || use_graph_search) {
         N_Qubit_Decomposition_custom&& cDecomp_custom_random = perform_optimization(nullptr);
+        if (config.count("max_iteration_loops") > 0) {
+            long long iteration_loop_count;
+            config["max_iteration_loops"].get_property(iteration_loop_count);
+            cDecomp_custom_random.set_iteration_loops(
+                qbit_num,
+                static_cast<int>(std::max<long long>(iteration_loop_count, 1))
+            );
+        }
         std::uniform_real_distribution<> distrib_real(0.0, 2 * M_PI);
         std::vector<double> optimized_parameters;
         current_minimum = std::numeric_limits<double>::max();
@@ -803,48 +811,90 @@ SearchNode N_Qubit_Decomposition_Tree_Search::evaluate_path(
     Matrix U;
     Matrix_float U_float;
     Matrix_real_float params_float;
-    for (const std::vector<int>& cut : all_cuts) {
-        if (cut.size() != 1) continue;
-        int max_rank = 2*(int)std::min(cut.size(), qbit_num-cut.size());
-        //int max_rank = 2;
-        std::tuple<int, double, std::vector<int>, std::vector<std::pair<int, double>>> rank_result;
-        for (int rank = max_rank-1; rank >= 0; rank--) {
-            cDecomp_custom_random.set_osr_params({cut}, rank, false);
-            //cDecomp_custom_random.set_osr_params(all_cuts, rank, true);
-            cDecomp_custom_random.start_decomposition();
-            Matrix_real params = cDecomp_custom_random.get_optimized_parameters();
-            if ( use_float ) {
-                params.copy_to(params_float);
-                Umtx_float.copy_to(U_float);
-                cDecomp_custom_random.apply_to(params_float, U_float);
-            }
-            else {
-                Umtx.copy_to(U);
-                cDecomp_custom_random.apply_to(params, U);
-            }
-            std::vector<std::pair<int, double>> osr_result;
-            osr_result.reserve(all_cuts.size());
-            int newrank = rank;
-            for (const std::vector<int>& eval_cut : all_cuts) {
-                if ( use_float ) {
-                    osr_result.emplace_back(operator_schmidt_rank(U_float, qbit_num, eval_cut, Fnorm, osr_tol));
-                }
-                else {
-                    osr_result.emplace_back(operator_schmidt_rank(U, qbit_num, eval_cut, Fnorm, osr_tol));
-                }
-                if (cut == eval_cut) newrank = osr_result.back().first;
-                //newrank = std::max(newrank, osr_result.back().first);
-            }
-            double best_kappa = std::numeric_limits<double>::infinity();
-            std::vector<int> best_edge_counts;
-            int min_cnots = osr_bound_solver.solve_min_cnots(osr_result, best_kappa, best_edge_counts);
-            if (newrank <= rank || rank == max_rank-1)
-                rank_result = std::make_tuple(min_cnots, best_kappa, std::move(best_edge_counts), std::move(osr_result));
-            if (newrank > rank) break;
-            rank = std::min(rank, newrank);
+    double profile_temperature = 0.1;
+    if (config.count("osr_profile_temperature") > 0)
+        config["osr_profile_temperature"].get_property(profile_temperature);
+    double cut_smoothmax_temperature = 0.0;
+    if (config.count("osr_cut_smoothmax_temperature") > 0)
+        config["osr_cut_smoothmax_temperature"].get_property(
+            cut_smoothmax_temperature
+        );
+
+    N_Qubit_Decomposition_custom joint_optimizer =
+        perform_optimization(nullptr, true);
+    if (config.count("max_iteration_loops") > 0) {
+        long long iteration_loop_count;
+        config["max_iteration_loops"].get_property(iteration_loop_count);
+        joint_optimizer.set_iteration_loops(
+            qbit_num,
+            static_cast<int>(std::max<long long>(iteration_loop_count, 1))
+        );
+    }
+    joint_optimizer.set_cost_function_variant(OSR_ENTANGLEMENT);
+    joint_optimizer.set_custom_gate_structure(gate_structure_loc.get());
+    joint_optimizer.set_optimization_blocks(gate_structure_loc->get_gate_num());
+    joint_optimizer.set_optimized_parameters(
+        optimized_parameters.data(),
+        static_cast<int>(optimized_parameters.size())
+    );
+    auto evaluate_all_cuts = [&](Matrix_real& params) {
+        if (use_float) {
+            params.copy_to(params_float);
+            Umtx_float.copy_to(U_float);
+            joint_optimizer.apply_to(params_float, U_float);
+        } else {
+            Umtx.copy_to(U);
+            joint_optimizer.apply_to(params, U);
         }
-        ev_results.osr_results.emplace_back(std::move(rank_result));
-        //if (ev_results.size() == (all_cuts.size()+1)/2) break;
+        std::vector<std::pair<int, double>> result;
+        result.reserve(all_cuts.size());
+        for (const std::vector<int>& cut : all_cuts) {
+            if (use_float)
+                result.emplace_back(operator_schmidt_rank(
+                    U_float, qbit_num, cut, Fnorm, osr_tol
+                ));
+            else
+                result.emplace_back(operator_schmidt_rank(
+                    U, qbit_num, cut, Fnorm, osr_tol
+                ));
+        }
+        return result;
+    };
+
+    Matrix_real params = joint_optimizer.get_optimized_parameters();
+    const int initial_min_cnots = osr_bound_solver.solve_min_cnots(
+        evaluate_all_cuts(params)
+    );
+    int target_bound = std::max(initial_min_cnots - 1, 0);
+    while (true) {
+        joint_optimizer.set_osr_params(
+            all_cuts,
+            osr_bound_solver.enumerate_cut_coverages(target_bound),
+            profile_temperature,
+            cut_smoothmax_temperature
+        );
+        joint_optimizer.start_decomposition();
+        params = joint_optimizer.get_optimized_parameters();
+
+        std::vector<std::pair<int, double>> osr_result =
+            evaluate_all_cuts(params);
+        double best_kappa = std::numeric_limits<double>::infinity();
+        std::vector<int> best_edge_counts;
+        const int min_cnots = osr_bound_solver.solve_min_cnots(
+            osr_result, best_kappa, best_edge_counts
+        );
+        ev_results.osr_results.emplace_back(
+            min_cnots, best_kappa, std::move(best_edge_counts),
+            std::move(osr_result)
+        );
+
+        // A two-qubit problem has one cut and at most two residual CNOT
+        // tiers.  Finishing the zero tier is effectively free and is needed
+        // to absorb boundary SWAPs.  Wider problems retain the deliberately
+        // fast one-tier greedy schedule.
+        if (qbit_num != 2 || target_bound == 0)
+            break;
+        target_bound = 0;
     }
     return ev_results;
 };
@@ -1068,7 +1118,6 @@ GrayCodeCNOT N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures
             generate_insertions(cur->path, topology, topo_filter, num_cnot,
                 [&](const GrayCodeCNOT& newpath) {
                     if (add_to_heap(newpath)) {
-                        //return cur > heap.top();
                         return top_heap->get_min_cnots() == 0;
                     }
                     return false;

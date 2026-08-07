@@ -73,9 +73,6 @@ void Optimization_Interface::solve_layer_optimization_problem_BFGS2( int num_of_
         }
 
 
-        double current_minimum_hold = current_minimum;
-
-
 
 
 
@@ -169,40 +166,63 @@ CPU_time = 0.0;
             long long bh_interval = 50;                // how often to adapt stepsize
             double bh_target_accept = 0.5;
             double bh_stepwise_factor = 0.9;
+            long long bh_niter_success = iteration_loops_max + 2;
             // Allow overrides via config (all optional)
             if (config.count("bh_T") > 0)                             config["bh_T"].get_property(bh_T);
             if (config.count("bh_stepsize") > 0)                      config["bh_stepsize"].get_property(bh_stepsize);
             if (config.count("bh_interval") > 0) { long long v; config["bh_interval"].get_property(v); bh_interval = std::max<long long>(1, v); }
             if (config.count("bh_target_accept_rate") > 0)            config["bh_target_accept_rate"].get_property(bh_target_accept);
             if (config.count("bh_stepwise_factor") > 0)               config["bh_stepwise_factor"].get_property(bh_stepwise_factor);
+            if (config.count("bh_niter_success") > 0)                 config["bh_niter_success"].get_property(bh_niter_success);
 
             // Clamp a couple of parameters to SciPy’s expected ranges
             bh_target_accept = std::min(0.999, std::max(0.001, bh_target_accept));
             if (!(bh_stepwise_factor > 0.0 && bh_stepwise_factor < 1.0)) bh_stepwise_factor = 0.9;
+            bh_niter_success = std::max<long long>(0, bh_niter_success);
 
             // ---------------- Basin-hopping driver ----------------
-            long long accept_count_window = 0;
-            long long window_len = 0;
+            long long accepted_steps = 0;
+            long long attempted_steps = 0;
             long long no_improve_count = 0;
             double stepsize_now = bh_stepsize;            // adaptive stepsize (SciPy-style)
 
             BFGS_Powell cBFGS_Powell(optimization_problem_combined, this);
-            double f_trial = cBFGS_Powell.Start_Optimization(solution_guess, max_inner_iterations);
+            double f_trial = cBFGS_Powell.Start_Optimization(solution_guess, max_inner_iterations_loc);
             if (f_trial < current_minimum) {
                 current_minimum = f_trial;
                 memcpy(optimized_parameters_mtx.get_data(), solution_guess.get_data(), num_of_parameters*sizeof(double));
-            }        
+            }
             Matrix_real x_current = solution_guess.copy();   // current basin representative
+            double current_minimum_hold = f_trial;
 
+            // The initial local solve may already satisfy the objective. Avoid
+            // an unnecessary perturbation and second BFGS solve in that case.
+            for (long long iter_idx=0;
+                 iter_idx<iteration_loops_max
+                     && current_minimum >= optimization_tolerance_loc;
+                 iter_idx++) {
 
-            for (long long iter_idx=0; iter_idx<iteration_loops_max; iter_idx++) {
+                // Match SciPy's AdaptiveStepsize ordering: update before the
+                // next proposal using the cumulative acceptance history.
+                ++attempted_steps;
+                if (bh_interval > 0
+                    && attempted_steps % bh_interval == 0) {
+                    const double accept_rate =
+                        static_cast<double>(accepted_steps)
+                        / static_cast<double>(attempted_steps);
+                    if (accept_rate > bh_target_accept) {
+                        stepsize_now /= bh_stepwise_factor;
+                    } else {
+                        stepsize_now *= bh_stepwise_factor;
+                    }
+                }
 
                 for (int j = 0; j < num_of_parameters; ++j) {
                     double delta = (distrib_real(gen) * 2.0 - 1.0) * stepsize_now * M_PI;
                     solution_guess[j] = fmod(solution_guess[j] + delta, 2.0 * M_PI);
                 }
             
-                f_trial = cBFGS_Powell.Start_Optimization(solution_guess, max_inner_iterations);
+                f_trial = cBFGS_Powell.Start_Optimization(solution_guess, max_inner_iterations_loc);
 
                 // --- Metropolis acceptance (always accept downhill; uphill with prob exp(-(f_new - f_old)/T))
                 bool accept = false;
@@ -218,7 +238,7 @@ CPU_time = 0.0;
                     // move to new basin
                     memcpy(x_current.get_data(), solution_guess.get_data(), num_of_parameters*sizeof(double));
                     current_minimum_hold = f_trial;
-                    ++accept_count_window;
+                    ++accepted_steps;
                 } else {
                     memcpy(solution_guess.get_data(), x_current.get_data(), num_of_parameters*sizeof(double));
                 }
@@ -233,7 +253,6 @@ CPU_time = 0.0;
                 } else {
                     ++no_improve_count;
                 }
-
                 if ( iter_idx % 5000 == 0 ) {
                         std::stringstream sstream;
                         sstream << "BFGS2: processed iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "%, current minimum:" << current_minimum << std::endl;
@@ -260,25 +279,9 @@ CPU_time = 0.0;
                 if (current_minimum < optimization_tolerance_loc ) {
                     break;
                 }
-                if (no_improve_count >= random_shift_count_max) {
+                if (no_improve_count > bh_niter_success) {
                     break;  // SciPy's niter_success criterion
                 }
-
-                // --- Adaptive stepsize every 'interval' iterations (SciPy behavior)
-                ++window_len;
-                if (bh_interval > 0 && (window_len % bh_interval) == 0) {
-                    double accept_rate = (double)accept_count_window / (double)bh_interval;
-                    // If acceptance is high, enlarge steps; else shrink steps.
-                    if (accept_rate > bh_target_accept) {
-                        stepsize_now /= bh_stepwise_factor;   // increase (since factor<1)
-                    } else {
-                        stepsize_now *= bh_stepwise_factor;   // decrease
-                    }
-                    // reset window counters
-                    accept_count_window = 0;
-                    window_len = 0;
-                }
-
 
             }
         } else if (use_de) {
@@ -631,7 +634,7 @@ CPU_time = 0.0;
 
                 BFGS_Powell cBFGS_Powell(optimization_problem_combined, this);
                 // You can tune max_inner_iterations here if you want
-                double f_pol = cBFGS_Powell.Start_Optimization(x_best, max_inner_iterations);
+                double f_pol = cBFGS_Powell.Start_Optimization(x_best, max_inner_iterations_loc);
 
                 if (f_pol < current_minimum) {
                     current_minimum = f_pol;

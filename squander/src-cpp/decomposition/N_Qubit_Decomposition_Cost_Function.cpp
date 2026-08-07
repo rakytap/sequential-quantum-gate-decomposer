@@ -1280,8 +1280,88 @@ std::pair<int, double> operator_schmidt_rank(const Matrix_float& U, int n,
     );
 }
 
+static std::vector<std::vector<double>> profile_softmin_coefficients(
+    const std::vector<std::vector<double>>& cuts_S,
+    const std::vector<std::vector<int>>& rank_profiles,
+    double profile_temperature,
+    double cut_smoothmax_temperature,
+    double& cost)
+{
+    if (rank_profiles.empty() || profile_temperature <= 0.0) {
+        throw std::invalid_argument(
+            "OSR profile objective requires profiles and a positive "
+            "profile temperature"
+        );
+    }
+    const double cut_count = static_cast<double>(cuts_S.size());
+    std::vector<double> losses(rank_profiles.size(), 0.0);
+    std::vector<std::vector<double>> cut_coefficients(
+        rank_profiles.size(), std::vector<double>(cuts_S.size(), 0.0)
+    );
+    for (size_t p = 0; p < rank_profiles.size(); ++p) {
+        if (rank_profiles[p].size() != cuts_S.size()) {
+            throw std::invalid_argument(
+                "OSR rank profile size must match cut count"
+            );
+        }
+        std::vector<double> cut_losses(cuts_S.size(), 0.0);
+        for (size_t c = 0; c < cuts_S.size(); ++c)
+            cut_losses[c] = loss_for_rank(
+                cuts_S[c], rank_profiles[p][c]
+            );
+        if (cut_smoothmax_temperature > 0.0) {
+            const double maximum = *std::max_element(
+                cut_losses.begin(), cut_losses.end()
+            );
+            double exponential_sum = 0.0;
+            for (size_t c = 0; c < cuts_S.size(); ++c) {
+                cut_coefficients[p][c] = std::exp(
+                    (cut_losses[c] - maximum) /
+                    cut_smoothmax_temperature
+                );
+                exponential_sum += cut_coefficients[p][c];
+            }
+            losses[p] = maximum + cut_smoothmax_temperature * std::log(
+                exponential_sum / cut_count
+            );
+            for (double& coefficient : cut_coefficients[p])
+                coefficient /= exponential_sum;
+        } else {
+            for (size_t c = 0; c < cuts_S.size(); ++c) {
+                cut_coefficients[p][c] = 1.0 / cut_count;
+                losses[p] += cut_coefficients[p][c] * cut_losses[c];
+            }
+        }
+    }
+
+    const double minimum = *std::min_element(losses.begin(), losses.end());
+    std::vector<double> weights(losses.size(), 0.0);
+    double weight_sum = 0.0;
+    for (size_t p = 0; p < losses.size(); ++p) {
+        weights[p] = std::exp(
+            -(losses[p] - minimum) / profile_temperature
+        );
+        weight_sum += weights[p];
+    }
+    for (double& weight : weights) weight /= weight_sum;
+
+    // Normalizing by the number of profiles makes this a nonnegative smooth
+    // minimum for nonnegative losses:
+    //   -tau log(mean_p exp(-L_p/tau)).
+    // Unlike the softmin-weighted expectation, its gradient is the positive
+    // convex combination of the profile gradients.  Negative coefficients
+    // can steer an optimizer away from an otherwise improving profile.
+    cost = minimum - profile_temperature * std::log(
+        weight_sum / static_cast<double>(losses.size())
+    );
+    for (size_t p = 0; p < rank_profiles.size(); ++p)
+        for (double& coefficient : cut_coefficients[p])
+            coefficient *= weights[p];
+    return cut_coefficients;
+}
+
 template<class MatrixT, class ComplexT, class RealT>
-static double get_osr_entanglement_test_impl(MatrixT& matrix, std::vector<std::vector<int>> &use_cuts, int rank, bool use_softmax) {
+static double get_osr_entanglement_test_impl(MatrixT& matrix, std::vector<std::vector<int>>& use_cuts, const std::vector<std::vector<int>>& rank_profiles, double profile_temperature, double cut_smoothmax_temperature) {
     //double hscost = get_hilbert_schmidt_test(matrix);
     int qbit_num = lg_down(matrix.rows);
     const auto& cuts = use_cuts.size() == 0 ? unique_cuts(qbit_num) : use_cuts;
@@ -1296,21 +1376,20 @@ static double get_osr_entanglement_test_impl(MatrixT& matrix, std::vector<std::v
         //printf("%f ", S[0]);
     }
     double res;
-    if (rank == -1) {
-        res = use_softmax ? cuts_softmax_tail_cost(allS, 1.0) : avg_tail_loss(allS, 0.9);
-    } else {
-        res = use_softmax ? cuts_softmax_rank_cost(allS, rank) : avg_loss_for_rank(allS, rank);
-    }
+    profile_softmin_coefficients(
+        allS, rank_profiles, profile_temperature,
+        cut_smoothmax_temperature, res
+    );
     //printf("%f\n", res);
     return res;
 }
 
-double get_osr_entanglement_test(Matrix& matrix, std::vector<std::vector<int>> &use_cuts, int rank, bool use_softmax) {
-    return get_osr_entanglement_test_impl<Matrix, QGD_Complex16, double>(matrix, use_cuts, rank, use_softmax);
+double get_osr_entanglement_test(Matrix& matrix, std::vector<std::vector<int>>& use_cuts, const std::vector<std::vector<int>>& rank_profiles, double profile_temperature, double cut_smoothmax_temperature) {
+    return get_osr_entanglement_test_impl<Matrix, QGD_Complex16, double>(matrix, use_cuts, rank_profiles, profile_temperature, cut_smoothmax_temperature);
 }
 
-double get_osr_entanglement_test(Matrix_float& matrix, std::vector<std::vector<int>> &use_cuts, int rank, bool use_softmax) {
-    return get_osr_entanglement_test_impl<Matrix_float, QGD_Complex8, float>(matrix, use_cuts, rank, use_softmax);
+double get_osr_entanglement_test(Matrix_float& matrix, std::vector<std::vector<int>>& use_cuts, const std::vector<std::vector<int>>& rank_profiles, double profile_temperature, double cut_smoothmax_temperature) {
+    return get_osr_entanglement_test_impl<Matrix_float, QGD_Complex8, float>(matrix, use_cuts, rank_profiles, profile_temperature, cut_smoothmax_temperature);
 }
 
 template<class ComplexT>
@@ -1396,7 +1475,7 @@ static OSRTriplet<ComplexT> top_k_triplet_for_cut(
 }
 
 template<class MatrixT, class ComplexT, class RealT>
-static MatrixT get_deriv_osr_entanglement_impl(MatrixT &matrix, std::vector<std::vector<int>> &use_cuts, int rank, bool use_softmax) {
+static MatrixT get_deriv_osr_entanglement_impl(MatrixT& matrix, std::vector<std::vector<int>>& use_cuts, const std::vector<std::vector<int>>& rank_profiles, double profile_temperature, double cut_smoothmax_temperature) {
     int qbit_num = lg_down(matrix.rows);
     const auto& cuts = use_cuts.size() == 0 ? unique_cuts(qbit_num) : use_cuts;
     double Fnorm = std::sqrt(matrix.rows);
@@ -1416,13 +1495,24 @@ static MatrixT get_deriv_osr_entanglement_impl(MatrixT &matrix, std::vector<std:
         stored.right_factors = std::move(triplet.right_factors);
         triplets.emplace_back(std::move(stored));
     }
-    if (rank == -1) {
-        if (use_softmax) allS = cuts_softmax_tail_grad(allS, Fnorm, 1.0);
-        else allS = cuts_avg_tail_grad(allS, Fnorm, 0.9);
-    } else {
-        if (use_softmax) allS = cuts_softmax_rank_grad(allS, rank, Fnorm);
-        else allS = cuts_avg_rank_grad(allS, rank, Fnorm);
+    double profile_cost = 0.0;
+    const std::vector<std::vector<double>> coefficients =
+        profile_softmin_coefficients(
+        allS, rank_profiles, profile_temperature,
+        cut_smoothmax_temperature, profile_cost
+    );
+    std::vector<std::vector<double>> combined(allS.size());
+    for (size_t c = 0; c < allS.size(); ++c) {
+        combined[c].assign(allS[c].size(), 0.0);
+        for (size_t p = 0; p < rank_profiles.size(); ++p) {
+            std::vector<double> profile_grad = loss_for_rank_grad_diag(
+                allS[c], rank_profiles[p][c], Fnorm
+            );
+            for (size_t j = 0; j < profile_grad.size(); ++j)
+                combined[c][j] += coefficients[p][c] * profile_grad[j];
+        }
     }
+    allS = std::move(combined);
     for (int i = 0; i < (int)cuts.size(); ++i) {
         triplets[i].singulars = std::move(allS[i]);
     }
@@ -1433,17 +1523,17 @@ static MatrixT get_deriv_osr_entanglement_impl(MatrixT &matrix, std::vector<std:
                                 triplet.left_factors,
                                 triplet.right_factors,
                                 qbit_num,
-                                cuts[i], rank);
+                                cuts[i], 0);
     }
     return deriv;
 }
 
-Matrix get_deriv_osr_entanglement(Matrix &matrix, std::vector<std::vector<int>> &use_cuts, int rank, bool use_softmax) {
-    return get_deriv_osr_entanglement_impl<Matrix, QGD_Complex16, double>(matrix, use_cuts, rank, use_softmax);
+Matrix get_deriv_osr_entanglement(Matrix& matrix, std::vector<std::vector<int>>& use_cuts, const std::vector<std::vector<int>>& rank_profiles, double profile_temperature, double cut_smoothmax_temperature) {
+    return get_deriv_osr_entanglement_impl<Matrix, QGD_Complex16, double>(matrix, use_cuts, rank_profiles, profile_temperature, cut_smoothmax_temperature);
 }
 
-Matrix_float get_deriv_osr_entanglement(Matrix_float &matrix, std::vector<std::vector<int>> &use_cuts, int rank, bool use_softmax) {
-    return get_deriv_osr_entanglement_impl<Matrix_float, QGD_Complex8, float>(matrix, use_cuts, rank, use_softmax);
+Matrix_float get_deriv_osr_entanglement(Matrix_float& matrix, std::vector<std::vector<int>>& use_cuts, const std::vector<std::vector<int>>& rank_profiles, double profile_temperature, double cut_smoothmax_temperature) {
+    return get_deriv_osr_entanglement_impl<Matrix_float, QGD_Complex8, float>(matrix, use_cuts, rank_profiles, profile_temperature, cut_smoothmax_temperature);
 }
 
 // Compute grad component = Re Tr( A^† B ) for A = dL/dU, B = dU/dθ

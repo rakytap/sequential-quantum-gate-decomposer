@@ -1340,6 +1340,13 @@ def _append_exact_osr_routing_event(
             "single_qubit_count": int(
                 exact_route.solution.single_qubit_count
             ),
+            "master_backend": str(exact_route.solution.master_backend),
+            "transition_swap_count": int(
+                sum(
+                    len(swaps)
+                    for swaps in (exact_route.solution.transition_swaps or ())
+                )
+            ),
             "explored_states": int(exact_route.solution.explored_states),
             "solver_nodes": exact_route.solution.solver_nodes,
             "solver_bound": exact_route.solution.solver_bound,
@@ -1383,8 +1390,16 @@ def _verify_exact_osr_routing_replay(event):
                 mapping[right_logical],
                 mapping[left_logical],
             )
+            # SWAP is symmetric, and QASM serialization canonicalizes its
+            # operands even when the router records the traversed edge in the
+            # opposite orientation. Match the serialized gate stream while
+            # retaining the archived orientation for mapping replay above.
             expected_operations.append(
-                {"name": "swap", "qubits": [left, right], "params": []}
+                {
+                    "name": "swap",
+                    "qubits": sorted((left, right)),
+                    "params": [],
+                }
             )
         source_indices = [int(index) for index in selection["source_gate_indices"]]
         if any(index in consumed for index in source_indices):
@@ -2557,6 +2572,9 @@ def synthesize_partition_with_squander(
         **dict(config or {}),
         "topology": mini_topology,
     }
+    resolved_config = qgd_Wide_Circuit_Optimization(
+        resolved_config
+    ).config
     if tree_level_max is not None:
         # Routing supplies the strict-improvement bound of one fewer CNOT
         # than its topology-valid fallback.  Do not let a generic synthesis
@@ -3483,6 +3501,17 @@ class qgd_Wide_Circuit_Optimization:
             "osr_optimization_tolerance",
             OSR_OPTIMIZATION_TOLERANCE,
         )
+        # Jointly optimize the complete exact-CNOT coverage profile. The
+        # eight-hop BFGS2 ceiling is needed by hard seeds; easy fidelity solves
+        # can terminate after their initial local minimization.
+        config.setdefault("osr_profile_temperature", 0.1)
+        config.setdefault("osr_cut_smoothmax_temperature", 0.1)
+        config.setdefault("optimizer", "BFGS2")
+        config.setdefault("use_basin_hopping", True)
+        config.setdefault("use_differential_evolution", False)
+        config.setdefault("use_dual_annealing", False)
+        config.setdefault("max_iteration_loops", 8)
+        config.setdefault("max_inner_iterations_bfgs2", 1000)
         config.setdefault(
             "circuit_validation_tolerance",
             _default_circuit_validation_tolerance(config),
@@ -3525,6 +3554,23 @@ class qgd_Wide_Circuit_Optimization:
         # and fixed-cover oracles). Partition enumeration and OSR pricing must
         # finish so the master sees the complete column set; they are excluded.
         config.setdefault("exact_routing_timeout_seconds", 20 * 60)
+        # A zero-interstage-SWAP check is a useful certificate, but some fixed
+        # covers make that auxiliary ILP unexpectedly difficult.  Keep it a
+        # short probe so the complete staged oracle always gets time to build
+        # a synthesis-aware incumbent.
+        config.setdefault(
+            "exact_routing_benders_zero_swap_probe_seconds", 5.0
+        )
+        # Do not let the compact cover master monopolize the whole budget at
+        # its root relaxation. Price its best incumbent between short slices
+        # so routing quality improves even when global proof remains hard.
+        config.setdefault("exact_routing_benders_master_slice_seconds", 30.0)
+        config.setdefault(
+            "exact_routing_benders_subproblem_slice_seconds", 60.0
+        )
+        config.setdefault("exact_routing_benders_stagnation_seconds", 120.0)
+        config.setdefault("exact_routing_cover_seed_timeout_seconds", 10.0)
+        config.setdefault("exact_routing_cover_seed_beam_width", 64)
         # CNOT count is the primary publication metric. Stop once its global
         # lower bound closes; proving the single-qubit tie is optional.
         config.setdefault("exact_routing_require_tiebreaker_proof", False)
@@ -3756,8 +3802,7 @@ class qgd_Wide_Circuit_Optimization:
         cDecompose.set_Cost_Function_Variant(3)
         cDecompose.set_Optimization_Tolerance(optimization_tolerance)
 
-        # adding new layer to the decomposition until threshold
-        cDecompose.set_Optimizer("BFGS")
+        cDecompose.set_Optimizer(config.get("optimizer", "BFGS2"))
 
         # starting the decomposition
         try:
@@ -3960,7 +4005,8 @@ class qgd_Wide_Circuit_Optimization:
                     new_subcircuit,
                     decomposed_parameters,
                     parallel=config["parallel"],
-                    tolerance=_circuit_validation_tolerance(config)
+                    tolerance=_circuit_validation_tolerance(config),
+                    report_overlap=config.get("verbosity", 0) >= 2,
                 )
 
             new_subcircuit = new_subcircuit.get_Flat_Circuit()
@@ -4216,14 +4262,12 @@ class qgd_Wide_Circuit_Optimization:
             circ, self.config["topology"]
         ):
 
-            print("fixing topology in the circuit")
             topo = self.config["topology"]
             self.config["topology"] = None
             strat = self.config["strategy"]
             self.config["strategy"] = self.config["pre-opt-strategy"]
             self.config["_rewrite_audit_stage"] = "all_to_all"
 
-            print("Optimizing circuit with all-to-all (a2a) connectivity")
             circ, parameters = self.OptimizeWideCircuit(circ, parameters)
             self.config["all_to_all_optimization_time"] = self.config[
                 "optimization_time"
@@ -4234,25 +4278,27 @@ class qgd_Wide_Circuit_Optimization:
             self.config["topology"] = topo
             self.config["_rewrite_audit_stage"] = "routing"
             start_time = time.time()
+            routing_input_cnot_count = CNOTGateCount(circ, 0)
 
-            print("Routing circuit to fix the topology")
             circ, parameters = self.route_circuit(circ, parameters)
             self.config["routing_time"] = time.time() - start_time
+            print(
+                f"Routing ({self.config.get('routing-strategy', 'exact-osr')}): "
+                f"{routing_input_cnot_count} -> {CNOTGateCount(circ, 0)} CNOTs; "
+                f"{self.config['routing_time']:.2f} s",
+                flush=True,
+            )
             self.config["routed_circuit"] = circ
             self.config["routed_parameters"] = parameters
             self.config["_rewrite_audit_stage"] = "topology_optimization"
-        else:
-            if self.config["topology"] is not None:
-                print("No additional routing is needed on the circuit")
-
         start_time = time.time()
+        optimization_input_cnot_count = CNOTGateCount(circ, 0)
         if _rewrite_audit_enabled() and self.config["strategy"] == "qiskit":
             raise NotImplementedError(
                 "Exact schema-v2 replay currently supports Squander-native and "
                 "BQSKit synthesis, not opaque Qiskit transpiler mutations."
             )
         if self.config["strategy"] == "bqskit":
-            print("Optimizing circuit with BQSkit")
             from squander import Qiskit_IO
             from bqskit import compile
             import bqskit.compiler.compile as bqskit_compile_module
@@ -4359,12 +4405,10 @@ class qgd_Wide_Circuit_Optimization:
             qgd_Wide_Circuit_Optimization.check_valid_routing(
                 newcirc, self.config["topology"]
             )
-            print("OptimizeWideCircuit::check_compare_circuits")
             self.check_compare_circuits(circ, parameters, newcirc, newparameters)
             circ, parameters = newcirc, newparameters
 
         elif self.config["strategy"] == "qiskit":
-            print("Optimizing circuit with Qiskit")
             from squander import Qiskit_IO
             from qiskit import transpile
             from qiskit.transpiler import CouplingMap
@@ -4397,12 +4441,9 @@ class qgd_Wide_Circuit_Optimization:
             qgd_Wide_Circuit_Optimization.check_valid_routing(
                 newcirc, self.config["topology"]
             )
-            print("OptimizeWideCircuit::check_compare_circuits")
             self.check_compare_circuits(circ, parameters, newcirc, newparameters)
             circ, parameters = newcirc, newparameters
         else:
-
-            print("Optimizing circuit with Squander")
             part_size_start = self.max_partition_size
             part_size_end = self.max_partition_size
             if self.config.get("auto_expand_partition_size", False) and (
@@ -4436,6 +4477,21 @@ class qgd_Wide_Circuit_Optimization:
                     if no_improve:
                         break
         self.config["optimization_time"] = time.time() - start_time
+        if self.config["strategy"] in ("bqskit", "qiskit"):
+            stage_name = (
+                "All-to-all optimization"
+                if self.config.get("_rewrite_audit_stage") == "all_to_all"
+                else "Topology optimization"
+            )
+            strategy_name = (
+                "BQSKit" if self.config["strategy"] == "bqskit" else "Qiskit"
+            )
+            print(
+                f"{stage_name} ({strategy_name}): "
+                f"{optimization_input_cnot_count} -> {CNOTGateCount(circ, 0)} CNOTs; "
+                f"{self.config['optimization_time']:.2f} s",
+                flush=True,
+            )
         return circ, parameters
 
     def InnerOptimizeWideCircuit(
@@ -4460,6 +4516,8 @@ class qgd_Wide_Circuit_Optimization:
         """
         from squander.utils import circuit_to_CNOT_basis
 
+        progress_started = time.perf_counter()
+        round_input_cnot_count = CNOTGateCount(circ, 0)
         audit_enabled = _rewrite_audit_enabled()
         if audit_enabled:
             basis_started_ns = time.time_ns()
@@ -4531,9 +4589,6 @@ class qgd_Wide_Circuit_Optimization:
 
         in_parent = parent_process() is not None
 
-        if not in_parent:
-            print(len(subcircuits), "partitions found to optimize")
-
         # the list of optimized subcircuits
         optimized_subcircuits: List[Optional[Circuit]] = [None] * len(subcircuits)
 
@@ -4544,8 +4599,6 @@ class qgd_Wide_Circuit_Optimization:
 
         # list of AsyncResult objects
         async_results = [None] * len(subcircuits)
-
-        total_opt = [0]
 
         def process_result(partition_idx):
             """Finalize async decomposition for partition ``partition_idx`` and update caches / lists."""
@@ -4578,13 +4631,6 @@ class qgd_Wide_Circuit_Optimization:
                     else async_results[partition_idx].get(timeout=None)
                 )
 
-                if subcircuit != new_subcircuit:
-                    print(
-                        "original subcircuit:    ",
-                        subcircuit.get_Gate_Nums(),
-                        partition_idx,
-                    )
-                    print("reoptimized subcircuit: ", new_subcircuit.get_Gate_Nums())
                 if fingerprint_dict is not None:
                     fingerprint_dict[fingerprint] = (new_subcircuit, new_parameters)
                     fingerprint_dict[
@@ -4602,9 +4648,6 @@ class qgd_Wide_Circuit_Optimization:
                             trim_subcirc, trim_parameters
                         )
                     ] = (trim_subcirc, trim_parameters)
-            if total_opt[0] % 100 == 99:
-                print(total_opt[0] + 1, "partitions optimized")
-            total_opt[0] += 1
             optimized_subcircuits[partition_idx] = new_subcircuit
             optimized_parameter_list[partition_idx] = new_parameters
 
@@ -4813,9 +4856,24 @@ class qgd_Wide_Circuit_Optimization:
             cast(List[List[np.ndarray]], optimized_parameter_list),
         )
 
-        if not in_parent:
-            print("original circuit:    ", circ.get_Gate_Nums())
-            print("reoptimized circuit: ", wide_circuit.get_Gate_Nums())
+        stage_name = (
+            "All-to-all optimization"
+            if self.config.get("_rewrite_audit_stage") == "all_to_all"
+            else "Topology optimization"
+        )
+        round_label = (
+            f" round {audit_round + 1}"
+            if audit_round is not None
+            else ""
+        )
+        print(
+            f"{stage_name}{round_label} "
+            f"({self.max_partition_size}-qubit partitions): "
+            f"{round_input_cnot_count} -> {CNOTGateCount(wide_circuit, 0)} CNOTs; "
+            f"{len(subcircuits)} candidates; "
+            f"{time.perf_counter() - progress_started:.2f} s",
+            flush=True,
+        )
 
         qgd_Wide_Circuit_Optimization.check_valid_routing(
             wide_circuit, self.config["topology"]
@@ -4825,7 +4883,6 @@ class qgd_Wide_Circuit_Optimization:
             orig_parameters,
             wide_circuit,
             wide_parameters,
-            label="InnerOptimizeWideCircuit",
         )
 
         if audit_enabled:
@@ -5027,8 +5084,6 @@ class qgd_Wide_Circuit_Optimization:
             or self.config.get("force_small_circuit_validation", True)
         )
         if self.config["test_final_circuit"] or forced_test:
-            if label is not None:
-                print(f"{label}: check_compare_circuits")
             tolerance = _circuit_validation_tolerance(self.config)
             if (
                 routing
@@ -5044,6 +5099,7 @@ class qgd_Wide_Circuit_Optimization:
                     final_mapping=self.config["final_mapping"],
                     tolerance=tolerance,
                     parallel=0,
+                    report_overlap=self.config.get("verbosity", 0) >= 2,
                 )
             else:
                 CompareCircuits(
@@ -5052,6 +5108,7 @@ class qgd_Wide_Circuit_Optimization:
                     wide_circuit,
                     wide_parameters,
                     tolerance=tolerance,
+                    report_overlap=self.config.get("verbosity", 0) >= 2,
                 )
 
     def route_circuit(self, circ: Circuit, orig_parameters: np.ndarray):
