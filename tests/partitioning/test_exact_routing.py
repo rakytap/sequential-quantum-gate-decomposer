@@ -41,6 +41,7 @@ def test_exact_osr_benders_is_the_wide_router_default():
     assert optimizer.config["exact_routing_cover_seed_translation_limit"] == 8
     assert optimizer.config["exact_routing_flow_seed"] is True
     assert optimizer.config["exact_routing_flow_seed_timeout_seconds"] == 30.0
+    assert optimizer.config["exact_routing_flow_seed_max_terms"] == 500_000
     assert optimizer.config["exact_routing_timeout_seconds"] == 20 * 60
     assert (
         optimizer.config["exact_routing_benders_zero_swap_probe_seconds"]
@@ -54,7 +55,13 @@ def test_exact_osr_benders_is_the_wide_router_default():
     assert optimizer.config["exact_routing_benders_stagnation_seconds"] == 120.0
     assert optimizer.config["exact_routing_cover_seed_timeout_seconds"] == 10.0
     assert optimizer.config["exact_routing_cover_seed_beam_width"] == 64
+    assert optimizer.config["exact_routing_precomputed_pam_seeds"] is True
+    assert optimizer.config["exact_routing_pam_layout_passes"] == 3
+    assert optimizer.config["exact_routing_pam_cover_strategies"] == (
+        "kahn", "ilp", "ilp-routing"
+    )
     assert optimizer.config["exact_routing_require_tiebreaker_proof"] is False
+    assert optimizer.config["routing_synthesis_workers"] == 16
     assert "exact_routing_total_timeout_seconds" not in optimizer.config
 
 
@@ -66,6 +73,176 @@ def test_three_qubit_topology_symmetry_counts():
     assert len(topology_automorphisms(triangle, 3)) == 6
     assert len(symmetry_reduced_assignment_orbits(path, 3)) == 18
     assert len(symmetry_reduced_assignment_orbits(triangle, 3)) == 6
+
+
+def test_precomputed_osr_pam_seed_uses_resolved_catalog_without_synthesis(
+    monkeypatch,
+):
+    local = qgd_Circuit(2)
+    local.add_CNOT(1, 0)
+    empty = np.empty((0,), dtype=np.float64)
+    payload = routing.SynthesizedRoutingPayload(
+        circuit=local,
+        parameters=empty,
+        topology=((0, 1),),
+        input_assignment=(0, 1),
+        output_assignment=(0, 1),
+        source_circuit=local,
+        source_parameters=empty,
+    )
+    alternatives = {}
+    for partition, logicals in ((0, (0, 2)), (1, (1, 2))):
+        alternatives[partition] = tuple(
+            RoutingAlternative(
+                partition,
+                logicals,
+                embedding,
+                embedding,
+                1,
+                payload=payload,
+            )
+            for edge in ((0, 1), (1, 2))
+            for embedding in (edge, edge[::-1])
+        )
+
+    def reject_synthesis(*args, **kwargs):
+        raise AssertionError("A precomputed PAM seed attempted synthesis.")
+
+    monkeypatch.setattr(routing, "_call_shared_synthesis", reject_synthesis)
+    monkeypatch.setattr(routing, "_call_shared_synthesis_batch", reject_synthesis)
+    result = routing._precomputed_osr_pam_warm_start(
+        selected_partitions=(0, 1),
+        gate_predecessors={0: (), 1: (0,)},
+        partitions=({0}, {1}),
+        alternatives=alternatives,
+        logical_qubit_count=3,
+        topology=((0, 1), (1, 2)),
+        path=(0, 1, 2),
+    )
+
+    assert result is not None
+    assert result.cnot_count == 2
+    assert {selection.partition for selection in result.selections} == {0, 1}
+    assert all(
+        selection.alternative in alternatives[selection.partition]
+        for selection in result.selections
+    )
+    replay, parameters = routing.construct_exact_routed_circuit(result, 3)
+    assert replay.get_Gate_Nums() == {"CNOT": 2}
+    assert parameters.size == 0
+
+
+def test_precomputed_pam_catalog_prices_swap_as_three_cnots():
+    swap = qgd_Circuit(2)
+    swap.add_SWAP((0, 1))
+
+    converted = routing._squander_to_bqskit(
+        swap,
+        np.empty((0,), dtype=np.float64),
+        compensate_endianness=True,
+    )
+
+    assert sum(
+        count
+        for gate, count in converted.gate_counts.items()
+        if gate.num_qudits >= 2
+    ) == 3
+
+
+def test_precomputed_pam_keys_sparse_circuit_by_declared_full_topology():
+    local = qgd_Circuit(3)
+    local.add_CNOT(1, 0)
+    empty = np.empty((0,), dtype=np.float64)
+    payload = routing.SynthesizedRoutingPayload(
+        circuit=local,
+        parameters=empty,
+        topology=((0, 1), (1, 2)),
+        input_assignment=(0, 1, 2),
+        output_assignment=(0, 1, 2),
+        source_circuit=local,
+        source_parameters=empty,
+    )
+    alternative = RoutingAlternative(
+        0, (0, 1, 2), (0, 1, 2), (0, 1, 2), 1, payload=payload
+    )
+
+    result = routing._precomputed_osr_pam_warm_start(
+        selected_partitions=(0,),
+        gate_predecessors={0: ()},
+        partitions=({0},),
+        alternatives={0: (alternative,)},
+        logical_qubit_count=3,
+        topology=((0, 1), (1, 2)),
+        path=(0, 1, 2),
+    )
+
+    assert result is not None
+    assert result.cnot_count == 1
+
+
+def test_precomputed_pam_replays_full_mapping_when_swaps_displace_other_tokens():
+    local = qgd_Circuit(2)
+    local.add_CNOT(1, 0)
+    empty = np.empty((0,), dtype=np.float64)
+    payload = routing.SynthesizedRoutingPayload(
+        circuit=local,
+        parameters=empty,
+        topology=((0, 1),),
+        input_assignment=(0, 1),
+        output_assignment=(0, 1),
+        source_circuit=local,
+        source_parameters=empty,
+    )
+    logical_pairs = ((0, 1), (0, 2), (0, 3))
+    alternatives = {
+        partition: tuple(
+            RoutingAlternative(
+                partition, logicals, embedding, embedding, 1, payload=payload
+            )
+            for edge in ((0, 1), (1, 2), (2, 3))
+            for embedding in (edge, edge[::-1])
+        )
+        for partition, logicals in enumerate(logical_pairs)
+    }
+
+    result = routing._precomputed_osr_pam_warm_start(
+        selected_partitions=(0, 1, 2),
+        gate_predecessors={0: (), 1: (0,), 2: (1,)},
+        partitions=({0}, {1}, {2}),
+        alternatives=alternatives,
+        logical_qubit_count=4,
+        topology=((0, 1), (1, 2), (2, 3)),
+        path=(0, 1, 2, 3),
+    )
+
+    assert result is not None
+    assert sum(map(len, result.transition_swaps)) >= 1
+    assert sorted(result.initial_mapping) == list(range(4))
+    assert sorted(result.final_mapping) == list(range(4))
+    replay, _parameters = routing.construct_exact_routed_circuit(result, 4)
+    routing._assert_local_topology(replay, ((0, 1), (1, 2), (2, 3)))
+
+
+def test_exact_audit_remap_canonicalizes_embedded_swap_operands():
+    from squander.decomposition.qgd_Wide_Circuit_Optimization import (
+        _remap_exact_state,
+    )
+
+    remapped = _remap_exact_state(
+        {
+            "qubits": 2,
+            "operations": [
+                {"name": "swap", "qubits": [0, 1], "params": []},
+                {"name": "cx", "qubits": [0, 1], "params": []},
+            ],
+        },
+        (5, 4),
+        7,
+    )
+
+    assert remapped["operations"][0]["qubits"] == [4, 5]
+    # Directed gates must retain their operand order.
+    assert remapped["operations"][1]["qubits"] == [5, 4]
 
 
 def test_exact_solver_propagates_partition_output_mapping():
@@ -1339,3 +1516,104 @@ def test_flow_seed_infeasibility_does_not_force_a_global_swap(monkeypatch):
 
     assert captured["minimum_transition_cnot_cost"] == 0
     assert sum(map(len, result.solution.transition_swaps)) == 0
+
+
+def test_flow_seed_nonfinite_bound_is_not_used_as_proof(monkeypatch):
+    captured = {}
+
+    def return_unproven_flow_seed(*args, warm_start, **kwargs):
+        return replace(
+            warm_start,
+            master_backend="test-flow-seed",
+            optimal=False,
+            solver_bound=float("inf"),
+        )
+
+    def capture_master(**kwargs):
+        captured["zero_swap_local_cnot_lower_bound"] = kwargs.get(
+            "zero_swap_local_cnot_lower_bound"
+        )
+        return kwargs["warm_start"]
+
+    monkeypatch.setattr(
+        routing,
+        "_solve_exact_routing_ilp_flow_restricted",
+        return_unproven_flow_seed,
+    )
+    monkeypatch.setattr(routing, "solve_exact_routing", capture_master)
+    circuit = qgd_Circuit(2)
+    circuit.add_CNOT(1, 0)
+    result = route_circuit_exact(
+        circuit,
+        np.empty((0,)),
+        [(0, 1)],
+        {
+            "strategy": "TreeSearch",
+            "max_partition_size": 2,
+            "exact_routing_master": "benders",
+            "exact_routing_timeout_seconds": 7.0,
+        },
+    )
+
+    assert captured["zero_swap_local_cnot_lower_bound"] == 0
+    assert result.solution.selections
+
+
+def test_routing_synthesis_worker_default_is_memory_bounded(monkeypatch):
+    monkeypatch.setattr(routing.mp, "cpu_count", lambda: 128)
+
+    assert routing._routing_synthesis_worker_count({}, 1000) == 16
+    assert (
+        routing._routing_synthesis_worker_count(
+            {"routing_synthesis_workers": 5}, 1000
+        )
+        == 5
+    )
+    assert (
+        routing._routing_synthesis_worker_count(
+            {"partition_workers": 7}, 1000
+        )
+        == 7
+    )
+    assert routing._routing_synthesis_worker_count({}, 3) == 3
+
+
+def test_oversized_auxiliary_flow_seed_is_skipped(monkeypatch, capsys):
+    captured = {}
+
+    def reject_unexpected_flow_seed(*args, **kwargs):
+        raise AssertionError("oversized auxiliary flow seed was constructed")
+
+    def capture_master(**kwargs):
+        captured["warm_start"] = kwargs["warm_start"]
+        return kwargs["warm_start"]
+
+    monkeypatch.setattr(
+        routing,
+        "_flow_seed_model_term_count",
+        lambda *args, **kwargs: 500_001,
+    )
+    monkeypatch.setattr(
+        routing,
+        "_solve_exact_routing_ilp_flow_restricted",
+        reject_unexpected_flow_seed,
+    )
+    monkeypatch.setattr(routing, "solve_exact_routing", capture_master)
+    circuit = qgd_Circuit(2)
+    circuit.add_CNOT(1, 0)
+
+    result = route_circuit_exact(
+        circuit,
+        np.empty((0,)),
+        [(0, 1)],
+        {
+            "strategy": "TreeSearch",
+            "max_partition_size": 2,
+            "exact_routing_master": "benders",
+            "exact_routing_timeout_seconds": 7.0,
+        },
+    )
+
+    assert result.solution.selections == captured["warm_start"].selections
+    assert result.solution.cnot_count == captured["warm_start"].cnot_count
+    assert "Skipping auxiliary routing flow seed" in capsys.readouterr().out

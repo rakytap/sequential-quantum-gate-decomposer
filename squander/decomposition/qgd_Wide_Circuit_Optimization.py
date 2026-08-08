@@ -296,15 +296,21 @@ def _remap_exact_state(state, qubits, total_qubits):
         raise AssertionError(
             f"Cannot embed {state['qubits']}-qubit state on {len(qubits)} qubits."
         )
+    def remapped_operation(operation):
+        physical_qubits = [
+            qubits[index] for index in operation["qubits"]
+        ]
+        # Squander/QASM serialization canonicalizes the operands of the
+        # symmetric SWAP gate after embedding.  Apply the same normalization
+        # to archived compact payloads so a reversed local embedding remains
+        # bit-identical to the materialized global stream.
+        if operation["name"] == "swap":
+            physical_qubits.sort()
+        return {**operation, "qubits": physical_qubits}
+
     return {
         "qubits": int(total_qubits),
-        "operations": [
-            {
-                **operation,
-                "qubits": [qubits[index] for index in operation["qubits"]],
-            }
-            for operation in state["operations"]
-        ],
+        "operations": [remapped_operation(operation) for operation in state["operations"]],
     }
 
 
@@ -2371,7 +2377,7 @@ _patch_eapp_if_needed()
 
 
 class SquanderPartitioner(_BQSKitBasePass):
-    """BQSKit pass: replace circuit body with Squander ILP partition blocks."""
+    """BQSKit pass: replace the body with selected Squander partition blocks."""
 
     def __init__(self, max_partition_size):
         super().__init__()
@@ -2412,7 +2418,7 @@ class SquanderPartitioner(_BQSKitBasePass):
         for subcircuit in partitioned_circuit.get_Gates():
             if not isinstance(subcircuit, Circuit):
                 raise RuntimeError(
-                    "Squander ILP partitioning returned a non-block gate; "
+                    "Squander partitioning returned a non-block gate; "
                     "BQSKit SEQPAM requires partition blocks."
                 )
 
@@ -3576,6 +3582,12 @@ class qgd_Wide_Circuit_Optimization:
         # find is a valid, compact MIP start for the complete staged model.
         config.setdefault("exact_routing_flow_seed", True)
         config.setdefault("exact_routing_flow_seed_timeout_seconds", 30.0)
+        # PuLP model construction occurs before the solver time limit applies.
+        # Bound the auxiliary flow seed by its dominant expression terms so a
+        # large route cannot exhaust host memory while merely building a MIP
+        # start. The complete Benders router and its LightSABRE incumbent are
+        # unaffected when this optional seed is skipped.
+        config.setdefault("exact_routing_flow_seed_max_terms", 500_000)
         # Bound cumulative routing-ILP time (compact master, flow certificates,
         # and fixed-cover oracles). Partition enumeration and OSR pricing must
         # finish so the master sees the complete column set; they are excluded.
@@ -3597,6 +3609,15 @@ class qgd_Wide_Circuit_Optimization:
         config.setdefault("exact_routing_benders_stagnation_seconds", 120.0)
         config.setdefault("exact_routing_cover_seed_timeout_seconds", 10.0)
         config.setdefault("exact_routing_cover_seed_beam_width", 64)
+        # Reuse the resolved all-partition/all-permutation OSR catalog in PAM
+        # to obtain strong mapping incumbents. BQSKit contributes only its PAM
+        # mapping heuristic; no BQSKit partitioner or synthesizer is involved.
+        config.setdefault("exact_routing_precomputed_pam_seeds", True)
+        config.setdefault("exact_routing_pam_layout_passes", 3)
+        config.setdefault(
+            "exact_routing_pam_cover_strategies",
+            ("kahn", "ilp", "ilp-routing"),
+        )
         # A fixed-cover warm start needs only a few promising translations of
         # each relative OSR column. Exhaustively expanding every path interval
         # made this optional seed superlinear and unbounded on wide circuits.
@@ -3610,6 +3631,12 @@ class qgd_Wide_Circuit_Optimization:
         # synthesis using the same CNOT-equivalent unit.
         config.setdefault("pam_swap_cnot_cost", 3.0)
         config.setdefault("partition_workers", None)
+        # Routing launches one crash-isolated native OSR process per active
+        # target. On large many-core hosts, using every logical CPU can exceed
+        # memory long before exhausting compute (128 workers consumed the
+        # 256-GiB benchmark host). Keep a safe throughput-oriented default;
+        # callers may explicitly tune it for their machine.
+        config.setdefault("routing_synthesis_workers", 16)
         config.setdefault("auto_expand_partition_size", False)
         config.setdefault("force_small_circuit_validation", True)
 
@@ -3711,11 +3738,61 @@ class qgd_Wide_Circuit_Optimization:
             raise Exception(
                 "The partition_workers parameter should be a positive integer or None."
             )
+        routing_synthesis_workers = config["routing_synthesis_workers"]
+        if (
+            not isinstance(routing_synthesis_workers, int)
+            or isinstance(routing_synthesis_workers, bool)
+            or routing_synthesis_workers <= 0
+        ):
+            raise ValueError(
+                "The routing_synthesis_workers parameter should be a positive integer."
+            )
+        exact_routing_flow_seed_max_terms = config[
+            "exact_routing_flow_seed_max_terms"
+        ]
+        if (
+            not isinstance(exact_routing_flow_seed_max_terms, int)
+            or isinstance(exact_routing_flow_seed_max_terms, bool)
+            or exact_routing_flow_seed_max_terms <= 0
+        ):
+            raise ValueError(
+                "The exact_routing_flow_seed_max_terms parameter should be a "
+                "positive integer."
+            )
+        if not isinstance(config["exact_routing_precomputed_pam_seeds"], bool):
+            raise ValueError(
+                "The exact_routing_precomputed_pam_seeds parameter should be a bool."
+            )
+        pam_layout_passes = config["exact_routing_pam_layout_passes"]
+        if (
+            not isinstance(pam_layout_passes, int)
+            or isinstance(pam_layout_passes, bool)
+            or pam_layout_passes <= 0
+        ):
+            raise ValueError(
+                "The exact_routing_pam_layout_passes parameter should be a "
+                "positive integer."
+            )
+        pam_cover_strategies = config["exact_routing_pam_cover_strategies"]
+        if (
+            not isinstance(pam_cover_strategies, (tuple, list))
+            or not pam_cover_strategies
+            or any(
+                strategy not in ("kahn", "ilp", "ilp-routing")
+                for strategy in pam_cover_strategies
+            )
+        ):
+            raise ValueError(
+                "The exact_routing_pam_cover_strategies parameter should contain "
+                "only 'kahn', 'ilp', and 'ilp-routing'."
+            )
 
-        if config["routing_partition_strategy"] not in ("ilp", "ilp-routing"):
+        if config["routing_partition_strategy"] not in (
+            "kahn", "ilp", "ilp-routing"
+        ):
             raise Exception(
-                "The routing_partition_strategy parameter should be either "
-                "'ilp' or 'ilp-routing'."
+                "The routing_partition_strategy parameter should be 'kahn', "
+                "'ilp', or 'ilp-routing'."
             )
 
         if not isinstance(config["seqpam_preoptimization"], bool):

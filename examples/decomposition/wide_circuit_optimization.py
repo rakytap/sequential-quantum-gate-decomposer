@@ -27,6 +27,7 @@ from squander.decomposition.qgd_Wide_Circuit_Optimization import (
 from squander.gates.qgd_Circuit import qgd_Circuit as Circuit
 from squander import utils
 from squander import Qiskit_IO
+import squander.partitioning.routing as Exact_Routing
 import argparse
 import hashlib
 import json
@@ -49,6 +50,24 @@ BENCHMARK_DATASETS = {
 }
 DATASET_STATS_CACHE = PARTITIONING_BENCHMARK_ROOT / "dataset_stats.json"
 DATASET_STATS_SCHEMA_VERSION = 1
+
+
+def runtime_source_fingerprint():
+    """Identify the exact Python implementation loaded by a benchmark run."""
+    digest = hashlib.sha256()
+    source_paths = (
+        Path(__file__).resolve(),
+        Path(Wide_Circuit_Optimization.__file__).resolve(),
+        Path(Exact_Routing.__file__).resolve(),
+    )
+    for source_path in source_paths:
+        digest.update(str(source_path).encode("utf-8"))
+        digest.update(b"\0")
+        with source_path.open("rb") as source:
+            for block in iter(lambda: source.read(1024 * 1024), b""):
+                digest.update(block)
+        digest.update(b"\0")
+    return digest.hexdigest()
 
 
 def transpile_to_ibm_eagle(qasm_path_or_circ, parameters=None):
@@ -190,10 +209,25 @@ def result_paths(max_partition_size, strategy):
     return result_directories, result_files
 
 
-def optimize_circuit_worker(config, dataset, filename, output_path, result_queue):
+def optimize_circuit_worker(
+    config,
+    dataset,
+    filename,
+    output_path,
+    expected_source_fingerprint,
+    result_queue,
+):
     """Optimize and archive one circuit in an isolated process."""
     old_audit_path = os.environ.get("SQUANDER_REWRITE_AUDIT_JSONL")
     try:
+        actual_source_fingerprint = runtime_source_fingerprint()
+        if actual_source_fingerprint != expected_source_fingerprint:
+            raise RuntimeError(
+                "Benchmark source changed after this run started; restart the "
+                "driver so the worker imports one consistent implementation. "
+                f"started={expected_source_fingerprint[:16]}, "
+                f"current={actual_source_fingerprint[:16]}."
+            )
         # Give BQSKit and multiprocessing descendants a dedicated process group
         # that the parent can terminate together on timeout.
         if hasattr(os, "setsid"):
@@ -242,6 +276,7 @@ def optimize_circuit_worker(config, dataset, filename, output_path, result_queue
             "strategy": config["strategy"],
             "pre_opt_strategy": config["pre-opt-strategy"],
             "routing_strategy": config["routing-strategy"],
+            "source_fingerprint": expected_source_fingerprint,
             "configuration": result_configuration(
                 optimizer.config, circ.get_Qbit_Num()
             ),
@@ -283,6 +318,7 @@ def optimize_circuit_worker(config, dataset, filename, output_path, result_queue
             "pre_opt_strategy": config["pre-opt-strategy"],
             "routing_strategy": config["routing-strategy"],
             "configuration": result_entry["configuration"],
+            "source_fingerprint": expected_source_fingerprint,
             "initial_mapping": optimizer.config.get("initial_mapping"),
             "final_mapping": optimizer.config.get("final_mapping"),
             "input_circuit": input_representation,
@@ -385,6 +421,8 @@ def result_configuration(config, qubit_num):
         "routing_partition_strategy",
         "pam_swap_cnot_cost",
         "partition_workers",
+        "routing_synthesis_workers",
+        "exact_routing_flow_seed_max_terms",
         "beam",
     )
     snapshot = {key: config.get(key) for key in keys}
@@ -421,6 +459,11 @@ if __name__ == "__main__":
         parser.error("--timeout-hours must be nonnegative")
     circuit_timeout = (
         None if args.timeout_hours == 0 else args.timeout_hours * 60.0 * 60.0
+    )
+    source_fingerprint = runtime_source_fingerprint()
+    print(
+        f"Benchmark source fingerprint: {source_fingerprint[:16]}",
+        flush=True,
     )
 
     config = {
@@ -550,6 +593,14 @@ if __name__ == "__main__":
         for _, dataset, filename, output_path in files
     )
     for _, dataset, filename, output_path in files:
+        current_source_fingerprint = runtime_source_fingerprint()
+        if current_source_fingerprint != source_fingerprint:
+            raise RuntimeError(
+                "Benchmark source changed while this driver was running. "
+                "Restart it before processing another circuit: "
+                f"started={source_fingerprint[:16]}, "
+                f"current={current_source_fingerprint[:16]}."
+            )
         fname = filename.name
         results = results_by_dataset[dataset]
         results_file = result_files[dataset]
@@ -567,7 +618,14 @@ if __name__ == "__main__":
         result_queue = context.Queue()
         process = context.Process(
             target=optimize_circuit_worker,
-            args=(config, dataset, str(filename), str(output_path), result_queue),
+            args=(
+                config,
+                dataset,
+                str(filename),
+                str(output_path),
+                source_fingerprint,
+                result_queue,
+            ),
         )
         process.start()
         try:
@@ -603,6 +661,7 @@ if __name__ == "__main__":
                 "strategy": config["strategy"],
                 "pre_opt_strategy": config["pre-opt-strategy"],
                 "routing_strategy": config["routing-strategy"],
+                "source_fingerprint": source_fingerprint,
                 "configuration": result_configuration(
                     resolved_timeout_config, timeout_circuit.get_Qbit_Num()
                 ),
@@ -626,20 +685,70 @@ if __name__ == "__main__":
 
         try:
             worker_result = result_queue.get(timeout=5.0)
-        except queue.Empty as exc:
-            raise RuntimeError(
-                f"Circuit worker for {fname} exited with code {process.exitcode} "
-                "without returning a result."
-            ) from exc
+        except queue.Empty:
+            worker_result = {
+                "ok": False,
+                "traceback": (
+                    f"Circuit worker exited with code {process.exitcode} "
+                    "without returning a result."
+                ),
+                "exitcode": process.exitcode,
+            }
         finally:
             result_queue.close()
             result_queue.join_thread()
 
         if not worker_result["ok"]:
-            raise RuntimeError(
-                f"Circuit optimization failed for {fname}:\n"
-                f"{worker_result['traceback']}"
+            output_path.with_suffix(output_path.suffix + ".tmp").unlink(
+                missing_ok=True
             )
+            failed_circuit, _, _ = utils.qasm_to_squander_circuit(
+                str(filename)
+            )
+            failed_config = dict(config)
+            failed_config["topology"] = (
+                Wide_Circuit_Optimization.qgd_Wide_Circuit_Optimization.linear_topology(
+                    failed_circuit.get_Qbit_Num()
+                )
+            )
+            resolved_failed_config = (
+                Wide_Circuit_Optimization.qgd_Wide_Circuit_Optimization(
+                    failed_config
+                ).config
+            )
+            failure = worker_result["traceback"]
+            results[fname] = {
+                "file": fname,
+                "dataset": dataset,
+                "output_file": str(output_path.relative_to(REPOSITORY_ROOT)),
+                "status": "failed",
+                "strategy": config["strategy"],
+                "pre_opt_strategy": config["pre-opt-strategy"],
+                "routing_strategy": config["routing-strategy"],
+                "source_fingerprint": source_fingerprint,
+                "configuration": result_configuration(
+                    resolved_failed_config,
+                    failed_circuit.get_Qbit_Num(),
+                ),
+                "init": CircuitGateStats(failed_circuit),
+                "worker_exitcode": worker_result.get("exitcode"),
+                "failure": failure,
+                "timing": {
+                    "a2a": None,
+                    "routing": None,
+                    "optimization": None,
+                    "total": None,
+                },
+            }
+            save_results(results_file, results)
+            completed_count += 1
+            print(
+                f"  FAILED {fname}; recorded diagnostic and continuing:\n"
+                f"{failure}",
+                flush=True,
+            )
+            print(f"--- {completed_count}/{len(files)} circuits attempted ---")
+            continue
 
         result_entry = worker_result["entry"]
         results[fname] = result_entry
