@@ -94,7 +94,7 @@ def test_exact_osr_is_the_wide_router_default():
         "kahn", "ilp", "ilp-routing"
     )
     assert optimizer.config["exact_routing_require_tiebreaker_proof"] is False
-    assert optimizer.config["routing_synthesis_workers"] == 4
+    assert optimizer.config["routing_synthesis_workers"] is None
     assert optimizer.config["routing_synthesis_worker_memory_limit_gib"] == 16.0
     assert optimizer.config["routing_minimum_available_memory_fraction"] == 0.25
     assert (
@@ -1793,7 +1793,7 @@ def test_flow_seed_nonfinite_bound_is_not_used_as_proof(monkeypatch):
 def test_routing_synthesis_worker_default_is_memory_bounded(monkeypatch):
     monkeypatch.setattr(routing.mp, "cpu_count", lambda: 128)
 
-    assert routing._routing_synthesis_worker_count({}, 1000) == 4
+    assert routing._routing_synthesis_worker_count({}, 1000) == 128
     assert (
         routing._routing_synthesis_worker_count(
             {"routing_synthesis_workers": 5}, 1000

@@ -3621,10 +3621,10 @@ class qgd_Wide_Circuit_Optimization:
         # not bound their aggregate memory. Keep both concurrency and each
         # worker's address space bounded, and stop well before host recovery
         # services such as SSH are threatened.
-        # Keep a small fixed batch of isolated native calls. Four workers give
-        # the measured routing-catalog throughput improvement while their hard
-        # address-space limits cap aggregate synthesis memory.
-        config.setdefault("routing_synthesis_workers", 4)
+        # Match the normal WCO pool: None inherits partition_workers and then
+        # falls back to every host CPU. An explicit integer remains available
+        # for smaller machines.
+        config.setdefault("routing_synthesis_workers", None)
         # The native three-qubit OSR backend reserves more virtual address
         # space than its resident set. A 12-GiB RLIMIT_AS silently rejected
         # valid columns; one 16-GiB worker remains safely bounded.
@@ -3795,13 +3795,14 @@ class qgd_Wide_Circuit_Optimization:
                 "The partition_workers parameter should be a positive integer or None."
             )
         routing_synthesis_workers = config["routing_synthesis_workers"]
-        if (
+        if routing_synthesis_workers is not None and (
             not isinstance(routing_synthesis_workers, int)
             or isinstance(routing_synthesis_workers, bool)
             or routing_synthesis_workers <= 0
         ):
             raise ValueError(
-                "The routing_synthesis_workers parameter should be a positive integer."
+                "The routing_synthesis_workers parameter should be a positive "
+                "integer or None."
             )
         exact_routing_flow_seed_max_terms = config[
             "exact_routing_flow_seed_max_terms"

@@ -29,7 +29,6 @@ import numpy as np
 
 Permutation = tuple[int, ...]
 Edge = tuple[int, int]
-_DEFAULT_ROUTING_SYNTHESIS_WORKERS = 4
 _DEFAULT_ROUTING_SYNTHESIS_WORKER_MEMORY_GIB = 16.0
 _DEFAULT_ROUTING_MINIMUM_AVAILABLE_MEMORY_FRACTION = 0.25
 
@@ -247,9 +246,9 @@ def _routing_synthesis_worker_count(config, task_count):
     if configured_workers is None:
         configured_workers = config.get("partition_workers")
     if configured_workers is None:
-        configured_workers = min(
-            mp.cpu_count(), _DEFAULT_ROUTING_SYNTHESIS_WORKERS
-        )
+        # Match Wide Circuit Optimization: use the complete host CPU pool
+        # unless the caller explicitly bounds partition/catalog workers.
+        configured_workers = mp.cpu_count()
     return max(1, min(int(configured_workers), int(task_count)))
 
 
