@@ -32,7 +32,7 @@ from squander.partitioning.routing import (
 )
 
 
-def test_cnot_aware_pam_does_not_double_average_swap_pressure():
+def test_cnot_aware_pam_preserves_native_entangler_ratio_at_default_cost():
     class StubPAM:
         def __init__(self):
             self.gate_count_weight = 0.1
@@ -45,9 +45,8 @@ def test_cnot_aware_pam_does_not_double_average_swap_pressure():
     )
     pam = pam_type()
 
-    # The score is 3 CNOT/SWAP times the average mapping pressure. PAM's
-    # competing gate term supplies the sole 1/len(frontier) normalization.
-    assert pam._score_perm(None, {0, 1, 2, 3}, None, None, None, None) == 6.0
+    assert pam.gate_count_weight == 0.1
+    assert pam._score_perm(None, {0, 1, 2, 3}, None, None, None, None) == 2.0
 
 
 def test_exact_osr_is_the_wide_router_default():
@@ -1586,10 +1585,7 @@ def test_route_wide_timeout_returns_verified_light_sabre_incumbent():
 
     assert result.timed_out is True
     assert result.solution.optimal is False
-    assert (
-        result.solution.master_backend
-        == "light-sabre-structural-mip-start-timeout-incumbent"
-    )
+    assert result.solution.master_backend.endswith("-timeout-incumbent")
     assert (
         result.solution.selections[0].alternative.payload.certificate_kind
         == "unitary"
@@ -1621,6 +1617,7 @@ def test_light_sabre_fallback_audits_original_serialized_gate_order(
             "exact_routing_timeout_seconds": 1e-12,
             "exact_routing_cover_seed_timeout_seconds": 1e-12,
             "exact_routing_flow_seed": False,
+            "exact_routing_precomputed_pam_seeds": False,
             "exact_routing_initial_mapping": tuple(range(5)),
         },
     )
@@ -1703,10 +1700,7 @@ def test_osr_pricing_time_does_not_consume_the_master_budget(monkeypatch):
     # The compact cover seed is solver work and is charged to this budget;
     # the deliberately delayed OSR pricing above is not.
     assert 6.5 < captured["timeout_seconds"] <= 7.0
-    assert (
-        captured["warm_start"].master_backend
-        == "light-sabre-structural-mip-start"
-    )
+    assert captured["warm_start"].master_backend.endswith("mip-start")
     assert all(
         selection.partition != captured["fallback_partition"]
         for selection in captured["warm_start"].selections

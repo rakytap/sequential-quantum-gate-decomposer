@@ -2956,40 +2956,29 @@ def _pam_exact_target(original_unitary, pre_perm, post_perm):
 
 
 def _cnot_aware_pam_routing_class(base_class, config):
-    """Make PAM routing value synthesized CNOTs plus three per SWAP pressure.
+    """Scale PAM's native entangler-aware mapping heuristic if requested.
 
     BQSKit's PAM objective is::
 
         mapping_score + two_qubit_gates * gate_count_weight / len(front)
 
-    The mapping score is already averaged over the front (and extended) set,
-    while the gate term is divided by ``len(front)``.  Multiplying the whole
-    objective by that positive constant therefore ranks candidates as::
-
-        synthesized_CNOTs
-        + swap_cnot_cost * len(front) * average_mapping_score
-
-    ``mapping_score`` is BQSKit's estimate of future SWAP pressure.  Its natural
-    CNOT-equivalent coefficient is three because every inserted SWAP is emitted
-    as three CNOTs.  Do not divide the mapping score by ``len(front)`` here:
-    ``_get_best_perm`` already divides the competing gate term by it.  Doing so
-    twice makes SWAP pressure disappear on deep circuits.
+    BQSKit already counts only multi-qudit gates in the competing gate term;
+    for Squander's U3+CNOT candidates this is exactly the local CNOT count.
+    Its layout and routing passes intentionally use different gate weights
+    (0.3 and 0.1), hence different look-ahead/local-cost tradeoffs.  Replacing
+    both with one unit gate weight destroyed that calibration and produced
+    severe routing blowups.  A cost of three is therefore the neutral/native
+    setting; other values scale only the mapping term while preserving each
+    pass's native entangler weight.
     """
 
     swap_cnot_cost = float(config.get("pam_swap_cnot_cost", 3.0))
     class CNOTAwarePAMPass(base_class):
-        def __init__(self, *args, **kwargs):
-            super().__init__(*args, **kwargs)
-            # BQSKit counts all multi-qudit operations here.  Squander's EAPP
-            # candidates and topology-safe fallbacks are in the U3+CNOT basis,
-            # so this is exactly their synthesized CNOT count.
-            self.gate_count_weight = 1.0
-
         def _score_perm(self, circuit, F, pi, D, perm, E):
             mapping_score = super()._score_perm(circuit, F, pi, D, perm, E)
             if not F:
                 return 0.0
-            return swap_cnot_cost * mapping_score
+            return (swap_cnot_cost / 3.0) * mapping_score
 
     CNOTAwarePAMPass.__name__ = f"CNOTAware{base_class.__name__}"
     return CNOTAwarePAMPass
@@ -3668,10 +3657,9 @@ class qgd_Wide_Circuit_Optimization:
         # mapping heuristic; no BQSKit partitioner or synthesizer is involved.
         config.setdefault("exact_routing_precomputed_pam_seeds", True)
         config.setdefault("exact_routing_pam_layout_passes", 3)
-        # PAM's distance term is expressed in physical SWAPs. Price each one
-        # as the three CNOTs emitted by the routed circuit; using a portfolio
-        # of arbitrary surrogate weights multiplies OSR pricing and can even
-        # steer mapping away from the true publication objective.
+        # Three is the neutral scale for PAM's native entangler-aware score.
+        # The score is an averaged look-ahead distance, not a literal SWAP
+        # count; the returned seed portfolio is ranked by actual CNOTs.
         config.setdefault(
             "exact_routing_pam_swap_cnot_costs",
             (3.0,),

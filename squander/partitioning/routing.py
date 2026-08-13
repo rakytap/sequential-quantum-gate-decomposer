@@ -5485,24 +5485,16 @@ def _precomputed_osr_pam_warm_start(
         [tuple(map(int, edge)) for edge in topology],
         num_qudits=int(logical_qubit_count),
     )
-    class _CNOTAwarePAMMixin:
+    class _NativeRatioPAMMixin:
         def _score_perm(self, circuit, frontier, pi, distances, perm, extended):
-            mapping_score = super()._score_perm(
+            score = super()._score_perm(
                 circuit, frontier, pi, distances, perm, extended
             )
-            if not frontier:
-                return 0.0
-            # PAM's gate term is already divided by len(frontier), whereas
-            # mapping_score is the average frontier distance.  Leaving the
-            # mapping term un-divided makes the equivalent comparison after
-            # rescaling local_CNOT + 3 * total_frontier_distance.  The former
-            # second division badly underweighted SWAPs on deep circuits.
-            return float(swap_cnot_cost) * mapping_score
+            return (float(swap_cnot_cost) / 3.0) * score
 
-    class _CNOTAwarePAMLayout(_CNOTAwarePAMMixin, PAMLayoutPass):
+    class _CNOTAwarePAMLayout(_NativeRatioPAMMixin, PAMLayoutPass):
         def __init__(self, total_passes):
             super().__init__(total_passes=total_passes)
-            self.gate_count_weight = 1.0
 
     layout = _CNOTAwarePAMLayout(max(1, int(layout_passes)))
     initial_mapping = list(range(int(logical_qubit_count)))
@@ -5515,10 +5507,9 @@ def _precomputed_osr_pam_warm_start(
     except RuntimeError:
         return None
 
-    class _RecordingPAMRoutingPass(_CNOTAwarePAMMixin, PAMRoutingPass):
+    class _RecordingPAMRoutingPass(_NativeRatioPAMMixin, PAMRoutingPass):
         def __init__(self):
             super().__init__()
-            self.gate_count_weight = 1.0
             self.selected = []
 
         def _get_best_perm(self, circuit, block_data, cg, frontier, pi,
