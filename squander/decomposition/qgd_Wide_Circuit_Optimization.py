@@ -4505,14 +4505,11 @@ class qgd_Wide_Circuit_Optimization:
             )
             self.config["routed_circuit"] = circ
             self.config["routed_parameters"] = parameters
-            if self.config.get("routing-strategy") in ("pam-osr", "exact-osr"):
-                # Both native routers return their selected topology-aware
-                # synthesis columns directly. A second all-partition pass is
-                # unaccounted post-routing synthesis and obscures routing
-                # quality, so it is deliberately excluded from both methods.
-                self.config["optimization_time"] = 0.0
-                self.config["topology_optimization_skipped"] = True
-                return circ, parameters
+            # Routing quality is archived above before the normal explicit
+            # topology-constrained optimization stage. Routing implementations
+            # must not hide cleanup internally, but this separately timed WCO
+            # stage is required for every routing strategy.
+            self.config.pop("topology_optimization_skipped", None)
             self.config["_rewrite_audit_stage"] = "topology_optimization"
         start_time = time.time()
         optimization_input_cnot_count = CNOTGateCount(circ, 0)

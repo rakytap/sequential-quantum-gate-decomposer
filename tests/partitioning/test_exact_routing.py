@@ -120,6 +120,62 @@ def test_distance_two_cnot_uses_exact_four_cnot_bridge(target, control):
     ) < 1e-15
 
 
+@pytest.mark.parametrize(
+    "routing_strategy",
+    (
+        "exact-osr",
+        "pam-osr",
+        "seqpam-ilp",
+        "seqpam-quick",
+        "bqskit-sabre",
+        "light-sabre",
+        "sabre",
+    ),
+)
+def test_every_router_still_runs_explicit_topology_optimization(
+    monkeypatch, routing_strategy
+):
+    topology = ((0, 1), (1, 2))
+    source = qgd_Circuit(3)
+    source.add_CNOT(2, 0)
+    parameters = np.empty((0,), dtype=np.float64)
+    observed_topologies = []
+
+    def fake_inner(self, circuit, values, **_kwargs):
+        observed_topologies.append(self.config.get("topology"))
+        return circuit, values
+
+    def fake_route(self, circuit, values):
+        return routing._route_source_circuit_on_local_topology(
+            circuit, values, topology, 3
+        )
+
+    monkeypatch.setattr(
+        qgd_Wide_Circuit_Optimization,
+        "InnerOptimizeWideCircuit",
+        fake_inner,
+    )
+    monkeypatch.setattr(
+        qgd_Wide_Circuit_Optimization,
+        "route_circuit",
+        fake_route,
+    )
+    optimizer = qgd_Wide_Circuit_Optimization(
+        {
+            "strategy": "TreeSearch",
+            "pre-opt-strategy": "TreeSearch",
+            "routing-strategy": routing_strategy,
+            "topology": topology,
+            "test_final_circuit": False,
+        }
+    )
+
+    optimizer.OptimizeWideCircuit(source, parameters)
+
+    assert observed_topologies == [None, topology]
+    assert "topology_optimization_skipped" not in optimizer.config
+
+
 def test_three_qubit_topology_symmetry_counts():
     path = [(0, 1), (1, 2)]
     triangle = [(0, 1), (1, 2), (0, 2)]
