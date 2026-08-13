@@ -2962,19 +2962,18 @@ def _cnot_aware_pam_routing_class(base_class, config):
 
         mapping_score + two_qubit_gates * gate_count_weight / len(front)
 
-    The mapping score is already averaged over the front (and extended) set.
-    Consequently, its default ``gate_count_weight=0.1`` makes the synthesized
-    block cost vanish as the frontier grows.  For Squander's CNOT-basis SEQPAM
-    candidates, multiply the objective by the positive constant ``len(front)``
-    and instead rank candidates as::
+    The mapping score is already averaged over the front (and extended) set,
+    while the gate term is divided by ``len(front)``.  Multiplying the whole
+    objective by that positive constant therefore ranks candidates as::
 
-        synthesized_CNOTs + swap_cnot_cost * mapping_score
+        synthesized_CNOTs
+        + swap_cnot_cost * len(front) * average_mapping_score
 
     ``mapping_score`` is BQSKit's estimate of future SWAP pressure.  Its natural
     CNOT-equivalent coefficient is three because every inserted SWAP is emitted
-    as three CNOTs.  Multiplying ``_score_perm`` by the coefficient divided by
-    the frontier size implements that objective without copying BQSKit's
-    private permutation enumeration logic.
+    as three CNOTs.  Do not divide the mapping score by ``len(front)`` here:
+    ``_get_best_perm`` already divides the competing gate term by it.  Doing so
+    twice makes SWAP pressure disappear on deep circuits.
     """
 
     swap_cnot_cost = float(config.get("pam_swap_cnot_cost", 3.0))
@@ -2990,7 +2989,7 @@ def _cnot_aware_pam_routing_class(base_class, config):
             mapping_score = super()._score_perm(circuit, F, pi, D, perm, E)
             if not F:
                 return 0.0
-            return swap_cnot_cost * mapping_score / len(F)
+            return swap_cnot_cost * mapping_score
 
     CNOTAwarePAMPass.__name__ = f"CNOTAware{base_class.__name__}"
     return CNOTAwarePAMPass
@@ -3562,14 +3561,19 @@ class qgd_Wide_Circuit_Optimization:
         # optional ``ilp-routing`` objective is experimental and can select
         # materially worse SEQPAM blocks despite preserving minimum cardinality.
         config.setdefault("routing_partition_strategy", "ilp")
+        # The default router couples the all-partition exact-cover master to
+        # permutation-aware OSR columns and exact SAT/Gurobi mapping flow. It
+        # returns that routed synthesis directly: no foreign synthesis and no
+        # post-routing cleanup are included in the reported route.
         config.setdefault("routing-strategy", "exact-osr")
         # Use the compact PuLP/Gurobi Benders master. It separates exact-cover
         # column choice from the complete mapping/SWAP trajectory, while the
         # monolithic ILP remains selectable as a cross-check.
         config.setdefault("exact_routing_master", "benders")
-        # Price every symmetry-distinct boundary permutation with OSR by
-        # default. The Schmidt-bound-guided lazy mode is an explicit speed
-        # option rather than part of the publication-quality path.
+        # Build the complete symmetry-reduced topology-aware OSR catalog
+        # before invoking PAM or the exact master. This makes routing quality
+        # independent of optimistic column order and keeps the 20-minute
+        # budget strictly a solver budget.
         config.setdefault("exact_routing_lazy_osr", False)
         # Routing prices each symmetry-distinct permutation exactly once.
         # Additional randomized retries multiply the dominant OSR cost and
@@ -3577,6 +3581,19 @@ class qgd_Wide_Circuit_Optimization:
         # circuits. The topology-valid fallback already supplies a strict
         # per-target CNOT ceiling to the single attempt.
         config.setdefault("exact_routing_synthesis_restarts", 1)
+        # Routing targets need the same deterministic basin schedule as normal
+        # OSR synthesis. A two-start shortcut both missed easy 2-CNOT columns
+        # and ran longer on multiply_n13 than the full eight-start schedule.
+        config.setdefault(
+            "routing_column_max_iteration_loops",
+            int(config["max_iteration_loops"]),
+        )
+        config.setdefault("routing_column_synthesis_mode", "topology-osr")
+        config.setdefault("exact_routing_catalog_progress", True)
+        config.setdefault("exact_routing_catalog_progress_interval", 25)
+        config.setdefault("exact_routing_light_sabre_seed_count", 32)
+        config.setdefault("exact_routing_light_sabre_trials_per_seed", 1)
+        config.setdefault("exact_routing_light_guided_cover_count", 8)
         # The former mapping-flow model is incomplete as a router because it
         # cannot insert arbitrary inter-block SWAPs, but any solution it does
         # find is a valid, compact MIP start for the complete staged model.
@@ -3588,6 +3605,31 @@ class qgd_Wide_Circuit_Optimization:
         # start. The complete Benders router and its LightSABRE incumbent are
         # unaffected when this optional seed is skipped.
         config.setdefault("exact_routing_flow_seed_max_terms", 500_000)
+        # PuLP builds the staged path-order oracle in Python before Gurobi's
+        # time limit starts. Its O(partitions * qubits^3) triangle system can
+        # otherwise exhaust a large host. Above this bound Benders safely
+        # returns the best replayable LightSABRE/PAM incumbent.
+        config.setdefault(
+            "exact_routing_fixed_cover_max_triangle_constraints", 500_000
+        )
+        config.setdefault("exact_routing_fixed_cover_backend", "sat")
+        config.setdefault("exact_routing_sat_solver", "glucose42")
+        config.setdefault(
+            "exact_routing_sat_max_estimated_clauses", 5_000_000
+        )
+        # Native OSR calls run in isolated processes, but isolation alone does
+        # not bound their aggregate memory. Keep both concurrency and each
+        # worker's address space bounded, and stop well before host recovery
+        # services such as SSH are threatened.
+        # Keep a small fixed batch of isolated native calls. Four workers give
+        # the measured routing-catalog throughput improvement while their hard
+        # address-space limits cap aggregate synthesis memory.
+        config.setdefault("routing_synthesis_workers", 4)
+        # The native three-qubit OSR backend reserves more virtual address
+        # space than its resident set. A 12-GiB RLIMIT_AS silently rejected
+        # valid columns; one 16-GiB worker remains safely bounded.
+        config.setdefault("routing_synthesis_worker_memory_limit_gib", 16.0)
+        config.setdefault("routing_minimum_available_memory_fraction", 0.25)
         # Bound cumulative routing-ILP time (compact master, flow certificates,
         # and fixed-cover oracles). Partition enumeration and OSR pricing must
         # finish so the master sees the complete column set; they are excluded.
@@ -3607,13 +3649,33 @@ class qgd_Wide_Circuit_Optimization:
             "exact_routing_benders_subproblem_slice_seconds", 60.0
         )
         config.setdefault("exact_routing_benders_stagnation_seconds", 120.0)
+        config.setdefault("exact_routing_cover_pool_timeout_seconds", 10.0)
+        config.setdefault("exact_routing_minimum_cover_seed_count", 8)
+        config.setdefault("exact_routing_post_catalog_pam_seed_count", 12)
         config.setdefault("exact_routing_cover_seed_timeout_seconds", 10.0)
+        # The exact token-order seed is useful diagnostically, but on the
+        # benchmark outlier it did not improve a strong structural incumbent
+        # in three minutes. Keep it opt-in so seed construction cannot consume
+        # routing time without progress.
+        config.setdefault("exact_routing_token_seed_timeout_seconds", 0.0)
+        config.setdefault(
+            "exact_routing_token_seed_cover_strategies",
+            ("light-structural",),
+        )
         config.setdefault("exact_routing_cover_seed_beam_width", 64)
         # Reuse the resolved all-partition/all-permutation OSR catalog in PAM
         # to obtain strong mapping incumbents. BQSKit contributes only its PAM
         # mapping heuristic; no BQSKit partitioner or synthesizer is involved.
         config.setdefault("exact_routing_precomputed_pam_seeds", True)
         config.setdefault("exact_routing_pam_layout_passes", 3)
+        # PAM's distance term is expressed in physical SWAPs. Price each one
+        # as the three CNOTs emitted by the routed circuit; using a portfolio
+        # of arbitrary surrogate weights multiplies OSR pricing and can even
+        # steer mapping away from the true publication objective.
+        config.setdefault(
+            "exact_routing_pam_swap_cnot_costs",
+            (3.0,),
+        )
         config.setdefault(
             "exact_routing_pam_cover_strategies",
             ("kahn", "ilp", "ilp-routing"),
@@ -3631,12 +3693,6 @@ class qgd_Wide_Circuit_Optimization:
         # synthesis using the same CNOT-equivalent unit.
         config.setdefault("pam_swap_cnot_cost", 3.0)
         config.setdefault("partition_workers", None)
-        # Routing launches one crash-isolated native OSR process per active
-        # target. On large many-core hosts, using every logical CPU can exceed
-        # memory long before exhausting compute (128 workers consumed the
-        # 256-GiB benchmark host). Keep a safe throughput-oriented default;
-        # callers may explicitly tune it for their machine.
-        config.setdefault("routing_synthesis_workers", 16)
         config.setdefault("auto_expand_partition_size", False)
         config.setdefault("force_small_circuit_validation", True)
 
@@ -3759,6 +3815,42 @@ class qgd_Wide_Circuit_Optimization:
                 "The exact_routing_flow_seed_max_terms parameter should be a "
                 "positive integer."
             )
+        minimum_cover_seed_count = config[
+            "exact_routing_minimum_cover_seed_count"
+        ]
+        if (
+            not isinstance(minimum_cover_seed_count, int)
+            or isinstance(minimum_cover_seed_count, bool)
+            or minimum_cover_seed_count <= 0
+        ):
+            raise ValueError(
+                "The exact_routing_minimum_cover_seed_count parameter should "
+                "be a positive integer."
+            )
+        light_guided_cover_count = config[
+            "exact_routing_light_guided_cover_count"
+        ]
+        if (
+            not isinstance(light_guided_cover_count, int)
+            or isinstance(light_guided_cover_count, bool)
+            or light_guided_cover_count < 0
+        ):
+            raise ValueError(
+                "The exact_routing_light_guided_cover_count parameter should "
+                "be a nonnegative integer."
+            )
+        post_catalog_seed_count = config[
+            "exact_routing_post_catalog_pam_seed_count"
+        ]
+        if (
+            not isinstance(post_catalog_seed_count, int)
+            or isinstance(post_catalog_seed_count, bool)
+            or post_catalog_seed_count < 0
+        ):
+            raise ValueError(
+                "The exact_routing_post_catalog_pam_seed_count parameter "
+                "should be a nonnegative integer."
+            )
         if not isinstance(config["exact_routing_precomputed_pam_seeds"], bool):
             raise ValueError(
                 "The exact_routing_precomputed_pam_seeds parameter should be a bool."
@@ -3772,6 +3864,22 @@ class qgd_Wide_Circuit_Optimization:
             raise ValueError(
                 "The exact_routing_pam_layout_passes parameter should be a "
                 "positive integer."
+            )
+        pam_swap_cnot_costs = config["exact_routing_pam_swap_cnot_costs"]
+        if (
+            not isinstance(pam_swap_cnot_costs, (tuple, list))
+            or not pam_swap_cnot_costs
+            or any(
+                not isinstance(cost, (int, float))
+                or isinstance(cost, bool)
+                or not np.isfinite(cost)
+                or cost <= 0.0
+                for cost in pam_swap_cnot_costs
+            )
+        ):
+            raise ValueError(
+                "The exact_routing_pam_swap_cnot_costs parameter should "
+                "contain positive finite numbers."
             )
         pam_cover_strategies = config["exact_routing_pam_cover_strategies"]
         if (
@@ -4397,6 +4505,14 @@ class qgd_Wide_Circuit_Optimization:
             )
             self.config["routed_circuit"] = circ
             self.config["routed_parameters"] = parameters
+            if self.config.get("routing-strategy") in ("pam-osr", "exact-osr"):
+                # Both native routers return their selected topology-aware
+                # synthesis columns directly. A second all-partition pass is
+                # unaccounted post-routing synthesis and obscures routing
+                # quality, so it is deliberately excluded from both methods.
+                self.config["optimization_time"] = 0.0
+                self.config["topology_optimization_skipped"] = True
+                return circ, parameters
             self.config["_rewrite_audit_stage"] = "topology_optimization"
         start_time = time.time()
         optimization_input_cnot_count = CNOTGateCount(circ, 0)
@@ -5221,7 +5337,7 @@ class qgd_Wide_Circuit_Optimization:
     def route_circuit(self, circ: Circuit, orig_parameters: np.ndarray):
         """Map ``circ`` onto ``self.config['topology']`` using the configured router.
 
-        The strategy is ``self.config['routing-strategy']``, e.g. ``exact-osr``,
+        The strategy is ``self.config['routing-strategy']``, e.g. ``pam-osr``, ``exact-osr``,
         ``seqpam-ilp``, ``seqpam-quick``, ``bqskit-sabre``, ``light-sabre``
         (Qiskit), or ``sabre`` (Squander). Writes ``initial_mapping`` and ``final_mapping`` into
         ``self.config`` when the backend provides them.
@@ -5233,29 +5349,32 @@ class qgd_Wide_Circuit_Optimization:
         Returns:
             ``(routed_circuit, routed_parameters)`` laid out for ``self.config['topology']``.
         """
-        strategy = self.config.get("routing-strategy", "exact-osr")
+        strategy = self.config.get("routing-strategy", "pam-osr")
 
         if _rewrite_audit_enabled() and strategy not in (
             "exact-osr",
+            "pam-osr",
             "seqpam-ilp",
             "seqpam-quick",
             "light-sabre",
             "sabre",
         ):
             raise NotImplementedError(
-                "Exact schema-v2 routing replay currently supports "
+                "Exact schema-v2 routing replay currently supports pam-osr, "
                 "exact-osr, seqpam-ilp, seqpam-quick, light-sabre, and sabre only."
             )
 
-        if strategy == "exact-osr":
+        if strategy in ("pam-osr", "exact-osr"):
             from squander.partitioning.routing import route_circuit_exact
 
             exact_route_started_ns = time.time_ns()
+            routing_config = dict(self.config)
+            routing_config["pam_osr_only"] = strategy == "pam-osr"
             exact_route = route_circuit_exact(
                 circ,
                 orig_parameters,
                 self.config["topology"],
-                self.config,
+                routing_config,
             )
             Squander_remapped_circuit = exact_route.circuit
             parameters_remapped_circuit = exact_route.parameters

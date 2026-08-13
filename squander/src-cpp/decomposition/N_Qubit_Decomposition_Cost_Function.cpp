@@ -1475,7 +1475,7 @@ static OSRTriplet<ComplexT> top_k_triplet_for_cut(
 }
 
 template<class MatrixT, class ComplexT, class RealT>
-static MatrixT get_deriv_osr_entanglement_impl(MatrixT& matrix, std::vector<std::vector<int>>& use_cuts, const std::vector<std::vector<int>>& rank_profiles, double profile_temperature, double cut_smoothmax_temperature) {
+static MatrixT get_deriv_osr_entanglement_impl(MatrixT& matrix, std::vector<std::vector<int>>& use_cuts, const std::vector<std::vector<int>>& rank_profiles, double profile_temperature, double cut_smoothmax_temperature, double* cost_out=nullptr) {
     int qbit_num = lg_down(matrix.rows);
     const auto& cuts = use_cuts.size() == 0 ? unique_cuts(qbit_num) : use_cuts;
     double Fnorm = std::sqrt(matrix.rows);
@@ -1501,6 +1501,7 @@ static MatrixT get_deriv_osr_entanglement_impl(MatrixT& matrix, std::vector<std:
         allS, rank_profiles, profile_temperature,
         cut_smoothmax_temperature, profile_cost
     );
+    if (cost_out != nullptr) *cost_out = profile_cost;
     std::vector<std::vector<double>> combined(allS.size());
     for (size_t c = 0; c < allS.size(); ++c) {
         combined[c].assign(allS[c].size(), 0.0);
@@ -1534,6 +1535,14 @@ Matrix get_deriv_osr_entanglement(Matrix& matrix, std::vector<std::vector<int>>&
 
 Matrix_float get_deriv_osr_entanglement(Matrix_float& matrix, std::vector<std::vector<int>>& use_cuts, const std::vector<std::vector<int>>& rank_profiles, double profile_temperature, double cut_smoothmax_temperature) {
     return get_deriv_osr_entanglement_impl<Matrix_float, QGD_Complex8, float>(matrix, use_cuts, rank_profiles, profile_temperature, cut_smoothmax_temperature);
+}
+
+Matrix get_osr_entanglement_test_and_deriv(Matrix& matrix, std::vector<std::vector<int>>& use_cuts, const std::vector<std::vector<int>>& rank_profiles, double& cost, double profile_temperature, double cut_smoothmax_temperature) {
+    return get_deriv_osr_entanglement_impl<Matrix, QGD_Complex16, double>(matrix, use_cuts, rank_profiles, profile_temperature, cut_smoothmax_temperature, &cost);
+}
+
+Matrix_float get_osr_entanglement_test_and_deriv(Matrix_float& matrix, std::vector<std::vector<int>>& use_cuts, const std::vector<std::vector<int>>& rank_profiles, double& cost, double profile_temperature, double cut_smoothmax_temperature) {
+    return get_deriv_osr_entanglement_impl<Matrix_float, QGD_Complex8, float>(matrix, use_cuts, rank_profiles, profile_temperature, cut_smoothmax_temperature, &cost);
 }
 
 // Compute grad component = Re Tr( A^† B ) for A = dL/dU, B = dU/dθ

@@ -42,12 +42,12 @@ dependencies = [
     "networkx",
     "pybind11",
     "pulp>=2.7",
+    "python-sat>=1.8.dev16",
 ]
 
 [project.optional-dependencies]
 dev = [
     "pytest",
 ]
-
 
 

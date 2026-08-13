@@ -150,6 +150,8 @@ double get_osr_entanglement_test(Matrix& matrix, std::vector<std::vector<int>>& 
 double get_osr_entanglement_test(Matrix_float& matrix, std::vector<std::vector<int>>& use_cuts, const std::vector<std::vector<int>>& rank_profiles, double profile_temperature=0.1, double cut_smoothmax_temperature=0.0);
 Matrix get_deriv_osr_entanglement(Matrix& matrix, std::vector<std::vector<int>>& use_cuts, const std::vector<std::vector<int>>& rank_profiles, double profile_temperature=0.1, double cut_smoothmax_temperature=0.0);
 Matrix_float get_deriv_osr_entanglement(Matrix_float& matrix, std::vector<std::vector<int>>& use_cuts, const std::vector<std::vector<int>>& rank_profiles, double profile_temperature=0.1, double cut_smoothmax_temperature=0.0);
+Matrix get_osr_entanglement_test_and_deriv(Matrix& matrix, std::vector<std::vector<int>>& use_cuts, const std::vector<std::vector<int>>& rank_profiles, double& cost, double profile_temperature=0.1, double cut_smoothmax_temperature=0.0);
+Matrix_float get_osr_entanglement_test_and_deriv(Matrix_float& matrix, std::vector<std::vector<int>>& use_cuts, const std::vector<std::vector<int>>& rank_profiles, double& cost, double profile_temperature=0.1, double cut_smoothmax_temperature=0.0);
 double real_trace_conj_dot(Matrix& A, Matrix& B);
 double real_trace_conj_dot(Matrix_float& A, Matrix_float& B);
 

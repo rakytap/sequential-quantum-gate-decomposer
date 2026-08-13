@@ -1164,12 +1164,10 @@ void Optimization_Interface::optimization_problem_combined_non_static( Matrix_re
     int qbit_num = instance->get_qbit_num();
     int trace_offset_loc = instance->get_trace_offset();
 
-    // Gradient-driven optimization is sensitive to low-precision objective
-    // values.  Leave this float32 combined path in place as experimental code,
-    // but force production optimizer cost/gradient evaluation through the
-    // double precision branch below.
-    const bool use_float_combined_cost_path = false;
-    if ( use_float_combined_cost_path && instance->get_use_float() ) {
+    // Dispatch the combined cost/gradient calculation at the configured
+    // precision. Hilbert-Schmidt refinement constructs a separate float64
+    // optimizer, while OSR may deliberately use this float32 fast path.
+    if ( instance->get_use_float() ) {
         static tbb::enumerable_thread_specific<Matrix_real_float> parameters_float_tls;
         Matrix_real_float& parameters_float = parameters_float_tls.local();
         parameters.copy_to(parameters_float);
@@ -1180,17 +1178,21 @@ void Optimization_Interface::optimization_problem_combined_non_static( Matrix_re
         Matrix_float& matrix_new = combined_result[0];
 
         Matrix_float trace_tmp(1,3);
-        *f0 = instance->calculate_cost_function(matrix_new, &trace_tmp);
-
         Matrix Upartial;
         Matrix_float Upartial_float;
         Matrix matrix_new64;
+        if (cost_fnc == OSR_ENTANGLEMENT) {
+            Upartial_float = get_osr_entanglement_test_and_deriv(
+                matrix_new, use_cuts, osr_rank_profiles, *f0,
+                osr_profile_temperature, osr_cut_smoothmax_temperature
+            );
+        }
+        else {
+            *f0 = instance->calculate_cost_function(matrix_new, &trace_tmp);
+        }
         if (cost_fnc == SUM_OF_SQUARES) {
             matrix_new64 = matrix_new.to_float64();
             Upartial = get_deriv_sum_of_squares(matrix_new64);
-        }
-        else if (cost_fnc == OSR_ENTANGLEMENT) {
-            Upartial_float = get_deriv_osr_entanglement(matrix_new, use_cuts, osr_rank_profiles, osr_profile_temperature, osr_cut_smoothmax_temperature);
         }
 
         auto calculate_gradient_component = [&](int idx) {
@@ -1386,13 +1388,18 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();////////////////////////////////
     instance->apply_to_combined( parameters, Umtx_loc, parallel, combined_result );
     Matrix& matrix_new = combined_result[0];
 
-    *f0 = instance->calculate_cost_function(matrix_new, &trace_tmp);
-
     Matrix Upartial;
+    if (cost_fnc == OSR_ENTANGLEMENT) {
+        Upartial = get_osr_entanglement_test_and_deriv(
+            matrix_new, use_cuts, osr_rank_profiles, *f0,
+            osr_profile_temperature, osr_cut_smoothmax_temperature
+        );
+    }
+    else {
+        *f0 = instance->calculate_cost_function(matrix_new, &trace_tmp);
+    }
     if (cost_fnc == SUM_OF_SQUARES) {
         Upartial = get_deriv_sum_of_squares(matrix_new);
-    } else if (cost_fnc == OSR_ENTANGLEMENT) {
-        Upartial = get_deriv_osr_entanglement(matrix_new, use_cuts, osr_rank_profiles, osr_profile_temperature, osr_cut_smoothmax_temperature);
     }
 
 

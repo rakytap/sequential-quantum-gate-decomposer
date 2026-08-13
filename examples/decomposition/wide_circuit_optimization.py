@@ -220,6 +220,11 @@ def optimize_circuit_worker(
     """Optimize and archive one circuit in an isolated process."""
     old_audit_path = os.environ.get("SQUANDER_REWRITE_AUDIT_JSONL")
     try:
+        # Protect the machine from parent-side Python/PuLP/Gurobi allocations.
+        # Native routing children receive their own, smaller limits separately.
+        Exact_Routing._set_process_address_space_limit(
+            config, "circuit_worker_memory_limit_gib", 64.0
+        )
         actual_source_fingerprint = runtime_source_fingerprint()
         if actual_source_fingerprint != expected_source_fingerprint:
             raise RuntimeError(
@@ -422,7 +427,30 @@ def result_configuration(config, qubit_num):
         "pam_swap_cnot_cost",
         "partition_workers",
         "routing_synthesis_workers",
+        "routing_column_max_iteration_loops",
+        "routing_column_synthesis_mode",
+        "exact_routing_catalog_progress",
+        "exact_routing_catalog_progress_interval",
+        "exact_routing_light_sabre_seed_count",
+        "exact_routing_light_sabre_trials_per_seed",
+        "exact_routing_light_guided_cover_count",
+        "exact_routing_minimum_cover_seed_count",
+        "exact_routing_post_catalog_pam_seed_count",
+        "exact_routing_pam_layout_passes",
+        "exact_routing_pam_swap_cnot_costs",
+        "exact_routing_pam_cover_strategies",
+        "exact_routing_lazy_osr",
+        "exact_routing_cover_pool_timeout_seconds",
+        "exact_routing_token_seed_timeout_seconds",
+        "exact_routing_token_seed_cover_strategies",
+        "routing_synthesis_worker_memory_limit_gib",
+        "routing_minimum_available_memory_fraction",
+        "circuit_worker_memory_limit_gib",
         "exact_routing_flow_seed_max_terms",
+        "exact_routing_fixed_cover_max_triangle_constraints",
+        "exact_routing_fixed_cover_backend",
+        "exact_routing_sat_solver",
+        "exact_routing_sat_max_estimated_clauses",
         "beam",
     )
     snapshot = {key: config.get(key) for key in keys}
@@ -476,7 +504,7 @@ if __name__ == "__main__":
         "use_graph_search": True,
         "auto_expand_partition_size": False,
         "pre-opt-strategy": "TreeSearch",  # possible values: "TreeSearch", "qiskit", "bqskit", "TabuSearch"
-        "routing-strategy": "exact-osr",  # possible values: "exact-osr", "sabre", "light-sabre", "bqskit-sabre", "seqpam-quick", "seqpam-ilp"
+        "routing-strategy": "exact-osr",  # all-partition OSR + exact SAT/Gurobi mapping flow; no post-routing synthesis
         # "tolerance": 1e-14,  # Squander Hilbert-Schmidt optimization target
         # "osr_optimization_tolerance": 1e-6,  # squared OSR tail cost; rank cutoff is its square root (1e-3)
         # "synthesis_acceptance_tolerance": 1e-10,  # Common block budget

@@ -11,6 +11,7 @@ import squander.partitioning.routing as routing
 from squander.gates.qgd_Circuit import qgd_Circuit
 from squander.decomposition.qgd_Wide_Circuit_Optimization import (
     _append_exact_osr_routing_event,
+    _cnot_aware_pam_routing_class,
     _verify_exact_osr_routing_replay,
     qgd_Wide_Circuit_Optimization,
 )
@@ -31,17 +32,45 @@ from squander.partitioning.routing import (
 )
 
 
-def test_exact_osr_benders_is_the_wide_router_default():
+def test_cnot_aware_pam_does_not_double_average_swap_pressure():
+    class StubPAM:
+        def __init__(self):
+            self.gate_count_weight = 0.1
+
+        def _score_perm(self, circuit, frontier, pi, distances, perm, extended):
+            return 2.0
+
+    pam_type = _cnot_aware_pam_routing_class(
+        StubPAM, {"pam_swap_cnot_cost": 3.0}
+    )
+    pam = pam_type()
+
+    # The score is 3 CNOT/SWAP times the average mapping pressure. PAM's
+    # competing gate term supplies the sole 1/len(frontier) normalization.
+    assert pam._score_perm(None, {0, 1, 2, 3}, None, None, None, None) == 6.0
+
+
+def test_exact_osr_is_the_wide_router_default():
     optimizer = qgd_Wide_Circuit_Optimization({})
 
     assert optimizer.config["routing-strategy"] == "exact-osr"
+    assert optimizer.config["routing_column_synthesis_mode"] == "topology-osr"
     assert optimizer.config["exact_routing_master"] == "benders"
     assert optimizer.config["exact_routing_lazy_osr"] is False
     assert optimizer.config["exact_routing_synthesis_restarts"] == 1
+    assert optimizer.config["exact_routing_light_sabre_seed_count"] == 32
+    assert optimizer.config["exact_routing_light_sabre_trials_per_seed"] == 1
+    assert optimizer.config["exact_routing_light_guided_cover_count"] == 8
     assert optimizer.config["exact_routing_cover_seed_translation_limit"] == 8
     assert optimizer.config["exact_routing_flow_seed"] is True
     assert optimizer.config["exact_routing_flow_seed_timeout_seconds"] == 30.0
     assert optimizer.config["exact_routing_flow_seed_max_terms"] == 500_000
+    assert optimizer.config["exact_routing_fixed_cover_backend"] == "sat"
+    assert optimizer.config["exact_routing_sat_solver"] == "glucose42"
+    assert (
+        optimizer.config["exact_routing_sat_max_estimated_clauses"]
+        == 5_000_000
+    )
     assert optimizer.config["exact_routing_timeout_seconds"] == 20 * 60
     assert (
         optimizer.config["exact_routing_benders_zero_swap_probe_seconds"]
@@ -54,15 +83,41 @@ def test_exact_osr_benders_is_the_wide_router_default():
     )
     assert optimizer.config["exact_routing_benders_stagnation_seconds"] == 120.0
     assert optimizer.config["exact_routing_cover_seed_timeout_seconds"] == 10.0
+    assert optimizer.config["exact_routing_cover_pool_timeout_seconds"] == 10.0
+    assert optimizer.config["exact_routing_minimum_cover_seed_count"] == 8
+    assert optimizer.config["exact_routing_post_catalog_pam_seed_count"] == 12
     assert optimizer.config["exact_routing_cover_seed_beam_width"] == 64
     assert optimizer.config["exact_routing_precomputed_pam_seeds"] is True
     assert optimizer.config["exact_routing_pam_layout_passes"] == 3
+    assert optimizer.config["exact_routing_pam_swap_cnot_costs"] == (3.0,)
     assert optimizer.config["exact_routing_pam_cover_strategies"] == (
         "kahn", "ilp", "ilp-routing"
     )
     assert optimizer.config["exact_routing_require_tiebreaker_proof"] is False
-    assert optimizer.config["routing_synthesis_workers"] == 16
+    assert optimizer.config["routing_synthesis_workers"] == 4
+    assert optimizer.config["routing_synthesis_worker_memory_limit_gib"] == 16.0
+    assert optimizer.config["routing_minimum_available_memory_fraction"] == 0.25
+    assert (
+        optimizer.config["exact_routing_fixed_cover_max_triangle_constraints"]
+        == 500_000
+    )
     assert "exact_routing_total_timeout_seconds" not in optimizer.config
+
+
+@pytest.mark.parametrize("target,control", [(2, 0), (0, 2)])
+def test_distance_two_cnot_uses_exact_four_cnot_bridge(target, control):
+    source = qgd_Circuit(3)
+    source.add_CNOT(target, control)
+
+    routed, parameters = routing._route_source_circuit_on_local_topology(
+        source, np.empty((0,)), ((0, 1), (1, 2)), 3
+    )
+
+    assert len(routed.get_Gates()) == 4
+    assert _process_infidelity(
+        source.get_Matrix(np.empty((0,)), is_f32=False),
+        routed.get_Matrix(parameters, is_f32=False),
+    ) < 1e-15
 
 
 def test_three_qubit_topology_symmetry_counts():
@@ -631,6 +686,73 @@ def test_ilp_encodes_and_propagates_a_fixed_initial_permutation():
     assert [selection.partition for selection in result.selections] == [0, 1]
 
 
+@pytest.mark.parametrize(
+    "initial_mapping",
+    ((0, 1, 2), (2, 0, 1), None),
+)
+def test_fixed_cover_sat_matches_exact_ilp_oracle(initial_mapping):
+    """The SAT replacement must preserve the former oracle's exact optimum."""
+    alternatives = {
+        0: [RoutingAlternative(0, (0, 1), (0, 1), (1, 0), 2)],
+        1: [RoutingAlternative(1, (1, 2), (0, 1), (0, 1), 1)],
+        2: [RoutingAlternative(2, (0, 2), (1, 0), (0, 1), 2)],
+    }
+    arguments = {
+        "gate_predecessors": {0: (), 1: (0,), 2: (0,)},
+        "partitions": [{0}, {1}, {2}],
+        "alternatives": alternatives,
+        "logical_qubit_count": 3,
+        "topology": [(0, 1), (1, 2)],
+        "initial_mapping": initial_mapping,
+    }
+
+    sat = solve_exact_routing_ilp(**arguments, fixed_cover_backend="sat")
+    ilp = solve_exact_routing_ilp(**arguments, fixed_cover_backend="ilp")
+
+    assert sat.cnot_count == ilp.cnot_count
+    assert sat.single_qubit_count == ilp.single_qubit_count
+    assert sat.optimal and ilp.optimal
+    assert sat.master_backend.startswith("pysat-glucose42-")
+    assert sum(map(len, sat.transition_swaps)) == (sat.cnot_count - 5) // 3
+    assert sorted(selection.partition for selection in sat.selections) == [0, 1, 2]
+
+
+def test_fixed_cover_sat_matches_ilp_for_every_three_block_boundary_profile():
+    logical_pairs = ((0, 1), (1, 2), (0, 2))
+    local_orders = ((0, 1), (1, 0))
+    for transitions in itertools.product(
+        itertools.product(local_orders, local_orders), repeat=3
+    ):
+        alternatives = {
+            partition: [
+                RoutingAlternative(
+                    partition,
+                    logical_pairs[partition],
+                    input_order,
+                    output_order,
+                    partition + 1,
+                )
+            ]
+            for partition, (input_order, output_order) in enumerate(transitions)
+        }
+        arguments = {
+            "gate_predecessors": {0: (), 1: (0,), 2: (0,)},
+            "partitions": [{0}, {1}, {2}],
+            "alternatives": alternatives,
+            "logical_qubit_count": 3,
+            "topology": [(0, 1), (1, 2)],
+            "initial_mapping": (0, 1, 2),
+        }
+        sat = solve_exact_routing_ilp(
+            **arguments, fixed_cover_backend="sat"
+        )
+        ilp = solve_exact_routing_ilp(
+            **arguments, fixed_cover_backend="ilp"
+        )
+
+        assert sat.cnot_count == ilp.cnot_count
+
+
 def test_global_path_ilp_materializes_and_audits_interpartition_swap(
     monkeypatch, tmp_path
 ):
@@ -924,7 +1046,7 @@ def test_two_qubit_nonidentity_transition_is_synthesized_not_swap_wrapped():
     assert synthesized.cnot_count == 2
 
 
-def test_exhaustive_osr_is_default_and_lazy_pricing_is_explicit():
+def test_lazy_osr_is_default_and_matches_explicit_exhaustive_pricing():
     circuit = qgd_Circuit(2)
     circuit.add_CNOT(1, 0)
     common = {
@@ -942,13 +1064,16 @@ def test_exhaustive_osr_is_default_and_lazy_pricing_is_explicit():
     }
 
     exhaustive = route_circuit_exact(
-        circuit, np.empty((0,)), [(0, 1)], common
+        circuit,
+        np.empty((0,)),
+        [(0, 1)],
+        {**common, "exact_routing_lazy_osr": False},
     )
     lazy = route_circuit_exact(
         circuit,
         np.empty((0,)),
         [(0, 1)],
-        {**common, "exact_routing_lazy_osr": True},
+        common,
     )
 
     assert exhaustive.lazy_rounds == 0
@@ -977,6 +1102,7 @@ def test_exhaustive_osr_reuses_identical_partition_synthesis():
             "parallel": 0,
             "verbosity": 0,
             "exact_routing_master": "ilp",
+            "exact_routing_lazy_osr": False,
         },
     )
 
@@ -1338,6 +1464,55 @@ def test_exact_incumbent_guarantees_and_audits_a_feasible_route(
     _verify_exact_osr_routing_replay(event)
 
 
+def test_lazy_pam_osr_route_reaches_auditable_catalog_fixed_point(
+    monkeypatch, tmp_path
+):
+    audit_path = tmp_path / "pam-osr-fixed-point.jsonl"
+    monkeypatch.setenv("SQUANDER_REWRITE_AUDIT_JSONL", str(audit_path))
+    circuit = qgd_Circuit(3)
+    circuit.add_CNOT(0, 2)
+    parameters = np.empty((0,))
+    topology = [(0, 1), (1, 2)]
+
+    result = route_circuit_exact(
+        circuit,
+        parameters,
+        topology,
+        {
+            "max_partition_size": 2,
+            "pam_osr_only": True,
+            "strategy": "TreeSearch",
+            "use_osr": True,
+            "use_graph_search": True,
+            "use_float": True,
+            "parallel": 0,
+            "tolerance": 1e-14,
+            "synthesis_acceptance_tolerance": 1e-10,
+            "routing_synthesis_workers": 2,
+            "exact_routing_pam_swap_cnot_costs": (3.0,),
+        },
+    )
+
+    assert result.timed_out is False
+    assert result.lazy_rounds >= 1
+    assert result.solution.master_backend.endswith("-fixed-point")
+    qgd_Wide_Circuit_Optimization.check_valid_routing(
+        result.circuit, topology
+    )
+    _append_exact_osr_routing_event(
+        "routing",
+        2,
+        circuit,
+        parameters,
+        result.circuit,
+        result.parameters,
+        result,
+        topology,
+        1e-10,
+    )
+    _verify_exact_osr_routing_replay(json.loads(audit_path.read_text()))
+
+
 def test_route_wide_timeout_returns_verified_light_sabre_incumbent():
     circuit = qgd_Circuit(4)
     circuit.add_CNOT(0, 3)
@@ -1562,7 +1737,7 @@ def test_flow_seed_nonfinite_bound_is_not_used_as_proof(monkeypatch):
 def test_routing_synthesis_worker_default_is_memory_bounded(monkeypatch):
     monkeypatch.setattr(routing.mp, "cpu_count", lambda: 128)
 
-    assert routing._routing_synthesis_worker_count({}, 1000) == 16
+    assert routing._routing_synthesis_worker_count({}, 1000) == 4
     assert (
         routing._routing_synthesis_worker_count(
             {"routing_synthesis_workers": 5}, 1000
