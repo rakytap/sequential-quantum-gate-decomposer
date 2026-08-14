@@ -3658,11 +3658,13 @@ class qgd_Wide_Circuit_Optimization:
         config.setdefault("exact_routing_precomputed_pam_seeds", True)
         config.setdefault("exact_routing_pam_layout_passes", 3)
         # Three is the neutral scale for PAM's native entangler-aware score.
-        # The score is an averaged look-ahead distance, not a literal SWAP
-        # count; the returned seed portfolio is ranked by actual CNOTs.
+        # Its averaged look-ahead distance is only a routing surrogate, so use
+        # a small deterministic scale portfolio and retain the route with the
+        # lowest actual CNOT count.  These passes reuse the completed OSR
+        # catalog and perform no additional synthesis.
         config.setdefault(
             "exact_routing_pam_swap_cnot_costs",
-            (3.0,),
+            (1.5, 3.0, 6.0, 12.0),
         )
         config.setdefault(
             "exact_routing_pam_cover_strategies",

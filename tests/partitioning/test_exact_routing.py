@@ -88,7 +88,9 @@ def test_exact_osr_is_the_wide_router_default():
     assert optimizer.config["exact_routing_cover_seed_beam_width"] == 64
     assert optimizer.config["exact_routing_precomputed_pam_seeds"] is True
     assert optimizer.config["exact_routing_pam_layout_passes"] == 3
-    assert optimizer.config["exact_routing_pam_swap_cnot_costs"] == (3.0,)
+    assert optimizer.config["exact_routing_pam_swap_cnot_costs"] == (
+        1.5, 3.0, 6.0, 12.0
+    )
     assert optimizer.config["exact_routing_pam_cover_strategies"] == (
         "kahn", "ilp", "ilp-routing"
     )
