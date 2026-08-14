@@ -7414,14 +7414,15 @@ def solve_exact_routing_benders(
     sat_max_estimated_clauses: int | None = 5_000_000,
     **_unused,
 ) -> ExactRoutingResult:
-    """Solve exact routing by lazy synthesis-column/path-routing separation.
+    """Solve exact routing by partition-cover/path-routing separation.
 
-    The compact master selects one relative placement/permutation column for
-    every exact-cover partition. Gurobi callbacks add dependency-cycle cuts;
-    between persistent master resumes, the staged path oracle prices an integer
-    cover and adds an exact conditional SWAP-cost cut. Thus Gurobi never starts
-    a nested optimization inside its callback, and convergence preserves the
-    same global optimum as the monolithic formulation.
+    The compact master selects only an exact-cover partition set.  Boundary
+    permutations and physical placements belong to the fixed-cover routing
+    oracle, which receives every precomputed synthesis alternative for each
+    selected partition.  Keeping permutation columns in the master both
+    introduced a large class of indistinguishable binaries and, worse, fixed
+    one arbitrary permutation before invoking the oracle.  Conditional
+    recourse-cost cuts preserve the global optimum without that symmetry.
     """
     del gate_qubits
     if max_states is not None:
@@ -7457,7 +7458,6 @@ def solve_exact_routing_benders(
                 "The exact Benders router currently supports path topologies."
             )
     path = tuple(path)
-    path_position = {physical: index for index, physical in enumerate(path)}
 
     gate_indices = sorted(map(int, gate_predecessors))
     if gate_indices != list(range(len(gate_indices))):
@@ -7472,91 +7472,68 @@ def solve_exact_routing_benders(
         for predecessor in map(int, predecessors):
             gate_successors[predecessor].add(int(gate))
 
-    # Physical translations of one relative path transition have identical
-    # synthesis cost. Keep one master column and let the routing oracle choose
-    # its interval, exactly as the staged model does.
-    nodes = []
-    nodes_by_partition = collections.defaultdict(list)
-    node_key = {}
-    for partition, values in sorted(alternatives.items()):
-        grouped = {}
-        for alternative in values:
-            positions_in = tuple(
-                path_position[int(value)] for value in alternative.input_physical
-            )
-            positions_out = tuple(
-                path_position[int(value)] for value in alternative.output_physical
-            )
-            start = min(positions_in)
-            key = (
-                tuple(map(int, alternative.logical_qubits)),
-                tuple(value - start for value in positions_in),
-                tuple(value - start for value in positions_out),
-            )
-            previous = grouped.get(key)
-            if previous is None or (
-                alternative.cnot_count,
-                alternative.single_qubit_count,
-            ) < (
-                previous.cnot_count,
-                previous.single_qubit_count,
-            ):
-                grouped[key] = alternative
-        for key, alternative in sorted(grouped.items()):
-            node = len(nodes)
-            nodes.append(alternative)
-            nodes_by_partition[int(partition)].append(node)
-            node_key[int(partition), key] = node
-    gate_to_nodes = {gate: [] for gate in gate_indices}
-    for node, alternative in enumerate(nodes):
-        for gate in partition_sets[alternative.partition]:
-            gate_to_nodes[gate].append(node)
-    if any(not values for values in gate_to_nodes.values()):
-        raise ValueError("Every gate needs at least one Benders routing column.")
+    master_partitions = tuple(
+        int(partition)
+        for partition, values in sorted(alternatives.items())
+        if values
+    )
+    if any(
+        partition < 0 or partition >= len(partition_sets)
+        for partition in master_partitions
+    ):
+        raise ValueError("A Benders alternative has an invalid partition index.")
+    partition_local_cost = {
+        partition: min(
+            (int(value.cnot_count), int(value.single_qubit_count))
+            for value in alternatives[partition]
+        )
+        for partition in master_partitions
+    }
+    gate_to_partitions = {
+        gate: [
+            partition
+            for partition in master_partitions
+            if gate in partition_sets[partition]
+        ]
+        for gate in gate_indices
+    }
+    if any(not values for values in gate_to_partitions.values()):
+        raise ValueError("Every gate needs at least one Benders partition.")
 
     minimum_transition_cnot_cost = int(minimum_transition_cnot_cost)
     zero_swap_local_cnot_lower_bound = int(
         zero_swap_local_cnot_lower_bound
     )
-    if (
-        minimum_transition_cnot_cost < 0
-        or minimum_transition_cnot_cost % 3
-    ):
+    if minimum_transition_cnot_cost < 0:
         raise ValueError(
-            "The path-transition lower bound must be a nonnegative multiple "
-            "of three CNOTs."
+            "The routing-recourse lower bound must be nonnegative."
         )
     if zero_swap_local_cnot_lower_bound < 0:
         raise ValueError("The zero-SWAP local-cost bound cannot be negative.")
     prob = pulp.LpProblem("ExactRoutingBenders", pulp.LpMinimize)
-    x = pulp.LpVariable.dicts("column", range(len(nodes)), cat="Binary")
-    swap_cost = pulp.LpVariable(
-        "transition_cnot_cost",
+    x = pulp.LpVariable.dicts(
+        "partition", list(master_partitions), cat="Binary"
+    )
+    recourse_cost = pulp.LpVariable(
+        "routing_recourse_cnot_cost",
         lowBound=minimum_transition_cnot_cost,
         cat="Integer",
     )
-    swap_count = pulp.LpVariable(
-        "transition_swap_count",
-        lowBound=minimum_transition_cnot_cost // 3,
-        cat="Integer",
-    )
-    prob += swap_cost == 3 * swap_count
     for gate in gate_indices:
-        prob += pulp.lpSum(x[node] for node in gate_to_nodes[gate]) == 1
+        prob += pulp.lpSum(
+            x[partition] for partition in gate_to_partitions[gate]
+        ) == 1
     max_single = 1 + sum(
-        max(
-            (nodes[node].single_qubit_count for node in values),
-            default=0,
-        )
-        for values in nodes_by_partition.values()
+        partition_local_cost[partition][1]
+        for partition in master_partitions
     )
     local_cnot = pulp.lpSum(
-        alternative.cnot_count * x[node]
-        for node, alternative in enumerate(nodes)
+        partition_local_cost[partition][0] * x[partition]
+        for partition in master_partitions
     )
     local_single = pulp.lpSum(
-        alternative.single_qubit_count * x[node]
-        for node, alternative in enumerate(nodes)
+        partition_local_cost[partition][1] * x[partition]
+        for partition in master_partitions
     )
     if zero_swap_local_cnot_lower_bound:
         # Disjunctive lower envelope: a zero-transition route costs at least Z
@@ -7565,43 +7542,33 @@ def solve_exact_routing_benders(
         # more expensive zero-SWAP routes.
         prob += (
             local_cnot
-            + (zero_swap_local_cnot_lower_bound / 3.0) * swap_cost
+            + zero_swap_local_cnot_lower_bound * recourse_cost
             >= zero_swap_local_cnot_lower_bound
         )
-    prob.setObjective((local_cnot + swap_cost) * max_single + local_single)
+    prob.setObjective((local_cnot + recourse_cost) * max_single + local_single)
 
-    def relative_key(alternative):
-        positions_in = tuple(
-            path_position[int(value)] for value in alternative.input_physical
-        )
-        positions_out = tuple(
-            path_position[int(value)] for value in alternative.output_physical
-        )
-        start = min(positions_in)
-        return (
-            tuple(map(int, alternative.logical_qubits)),
-            tuple(value - start for value in positions_in),
-            tuple(value - start for value in positions_out),
-        )
-
-    warm_nodes = set()
-    warm_swap_cost = 0
+    warm_partitions = set()
+    warm_recourse_cost = 0
     if warm_start is not None:
         for selection in warm_start.selections:
-            key = (selection.partition, relative_key(selection.alternative))
-            if key not in node_key:
-                raise ValueError("A warm-start routing column is unavailable.")
-            warm_nodes.add(node_key[key])
-        warm_swap_cost = 3 * sum(
-            len(swaps) for swaps in (warm_start.transition_swaps or ())
+            partition = int(selection.partition)
+            if partition not in partition_local_cost:
+                raise ValueError("A warm-start routing partition is unavailable.")
+            warm_partitions.add(partition)
+        warm_local_lower_bound = sum(
+            partition_local_cost[partition][0]
+            for partition in warm_partitions
         )
-        for node in range(len(nodes)):
-            x[node].setInitialValue(int(node in warm_nodes))
-        swap_cost.setInitialValue(warm_swap_cost)
-        swap_count.setInitialValue(warm_swap_cost // 3)
-        prob += local_cnot + swap_cost <= (
-            sum(nodes[node].cnot_count for node in warm_nodes)
-            + warm_swap_cost
+        warm_recourse_cost = max(
+            0, int(warm_start.cnot_count) - warm_local_lower_bound
+        )
+        for partition in master_partitions:
+            x[partition].setInitialValue(
+                int(partition in warm_partitions)
+            )
+        recourse_cost.setInitialValue(warm_recourse_cost)
+        prob += local_cnot + recourse_cost <= (
+            int(warm_start.cnot_count)
         )
 
     if (
@@ -7675,51 +7642,24 @@ def solve_exact_routing_benders(
     def solve_selected_subproblem(signature):
         if signature in callback_cache:
             return callback_cache[signature]
-        selected_nodes = tuple(signature)
-        original_partitions = tuple(nodes[node].partition for node in selected_nodes)
+        original_partitions = tuple(map(int, signature))
         reduced_partitions = tuple(
             partition_sets[partition] for partition in original_partitions
         )
         reduced_alternatives = {
-            reduced: (
-                replace(nodes[node], partition=reduced),
+            reduced: tuple(
+                replace(alternative, partition=reduced)
+                for alternative in alternatives[partition]
             )
-            for reduced, node in enumerate(selected_nodes)
+            for reduced, partition in enumerate(original_partitions)
         }
-        # The compact flow oracle does not translate relative path columns on
-        # its own, so explicitly expose every interval only for this selected
-        # cover. This remains tiny compared with the global master.
-        expanded_alternatives = {}
-        for reduced, node in enumerate(selected_nodes):
-            alternative = nodes[node]
-            positions_in = tuple(
-                path_position[physical]
-                for physical in alternative.input_physical
-            )
-            positions_out = tuple(
-                path_position[physical]
-                for physical in alternative.output_physical
-            )
-            base = min(positions_in)
-            input_offsets = tuple(value - base for value in positions_in)
-            output_offsets = tuple(value - base for value in positions_out)
-            width = len(alternative.logical_qubits)
-            expanded_alternatives[reduced] = tuple(
-                replace(
-                    alternative,
-                    partition=reduced,
-                    input_physical=tuple(
-                        path[start + value] for value in input_offsets
-                    ),
-                    output_physical=tuple(
-                        path[start + value] for value in output_offsets
-                    ),
-                )
-                for start in range(logical_qubit_count - width + 1)
-            )
-        selected_local = sum(nodes[node].cnot_count for node in selected_nodes)
+        selected_local = sum(
+            partition_local_cost[partition][0]
+            for partition in original_partitions
+        )
         selected_single = sum(
-            nodes[node].single_qubit_count for node in selected_nodes
+            partition_local_cost[partition][1]
+            for partition in original_partitions
         )
 
         # Zero-SWAP compatibility is exactly the old compact mapping-flow
@@ -7737,11 +7677,12 @@ def solve_exact_routing_benders(
                 if remaining is None
                 else min(float(zero_swap_probe_seconds), remaining)
             )
+        zero_swap_infeasible = False
         try:
             flow_result = _solve_exact_routing_ilp_flow_restricted(
                 gate_predecessors=gate_predecessors,
                 partitions=reduced_partitions,
-                alternatives=expanded_alternatives,
+                alternatives=reduced_alternatives,
                 logical_qubit_count=logical_qubit_count,
                 physical_qubit_count=physical_qubit_count,
                 topology=topology,
@@ -7749,11 +7690,14 @@ def solve_exact_routing_benders(
                 timeout_seconds=probe_seconds,
                 allow_suboptimal=False,
             )
-        except (ExactRoutingLimitExceeded, ValueError):
+        except ExactRoutingLimitExceeded:
             # This is only a fast zero-transition certificate.  A difficult
             # proof must not consume the complete routing budget before the
             # staged oracle has constructed its synthesis-aware incumbent.
             flow_result = None
+        except ValueError:
+            flow_result = None
+            zero_swap_infeasible = True
         if flow_result is not None:
             result = remap_oracle_result(flow_result, original_partitions)
             callback_cache[signature] = (0, result)
@@ -7761,14 +7705,14 @@ def solve_exact_routing_benders(
             return callback_cache[signature]
 
         one_swap_lower_bound = (selected_local + 3, selected_single)
-        if one_swap_lower_bound >= incumbent_cost[0]:
+        if zero_swap_infeasible and one_swap_lower_bound >= incumbent_cost[0]:
             callback_cache[signature] = ("pruned", None)
             return callback_cache[signature]
 
         # First reject the zero-cost master incumbent with the universally
         # valid one-SWAP lower bound.  This lets the master eliminate many
         # covers before paying for the complete staged routing oracle.
-        if signature not in callback_lower_bounds:
+        if zero_swap_infeasible and signature not in callback_lower_bounds:
             callback_lower_bounds[signature] = 3
             return 3, None
 
@@ -7815,8 +7759,8 @@ def solve_exact_routing_benders(
         )
         result = remap_oracle_result(reduced_result, original_partitions)
         transition_cost = result.cnot_count - selected_local
-        if transition_cost < 0 or transition_cost % 3:
-            raise AssertionError("Routing oracle returned an invalid SWAP cost.")
+        if transition_cost < 0:
+            raise AssertionError("Routing oracle violated its local lower bound.")
         record_incumbent(result)
         if result.optimal:
             callback_cache[signature] = (transition_cost, result)
@@ -7849,29 +7793,31 @@ def solve_exact_routing_benders(
             if remaining is not None and remaining <= 0:
                 model.terminate()
                 return
-            model_x = [
-                model.getVarByName(x[node].name) for node in range(len(nodes))
-            ]
-            values = model.cbGetSolution(model_x)
-            signature = tuple(
-                node for node, value in enumerate(values) if int(round(value))
+            model_x = {
+                partition: model.getVarByName(x[partition].name)
+                for partition in master_partitions
+            }
+            values = model.cbGetSolution(
+                [model_x[partition] for partition in master_partitions]
             )
-            selected_partitions = {nodes[node].partition for node in signature}
+            signature = tuple(
+                partition
+                for partition, value in zip(master_partitions, values)
+                if int(round(value))
+            )
+            selected_partitions = set(signature)
             bad_sccs = sol_to_badsccs(
                 gate_successors, partition_sets, selected_partitions
             )
             if bad_sccs:
                 for scc in bad_sccs:
-                    scc_nodes = tuple(
-                        node
-                        for partition in scc
-                        for node in nodes_by_partition[partition]
-                    )
-                    cut_signature = tuple(sorted(scc_nodes))
+                    cut_signature = tuple(sorted(map(int, scc)))
                     if cut_signature in callback_cycle_cuts:
                         continue
                     model.cbLazy(
-                        gp.quicksum(model_x[node] for node in scc_nodes)
+                        gp.quicksum(
+                            model_x[partition] for partition in cut_signature
+                        )
                         <= len(scc) - 1
                     )
                     callback_cycle_cuts.add(cut_signature)
@@ -7944,8 +7890,11 @@ def solve_exact_routing_benders(
     if callback_failure[0] is not None:
         raise callback_failure[0]
     model = prob.solverModel
-    model_x = [model.getVarByName(x[node].name) for node in range(len(nodes))]
-    model_swap_cost = model.getVarByName(swap_cost.name)
+    model_x = {
+        partition: model.getVarByName(x[partition].name)
+        for partition in master_partitions
+    }
+    model_recourse_cost = model.getVarByName(recourse_cost.name)
     permanent_cycle_cuts = set()
 
     def resume_master():
@@ -7998,26 +7947,25 @@ def solve_exact_routing_benders(
             )
 
         signature = tuple(
-            node for node, variable in enumerate(model_x) if variable.X > 0.5
+            partition
+            for partition, variable in model_x.items()
+            if variable.X > 0.5
         )
-        selected_partitions = {nodes[node].partition for node in signature}
+        selected_partitions = set(signature)
         bad_sccs = sol_to_badsccs(
             gate_successors, partition_sets, selected_partitions
         )
         if bad_sccs:
             for scc in bad_sccs:
-                scc_nodes = tuple(
-                    node
-                    for partition in scc
-                    for node in nodes_by_partition[partition]
-                )
-                cut_signature = tuple(sorted(scc_nodes))
+                cut_signature = tuple(sorted(map(int, scc)))
                 if cut_signature in permanent_cycle_cuts:
                     raise AssertionError(
                         "A permanent Benders cycle cut was not enforced."
                     )
                 model.addConstr(
-                    gp.quicksum(model_x[node] for node in scc_nodes)
+                    gp.quicksum(
+                        model_x[partition] for partition in cut_signature
+                    )
                     <= len(scc) - 1
                 )
                 permanent_cycle_cuts.add(cut_signature)
@@ -8045,12 +7993,14 @@ def solve_exact_routing_benders(
                 )
             raise
 
-        indicator = gp.quicksum(model_x[node] for node in signature)
+        indicator = gp.quicksum(
+            model_x[partition] for partition in signature
+        )
         if transition_cost == "pruned":
             model.addConstr(indicator <= len(signature) - 1)
-        elif model_swap_cost.X + 0.5 < transition_cost:
+        elif model_recourse_cost.X + 0.5 < transition_cost:
             model.addConstr(
-                model_swap_cost
+                model_recourse_cost
                 >= transition_cost * (indicator - len(signature) + 1)
             )
         else:

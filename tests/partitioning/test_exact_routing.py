@@ -506,6 +506,71 @@ def test_benders_zero_swap_probe_timeout_preserves_staged_incumbent(monkeypatch)
     assert result.cnot_count < warm_start.cnot_count
 
 
+def test_benders_oracle_receives_every_permutation_for_selected_partition(
+    monkeypatch,
+):
+    try:
+        from squander.partitioning.ilp import _check_gurobi_available
+
+        _check_gurobi_available()
+    except Exception as exc:
+        pytest.skip(f"Gurobi is unavailable: {exc}")
+
+    cheap = RoutingAlternative(0, (0, 1), (0, 1), (0, 1), 0)
+    compatible = RoutingAlternative(0, (0, 1), (1, 2), (1, 2), 1)
+    warm_start = ExactRoutingResult(
+        selections=(RoutingSelection(0, cheap),),
+        cnot_count=3,
+        single_qubit_count=0,
+        initial_mapping=(0, 1, 2),
+        final_mapping=(0, 1, 2),
+        explored_states=0,
+        master_backend="test-warm-start",
+        optimal=False,
+        transition_swaps=(((0, 1),),),
+    )
+    observed = []
+
+    def timeout_zero_swap_probe(*args, **kwargs):
+        raise routing.ExactRoutingLimitExceeded("force staged oracle")
+
+    def inspect_staged_oracle(*, alternatives, **kwargs):
+        observed.append(tuple(alternatives[0]))
+        chosen = alternatives[0][1]
+        return ExactRoutingResult(
+            selections=(RoutingSelection(0, chosen),),
+            cnot_count=1,
+            single_qubit_count=0,
+            initial_mapping=(0, 1, 2),
+            final_mapping=(0, 1, 2),
+            explored_states=0,
+            master_backend="test-oracle",
+            optimal=True,
+            transition_swaps=((),),
+        )
+
+    monkeypatch.setattr(
+        routing,
+        "_solve_exact_routing_ilp_flow_restricted",
+        timeout_zero_swap_probe,
+    )
+    monkeypatch.setattr(routing, "solve_exact_routing_ilp", inspect_staged_oracle)
+
+    result = routing.solve_exact_routing_benders(
+        gate_predecessors={0: ()},
+        partitions=[{0}],
+        alternatives={0: (cheap, compatible)},
+        logical_qubit_count=3,
+        topology=[(0, 1), (1, 2)],
+        timeout_seconds=20,
+        allow_suboptimal=True,
+        warm_start=warm_start,
+    )
+
+    assert observed == [(cheap, compatible)]
+    assert result.cnot_count == 1
+
+
 def test_local_cover_seed_prefers_synthesized_multi_gate_column():
     try:
         from squander.partitioning.ilp import _check_gurobi_available
