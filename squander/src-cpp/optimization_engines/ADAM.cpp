@@ -116,7 +116,7 @@ void Optimization_Interface::solve_layer_optimization_problem_ADAM( int num_of_p
             iteration_threshold_of_randomization_loc = 2500000;
         }
         
-        long long export_circuit_2_binary_loc;
+        bool export_circuit_2_binary_loc = false;
         if ( config.count("export_circuit_2_binary_adam") > 0 ) {
              config["export_circuit_2_binary_adam"].get_property( export_circuit_2_binary_loc );  
         }
@@ -124,7 +124,7 @@ void Optimization_Interface::solve_layer_optimization_problem_ADAM( int num_of_p
              config["export_circuit_2_binary"].get_property( export_circuit_2_binary_loc );  
         }
         else {
-            export_circuit_2_binary_loc = 0;
+            export_circuit_2_binary_loc = false;
         }            
         
         
@@ -140,19 +140,12 @@ void Optimization_Interface::solve_layer_optimization_problem_ADAM( int num_of_p
         }       
  
 
-        bool adaptive_eta_loc;
+        bool adaptive_eta_loc = adaptive_eta;
         if ( config.count("adaptive_eta_adam") > 0 ) {
-             long long tmp;
-             config["adaptive_eta_adam"].get_property( tmp );  
-             adaptive_eta_loc = (bool)tmp;
+             config["adaptive_eta_adam"].get_property( adaptive_eta_loc );
         }
-        if ( config.count("adaptive_eta") > 0 ) {
-             long long tmp;
-             config["adaptive_eta"].get_property( tmp );  
-             adaptive_eta_loc = (bool)tmp;
-        }
-        else {
-            adaptive_eta_loc = adaptive_eta;
+        else if ( config.count("adaptive_eta") > 0 ) {
+             config["adaptive_eta"].get_property( adaptive_eta_loc );
         }
 
 
@@ -245,7 +238,7 @@ void Optimization_Interface::solve_layer_optimization_problem_ADAM( int num_of_p
                     sstream << "ADAM: processed iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "%, current minimum:" << current_minimum <<", sub_iter_idx:" << sub_iter_idx <<std::endl;
                     print(sstream, 1);   
                 }
-                if ( export_circuit_2_binary_loc > 0 ) {
+                if ( export_circuit_2_binary_loc ) {
                     std::string filename("initial_circuit_iteration.binary");
                     if (project_name != "") { 
                         filename=project_name+ "_"  +filename;
@@ -337,5 +330,3 @@ void Optimization_Interface::solve_layer_optimization_problem_ADAM( int num_of_p
         print(sstream, 1); 
 
 }
-
-

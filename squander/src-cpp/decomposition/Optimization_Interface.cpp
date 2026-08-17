@@ -110,8 +110,9 @@ Optimization_Interface::Optimization_Interface( const Optimization_Interface& ot
     correction1_scale = other.correction1_scale;
     correction2_scale = other.correction2_scale;
     use_cuts = other.use_cuts;
-    osr_rank = other.osr_rank;
-    use_softmax = other.use_softmax;
+    osr_rank_profiles = other.osr_rank_profiles;
+    osr_profile_temperature = other.osr_profile_temperature;
+    osr_cut_smoothmax_temperature = other.osr_cut_smoothmax_temperature;
     number_of_iters.store(other.number_of_iters.load(std::memory_order_relaxed), std::memory_order_relaxed);
     adaptive_eta = other.adaptive_eta;
     radius = other.radius;
@@ -307,8 +308,9 @@ Optimization_Interface& Optimization_Interface::operator=( const Optimization_In
     correction1_scale = other.correction1_scale;
     correction2_scale = other.correction2_scale;
     use_cuts = other.use_cuts;
-    osr_rank = other.osr_rank;
-    use_softmax = other.use_softmax;
+    osr_rank_profiles = other.osr_rank_profiles;
+    osr_profile_temperature = other.osr_profile_temperature;
+    osr_cut_smoothmax_temperature = other.osr_cut_smoothmax_temperature;
     number_of_iters.store(other.number_of_iters.load(std::memory_order_relaxed), std::memory_order_relaxed);
     adaptive_eta = other.adaptive_eta;
     radius = other.radius;
@@ -468,7 +470,7 @@ Optimization_Interface::calc_decomposition_error(Matrix& decomposed_matrix ) {
         decomposition_error = get_infidelity(decomposed_matrix);
         break;
     case OSR_ENTANGLEMENT:
-        decomposition_error = get_osr_entanglement_test(decomposed_matrix, use_cuts, osr_rank, use_softmax);
+        decomposition_error = get_osr_entanglement_test(decomposed_matrix, use_cuts, osr_rank_profiles, osr_profile_temperature, osr_cut_smoothmax_temperature);
         break;
     default: {
         std::string err("Optimization_Interface::optimization_problem: Cost function variant not implmented.");
@@ -726,7 +728,7 @@ double Optimization_Interface::calculate_cost_function( Matrix& matrix_new, Matr
         }
         return get_infidelity(matrix_new);
     case OSR_ENTANGLEMENT:
-        return get_osr_entanglement_test(matrix_new, use_cuts, osr_rank, use_softmax);
+        return get_osr_entanglement_test(matrix_new, use_cuts, osr_rank_profiles, osr_profile_temperature, osr_cut_smoothmax_temperature);
     default: {
         std::string err("Optimization_Interface::optimization_problem: Cost function variant not implmented.");
         throw err;
@@ -769,7 +771,7 @@ double Optimization_Interface::calculate_cost_function( Matrix_float& matrix_new
     case SUM_OF_SQUARES:
     case OSR_ENTANGLEMENT: {
         if (cost_fnc == OSR_ENTANGLEMENT) {
-            return get_osr_entanglement_test(matrix_new, use_cuts, osr_rank, use_softmax);
+            return get_osr_entanglement_test(matrix_new, use_cuts, osr_rank_profiles, osr_profile_temperature, osr_cut_smoothmax_temperature);
         }
         Matrix matrix_new64 = matrix_new.to_float64();
         return calculate_cost_function(matrix_new64, NULL); }
@@ -1162,12 +1164,10 @@ void Optimization_Interface::optimization_problem_combined_non_static( Matrix_re
     int qbit_num = instance->get_qbit_num();
     int trace_offset_loc = instance->get_trace_offset();
 
-    // Gradient-driven optimization is sensitive to low-precision objective
-    // values.  Leave this float32 combined path in place as experimental code,
-    // but force production optimizer cost/gradient evaluation through the
-    // double precision branch below.
-    const bool use_float_combined_cost_path = false;
-    if ( use_float_combined_cost_path && instance->get_use_float() ) {
+    // Dispatch the combined cost/gradient calculation at the configured
+    // precision. Hilbert-Schmidt refinement constructs a separate float64
+    // optimizer, while OSR may deliberately use this float32 fast path.
+    if ( instance->get_use_float() ) {
         static tbb::enumerable_thread_specific<Matrix_real_float> parameters_float_tls;
         Matrix_real_float& parameters_float = parameters_float_tls.local();
         parameters.copy_to(parameters_float);
@@ -1178,17 +1178,21 @@ void Optimization_Interface::optimization_problem_combined_non_static( Matrix_re
         Matrix_float& matrix_new = combined_result[0];
 
         Matrix_float trace_tmp(1,3);
-        *f0 = instance->calculate_cost_function(matrix_new, &trace_tmp);
-
         Matrix Upartial;
         Matrix_float Upartial_float;
         Matrix matrix_new64;
+        if (cost_fnc == OSR_ENTANGLEMENT) {
+            Upartial_float = get_osr_entanglement_test_and_deriv(
+                matrix_new, use_cuts, osr_rank_profiles, *f0,
+                osr_profile_temperature, osr_cut_smoothmax_temperature
+            );
+        }
+        else {
+            *f0 = instance->calculate_cost_function(matrix_new, &trace_tmp);
+        }
         if (cost_fnc == SUM_OF_SQUARES) {
             matrix_new64 = matrix_new.to_float64();
             Upartial = get_deriv_sum_of_squares(matrix_new64);
-        }
-        else if (cost_fnc == OSR_ENTANGLEMENT) {
-            Upartial_float = get_deriv_osr_entanglement(matrix_new, use_cuts, osr_rank, use_softmax);
         }
 
         auto calculate_gradient_component = [&](int idx) {
@@ -1384,13 +1388,18 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();////////////////////////////////
     instance->apply_to_combined( parameters, Umtx_loc, parallel, combined_result );
     Matrix& matrix_new = combined_result[0];
 
-    *f0 = instance->calculate_cost_function(matrix_new, &trace_tmp);
-
     Matrix Upartial;
+    if (cost_fnc == OSR_ENTANGLEMENT) {
+        Upartial = get_osr_entanglement_test_and_deriv(
+            matrix_new, use_cuts, osr_rank_profiles, *f0,
+            osr_profile_temperature, osr_cut_smoothmax_temperature
+        );
+    }
+    else {
+        *f0 = instance->calculate_cost_function(matrix_new, &trace_tmp);
+    }
     if (cost_fnc == SUM_OF_SQUARES) {
         Upartial = get_deriv_sum_of_squares(matrix_new);
-    } else if (cost_fnc == OSR_ENTANGLEMENT) {
-        Upartial = get_deriv_osr_entanglement(matrix_new, use_cuts, osr_rank, use_softmax);
     }
 
 
@@ -1437,7 +1446,7 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();////////////////////////////////
                 auto paramcopy = parameters.copy();
                 paramcopy[idx] += 1e-10;
                 instance->apply_to( paramcopy, matrix_new );
-                double f1 = instance->get_cost_function_variant() == SUM_OF_SQUARES ? get_cost_function_sum_of_squares(matrix_new) : get_osr_entanglement_test(matrix_new, use_cuts, osr_rank, use_softmax);
+                double f1 = instance->get_cost_function_variant() == SUM_OF_SQUARES ? get_cost_function_sum_of_squares(matrix_new) : get_osr_entanglement_test(matrix_new, use_cuts, osr_rank_profiles, osr_profile_temperature, osr_cut_smoothmax_temperature);
                 double check = (f1 - *f0) / 1e-10;
                 //printf("%d: %g %g\n", idx, grad_comp, check);
                 grad_comp = check;
@@ -1836,13 +1845,14 @@ Optimization_Interface::get_accelerator_num() {
 
 }
 
-
-void Optimization_Interface::set_osr_params( std::vector<std::vector<int>> use_cuts_in, int osr_rank_in, bool use_softmax_in )
+void Optimization_Interface::set_osr_params(
+    std::vector<std::vector<int>> use_cuts_in,
+    std::vector<std::vector<int>> rank_profiles_in,
+    double profile_temperature_in,
+    double cut_smoothmax_temperature_in)
 {
-    use_cuts = use_cuts_in;
-    osr_rank = osr_rank_in;
-    use_softmax = use_softmax_in;
-    //std::stringstream sstream;
-    //sstream << "Optimization_Interface::set_osr_params: OSR entanglement test parameters set. osr_rank: " << osr_rank << ", use_softmax: " << use_softmax << std::endl;
-    //print(sstream, 2);
+    use_cuts = std::move(use_cuts_in);
+    osr_rank_profiles = std::move(rank_profiles_in);
+    osr_profile_temperature = profile_temperature_in;
+    osr_cut_smoothmax_temperature = cut_smoothmax_temperature_in;
 }

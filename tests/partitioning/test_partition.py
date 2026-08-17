@@ -5,12 +5,106 @@ from squander import utils
 
 from squander.partitioning.partition import PartitionCircuitQasm
 from squander.partitioning.kahn import kahn_partition
+from squander.partitioning.ilp import get_all_partitions, routing_partition_weights
 from squander.partitioning.tools import get_qubits
 
 
 """
 CORRECTNESS TESTS
 """
+
+
+def test_AllPartitionsMatchesExhaustiveConvexContractedSubgraphs():
+    """The optimized enumerator must not lose cores when it contracts 1q chains."""
+    circuit = Circuit(4)
+    circuit.add_CNOT(0, 1)
+    circuit.add_U3(1)
+    circuit.add_U3(1)
+    circuit.add_CNOT(1, 2)
+    circuit.add_U3(2)
+    circuit.add_CNOT(2, 3)
+    circuit.add_CNOT(0, 2)
+
+    enumerated, graph, _, _, chains, gate_qubits, _ = get_all_partitions(
+        circuit, 3
+    )
+    nodes = tuple(graph)
+
+    def descendants(start):
+        reached = set()
+        pending = list(graph[start])
+        while pending:
+            gate = pending.pop()
+            if gate not in reached:
+                reached.add(gate)
+                pending.extend(graph[gate] - reached)
+        return reached
+
+    reach = {gate: descendants(gate) for gate in nodes}
+    exhaustive = set()
+    for mask in range(1, 1 << len(nodes)):
+        part = frozenset(
+            gate for index, gate in enumerate(nodes) if mask & (1 << index)
+        )
+        qubits = set().union(*(gate_qubits[gate] for gate in part))
+        if len(qubits) > 3:
+            continue
+        convex = True
+        for left in part:
+            for right in part & reach[left]:
+                between = reach[left] & {
+                    gate
+                    for gate in nodes
+                    if gate == right or right in reach[gate]
+                }
+                if not between <= part:
+                    convex = False
+                    break
+            if not convex:
+                break
+        if convex:
+            exhaustive.add(part)
+
+    assert set(enumerated) == exhaustive
+    assert chains == {(1, 2), (4,)}
+
+
+def test_RoutingWeightsPreferBalancedEntanglerDepth():
+    """Equal-count covers should avoid one unnecessarily deep routing block."""
+    allparts = [
+        frozenset({0}),
+        frozenset({1, 2, 3}),
+        frozenset({0, 1}),
+        frozenset({2, 3}),
+    ]
+    dependencies = {0: {1}, 1: {2}, 2: {3}, 3: set()}
+    gate_to_qubit = {gate: {0, 1} for gate in dependencies}
+    weights = routing_partition_weights(
+        allparts, dependencies, gate_to_qubit
+    )
+
+    unbalanced_cover = weights[0] + weights[1]
+    balanced_cover = weights[2] + weights[3]
+    assert balanced_cover < unbalanced_cover
+
+
+def test_RoutingWeightsPreferCompactGateSpans():
+    """Equal-count covers should avoid interleaving distant circuit regions."""
+    allparts = [
+        frozenset({0, 2}),
+        frozenset({1, 3}),
+        frozenset({0, 1}),
+        frozenset({2, 3}),
+    ]
+    dependencies = {gate: set() for gate in range(4)}
+    gate_to_qubit = {gate: {0, 1} for gate in dependencies}
+    weights = routing_partition_weights(
+        allparts, dependencies, gate_to_qubit
+    )
+
+    interleaved_cover = weights[0] + weights[1]
+    compact_cover = weights[2] + weights[3]
+    assert compact_cover < interleaved_cover
 
 
 @pytest.mark.parametrize("max_qubits", [3, 4, 5])

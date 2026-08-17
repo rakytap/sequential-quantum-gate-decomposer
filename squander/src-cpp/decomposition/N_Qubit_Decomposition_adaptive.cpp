@@ -324,16 +324,16 @@ void N_Qubit_Decomposition_adaptive::get_initial_circuit() {
     }
 
 
-    long long export_circuit_2_binary_loc;
+    bool export_circuit_2_binary_loc = false;
     if ( config.count("export_circuit_2_binary") > 0 ) {
         config["export_circuit_2_binary"].get_property( export_circuit_2_binary_loc );  
     }
     else {
-        export_circuit_2_binary_loc = 0;
+        export_circuit_2_binary_loc = false;
     }     
         
         
-    if ( export_circuit_2_binary_loc > 0 ) {
+    if ( export_circuit_2_binary_loc ) {
         std::string filename("circuit_squander.binary");
         if (project_name != "") {
             filename = project_name+ "_" +filename;
@@ -415,12 +415,12 @@ void N_Qubit_Decomposition_adaptive::compress_circuit() {
     int iter = 0;
     int uncompressed_iter_num = 0;
     
-    long long export_circuit_2_binary_loc;
+    bool export_circuit_2_binary_loc = false;
     if ( config.count("export_circuit_2_binary") > 0 ) {
         config["export_circuit_2_binary"].get_property( export_circuit_2_binary_loc );  
     }
     else {
-        export_circuit_2_binary_loc = 0;
+        export_circuit_2_binary_loc = false;
     }      
     
     
@@ -447,7 +447,7 @@ void N_Qubit_Decomposition_adaptive::compress_circuit() {
             
 
 
-            if ( export_circuit_2_binary_loc > 0 ) {
+            if ( export_circuit_2_binary_loc ) {
                 std::string filename("circuit_compression.binary");
                 if (project_name != "") { 
                     filename=project_name+ "_"  +filename;
@@ -619,16 +619,16 @@ void N_Qubit_Decomposition_adaptive::finalize_circuit() {
    
 
 
-    long long export_circuit_2_binary_loc;
+    bool export_circuit_2_binary_loc = false;
     if ( config.count("export_circuit_2_binary") > 0 ) {
         config["export_circuit_2_binary"].get_property( export_circuit_2_binary_loc );  
     }
     else {
-        export_circuit_2_binary_loc = 0;
+        export_circuit_2_binary_loc = false;
     }       
     	
     	
-    if ( export_circuit_2_binary_loc > 0 ) {
+    if ( export_circuit_2_binary_loc ) {
         std::string filename2("circuit_final.binary");
 
         if (project_name != "") {

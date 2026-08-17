@@ -73,9 +73,6 @@ void Optimization_Interface::solve_layer_optimization_problem_BFGS2( int num_of_
         }
 
 
-        double current_minimum_hold = current_minimum;
-
-
 
 
 
@@ -99,7 +96,7 @@ CPU_time = 0.0;
         }
 
 
-        long long export_circuit_2_binary_loc;
+        bool export_circuit_2_binary_loc = false;
         if ( config.count("export_circuit_2_binary_bfgs2") > 0 ) {
              config["export_circuit_2_binary_bfgs2"].get_property( export_circuit_2_binary_loc );  
         }
@@ -107,7 +104,7 @@ CPU_time = 0.0;
              config["export_circuit_2_binary"].get_property( export_circuit_2_binary_loc );  
         }
         else {
-            export_circuit_2_binary_loc = 0;
+            export_circuit_2_binary_loc = false;
         }    
         
 
@@ -146,18 +143,20 @@ CPU_time = 0.0;
         sstream << "max_inner_iterations: " << max_inner_iterations_loc  << std::endl;
         print(sstream, 2);
 
-        long long use_basin_hopping = 0;
-        long long use_de = 0;
-        long long use_dual_annealing = 0;
+        bool use_basin_hopping = false;
+        bool use_de = false;
+        bool use_dual_annealing = false;
         if ( config.count("use_basin_hopping") > 0 ) {
             config["use_basin_hopping"].get_property( use_basin_hopping );  
-        } else if ( config.count("use_differential_evolution") > 0 ) {
+        }
+        if ( config.count("use_differential_evolution") > 0 ) {
             config["use_differential_evolution"].get_property( use_de );  
-        } else if ( config.count("use_dual_annealing") > 0 ) {
+        }
+        if ( config.count("use_dual_annealing") > 0 ) {
             config["use_dual_annealing"].get_property( use_dual_annealing );  
         }
         if (!use_basin_hopping && !use_de && !use_dual_annealing) {
-            use_dual_annealing = 1; //use_basin_hopping = 1;
+            use_dual_annealing = true; //use_basin_hopping = true;
         } 
 
         if (use_basin_hopping) {
@@ -167,40 +166,63 @@ CPU_time = 0.0;
             long long bh_interval = 50;                // how often to adapt stepsize
             double bh_target_accept = 0.5;
             double bh_stepwise_factor = 0.9;
+            long long bh_niter_success = iteration_loops_max + 2;
             // Allow overrides via config (all optional)
             if (config.count("bh_T") > 0)                             config["bh_T"].get_property(bh_T);
             if (config.count("bh_stepsize") > 0)                      config["bh_stepsize"].get_property(bh_stepsize);
             if (config.count("bh_interval") > 0) { long long v; config["bh_interval"].get_property(v); bh_interval = std::max<long long>(1, v); }
             if (config.count("bh_target_accept_rate") > 0)            config["bh_target_accept_rate"].get_property(bh_target_accept);
             if (config.count("bh_stepwise_factor") > 0)               config["bh_stepwise_factor"].get_property(bh_stepwise_factor);
+            if (config.count("bh_niter_success") > 0)                 config["bh_niter_success"].get_property(bh_niter_success);
 
             // Clamp a couple of parameters to SciPy’s expected ranges
             bh_target_accept = std::min(0.999, std::max(0.001, bh_target_accept));
             if (!(bh_stepwise_factor > 0.0 && bh_stepwise_factor < 1.0)) bh_stepwise_factor = 0.9;
+            bh_niter_success = std::max<long long>(0, bh_niter_success);
 
             // ---------------- Basin-hopping driver ----------------
-            long long accept_count_window = 0;
-            long long window_len = 0;
+            long long accepted_steps = 0;
+            long long attempted_steps = 0;
             long long no_improve_count = 0;
             double stepsize_now = bh_stepsize;            // adaptive stepsize (SciPy-style)
 
             BFGS_Powell cBFGS_Powell(optimization_problem_combined, this);
-            double f_trial = cBFGS_Powell.Start_Optimization(solution_guess, max_inner_iterations);
+            double f_trial = cBFGS_Powell.Start_Optimization(solution_guess, max_inner_iterations_loc);
             if (f_trial < current_minimum) {
                 current_minimum = f_trial;
                 memcpy(optimized_parameters_mtx.get_data(), solution_guess.get_data(), num_of_parameters*sizeof(double));
-            }        
+            }
             Matrix_real x_current = solution_guess.copy();   // current basin representative
+            double current_minimum_hold = f_trial;
 
+            // The initial local solve may already satisfy the objective. Avoid
+            // an unnecessary perturbation and second BFGS solve in that case.
+            for (long long iter_idx=0;
+                 iter_idx<iteration_loops_max
+                     && current_minimum >= optimization_tolerance_loc;
+                 iter_idx++) {
 
-            for (long long iter_idx=0; iter_idx<iteration_loops_max; iter_idx++) {
+                // Match SciPy's AdaptiveStepsize ordering: update before the
+                // next proposal using the cumulative acceptance history.
+                ++attempted_steps;
+                if (bh_interval > 0
+                    && attempted_steps % bh_interval == 0) {
+                    const double accept_rate =
+                        static_cast<double>(accepted_steps)
+                        / static_cast<double>(attempted_steps);
+                    if (accept_rate > bh_target_accept) {
+                        stepsize_now /= bh_stepwise_factor;
+                    } else {
+                        stepsize_now *= bh_stepwise_factor;
+                    }
+                }
 
                 for (int j = 0; j < num_of_parameters; ++j) {
                     double delta = (distrib_real(gen) * 2.0 - 1.0) * stepsize_now * M_PI;
                     solution_guess[j] = fmod(solution_guess[j] + delta, 2.0 * M_PI);
                 }
             
-                f_trial = cBFGS_Powell.Start_Optimization(solution_guess, max_inner_iterations);
+                f_trial = cBFGS_Powell.Start_Optimization(solution_guess, max_inner_iterations_loc);
 
                 // --- Metropolis acceptance (always accept downhill; uphill with prob exp(-(f_new - f_old)/T))
                 bool accept = false;
@@ -216,7 +238,7 @@ CPU_time = 0.0;
                     // move to new basin
                     memcpy(x_current.get_data(), solution_guess.get_data(), num_of_parameters*sizeof(double));
                     current_minimum_hold = f_trial;
-                    ++accept_count_window;
+                    ++accepted_steps;
                 } else {
                     memcpy(solution_guess.get_data(), x_current.get_data(), num_of_parameters*sizeof(double));
                 }
@@ -231,13 +253,12 @@ CPU_time = 0.0;
                 } else {
                     ++no_improve_count;
                 }
-
                 if ( iter_idx % 5000 == 0 ) {
                         std::stringstream sstream;
                         sstream << "BFGS2: processed iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "%, current minimum:" << current_minimum << std::endl;
                         print(sstream, 2);  
 
-                        if ( export_circuit_2_binary_loc>0) {
+                        if ( export_circuit_2_binary_loc ) {
                             std::string filename("initial_circuit_iteration.binary");
                             if (project_name != "") { 
                                 filename=project_name+ "_"  +filename;
@@ -258,25 +279,9 @@ CPU_time = 0.0;
                 if (current_minimum < optimization_tolerance_loc ) {
                     break;
                 }
-                if (no_improve_count >= random_shift_count_max) {
+                if (no_improve_count > bh_niter_success) {
                     break;  // SciPy's niter_success criterion
                 }
-
-                // --- Adaptive stepsize every 'interval' iterations (SciPy behavior)
-                ++window_len;
-                if (bh_interval > 0 && (window_len % bh_interval) == 0) {
-                    double accept_rate = (double)accept_count_window / (double)bh_interval;
-                    // If acceptance is high, enlarge steps; else shrink steps.
-                    if (accept_rate > bh_target_accept) {
-                        stepsize_now /= bh_stepwise_factor;   // increase (since factor<1)
-                    } else {
-                        stepsize_now *= bh_stepwise_factor;   // decrease
-                    }
-                    // reset window counters
-                    accept_count_window = 0;
-                    window_len = 0;
-                }
-
 
             }
         } else if (use_de) {
@@ -290,7 +295,7 @@ CPU_time = 0.0;
             double de_recombination = 0.7;     // CR
             double de_tol = 1e-6;
             long long de_init = INIT_RANDOM;    // or INIT_LHS
-            long long de_polish = 1;           // run BFGS after DE?
+            bool de_polish = true;             // run BFGS after DE?
 
 
             if (config.count("de_strategy") > 0)                 config["de_strategy"].get_property(de_strategy);
@@ -299,7 +304,7 @@ CPU_time = 0.0;
             if (config.count("de_recombination") > 0)            config["de_recombination"].get_property(de_recombination);
             if (config.count("de_tol") > 0)                      config["de_tol"].get_property(de_tol);
             if (config.count("de_init") > 0)                     config["de_init"].get_property(de_init);
-            if (config.count("de_polish") > 0) { long long v;    config["de_polish"].get_property(v); de_polish = v ? 1 : 0; }
+            if (config.count("de_polish") > 0)                    config["de_polish"].get_property(de_polish);
 
             // Sanity + derived
             if (de_mutation <= 0.0) de_mutation = 0.8;
@@ -430,7 +435,7 @@ CPU_time = 0.0;
                             << ", best=" << current_minimum << std::endl;
                     print(sstream, 2);
 
-                    if (export_circuit_2_binary_loc > 0) {
+                    if (export_circuit_2_binary_loc) {
                         std::string filename("initial_circuit_iteration.binary");
                         if (project_name != "") filename = project_name + "_" + filename;
                         export_gate_list_to_binary(optimized_parameters_mtx, this, filename, verbose);
@@ -482,7 +487,7 @@ CPU_time = 0.0;
             long long da_maxiter         = iteration_loops_max; // max temperature steps
             long long da_maxfun          = 10000000; // max function evaluations
             double da_tol                = 1e-6;     // required improvement threshold
-            long long da_no_local_search = 0;        // 0 => do local search (polish), 1 => skip
+            bool da_no_local_search = false;         // false => do local search (polish), true => skip
             if (config.count("da_initial_temp") > 0)        config["da_initial_temp"].get_property(da_initial_temp);
             if (config.count("da_restart_temp_ratio") > 0)  config["da_restart_temp_ratio"].get_property(da_restart_temp_ratio);
             if (config.count("da_visit") > 0)               config["da_visit"].get_property(da_visit);
@@ -496,10 +501,8 @@ CPU_time = 0.0;
                 da_maxfun = std::max<long long>(1, v);
             }
             if (config.count("da_tol") > 0)                 config["da_tol"].get_property(da_tol);
-            if (config.count("da_no_local_search") > 0) {
-                long long v; config["da_no_local_search"].get_property(v);
-                da_no_local_search = v ? 1 : 0;
-            }
+            if (config.count("da_no_local_search") > 0)
+                config["da_no_local_search"].get_property(da_no_local_search);
 
             // Sanity
             if (da_initial_temp <= 0.0) da_initial_temp = 5230.0;
@@ -595,7 +598,7 @@ CPU_time = 0.0;
                             << ", T=" << Tk << std::endl;
                     print(sstream, 2);
 
-                    if (export_circuit_2_binary_loc > 0) {
+                    if (export_circuit_2_binary_loc) {
                         std::string filename("initial_circuit_iteration.binary");
                         if (project_name != "") filename = project_name + "_" + filename;
                         export_gate_list_to_binary(optimized_parameters_mtx, this, filename, verbose);
@@ -631,7 +634,7 @@ CPU_time = 0.0;
 
                 BFGS_Powell cBFGS_Powell(optimization_problem_combined, this);
                 // You can tune max_inner_iterations here if you want
-                double f_pol = cBFGS_Powell.Start_Optimization(x_best, max_inner_iterations);
+                double f_pol = cBFGS_Powell.Start_Optimization(x_best, max_inner_iterations_loc);
 
                 if (f_pol < current_minimum) {
                     current_minimum = f_pol;
@@ -645,5 +648,3 @@ CPU_time = 0.0;
         //std::cout << "bfgs2 time: " << CPU_time << " " << current_minimum << std::endl;
 
 }
-
-

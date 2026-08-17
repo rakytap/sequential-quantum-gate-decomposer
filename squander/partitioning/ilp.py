@@ -40,16 +40,25 @@ def _check_gurobi_available():
 def _solve_pulp_with_gurobi_or_cbc(prob, pulp, callback=None, **gurobi_kwargs):
     try:
         _check_gurobi_available()
-        solver = pulp.GUROBI(manageEnv=True, msg=False, **gurobi_kwargs)
-        if callback is None:
-            prob.solve(solver)
-        else:
-            prob.solve(solver, callback=callback)
-        return "gurobi"
     except Exception as exc:
         _print_gurobi_fallback_warning(exc)
-        prob.solve(pulp.PULP_CBC_CMD(msg=False))
+        cbc_kwargs = {}
+        if gurobi_kwargs.get("timeLimit") is not None:
+            cbc_kwargs["timeLimit"] = gurobi_kwargs["timeLimit"]
+        if gurobi_kwargs.get("Threads") is not None:
+            cbc_kwargs["threads"] = gurobi_kwargs["Threads"]
+        prob.solve(pulp.PULP_CBC_CMD(msg=False, **cbc_kwargs))
         return "cbc"
+    # Once Gurobi has initialized successfully, a solve-time exception is a
+    # failure of this model/run (most importantly, an out-of-memory signal).
+    # Starting CBC on the same live PuLP model can double memory pressure and
+    # leaves ``solverModel`` pointing at a freed Gurobi object.
+    solver = pulp.GUROBI(manageEnv=True, msg=False, **gurobi_kwargs)
+    if callback is None:
+        prob.solve(solver)
+    else:
+        prob.solve(solver, callback=callback)
+    return "gurobi"
 
 
 def topo_sort_partitions(c, parts):
@@ -597,7 +606,15 @@ def sol_to_badsccs(g, allparts, L):
     _, scc = scc_tarjan_iterative(G_part)
     return {frozenset(v) for v in scc if len(v) > 1}
 
-def ilp_global_optimal(allparts, g, weighted_info=None, gurobi_direct=False, use_order=False, weights=None):
+def ilp_global_optimal(
+    allparts,
+    g,
+    weighted_info=None,
+    gurobi_direct=False,
+    use_order=False,
+    weights=None,
+    weight_partition_tiebreak=1,
+):
     """
     Select an optimal set of non-overlapping parts via ILP/MIP with cycle cuts.
 
@@ -623,21 +640,26 @@ def ilp_global_optimal(allparts, g, weighted_info=None, gurobi_direct=False, use
         single_qubit_chains_prepost = {x[0]: x for x in single_qubit_chains if x[0] in single_qubit_chains_pre and x[-1] in single_qubit_chains_post}
     def fortet_inequalities(x, y, z): #-z-x<=0 -z+x+y<=1 z-x<=0 z+x-y<=1
         return [z-x<=0, z-y<=0, x+y-z<=1]
+    if weight_partition_tiebreak not in (-1, 0, 1):
+        raise ValueError("weight_partition_tiebreak must be -1, 0, or 1.")
     N = len(allparts)
+    weight_scale = N + 1
     gate_to_parts = {x: [] for x in g}
     for i, part in enumerate(allparts):
         for gate in part: gate_to_parts[gate].append(i)
     if gurobi_direct:
         from gurobipy import Env, Model, GRB
         import gurobipy as gp
-        with Env() as env:
-            env.setParam("OutputFlag", 0)
+        # OutputFlag must be supplied while constructing a WLS environment.
+        # Setting it afterward is too late to suppress credential and license
+        # initialization messages.
+        with Env(params={"OutputFlag": 0}) as env:
             with Model(env=env) as m:
                 m.setParam(GRB.Param.IntegralityFocus, 1)
                 m.setParam(GRB.Param.LazyConstraints, 1)
                 x = m.addVars(range(N), lb=[0]*N, ub=[1]*N, vtype=[GRB.BINARY]*N, name=["x_" + str(i) for i in range(N)])
                 for i in g: m.addConstr(gp.quicksum(x[j] for j in gate_to_parts[i]) == 1)
-                if weights is not None: m.setObjective(gp.quicksum((weights[i]*N+1) * x[i] for i in range(N)), GRB.MINIMIZE)
+                if weights is not None: m.setObjective(gp.quicksum((weights[i]*weight_scale+weight_partition_tiebreak) * x[i] for i in range(N)), GRB.MINIMIZE)
                 elif weighted_info is None: m.setObjective(gp.quicksum(x[i] for i in range(N)), GRB.MINIMIZE)
                 else:
                     Npre, Npost, Nprepost = len(single_qubit_chains_pre), len(single_qubit_chains_post), len(single_qubit_chains_prepost)
@@ -742,7 +764,7 @@ def ilp_global_optimal(allparts, g, weighted_info=None, gurobi_direct=False, use
     #print(all_cycles_from_dag_edges(succ))
     #for u, v in two_cycles_from_dag_edges(g, gate_to_parts, allparts):
     #    prob += x[u] + x[v] <= 1 #constraint that no two cycles are included
-    if weights is not None: prob.setObjective(pulp.lpSum((weights[i]*N+1) * x[i] for i in range(N)))
+    if weights is not None: prob.setObjective(pulp.lpSum((weights[i]*weight_scale+weight_partition_tiebreak) * x[i] for i in range(N)))
     elif weighted_info is None: prob.setObjective(pulp.lpSum(x[i] for i in range(N)))
     else:
         Npre, Npost, Nprepost = len(single_qubit_chains_pre), len(single_qubit_chains_post), len(single_qubit_chains_prepost)
@@ -932,7 +954,79 @@ def get_all_partitions(c, max_qubits_per_partition):
                 Ynew -= prune; Bnew -= prune
                 stack.append((Xnew, Ynew, Anew, Bnew, list(sorted(Anew, key=topo_index.__getitem__)), list(sorted(Bnew, key=topo_index.__getitem__, reverse=True)), newQ))    
     return list(allparts), g, go, rgo, single_qubit_chains, gate_to_qubit, gate_to_tqubit
-def max_partitions(c, max_qubits_per_partition, use_ilp=True, fusion_cost=False, control_aware=False):
+
+
+def routing_partition_weights(allparts, g, gate_to_qubit):
+    """Return additive weights for routing-oriented exact-cover partitioning.
+
+    Minimum partition count remains the primary objective. Among equal-count
+    covers, prefer temporally compact blocks by penalizing holes in each
+    candidate's span in original circuit order. This prevents the exact-cover
+    solver from interleaving distant, merely dependency-compatible gates into
+    blocks that look efficient abstractly but produce poor permutation
+    transitions during SEQPAM routing.
+
+    Dependency edges crossing a block boundary and the square of its
+    entangling-gate count contribute to the same secondary score. The square
+    favours balanced blocks: permutation synthesis is exponential in block
+    depth, so a ``1, 3`` split is generally more expensive than ``2, 2`` even
+    though both contain four entanglers.
+
+    The per-partition constant is greater than an upper bound on the complete
+    secondary score, so minimum partition count is provably primary. The
+    coefficients remain quadratic in circuit size rather than using a fragile
+    product of nested lexicographic scales.
+
+    Candidate-overlap conflict degree was deliberately not included: on the
+    ``adder_n4`` routing regression it moved gates into deeper 3-CNOT blocks and
+    worsened the routed result from 13 to 17 CNOTs. Summed gate-intersection
+    cardinality is also constant for every exact cover and cannot break ties.
+
+    No pair variables or additional constraints are introduced.
+    """
+    gate_count = len(g)
+    edge_count = sum(len(successors) for successors in g.values())
+    circuit_span = max(g) - min(g) + 1 if g else 0
+    secondary_bound = (
+        gate_count * circuit_span
+        + 2 * edge_count
+        + gate_count ** 2
+    )
+    partition_cost = secondary_bound + 1
+    weights = []
+    for part in allparts:
+        span = max(part) - min(part) + 1
+        holes = span - len(part)
+        outgoing = sum(
+            successor not in part
+            for gate in part
+            for successor in g[gate]
+        )
+        incoming = sum(
+            successor in part
+            for gate, successors in g.items()
+            if gate not in part
+            for successor in successors
+        )
+        entanglers = sum(len(gate_to_qubit[gate]) >= 2 for gate in part)
+        weights.append(
+            partition_cost
+            + holes
+            + outgoing
+            + incoming
+            + entanglers * entanglers
+        )
+    return weights
+
+
+def max_partitions(
+    c,
+    max_qubits_per_partition,
+    use_ilp=True,
+    fusion_cost=False,
+    control_aware=False,
+    routing_cost=False,
+):
     """
     Enumerate feasible parts and select a maximum/optimal partitioning of a circuit.
 
@@ -943,6 +1037,8 @@ def max_partitions(c, max_qubits_per_partition, use_ilp=True, fusion_cost=False,
         fusion_cost (bool): If True, include FLOP-based cost with fusion/controls.
         control_aware (bool): If True and fusion_cost, treat single-qubit chains as
             pre/post relative to targets.
+        routing_cost (bool): If True, keep minimum partition count primary and
+            use dependency cuts plus balanced entangler depth as a tie-breaker.
 
     Returns:
         tuple: (partitioned_circ, param_order, parts)
@@ -952,7 +1048,14 @@ def max_partitions(c, max_qubits_per_partition, use_ilp=True, fusion_cost=False,
     """
     allparts, g, go, rgo, single_qubit_chains, gate_to_qubit, gate_to_tqubit = get_all_partitions(c, max_qubits_per_partition)
     if use_ilp:
-        weights = parts_to_float_ops(max_qubits_per_partition, gate_to_qubit, None, allparts) if fusion_cost and not control_aware else None
+        if routing_cost and (fusion_cost or control_aware):
+            raise ValueError(
+                "Routing-oriented partitioning cannot be combined with fusion costs."
+            )
+        if routing_cost:
+            weights = routing_partition_weights(allparts, g, gate_to_qubit)
+        else:
+            weights = parts_to_float_ops(max_qubits_per_partition, gate_to_qubit, None, allparts) if fusion_cost and not control_aware else None
         L, fusion_info = ilp_global_optimal(allparts, g, (single_qubit_chains, max_qubits_per_partition, go, rgo, gate_to_qubit, gate_to_tqubit) if control_aware else None, weights=weights)
     else:
         L, excluded = [], set()

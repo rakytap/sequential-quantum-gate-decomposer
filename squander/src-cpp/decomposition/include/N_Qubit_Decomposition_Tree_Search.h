@@ -101,6 +101,15 @@ public:
             }
         }
     }
+    std::vector<std::vector<int>> enumerate_cut_coverages(int total) const {
+        std::set<std::vector<int>> unique_coverages;
+        if (total < 0 || num_edges_ <= 0) return {};
+        std::vector<int> edge_counts(num_edges_, 0);
+        enumerate_cut_coverages_recursive(
+            total, edge_counts, 0, 0, unique_coverages
+        );
+        return {unique_coverages.begin(), unique_coverages.end()};
+    }
 private:
     int num_qubits_;
     int num_edges_;
@@ -167,6 +176,29 @@ private:
             }
         }
         return false;
+    }
+    void enumerate_cut_coverages_recursive(
+        int total, std::vector<int>& edge_counts, int pos, int used_sum,
+        std::set<std::vector<int>>& unique_coverages) const
+    {
+        const int m = static_cast<int>(edge_counts.size());
+        if (pos == m - 1) {
+            edge_counts[pos] = total - used_sum;
+            std::vector<int> coverage(cut_to_edges_.size(), 0);
+            for (size_t c = 0; c < cut_to_edges_.size(); ++c)
+                for (int edge_idx : cut_to_edges_[c])
+                    coverage[c] += edge_counts[edge_idx];
+            unique_coverages.emplace(std::move(coverage));
+            return;
+        }
+        const int remaining = total - used_sum;
+        for (int x = 0; x <= remaining; ++x) {
+            edge_counts[pos] = x;
+            enumerate_cut_coverages_recursive(
+                total, edge_counts, pos + 1, used_sum + x,
+                unique_coverages
+            );
+        }
     }
     bool best_feasible_for_some_composition(
         int total,
@@ -246,14 +278,17 @@ struct SearchNode {
     }
     bool operator<(const SearchNode& other) const { return other > *this; }
     bool operator>(const SearchNode& other) const {
-        // int min_cnots = get_min_cnots();
-        // int other_min_cnots = other.get_min_cnots();
-        // int tot_cnot = path.size() + min_cnots;
-        // int other_tot_cnot = other.path.size() + other_min_cnots;
-        // if (tot_cnot != other_tot_cnot)
-        //     return tot_cnot > other_tot_cnot;
-        //if (min_cnots != other_min_cnots)
-        //    return min_cnots > other_min_cnots;
+        const int min_cnots = get_min_cnots();
+        const int other_min_cnots = other.get_min_cnots();
+        const int total_cnot_bound = path.size() + min_cnots;
+        const int other_total_cnot_bound =
+            other.path.size() + other_min_cnots;
+        if (total_cnot_bound != other_total_cnot_bound) {
+            return total_cnot_bound > other_total_cnot_bound;
+        }
+        if (min_cnots != other_min_cnots) {
+            return min_cnots > other_min_cnots;
+        }
         const std::tuple<int, double, std::vector<int>, std::vector<std::pair<int, double>>>& best_osr = get_best_osr_result();
         const std::tuple<int, double, std::vector<int>, std::vector<std::pair<int, double>>>& other_best_osr = other.get_best_osr_result();
         if (std::get<0>(best_osr) != std::get<0>(other_best_osr))
@@ -455,7 +490,10 @@ class N_Qubit_Decomposition_Tree_Search : public Optimization_Interface {
     @brief Call to perform the optimization on the given gate structure
     @param gate_structure_loc The gate structure to be optimized
     */
-    N_Qubit_Decomposition_custom perform_optimization(Gates_block* gate_structure_loc);
+    N_Qubit_Decomposition_custom perform_optimization(
+        Gates_block* gate_structure_loc,
+        bool osr_scoring = false
+    );
 
     // Bring base class add_finalyzing_layer into scope to avoid hiding
     using Optimization_Interface::add_finalyzing_layer;

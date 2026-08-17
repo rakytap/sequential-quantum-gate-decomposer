@@ -20,6 +20,14 @@ from typing import List, Callable, Tuple, Optional, Set, Dict, Any, cast, Union
 import multiprocessing as mp
 from multiprocessing import Process, Pool, parent_process
 import os, contextlib, collections, time
+import gzip
+import hashlib
+import json
+import platform
+import struct
+import sys
+import uuid
+from dataclasses import dataclass
 
 
 from squander.partitioning.partition import PartitionCircuit
@@ -36,16 +44,29 @@ except Exception:
 
 _SQUANDER_BQSKIT_SYNTHESIS_CONFIG = None
 
+_REWRITE_AUDIT_PATH_ENV = "SQUANDER_REWRITE_AUDIT_JSONL"
+REWRITE_AUDIT_SCHEMA_VERSION = 2
+
 _SQUANDER_NATIVE_STRATEGIES = frozenset(
     ("TreeSearch", "TabuSearch", "Adaptive", "Custom")
 )
 
-SQUANDER_FLOAT64_TOLERANCE = 1e-10
-SQUANDER_FLOAT32_TOLERANCE = 1e-8
-BQSKIT_FLOAT64_SYNTHESIS_VALIDATION_TOLERANCE = 1e-8
-BQSKIT_FLOAT32_SYNTHESIS_VALIDATION_TOLERANCE = 1e-8
+# Squander's optimizer target and the common accepted-rewrite budget both use
+# the process-infidelity metric ``1 - F**2``, but serve different purposes.
+SQUANDER_FLOAT64_TOLERANCE = 1e-14
+# ``use_float`` selects the faster float32 OSR search, but the final
+# Hilbert-Schmidt refinement is deliberately performed in float64.
+SQUANDER_FLOAT32_TOLERANCE = SQUANDER_FLOAT64_TOLERANCE
+# OSR minimizes squared tail singular values. Its relative singular-value rank
+# cutoff is derived as sqrt(OSR_OPTIMIZATION_TOLERANCE) in C++, keeping the
+# optimizer and classifier on one explicit scale.
+OSR_OPTIMIZATION_TOLERANCE = 1e-6
+SYNTHESIS_ACCEPTANCE_TOLERANCE = 1e-10
+# Whole-circuit state-vector discrepancies accumulate across independently
+# accepted partition rewrites. Keep this looser than the per-partition budget;
+# it is a validation threshold, not a synthesis acceptance threshold.
 CIRCUIT_FLOAT64_VALIDATION_TOLERANCE = 1e-8
-CIRCUIT_FLOAT32_VALIDATION_TOLERANCE = 1e-6
+CIRCUIT_FLOAT32_VALIDATION_TOLERANCE = 1e-8
 
 
 def _config_uses_float32(config):
@@ -60,14 +81,6 @@ def _default_squander_tolerance(config):
     )
 
 
-def _default_bqskit_synthesis_validation_tolerance(config):
-    return (
-        BQSKIT_FLOAT32_SYNTHESIS_VALIDATION_TOLERANCE
-        if _config_uses_float32(config)
-        else BQSKIT_FLOAT64_SYNTHESIS_VALIDATION_TOLERANCE
-    )
-
-
 def _default_circuit_validation_tolerance(config):
     return (
         CIRCUIT_FLOAT32_VALIDATION_TOLERANCE
@@ -76,10 +89,12 @@ def _default_circuit_validation_tolerance(config):
     )
 
 
-def _squander_validation_tolerance(config):
+def _synthesis_acceptance_tolerance(config):
+    """Return the common block-rewrite budget in the ``1 - F**2`` metric."""
+
     return config.get(
-        "tolerance",
-        _default_squander_tolerance(config),
+        "synthesis_acceptance_tolerance",
+        SYNTHESIS_ACCEPTANCE_TOLERANCE,
     )
 
 
@@ -92,10 +107,32 @@ def _circuit_validation_tolerance(config):
     )
 
 
-def _bqskit_synthesis_validation_tolerance(config):
-    return config.get(
-        "bqskit_synthesis_validation_tolerance",
-        _default_bqskit_synthesis_validation_tolerance(config),
+def _trace_infidelity_from_process_infidelity(process_infidelity):
+    """Convert ``1 - F**2`` to ``1 - F`` without cancellation."""
+
+    process_infidelity = float(process_infidelity)
+    if not 0.0 <= process_infidelity <= 1.0:
+        raise ValueError(
+            "Process infidelity must be between zero and one, got "
+            f"{process_infidelity}."
+        )
+    return process_infidelity / (
+        1.0 + np.sqrt(1.0 - process_infidelity)
+    )
+
+
+def _bqskit_synthesis_epsilon(config):
+    """Return BQSKit's exactly equivalent synthesis-success threshold.
+
+    Squander cost-function variant 3 and the rewrite audit use
+    ``1 - F**2``. BQSKit's ``HilbertSchmidtCost`` uses ``1 - F``. Here
+    ``F = |Tr(U^dagger V)| / d``, so the conversion is exact and independent
+    of partition width. BQSKit calls this threshold ``synthesis_epsilon``;
+    its numerical optimizer uses separate, tighter ftol/gtol stopping tests.
+    """
+
+    return _trace_infidelity_from_process_infidelity(
+        _synthesis_acceptance_tolerance(config)
     )
 
 
@@ -131,6 +168,1764 @@ def _copy_bqskit_synthesis_config(config):
 
 
 _SKIP_CONFIG_VALUE = object()
+
+
+def rewrite_audit_software_versions():
+    """Return the execution identity required for bit-exact metric replay."""
+    from importlib.metadata import PackageNotFoundError, version
+
+    packages = {}
+    for package in ("numpy", "qiskit", "bqskit", "squander"):
+        try:
+            packages[package] = version(package)
+        except PackageNotFoundError:
+            packages[package] = None
+    return {
+        "python": platform.python_version(),
+        "implementation": platform.python_implementation(),
+        "platform": platform.platform(),
+        "machine": platform.machine(),
+        "byteorder": sys.byteorder,
+        "packages": packages,
+    }
+
+
+def _json_complex_matrix(matrix):
+    """Return a compact, JSON-safe representation of a complex matrix."""
+    matrix = np.asarray(matrix, dtype=np.complex128)
+    return {
+        "dimension": int(matrix.shape[0]),
+        "real": matrix.real.ravel().tolist(),
+        "imag": matrix.imag.ravel().tolist(),
+    }
+
+
+def _complex_matrix_from_json(value):
+    """Decode a matrix produced by :func:`_json_complex_matrix`."""
+    dimension = int(value["dimension"])
+    real = np.asarray(value["real"], dtype=np.float64)
+    imag = np.asarray(value["imag"], dtype=np.float64)
+    return (real + 1j * imag).reshape((dimension, dimension))
+
+
+def _unitary_audit_metrics(before, after):
+    """Compute phase-insensitive equivalence metrics in float64."""
+    before = np.asarray(before, dtype=np.complex128)
+    after = np.asarray(after, dtype=np.complex128)
+    if before.shape != after.shape or before.ndim != 2 or before.shape[0] != before.shape[1]:
+        raise AssertionError(
+            f"Audit unitary shape mismatch: {before.shape} versus {after.shape}."
+        )
+    dimension = before.shape[0]
+    trace = np.trace(before.conj().T @ after)
+    overlap = min(1.0, float(abs(trace) / dimension))
+    phase = np.conj(trace) / abs(trace) if abs(trace) else 1.0 + 0.0j
+    difference = before - phase * after
+    return {
+        "trace_overlap": overlap,
+        "process_infidelity": max(0.0, 1.0 - overlap * overlap),
+        "phase_aligned_frobenius": float(np.linalg.norm(difference, "fro")),
+        "phase_aligned_spectral": float(np.linalg.norm(difference, 2)),
+    }
+
+
+def _squander_audit_representation(circuit, parameters, involved_qbits=None):
+    """Serialize a Squander block compactly enough for independent replay."""
+    from qiskit import qasm2
+    from squander import Qiskit_IO
+
+    if involved_qbits is None:
+        involved_qbits = sorted(circuit.get_Qbits())
+    involved_qbits = list(involved_qbits)
+    qbit_map = {qbit: index for index, qbit in enumerate(involved_qbits)}
+    compact = circuit.Remap_Qbits(qbit_map, len(involved_qbits)).get_Flat_Circuit()
+    parameters = np.asarray(parameters, dtype=np.float64)
+    qiskit_circuit = Qiskit_IO.get_Qiskit_Circuit(compact, parameters)
+    return {
+        "format": "squander_openqasm2",
+        "qasm": qasm2.dumps(qiskit_circuit),
+        "gate_counts": compact.get_Gate_Nums(),
+        "qubits": len(involved_qbits),
+    }
+
+
+def _float64_bits(value):
+    """Encode one real number by its IEEE-754 binary64 bits."""
+    return struct.pack(">d", float(value)).hex()
+
+
+def _qasm_exact_state(representation):
+    """Return the exact ordered gate/parameter stream represented by QASM."""
+    from qiskit import QuantumCircuit
+
+    qasm = representation["qasm"] if isinstance(representation, dict) else representation
+    circuit = QuantumCircuit.from_qasm_str(qasm)
+    operations = []
+    for instruction in circuit.data:
+        operation = instruction.operation
+        params = []
+        for parameter in operation.params:
+            value = complex(parameter)
+            params.append(
+                [_float64_bits(value.real), _float64_bits(value.imag)]
+            )
+        operations.append(
+            {
+                "name": operation.name,
+                "qubits": [
+                    int(circuit.find_bit(qubit).index)
+                    for qubit in instruction.qubits
+                ],
+                "params": params,
+            }
+        )
+    return {"qubits": int(circuit.num_qubits), "operations": operations}
+
+
+def _exact_state_sha256(state):
+    """Hash a canonical exact circuit state."""
+    return hashlib.sha256(
+        json.dumps(state, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
+
+
+def _remap_exact_state(state, qubits, total_qubits):
+    """Embed a compact exact state onto global ``qubits``."""
+    qubits = [int(qubit) for qubit in qubits]
+    if state["qubits"] != len(qubits):
+        raise AssertionError(
+            f"Cannot embed {state['qubits']}-qubit state on {len(qubits)} qubits."
+        )
+    def remapped_operation(operation):
+        physical_qubits = [
+            qubits[index] for index in operation["qubits"]
+        ]
+        # Squander/QASM serialization canonicalizes the operands of the
+        # symmetric SWAP gate after embedding.  Apply the same normalization
+        # to archived compact payloads so a reversed local embedding remains
+        # bit-identical to the materialized global stream.
+        if operation["name"] == "swap":
+            physical_qubits.sort()
+        return {**operation, "qubits": physical_qubits}
+
+    return {
+        "qubits": int(total_qubits),
+        "operations": [remapped_operation(operation) for operation in state["operations"]],
+    }
+
+
+def _verify_native_round_replay(event, event_by_id):
+    """Rebuild one native round solely from its recorded selected blocks."""
+    input_state = _qasm_exact_state(event["input"])
+    output_state = _qasm_exact_state(event["output"])
+    if _exact_state_sha256(input_state) != event["input_sha256"]:
+        raise AssertionError("Native round input state hash does not match its QASM.")
+    if _exact_state_sha256(output_state) != event["output_sha256"]:
+        raise AssertionError("Native round output state hash does not match its QASM.")
+
+    expected_operations = []
+    consumed_indices = []
+    for selection in event["selections"]:
+        rewrite = event_by_id.get(selection["rewrite_event_id"])
+        if rewrite is None or rewrite.get("kind") != "rewrite":
+            raise AssertionError(
+                f"Missing selected rewrite {selection['rewrite_event_id']}."
+            )
+        if not rewrite.get("accepted", False):
+            raise AssertionError("A native round selected an unaccepted rewrite.")
+        source_indices = [int(index) for index in selection["source_gate_indices"]]
+        if any(index < 0 or index >= len(input_state["operations"]) for index in source_indices):
+            raise AssertionError("Native source gate index is outside the round input.")
+        qubits = selection["qubits"]
+        before_state = _remap_exact_state(
+            _qasm_exact_state(rewrite["before"]), qubits, input_state["qubits"]
+        )
+        source_operations = [
+            input_state["operations"][index] for index in source_indices
+        ]
+        if source_operations != before_state["operations"]:
+            raise AssertionError(
+                f"Selected partition {rewrite.get('partition_index')} does not "
+                "match its claimed source gates."
+            )
+        after_state = _remap_exact_state(
+            _qasm_exact_state(rewrite["after"]), qubits, input_state["qubits"]
+        )
+        expected_operations.extend(after_state["operations"])
+        consumed_indices.extend(source_indices)
+
+    if sorted(consumed_indices) != list(range(len(input_state["operations"]))):
+        raise AssertionError(
+            "Native round selections do not cover every input gate exactly once."
+        )
+    expected_state = {
+        "qubits": input_state["qubits"],
+        "operations": expected_operations,
+    }
+    if expected_state != output_state:
+        raise AssertionError(
+            "Replaying selected native partitions did not reproduce the exact "
+            "round output gate and parameter stream."
+        )
+    return input_state, output_state
+
+
+def _verify_squander_basis_replay(event):
+    """Rerun CNOT-basis conversion and require the exact recorded output."""
+    from qiskit import QuantumCircuit
+    from squander import Qiskit_IO
+    from squander.utils import circuit_to_CNOT_basis
+
+    input_state = _qasm_exact_state(event["input"])
+    output_state = _qasm_exact_state(event["output"])
+    if _exact_state_sha256(input_state) != event["input_sha256"]:
+        raise AssertionError("Basis conversion input hash mismatch.")
+    if _exact_state_sha256(output_state) != event["output_sha256"]:
+        raise AssertionError("Basis conversion output hash mismatch.")
+    qiskit_circuit = QuantumCircuit.from_qasm_str(event["input"]["qasm"])
+    circuit, parameters = Qiskit_IO.convert_Qiskit_to_Squander(qiskit_circuit)
+    converted, converted_parameters = circuit_to_CNOT_basis(circuit, parameters)
+    replay_representation = _squander_audit_representation(
+        converted,
+        converted_parameters,
+        range(converted.get_Qbit_Num()),
+    )
+    if _qasm_exact_state(replay_representation) != output_state:
+        raise AssertionError(
+            "Replaying CNOT-basis conversion did not reproduce the exact output."
+        )
+    return input_state, output_state
+
+
+def _verify_bqskit_to_squander_replay(event):
+    """Rerun BQSKit-QASM loading through Qiskit_IO exactly."""
+    from qiskit import QuantumCircuit
+    from squander import Qiskit_IO
+
+    input_state = _qasm_exact_state(event["input_qasm"])
+    output_state = _qasm_exact_state(event["output"])
+    if _exact_state_sha256(input_state) != event["input_sha256"]:
+        raise AssertionError("Framework conversion input hash mismatch.")
+    if _exact_state_sha256(output_state) != event["output_sha256"]:
+        raise AssertionError("Framework conversion output hash mismatch.")
+    qiskit_circuit = QuantumCircuit.from_qasm_str(event["input_qasm"])
+    circuit, parameters = Qiskit_IO.convert_Qiskit_to_Squander(qiskit_circuit)
+    replay = _squander_audit_representation(
+        circuit, parameters, range(circuit.get_Qbit_Num())
+    )
+    if _qasm_exact_state(replay) != output_state:
+        raise AssertionError(
+            "BQSKit-to-Squander conversion did not reproduce its exact output."
+        )
+    return input_state, output_state
+
+
+def _circuit_dependencies(state):
+    """Return predecessor/successor sets for an exact operation stream."""
+    predecessors = [set() for _ in state["operations"]]
+    successors = [set() for _ in state["operations"]]
+    last_on_qubit = {}
+    for index, operation in enumerate(state["operations"]):
+        for qubit in operation["qubits"]:
+            previous = last_on_qubit.get(int(qubit))
+            if previous is not None:
+                predecessors[index].add(previous)
+                successors[previous].add(index)
+            last_on_qubit[int(qubit)] = index
+    return predecessors, successors
+
+
+def _qiskit_sabre_actions(input_state, output_state, initial_mapping, topology):
+    """Explain a SABRE output as reordered source gates plus physical SWAPs."""
+    initial_mapping = [int(qubit) for qubit in initial_mapping]
+    width = int(input_state["qubits"])
+    if sorted(initial_mapping) != list(range(width)):
+        raise AssertionError("SABRE initial mapping is not a permutation.")
+    if int(output_state["qubits"]) != width:
+        raise AssertionError("SABRE changed the circuit width.")
+
+    topology_edges = {
+        frozenset((int(u), int(v))) for u, v in topology
+    }
+    predecessors, successors = _circuit_dependencies(input_state)
+    remaining_predecessors = [len(values) for values in predecessors]
+    ready = {
+        index
+        for index, count in enumerate(remaining_predecessors)
+        if count == 0
+    }
+    mapping = list(initial_mapping)
+    actions = []
+    consumed = set()
+
+    output_operations = output_state["operations"]
+
+    def consume_source(source_index, action):
+        ready.remove(source_index)
+        consumed.add(source_index)
+        actions.append(action)
+        for successor in successors[source_index]:
+            remaining_predecessors[successor] -= 1
+            if remaining_predecessors[successor] == 0:
+                ready.add(successor)
+
+    output_index = 0
+    while output_index < len(output_operations):
+        output_operation = output_operations[output_index]
+        if output_operation["name"] == "swap":
+            physical = [int(q) for q in output_operation["qubits"]]
+            if (
+                len(physical) != 2
+                or frozenset(physical) not in topology_edges
+                or output_operation["params"]
+            ):
+                raise AssertionError("SABRE emitted an invalid physical SWAP.")
+            logical_a = mapping.index(physical[0])
+            logical_b = mapping.index(physical[1])
+            mapping[logical_a], mapping[logical_b] = (
+                mapping[logical_b], mapping[logical_a]
+            )
+            actions.append({"kind": "swap", "qubits": physical})
+            output_index += 1
+            continue
+
+        # Squander's internal SABRE represents SWAP physically as the exact
+        # primitive sequence CX(a,b) CX(b,a) CX(a,b).  Recognize it before
+        # attempting to match those CNOTs to source gates.
+        decomposed_swap = output_operations[output_index : output_index + 3]
+        if (
+            len(decomposed_swap) == 3
+            and [operation["name"] for operation in decomposed_swap]
+            == ["cx", "cx", "cx"]
+            and not any(operation["params"] for operation in decomposed_swap)
+            and not any(
+                input_state["operations"][source_index]["name"] == "cx"
+                and [
+                    mapping[int(q)]
+                    for q in input_state["operations"][source_index]["qubits"]
+                ]
+                == output_operation["qubits"]
+                for source_index in ready
+            )
+        ):
+            first = [int(q) for q in decomposed_swap[0]["qubits"]]
+            middle = [int(q) for q in decomposed_swap[1]["qubits"]]
+            last = [int(q) for q in decomposed_swap[2]["qubits"]]
+            if (
+                len(first) == 2
+                and middle == list(reversed(first))
+                and last == first
+                and frozenset(first) in topology_edges
+            ):
+                logical_a = mapping.index(first[0])
+                logical_b = mapping.index(first[1])
+                mapping[logical_a], mapping[logical_b] = (
+                    mapping[logical_b], mapping[logical_a]
+                )
+                actions.append(
+                    {"kind": "swap", "qubits": sorted(first)}
+                )
+                output_index += 3
+                continue
+
+        # Squander's internal SABRE may reverse a directed CNOT with the exact
+        # identity H(a) H(b) CX(b,a) H(a) H(b). Treat this as one replayable
+        # source-gate action rather than five unexplained output gates.
+        direction_rewrite = output_operations[output_index : output_index + 5]
+        if (
+            len(direction_rewrite) == 5
+            and [operation["name"] for operation in direction_rewrite]
+            == ["h", "h", "cx", "h", "h"]
+            and not any(operation["params"] for operation in direction_rewrite)
+        ):
+            first_pair = [
+                int(direction_rewrite[0]["qubits"][0]),
+                int(direction_rewrite[1]["qubits"][0]),
+            ]
+            last_pair = [
+                int(direction_rewrite[3]["qubits"][0]),
+                int(direction_rewrite[4]["qubits"][0]),
+            ]
+            reversed_cnot = [
+                int(q) for q in direction_rewrite[2]["qubits"]
+            ]
+            rewrite_matches = []
+            for source_index in ready:
+                source = input_state["operations"][source_index]
+                mapped = [mapping[int(q)] for q in source["qubits"]]
+                if (
+                    source["name"] == "cx"
+                    and not source["params"]
+                    and len(mapped) == 2
+                    and first_pair == last_pair
+                    and set(first_pair) == set(mapped)
+                    and reversed_cnot == list(reversed(mapped))
+                    and frozenset(mapped) in topology_edges
+                ):
+                    rewrite_matches.append(source_index)
+            if rewrite_matches:
+                source_index = min(rewrite_matches)
+                consume_source(
+                    source_index,
+                    {
+                        "kind": "cnot_direction_rewrite",
+                        "source_index": source_index,
+                    },
+                )
+                output_index += 5
+                continue
+
+        physical = [int(q) for q in output_operation["qubits"]]
+        if len(physical) > 1:
+            wanted = set(physical)
+            seen = {physical[0]}
+            frontier = [physical[0]]
+            while frontier:
+                current = frontier.pop()
+                for edge in topology_edges:
+                    if current not in edge:
+                        continue
+                    neighbour = next(iter(edge - {current}))
+                    if neighbour in wanted and neighbour not in seen:
+                        seen.add(neighbour)
+                        frontier.append(neighbour)
+            if seen != wanted:
+                raise AssertionError(
+                    "SABRE emitted a multi-qubit gate outside the topology."
+                )
+
+        matches = []
+        for source_index in ready:
+            source = input_state["operations"][source_index]
+            if (
+                source["name"] == output_operation["name"]
+                and source["params"] == output_operation["params"]
+                and [mapping[int(q)] for q in source["qubits"]]
+                == output_operation["qubits"]
+            ):
+                matches.append(source_index)
+        if not matches:
+            raise AssertionError(
+                "SABRE output contains a gate that cannot be matched to a "
+                "dependency-ready input gate."
+            )
+        source_index = min(matches)
+        consume_source(
+            source_index, {"kind": "gate", "source_index": source_index}
+        )
+        output_index += 1
+
+    if consumed != set(range(len(input_state["operations"]))):
+        raise AssertionError("SABRE output did not consume every input gate.")
+    return actions, mapping
+
+
+def _verify_qiskit_sabre_replay(event):
+    """Replay SABRE solely as source-gate scheduling, placement, and SWAPs."""
+    input_state = _qasm_exact_state(event["input_qasm"])
+    output_state = _qasm_exact_state(event["output_qasm"])
+    if _exact_state_sha256(input_state) != event["input_sha256"]:
+        raise AssertionError("SABRE input hash mismatch.")
+    if _exact_state_sha256(output_state) != event["output_sha256"]:
+        raise AssertionError("SABRE output hash mismatch.")
+
+    recorded_actions = event["actions"]
+    replayed_actions, replayed_final_mapping = _qiskit_sabre_actions(
+        input_state,
+        output_state,
+        event["initial_mapping"],
+        event["topology"],
+    )
+    if replayed_actions != recorded_actions:
+        raise AssertionError("Replayed SABRE actions are not bit-identical.")
+    if replayed_final_mapping != [int(q) for q in event["final_mapping"]]:
+        raise AssertionError("Replayed SABRE final mapping does not match.")
+    return input_state, output_state
+
+
+def _verify_bqskit_foreach_replay(event, event_by_id):
+    """Replay one BQSKit ForEachBlockPass from its parent operation list."""
+    input_state = event["input"]
+    output_state = event["output"]
+    if _exact_state_sha256(input_state) != event["input_sha256"]:
+        raise AssertionError("BQSKit invocation input hash mismatch.")
+    if _exact_state_sha256(output_state) != event["output_sha256"]:
+        raise AssertionError("BQSKit invocation output hash mismatch.")
+
+    from bqskit import Circuit as BQSKitCircuit
+
+    expected_circuit = BQSKitCircuit(int(input_state["qubits"]))
+    for parent_operation in event["parent_operations"]:
+        representation = parent_operation["before"]
+        rewrite_id = parent_operation.get("rewrite_event_id")
+        if parent_operation.get("collected", False):
+            rewrite = event_by_id.get(rewrite_id)
+            if rewrite is None:
+                raise AssertionError(
+                    f"Missing BQSKit block rewrite {rewrite_id}."
+                )
+            recorded_before = _bqskit_representation_exact_state(
+                rewrite["before"]
+            )
+            parent_before = _bqskit_representation_exact_state(representation)
+            if recorded_before != parent_before:
+                raise AssertionError(
+                    "BQSKit rewrite does not match its parent input operation."
+                )
+            if rewrite.get("accepted", False):
+                representation = rewrite["after"]
+        elif rewrite_id is not None:
+            raise AssertionError("Uncollected BQSKit operation has a rewrite id.")
+
+        local_circuit = _bqskit_circuit_from_representation(representation)
+        expected_circuit.append_circuit(
+            local_circuit,
+            parent_operation["location"],
+            as_circuit_gate=True,
+        )
+    expected_state = _bqskit_exact_state(expected_circuit)
+    expected_operations = expected_state["operations"]
+    if expected_state != output_state:
+        mismatch_index = next(
+            (
+                index
+                for index, (expected, actual) in enumerate(
+                    zip(expected_operations, output_state["operations"])
+                )
+                if expected != actual
+            ),
+            min(len(expected_operations), len(output_state["operations"])),
+        )
+        raise AssertionError(
+            "Replaying BQSKit's accepted block replacements did not reproduce "
+            "the exact invocation output gate and parameter stream for "
+            f"{event.get('event_id')}; first mismatch {mismatch_index}, "
+            f"expected length {len(expected_operations)}, output length "
+            f"{len(output_state['operations'])}."
+        )
+    return input_state, output_state
+
+
+def _apply_recorded_permutation(permutation, mapping):
+    """Apply BQSKit PAM's logical permutation update to ``mapping``."""
+    permutation = [int(q) for q in permutation]
+    updated = {
+        qubit: mapping[permutation[index]]
+        for index, qubit in enumerate(sorted(permutation))
+    }
+    for qubit in permutation:
+        mapping[qubit] = updated[qubit]
+
+
+def _verify_bqskit_pam_replay(event, event_by_id):
+    """Replay PAM routing actions, topology/mapping changes, and chosen blocks."""
+    from bqskit import Circuit as BQSKitCircuit
+
+    input_state = event["input"]
+    output_state = event["output"]
+    if _exact_state_sha256(input_state) != event["input_sha256"]:
+        raise AssertionError("PAM input hash mismatch.")
+    if _exact_state_sha256(output_state) != event["output_sha256"]:
+        raise AssertionError("PAM output hash mismatch.")
+
+    blocks = {
+        tuple(block["point"]): block for block in event["input_blocks"]
+    }
+    consumed = set()
+    for choice in event["choices"]:
+        point = tuple(choice["input_point"])
+        block = blocks.get(point)
+        if block is None or point in consumed:
+            raise AssertionError(f"PAM consumed invalid input block {point}.")
+        predecessors = {tuple(value) for value in block["predecessors"]}
+        if not predecessors <= consumed:
+            raise AssertionError(
+                f"PAM executed block {point} before its dependencies."
+            )
+        choice_mapping = [int(value) for value in choice["mapping_before"]]
+        _apply_recorded_permutation(
+            choice["pre_perm_global"], choice_mapping
+        )
+        physical_location = [
+            choice_mapping[int(logical)]
+            for logical in choice["logical_location"]
+        ]
+        if physical_location != choice["physical_location"]:
+            raise AssertionError(
+                f"PAM block {point} has inconsistent physical placement."
+            )
+        rewrite = event_by_id.get(choice["rewrite_event_id"])
+        if rewrite is None or not rewrite.get("accepted", False):
+            raise AssertionError("PAM choice lacks an accepted rewrite certificate.")
+        from bqskit.qis.unitary.unitarymatrix import UnitaryMatrix
+
+        replayed_original = _audit_representation_unitary(block["before"])
+        has_recorded_original = "original_unitary" in block
+        if has_recorded_original:
+            recorded_original = _complex_matrix_from_json(
+                block["original_unitary"]
+            )
+            original_metrics = _unitary_audit_metrics(
+                replayed_original, recorded_original
+            )
+            stored_metrics = block.get("original_unitary_metrics", {})
+            for metric_name, metric_value in original_metrics.items():
+                stored_value = stored_metrics.get(metric_name)
+                stored_bits = stored_metrics.get(f"{metric_name}_bits")
+                if (
+                    stored_value is None
+                    or _float64_bits(stored_value) != stored_bits
+                    or stored_bits != _float64_bits(metric_value)
+                ):
+                    raise AssertionError(
+                        f"Stored PAM input-block {metric_name} for {point} "
+                        "is not bit-identical when recomputed."
+                    )
+            if original_metrics["process_infidelity"] > float(
+                rewrite["tolerance"]
+            ):
+                raise AssertionError(
+                    f"PAM original unitary for input block {point} does not "
+                    "match its replayed gate stream within synthesis tolerance."
+                )
+            original_unitary = UnitaryMatrix(recorded_original)
+        else:
+            # Schema-v2 audits written before original_unitary was added can
+            # only reconstruct BQSKit's cached value from the block circuit.
+            original_unitary = UnitaryMatrix(replayed_original)
+        reconstructed_target = _pam_exact_target(
+            original_unitary,
+            choice["pre_perm_local"],
+            choice["post_perm_local"],
+        )
+        stored_target = _audit_representation_unitary(rewrite["before"])
+        if not np.array_equal(reconstructed_target, stored_target):
+            if has_recorded_original:
+                raise AssertionError(
+                    f"PAM target for input block {point} is not bit-identical."
+                )
+            legacy_metrics = _unitary_audit_metrics(
+                reconstructed_target, stored_target
+            )
+            if legacy_metrics["process_infidelity"] > float(
+                rewrite["tolerance"]
+            ):
+                raise AssertionError(
+                    f"Legacy PAM target for input block {point} does not "
+                    "match its replayed gate stream within synthesis tolerance."
+                )
+        consumed.add(point)
+    if consumed != set(blocks):
+        raise AssertionError("PAM replay did not consume every input block exactly once.")
+
+    trace_mapping = list(range(int(input_state["qubits"])))
+    for trace in event["mapping_trace"]:
+        if trace_mapping != trace["before"]:
+            raise AssertionError("PAM mapping trace is not contiguous.")
+        if trace["kind"] == "swap":
+            physical_a, physical_b = trace["swap"]
+            logical_a = trace_mapping.index(physical_a)
+            logical_b = trace_mapping.index(physical_b)
+            trace_mapping[logical_a], trace_mapping[logical_b] = (
+                trace_mapping[logical_b],
+                trace_mapping[logical_a],
+            )
+        else:
+            _apply_recorded_permutation(trace["permutation"], trace_mapping)
+        if trace_mapping != trace["after"]:
+            raise AssertionError("PAM mapping trace operation is invalid.")
+    if trace_mapping != event["local_final_mapping"]:
+        raise AssertionError("PAM local final mapping mismatch.")
+    composed_mapping = [
+        trace_mapping[index] for index in event["mapping_before_pass"]
+    ]
+    if composed_mapping != event["mapping_after_pass"]:
+        raise AssertionError("PAM pass-data mapping composition mismatch.")
+
+    expected_circuit = BQSKitCircuit(int(input_state["qubits"]))
+    for action in event["actions"]:
+        if action["kind"] == "gate":
+            local_circuit = _bqskit_circuit_from_representation(action["circuit"])
+            expected_circuit.append_circuit(
+                local_circuit, action["location"], as_circuit_gate=True
+            )
+            continue
+
+        point = tuple(action["input_point"])
+        rewrite = event_by_id.get(action["rewrite_event_id"])
+        if rewrite is None or not rewrite.get("accepted", False):
+            raise AssertionError("PAM action lacks an accepted block certificate.")
+        selected = _bqskit_circuit_from_representation(rewrite["after"])
+        expected_circuit.append_circuit(
+            selected, action["physical_location"], as_circuit_gate=True
+        )
+    expected_state = _bqskit_exact_state(expected_circuit)
+    if expected_state != output_state:
+        raise AssertionError(
+            "PAM action replay did not reproduce the exact routed gate and "
+            "parameter stream."
+        )
+    return input_state, output_state
+
+
+def _verify_bqskit_placement_replay(event):
+    """Replay an ApplyPlacement wire renumbering exactly."""
+    from bqskit import Circuit as BQSKitCircuit
+
+    input_state = event["input"]
+    output_state = event["output"]
+    placement = [int(q) for q in event["placement"]]
+    if len(placement) < input_state["qubits"]:
+        raise AssertionError("Placement does not cover every input qubit.")
+    expected_circuit = BQSKitCircuit(int(output_state["qubits"]))
+    for parent_operation in event["parent_operations"]:
+        local_circuit = _bqskit_circuit_from_representation(
+            parent_operation["circuit"]
+        )
+        expected_circuit.append_circuit(
+            local_circuit,
+            [placement[q] for q in parent_operation["location"]],
+            as_circuit_gate=True,
+        )
+    expected_state = _bqskit_exact_state(expected_circuit)
+    if expected_state != output_state:
+        raise AssertionError("ApplyPlacement replay did not reproduce its output.")
+    for mapping_name in ("initial", "final"):
+        expected_mapping = [
+            placement[q] for q in event["mapping_before"][mapping_name]
+        ]
+        if expected_mapping != event["mapping_after"][mapping_name]:
+            raise AssertionError(
+                f"ApplyPlacement {mapping_name} mapping mismatch."
+            )
+    return input_state, output_state
+
+
+def _verify_bqskit_stage_replay(stage_event, all_events, event_by_id):
+    """Chain all root compiler mutations between exact QASM boundaries."""
+    from bqskit.ir.lang.qasm2 import OPENQASM2Language
+
+    input_qasm_state = _qasm_exact_state(stage_event["input_qasm"])
+    output_qasm_state = _qasm_exact_state(stage_event["output_qasm"])
+    if _exact_state_sha256(input_qasm_state) != stage_event["input_qasm_sha256"]:
+        raise AssertionError("BQSKit stage input QASM hash mismatch.")
+    if _exact_state_sha256(output_qasm_state) != stage_event["output_qasm_sha256"]:
+        raise AssertionError("BQSKit stage output QASM hash mismatch.")
+    decoded_input = OPENQASM2Language().decode(stage_event["input_qasm"])
+    decoded_output = OPENQASM2Language().decode(stage_event["output_qasm"])
+    if _bqskit_exact_state(decoded_input) != stage_event["input"]:
+        raise AssertionError("BQSKit stage input QASM does not match its IR state.")
+    if _bqskit_exact_state(decoded_output) != stage_event["output"]:
+        raise AssertionError("BQSKit stage output QASM does not match its IR state.")
+
+    replay_kinds = {
+        "bqskit_foreach",
+        "bqskit_pam_routing",
+        "bqskit_apply_placement",
+    }
+    internal_events = [
+        event
+        for event in all_events
+        if event.get("kind") in replay_kinds
+        and event.get("stage") == stage_event.get("stage")
+        and stage_event["started_ns"] <= event.get("started_ns", 0)
+        <= stage_event["finished_ns"]
+        and not (
+            event.get("kind") == "bqskit_foreach"
+            and event.get("parent_event_id") is not None
+        )
+    ]
+    internal_events.sort(key=lambda event: event["started_ns"])
+    current_state = stage_event["input"]
+    for event in internal_events:
+        if event["input"] != current_state:
+            raise AssertionError(
+                f"BQSKit replay chain breaks before {event.get('event_id')}."
+            )
+        if event["kind"] == "bqskit_foreach":
+            _, current_state = _verify_bqskit_foreach_replay(event, event_by_id)
+        elif event["kind"] == "bqskit_pam_routing":
+            _, current_state = _verify_bqskit_pam_replay(event, event_by_id)
+        else:
+            _, current_state = _verify_bqskit_placement_replay(event)
+    if current_state != stage_event["output"]:
+        raise AssertionError(
+            "BQSKit internal replay did not reach the exact stage output."
+        )
+    return input_qasm_state, output_qasm_state, len(internal_events)
+
+
+def _verify_full_replay_chain(audit, event_by_id):
+    """Replay every whole-circuit transition from archived input to output."""
+    run = audit.get("run", {})
+    if "input_circuit" not in run or "output_circuit" not in run:
+        raise AssertionError(
+            "Audit is missing its archived input/output circuit states."
+        )
+    input_state = _qasm_exact_state(run["input_circuit"])
+    output_state = _qasm_exact_state(run["output_circuit"])
+    if _exact_state_sha256(input_state) != run["input_circuit_sha256"]:
+        raise AssertionError("Archived input circuit hash mismatch.")
+    if _exact_state_sha256(output_state) != run["output_circuit_sha256"]:
+        raise AssertionError("Archived output circuit hash mismatch.")
+
+    transition_kinds = {
+        "squander_basis_conversion",
+        "round",
+        "bqskit_stage",
+        "qiskit_sabre_routing",
+        "squander_sabre_routing",
+        "exact_osr_routing",
+        "bqskit_to_squander",
+    }
+    transitions = [
+        event
+        for event in audit["events"]
+        if event.get("kind") in transition_kinds
+    ]
+    transitions.sort(key=lambda event: event["started_ns"])
+    current_state = input_state
+    for transition in transitions:
+        if transition["kind"] == "squander_basis_conversion":
+            transition_input, transition_output = _verify_squander_basis_replay(
+                transition
+            )
+        elif transition["kind"] == "round":
+            transition_input, transition_output = _verify_native_round_replay(
+                transition, event_by_id
+            )
+        elif transition["kind"] == "bqskit_stage":
+            transition_input, transition_output, _ = _verify_bqskit_stage_replay(
+                transition, audit["events"], event_by_id
+            )
+        elif transition["kind"] == "qiskit_sabre_routing":
+            transition_input, transition_output = _verify_qiskit_sabre_replay(
+                transition
+            )
+        elif transition["kind"] == "exact_osr_routing":
+            transition_input, transition_output = (
+                _verify_exact_osr_routing_replay(transition)
+            )
+        elif transition["kind"] == "squander_sabre_routing":
+            transition_input, transition_output = (
+                _verify_squander_sabre_replay(transition)
+            )
+        else:
+            transition_input, transition_output = (
+                _verify_bqskit_to_squander_replay(transition)
+            )
+        if transition_input != current_state:
+            raise AssertionError(
+                f"Whole-circuit replay chain breaks before "
+                f"{transition.get('event_id')}."
+            )
+        current_state = transition_output
+    if current_state != output_state:
+        raise AssertionError(
+            "Whole-circuit replay did not finish at the exact archived output "
+            "gate and parameter stream."
+        )
+    return len(transitions), _exact_state_sha256(current_state)
+
+
+def _bqskit_audit_representation(circuit):
+    """Serialize a BQSKit block, falling back to its unitary when necessary."""
+    from bqskit.ir.lang.qasm2 import OPENQASM2Language
+
+    representation = {
+        "gate_counts": dict(collections.Counter(op.gate.name for op in circuit)),
+        "qubits": int(circuit.num_qudits),
+    }
+    try:
+        representation.update(
+            format="openqasm2", qasm=OPENQASM2Language().encode(circuit)
+        )
+    except Exception:
+        representation.update(
+            format="unitary", unitary=_json_complex_matrix(circuit.get_unitary())
+        )
+    return representation
+
+
+def _bqskit_full_qasm(circuit):
+    """Encode a fully unfolded BQSKit circuit as OpenQASM 2."""
+    from bqskit.ir.lang.qasm2 import OPENQASM2Language
+
+    circuit = circuit.copy()
+    circuit.unfold_all()
+    return OPENQASM2Language().encode(circuit)
+
+
+def _append_bqskit_stage_event(
+    stage,
+    started_ns,
+    input_qasm,
+    input_circuit,
+    output_qasm,
+    output_circuit,
+    initial_mapping,
+    final_mapping,
+):
+    """Record a complete compiler-stage boundary around internal replay events."""
+    input_state = _bqskit_exact_state(input_circuit)
+    output_state = _bqskit_exact_state(output_circuit)
+    input_qasm_state = _qasm_exact_state(input_qasm)
+    output_qasm_state = _qasm_exact_state(output_qasm)
+    _append_rewrite_audit_event(
+        {
+            "kind": "bqskit_stage",
+            "component": "bqskit_stage_replay",
+            "stage": stage,
+            "started_ns": int(started_ns),
+            "finished_ns": time.time_ns(),
+            "input_qasm": input_qasm,
+            "output_qasm": output_qasm,
+            "input_qasm_sha256": _exact_state_sha256(input_qasm_state),
+            "output_qasm_sha256": _exact_state_sha256(output_qasm_state),
+            "input": input_state,
+            "output": output_state,
+            "input_sha256": _exact_state_sha256(input_state),
+            "output_sha256": _exact_state_sha256(output_state),
+            "initial_mapping": [int(q) for q in initial_mapping],
+            "final_mapping": [int(q) for q in final_mapping],
+        }
+    )
+
+
+def _append_bqskit_to_squander_event(
+    stage, started_ns, input_qasm, output_circuit, output_parameters
+):
+    """Record the exact BQSKit-QASM to Squander IR conversion boundary."""
+    output = _squander_audit_representation(
+        output_circuit,
+        output_parameters,
+        range(output_circuit.get_Qbit_Num()),
+    )
+    input_state = _qasm_exact_state(input_qasm)
+    output_state = _qasm_exact_state(output)
+    _append_rewrite_audit_event(
+        {
+            "kind": "bqskit_to_squander",
+            "component": "framework_conversion_replay",
+            "stage": stage,
+            "started_ns": int(started_ns),
+            "input_qasm": input_qasm,
+            "output": output,
+            "input_sha256": _exact_state_sha256(input_state),
+            "output_sha256": _exact_state_sha256(output_state),
+        }
+    )
+
+
+def _append_qiskit_sabre_event(
+    stage,
+    started_ns,
+    input_qasm,
+    output_qasm,
+    initial_mapping,
+    final_mapping,
+    topology,
+):
+    """Record a replayable placement-and-SWAP certificate for light SABRE."""
+    input_state = _qasm_exact_state(input_qasm)
+    output_state = _qasm_exact_state(output_qasm)
+    actions, replayed_final_mapping = _qiskit_sabre_actions(
+        input_state,
+        output_state,
+        initial_mapping,
+        topology,
+    )
+    final_mapping = [int(q) for q in final_mapping]
+    if replayed_final_mapping != final_mapping:
+        raise AssertionError(
+            "SABRE output actions do not reproduce its reported final mapping."
+        )
+    _append_rewrite_audit_event(
+        {
+            "kind": "qiskit_sabre_routing",
+            "component": "qiskit_sabre_replay",
+            "stage": stage,
+            "started_ns": int(started_ns),
+            "input_qasm": input_qasm,
+            "output_qasm": output_qasm,
+            "input_sha256": _exact_state_sha256(input_state),
+            "output_sha256": _exact_state_sha256(output_state),
+            "initial_mapping": [int(q) for q in initial_mapping],
+            "final_mapping": final_mapping,
+            "topology": [[int(u), int(v)] for u, v in topology],
+            "actions": actions,
+        }
+    )
+
+
+def _append_squander_sabre_event(
+    stage,
+    started_ns,
+    input_circuit,
+    input_parameters,
+    output_circuit,
+    output_parameters,
+    initial_mapping,
+    final_mapping,
+    topology,
+):
+    """Record internal Squander SABRE as source gates and physical SWAPs."""
+    input_representation = _squander_audit_representation(
+        input_circuit, input_parameters, range(input_circuit.get_Qbit_Num())
+    )
+    output_representation = _squander_audit_representation(
+        output_circuit, output_parameters, range(output_circuit.get_Qbit_Num())
+    )
+    input_state = _qasm_exact_state(input_representation)
+    output_state = _qasm_exact_state(output_representation)
+    actions, replayed_final_mapping = _qiskit_sabre_actions(
+        input_state, output_state, initial_mapping, topology
+    )
+    final_mapping = [int(q) for q in final_mapping]
+    if replayed_final_mapping != final_mapping:
+        raise AssertionError("Internal SABRE final mapping does not replay.")
+    _append_rewrite_audit_event(
+        {
+            "kind": "squander_sabre_routing",
+            "component": "squander_sabre_replay",
+            "stage": stage,
+            "started_ns": int(started_ns),
+            "input": input_representation,
+            "output": output_representation,
+            "input_sha256": _exact_state_sha256(input_state),
+            "output_sha256": _exact_state_sha256(output_state),
+            "initial_mapping": [int(q) for q in initial_mapping],
+            "final_mapping": final_mapping,
+            "topology": [[int(u), int(v)] for u, v in topology],
+            "actions": actions,
+        }
+    )
+
+
+def _verify_squander_sabre_replay(event):
+    """Replay the internal SABRE gate schedule and SWAP sequence exactly."""
+    input_state = _qasm_exact_state(event["input"])
+    output_state = _qasm_exact_state(event["output"])
+    if _exact_state_sha256(input_state) != event["input_sha256"]:
+        raise AssertionError("Internal SABRE input hash mismatch.")
+    if _exact_state_sha256(output_state) != event["output_sha256"]:
+        raise AssertionError("Internal SABRE output hash mismatch.")
+    actions, final_mapping = _qiskit_sabre_actions(
+        input_state,
+        output_state,
+        event["initial_mapping"],
+        event["topology"],
+    )
+    if actions != event["actions"]:
+        raise AssertionError("Internal SABRE actions are not bit-identical.")
+    if final_mapping != [int(q) for q in event["final_mapping"]]:
+        raise AssertionError("Internal SABRE final mapping mismatch.")
+    return input_state, output_state
+
+
+def _append_exact_osr_routing_event(
+    stage,
+    started_ns,
+    input_circuit,
+    input_parameters,
+    output_circuit,
+    output_parameters,
+    exact_route,
+    topology,
+    tolerance,
+):
+    """Record a replayable exact-cover, mapping, and local-unitary certificate."""
+    from squander.partitioning.routing import permuted_partition_target
+
+    input_representation = _squander_audit_representation(
+        input_circuit, input_parameters, range(input_circuit.get_Qbit_Num())
+    )
+    output_representation = _squander_audit_representation(
+        output_circuit, output_parameters, range(output_circuit.get_Qbit_Num())
+    )
+    input_state = _qasm_exact_state(input_representation)
+    selections = []
+    transition_swaps = exact_route.solution.transition_swaps or tuple(
+        () for _selection in exact_route.solution.selections
+    )
+    if len(transition_swaps) != len(exact_route.solution.selections):
+        raise AssertionError("Exact routing SWAP certificate length mismatch.")
+    for swaps_before, selection in zip(
+        transition_swaps, exact_route.solution.selections
+    ):
+        alternative = selection.alternative
+        payload = alternative.payload
+        if payload.source_circuit is None or payload.source_parameters is None:
+            raise AssertionError("Exact routing audit is missing its source block.")
+        logical_qubits = tuple(map(int, alternative.logical_qubits))
+        source = _squander_audit_representation(
+            payload.source_circuit,
+            payload.source_parameters,
+            range(len(alternative.logical_qubits)),
+        )
+        synthesized = _squander_audit_representation(
+            payload.circuit,
+            payload.parameters,
+            range(len(alternative.logical_qubits)),
+        )
+        embedding = [
+            int(alternative.input_physical[local_logical])
+            for local_logical in payload.input_assignment
+        ]
+        certificate_kind = getattr(payload, "certificate_kind", "unitary")
+        source_gate_indices = tuple(
+            exact_route.candidate_gate_orders[selection.partition]
+        )
+        remapped_source_state = _remap_exact_state(
+            _qasm_exact_state(source), logical_qubits, input_state["qubits"]
+        )
+
+        def source_matches(indices):
+            return remapped_source_state["operations"] == [
+                input_state["operations"][index] for index in indices
+            ]
+
+        if not source_matches(source_gate_indices):
+            # The whole-circuit structural fallback preserves serialization
+            # order, while local synthesis candidates use their dependency-
+            # valid extraction order. Resolve this distinction before writing
+            # the archive; the verifier must never need to guess it later.
+            source_order = tuple(
+                sorted(exact_route.candidate_gate_sets[selection.partition])
+            )
+            if source_matches(source_order):
+                source_gate_indices = source_order
+            else:
+                raise AssertionError(
+                    "Exact routing source block cannot be associated with its "
+                    "input gate indices."
+                )
+        archived_selection = {
+                "partition": int(selection.partition),
+                "source_gate_indices": list(source_gate_indices),
+                "logical_qubits": list(logical_qubits),
+                "input_physical": [int(q) for q in alternative.input_physical],
+                "output_physical": [int(q) for q in alternative.output_physical],
+                "input_assignment": [int(q) for q in payload.input_assignment],
+                "output_assignment": [int(q) for q in payload.output_assignment],
+                "embedding": embedding,
+                "source": source,
+                "synthesized": synthesized,
+                "certificate_kind": certificate_kind,
+                "swaps_before": [
+                    [int(left), int(right)] for left, right in swaps_before
+                ],
+                "tolerance": float(tolerance),
+            }
+        if certificate_kind == "sabre":
+            actions, replayed_final_mapping = _qiskit_sabre_actions(
+                _qasm_exact_state(source),
+                _qasm_exact_state(synthesized),
+                alternative.input_physical,
+                topology,
+            )
+            if replayed_final_mapping != list(alternative.output_physical):
+                raise AssertionError(
+                    "Exact-router SABRE fallback mapping does not replay."
+                )
+            archived_selection["actions"] = actions
+        elif certificate_kind == "unitary":
+            # Compute the archived metric from the archived representations.
+            # The verifier reconstructs these same QASM streams; using live
+            # objects can differ in the final float64 bits after QASM gate
+            # normalization despite representing the same unitary.
+            source_unitary = _audit_representation_unitary(source)
+            target = permuted_partition_target(
+                source_unitary,
+                payload.input_assignment,
+                payload.output_assignment,
+            )
+            synthesized_unitary = _audit_representation_unitary(synthesized)
+            metrics = _unitary_audit_metrics(target, synthesized_unitary)
+            archived_selection["metrics"] = {
+                    **metrics,
+                    **{
+                        f"{name}_bits": _float64_bits(value)
+                        for name, value in metrics.items()
+                    },
+            }
+        else:
+            raise AssertionError(
+                f"Unknown exact-routing certificate {certificate_kind!r}."
+            )
+        selections.append(archived_selection)
+    output_state = _qasm_exact_state(output_representation)
+    _append_rewrite_audit_event(
+        {
+            "kind": "exact_osr_routing",
+            "component": "exact_osr_routing_replay",
+            "stage": stage,
+            "started_ns": int(started_ns),
+            "input": input_representation,
+            "output": output_representation,
+            "input_sha256": _exact_state_sha256(input_state),
+            "output_sha256": _exact_state_sha256(output_state),
+            "initial_mapping": list(exact_route.solution.initial_mapping),
+            "final_mapping": list(exact_route.solution.final_mapping),
+            "topology": [[int(u), int(v)] for u, v in topology],
+            "cnot_count": int(exact_route.solution.cnot_count),
+            "single_qubit_count": int(
+                exact_route.solution.single_qubit_count
+            ),
+            "master_backend": str(exact_route.solution.master_backend),
+            "transition_swap_count": int(
+                sum(
+                    len(swaps)
+                    for swaps in (exact_route.solution.transition_swaps or ())
+                )
+            ),
+            "explored_states": int(exact_route.solution.explored_states),
+            "solver_nodes": exact_route.solution.solver_nodes,
+            "solver_bound": exact_route.solution.solver_bound,
+            "solver_gap": exact_route.solution.solver_gap,
+            "solver_solutions": exact_route.solution.solver_solutions,
+            "optimal": bool(exact_route.solution.optimal),
+            "cnot_optimal": bool(
+                exact_route.solution.optimal
+                or exact_route.solution.cnot_optimal
+            ),
+            "timed_out": bool(exact_route.timed_out),
+            "selections": selections,
+        }
+    )
+
+
+def _verify_exact_osr_routing_replay(event):
+    """Replay an exact OSR route from source indices and local certificates."""
+    from squander.partitioning.routing import permuted_partition_target
+
+    input_state = _qasm_exact_state(event["input"])
+    output_state = _qasm_exact_state(event["output"])
+    if _exact_state_sha256(input_state) != event["input_sha256"]:
+        raise AssertionError("Exact OSR routing input hash mismatch.")
+    if _exact_state_sha256(output_state) != event["output_sha256"]:
+        raise AssertionError("Exact OSR routing output hash mismatch.")
+
+    predecessors, _ = _circuit_dependencies(input_state)
+    consumed = set()
+    expected_operations = []
+    mapping = [int(q) for q in event["initial_mapping"]]
+    topology = {frozenset((int(u), int(v))) for u, v in event["topology"]}
+    for selection in event["selections"]:
+        for edge in selection.get("swaps_before", []):
+            left, right = map(int, edge)
+            if frozenset((left, right)) not in topology:
+                raise AssertionError("Exact OSR transition SWAP violates topology.")
+            left_logical = mapping.index(left)
+            right_logical = mapping.index(right)
+            mapping[left_logical], mapping[right_logical] = (
+                mapping[right_logical],
+                mapping[left_logical],
+            )
+            # SWAP is symmetric, and QASM serialization canonicalizes its
+            # operands even when the router records the traversed edge in the
+            # opposite orientation. Match the serialized gate stream while
+            # retaining the archived orientation for mapping replay above.
+            expected_operations.append(
+                {
+                    "name": "swap",
+                    "qubits": sorted((left, right)),
+                    "params": [],
+                }
+            )
+        source_indices = [int(index) for index in selection["source_gate_indices"]]
+        if any(index in consumed for index in source_indices):
+            raise AssertionError("Exact OSR selections overlap.")
+        source_set = set(source_indices)
+        for index in source_indices:
+            if not predecessors[index] - source_set <= consumed:
+                raise AssertionError("Exact OSR selected a dependency-blocked part.")
+
+        logical_qubits = [int(q) for q in selection["logical_qubits"]]
+        source_state = _remap_exact_state(
+            _qasm_exact_state(selection["source"]),
+            logical_qubits,
+            input_state["qubits"],
+        )
+        if source_state["operations"] != [
+            input_state["operations"][index] for index in source_indices
+        ]:
+            raise AssertionError("Exact OSR source block does not match its gates.")
+
+        input_physical = [int(q) for q in selection["input_physical"]]
+        output_physical = [int(q) for q in selection["output_physical"]]
+        if any(mapping[q] != p for q, p in zip(logical_qubits, input_physical)):
+            raise AssertionError("Exact OSR input mapping transition mismatch.")
+        for logical, physical in zip(logical_qubits, output_physical):
+            mapping[logical] = physical
+
+        certificate_kind = selection.get("certificate_kind", "unitary")
+        if certificate_kind == "sabre":
+            actions, replayed_final_mapping = _qiskit_sabre_actions(
+                _qasm_exact_state(selection["source"]),
+                _qasm_exact_state(selection["synthesized"]),
+                input_physical,
+                event["topology"],
+            )
+            if actions != selection["actions"]:
+                raise AssertionError(
+                    "Exact-router SABRE actions are not bit-identical."
+                )
+            if replayed_final_mapping != output_physical:
+                raise AssertionError(
+                    "Exact-router SABRE final mapping does not replay."
+                )
+        elif certificate_kind == "unitary":
+            source_unitary = _audit_representation_unitary(selection["source"])
+            synthesized_unitary = _audit_representation_unitary(
+                selection["synthesized"]
+            )
+            target = permuted_partition_target(
+                source_unitary,
+                selection["input_assignment"],
+                selection["output_assignment"],
+            )
+            metrics = _unitary_audit_metrics(target, synthesized_unitary)
+            if metrics["process_infidelity"] > float(selection["tolerance"]):
+                raise AssertionError("Exact OSR selected an inaccurate synthesis.")
+            for name, value in metrics.items():
+                if _float64_bits(value) != selection["metrics"][f"{name}_bits"]:
+                    raise AssertionError("Exact OSR metric is not bit-identical.")
+        else:
+            raise AssertionError(
+                f"Unknown exact-routing certificate {certificate_kind!r}."
+            )
+
+        synthesized_state = _remap_exact_state(
+            _qasm_exact_state(selection["synthesized"]),
+            selection["embedding"],
+            input_state["qubits"],
+        )
+        for operation in synthesized_state["operations"]:
+            if len(operation["qubits"]) > 1:
+                used = operation["qubits"]
+                if len(used) == 2 and frozenset(used) not in topology:
+                    raise AssertionError("Exact OSR output violates topology.")
+        expected_operations.extend(synthesized_state["operations"])
+        consumed.update(source_indices)
+
+    if consumed != set(range(len(input_state["operations"]))):
+        raise AssertionError("Exact OSR selections are not an exact gate cover.")
+    if mapping != [int(q) for q in event["final_mapping"]]:
+        raise AssertionError("Exact OSR final mapping mismatch.")
+    expected_state = {
+        "qubits": input_state["qubits"],
+        "operations": expected_operations,
+    }
+    if expected_state != output_state:
+        raise AssertionError("Exact OSR replay did not reproduce exact output.")
+    return input_state, output_state
+
+
+def _bqskit_exact_state(circuit):
+    """Return BQSKit's exact flattened gate/parameter stream."""
+    circuit = circuit.copy()
+    circuit.unfold_all()
+    return {
+        "qubits": int(circuit.num_qudits),
+        "operations": [
+            {
+                "name": op.gate.name,
+                "qubits": [int(qubit) for qubit in op.location],
+                "params": [
+                    [_float64_bits(complex(parameter).real), _float64_bits(complex(parameter).imag)]
+                    for parameter in op.params
+                ],
+            }
+            for op in circuit
+        ],
+    }
+
+
+def _bqskit_representation_exact_state(representation):
+    """Decode an audit block and return its exact BQSKit operation stream."""
+    return _bqskit_exact_state(
+        _bqskit_circuit_from_representation(representation)
+    )
+
+
+def _bqskit_circuit_from_representation(representation):
+    """Reconstruct a BQSKit circuit from a replay representation."""
+    from bqskit import Circuit as BQSKitCircuit
+    from bqskit.ir.gates import ConstantUnitaryGate
+    from bqskit.ir.lang.qasm2 import OPENQASM2Language
+
+    if representation["format"] == "openqasm2":
+        circuit = OPENQASM2Language().decode(representation["qasm"])
+    elif representation["format"] == "unitary":
+        unitary = _complex_matrix_from_json(representation["unitary"])
+        circuit = BQSKitCircuit(int(representation["qubits"]))
+        circuit.append_gate(
+            ConstantUnitaryGate(unitary), range(circuit.num_qudits)
+        )
+    else:
+        raise AssertionError(
+            f"Unsupported BQSKit audit representation {representation['format']}."
+        )
+    return circuit
+
+
+def _audit_representation_unitary(representation):
+    """Reconstruct a block unitary from an audit representation."""
+    if representation["format"] == "unitary":
+        return _complex_matrix_from_json(representation["unitary"])
+    if representation["format"] == "squander_openqasm2":
+        from qiskit import QuantumCircuit
+        from squander import Qiskit_IO
+
+        qiskit_circuit = QuantumCircuit.from_qasm_str(representation["qasm"])
+        circuit, parameters = Qiskit_IO.convert_Qiskit_to_Squander(qiskit_circuit)
+        return np.asarray(
+            circuit.get_Matrix(np.asarray(parameters, dtype=np.float64)),
+            dtype=np.complex128,
+        )
+    if representation["format"] != "openqasm2":
+        raise AssertionError(f"Unknown audit representation: {representation['format']}")
+    from bqskit.ir.lang.qasm2 import OPENQASM2Language
+    return np.asarray(
+        OPENQASM2Language().decode(representation["qasm"]).get_unitary(),
+        dtype=np.complex128,
+    )
+
+
+def _append_rewrite_audit_event(event):
+    """Append one process-safe JSONL audit event when auditing is enabled."""
+    path = os.environ.get(_REWRITE_AUDIT_PATH_ENV)
+    if not path:
+        return None
+    import fcntl
+
+    event = dict(event)
+    event.setdefault("event_id", uuid.uuid4().hex)
+    event.setdefault("timestamp_ns", time.time_ns())
+    event.setdefault("pid", os.getpid())
+    encoded = json.dumps(event, separators=(",", ":"), allow_nan=False)
+    with open(path, "a", encoding="utf-8") as audit_file:
+        fcntl.flock(audit_file.fileno(), fcntl.LOCK_EX)
+        audit_file.write(encoded + "\n")
+        audit_file.flush()
+        fcntl.flock(audit_file.fileno(), fcntl.LOCK_UN)
+    return event["event_id"]
+
+
+def _rewrite_audit_enabled():
+    """Return whether the current process should emit rewrite events."""
+    return bool(os.environ.get(_REWRITE_AUDIT_PATH_ENV))
+
+
+def _make_rewrite_event(component, before, after, tolerance, **metadata):
+    """Build a replayable event without slowing the optimization hot path."""
+    event = {
+        "kind": "rewrite",
+        "component": component,
+        "before": before,
+        "after": after,
+        "tolerance": float(tolerance),
+    }
+    event.update(metadata)
+    return event
+
+
+def load_rewrite_audit(path):
+    """Load a compressed rewrite audit generated by the benchmark driver."""
+    with gzip.open(path, "rt", encoding="utf-8") as audit_file:
+        return json.load(audit_file)
+
+
+def verify_rewrite_audit(audit_or_path, tolerance=None, expected_sha256=None):
+    """Replay a complete optimization certificate and hard-fail any mismatch.
+
+    The replay starts with the archived input gate/parameter stream, reruns
+    basis and framework conversions, applies every selected native partition,
+    replays BQSKit parent replacements, PAM dependencies/permutations/swaps and
+    placements, and requires the exact archived output stream and file digest.
+    Every local unitary metric is independently recomputed in complex128 and
+    compared by its IEEE-754 binary64 bits with the stored value.
+    """
+    audit_path = None
+    if isinstance(audit_or_path, (str, os.PathLike)):
+        audit_path = os.fspath(audit_or_path)
+        if expected_sha256 is not None:
+            with open(audit_or_path, "rb") as audit_file:
+                actual_sha256 = hashlib.sha256(audit_file.read()).hexdigest()
+            if actual_sha256 != expected_sha256:
+                raise AssertionError(
+                    f"Rewrite audit digest mismatch: {actual_sha256} != "
+                    f"{expected_sha256}."
+                )
+        audit = load_rewrite_audit(audit_or_path)
+    else:
+        if expected_sha256 is not None:
+            raise ValueError("A SHA-256 digest can only verify an on-disk audit.")
+        audit = audit_or_path
+    if audit.get("schema_version") != REWRITE_AUDIT_SCHEMA_VERSION:
+        raise AssertionError(
+            f"Unsupported rewrite audit schema {audit.get('schema_version')}."
+        )
+    recorded_software = audit.get("run", {}).get("software")
+    current_software = rewrite_audit_software_versions()
+    if recorded_software != current_software:
+        raise AssertionError(
+            "Bit-exact replay requires the recorded software/platform identity; "
+            f"recorded={recorded_software}, current={current_software}."
+        )
+    verified = 0
+    accepted = 0
+    tolerance_misses = 0
+    worst = 0.0
+    worst_accepted = 0.0
+    accepted_spectral_sum = 0.0
+    event_by_id = {
+        event["event_id"]: event
+        for event in audit.get("events", [])
+        if event.get("event_id") is not None
+    }
+    for event in audit.get("events", []):
+        if event.get("kind") != "rewrite":
+            continue
+        before = _audit_representation_unitary(event["before"])
+        after = _audit_representation_unitary(event["after"])
+        metrics = _unitary_audit_metrics(before, after)
+        limit = float(event["tolerance"] if tolerance is None else tolerance)
+        error = metrics["process_infidelity"]
+        within_tolerance = error <= limit
+        if not within_tolerance:
+            tolerance_misses += 1
+        if event.get("accepted", False):
+            if not within_tolerance:
+                raise AssertionError(
+                    f"Accepted rewrite {event.get('event_id', '<unknown>')} in "
+                    f"{event.get('component', '<unknown>')} has process "
+                    f"infidelity {error:.3e}, exceeding {limit:.3e}."
+                )
+        stored = event.get("metrics", {})
+        for metric_name, metric_value in metrics.items():
+            stored_value = stored.get(metric_name)
+            stored_bits = stored.get(f"{metric_name}_bits")
+            recomputed_bits = _float64_bits(metric_value)
+            if (
+                stored_value is None
+                or _float64_bits(stored_value) != stored_bits
+                or stored_bits != recomputed_bits
+            ):
+                raise AssertionError(
+                    f"Stored {metric_name} is not bit-identical when recomputed "
+                    f"for rewrite {event.get('event_id')}."
+                )
+        verified += 1
+        worst = max(worst, error)
+        if event.get("accepted", False):
+            accepted += 1
+            worst_accepted = max(worst_accepted, error)
+            accepted_spectral_sum += metrics["phase_aligned_spectral"]
+    native_rounds = 0
+    bqskit_invocations = 0
+    pam_routing_passes = 0
+    placement_passes = 0
+    qiskit_sabre_passes = 0
+    exact_osr_routing_passes = 0
+    squander_sabre_passes = 0
+    for event in audit.get("events", []):
+        if event.get("kind") == "round" and event.get("component") == "squander_wide_optimization":
+            _verify_native_round_replay(event, event_by_id)
+            native_rounds += 1
+        elif event.get("kind") == "bqskit_foreach":
+            _verify_bqskit_foreach_replay(event, event_by_id)
+            bqskit_invocations += 1
+        elif event.get("kind") == "bqskit_pam_routing":
+            _verify_bqskit_pam_replay(event, event_by_id)
+            pam_routing_passes += 1
+        elif event.get("kind") == "bqskit_apply_placement":
+            _verify_bqskit_placement_replay(event)
+            placement_passes += 1
+        elif event.get("kind") == "qiskit_sabre_routing":
+            _verify_qiskit_sabre_replay(event)
+            qiskit_sabre_passes += 1
+        elif event.get("kind") == "exact_osr_routing":
+            _verify_exact_osr_routing_replay(event)
+            exact_osr_routing_passes += 1
+        elif event.get("kind") == "squander_sabre_routing":
+            _verify_squander_sabre_replay(event)
+            squander_sabre_passes += 1
+    bqskit_stages = 0
+    chained_bqskit_events = 0
+    for event in audit.get("events", []):
+        if event.get("kind") == "bqskit_stage":
+            _, _, chained = _verify_bqskit_stage_replay(
+                event, audit["events"], event_by_id
+            )
+            bqskit_stages += 1
+            chained_bqskit_events += chained
+    replayed_transitions, final_circuit_sha256 = _verify_full_replay_chain(
+        audit, event_by_id
+    )
+    if audit_path is not None and audit.get("run", {}).get("output_file"):
+        archived_output_path = os.path.join(
+            os.path.dirname(audit_path),
+            os.path.basename(audit["run"]["output_file"]),
+        )
+        if os.path.exists(archived_output_path):
+            with open(archived_output_path, "rb") as output_file:
+                output_bytes = output_file.read()
+            output_digest = hashlib.sha256(output_bytes).hexdigest()
+            if output_digest != audit["run"].get("output_file_sha256"):
+                raise AssertionError("Archived output QASM byte hash mismatch.")
+            archived_state = _qasm_exact_state(output_bytes.decode("utf-8"))
+            if archived_state != _qasm_exact_state(audit["run"]["output_circuit"]):
+                raise AssertionError(
+                    "Archived output QASM is not the exact replayed gate and "
+                    "parameter stream."
+                )
+        input_relative_path = audit["run"].get("input_file")
+        if input_relative_path:
+            search_directory = os.path.abspath(os.path.dirname(audit_path))
+            archived_input_path = None
+            while True:
+                candidate = os.path.join(search_directory, input_relative_path)
+                if os.path.exists(candidate):
+                    archived_input_path = candidate
+                    break
+                parent = os.path.dirname(search_directory)
+                if parent == search_directory:
+                    break
+                search_directory = parent
+            if archived_input_path is not None:
+                with open(archived_input_path, "rb") as input_file:
+                    input_bytes = input_file.read()
+                input_digest = hashlib.sha256(input_bytes).hexdigest()
+                if input_digest != audit["run"].get("input_file_sha256"):
+                    raise AssertionError("Archived input QASM byte hash mismatch.")
+                from squander import utils
+
+                source_circuit, source_parameters, _ = (
+                    utils.qasm_to_squander_circuit(archived_input_path)
+                )
+                converted_input = _squander_audit_representation(
+                    source_circuit,
+                    source_parameters,
+                    range(source_circuit.get_Qbit_Num()),
+                )
+                if _qasm_exact_state(converted_input) != _qasm_exact_state(
+                    audit["run"]["input_circuit"]
+                ):
+                    raise AssertionError(
+                        "Reparsing the archived input QASM did not reproduce "
+                        "the replay input gate and parameter stream."
+                    )
+    return {
+        "verified_rewrites": verified,
+        "accepted_rewrites": accepted,
+        "worst_process_infidelity": worst,
+        "worst_accepted_process_infidelity": worst_accepted,
+        "candidate_tolerance_misses": tolerance_misses,
+        "accepted_spectral_error_bound": accepted_spectral_sum,
+        "replayed_native_rounds": native_rounds,
+        "replayed_bqskit_invocations": bqskit_invocations,
+        "replayed_pam_routing_passes": pam_routing_passes,
+        "replayed_placement_passes": placement_passes,
+        "replayed_qiskit_sabre_passes": qiskit_sabre_passes,
+        "replayed_exact_osr_routing_passes": exact_osr_routing_passes,
+        "replayed_squander_sabre_passes": squander_sabre_passes,
+        "replayed_bqskit_stages": bqskit_stages,
+        "chained_bqskit_events": chained_bqskit_events,
+        "replayed_whole_circuit_transitions": replayed_transitions,
+        "final_circuit_sha256": final_circuit_sha256,
+    }
+
+
+def save_rewrite_audit(jsonl_path, output_path, run_metadata=None):
+    """Compact process-safe JSONL events into one atomic ``.json.gz`` ledger."""
+    events = []
+    jsonl_path = os.fspath(jsonl_path)
+    output_path = os.fspath(output_path)
+    if os.path.exists(jsonl_path):
+        with open(jsonl_path, encoding="utf-8") as audit_file:
+            for line_number, line in enumerate(audit_file, 1):
+                if line.strip():
+                    try:
+                        events.append(json.loads(line))
+                    except json.JSONDecodeError as error:
+                        raise AssertionError(
+                            f"Corrupt audit event at {jsonl_path}:{line_number}."
+                        ) from error
+    events.sort(
+        key=lambda event: (
+            event.get("timestamp_ns", 0),
+            event.get("event_id", ""),
+        )
+    )
+    for event in events:
+        if event.get("kind") == "rewrite":
+            event["metrics"] = _unitary_audit_metrics(
+                _audit_representation_unitary(event["before"]),
+                _audit_representation_unitary(event["after"]),
+            )
+            for metric_name, metric_value in tuple(event["metrics"].items()):
+                event["metrics"][f"{metric_name}_bits"] = _float64_bits(
+                    metric_value
+                )
+            event["within_tolerance"] = (
+                event["metrics"]["process_infidelity"]
+                <= float(event["tolerance"])
+            )
+        elif event.get("kind") == "bqskit_pam_routing":
+            for block in event.get("input_blocks", []):
+                if "original_unitary" not in block:
+                    continue
+                block["original_unitary_metrics"] = _unitary_audit_metrics(
+                    _audit_representation_unitary(block["before"]),
+                    _complex_matrix_from_json(block["original_unitary"]),
+                )
+                for metric_name, metric_value in tuple(
+                    block["original_unitary_metrics"].items()
+                ):
+                    block["original_unitary_metrics"][
+                        f"{metric_name}_bits"
+                    ] = _float64_bits(metric_value)
+    summary = {
+        "events": len(events),
+        "rewrites": sum(event.get("kind") == "rewrite" for event in events),
+        "accepted_rewrites": sum(
+            event.get("kind") == "rewrite" and event.get("accepted", False)
+            for event in events
+        ),
+        "failed_synthesis_attempts": sum(
+            event.get("kind") == "synthesis_attempt"
+            and not event.get("accepted", False)
+            for event in events
+        ),
+        "fallbacks": sum(bool(event.get("fallback_used", False)) for event in events),
+        "candidate_tolerance_misses": sum(
+            event.get("kind") == "rewrite"
+            and not event.get("within_tolerance", True)
+            and not event.get("accepted", False)
+            for event in events
+        ),
+    }
+    run = dict(run_metadata or {})
+    run.setdefault("software", rewrite_audit_software_versions())
+    audit = {
+        "schema_version": REWRITE_AUDIT_SCHEMA_VERSION,
+        "run": run,
+        "summary": summary,
+        "events": events,
+    }
+    temporary_path = output_path + ".tmp"
+    try:
+        with gzip.open(temporary_path, "wt", encoding="utf-8") as audit_file:
+            json.dump(audit, audit_file, separators=(",", ":"), allow_nan=False)
+        os.replace(temporary_path, output_path)
+    finally:
+        if os.path.exists(temporary_path):
+            os.unlink(temporary_path)
+    with open(output_path, "rb") as audit_file:
+        digest = hashlib.sha256(audit_file.read()).hexdigest()
+    return audit, digest
 
 
 # ---------------------------------------------------------------------------
@@ -311,6 +2106,20 @@ def _fallback_circuit_for_permutation(original_circuit, graph, pi, po):
         topo_edges.add((u, v))
         topo_edges.add((v, u))
 
+    if tuple(pi) == tuple(po):
+        # Equal boundary permutations are a change of wire labels, not a
+        # physical permutation that must be implemented twice.  In
+        # particular, reversing a two-qubit CNOT remains one CNOT; encoding
+        # it as SWAP-CNOT-SWAP poisons routing costs by six CNOTs.
+        relabeled = original_circuit.copy()
+        relabeled.renumber_qudits(tuple(pi))
+        try:
+            _assert_circuit_respects_topology(relabeled, topo_edges)
+        except AssertionError:
+            pass
+        else:
+            return relabeled
+
     fallback = _BQCircuit(width, original_circuit.radixes)
 
     for a, b in _topo_perm_to_swaps(pi, topo_edges, width):
@@ -339,16 +2148,39 @@ async def _squander_synthesize_or_fallback(
     inner_synthesis,
     target,
     target_data,
-    original_circuit,
-    graph,
-    pi,
-    po,
+    fallback,
 ):
     """Run Squander synthesis, falling back only for explicit Squander misses."""
+    used_fallback = False
     try:
-        return await inner_synthesis.synthesize(target, target_data)
+        synthesized = await inner_synthesis.synthesize(target, target_data)
     except _SquanderSynthesisFailed:
-        return _fallback_circuit_for_permutation(original_circuit, graph, pi, po)
+        synthesized = fallback
+        used_fallback = True
+    if _rewrite_audit_enabled():
+        before = {
+            "format": "unitary",
+            "unitary": _json_complex_matrix(np.asarray(target)),
+            "qubits": int(target.num_qudits),
+        }
+        after = _bqskit_audit_representation(synthesized)
+        config = getattr(inner_synthesis, "config", {})
+        _append_rewrite_audit_event(
+            _make_rewrite_event(
+                "seqpam_permutation_synthesis",
+                before,
+                after,
+                _synthesis_acceptance_tolerance(config),
+                accepted=False,
+                candidate=True,
+                stage=config.get("_rewrite_audit_stage", "routing"),
+                fallback_used=used_fallback,
+                input_permutation=target_data.get("_squander_input_permutation"),
+                output_permutation=target_data.get("_squander_output_permutation"),
+                subtopology=target_data.get("_squander_subtopology"),
+            )
+        )
+    return synthesized
 
 
 def _patch_eapp_if_needed():
@@ -444,24 +2276,46 @@ def _patch_eapp_if_needed():
         extended_datas = []
         extended_graphs = []
         extended_perms = []
-        original_circuits = []
+        fallback_circuits = []
         for target_index, target in enumerate(targets):
             for graph_index, graph in enumerate(graphs):
+                fallback = _fallback_circuit_for_permutation(
+                    circuit,
+                    graph,
+                    permsbyperms[target_index][0],
+                    permsbyperms[target_index][1],
+                )
+                # EAPP uses this fallback unless OSR finds a strictly cheaper
+                # circuit. Bound the search to circuits that can win instead
+                # of retaining the tree search's unrelated default depth 14.
+                fallback_entanglers = sum(
+                    1 for op in fallback if op.gate.num_qudits >= 2
+                )
+                target_data = _copy.deepcopy(datas[graph_index])
+                target_data['_squander_tree_level_max'] = max(
+                    0, fallback_entanglers - 1
+                )
+                target_data['_squander_input_permutation'] = list(
+                    permsbyperms[target_index][0]
+                )
+                target_data['_squander_output_permutation'] = list(
+                    permsbyperms[target_index][1]
+                )
+                target_data['_squander_subtopology'] = [
+                    [int(u), int(v)] for u, v in graph
+                ]
                 extended_targets.append(target)
-                extended_datas.append(datas[graph_index])
+                extended_datas.append(target_data)
                 extended_graphs.append(graph)
                 extended_perms.append(permsbyperms[target_index])
-                original_circuits.append(circuit)
+                fallback_circuits.append(fallback)
 
         circuits = await _get_runtime().map(
             _squander_synthesize_or_fallback,
             [self.inner_synthesis] * len(extended_targets),
             extended_targets,
             extended_datas,
-            original_circuits,
-            extended_graphs,
-            [perm[0] for perm in extended_perms],
-            [perm[1] for perm in extended_perms],
+            fallback_circuits,
         )
 
         perm_data = {}
@@ -523,7 +2377,7 @@ _patch_eapp_if_needed()
 
 
 class SquanderPartitioner(_BQSKitBasePass):
-    """BQSKit pass: replace circuit body with Squander ILP partition blocks."""
+    """BQSKit pass: replace the body with selected Squander partition blocks."""
 
     def __init__(self, max_partition_size):
         super().__init__()
@@ -545,14 +2399,26 @@ class SquanderPartitioner(_BQSKitBasePass):
             return
 
         circ, orig_parameters = Qiskit_IO.convert_Qiskit_to_Squander(circ_qiskit)
+        cfg = _SQUANDER_BQSKIT_SYNTHESIS_CONFIG
+        if not cfg:
+            import os as _os, json as _json
+            serialized = _os.environ.get('_SQUANDER_BQSKIT_CONFIG')
+            if serialized:
+                cfg = _json.loads(serialized)
+        partition_strategy = (cfg or {}).get(
+            "routing_partition_strategy", "ilp"
+        )
         partitioned_circuit, parameters, _ = PartitionCircuit(
-            circ, orig_parameters, self.max_partition_size, strategy="ilp"
+            circ,
+            orig_parameters,
+            self.max_partition_size,
+            strategy=partition_strategy,
         )
         partitioned_circuit_bqskit = BQSKitCircuit(circ.get_Qbit_Num())
         for subcircuit in partitioned_circuit.get_Gates():
             if not isinstance(subcircuit, Circuit):
                 raise RuntimeError(
-                    "Squander ILP partitioning returned a non-block gate; "
+                    "Squander partitioning returned a non-block gate; "
                     "BQSKit SEQPAM requires partition blocks."
                 )
 
@@ -575,6 +2441,203 @@ class SquanderPartitioner(_BQSKitBasePass):
                 True,
             )
         circuit.become(partitioned_circuit_bqskit, False)
+
+
+def _coupling_graph_embeds_in_model(edges, width, model_edges, model_width):
+    """Return whether ``edges`` has a subgraph embedding in the device model."""
+
+    if width > model_width:
+        return False
+
+    pattern_adjacency = [set() for _ in range(width)]
+    for u, v in edges:
+        u, v = int(u), int(v)
+        pattern_adjacency[u].add(v)
+        pattern_adjacency[v].add(u)
+
+    device_adjacency = [set() for _ in range(model_width)]
+    for u, v in model_edges:
+        u, v = int(u), int(v)
+        if u != v:
+            device_adjacency[u].add(v)
+            device_adjacency[v].add(u)
+
+    # Map high-degree pattern vertices first. Candidate locations are then the
+    # intersection of already mapped neighbours, avoiding the O(N**width)
+    # permutation scan that is prohibitive on Eagle-sized devices.
+    order = sorted(
+        range(width),
+        key=lambda vertex: (-len(pattern_adjacency[vertex]), vertex),
+    )
+    placement = {}
+    used = set()
+
+    def search(index):
+        if index == width:
+            return True
+        vertex = order[index]
+        mapped_neighbours = [
+            placement[neighbour]
+            for neighbour in pattern_adjacency[vertex]
+            if neighbour in placement
+        ]
+        if mapped_neighbours:
+            candidates = set(device_adjacency[mapped_neighbours[0]])
+            for neighbour in mapped_neighbours[1:]:
+                candidates.intersection_update(device_adjacency[neighbour])
+        else:
+            candidates = range(model_width)
+
+        for location in candidates:
+            if location in used:
+                continue
+            if len(device_adjacency[location]) < len(pattern_adjacency[vertex]):
+                continue
+            placement[vertex] = location
+            used.add(location)
+            if search(index + 1):
+                return True
+            used.remove(location)
+            del placement[vertex]
+        return False
+
+    return search(0)
+
+
+class SquanderSubtopologySelectionPass(_BQSKitBasePass):
+    """Select genuinely embeddable block topologies for SEQPAM.
+
+    BQSKit's ``filter_compatible_subgraphs`` may return non-embeddable
+    supergraphs. For example, it returns a triangle for a linear device.
+    Preserve labeled copies because EAPP needs them to cover every combination
+    of local topology and boundary permutation, but reject graphs that cannot
+    actually occur on the target device.
+    """
+
+    def __init__(self, block_size):
+        super().__init__()
+        self.block_size = int(block_size)
+        if self.block_size <= 1:
+            raise ValueError("Expected block_size > 1.")
+
+    async def run(self, circuit, data):
+        from bqskit.passes.mapping.topology import (
+            SubtopologySelectionPass,
+            all_coupling_graphs_of_size,
+        )
+        from bqskit.qis.graph import CouplingGraph
+
+        model = data.model
+        model_graph = model.coupling_graph
+        model_edges = tuple(model_graph)
+        model_width = int(model.num_qudits)
+        model_is_all_to_all = (
+            len(model_edges) == model_width * (model_width - 1) // 2
+        )
+        topologies = {}
+        for width in range(2, self.block_size + 1):
+            if model_is_all_to_all:
+                topologies[width] = [CouplingGraph.all_to_all(width)]
+                continue
+
+            representatives = {}
+            for candidate in all_coupling_graphs_of_size(width):
+                candidate_edges = tuple(candidate)
+                normalized = tuple(
+                    sorted(
+                        tuple(sorted((int(u), int(v))))
+                        for u, v in candidate_edges
+                    )
+                )
+                if normalized in representatives:
+                    continue
+                if _coupling_graph_embeds_in_model(
+                    normalized,
+                    width,
+                    model_edges,
+                    model_width,
+                ):
+                    representatives[normalized] = CouplingGraph(
+                        normalized, width
+                    )
+            topologies[width] = [
+                representatives[key]
+                for key in sorted(
+                    representatives,
+                    key=lambda item: (len(item), item),
+                )
+            ]
+            if not topologies[width]:
+                raise RuntimeError(
+                    f"Device topology has no connected {width}-qubit subgraph."
+                )
+
+        data[SubtopologySelectionPass.key] = topologies
+
+
+@dataclass(frozen=True)
+class SquanderPartitionSynthesisResult:
+    """Validated native result returned by the shared synthesis callback."""
+
+    circuit: Circuit
+    parameters: np.ndarray
+    config: dict
+    topology: Optional[tuple]
+
+
+def synthesize_partition_with_squander(
+    target_matrix,
+    config,
+    *,
+    mini_topology=None,
+    tree_level_max=None,
+):
+    """Run one topology-aware Squander partition synthesis consistently.
+
+    This is the native callback shared by BQSKit's permutation-aware routing
+    adapter and Squander's exact router.  It owns configuration resolution,
+    the optional routing search bound, candidate selection, parameter dtype,
+    and the acceptance check performed by ``DecomposePartition``.  Conversion
+    to a foreign circuit representation deliberately remains in the adapter.
+    """
+    resolved_config = {
+        **dict(config or {}),
+        "topology": mini_topology,
+    }
+    resolved_config = qgd_Wide_Circuit_Optimization(
+        resolved_config
+    ).config
+    if tree_level_max is not None:
+        # Routing supplies the strict-improvement bound of one fewer CNOT
+        # than its topology-valid fallback.  Do not let a generic synthesis
+        # cap silently make that exact routing search incomplete.
+        resolved_config["tree_level_max"] = int(tree_level_max)
+
+    target_matrix = np.asarray(target_matrix, dtype=np.complex128)
+    candidates = qgd_Wide_Circuit_Optimization.DecomposePartition(
+        target_matrix,
+        resolved_config,
+        mini_topology=mini_topology,
+    )
+    if not candidates:
+        return None
+
+    optimized_circuit, optimized_parameters = (
+        qgd_Wide_Circuit_Optimization.CompareAndPickCircuits(
+            [candidate[0] for candidate in candidates],
+            [candidate[1] for candidate in candidates],
+        )
+    )
+    return SquanderPartitionSynthesisResult(
+        circuit=optimized_circuit,
+        parameters=np.asarray(optimized_parameters, dtype=np.float64),
+        config=resolved_config,
+        topology=(
+            None
+            if mini_topology is None
+            else tuple((int(u), int(v)) for u, v in mini_topology)
+        ),
+    )
 
 
 class SquanderSynthesisPass(_BQSKitSynthesisPass):
@@ -646,33 +2709,28 @@ class SquanderSynthesisPass(_BQSKitSynthesisPass):
         qbit_num = target.num_qudits
         mini_topology = self._data_topology(data, qbit_num)
 
-        config = {
-            **self.config,
-            "topology": mini_topology,
-        }
+        routing_level_max = None
+        if data is not None and '_squander_tree_level_max' in data:
+            routing_level_max = int(data['_squander_tree_level_max'])
 
-        candidates = qgd_Wide_Circuit_Optimization.DecomposePartition(
+        result = synthesize_partition_with_squander(
             target_matrix,
-            config,
+            self.config,
             mini_topology=mini_topology,
+            tree_level_max=routing_level_max,
         )
-        if len(candidates) == 0:
-            tolerance = config.get("tolerance", _default_squander_tolerance(config))
+        if result is None:
+            tolerance = self.config.get(
+                "tolerance", _default_squander_tolerance(self.config)
+            )
             raise _SquanderSynthesisFailed(
                 f"Squander synthesis failed for {qbit_num}-qubit block "
                 f"at tolerance {tolerance}."
             )
 
-        optimized_circuit, optimized_parameters = (
-            qgd_Wide_Circuit_Optimization.CompareAndPickCircuits(
-                [candidate[0] for candidate in candidates],
-                [candidate[1] for candidate in candidates],
-            )
-        )
-
         optimized_qiskit = Qiskit_IO.get_Qiskit_Circuit(
-            optimized_circuit.get_Flat_Circuit(),
-            np.asarray(optimized_parameters, dtype=np.float64),
+            result.circuit.get_Flat_Circuit(),
+            result.parameters,
         )
         synthesized = OPENQASM2Language().decode(qasm2.dumps(optimized_qiskit))
 
@@ -691,10 +2749,14 @@ class SquanderSynthesisPass(_BQSKitSynthesisPass):
         if self.config.get("bqskit_distance_test", False):
             target_unitary = UnitaryMatrix(target)
             distance = target_unitary.get_distance_from(synthesized.get_unitary())
-            tol = _bqskit_synthesis_validation_tolerance(self.config)
-            if distance > tol:
+            process_tolerance = _synthesis_acceptance_tolerance(
+                self.config
+            )
+            distance_tolerance = np.sqrt(process_tolerance)
+            if distance > distance_tolerance:
                 raise _SquanderSynthesisFailed(
-                    f"BQSKit synthesis validation failed: {distance:.2e} > {tol:.2e}"
+                    "BQSKit synthesis validation failed: "
+                    f"{distance:.2e} > {distance_tolerance:.2e}"
                 )
 
         return synthesized
@@ -759,6 +2821,422 @@ def _topo_perm_to_swaps(pi, topo_edges, width):
     return swaps
 
 
+def _audited_foreach_class(base_class, config):
+    """Wrap BQSKit's block control pass without copying its implementation."""
+    from bqskit.passes.control.foreach import gen_replace_filter
+    from bqskit.ir.gates import CircuitGate
+    from bqskit import Circuit as BQSKitCircuit
+    configured_audit = _copy_bqskit_synthesis_config(config)
+
+    class AuditedForEachBlockPass(base_class):
+        async def run(self, circuit, data):
+            started_ns = time.time_ns()
+            configured_filter = self.replace_filter
+            replace_filter = (
+                gen_replace_filter(configured_filter, data.model)
+                if isinstance(configured_filter, str)
+                else configured_filter
+            )
+
+            invocation = getattr(self, "_squander_audit_invocation", 0)
+            self._squander_audit_invocation = invocation + 1
+            block_index = [0]
+            invocation_id = uuid.uuid4().hex
+            parent_key = self.pass_down_key_prefix + "squander_audit_parent"
+            parent_id = data.get(parent_key)
+            previous_parent = data.get(parent_key)
+            data[parent_key] = invocation_id
+            input_state = _bqskit_exact_state(circuit)
+            parent_operations = []
+            collected_operations = []
+            for cycle, operation in circuit.operations_with_cycles():
+                if isinstance(operation.gate, CircuitGate):
+                    local_circuit = operation.gate._circuit.copy()
+                    local_circuit.set_params(operation.params)
+                else:
+                    local_circuit = BQSKitCircuit.from_operation(operation)
+                record = {
+                    "cycle": int(cycle),
+                    "location": [int(q) for q in operation.location],
+                    "before": _bqskit_audit_representation(local_circuit),
+                    "collected": bool(self.collection_filter(operation)),
+                    "rewrite_event_id": None,
+                }
+                parent_operations.append(record)
+                if record["collected"]:
+                    collected_operations.append(record)
+
+            def audited_replace_filter(candidate, operation):
+                current_block = block_index[0]
+                block_index[0] += 1
+                accepted = bool(replace_filter(candidate, operation))
+                if isinstance(operation.gate, CircuitGate):
+                    original = operation.gate._circuit.copy()
+                    original.set_params(operation.params)
+                else:
+                    original = BQSKitCircuit.from_operation(operation)
+                before = _bqskit_audit_representation(original)
+                after = _bqskit_audit_representation(candidate)
+                tolerance = _synthesis_acceptance_tolerance(
+                    configured_audit
+                )
+                event_id = _append_rewrite_audit_event(
+                    _make_rewrite_event(
+                        "bqskit_partition_rewrite",
+                        before,
+                        after,
+                        tolerance,
+                        accepted=accepted,
+                        stage=configured_audit.get("_rewrite_audit_stage"),
+                        invocation=int(invocation),
+                        block_index=int(current_block),
+                        location=[int(q) for q in operation.location],
+                        workflow=getattr(self.workflow, "name", type(self.workflow).__name__),
+                    )
+                )
+                collected_operations[current_block]["rewrite_event_id"] = event_id
+                return accepted
+
+            self.replace_filter = audited_replace_filter
+            try:
+                await super().run(circuit, data)
+            finally:
+                self.replace_filter = configured_filter
+                if previous_parent is None:
+                    data.pop(parent_key, None)
+                else:
+                    data[parent_key] = previous_parent
+            if block_index[0] != len(collected_operations):
+                raise AssertionError(
+                    "BQSKit audit did not observe every collected block."
+                )
+            output_state = _bqskit_exact_state(circuit)
+            _append_rewrite_audit_event(
+                {
+                    "event_id": invocation_id,
+                    "kind": "bqskit_foreach",
+                    "component": "bqskit_partition_replay",
+                    "stage": configured_audit.get("_rewrite_audit_stage"),
+                    "parent_event_id": parent_id,
+                    "started_ns": started_ns,
+                    "invocation": int(invocation),
+                    "workflow": getattr(
+                        self.workflow, "name", type(self.workflow).__name__
+                    ),
+                    "input": input_state,
+                    "input_sha256": _exact_state_sha256(input_state),
+                    "output": output_state,
+                    "output_sha256": _exact_state_sha256(output_state),
+                    "parent_operations": parent_operations,
+                }
+            )
+
+    AuditedForEachBlockPass.__name__ = "AuditedForEachBlockPass"
+    return AuditedForEachBlockPass
+
+
+def _circuit_point_json(point):
+    """Serialize a BQSKit CircuitPoint as two integers."""
+    return [int(point[0]), int(point[1])]
+
+
+def _pam_exact_target(original_unitary, pre_perm, post_perm):
+    """Build BQSKit's exact local PAM target for recorded permutations."""
+    from bqskit import Circuit as BQSKitCircuit
+    from bqskit.ir.gates import ConstantUnitaryGate, PermutationGate
+
+    width = int(original_unitary.num_qudits)
+    opposite_pre = tuple(pre_perm.index(i) for i in range(width))
+    opposite_post = tuple(post_perm.index(i) for i in range(width))
+    exact = BQSKitCircuit(width)
+    exact.append_gate(PermutationGate(width, opposite_pre), range(width))
+    exact.append_gate(ConstantUnitaryGate(original_unitary), range(width))
+    exact.append_gate(PermutationGate(width, opposite_post), range(width))
+    return np.asarray(exact.get_unitary(), dtype=np.complex128)
+
+
+def _cnot_aware_pam_routing_class(base_class, config):
+    """Scale PAM's native entangler-aware mapping heuristic if requested.
+
+    BQSKit's PAM objective is::
+
+        mapping_score + two_qubit_gates * gate_count_weight / len(front)
+
+    BQSKit already counts only multi-qudit gates in the competing gate term;
+    for Squander's U3+CNOT candidates this is exactly the local CNOT count.
+    Its layout and routing passes intentionally use different gate weights
+    (0.3 and 0.1), hence different look-ahead/local-cost tradeoffs.  Replacing
+    both with one unit gate weight destroyed that calibration and produced
+    severe routing blowups.  A cost of three is therefore the neutral/native
+    setting; other values scale only the mapping term while preserving each
+    pass's native entangler weight.
+    """
+
+    swap_cnot_cost = float(config.get("pam_swap_cnot_cost", 3.0))
+    class CNOTAwarePAMPass(base_class):
+        def _score_perm(self, circuit, F, pi, D, perm, E):
+            mapping_score = super()._score_perm(circuit, F, pi, D, perm, E)
+            if not F:
+                return 0.0
+            return (swap_cnot_cost / 3.0) * mapping_score
+
+    CNOTAwarePAMPass.__name__ = f"CNOTAware{base_class.__name__}"
+    return CNOTAwarePAMPass
+
+
+def _audited_pam_class(base_class, config):
+    """Wrap PAM routing with a complete, replayable action certificate."""
+    configured_audit = _copy_bqskit_synthesis_config(config)
+
+    class AuditedPAMRoutingPass(base_class):
+        def _get_best_perm(self, circuit, perm_data, *args, **kwargs):
+            mapping_before = list(args[2])
+            result = super()._get_best_perm(circuit, perm_data, *args, **kwargs)
+            input_point = self._squander_point_by_perm_data[id(perm_data)]
+            operation = circuit[input_point]
+            self._squander_choices.append(
+                {
+                    "input_point": _circuit_point_json(input_point),
+                    "logical_location": [int(q) for q in operation.location],
+                    "pre_perm_global": [int(q) for q in result[0]],
+                    "post_perm_global": [int(q) for q in result[2]],
+                    "mapping_before": [int(q) for q in mapping_before],
+                    "selected": _bqskit_audit_representation(result[1]),
+                }
+            )
+            return result
+
+        def _apply_swap(self, swap, mapping, decay):
+            before = list(mapping)
+            result = super()._apply_swap(swap, mapping, decay)
+            if hasattr(self, "_squander_mapping_trace"):
+                self._squander_mapping_trace.append(
+                    {
+                        "kind": "swap",
+                        "swap": [int(q) for q in swap],
+                        "before": [int(q) for q in before],
+                        "after": [int(q) for q in mapping],
+                    }
+                )
+            return result
+
+        def _apply_perm(self, permutation, mapping):
+            before = list(mapping)
+            result = super()._apply_perm(permutation, mapping)
+            if hasattr(self, "_squander_mapping_trace"):
+                self._squander_mapping_trace.append(
+                    {
+                        "kind": "permutation",
+                        "permutation": [int(q) for q in permutation],
+                        "before": [int(q) for q in before],
+                        "after": [int(q) for q in mapping],
+                    }
+                )
+            return result
+
+        async def run(self, circuit, data):
+            from bqskit.passes.control.foreach import ForEachBlockPass
+
+            started_ns = time.time_ns()
+            input_circuit = circuit.copy()
+            input_state = _bqskit_exact_state(input_circuit)
+            block_datas = data[ForEachBlockPass.key][-1]
+            self._squander_point_by_perm_data = {
+                id(block_data["permutation_data"]): block_data["point"]
+                for block_data in block_datas
+            }
+            self._squander_choices = []
+            self._squander_mapping_trace = []
+            mapping_before_pass = [int(q) for q in data.final_mapping]
+            input_blocks = []
+            for point in sorted(self._squander_point_by_perm_data.values()):
+                operation = input_circuit[point]
+                predecessors = sorted(input_circuit.prev(point))
+                if hasattr(operation.gate, "_circuit"):
+                    source_block = operation.gate._circuit.copy()
+                    source_block.set_params(operation.params)
+                else:
+                    source_block = type(input_circuit).from_operation(operation)
+                input_blocks.append(
+                    {
+                        "point": _circuit_point_json(point),
+                        "location": [int(q) for q in operation.location],
+                        "predecessors": [
+                            _circuit_point_json(predecessor)
+                            for predecessor in predecessors
+                        ],
+                        "before": _bqskit_audit_representation(
+                            source_block
+                        ),
+                    }
+                )
+            input_block_by_point = {
+                tuple(block["point"]): block for block in input_blocks
+            }
+
+            await super().run(circuit, data)
+            out_data = data[self.out_data_key]
+            if len(self._squander_choices) != len(out_data):
+                raise AssertionError("PAM audit choice/output count mismatch.")
+
+            routed_blocks = {}
+            for choice, (output_point, block_data) in zip(
+                self._squander_choices, out_data.items()
+            ):
+                # PAM creates original_utry during its run and may evaluate it
+                # through a numerically different path than source_block.
+                # Preserve the exact target input and later certify its
+                # fidelity to the independently replayable input gate stream.
+                input_block_by_point[tuple(choice["input_point"])][
+                    "original_unitary"
+                ] = _json_complex_matrix(block_data["original_utry"])
+                output_operation = circuit[output_point]
+                selected = (
+                    output_operation.gate._circuit.copy()
+                    if hasattr(output_operation.gate, "_circuit")
+                    else type(circuit).from_operation(output_operation)
+                )
+                selected.set_params(output_operation.params)
+                selected_representation = _bqskit_audit_representation(selected)
+                if (
+                    _bqskit_representation_exact_state(choice["selected"])
+                    != _bqskit_representation_exact_state(selected_representation)
+                ):
+                    raise AssertionError("PAM selected circuit changed before routing output.")
+                target = {
+                    "format": "unitary",
+                    "unitary": _json_complex_matrix(
+                        _pam_exact_target(
+                            block_data["original_utry"],
+                            block_data["pre_perm"],
+                            block_data["post_perm"],
+                        )
+                    ),
+                    "qubits": int(block_data["original_utry"].num_qudits),
+                }
+                rewrite_id = _append_rewrite_audit_event(
+                    _make_rewrite_event(
+                        "bqskit_pam_selected_block",
+                        target,
+                        selected_representation,
+                        _synthesis_acceptance_tolerance(configured_audit),
+                        accepted=True,
+                        stage=configured_audit.get("_rewrite_audit_stage"),
+                        input_point=choice["input_point"],
+                        output_point=_circuit_point_json(output_point),
+                        input_permutation=list(block_data["pre_perm"]),
+                        output_permutation=list(block_data["post_perm"]),
+                    )
+                )
+                choice.update(
+                    {
+                        "output_point": _circuit_point_json(output_point),
+                        "physical_location": [
+                            int(q) for q in output_operation.location
+                        ],
+                        "pre_perm_local": list(block_data["pre_perm"]),
+                        "post_perm_local": list(block_data["post_perm"]),
+                        "rewrite_event_id": rewrite_id,
+                    }
+                )
+                routed_blocks[tuple(output_point)] = choice
+
+            actions = []
+            for cycle, operation in circuit.operations_with_cycles():
+                point = (int(cycle), int(operation.location[0]))
+                if point in routed_blocks:
+                    actions.append({"kind": "block", **routed_blocks[point]})
+                else:
+                    local = type(circuit).from_operation(operation)
+                    actions.append(
+                        {
+                            "kind": "gate",
+                            "location": [int(q) for q in operation.location],
+                            "circuit": _bqskit_audit_representation(local),
+                        }
+                    )
+
+            output_state = _bqskit_exact_state(circuit)
+            _append_rewrite_audit_event(
+                {
+                    "kind": "bqskit_pam_routing",
+                    "component": "bqskit_pam_replay",
+                    "stage": configured_audit.get("_rewrite_audit_stage"),
+                    "started_ns": started_ns,
+                    "input": input_state,
+                    "input_sha256": _exact_state_sha256(input_state),
+                    "output": output_state,
+                    "output_sha256": _exact_state_sha256(output_state),
+                    "input_blocks": input_blocks,
+                    "actions": actions,
+                    "choices": self._squander_choices,
+                    "local_final_mapping": (
+                        self._squander_mapping_trace[-1]["after"]
+                        if self._squander_mapping_trace
+                        else list(range(circuit.num_qudits))
+                    ),
+                    "mapping_before_pass": mapping_before_pass,
+                    "mapping_after_pass": [int(q) for q in data.final_mapping],
+                    "mapping_trace": self._squander_mapping_trace,
+                }
+            )
+
+    AuditedPAMRoutingPass.__name__ = "AuditedPAMRoutingPass"
+    return AuditedPAMRoutingPass
+
+
+def _audited_apply_placement_class(base_class, config):
+    """Wrap ApplyPlacement with an exact wire-renumbering certificate."""
+    configured_audit = _copy_bqskit_synthesis_config(config)
+
+    class AuditedApplyPlacement(base_class):
+        async def run(self, circuit, data):
+            started_ns = time.time_ns()
+            input_state = _bqskit_exact_state(circuit)
+            parent_operations = []
+            for _, operation in circuit.operations_with_cycles():
+                if hasattr(operation.gate, "_circuit"):
+                    local_circuit = operation.gate._circuit.copy()
+                    local_circuit.set_params(operation.params)
+                else:
+                    local_circuit = type(circuit).from_operation(operation)
+                parent_operations.append(
+                    {
+                        "location": [int(q) for q in operation.location],
+                        "circuit": _bqskit_audit_representation(local_circuit),
+                    }
+                )
+            placement = [int(q) for q in data.placement]
+            mapping_before = {
+                "initial": [int(q) for q in data.initial_mapping],
+                "final": [int(q) for q in data.final_mapping],
+            }
+            await super().run(circuit, data)
+            output_state = _bqskit_exact_state(circuit)
+            _append_rewrite_audit_event(
+                {
+                    "kind": "bqskit_apply_placement",
+                    "component": "bqskit_placement_replay",
+                    "stage": configured_audit.get("_rewrite_audit_stage"),
+                    "started_ns": started_ns,
+                    "placement": placement,
+                    "parent_operations": parent_operations,
+                    "mapping_before": mapping_before,
+                    "mapping_after": {
+                        "initial": [int(q) for q in data.initial_mapping],
+                        "final": [int(q) for q in data.final_mapping],
+                    },
+                    "input": input_state,
+                    "input_sha256": _exact_state_sha256(input_state),
+                    "output": output_state,
+                    "output_sha256": _exact_state_sha256(output_state),
+                }
+            )
+
+    AuditedApplyPlacement.__name__ = "AuditedApplyPlacement"
+    return AuditedApplyPlacement
+
+
 @contextlib.contextmanager
 def patched_seqpam_workflow_classes(bqskit_compile_module, use_squander_partitioner, config):
     """Patch BQSKit workflow factories to use Squander passes.
@@ -778,6 +3256,10 @@ def patched_seqpam_workflow_classes(bqskit_compile_module, use_squander_partitio
     original_quick = bqskit_compile_module.QuickPartitioner
     original_qsearch = bqskit_compile_module.QSearchSynthesisPass
     original_leap = bqskit_compile_module.LEAPSynthesisPass
+    original_foreach = bqskit_compile_module.ForEachBlockPass
+    original_pam = bqskit_compile_module.PAMRoutingPass
+    original_subtopology = bqskit_compile_module.SubtopologySelectionPass
+    original_apply_placement = bqskit_compile_module.ApplyPlacement
     original_config = _SQUANDER_BQSKIT_SYNTHESIS_CONFIG
     original_config_env = _os.environ.get('_SQUANDER_BQSKIT_CONFIG')
     try:
@@ -785,21 +3267,84 @@ def patched_seqpam_workflow_classes(bqskit_compile_module, use_squander_partitio
         _SQUANDER_BQSKIT_SYNTHESIS_CONFIG = cfg
         # Also store in env var so worker processes (Popen) inherit it
         _os.environ['_SQUANDER_BQSKIT_CONFIG'] = _json.dumps(cfg)
+        # BQSKit may report non-embeddable block graphs (for example, a
+        # triangle on a linear device). Use the same exact topology filter for
+        # both ILP and Quick partitioning so the comparison remains fair.
+        bqskit_compile_module.SubtopologySelectionPass = (
+            SquanderSubtopologySelectionPass
+        )
         if use_squander_partitioner:
             bqskit_compile_module.QuickPartitioner = SquanderPartitioner
+            # Placement does not emit gates and its bidirectional search needs
+            # BQSKit's mapping-only score. Replace only the final routing
+            # choice, where synthesized blocks and inserted SWAPs contribute
+            # directly to the emitted CNOT count.
+            bqskit_compile_module.PAMRoutingPass = _cnot_aware_pam_routing_class(
+                original_pam, config
+            )
         if config.get("strategy") in _SQUANDER_NATIVE_STRATEGIES:
             bqskit_compile_module.QSearchSynthesisPass = SquanderSynthesisPass
             bqskit_compile_module.LEAPSynthesisPass = SquanderSynthesisPass
+        if _os.environ.get(_REWRITE_AUDIT_PATH_ENV):
+            bqskit_compile_module.ForEachBlockPass = _audited_foreach_class(
+                original_foreach, config
+            )
+            bqskit_compile_module.PAMRoutingPass = _audited_pam_class(
+                bqskit_compile_module.PAMRoutingPass, config
+            )
+            bqskit_compile_module.ApplyPlacement = (
+                _audited_apply_placement_class(original_apply_placement, config)
+            )
         yield
     finally:
         bqskit_compile_module.QuickPartitioner = original_quick
         bqskit_compile_module.QSearchSynthesisPass = original_qsearch
         bqskit_compile_module.LEAPSynthesisPass = original_leap
+        bqskit_compile_module.ForEachBlockPass = original_foreach
+        bqskit_compile_module.PAMRoutingPass = original_pam
+        bqskit_compile_module.SubtopologySelectionPass = original_subtopology
+        bqskit_compile_module.ApplyPlacement = original_apply_placement
         _SQUANDER_BQSKIT_SYNTHESIS_CONFIG = original_config
         if original_config_env is None:
             _os.environ.pop('_SQUANDER_BQSKIT_CONFIG', None)
         else:
             _os.environ['_SQUANDER_BQSKIT_CONFIG'] = original_config_env
+
+
+def _remove_seqpam_preoptimization(workflow):
+    """Drop BQSKit's redundant A2A SeqPAM phase from a routing workflow.
+
+    WCO has already optimized the circuit with all-to-all connectivity before
+    invoking its router. BQSKit's stock workflow nevertheless partitions,
+    permutation-synthesizes, and unfolds the circuit once on extracted A2A
+    connectivity before repeating those operations for the actual topology.
+    Keep the mapping half beginning at ``SubtopologySelectionPass``.
+    """
+
+    root_passes = getattr(workflow, "_passes", None)
+    if not isinstance(root_passes, list) or len(root_passes) != 1:
+        raise RuntimeError("Unexpected BQSKit SeqPAM workflow root structure.")
+    conditional = root_passes[0]
+    on_true = getattr(conditional, "on_true", None)
+    passes = getattr(on_true, "_passes", None)
+    if not isinstance(passes, list):
+        raise RuntimeError("Unexpected BQSKit SeqPAM conditional structure.")
+
+    mapping_start = next(
+        (
+            index
+            for index, pass_object in enumerate(passes)
+            if type(pass_object).__name__ == "SubtopologySelectionPass"
+            or isinstance(pass_object, SquanderSubtopologySelectionPass)
+        ),
+        None,
+    )
+    if mapping_start is None:
+        raise RuntimeError(
+            "BQSKit SeqPAM workflow has no SubtopologySelectionPass."
+        )
+    on_true._passes = passes[mapping_start:]
+    return workflow
 
 
 def extract_subtopology(involved_qbits, qbit_map, config):
@@ -960,6 +3505,10 @@ class qgd_Wide_Circuit_Optimization:
     and routing when the circuit does not match the target topology.
     """
 
+    save_rewrite_audit = staticmethod(save_rewrite_audit)
+    load_rewrite_audit = staticmethod(load_rewrite_audit)
+    verify_rewrite_audit = staticmethod(verify_rewrite_audit)
+
     def __init__(self, config):
         """Validate and store wide-circuit optimization ``config`` (strategy, topology, partitioning, tolerances)."""
 
@@ -969,19 +3518,199 @@ class qgd_Wide_Circuit_Optimization:
         config.setdefault("use_float", False)
         config.setdefault("tolerance", _default_squander_tolerance(config))
         config.setdefault(
+            "osr_optimization_tolerance",
+            OSR_OPTIMIZATION_TOLERANCE,
+        )
+        # Jointly optimize the complete exact-CNOT coverage profile. The
+        # eight-hop BFGS2 ceiling is needed by hard seeds; easy fidelity solves
+        # can terminate after their initial local minimization.
+        config.setdefault("osr_profile_temperature", 0.1)
+        config.setdefault("osr_cut_smoothmax_temperature", 0.1)
+        config.setdefault("optimizer", "BFGS2")
+        config.setdefault("use_basin_hopping", True)
+        config.setdefault("use_differential_evolution", False)
+        config.setdefault("use_dual_annealing", False)
+        config.setdefault("max_iteration_loops", 8)
+        config.setdefault("max_inner_iterations_bfgs2", 1000)
+        # An equal-CNOT rewrite can change the local circuit structure and
+        # expose reductions to the next all-partition round.  Do not confuse
+        # that useful plateau motion with convergence, but bound it so a
+        # sequence of equivalent rewrites cannot run indefinitely.
+        config.setdefault("max_equal_cnot_optimization_rounds", 3)
+        config.setdefault(
             "circuit_validation_tolerance",
             _default_circuit_validation_tolerance(config),
         )
         config.setdefault(
-            "bqskit_synthesis_validation_tolerance",
-            _default_bqskit_synthesis_validation_tolerance(config),
+            "synthesis_acceptance_tolerance",
+            SYNTHESIS_ACCEPTANCE_TOLERANCE,
         )
+        config["bqskit_synthesis_epsilon"] = _bqskit_synthesis_epsilon(config)
         config.setdefault("test_subcircuits", False)
         config.setdefault("test_final_circuit", True)
         config.setdefault("max_partition_size", 3)
         config.setdefault("topology", None)
         config.setdefault("partition_strategy", "ilp")
-        config.setdefault("auto_expand_partition_size", True)
+        # Keep the exact minimum-partition ILP as the routing default.  The
+        # optional ``ilp-routing`` objective is experimental and can select
+        # materially worse SEQPAM blocks despite preserving minimum cardinality.
+        config.setdefault("routing_partition_strategy", "ilp")
+        # The default router couples the all-partition exact-cover master to
+        # permutation-aware OSR columns and exact SAT/Gurobi mapping flow. It
+        # returns that routed synthesis directly: no foreign synthesis and no
+        # post-routing cleanup are included in the reported route.
+        config.setdefault("routing-strategy", "exact-osr")
+        # Use the compact PuLP/Gurobi Benders master. It separates exact-cover
+        # column choice from the complete mapping/SWAP trajectory, while the
+        # monolithic ILP remains selectable as a cross-check.
+        config.setdefault("exact_routing_master", "benders")
+        # Build the complete symmetry-reduced topology-aware OSR catalog
+        # before invoking PAM or the exact master. This makes routing quality
+        # independent of optimistic column order and keeps the 20-minute
+        # budget strictly a solver budget.
+        config.setdefault("exact_routing_lazy_osr", False)
+        # Routing prices each symmetry-distinct permutation exactly once.
+        # Additional randomized retries multiply the dominant OSR cost and
+        # make the exhaustive global router impractical on benchmark-scale
+        # circuits. The topology-valid fallback already supplies a strict
+        # per-target CNOT ceiling to the single attempt.
+        config.setdefault("exact_routing_synthesis_restarts", 1)
+        # Retry only the observed hard three-qubit boundary class: a six-CNOT
+        # routed source plus exactly one SWAP. This closes the concrete
+        # stochastic miss without repeating the complete routing catalog.
+        config.setdefault("exact_routing_fallback_retry_count", 1)
+        # Routing targets need the same deterministic basin schedule as normal
+        # OSR synthesis. A two-start shortcut both missed easy 2-CNOT columns
+        # and ran longer on multiply_n13 than the full eight-start schedule.
+        config.setdefault(
+            "routing_column_max_iteration_loops",
+            int(config["max_iteration_loops"]),
+        )
+        config.setdefault("routing_column_synthesis_mode", "topology-osr")
+        config.setdefault("exact_routing_catalog_progress", True)
+        config.setdefault("exact_routing_catalog_progress_interval", 25)
+        config.setdefault("exact_routing_light_sabre_seed_count", 32)
+        config.setdefault("exact_routing_light_sabre_trials_per_seed", 1)
+        config.setdefault("exact_routing_light_guided_cover_count", 8)
+        # The former mapping-flow model is incomplete as a router because it
+        # cannot insert arbitrary inter-block SWAPs, but any solution it does
+        # find is a valid, compact MIP start for the complete staged model.
+        config.setdefault("exact_routing_flow_seed", True)
+        config.setdefault("exact_routing_flow_seed_timeout_seconds", 30.0)
+        # PuLP model construction occurs before the solver time limit applies.
+        # Bound the auxiliary flow seed by its dominant expression terms so a
+        # large route cannot exhaust host memory while merely building a MIP
+        # start. The complete Benders router and its LightSABRE incumbent are
+        # unaffected when this optional seed is skipped.
+        config.setdefault("exact_routing_flow_seed_max_terms", 500_000)
+        # PuLP builds the staged path-order oracle in Python before Gurobi's
+        # time limit starts. Its O(partitions * qubits^3) triangle system can
+        # otherwise exhaust a large host. Above this bound Benders safely
+        # returns the best replayable LightSABRE/PAM incumbent.
+        config.setdefault(
+            "exact_routing_fixed_cover_max_triangle_constraints", 500_000
+        )
+        config.setdefault("exact_routing_fixed_cover_backend", "sat")
+        config.setdefault("exact_routing_sat_solver", "glucose42")
+        config.setdefault(
+            "exact_routing_sat_max_estimated_clauses", 5_000_000
+        )
+        # Native OSR calls run in isolated processes, but isolation alone does
+        # not bound their aggregate memory. Keep both concurrency and each
+        # worker's address space bounded, and stop well before host recovery
+        # services such as SSH are threatened.
+        # Match the normal WCO pool: None inherits partition_workers and then
+        # falls back to every host CPU. An explicit integer remains available
+        # for smaller machines.
+        config.setdefault("routing_synthesis_workers", None)
+        # The native three-qubit OSR backend reserves more virtual address
+        # space than its resident set. A 12-GiB RLIMIT_AS silently rejected
+        # valid columns; one 16-GiB worker remains safely bounded.
+        config.setdefault("routing_synthesis_worker_memory_limit_gib", 16.0)
+        config.setdefault("routing_minimum_available_memory_fraction", 0.25)
+        # Bound cumulative routing-ILP time (compact master, flow certificates,
+        # and fixed-cover oracles). Partition enumeration and OSR pricing must
+        # finish so the master sees the complete column set; they are excluded.
+        config.setdefault("exact_routing_timeout_seconds", 20 * 60)
+        # A zero-interstage-SWAP check is a useful certificate, but some fixed
+        # covers make that auxiliary ILP unexpectedly difficult.  Keep it a
+        # short probe so the complete staged oracle always gets time to build
+        # a synthesis-aware incumbent.
+        config.setdefault(
+            "exact_routing_benders_zero_swap_probe_seconds", 5.0
+        )
+        # Do not let the compact cover master monopolize the whole budget at
+        # its root relaxation. Price its best incumbent between short slices
+        # so routing quality improves even when global proof remains hard.
+        config.setdefault("exact_routing_benders_master_slice_seconds", 30.0)
+        config.setdefault(
+            "exact_routing_benders_subproblem_slice_seconds", 60.0
+        )
+        # Equal-score native layout choices can change a fixed-cover route by
+        # dozens of CNOTs. Screen a small deterministic multi-pass portfolio
+        # against the immutable OSR catalog, then spend the normal beam only
+        # on its best two layouts. This work performs no synthesis and is not
+        # charged to the exact-master time budget.
+        config.setdefault("exact_routing_layout_seed_count", 8)
+        config.setdefault("exact_routing_layout_total_passes", 8)
+        config.setdefault("exact_routing_layout_candidate_limit", 2)
+        config.setdefault(
+            "exact_routing_layout_portfolio_timeout_seconds", None
+        )
+        # A fixed two-minute no-improvement stop repeatedly terminated the
+        # global solve at its root and returned the original weak seed. The
+        # explicit 20-minute solver budget is the only default termination.
+        config.setdefault("exact_routing_benders_stagnation_seconds", None)
+        config.setdefault("exact_routing_cover_pool_timeout_seconds", 10.0)
+        config.setdefault("exact_routing_minimum_cover_seed_count", 8)
+        config.setdefault("exact_routing_post_catalog_pam_seed_count", 12)
+        config.setdefault("exact_routing_cover_seed_timeout_seconds", 10.0)
+        # The exact token-order seed is useful diagnostically, but on the
+        # benchmark outlier it did not improve a strong structural incumbent
+        # in three minutes. Keep it opt-in so seed construction cannot consume
+        # routing time without progress.
+        config.setdefault("exact_routing_token_seed_timeout_seconds", 0.0)
+        config.setdefault(
+            "exact_routing_token_seed_cover_strategies",
+            ("light-structural",),
+        )
+        config.setdefault("exact_routing_cover_seed_beam_width", 64)
+        config.setdefault(
+            "exact_routing_minimum_partition_priority_beam_width", 16
+        )
+        config.setdefault("exact_routing_weighted_cover_seed_beam_width", 8)
+        # Reuse the resolved all-partition/all-permutation OSR catalog in PAM
+        # to obtain strong mapping incumbents. BQSKit contributes only its PAM
+        # mapping heuristic; no BQSKit partitioner or synthesizer is involved.
+        config.setdefault("exact_routing_precomputed_pam_seeds", True)
+        config.setdefault("exact_routing_pam_layout_passes", 3)
+        # Three is the neutral scale for PAM's native entangler-aware score.
+        # Its averaged look-ahead distance is only a routing surrogate, so use
+        # a small deterministic scale portfolio and retain the route with the
+        # lowest actual CNOT count.  These passes reuse the completed OSR
+        # catalog and perform no additional synthesis.
+        config.setdefault(
+            "exact_routing_pam_swap_cnot_costs",
+            (1.5, 3.0, 6.0, 12.0),
+        )
+        config.setdefault(
+            "exact_routing_pam_cover_strategies",
+            ("kahn", "ilp", "ilp-routing"),
+        )
+        # A fixed-cover warm start needs only a few promising translations of
+        # each relative OSR column. Exhaustively expanding every path interval
+        # made this optional seed superlinear and unbounded on wide circuits.
+        config.setdefault("exact_routing_cover_seed_translation_limit", 8)
+        # CNOT count is the primary publication metric. Stop once its global
+        # lower bound closes; proving the single-qubit tie is optional.
+        config.setdefault("exact_routing_require_tiebreaker_proof", False)
+        config.setdefault("seqpam_preoptimization", False)
+        # PAM's mapping-distance score estimates future SWAP pressure.  Each
+        # actual SWAP is emitted as three CNOTs, so compare it against local
+        # synthesis using the same CNOT-equivalent unit.
+        config.setdefault("pam_swap_cnot_cost", 3.0)
+        config.setdefault("partition_workers", None)
+        config.setdefault("auto_expand_partition_size", False)
         config.setdefault("force_small_circuit_validation", True)
 
         # testing the fields of config
@@ -1012,23 +3741,55 @@ class qgd_Wide_Circuit_Optimization:
         tolerance = config["tolerance"]
         if not isinstance(tolerance, float):
             raise Exception(f"The tolerance parameter should be a float.")
+        if not 0.0 <= tolerance <= 1.0:
+            raise Exception(
+                "The tolerance parameter should be between zero and one."
+            )
+
+        osr_optimization_tolerance = config[
+            "osr_optimization_tolerance"
+        ]
+        if not isinstance(osr_optimization_tolerance, float):
+            raise Exception(
+                "The osr_optimization_tolerance parameter should be a float."
+            )
+        if not 0.0 <= osr_optimization_tolerance <= 1.0:
+            raise Exception(
+                "The osr_optimization_tolerance parameter should be between "
+                "zero and one."
+            )
 
         use_float = config["use_float"]
         if not isinstance(use_float, bool):
             raise Exception(f"The use_float parameter should be a bool.")
 
-        bqskit_synthesis_validation_tolerance = config[
-            "bqskit_synthesis_validation_tolerance"
+        synthesis_acceptance_tolerance = config[
+            "synthesis_acceptance_tolerance"
         ]
-        if not isinstance(bqskit_synthesis_validation_tolerance, float):
+        if not isinstance(synthesis_acceptance_tolerance, float):
             raise Exception(
-                "The bqskit_synthesis_validation_tolerance parameter should be a float."
+                "The synthesis_acceptance_tolerance parameter should be a float."
+            )
+        if not 0.0 <= synthesis_acceptance_tolerance <= 1.0:
+            raise Exception(
+                "The synthesis_acceptance_tolerance parameter should "
+                "be between zero and one."
+            )
+        if synthesis_acceptance_tolerance < tolerance:
+            raise Exception(
+                "The synthesis_acceptance_tolerance parameter should not be "
+                "tighter than the optimization tolerance."
             )
 
         circuit_validation_tolerance = config["circuit_validation_tolerance"]
         if not isinstance(circuit_validation_tolerance, float):
             raise Exception(
                 "The circuit_validation_tolerance parameter should be a float."
+            )
+        if not 0.0 <= circuit_validation_tolerance <= 1.0:
+            raise Exception(
+                "The circuit_validation_tolerance parameter should be between "
+                "zero and one."
             )
 
         test_subcircuits = config["test_subcircuits"]
@@ -1042,6 +3803,155 @@ class qgd_Wide_Circuit_Optimization:
         max_partition_size = config["max_partition_size"]
         if not isinstance(max_partition_size, int):
             raise Exception(f"The max_partition_size parameter should be an integer.")
+
+        max_equal_rounds = config["max_equal_cnot_optimization_rounds"]
+        if (
+            not isinstance(max_equal_rounds, int)
+            or isinstance(max_equal_rounds, bool)
+            or max_equal_rounds < 0
+        ):
+            raise ValueError(
+                "The max_equal_cnot_optimization_rounds parameter should be "
+                "a nonnegative integer."
+            )
+        fallback_retries = config["exact_routing_fallback_retry_count"]
+        if (
+            not isinstance(fallback_retries, int)
+            or isinstance(fallback_retries, bool)
+            or fallback_retries < 0
+        ):
+            raise ValueError(
+                "The exact_routing_fallback_retry_count parameter should be "
+                "a nonnegative integer."
+            )
+
+        partition_workers = config["partition_workers"]
+        if partition_workers is not None and (
+            not isinstance(partition_workers, int) or partition_workers <= 0
+        ):
+            raise Exception(
+                "The partition_workers parameter should be a positive integer or None."
+            )
+        routing_synthesis_workers = config["routing_synthesis_workers"]
+        if routing_synthesis_workers is not None and (
+            not isinstance(routing_synthesis_workers, int)
+            or isinstance(routing_synthesis_workers, bool)
+            or routing_synthesis_workers <= 0
+        ):
+            raise ValueError(
+                "The routing_synthesis_workers parameter should be a positive "
+                "integer or None."
+            )
+        exact_routing_flow_seed_max_terms = config[
+            "exact_routing_flow_seed_max_terms"
+        ]
+        if (
+            not isinstance(exact_routing_flow_seed_max_terms, int)
+            or isinstance(exact_routing_flow_seed_max_terms, bool)
+            or exact_routing_flow_seed_max_terms <= 0
+        ):
+            raise ValueError(
+                "The exact_routing_flow_seed_max_terms parameter should be a "
+                "positive integer."
+            )
+        minimum_cover_seed_count = config[
+            "exact_routing_minimum_cover_seed_count"
+        ]
+        if (
+            not isinstance(minimum_cover_seed_count, int)
+            or isinstance(minimum_cover_seed_count, bool)
+            or minimum_cover_seed_count <= 0
+        ):
+            raise ValueError(
+                "The exact_routing_minimum_cover_seed_count parameter should "
+                "be a positive integer."
+            )
+        light_guided_cover_count = config[
+            "exact_routing_light_guided_cover_count"
+        ]
+        if (
+            not isinstance(light_guided_cover_count, int)
+            or isinstance(light_guided_cover_count, bool)
+            or light_guided_cover_count < 0
+        ):
+            raise ValueError(
+                "The exact_routing_light_guided_cover_count parameter should "
+                "be a nonnegative integer."
+            )
+        post_catalog_seed_count = config[
+            "exact_routing_post_catalog_pam_seed_count"
+        ]
+        if (
+            not isinstance(post_catalog_seed_count, int)
+            or isinstance(post_catalog_seed_count, bool)
+            or post_catalog_seed_count < 0
+        ):
+            raise ValueError(
+                "The exact_routing_post_catalog_pam_seed_count parameter "
+                "should be a nonnegative integer."
+            )
+        if not isinstance(config["exact_routing_precomputed_pam_seeds"], bool):
+            raise ValueError(
+                "The exact_routing_precomputed_pam_seeds parameter should be a bool."
+            )
+        pam_layout_passes = config["exact_routing_pam_layout_passes"]
+        if (
+            not isinstance(pam_layout_passes, int)
+            or isinstance(pam_layout_passes, bool)
+            or pam_layout_passes <= 0
+        ):
+            raise ValueError(
+                "The exact_routing_pam_layout_passes parameter should be a "
+                "positive integer."
+            )
+        pam_swap_cnot_costs = config["exact_routing_pam_swap_cnot_costs"]
+        if (
+            not isinstance(pam_swap_cnot_costs, (tuple, list))
+            or not pam_swap_cnot_costs
+            or any(
+                not isinstance(cost, (int, float))
+                or isinstance(cost, bool)
+                or not np.isfinite(cost)
+                or cost <= 0.0
+                for cost in pam_swap_cnot_costs
+            )
+        ):
+            raise ValueError(
+                "The exact_routing_pam_swap_cnot_costs parameter should "
+                "contain positive finite numbers."
+            )
+        pam_cover_strategies = config["exact_routing_pam_cover_strategies"]
+        if (
+            not isinstance(pam_cover_strategies, (tuple, list))
+            or not pam_cover_strategies
+            or any(
+                strategy not in ("kahn", "ilp", "ilp-routing")
+                for strategy in pam_cover_strategies
+            )
+        ):
+            raise ValueError(
+                "The exact_routing_pam_cover_strategies parameter should contain "
+                "only 'kahn', 'ilp', and 'ilp-routing'."
+            )
+
+        if config["routing_partition_strategy"] not in (
+            "kahn", "ilp", "ilp-routing"
+        ):
+            raise Exception(
+                "The routing_partition_strategy parameter should be 'kahn', "
+                "'ilp', or 'ilp-routing'."
+            )
+
+        if not isinstance(config["seqpam_preoptimization"], bool):
+            raise Exception(
+                "The seqpam_preoptimization parameter should be a bool."
+            )
+
+        pam_swap_cnot_cost = config["pam_swap_cnot_cost"]
+        if not isinstance(pam_swap_cnot_cost, float):
+            raise Exception("The pam_swap_cnot_cost parameter should be a float.")
+        if pam_swap_cnot_cost <= 0.0:
+            raise Exception("The pam_swap_cnot_cost parameter should be positive.")
 
         self.config = config
 
@@ -1140,13 +4050,13 @@ class qgd_Wide_Circuit_Optimization:
         else:
             raise Exception(f"Unsupported decomposition type: {strategy}")
 
-        tolerance = config["tolerance"]
+        optimization_tolerance = config["tolerance"]
+        acceptance_tolerance = _synthesis_acceptance_tolerance(config)
         cDecompose.set_Verbose(config["verbosity"])
         cDecompose.set_Cost_Function_Variant(3)
-        cDecompose.set_Optimization_Tolerance(tolerance)
+        cDecompose.set_Optimization_Tolerance(optimization_tolerance)
 
-        # adding new layer to the decomposition until threshold
-        cDecompose.set_Optimizer("BFGS")
+        cDecompose.set_Optimizer(config.get("optimizer", "BFGS2"))
 
         # starting the decomposition
         try:
@@ -1159,13 +4069,16 @@ class qgd_Wide_Circuit_Optimization:
             return cDecompose.all_solutions
 
         squander_circuit = cDecompose.get_Circuit()
-        parameters = cDecompose.get_Optimized_Parameters()
+        if strategy == "TreeSearch" and config.get("use_float", False):
+            parameters = cDecompose.get_Optimized_Parameters_Double()
+        else:
+            parameters = cDecompose.get_Optimized_Parameters()
         assert parameters is not None
 
         if strategy == "Custom":
             err = cDecompose.Optimization_Problem(parameters)
             it = 0
-            while err > tolerance and it < 20:
+            while err > optimization_tolerance and it < 20:
                 cDecompose.set_Optimized_Parameters(
                     np.random.rand(cDecompose.get_Parameter_Num()) * (2 * np.pi)
                 )
@@ -1173,14 +4086,78 @@ class qgd_Wide_Circuit_Optimization:
                 parameters = cDecompose.get_Optimized_Parameters()
                 err = cDecompose.Optimization_Problem(parameters)
                 it += 1
-            if err > tolerance or it != 0:
+            if err > optimization_tolerance or it != 0:
                 print("Decomposition error: ", err, it)
         else:
             err = cDecompose.get_Decomposition_Error()
-        # print( "Decomposition error: ", err )
-        if tolerance < err:
+
+        # Accept the circuit that Python actually receives, not merely the
+        # optimizer's internal error estimate. At tight tolerances, rebuilding
+        # the returned gate stream can expose rounding differences that matter
+        # to the independently replayed rewrite audit.
+        returned_unitary = squander_circuit.get_Matrix(
+            np.asarray(parameters, dtype=np.float64)
+        )
+        optimizer_reported_error = err
+        err = _unitary_audit_metrics(Umtx, returned_unitary)[
+            "process_infidelity"
+        ]
+        if acceptance_tolerance < err:
+            if _rewrite_audit_enabled():
+                _append_rewrite_audit_event(
+                    {
+                        "kind": "synthesis_attempt",
+                        "component": "squander_partition_synthesis",
+                        "accepted": False,
+                        "target": {
+                            "format": "unitary",
+                            "unitary": _json_complex_matrix(Umtx),
+                            "qubits": int(round(np.log2(Umtx.shape[0]))),
+                        },
+                        "reported_error": float(err),
+                        "optimizer_reported_error": float(
+                            optimizer_reported_error
+                        ),
+                        "tolerance": float(acceptance_tolerance),
+                        "optimization_tolerance": float(
+                            optimization_tolerance
+                        ),
+                        "strategy": strategy,
+                        "stage": config.get("_rewrite_audit_stage"),
+                    }
+                )
             # raise Exception(f"Decomposition error {err} exceeds the tolerance {tolerance}.")
             return []
+
+        if _rewrite_audit_enabled():
+            target_representation = {
+                "format": "unitary",
+                "unitary": _json_complex_matrix(Umtx),
+                "qubits": int(round(np.log2(Umtx.shape[0]))),
+            }
+            candidate_representation = _squander_audit_representation(
+                squander_circuit, parameters
+            )
+            _append_rewrite_audit_event(
+                _make_rewrite_event(
+                    "squander_partition_synthesis",
+                    target_representation,
+                    candidate_representation,
+                    acceptance_tolerance,
+                    accepted=False,
+                    candidate=True,
+                    reported_error=float(err),
+                    optimizer_reported_error=float(optimizer_reported_error),
+                    optimization_tolerance=float(optimization_tolerance),
+                    strategy=strategy,
+                    stage=config.get("_rewrite_audit_stage"),
+                    subtopology=(
+                        [[int(u), int(v)] for u, v in mini_topology]
+                        if mini_topology is not None
+                        else None
+                    ),
+                )
+            )
 
         return [(squander_circuit, parameters)]
 
@@ -1282,7 +4259,8 @@ class qgd_Wide_Circuit_Optimization:
                     new_subcircuit,
                     decomposed_parameters,
                     parallel=config["parallel"],
-                    tolerance=_squander_validation_tolerance(config)
+                    tolerance=_circuit_validation_tolerance(config),
+                    report_overlap=config.get("verbosity", 0) >= 2,
                 )
 
             new_subcircuit = new_subcircuit.get_Flat_Circuit()
@@ -1455,8 +4433,20 @@ class qgd_Wide_Circuit_Optimization:
         ) + tuple(params)
 
     @staticmethod
+    def get_structure_fingerprint(circ):
+        """Hash the ordered gate structure, excluding numerical parameters."""
+        return (circ.get_Qbit_Num(),) + tuple(
+            (gate.get_Name(), tuple(gate.get_Involved_Qbits()))
+            for gate in circ.get_Gates()
+        )
+
+    @staticmethod
     def recombine_all_partition_circuit(
-        circ, optimized_subcircuits, optimized_parameter_list, recombine_info
+        circ,
+        optimized_subcircuits,
+        optimized_parameter_list,
+        recombine_info,
+        return_selection=False,
     ):
         """Reorder optimized partitions to respect global gate dependencies.
 
@@ -1506,9 +4496,16 @@ class qgd_Wide_Circuit_Optimization:
         for extrapart in parts[len(struct_idxs) :]:
             struct_idxs.append(single_qubit_chain_idx[frozenset(extrapart)])
         L = topo_sort_partitions(circ, parts)
-        return [optimized_subcircuits[struct_idxs[i]] for i in L], [
+        selected_indices = [struct_idxs[i] for i in L]
+        selected_gate_sets = [sorted(int(index) for index in parts[i]) for i in L]
+        result = ([optimized_subcircuits[i] for i in selected_indices], [
             optimized_parameter_list[struct_idxs[i]] for i in L
-        ]
+        ])
+        return (
+            (*result, selected_indices, selected_gate_sets)
+            if return_selection
+            else result
+        )
 
     def OptimizeWideCircuit(
         self, circ: Circuit, parameters: np.ndarray
@@ -1517,17 +4514,22 @@ class qgd_Wide_Circuit_Optimization:
 
         Sets ``self.config`` timing and intermediate circuit keys (e.g. ``routed_circuit``, ``optimization_time``).
         """
+        self.config.setdefault(
+            "_rewrite_audit_stage",
+            "all_to_all"
+            if self.config["topology"] is None
+            else "topology_optimization",
+        )
         if not qgd_Wide_Circuit_Optimization.is_valid_routing(
             circ, self.config["topology"]
         ):
 
-            print("fixing topology in the circuit")
             topo = self.config["topology"]
             self.config["topology"] = None
             strat = self.config["strategy"]
             self.config["strategy"] = self.config["pre-opt-strategy"]
+            self.config["_rewrite_audit_stage"] = "all_to_all"
 
-            print("Optimizing circuit with all-to-all (a2a) connectivity")
             circ, parameters = self.OptimizeWideCircuit(circ, parameters)
             self.config["all_to_all_optimization_time"] = self.config[
                 "optimization_time"
@@ -1536,22 +4538,37 @@ class qgd_Wide_Circuit_Optimization:
             self.config["all_to_all_parameters"] = parameters
             self.config["strategy"] = strat
             self.config["topology"] = topo
+            self.config["_rewrite_audit_stage"] = "routing"
             start_time = time.time()
+            routing_input_cnot_count = CNOTGateCount(circ, 0)
 
-            print("Routing circuit to fix the topology")
             circ, parameters = self.route_circuit(circ, parameters)
             self.config["routing_time"] = time.time() - start_time
+            print(
+                f"Routing ({self.config.get('routing-strategy', 'exact-osr')}): "
+                f"{routing_input_cnot_count} -> {CNOTGateCount(circ, 0)} CNOTs; "
+                f"{self.config['routing_time']:.2f} s",
+                flush=True,
+            )
             self.config["routed_circuit"] = circ
             self.config["routed_parameters"] = parameters
-        else:
-            if self.config["topology"] is not None:
-                print("No additional routing is needed on the circuit")
-
+            # Routing quality is archived above before the normal explicit
+            # topology-constrained optimization stage. Routing implementations
+            # must not hide cleanup internally, but this separately timed WCO
+            # stage is required for every routing strategy.
+            self.config.pop("topology_optimization_skipped", None)
+            self.config["_rewrite_audit_stage"] = "topology_optimization"
         start_time = time.time()
+        optimization_input_cnot_count = CNOTGateCount(circ, 0)
+        if _rewrite_audit_enabled() and self.config["strategy"] == "qiskit":
+            raise NotImplementedError(
+                "Exact schema-v2 replay currently supports Squander-native and "
+                "BQSKit synthesis, not opaque Qiskit transpiler mutations."
+            )
         if self.config["strategy"] == "bqskit":
-            print("Optimizing circuit with BQSkit")
             from squander import Qiskit_IO
             from bqskit import compile
+            import bqskit.compiler.compile as bqskit_compile_module
 
             from bqskit.compiler.machine import MachineModel
             from bqskit.compiler import Compiler
@@ -1569,6 +4586,7 @@ class qgd_Wide_Circuit_Optimization:
 
             # Build BQSKit machine model from your topology
             model = MachineModel(circ.get_Qbit_Num(), self.config["topology"])
+            synthesis_epsilon = _bqskit_synthesis_epsilon(self.config)
 
             # Convert squander circuit → qiskit → BQSKit
             # (BQSKit has a from_qiskit helper if you go via Qiskit IR)
@@ -1576,25 +4594,42 @@ class qgd_Wide_Circuit_Optimization:
                 circ, np.asarray(parameters, dtype=np.float64)
             )
 
-            bqskit_circ = OPENQASM2Language().decode(qasm2.dumps(circo))
+            bqskit_input_qasm = qasm2.dumps(circo)
+            bqskit_circ = OPENQASM2Language().decode(bqskit_input_qasm)
 
-            compilation_workflow = [
-                SetModelPass(model),  # attach hardware model to circuit
-                build_multi_qudit_retarget_workflow(
-                    4, max_synthesis_size=self.max_partition_size
-                ),
-                build_resynthesis_optimization_workflow(
-                    4, max_synthesis_size=self.max_partition_size, iterative=True
-                ),
-                build_single_qudit_retarget_workflow(
-                    4, max_synthesis_size=self.max_partition_size
-                ),
-                build_gate_deletion_optimization_workflow(
-                    4, max_synthesis_size=self.max_partition_size, iterative=True
-                ),
-                LogErrorPass(),
-            ]
+            with patched_seqpam_workflow_classes(
+                bqskit_compile_module,
+                use_squander_partitioner=False,
+                config=self.config,
+            ):
+                compilation_workflow = [
+                    SetModelPass(model),  # attach hardware model to circuit
+                    build_multi_qudit_retarget_workflow(
+                        4,
+                        synthesis_epsilon=synthesis_epsilon,
+                        max_synthesis_size=self.max_partition_size,
+                    ),
+                    build_resynthesis_optimization_workflow(
+                        4,
+                        synthesis_epsilon=synthesis_epsilon,
+                        max_synthesis_size=self.max_partition_size,
+                        iterative=True,
+                    ),
+                    build_single_qudit_retarget_workflow(
+                        4,
+                        synthesis_epsilon=synthesis_epsilon,
+                        max_synthesis_size=self.max_partition_size,
+                    ),
+                    build_gate_deletion_optimization_workflow(
+                        4,
+                        synthesis_epsilon=synthesis_epsilon,
+                        max_synthesis_size=self.max_partition_size,
+                        iterative=True,
+                    ),
+                    LogErrorPass(),
+                ]
 
+            bqskit_stage_started_ns = time.time_ns()
             with Compiler() as compiler:
                 routed_bqskit_circ, pass_data = compiler.compile(
                     bqskit_circ, compilation_workflow, True
@@ -1604,23 +4639,43 @@ class qgd_Wide_Circuit_Optimization:
                 initial_map = pass_data.get("initial_mapping", default)
                 final_map = pass_data.get("final_mapping", default)
 
+            bqskit_output_qasm = _bqskit_full_qasm(routed_bqskit_circ)
+            if _rewrite_audit_enabled():
+                _append_bqskit_stage_event(
+                    self.config.get("_rewrite_audit_stage"),
+                    bqskit_stage_started_ns,
+                    bqskit_input_qasm,
+                    bqskit_circ,
+                    bqskit_output_qasm,
+                    routed_bqskit_circ,
+                    initial_map,
+                    final_map,
+                )
+
             # Convert back: BQSKit → Qiskit → Squander
+            conversion_started_ns = time.time_ns()
             circuit_qiskit = QuantumCircuit.from_qasm_str(
-                OPENQASM2Language().encode(routed_bqskit_circ)
+                bqskit_output_qasm
             )
             newcirc, newparameters = Qiskit_IO.convert_Qiskit_to_Squander(
                 circuit_qiskit
             )
+            if _rewrite_audit_enabled():
+                _append_bqskit_to_squander_event(
+                    self.config.get("_rewrite_audit_stage"),
+                    conversion_started_ns,
+                    bqskit_output_qasm,
+                    newcirc,
+                    newparameters,
+                )
 
             qgd_Wide_Circuit_Optimization.check_valid_routing(
                 newcirc, self.config["topology"]
             )
-            print("OptimizeWideCircuit::check_compare_circuits")
             self.check_compare_circuits(circ, parameters, newcirc, newparameters)
             circ, parameters = newcirc, newparameters
 
         elif self.config["strategy"] == "qiskit":
-            print("Optimizing circuit with Qiskit")
             from squander import Qiskit_IO
             from qiskit import transpile
             from qiskit.transpiler import CouplingMap
@@ -1653,44 +4708,101 @@ class qgd_Wide_Circuit_Optimization:
             qgd_Wide_Circuit_Optimization.check_valid_routing(
                 newcirc, self.config["topology"]
             )
-            print("OptimizeWideCircuit::check_compare_circuits")
             self.check_compare_circuits(circ, parameters, newcirc, newparameters)
             circ, parameters = newcirc, newparameters
         else:
-
-            print("Optimizing circuit with Squander")
             part_size_start = self.max_partition_size
             part_size_end = self.max_partition_size
-            if self.config.get("auto_expand_partition_size", True) and (
+            if self.config.get("auto_expand_partition_size", False) and (
                 self.config.get("use_osr", False)
                 or self.config.get("use_graph_search", False)
             ):
                 part_size_end = min(4, circ.get_Qbit_Num())
             count = CNOTGateCount(circ, 0)
             fingerprint_dict = {}
+            audit_round = 0
             for max_part_size in range(part_size_start, part_size_end + 1):
                 # instantiate the object for optimizing wide circuits
                 wide_circuit_optimizer = qgd_Wide_Circuit_Optimization(
                     {**self.config, "max_partition_size": max_part_size}
                 )
+                equal_count_rounds = 0
+                seen_round_fingerprints = {
+                    qgd_Wide_Circuit_Optimization.get_structure_fingerprint(circ)
+                }
                 while True:
+                    previous_count = count
                     # run circuit optimization
-                    circ_flat, parameters = (
+                    circ_flat, new_parameters = (
                         wide_circuit_optimizer.InnerOptimizeWideCircuit(
-                            circ, parameters, fingerprint_dict=fingerprint_dict
+                            circ,
+                            parameters,
+                            fingerprint_dict=fingerprint_dict,
+                            audit_round=audit_round,
                         )
                     )
-                    circ = circ_flat.get_Flat_Circuit()
-                    newcount = CNOTGateCount(circ, 0)
-                    no_improve = newcount >= count
+                    audit_round += 1
+                    new_circ = circ_flat.get_Flat_Circuit()
+                    newcount = CNOTGateCount(new_circ, 0)
+                    if newcount > previous_count:
+                        # Silently reverting would leave an already-written
+                        # rewrite-audit round inconsistent with the returned
+                        # circuit.  Monotonicity is a contract, so fail loudly
+                        # if a future partition strategy violates it.
+                        raise RuntimeError(
+                            "Wide-circuit optimization increased the CNOT "
+                            f"count from {previous_count} to {newcount}."
+                        )
+
+                    circ = new_circ
+                    parameters = new_parameters
                     count = newcount
-                    if no_improve:
+                    if newcount < previous_count:
+                        equal_count_rounds = 0
+                        seen_round_fingerprints = {
+                            qgd_Wide_Circuit_Optimization.get_structure_fingerprint(
+                                circ
+                            )
+                        }
+                        continue
+
+                    fingerprint = (
+                        qgd_Wide_Circuit_Optimization.get_structure_fingerprint(
+                            circ
+                        )
+                    )
+                    equal_count_rounds += 1
+                    if fingerprint in seen_round_fingerprints:
+                        break
+                    seen_round_fingerprints.add(fingerprint)
+                    if equal_count_rounds >= int(
+                        self.config["max_equal_cnot_optimization_rounds"]
+                    ):
                         break
         self.config["optimization_time"] = time.time() - start_time
+        if self.config["strategy"] in ("bqskit", "qiskit"):
+            stage_name = (
+                "All-to-all optimization"
+                if self.config.get("_rewrite_audit_stage") == "all_to_all"
+                else "Topology optimization"
+            )
+            strategy_name = (
+                "BQSKit" if self.config["strategy"] == "bqskit" else "Qiskit"
+            )
+            print(
+                f"{stage_name} ({strategy_name}): "
+                f"{optimization_input_cnot_count} -> {CNOTGateCount(circ, 0)} CNOTs; "
+                f"{self.config['optimization_time']:.2f} s",
+                flush=True,
+            )
         return circ, parameters
 
     def InnerOptimizeWideCircuit(
-        self, circ: Circuit, orig_parameters: np.ndarray, fingerprint_dict=None
+        self,
+        circ: Circuit,
+        orig_parameters: np.ndarray,
+        fingerprint_dict=None,
+        audit_round=None,
     ) -> Tuple[Circuit, np.ndarray]:
         """Optimize one pass of wide-circuit partition decomposition.
 
@@ -1707,8 +4819,57 @@ class qgd_Wide_Circuit_Optimization:
         """
         from squander.utils import circuit_to_CNOT_basis
 
+        progress_started = time.perf_counter()
+        round_input_cnot_count = CNOTGateCount(circ, 0)
+        audit_enabled = _rewrite_audit_enabled()
+        if audit_enabled:
+            basis_started_ns = time.time_ns()
+            basis_input_representation = _squander_audit_representation(
+                circ,
+                orig_parameters,
+                range(circ.get_Qbit_Num()),
+            )
         circ, orig_parameters = circuit_to_CNOT_basis(circ, orig_parameters)
+        if audit_enabled:
+            basis_output_representation = _squander_audit_representation(
+                circ,
+                orig_parameters,
+                range(circ.get_Qbit_Num()),
+            )
+            _append_rewrite_audit_event(
+                {
+                    "kind": "squander_basis_conversion",
+                    "component": "squander_basis_replay",
+                    "stage": self.config.get("_rewrite_audit_stage"),
+                    "started_ns": basis_started_ns,
+                    "input": basis_input_representation,
+                    "output": basis_output_representation,
+                    "input_sha256": _exact_state_sha256(
+                        _qasm_exact_state(basis_input_representation)
+                    ),
+                    "output_sha256": _exact_state_sha256(
+                        _qasm_exact_state(basis_output_representation)
+                    ),
+                }
+            )
+        round_started_ns = time.time_ns()
+        round_input_representation = None
+        round_input_state = None
+        round_input_sha256 = None
+        if audit_enabled:
+            round_input_representation = _squander_audit_representation(
+                circ,
+                orig_parameters,
+                range(circ.get_Qbit_Num()),
+            )
+            round_input_state = _qasm_exact_state(round_input_representation)
+            round_input_sha256 = _exact_state_sha256(round_input_state)
         global_min = self.config.get("global_min", True)
+        if audit_enabled and not global_min:
+            raise NotImplementedError(
+                "Exact rewrite replay currently requires global_min=True so "
+                "every output block has explicit source gate indices."
+            )
         if global_min:
             partitioned_circuit, parameters, recombine_info, part_deps = (
                 qgd_Wide_Circuit_Optimization.make_all_partition_circuit(
@@ -1731,9 +4892,6 @@ class qgd_Wide_Circuit_Optimization:
 
         in_parent = parent_process() is not None
 
-        if not in_parent:
-            print(len(subcircuits), "partitions found to optimize")
-
         # the list of optimized subcircuits
         optimized_subcircuits: List[Optional[Circuit]] = [None] * len(subcircuits)
 
@@ -1744,8 +4902,6 @@ class qgd_Wide_Circuit_Optimization:
 
         # list of AsyncResult objects
         async_results = [None] * len(subcircuits)
-
-        total_opt = [0]
 
         def process_result(partition_idx):
             """Finalize async decomposition for partition ``partition_idx`` and update caches / lists."""
@@ -1778,13 +4934,6 @@ class qgd_Wide_Circuit_Optimization:
                     else async_results[partition_idx].get(timeout=None)
                 )
 
-                if subcircuit != new_subcircuit:
-                    print(
-                        "original subcircuit:    ",
-                        subcircuit.get_Gate_Nums(),
-                        partition_idx,
-                    )
-                    print("reoptimized subcircuit: ", new_subcircuit.get_Gate_Nums())
                 if fingerprint_dict is not None:
                     fingerprint_dict[fingerprint] = (new_subcircuit, new_parameters)
                     fingerprint_dict[
@@ -1802,14 +4951,15 @@ class qgd_Wide_Circuit_Optimization:
                             trim_subcirc, trim_parameters
                         )
                     ] = (trim_subcirc, trim_parameters)
-            if total_opt[0] % 100 == 99:
-                print(total_opt[0] + 1, "partitions optimized")
-            total_opt[0] += 1
             optimized_subcircuits[partition_idx] = new_subcircuit
             optimized_parameter_list[partition_idx] = new_parameters
 
+        worker_count = self.config.get("partition_workers")
+        if worker_count is None:
+            worker_count = mp.cpu_count()
+        worker_count = max(1, min(worker_count, len(subcircuits)))
         with (
-            contextlib.nullcontext() if in_parent else Pool(processes=mp.cpu_count())
+            contextlib.nullcontext() if in_parent else Pool(processes=worker_count)
         ) as pool:
             remaining = list(range(len(subcircuits)))
             while remaining:
@@ -1835,6 +4985,22 @@ class qgd_Wide_Circuit_Optimization:
                             optimized_subcircuits[partition_idx],
                             optimized_parameter_list[partition_idx],
                         ) = fingerprint_dict[fingerprint]
+                        continue
+                    # With a required reduction of one CNOT, a CNOT-basis block
+                    # containing at most one CNOT has no search depth to explore.
+                    # Local one-qubit gates cannot reduce the operator Schmidt
+                    # rank of a single CNOT, so avoid an exact-synthesis call and
+                    # cache this mathematically irreducible result immediately.
+                    if CNOTGateCount(subcircuit) <= 1:
+                        optimized_subcircuits[partition_idx] = subcircuit
+                        optimized_parameter_list[partition_idx] = (
+                            subcircuit_parameters
+                        )
+                        if fingerprint_dict is not None:
+                            fingerprint_dict[fingerprint] = (
+                                subcircuit,
+                                subcircuit_parameters,
+                            )
                         continue
                     if part_deps is not None and partition_idx in part_deps:
                         any_optimized, any_remaining = False, False
@@ -1891,14 +5057,96 @@ class qgd_Wide_Circuit_Optimization:
 
         # construct the wide circuit from the optimized subcircuits
         if global_min:
-            optimized_subcircuits, optimized_parameter_list = (
+            (
+                optimized_subcircuits,
+                optimized_parameter_list,
+                selected_indices,
+                selected_gate_sets,
+            ) = (
                 qgd_Wide_Circuit_Optimization.recombine_all_partition_circuit(
                     circ,
                     optimized_subcircuits,
                     optimized_parameter_list,
                     recombine_info,
+                    return_selection=True,
                 )
             )
+        else:
+            selected_indices = list(range(len(subcircuits)))
+            selected_gate_sets = [None] * len(selected_indices)
+
+        round_selections = []
+        if audit_enabled:
+            for output_index, partition_idx in enumerate(selected_indices):
+                if partition_idx >= len(subcircuits):
+                    raise AssertionError(
+                        f"Selected partition {partition_idx} has no source block."
+                    )
+                before_circuit = subcircuits[partition_idx]
+                after_circuit = optimized_subcircuits[output_index]
+                start_idx = before_circuit.get_Parameter_Start_Index()
+                before_parameters = parameters[
+                    start_idx : start_idx + before_circuit.get_Parameter_Num()
+                ]
+                involved_qbits = sorted(before_circuit.get_Qbits())
+                before = _squander_audit_representation(
+                    before_circuit, before_parameters, involved_qbits
+                )
+                after = _squander_audit_representation(
+                    after_circuit,
+                    optimized_parameter_list[output_index],
+                    involved_qbits,
+                )
+                source_gate_set = selected_gate_sets[output_index]
+                before_global_state = _remap_exact_state(
+                    _qasm_exact_state(before),
+                    involved_qbits,
+                    round_input_state["qubits"],
+                )
+                unused_source_indices = set(source_gate_set)
+                source_gate_indices = []
+                for operation in before_global_state["operations"]:
+                    matching_index = next(
+                        (
+                            index
+                            for index in sorted(unused_source_indices)
+                            if round_input_state["operations"][index] == operation
+                        ),
+                        None,
+                    )
+                    if matching_index is None:
+                        raise AssertionError(
+                            "Partition operation has no matching source gate."
+                        )
+                    source_gate_indices.append(int(matching_index))
+                    unused_source_indices.remove(matching_index)
+                if unused_source_indices:
+                    raise AssertionError(
+                        "Partition did not consume every selected source gate."
+                    )
+                event_id = _append_rewrite_audit_event(
+                    _make_rewrite_event(
+                        "squander_selected_partition_rewrite",
+                        before,
+                        after,
+                        _synthesis_acceptance_tolerance(self.config),
+                        accepted=True,
+                        stage=self.config.get("_rewrite_audit_stage"),
+                        round=audit_round,
+                        changed=before_circuit != after_circuit,
+                        partition_index=int(partition_idx),
+                        source_gate_indices=source_gate_indices,
+                        qubits=[int(q) for q in involved_qbits],
+                        max_partition_size=int(self.max_partition_size),
+                    )
+                )
+                round_selections.append(
+                    {
+                        "rewrite_event_id": event_id,
+                        "source_gate_indices": source_gate_indices,
+                        "qubits": [int(q) for q in involved_qbits],
+                    }
+                )
 
         if any(c is None for c in optimized_subcircuits) or any(
             p is None for p in optimized_parameter_list
@@ -1911,9 +5159,24 @@ class qgd_Wide_Circuit_Optimization:
             cast(List[List[np.ndarray]], optimized_parameter_list),
         )
 
-        if not in_parent:
-            print("original circuit:    ", circ.get_Gate_Nums())
-            print("reoptimized circuit: ", wide_circuit.get_Gate_Nums())
+        stage_name = (
+            "All-to-all optimization"
+            if self.config.get("_rewrite_audit_stage") == "all_to_all"
+            else "Topology optimization"
+        )
+        round_label = (
+            f" round {audit_round + 1}"
+            if audit_round is not None
+            else ""
+        )
+        print(
+            f"{stage_name}{round_label} "
+            f"({self.max_partition_size}-qubit partitions): "
+            f"{round_input_cnot_count} -> {CNOTGateCount(wide_circuit, 0)} CNOTs; "
+            f"{len(subcircuits)} candidates; "
+            f"{time.perf_counter() - progress_started:.2f} s",
+            flush=True,
+        )
 
         qgd_Wide_Circuit_Optimization.check_valid_routing(
             wide_circuit, self.config["topology"]
@@ -1923,8 +5186,33 @@ class qgd_Wide_Circuit_Optimization:
             orig_parameters,
             wide_circuit,
             wide_parameters,
-            label="InnerOptimizeWideCircuit",
         )
+
+        if audit_enabled:
+            round_output_representation = _squander_audit_representation(
+                wide_circuit.get_Flat_Circuit(),
+                wide_parameters,
+                range(wide_circuit.get_Qbit_Num()),
+            )
+            round_output_state = _qasm_exact_state(round_output_representation)
+            round_output_sha256 = _exact_state_sha256(round_output_state)
+            _append_rewrite_audit_event(
+                {
+                    "kind": "round",
+                    "component": "squander_wide_optimization",
+                    "started_ns": round_started_ns,
+                    "round": audit_round,
+                    "stage": self.config.get("_rewrite_audit_stage"),
+                    "max_partition_size": int(self.max_partition_size),
+                    "input_sha256": round_input_sha256,
+                    "output_sha256": round_output_sha256,
+                    "input": round_input_representation,
+                    "output": round_output_representation,
+                    "selections": round_selections,
+                    "input_gate_counts": circ.get_Gate_Nums(),
+                    "output_gate_counts": wide_circuit.get_Gate_Nums(),
+                }
+            )
 
         return wide_circuit, wide_parameters
 
@@ -2083,21 +5371,22 @@ class qgd_Wide_Circuit_Optimization:
             wide_parameters: Parameters for ``wide_circuit``.
             routing: If true and initial/final mappings exist in ``self.config``,
                 pass them to ``CompareCircuits`` for layout-aware comparison.
-            forced_test: If true, run the comparison even when ``test_final_circuit``
-                is false in config.
+            forced_test: If true, run the comparison for circuits of at most 12
+                qubits even when ``test_final_circuit`` is false in config. Large
+                comparisons require ``test_final_circuit=True`` explicitly.
 
-        ``self.config['circuit_validation_tolerance']`` is an infidelity
-        threshold for this whole-circuit state-vector check. It is deliberately
-        separate from ``self.config['tolerance']``, which controls block
-        synthesis and block-level validation.
+        ``self.config['circuit_validation_tolerance']`` bounds
+        ``1 - |<psi_original|psi_optimized>|`` for this whole-circuit random
+        state-vector check. It is deliberately separate from
+        ``self.config['tolerance']``, the per-block process infidelity
+        ``1 - |Tr(U^dagger V)/d|^2`` used by Squander and converted exactly for
+        BQSKit synthesis.
         """
-        forced_test = forced_test or (
-            self.config.get("force_small_circuit_validation", True)
-            and circ.get_Qbit_Num() <= 12
+        forced_test = circ.get_Qbit_Num() <= 12 and (
+            forced_test
+            or self.config.get("force_small_circuit_validation", True)
         )
         if self.config["test_final_circuit"] or forced_test:
-            if label is not None:
-                print(f"{label}: check_compare_circuits")
             tolerance = _circuit_validation_tolerance(self.config)
             if (
                 routing
@@ -2113,6 +5402,7 @@ class qgd_Wide_Circuit_Optimization:
                     final_mapping=self.config["final_mapping"],
                     tolerance=tolerance,
                     parallel=0,
+                    report_overlap=self.config.get("verbosity", 0) >= 2,
                 )
             else:
                 CompareCircuits(
@@ -2121,14 +5411,15 @@ class qgd_Wide_Circuit_Optimization:
                     wide_circuit,
                     wide_parameters,
                     tolerance=tolerance,
+                    report_overlap=self.config.get("verbosity", 0) >= 2,
                 )
 
     def route_circuit(self, circ: Circuit, orig_parameters: np.ndarray):
         """Map ``circ`` onto ``self.config['topology']`` using the configured router.
 
-        The strategy is ``self.config['routing-strategy']``, e.g. ``seqpam-ilp``,
-        ``seqpam-quick``, ``bqskit-sabre``, ``light-sabre`` (Qiskit), or ``sabre``
-        (Squander). Writes ``initial_mapping`` and ``final_mapping`` into
+        The strategy is ``self.config['routing-strategy']``, e.g. ``pam-osr``, ``exact-osr``,
+        ``seqpam-ilp``, ``seqpam-quick``, ``bqskit-sabre``, ``light-sabre``
+        (Qiskit), or ``sabre`` (Squander). Writes ``initial_mapping`` and ``final_mapping`` into
         ``self.config`` when the backend provides them.
 
         Args:
@@ -2138,9 +5429,106 @@ class qgd_Wide_Circuit_Optimization:
         Returns:
             ``(routed_circuit, routed_parameters)`` laid out for ``self.config['topology']``.
         """
-        strategy = self.config.get("routing-strategy", "seqpam-ilp")
+        strategy = self.config.get("routing-strategy", "pam-osr")
 
-        if strategy in ("seqpam-ilp", "seqpam-quick", "bqskit-sabre"):
+        if _rewrite_audit_enabled() and strategy not in (
+            "exact-osr",
+            "pam-osr",
+            "seqpam-ilp",
+            "seqpam-quick",
+            "light-sabre",
+            "sabre",
+        ):
+            raise NotImplementedError(
+                "Exact schema-v2 routing replay currently supports pam-osr, "
+                "exact-osr, seqpam-ilp, seqpam-quick, light-sabre, and sabre only."
+            )
+
+        if strategy in ("pam-osr", "exact-osr"):
+            from squander.partitioning.routing import route_circuit_exact
+
+            exact_route_started_ns = time.time_ns()
+            routing_config = dict(self.config)
+            routing_config["pam_osr_only"] = strategy == "pam-osr"
+            exact_route = route_circuit_exact(
+                circ,
+                orig_parameters,
+                self.config["topology"],
+                routing_config,
+            )
+            Squander_remapped_circuit = exact_route.circuit
+            parameters_remapped_circuit = exact_route.parameters
+            self.config["initial_mapping"] = list(
+                exact_route.solution.initial_mapping
+            )
+            self.config["final_mapping"] = list(
+                exact_route.solution.final_mapping
+            )
+            self.config["exact_routing_cnot_count"] = (
+                exact_route.solution.cnot_count
+            )
+            self.config["exact_routing_single_qubit_count"] = (
+                exact_route.solution.single_qubit_count
+            )
+            self.config["exact_routing_explored_states"] = (
+                exact_route.solution.explored_states
+            )
+            self.config["exact_routing_master"] = self.config.get(
+                "exact_routing_master", "benders"
+            )
+            self.config["exact_routing_master_used"] = (
+                exact_route.solution.master_backend
+            )
+            self.config["exact_routing_candidate_count"] = len(
+                exact_route.candidate_gate_sets
+            )
+            self.config["exact_routing_lazy_rounds"] = exact_route.lazy_rounds
+            self.config["exact_routing_synthesized_partitions"] = (
+                exact_route.synthesized_partitions
+            )
+            self.config["exact_routing_synthesis_cache_hits"] = (
+                exact_route.synthesis_cache_hits
+            )
+            if exact_route.routing_catalog is not None:
+                self.config["routing_osr_catalog"] = dict(
+                    exact_route.routing_catalog
+                )
+            self.config["exact_routing_optimal"] = bool(
+                exact_route.solution.optimal
+            )
+            self.config["exact_routing_cnot_optimal"] = bool(
+                exact_route.solution.optimal
+                or exact_route.solution.cnot_optimal
+            )
+            self.config["exact_routing_timed_out"] = bool(
+                exact_route.timed_out
+            )
+            self.config["exact_routing_solver_nodes"] = (
+                exact_route.solution.solver_nodes
+            )
+            self.config["exact_routing_solver_bound"] = (
+                exact_route.solution.solver_bound
+            )
+            self.config["exact_routing_solver_gap"] = (
+                exact_route.solution.solver_gap
+            )
+            self.config["exact_routing_solver_solutions"] = (
+                exact_route.solution.solver_solutions
+            )
+            if _rewrite_audit_enabled():
+                _append_exact_osr_routing_event(
+                    self.config.get("_rewrite_audit_stage"),
+                    exact_route_started_ns,
+                    circ,
+                    orig_parameters,
+                    Squander_remapped_circuit,
+                    parameters_remapped_circuit,
+                    exact_route,
+                    self.config["topology"],
+                    _synthesis_acceptance_tolerance(self.config),
+                )
+
+        elif strategy in ("seqpam-ilp", "seqpam-quick", "bqskit-sabre"):
             from squander import Qiskit_IO
             import bqskit.compiler.compile as bqskit_compile_module
             from bqskit.compiler import Compiler
@@ -2158,6 +5546,7 @@ class qgd_Wide_Circuit_Optimization:
 
             # Build BQSKit machine model from your topology
             model = MachineModel(circ.get_Qbit_Num(), self.config["topology"])
+            synthesis_epsilon = _bqskit_synthesis_epsilon(self.config)
 
             # Convert squander circuit → qiskit → BQSKit
             # (BQSKit has a from_qiskit helper if you go via Qiskit IR)
@@ -2165,7 +5554,8 @@ class qgd_Wide_Circuit_Optimization:
                 circ, np.asarray(orig_parameters, dtype=np.float64)
             )
 
-            bqskit_circ = OPENQASM2Language().decode(qasm2.dumps(circo))
+            bqskit_input_qasm = qasm2.dumps(circo)
+            bqskit_circ = OPENQASM2Language().decode(bqskit_input_qasm)
             # Customizable knobs
 
             if strategy == "seqpam-ilp":
@@ -2178,8 +5568,11 @@ class qgd_Wide_Circuit_Optimization:
                     config=self.config,
                 ):
                     mainflow = build_seqpam_mapping_optimization_workflow(
-                        block_size=3  # SEQPAM uses 3-qubit blocks only
+                        synthesis_epsilon=synthesis_epsilon,
+                        block_size=3,  # SEQPAM uses 3-qubit blocks only
                     )
+                    if not self.config["seqpam_preoptimization"]:
+                        mainflow = _remove_seqpam_preoptimization(mainflow)
             elif strategy == "seqpam-quick":
                 # Keep BQSKit's QuickPartitioner. QSearch/LEAP are replaced
                 # only when the configured optimizer is Squander-native.
@@ -2189,8 +5582,11 @@ class qgd_Wide_Circuit_Optimization:
                     config=self.config,
                 ):
                     mainflow = build_seqpam_mapping_optimization_workflow(
-                        block_size=3  # SEQPAM uses 3-qubit blocks only
+                        synthesis_epsilon=synthesis_epsilon,
+                        block_size=3,  # SEQPAM uses 3-qubit blocks only
                     )
+                    if not self.config["seqpam_preoptimization"]:
+                        mainflow = _remove_seqpam_preoptimization(mainflow)
             elif strategy == "bqskit-sabre":
                 mainflow = build_sabre_mapping_workflow()
             else:
@@ -2211,6 +5607,7 @@ class qgd_Wide_Circuit_Optimization:
                 _copy_bqskit_synthesis_config(self.config)
             )
             _patch_eapp_if_needed()
+            bqskit_stage_started_ns = time.time_ns()
             try:
                 with Compiler() as compiler:
                     routed_bqskit_circ, pass_data = compiler.compile(
@@ -2226,19 +5623,41 @@ class qgd_Wide_Circuit_Optimization:
                 else:
                     _os.environ['_SQUANDER_BQSKIT_CONFIG'] = old_config_env
 
+            bqskit_output_qasm = _bqskit_full_qasm(routed_bqskit_circ)
+            if _rewrite_audit_enabled():
+                _append_bqskit_stage_event(
+                    self.config.get("_rewrite_audit_stage"),
+                    bqskit_stage_started_ns,
+                    bqskit_input_qasm,
+                    bqskit_circ,
+                    bqskit_output_qasm,
+                    routed_bqskit_circ,
+                    pass_data.initial_mapping,
+                    pass_data.final_mapping,
+                )
+
             # Convert back: BQSKit → Qiskit → Squander
+            conversion_started_ns = time.time_ns()
             circuit_qiskit_routed = QuantumCircuit.from_qasm_str(
-                OPENQASM2Language().encode(routed_bqskit_circ)
+                bqskit_output_qasm
             )
             Squander_remapped_circuit, parameters_remapped_circuit = (
                 Qiskit_IO.convert_Qiskit_to_Squander(circuit_qiskit_routed)
             )
+            if _rewrite_audit_enabled():
+                _append_bqskit_to_squander_event(
+                    self.config.get("_rewrite_audit_stage"),
+                    conversion_started_ns,
+                    bqskit_output_qasm,
+                    Squander_remapped_circuit,
+                    parameters_remapped_circuit,
+                )
             self.config["initial_mapping"] = list(pass_data.initial_mapping)
             self.config["final_mapping"] = list(pass_data.final_mapping)
 
         elif strategy == "light-sabre":
             from squander import Qiskit_IO
-            from qiskit import transpile
+            from qiskit import qasm2
             from qiskit.transpiler.preset_passmanagers import (
                 generate_preset_pass_manager,
             )
@@ -2257,6 +5676,7 @@ class qgd_Wide_Circuit_Optimization:
             sabre_seed = self.config.get("sabre_seed", 42)
             sabre_trials = self.config.get("sabre_trials", 5)  # layout trials
             swap_trials = self.config.get("sabre_swap_trials", sabre_trials)
+            sabre_max_iterations = self.config.get("sabre_max_iterations", 3)
             heuristic = self.config.get(
                 "sabre_heuristic", "decay"
             )  # "basic" | "lookahead" | "decay"
@@ -2264,8 +5684,9 @@ class qgd_Wide_Circuit_Optimization:
             layout_pass = SabreLayout(
                 coupling_map,
                 seed=sabre_seed,
-                max_iterations=sabre_trials,
+                max_iterations=sabre_max_iterations,
                 swap_trials=swap_trials,
+                layout_trials=sabre_trials,
             )
             swap_pass = SabreSwap(
                 coupling_map,
@@ -2280,17 +5701,42 @@ class qgd_Wide_Circuit_Optimization:
                     swap_pass,  # insert SWAP gates for routing
                 ]
             )
+            sabre_started_ns = time.time_ns()
+            sabre_input_qasm = qasm2.dumps(circo)
             circuit_qiskit_sabre = pm.run(circo)
+            sabre_output_qasm = qasm2.dumps(circuit_qiskit_sabre)
+            initial_mapping = (
+                circuit_qiskit_sabre.layout.initial_index_layout()
+            )
+            final_mapping = (
+                circuit_qiskit_sabre.layout.final_index_layout()
+            )
+            if _rewrite_audit_enabled():
+                _append_qiskit_sabre_event(
+                    self.config.get("_rewrite_audit_stage"),
+                    sabre_started_ns,
+                    sabre_input_qasm,
+                    sabre_output_qasm,
+                    initial_mapping,
+                    final_mapping,
+                    self.config["topology"],
+                )
+            conversion_started_ns = time.time_ns()
             Squander_remapped_circuit, parameters_remapped_circuit = (
                 Qiskit_IO.convert_Qiskit_to_Squander(circuit_qiskit_sabre)
             )
-            self.config["initial_mapping"] = (
-                circuit_qiskit_sabre.layout.initial_index_layout()
-            )
-            self.config["final_mapping"] = (
-                circuit_qiskit_sabre.layout.final_index_layout()
-            )
+            if _rewrite_audit_enabled():
+                _append_bqskit_to_squander_event(
+                    self.config.get("_rewrite_audit_stage"),
+                    conversion_started_ns,
+                    sabre_output_qasm,
+                    Squander_remapped_circuit,
+                    parameters_remapped_circuit,
+                )
+            self.config["initial_mapping"] = initial_mapping
+            self.config["final_mapping"] = final_mapping
         elif strategy == "sabre":
+            sabre_started_ns = time.time_ns()
             sabre = SABRE(circ, self.config["topology"])
             (
                 Squander_remapped_circuit,
@@ -2301,19 +5747,28 @@ class qgd_Wide_Circuit_Optimization:
             ) = sabre.map_circuit(orig_parameters)
             self.config["initial_mapping"] = pi
             self.config["final_mapping"] = final_pi
+            if _rewrite_audit_enabled():
+                _append_squander_sabre_event(
+                    self.config.get("_rewrite_audit_stage"),
+                    sabre_started_ns,
+                    circ,
+                    orig_parameters,
+                    Squander_remapped_circuit,
+                    parameters_remapped_circuit,
+                    pi,
+                    final_pi,
+                    self.config["topology"],
+                )
         qgd_Wide_Circuit_Optimization.check_valid_routing(
             Squander_remapped_circuit, self.config["topology"]
         )
 
-        print("checking circuit after routing")
-        print(self.config)
         self.check_compare_circuits(
             circ,
             orig_parameters,
             Squander_remapped_circuit,
             parameters_remapped_circuit,
             routing=True,
-            forced_test=True,
             label="route_circuit",
         )
         return Squander_remapped_circuit, parameters_remapped_circuit
