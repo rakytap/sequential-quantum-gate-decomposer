@@ -3532,6 +3532,11 @@ class qgd_Wide_Circuit_Optimization:
         config.setdefault("use_dual_annealing", False)
         config.setdefault("max_iteration_loops", 8)
         config.setdefault("max_inner_iterations_bfgs2", 1000)
+        # An equal-CNOT rewrite can change the local circuit structure and
+        # expose reductions to the next all-partition round.  Do not confuse
+        # that useful plateau motion with convergence, but bound it so a
+        # sequence of equivalent rewrites cannot run indefinitely.
+        config.setdefault("max_equal_cnot_optimization_rounds", 3)
         config.setdefault(
             "circuit_validation_tolerance",
             _default_circuit_validation_tolerance(config),
@@ -3570,6 +3575,10 @@ class qgd_Wide_Circuit_Optimization:
         # circuits. The topology-valid fallback already supplies a strict
         # per-target CNOT ceiling to the single attempt.
         config.setdefault("exact_routing_synthesis_restarts", 1)
+        # Retry only the observed hard three-qubit boundary class: a six-CNOT
+        # routed source plus exactly one SWAP. This closes the concrete
+        # stochastic miss without repeating the complete routing catalog.
+        config.setdefault("exact_routing_fallback_retry_count", 1)
         # Routing targets need the same deterministic basin schedule as normal
         # OSR synthesis. A two-start shortcut both missed easy 2-CNOT columns
         # and ran longer on multiply_n13 than the full eight-start schedule.
@@ -3637,7 +3646,21 @@ class qgd_Wide_Circuit_Optimization:
         config.setdefault(
             "exact_routing_benders_subproblem_slice_seconds", 60.0
         )
-        config.setdefault("exact_routing_benders_stagnation_seconds", 120.0)
+        # Equal-score native layout choices can change a fixed-cover route by
+        # dozens of CNOTs. Screen a small deterministic multi-pass portfolio
+        # against the immutable OSR catalog, then spend the normal beam only
+        # on its best two layouts. This work performs no synthesis and is not
+        # charged to the exact-master time budget.
+        config.setdefault("exact_routing_layout_seed_count", 8)
+        config.setdefault("exact_routing_layout_total_passes", 8)
+        config.setdefault("exact_routing_layout_candidate_limit", 2)
+        config.setdefault(
+            "exact_routing_layout_portfolio_timeout_seconds", None
+        )
+        # A fixed two-minute no-improvement stop repeatedly terminated the
+        # global solve at its root and returned the original weak seed. The
+        # explicit 20-minute solver budget is the only default termination.
+        config.setdefault("exact_routing_benders_stagnation_seconds", None)
         config.setdefault("exact_routing_cover_pool_timeout_seconds", 10.0)
         config.setdefault("exact_routing_minimum_cover_seed_count", 8)
         config.setdefault("exact_routing_post_catalog_pam_seed_count", 12)
@@ -3652,6 +3675,10 @@ class qgd_Wide_Circuit_Optimization:
             ("light-structural",),
         )
         config.setdefault("exact_routing_cover_seed_beam_width", 64)
+        config.setdefault(
+            "exact_routing_minimum_partition_priority_beam_width", 16
+        )
+        config.setdefault("exact_routing_weighted_cover_seed_beam_width", 8)
         # Reuse the resolved all-partition/all-permutation OSR catalog in PAM
         # to obtain strong mapping incumbents. BQSKit contributes only its PAM
         # mapping heuristic; no BQSKit partitioner or synthesizer is involved.
@@ -3776,6 +3803,27 @@ class qgd_Wide_Circuit_Optimization:
         max_partition_size = config["max_partition_size"]
         if not isinstance(max_partition_size, int):
             raise Exception(f"The max_partition_size parameter should be an integer.")
+
+        max_equal_rounds = config["max_equal_cnot_optimization_rounds"]
+        if (
+            not isinstance(max_equal_rounds, int)
+            or isinstance(max_equal_rounds, bool)
+            or max_equal_rounds < 0
+        ):
+            raise ValueError(
+                "The max_equal_cnot_optimization_rounds parameter should be "
+                "a nonnegative integer."
+            )
+        fallback_retries = config["exact_routing_fallback_retry_count"]
+        if (
+            not isinstance(fallback_retries, int)
+            or isinstance(fallback_retries, bool)
+            or fallback_retries < 0
+        ):
+            raise ValueError(
+                "The exact_routing_fallback_retry_count parameter should be "
+                "a nonnegative integer."
+            )
 
         partition_workers = config["partition_workers"]
         if partition_workers is not None and (
@@ -4385,6 +4433,14 @@ class qgd_Wide_Circuit_Optimization:
         ) + tuple(params)
 
     @staticmethod
+    def get_structure_fingerprint(circ):
+        """Hash the ordered gate structure, excluding numerical parameters."""
+        return (circ.get_Qbit_Num(),) + tuple(
+            (gate.get_Name(), tuple(gate.get_Involved_Qbits()))
+            for gate in circ.get_Gates()
+        )
+
+    @staticmethod
     def recombine_all_partition_circuit(
         circ,
         optimized_subcircuits,
@@ -4670,9 +4726,14 @@ class qgd_Wide_Circuit_Optimization:
                 wide_circuit_optimizer = qgd_Wide_Circuit_Optimization(
                     {**self.config, "max_partition_size": max_part_size}
                 )
+                equal_count_rounds = 0
+                seen_round_fingerprints = {
+                    qgd_Wide_Circuit_Optimization.get_structure_fingerprint(circ)
+                }
                 while True:
+                    previous_count = count
                     # run circuit optimization
-                    circ_flat, parameters = (
+                    circ_flat, new_parameters = (
                         wide_circuit_optimizer.InnerOptimizeWideCircuit(
                             circ,
                             parameters,
@@ -4681,11 +4742,42 @@ class qgd_Wide_Circuit_Optimization:
                         )
                     )
                     audit_round += 1
-                    circ = circ_flat.get_Flat_Circuit()
-                    newcount = CNOTGateCount(circ, 0)
-                    no_improve = newcount >= count
+                    new_circ = circ_flat.get_Flat_Circuit()
+                    newcount = CNOTGateCount(new_circ, 0)
+                    if newcount > previous_count:
+                        # Silently reverting would leave an already-written
+                        # rewrite-audit round inconsistent with the returned
+                        # circuit.  Monotonicity is a contract, so fail loudly
+                        # if a future partition strategy violates it.
+                        raise RuntimeError(
+                            "Wide-circuit optimization increased the CNOT "
+                            f"count from {previous_count} to {newcount}."
+                        )
+
+                    circ = new_circ
+                    parameters = new_parameters
                     count = newcount
-                    if no_improve:
+                    if newcount < previous_count:
+                        equal_count_rounds = 0
+                        seen_round_fingerprints = {
+                            qgd_Wide_Circuit_Optimization.get_structure_fingerprint(
+                                circ
+                            )
+                        }
+                        continue
+
+                    fingerprint = (
+                        qgd_Wide_Circuit_Optimization.get_structure_fingerprint(
+                            circ
+                        )
+                    )
+                    equal_count_rounds += 1
+                    if fingerprint in seen_round_fingerprints:
+                        break
+                    seen_round_fingerprints.add(fingerprint)
+                    if equal_count_rounds >= int(
+                        self.config["max_equal_cnot_optimization_rounds"]
+                    ):
                         break
         self.config["optimization_time"] = time.time() - start_time
         if self.config["strategy"] in ("bqskit", "qiskit"):
@@ -5397,6 +5489,10 @@ class qgd_Wide_Circuit_Optimization:
             self.config["exact_routing_synthesis_cache_hits"] = (
                 exact_route.synthesis_cache_hits
             )
+            if exact_route.routing_catalog is not None:
+                self.config["routing_osr_catalog"] = dict(
+                    exact_route.routing_catalog
+                )
             self.config["exact_routing_optimal"] = bool(
                 exact_route.solution.optimal
             )

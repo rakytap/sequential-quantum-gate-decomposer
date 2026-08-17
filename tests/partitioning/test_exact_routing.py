@@ -19,10 +19,13 @@ from squander.partitioning.routing import (
     ExactRoutingResult,
     RoutingAlternative,
     RoutingSelection,
+    SynthesizedRoutingPayload,
     _process_infidelity,
     cnot_schmidt_lower_bound,
     permuted_partition_target,
     route_circuit_exact,
+    load_routing_osr_catalog,
+    save_routing_osr_catalog,
     solve_exact_routing,
     solve_exact_routing_branch_and_bound,
     solve_exact_routing_ilp,
@@ -30,6 +33,84 @@ from squander.partitioning.routing import (
     symmetry_reduced_assignment_orbits,
     topology_automorphisms,
 )
+
+
+def test_routing_osr_catalog_round_trip(tmp_path):
+    circuit = qgd_Circuit(2)
+    circuit.add_CNOT(1, 0)
+    parameters = np.empty((0,), dtype=np.float64)
+    payload = SynthesizedRoutingPayload(
+        circuit=circuit,
+        parameters=parameters,
+        topology=((0, 1),),
+        input_assignment=(0, 1),
+        output_assignment=(0, 1),
+        source_circuit=circuit,
+        source_parameters=parameters,
+    )
+    alternative = RoutingAlternative(
+        partition=0,
+        logical_qubits=(0, 1),
+        input_physical=(0, 1),
+        output_physical=(0, 1),
+        cnot_count=1,
+        payload=payload,
+    )
+    path = tmp_path / "example.routing-catalog.json.gz"
+
+    metadata = save_routing_osr_catalog(
+        path,
+        circuit=circuit,
+        parameters=parameters,
+        topology=((0, 1),),
+        config={"strategy": "TreeSearch", "runtime_object": object()},
+        candidate_gate_sets=((0,),),
+        candidate_gate_orders=((0,),),
+        feasible_alternatives={0: (alternative,)},
+        osr_synthesized_partitions={0},
+    )
+    archive = load_routing_osr_catalog(path, metadata["sha256"])
+
+    assert metadata["complete"] is True
+    assert metadata["partition_count"] == 1
+    assert metadata["alternative_count"] == 1
+    assert archive["proof_status"] == "debug-cache-not-part-of-rewrite-audit"
+    assert archive["partitions"][0]["gate_set"] == [0]
+    assert archive["partitions"][0]["alternatives"][0]["cnot_count"] == 1
+    assert "OPENQASM 2.0" in archive["payloads"][0]["qasm"]
+
+
+def test_mismatched_routing_catalog_is_deleted_as_a_cache_miss(
+    tmp_path, monkeypatch
+):
+    cached_circuit = qgd_Circuit(2)
+    cached_circuit.add_X(0)
+    current_circuit = qgd_Circuit(2)
+    parameters = np.empty((0,), dtype=np.float64)
+    catalog = routing.LoadedRoutingOSRCatalog(
+        circuit=cached_circuit,
+        parameters=parameters,
+        topology=((0, 1),),
+        partitions=(),
+        gate_orders=(),
+        alternatives={},
+        configuration={},
+    )
+    path = tmp_path / "stale.routing-catalog.json.gz"
+    path.write_bytes(b"stale")
+    monkeypatch.setattr(
+        routing, "reconstruct_routing_osr_catalog", lambda _path: catalog
+    )
+
+    loaded = routing._load_compatible_routing_osr_catalog(
+        path,
+        circuit=current_circuit,
+        parameters=parameters,
+        topology=((0, 1),),
+    )
+
+    assert loaded is None
+    assert not path.exists()
 
 
 def test_cnot_aware_pam_preserves_native_entangler_ratio_at_default_cost():
@@ -57,6 +138,7 @@ def test_exact_osr_is_the_wide_router_default():
     assert optimizer.config["exact_routing_master"] == "benders"
     assert optimizer.config["exact_routing_lazy_osr"] is False
     assert optimizer.config["exact_routing_synthesis_restarts"] == 1
+    assert optimizer.config["exact_routing_fallback_retry_count"] == 1
     assert optimizer.config["exact_routing_light_sabre_seed_count"] == 32
     assert optimizer.config["exact_routing_light_sabre_trials_per_seed"] == 1
     assert optimizer.config["exact_routing_light_guided_cover_count"] == 8
@@ -80,7 +162,14 @@ def test_exact_osr_is_the_wide_router_default():
         optimizer.config["exact_routing_benders_subproblem_slice_seconds"]
         == 60.0
     )
-    assert optimizer.config["exact_routing_benders_stagnation_seconds"] == 120.0
+    assert optimizer.config["exact_routing_benders_stagnation_seconds"] is None
+    assert optimizer.config["exact_routing_layout_seed_count"] == 8
+    assert optimizer.config["exact_routing_layout_total_passes"] == 8
+    assert optimizer.config["exact_routing_layout_candidate_limit"] == 2
+    assert (
+        optimizer.config["exact_routing_layout_portfolio_timeout_seconds"]
+        is None
+    )
     assert optimizer.config["exact_routing_cover_seed_timeout_seconds"] == 10.0
     assert optimizer.config["exact_routing_cover_pool_timeout_seconds"] == 10.0
     assert optimizer.config["exact_routing_minimum_cover_seed_count"] == 8
@@ -749,6 +838,88 @@ def test_mapping_beam_gives_each_initial_layout_its_full_quota():
     assert combined == separate
 
 
+def test_fixed_cover_beam_preserves_requested_initial_mapping():
+    alternatives = {
+        0: (
+            RoutingAlternative(0, (0, 1), (0, 1), (0, 1), 0),
+            RoutingAlternative(0, (0, 1), (1, 0), (1, 0), 1),
+        ),
+    }
+
+    result = routing._cover_selection_warm_start(
+        selected_partitions=(0,),
+        gate_predecessors={0: ()},
+        partitions=({0},),
+        alternatives=alternatives,
+        logical_qubit_count=2,
+        path=(0, 1),
+        initial_mapping=(1, 0),
+        master_backend="fixed-layout-test",
+        beam_width=1,
+        exact_refine_timeout_seconds=None,
+    )
+
+    assert result.initial_mapping == (1, 0)
+    assert result.cnot_count == 1
+    assert result.transition_swaps == ((),)
+
+
+def test_weighted_routing_cover_has_no_partition_count_bias(monkeypatch):
+    from squander.partitioning import ilp as partitioning_ilp
+
+    observed = []
+
+    def fake_global_optimal(_parts, _successors, **kwargs):
+        observed.append(kwargs["weight_partition_tiebreak"])
+        return [0, 1], None
+
+    monkeypatch.setattr(
+        partitioning_ilp, "ilp_global_optimal", fake_global_optimal
+    )
+
+    selected = routing._minimum_partition_cover_selection(
+        gate_predecessors={0: (), 1: (0,)},
+        partitions=({0}, {1}, {0, 1}),
+        weights=(1, 1, 2),
+        weight_partition_tiebreak=0,
+    )
+
+    assert selected == (0, 1)
+    assert observed == [0]
+
+
+def test_gurobi_runtime_failure_does_not_start_cbc(monkeypatch):
+    from squander.partitioning import ilp as partitioning_ilp
+
+    class FakePulp:
+        cbc_started = False
+
+        @staticmethod
+        def GUROBI(**_kwargs):
+            return object()
+
+        @classmethod
+        def PULP_CBC_CMD(cls, **_kwargs):
+            cls.cbc_started = True
+            return object()
+
+    class FailingProblem:
+        @staticmethod
+        def solve(_solver, **_kwargs):
+            raise RuntimeError("Gurobi solve-time failure")
+
+    monkeypatch.setattr(
+        partitioning_ilp, "_check_gurobi_available", lambda: None
+    )
+
+    with pytest.raises(RuntimeError, match="solve-time failure"):
+        partitioning_ilp._solve_pulp_with_gurobi_or_cbc(
+            FailingProblem(), FakePulp
+        )
+
+    assert FakePulp.cbc_started is False
+
+
 def test_fixed_cover_seed_obeys_an_expired_wall_clock_deadline():
     alternatives = {
         0: (
@@ -1266,7 +1437,7 @@ def test_synthesis_cache_deduplicates_and_remembers_failures(monkeypatch):
 
 
 def test_exact_routing_rejects_repeated_synthesis_attempts():
-    with pytest.raises(ValueError, match="exactly once"):
+    with pytest.raises(ValueError, match="Unconditional"):
         routing._call_shared_synthesis_batch_cached(
             (np.eye(4, dtype=np.complex128),),
             {
@@ -1276,6 +1447,64 @@ def test_exact_routing_rejects_repeated_synthesis_attempts():
             },
             [(0, 1)],
         )
+
+
+def test_exact_routing_retries_only_marked_fallback_bound_miss(monkeypatch):
+    calls = []
+
+    def synthesize(targets, config, topology, *, target_configs=None):
+        calls.append(tuple(item["random_seed"] for item in target_configs))
+        return (None,) if len(calls) == 1 else ("improved",)
+
+    monkeypatch.setattr(routing, "_call_shared_synthesis_batch", synthesize)
+    target = np.eye(4, dtype=np.complex128)
+    config = {
+        "strategy": "TreeSearch",
+        "exact_routing_fallback_retry_count": 1,
+    }
+    target_config = {
+        **config,
+        "_exact_routing_retry_fallback_bound": True,
+    }
+    cache = {}
+    assert routing._call_shared_synthesis_batch_cached(
+        (target,),
+        config,
+        [(0, 1)],
+        target_configs=(target_config,),
+        cache=cache,
+    ) == ("improved",)
+    assert len(calls) == 2
+    assert calls[0][0] != calls[1][0]
+    # The resolved retry replaces the initial miss in the exact cache.
+    assert routing._call_shared_synthesis_batch_cached(
+        (target,),
+        config,
+        [(0, 1)],
+        target_configs=(target_config,),
+        cache=cache,
+    ) == ("improved",)
+    assert len(calls) == 2
+
+
+def test_exact_routing_does_not_retry_unmarked_synthesis_miss(monkeypatch):
+    calls = []
+
+    def synthesize(targets, config, topology, *, target_configs=None):
+        calls.append(len(targets))
+        return (None,)
+
+    monkeypatch.setattr(routing, "_call_shared_synthesis_batch", synthesize)
+    result = routing._call_shared_synthesis_batch_cached(
+        (np.eye(4, dtype=np.complex128),),
+        {
+            "strategy": "TreeSearch",
+            "exact_routing_fallback_retry_count": 1,
+        },
+        [(0, 1)],
+    )
+    assert result == (None,)
+    assert calls == [1]
 
 
 def test_global_synthesis_batch_combines_partitions_and_deduplicates(monkeypatch):
@@ -1345,6 +1574,19 @@ def test_failed_orbit_representatives_are_not_retried(monkeypatch):
     assert calls == [1]
     assert len(seeds) == len(set(seeds)) == 1
     assert len(alternatives) == 4
+    assert all(
+        "SWAP" not in alternative.payload.circuit.get_Gate_Nums()
+        for alternative in alternatives
+    )
+    assert {
+        (alternative.input_physical, alternative.output_physical)
+        for alternative in alternatives
+    } == {
+        ((0, 1), (0, 1)),
+        ((0, 1), (1, 0)),
+        ((1, 0), (0, 1)),
+        ((1, 0), (1, 0)),
+    }
 
 
 def test_routing_search_depth_is_one_below_each_naive_fallback(monkeypatch):
@@ -1503,12 +1745,49 @@ def test_fallback_routes_nonlocal_source_gates_on_the_local_subtopology():
         source_parameters=parameters,
     )
 
+    assert len(alternatives) == 36
+    assert len(
+        {
+            (alternative.input_physical, alternative.output_physical)
+            for alternative in alternatives
+        }
+    ) == 36
     for alternative in alternatives:
+        assert "SWAP" not in alternative.payload.circuit.get_Gate_Nums()
         allowed = {frozenset(edge) for edge in alternative.payload.topology}
         for gate in alternative.payload.circuit.get_Flat_Circuit().get_Gates():
             qubits = tuple(gate.get_Involved_Qbits())
             if len(qubits) == 2:
                 assert frozenset(qubits) in allowed
+
+
+def test_fallbacks_close_over_better_boundary_swap_compositions():
+    circuit = qgd_Circuit(3)
+    circuit.add_CNOT(1, 0)
+    alternatives = synthesize_partition_alternatives(
+        partition=0,
+        unitary=circuit.get_Matrix(np.empty((0,)), is_f32=False),
+        logical_qubits=(0, 1, 2),
+        topology=[(0, 1), (1, 2)],
+        physical_qubit_count=3,
+        config={
+            "max_partition_size": 3,
+            "exact_routing_eager_synthesis": False,
+            "synthesis_acceptance_tolerance": 1e-10,
+        },
+        source_circuit=circuit,
+        source_parameters=np.empty((0,)),
+    )
+
+    absorbed = next(
+        alternative
+        for alternative in alternatives
+        if alternative.payload.input_assignment == (0, 1, 2)
+        and alternative.payload.output_assignment == (2, 1, 0)
+    )
+    # Starting from a better relabeled boundary solution and composing one
+    # SWAP is four CNOTs. Independently wrapping the original source uses ten.
+    assert absorbed.cnot_count == 4
 
 
 def test_exact_routing_audit_metric_replays_bit_identically(

@@ -40,12 +40,6 @@ def _check_gurobi_available():
 def _solve_pulp_with_gurobi_or_cbc(prob, pulp, callback=None, **gurobi_kwargs):
     try:
         _check_gurobi_available()
-        solver = pulp.GUROBI(manageEnv=True, msg=False, **gurobi_kwargs)
-        if callback is None:
-            prob.solve(solver)
-        else:
-            prob.solve(solver, callback=callback)
-        return "gurobi"
     except Exception as exc:
         _print_gurobi_fallback_warning(exc)
         cbc_kwargs = {}
@@ -55,6 +49,16 @@ def _solve_pulp_with_gurobi_or_cbc(prob, pulp, callback=None, **gurobi_kwargs):
             cbc_kwargs["threads"] = gurobi_kwargs["Threads"]
         prob.solve(pulp.PULP_CBC_CMD(msg=False, **cbc_kwargs))
         return "cbc"
+    # Once Gurobi has initialized successfully, a solve-time exception is a
+    # failure of this model/run (most importantly, an out-of-memory signal).
+    # Starting CBC on the same live PuLP model can double memory pressure and
+    # leaves ``solverModel`` pointing at a freed Gurobi object.
+    solver = pulp.GUROBI(manageEnv=True, msg=False, **gurobi_kwargs)
+    if callback is None:
+        prob.solve(solver)
+    else:
+        prob.solve(solver, callback=callback)
+    return "gurobi"
 
 
 def topo_sort_partitions(c, parts):
@@ -602,7 +606,15 @@ def sol_to_badsccs(g, allparts, L):
     _, scc = scc_tarjan_iterative(G_part)
     return {frozenset(v) for v in scc if len(v) > 1}
 
-def ilp_global_optimal(allparts, g, weighted_info=None, gurobi_direct=False, use_order=False, weights=None):
+def ilp_global_optimal(
+    allparts,
+    g,
+    weighted_info=None,
+    gurobi_direct=False,
+    use_order=False,
+    weights=None,
+    weight_partition_tiebreak=1,
+):
     """
     Select an optimal set of non-overlapping parts via ILP/MIP with cycle cuts.
 
@@ -628,7 +640,10 @@ def ilp_global_optimal(allparts, g, weighted_info=None, gurobi_direct=False, use
         single_qubit_chains_prepost = {x[0]: x for x in single_qubit_chains if x[0] in single_qubit_chains_pre and x[-1] in single_qubit_chains_post}
     def fortet_inequalities(x, y, z): #-z-x<=0 -z+x+y<=1 z-x<=0 z+x-y<=1
         return [z-x<=0, z-y<=0, x+y-z<=1]
+    if weight_partition_tiebreak not in (-1, 0, 1):
+        raise ValueError("weight_partition_tiebreak must be -1, 0, or 1.")
     N = len(allparts)
+    weight_scale = N + 1
     gate_to_parts = {x: [] for x in g}
     for i, part in enumerate(allparts):
         for gate in part: gate_to_parts[gate].append(i)
@@ -644,7 +659,7 @@ def ilp_global_optimal(allparts, g, weighted_info=None, gurobi_direct=False, use
                 m.setParam(GRB.Param.LazyConstraints, 1)
                 x = m.addVars(range(N), lb=[0]*N, ub=[1]*N, vtype=[GRB.BINARY]*N, name=["x_" + str(i) for i in range(N)])
                 for i in g: m.addConstr(gp.quicksum(x[j] for j in gate_to_parts[i]) == 1)
-                if weights is not None: m.setObjective(gp.quicksum((weights[i]*N+1) * x[i] for i in range(N)), GRB.MINIMIZE)
+                if weights is not None: m.setObjective(gp.quicksum((weights[i]*weight_scale+weight_partition_tiebreak) * x[i] for i in range(N)), GRB.MINIMIZE)
                 elif weighted_info is None: m.setObjective(gp.quicksum(x[i] for i in range(N)), GRB.MINIMIZE)
                 else:
                     Npre, Npost, Nprepost = len(single_qubit_chains_pre), len(single_qubit_chains_post), len(single_qubit_chains_prepost)
@@ -749,7 +764,7 @@ def ilp_global_optimal(allparts, g, weighted_info=None, gurobi_direct=False, use
     #print(all_cycles_from_dag_edges(succ))
     #for u, v in two_cycles_from_dag_edges(g, gate_to_parts, allparts):
     #    prob += x[u] + x[v] <= 1 #constraint that no two cycles are included
-    if weights is not None: prob.setObjective(pulp.lpSum((weights[i]*N+1) * x[i] for i in range(N)))
+    if weights is not None: prob.setObjective(pulp.lpSum((weights[i]*weight_scale+weight_partition_tiebreak) * x[i] for i in range(N)))
     elif weighted_info is None: prob.setObjective(pulp.lpSum(x[i] for i in range(N)))
     else:
         Npre, Npost, Nprepost = len(single_qubit_chains_pre), len(single_qubit_chains_post), len(single_qubit_chains_prepost)

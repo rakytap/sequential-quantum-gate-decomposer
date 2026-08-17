@@ -219,6 +219,22 @@ def validate_audit(path: Path) -> None:
         raise RuntimeError(f"{path} is not a rewrite-audit archive")
 
 
+def validate_routing_catalog(path: Path) -> None:
+    """Reject a truncated or malformed reusable routing catalog."""
+    try:
+        with gzip.open(path, "rt", encoding="utf-8") as stream:
+            catalog = json.load(stream)
+    except (OSError, json.JSONDecodeError) as exc:
+        raise RuntimeError(f"cannot read routing catalog {path}: {exc}") from exc
+    if (
+        not isinstance(catalog, dict)
+        or catalog.get("schema") != "squander-routing-osr-catalog"
+        or not isinstance(catalog.get("partitions"), list)
+        or not isinstance(catalog.get("payloads"), list)
+    ):
+        raise RuntimeError(f"{path} is not a routing OSR catalog")
+
+
 def validate_sha256(path: Path, expected: str) -> None:
     """Require a downloaded artifact to match its archived digest."""
     if not isinstance(expected, str) or len(expected) != 64:
@@ -280,6 +296,18 @@ def fetch_result_group(
                     validate_sha256(path, digest)
 
                 artifacts.setdefault(audit_name, validate_archived_audit)
+            routing_catalog = entry.get("routing_osr_catalog")
+            if isinstance(routing_catalog, dict) and routing_catalog.get("file"):
+                catalog_name = archived_basename(
+                    routing_catalog.get("file"), "routing_osr_catalog.file"
+                )
+                expected_digest = routing_catalog.get("sha256")
+
+                def validate_archived_catalog(path, digest=expected_digest):
+                    validate_routing_catalog(path)
+                    validate_sha256(path, digest)
+
+                artifacts.setdefault(catalog_name, validate_archived_catalog)
         artifact_remote_directory = (
             f"{remote_host}:{remote_root.rstrip('/')}/{directory.name}"
         )

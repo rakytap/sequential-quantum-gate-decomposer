@@ -119,6 +119,35 @@ def audit_paths(output_path):
     return Path(f"{stem}.audit.jsonl"), Path(f"{stem}.audit.json.gz")
 
 
+def routing_catalog_path(output_path):
+    """Return the reusable, non-proof routing catalog beside a result QASM."""
+    output_path = Path(output_path)
+    return Path(f"{output_path.with_suffix('')}.routing-catalog.json.gz")
+
+
+def clear_invalidated_result_artifacts(output_path):
+    """Remove generated relics when a circuit has no ``results.json`` entry.
+
+    The result directory is separate from the archived benchmark inputs.  A
+    basename-qualified match therefore removes the output QASM, live/compressed
+    audits, routing catalog, temporary files, and diagnostics without touching
+    any other circuit or its source QASM.
+    """
+    output_path = Path(output_path)
+    artifact_prefix = f"{output_path.with_suffix('').name}."
+    removed = []
+    if not output_path.parent.is_dir():
+        return removed
+    for artifact in output_path.parent.iterdir():
+        if (
+            artifact.name.startswith(artifact_prefix)
+            and (artifact.is_file() or artifact.is_symlink())
+        ):
+            artifact.unlink(missing_ok=True)
+            removed.append(artifact)
+    return removed
+
+
 def file_sha256(path):
     """Return the SHA-256 digest of a file's exact bytes."""
     digest = hashlib.sha256()
@@ -241,6 +270,7 @@ def optimize_circuit_worker(
         filename = Path(filename)
         output_path = Path(output_path)
         audit_jsonl_path, audit_gzip_path = audit_paths(output_path)
+        catalog_path = routing_catalog_path(output_path)
         audit_jsonl_path.unlink(missing_ok=True)
         os.environ["SQUANDER_REWRITE_AUDIT_JSONL"] = str(audit_jsonl_path)
         fname = filename.name
@@ -251,6 +281,7 @@ def optimize_circuit_worker(
                 circ.get_Qbit_Num()
             )
         )
+        worker_config["exact_routing_catalog_output_path"] = str(catalog_path)
 
         init_stats = CircuitGateStats(circ)
         optimizer = Wide_Circuit_Optimization.qgd_Wide_Circuit_Optimization(
@@ -345,6 +376,14 @@ def optimize_circuit_worker(
             "input_file_sha256": file_sha256(filename),
             "output_file_sha256": file_sha256(output_path),
         }
+        routing_catalog = optimizer.config.get("routing_osr_catalog")
+        if routing_catalog is not None:
+            routing_catalog = dict(routing_catalog)
+            routing_catalog["file"] = str(
+                Path(routing_catalog["file"]).relative_to(REPOSITORY_ROOT)
+            )
+            result_entry["routing_osr_catalog"] = routing_catalog
+            run_metadata["routing_osr_catalog"] = routing_catalog
         rewrite_audit, audit_sha256 = optimizer.save_rewrite_audit(
             audit_jsonl_path, audit_gzip_path, run_metadata
         )
@@ -429,6 +468,8 @@ def result_configuration(config, qubit_num):
         "routing_synthesis_workers",
         "routing_column_max_iteration_loops",
         "routing_column_synthesis_mode",
+        "max_equal_cnot_optimization_rounds",
+        "exact_routing_fallback_retry_count",
         "exact_routing_catalog_progress",
         "exact_routing_catalog_progress_interval",
         "exact_routing_light_sabre_seed_count",
@@ -437,6 +478,10 @@ def result_configuration(config, qubit_num):
         "exact_routing_minimum_cover_seed_count",
         "exact_routing_post_catalog_pam_seed_count",
         "exact_routing_pam_layout_passes",
+        "exact_routing_layout_seed_count",
+        "exact_routing_layout_total_passes",
+        "exact_routing_layout_candidate_limit",
+        "exact_routing_layout_portfolio_timeout_seconds",
         "exact_routing_pam_swap_cnot_costs",
         "exact_routing_pam_cover_strategies",
         "exact_routing_lazy_osr",
@@ -638,6 +683,17 @@ if __name__ == "__main__":
                 f"({results[fname].get('status', 'completed')})"
             )
             continue
+
+        # Deleting one results.json entry is the deliberate invalidation API.
+        # Do not let an output QASM, audit, or catalog from that old run leak
+        # into the replacement run or block it on a source-QASM mismatch.
+        if fname not in results:
+            removed_artifacts = clear_invalidated_result_artifacts(output_path)
+            if removed_artifacts:
+                print(
+                    f"Cleared {len(removed_artifacts)} invalidated result "
+                    f"artifacts for {fname}."
+                )
 
         print(f"executing optimization of circuit: {filename}")
         #if not filename.endswith("_n140.qasm"): continue

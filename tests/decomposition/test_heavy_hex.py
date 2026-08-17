@@ -56,10 +56,19 @@ class Test_Decomposition:
         matrix_size = int(2**qbit_num)
    
         # creating a random unitary to be decomposed
-        Umtx = unitary_group.rvs(matrix_size)
+        # This is a numerical functionality test, not a stochastic optimizer
+        # benchmark.  An unseeded Haar target occasionally needs thousands of
+        # outer iterations and can consume the entire CI job timeout.
+        Umtx = unitary_group.rvs(matrix_size, random_state=0)
     
         # creating an instance of the C++ class
-        decomp = N_Qubit_Decomposition( Umtx.conj().T)
+        decomp = N_Qubit_Decomposition(
+            Umtx.conj().T,
+            config={
+                "random_seed": 1,
+                "max_outer_iterations": 150,
+            },
+        )
 
 
         # create custom gate structure
@@ -76,12 +85,14 @@ class Test_Decomposition:
         # set the number of block to be optimized in one shot
         decomp.set_Optimization_Blocks( 20 )
 
+        # The assertion below is 1e-3; targeting one order of magnitude below
+        # it avoids spending minutes polishing toward the library's much
+        # tighter general-purpose default.
+        decomp.set_Optimization_Tolerance(1e-5)
+
         # starting the decomposition
         decomp.Start_Decomposition()   
 
-
-        # list the decomposing operations
-        decomp.List_Gates()
 
         # get the decomposing operations
         quantum_circuit = decomp.get_Qiskit_Circuit()
