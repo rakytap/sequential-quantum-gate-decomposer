@@ -83,6 +83,24 @@ def _build_skip_descriptor_set():
     return build_partition_descriptor_set(surface)
 
 
+def _build_fuse_descriptor_set():
+    surface = build_canonical_planner_surface_from_operation_specs(
+        qbit_num=1,
+        source_type="microcase_builder",
+        workload_id="cost_model_fuse_motif",
+        operation_specs=[
+            _u3(0),
+            _noise(
+                "amplitude_damping",
+                0,
+                0,
+                _noise_value("amplitude_damping"),
+            ),
+        ],
+    )
+    return build_partition_descriptor_set(surface)
+
+
 def test_extract_motif_cost_features_uses_frozen_per_operation_rank_bounds():
     descriptor_set = _build_rank_surface_descriptor_set()
     partition = descriptor_set.partitions[0]
@@ -223,6 +241,29 @@ def test_hybrid_cost_model_flag_on_skips_with_audit_and_preserves_exactness():
     assert result.to_dict()["summary"]["cost_model_skip_count"] == 1
     assert metrics["frobenius_norm_diff"] <= PHASE3_RUNTIME_DENSITY_TOL
     assert metrics["max_abs_diff"] <= PHASE3_RUNTIME_DENSITY_TOL
+
+
+def test_hybrid_cost_model_flag_on_fuse_route_also_emits_audit_fields():
+    descriptor_set = _build_fuse_descriptor_set()
+    parameters = build_initial_parameters(descriptor_set.parameter_count)
+
+    result = execute_partitioned_density_channel_native_hybrid(
+        descriptor_set,
+        parameters,
+        enable_channel_native_cost_model=True,
+    )
+    payload = result.partitions[0].to_dict(descriptor_set)
+
+    assert result.partitions[0].partition_runtime_class == "phase31_channel_native"
+    assert (
+        result.partitions[0].partition_route_reason
+        == "eligible_channel_native_motif"
+    )
+    assert payload["cost_model_id"] == PHASE31_KRAUS_EXPANSION_MODEL_ID
+    assert payload["cost_model_decision"] == "fuse_channel_native"
+    assert payload["predicted_kraus_count_upper"] == 2
+    assert payload["predicted_apply_cost"] < payload["predicted_baseline_cost"]
+    assert result.to_dict()["summary"]["cost_model_skip_count"] == 0
 
 
 def test_strict_channel_native_path_never_invokes_cost_model(monkeypatch):
