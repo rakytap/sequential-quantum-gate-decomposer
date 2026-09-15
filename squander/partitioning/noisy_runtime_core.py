@@ -53,6 +53,12 @@ class NoisyRuntimePartitionRecord:
     runtime_circuit_parameter_count: int
     partition_runtime_class: str | None = None
     partition_route_reason: str | None = None
+    cost_model_id: str | None = None
+    cost_model_version: str | None = None
+    predicted_kraus_count_upper: int | None = None
+    predicted_apply_cost: float | None = None
+    predicted_baseline_cost: float | None = None
+    cost_model_decision: str | None = None
 
     def to_dict(self, descriptor_set: NoisyPartitionDescriptorSet) -> dict[str, Any]:
         return runtime_partition_audit_dict(descriptor_set, self)
@@ -78,6 +84,18 @@ def runtime_partition_audit_dict(
         payload["partition_runtime_class"] = record.partition_runtime_class
     if record.partition_route_reason is not None:
         payload["partition_route_reason"] = record.partition_route_reason
+    if record.cost_model_id is not None:
+        payload["cost_model_id"] = record.cost_model_id
+    if record.cost_model_version is not None:
+        payload["cost_model_version"] = record.cost_model_version
+    if record.predicted_kraus_count_upper is not None:
+        payload["predicted_kraus_count_upper"] = record.predicted_kraus_count_upper
+    if record.predicted_apply_cost is not None:
+        payload["predicted_apply_cost"] = record.predicted_apply_cost
+    if record.predicted_baseline_cost is not None:
+        payload["predicted_baseline_cost"] = record.predicted_baseline_cost
+    if record.cost_model_decision is not None:
+        payload["cost_model_decision"] = record.cost_model_decision
     return payload
 
 
@@ -703,6 +721,12 @@ def _build_partition_record(
     runtime_circuit: NoisyCircuit,
     partition_runtime_class: str | None = None,
     partition_route_reason: str | None = None,
+    cost_model_id: str | None = None,
+    cost_model_version: str | None = None,
+    predicted_kraus_count_upper: int | None = None,
+    predicted_apply_cost: float | None = None,
+    predicted_baseline_cost: float | None = None,
+    cost_model_decision: str | None = None,
 ) -> NoisyRuntimePartitionRecord:
     return NoisyRuntimePartitionRecord(
         partition_index=partition.partition_index,
@@ -710,6 +734,12 @@ def _build_partition_record(
         runtime_circuit_parameter_count=runtime_circuit.parameter_num,
         partition_runtime_class=partition_runtime_class,
         partition_route_reason=partition_route_reason,
+        cost_model_id=cost_model_id,
+        cost_model_version=cost_model_version,
+        predicted_kraus_count_upper=predicted_kraus_count_upper,
+        predicted_apply_cost=predicted_apply_cost,
+        predicted_baseline_cost=predicted_baseline_cost,
+        cost_model_decision=cost_model_decision,
     )
 
 
@@ -819,6 +849,7 @@ def execute_partitioned_density(
     *,
     runtime_path: str = PHASE3_RUNTIME_PATH_BASELINE,
     allow_fusion: bool = False,
+    enable_channel_native_cost_model: bool = False,
 ) -> NoisyRuntimeExecutionResult:
     from squander.partitioning.noisy_runtime_channel_native import (
         classify_partition_channel_native_route,
@@ -878,12 +909,30 @@ def execute_partitioned_density(
                 _build_partition_record(partition, runtime_circuit=partition_circuit)
             )
         elif channel_native_hybrid_path:
-            eligible, _local_support, route_reason = classify_partition_channel_native_route(
+            eligible, local_support, route_reason = classify_partition_channel_native_route(
                 validated_descriptor_set,
                 partition,
                 runtime_path=requested_runtime_path,
             )
-            if eligible:
+            cost_decision = None
+            if eligible and enable_channel_native_cost_model:
+                from squander.partitioning.noisy_runtime_cost_model import (
+                    DEFAULT_CHANNEL_NATIVE_COST_MODEL,
+                    extract_motif_cost_features,
+                )
+
+                assert local_support is not None
+                cost_features = extract_motif_cost_features(
+                    validated_descriptor_set,
+                    partition,
+                    local_support,
+                )
+                cost_decision = DEFAULT_CHANNEL_NATIVE_COST_MODEL.decide(cost_features)
+                route_reason = cost_decision.route_reason
+            if eligible and (
+                cost_decision is None
+                or cost_decision.decision == "fuse_channel_native"
+            ):
                 recs, rho = execute_partition_channel_native(
                     validated_descriptor_set,
                     partition,
@@ -898,6 +947,34 @@ def execute_partitioned_density(
                         runtime_circuit=partition_circuit,
                         partition_runtime_class="phase31_channel_native",
                         partition_route_reason="eligible_channel_native_motif",
+                        cost_model_id=(
+                            cost_decision.model_id if cost_decision is not None else None
+                        ),
+                        cost_model_version=(
+                            cost_decision.model_version
+                            if cost_decision is not None
+                            else None
+                        ),
+                        predicted_kraus_count_upper=(
+                            cost_decision.predicted_kraus_count_upper
+                            if cost_decision is not None
+                            else None
+                        ),
+                        predicted_apply_cost=(
+                            cost_decision.predicted_apply_cost
+                            if cost_decision is not None
+                            else None
+                        ),
+                        predicted_baseline_cost=(
+                            cost_decision.predicted_baseline_cost
+                            if cost_decision is not None
+                            else None
+                        ),
+                        cost_model_decision=(
+                            cost_decision.decision
+                            if cost_decision is not None
+                            else None
+                        ),
                     )
                 )
             else:
@@ -918,6 +995,34 @@ def execute_partitioned_density(
                             phase3_recs, partition.partition_index
                         ),
                         partition_route_reason=route_reason,
+                        cost_model_id=(
+                            cost_decision.model_id if cost_decision is not None else None
+                        ),
+                        cost_model_version=(
+                            cost_decision.model_version
+                            if cost_decision is not None
+                            else None
+                        ),
+                        predicted_kraus_count_upper=(
+                            cost_decision.predicted_kraus_count_upper
+                            if cost_decision is not None
+                            else None
+                        ),
+                        predicted_apply_cost=(
+                            cost_decision.predicted_apply_cost
+                            if cost_decision is not None
+                            else None
+                        ),
+                        predicted_baseline_cost=(
+                            cost_decision.predicted_baseline_cost
+                            if cost_decision is not None
+                            else None
+                        ),
+                        cost_model_decision=(
+                            cost_decision.decision
+                            if cost_decision is not None
+                            else None
+                        ),
                     )
                 )
         else:
@@ -992,12 +1097,15 @@ def execute_partitioned_density_channel_native(
 def execute_partitioned_density_channel_native_hybrid(
     descriptor_set: NoisyPartitionDescriptorSet,
     parameters: Iterable[float],
+    *,
+    enable_channel_native_cost_model: bool = False,
 ) -> NoisyRuntimeExecutionResult:
     return execute_partitioned_density(
         descriptor_set,
         parameters,
         runtime_path=PHASE31_RUNTIME_PATH_CHANNEL_NATIVE_HYBRID,
         allow_fusion=True,
+        enable_channel_native_cost_model=enable_channel_native_cost_model,
     )
 
 
