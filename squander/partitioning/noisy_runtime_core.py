@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 import resource
 import time
 from dataclasses import dataclass, field
@@ -235,6 +236,13 @@ class NoisyRuntimeExecutionResult:
         return self.fused_region_count > 0
 
     @property
+    def cost_model_skip_count(self) -> int:
+        return sum(
+            record.cost_model_decision == "skip_to_phase3"
+            for record in self.partitions
+        )
+
+    @property
     def trace(self) -> complex:
         return complex(self.density_matrix.trace())
 
@@ -275,7 +283,7 @@ class NoisyRuntimeExecutionResult:
         return record
 
     def to_dict(self, *, include_density_matrix: bool = False) -> dict[str, Any]:
-        return {
+        payload = {
             "requested_mode": self.requested_mode,
             "source_type": self.source_type,
             "workload_id": self.workload_id,
@@ -315,6 +323,9 @@ class NoisyRuntimeExecutionResult:
             "partitions": [rec.to_dict(self.descriptor_set) for rec in self.partitions],
             "fused_regions": [region.to_dict() for region in self.fused_regions],
         }
+        if any(record.cost_model_decision is not None for record in self.partitions):
+            payload["summary"]["cost_model_skip_count"] = self.cost_model_skip_count
+        return payload
 
 
 def _coerce_parameter_vector(
@@ -909,7 +920,11 @@ def execute_partitioned_density(
                 _build_partition_record(partition, runtime_circuit=partition_circuit)
             )
         elif channel_native_hybrid_path:
-            eligible, local_support, route_reason = classify_partition_channel_native_route(
+            (
+                eligible,
+                local_support,
+                route_reason,
+            ) = classify_partition_channel_native_route(
                 validated_descriptor_set,
                 partition,
                 runtime_path=requested_runtime_path,
@@ -917,17 +932,47 @@ def execute_partitioned_density(
             cost_decision = None
             if eligible and enable_channel_native_cost_model:
                 from squander.partitioning.noisy_runtime_cost_model import (
+                    COST_MODEL_ROUTE_FUSE,
+                    COST_MODEL_ROUTE_SKIP,
                     DEFAULT_CHANNEL_NATIVE_COST_MODEL,
+                    build_cost_model_error_decision,
                     extract_motif_cost_features,
                 )
 
                 assert local_support is not None
-                cost_features = extract_motif_cost_features(
-                    validated_descriptor_set,
-                    partition,
-                    local_support,
-                )
-                cost_decision = DEFAULT_CHANNEL_NATIVE_COST_MODEL.decide(cost_features)
+                cost_features = None
+                attempted_decision = None
+                try:
+                    cost_features = extract_motif_cost_features(
+                        validated_descriptor_set,
+                        partition,
+                        local_support,
+                    )
+                    attempted_decision = DEFAULT_CHANNEL_NATIVE_COST_MODEL.decide(
+                        cost_features
+                    )
+                    expected_reason = (
+                        COST_MODEL_ROUTE_FUSE
+                        if attempted_decision.decision == "fuse_channel_native"
+                        else COST_MODEL_ROUTE_SKIP
+                    )
+                    if (
+                        attempted_decision.decision
+                        not in ("fuse_channel_native", "skip_to_phase3")
+                        or attempted_decision.route_reason != expected_reason
+                        or not math.isfinite(attempted_decision.predicted_apply_cost)
+                        or not math.isfinite(
+                            attempted_decision.predicted_baseline_cost
+                        )
+                    ):
+                        raise ValueError("Invalid or non-finite cost-model decision")
+                    cost_decision = attempted_decision
+                except Exception:
+                    cost_decision = build_cost_model_error_decision(
+                        DEFAULT_CHANNEL_NATIVE_COST_MODEL,
+                        features=cost_features,
+                        attempted_decision=attempted_decision,
+                    )
                 route_reason = cost_decision.route_reason
             if eligible and (
                 cost_decision is None

@@ -1,7 +1,14 @@
-"""Pure cost-model features and routing decisions for the Phase 3.1 hybrid path."""
+"""Pure cost-model features and routing decisions for the Phase 3.1 hybrid path.
+
+The v0 ``predicted_baseline_cost`` is the sequential sum of per-member apply
+units. A skip executes the existing Phase-3 optional-fusion path, so this
+predicted baseline intentionally approximates, rather than exactly models, the
+cost of the path that receives a skipped motif.
+"""
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 from typing import Literal, Protocol
 
@@ -15,6 +22,7 @@ CostDecision = Literal["fuse_channel_native", "skip_to_phase3"]
 
 COST_MODEL_ROUTE_FUSE = "eligible_channel_native_motif"
 COST_MODEL_ROUTE_SKIP = "cost_model_skip_kraus_expansion"
+COST_MODEL_ROUTE_ERROR = "cost_model_error"
 PHASE31_KRAUS_EXPANSION_MODEL_ID = "phase31_kraus_expansion_v0"
 PHASE31_KRAUS_EXPANSION_MODEL_VERSION = "0.1.0"
 
@@ -51,9 +59,9 @@ class CostModelDecision:
 
     decision: CostDecision
     route_reason: str
-    predicted_kraus_count_upper: int
-    predicted_apply_cost: float
-    predicted_baseline_cost: float
+    predicted_kraus_count_upper: int | None
+    predicted_apply_cost: float | None
+    predicted_baseline_cost: float | None
     model_id: str
     model_version: str
 
@@ -138,3 +146,42 @@ class Phase31KrausExpansionCostModelV0:
 
 
 DEFAULT_CHANNEL_NATIVE_COST_MODEL = Phase31KrausExpansionCostModelV0()
+
+
+def build_cost_model_error_decision(
+    model: ChannelNativeCostModel,
+    *,
+    features: MotifCostFeatures | None = None,
+    attempted_decision: object | None = None,
+) -> CostModelDecision:
+    """Fail closed to Phase 3 while retaining only usable prediction fields."""
+
+    def _finite_cost(name: str) -> float | None:
+        value = getattr(attempted_decision, name, None)
+        try:
+            cost = float(value)
+        except (TypeError, ValueError, OverflowError):
+            return None
+        return cost if math.isfinite(cost) else None
+
+    attempted_upper = getattr(
+        attempted_decision, "predicted_kraus_count_upper", None
+    )
+    predicted_upper = (
+        attempted_upper
+        if isinstance(attempted_upper, int)
+        else (
+            features.predicted_kraus_count_upper
+            if features is not None
+            else None
+        )
+    )
+    return CostModelDecision(
+        decision="skip_to_phase3",
+        route_reason=COST_MODEL_ROUTE_ERROR,
+        predicted_kraus_count_upper=predicted_upper,
+        predicted_apply_cost=_finite_cost("predicted_apply_cost"),
+        predicted_baseline_cost=_finite_cost("predicted_baseline_cost"),
+        model_id=str(getattr(model, "model_id", "unknown_cost_model")),
+        model_version=str(getattr(model, "version", "unknown")),
+    )
