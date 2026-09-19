@@ -374,7 +374,6 @@ void set_convergence_threshold( double convergence_threshold_in );
 */
 double get_decomposition_error( );
 
-
 /**
 @brief Call to get the obtained minimum of the cost function
 @return Returns with the minimum of the cost function

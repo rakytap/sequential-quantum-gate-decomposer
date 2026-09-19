@@ -41,6 +41,7 @@ limitations under the License.
 
 namespace {
 constexpr double DEFAULT_OSR_OPTIMIZATION_TOLERANCE = 1e-6;
+
 }
 
 /**
@@ -734,8 +735,30 @@ Gates_block* N_Qubit_Decomposition_Tree_Search::determine_gate_structure(Matrix_
         }
     }
     if (use_osr || use_graph_search) {
+        double fixed_structure_acceptance_tolerance_loc =
+            optimization_tolerance_loc;
+        if (config.count("synthesis_acceptance_tolerance") > 0) {
+            double synthesis_acceptance_tolerance_loc;
+            config["synthesis_acceptance_tolerance"].get_property(
+                synthesis_acceptance_tolerance_loc
+            );
+            if (synthesis_acceptance_tolerance_loc > 0.0) {
+                fixed_structure_acceptance_tolerance_loc = std::max(
+                    fixed_structure_acceptance_tolerance_loc,
+                    synthesis_acceptance_tolerance_loc
+                );
+            }
+        }
+        bool use_hilbert_schmidt_guidance = qbit_num >= 2;
+        if (config.count("osr_use_hilbert_schmidt_guidance") > 0) {
+            config["osr_use_hilbert_schmidt_guidance"].get_property(
+                use_hilbert_schmidt_guidance
+            );
+        }
         N_Qubit_Decomposition_custom&& cDecomp_custom_random = perform_optimization(nullptr);
-        if (config.count("max_iteration_loops") > 0) {
+        if (use_hilbert_schmidt_guidance) {
+            cDecomp_custom_random.set_iteration_loops(qbit_num, 0);
+        } else if (config.count("max_iteration_loops") > 0) {
             long long iteration_loop_count;
             config["max_iteration_loops"].get_property(iteration_loop_count);
             cDecomp_custom_random.set_iteration_loops(
@@ -750,6 +773,16 @@ Gates_block* N_Qubit_Decomposition_Tree_Search::determine_gate_structure(Matrix_
             // Last-resort fallback: evaluate the current best-known structure.
             all_solutions.emplace_back(best_solution.copy());
         }
+        int osr_zero_hs_attempts = 10;
+        if (config.count("osr_zero_hs_attempts") > 0) {
+            long long configured_attempts;
+            config["osr_zero_hs_attempts"].get_property(
+                configured_attempts
+            );
+            osr_zero_hs_attempts = static_cast<int>(
+                std::max<long long>(configured_attempts, 1)
+            );
+        }
         for (const GrayCodeCNOT& solution : all_solutions) {
             std::unique_ptr<Gates_block> gate_structure_loc;
             gate_structure_loc.reset(construct_gate_structure_from_Gray_code(solution));
@@ -757,17 +790,43 @@ Gates_block* N_Qubit_Decomposition_Tree_Search::determine_gate_structure(Matrix_
             cDecomp_custom_random.set_optimization_blocks(gate_structure_loc->get_gate_num());
 
             // ----------- start the decomposition -----------
-            double current_minimum_tmp;
-            for (int iter = 0; iter < 5; iter++) {
+            double current_minimum_tmp =
+                std::numeric_limits<double>::infinity();
+            const int attempt_count =
+                use_hilbert_schmidt_guidance && use_graph_search
+                    ? (best_first_osr_solution_found
+                           ? osr_zero_hs_attempts
+                           : 1)
+                    : 5;
+            if (use_hilbert_schmidt_guidance && use_graph_search) {
+                cDecomp_custom_random.set_iteration_loops(qbit_num, 0);
+            }
+            const bool has_hs_warm_start =
+                use_hilbert_schmidt_guidance && use_graph_search &&
+                solution == best_first_solution_path &&
+                best_first_solution_parameters.size() ==
+                    static_cast<size_t>(
+                        cDecomp_custom_random.get_parameter_num()
+                    );
+            for (int iter = 0; iter < attempt_count; iter++) {
                 optimized_parameters.resize(cDecomp_custom_random.get_parameter_num());
-                for (size_t idx = 0; idx < optimized_parameters.size(); idx++) {
-                    optimized_parameters[idx] = distrib_real(gen);
+                if (has_hs_warm_start && iter == 0) {
+                    std::copy(
+                        best_first_solution_parameters.begin(),
+                        best_first_solution_parameters.end(),
+                        optimized_parameters.begin()
+                    );
+                } else {
+                    for (size_t idx = 0;
+                         idx < optimized_parameters.size(); ++idx) {
+                        optimized_parameters[idx] = distrib_real(gen);
+                    }
                 }
                 cDecomp_custom_random.set_optimized_parameters(optimized_parameters.data(),
                                                                static_cast<int>(optimized_parameters.size()));
                 cDecomp_custom_random.start_decomposition();
                 current_minimum_tmp = cDecomp_custom_random.get_current_minimum();
-                if (current_minimum_tmp < optimization_tolerance_loc) {
+                if (current_minimum_tmp < fixed_structure_acceptance_tolerance_loc) {
                     break;
                 }
             }
@@ -777,7 +836,7 @@ Gates_block* N_Qubit_Decomposition_Tree_Search::determine_gate_structure(Matrix_
                 sync_optimized_parameters_float();
                 best_solution = solution;
             }
-            if (current_minimum < optimization_tolerance_loc && stop_first_solution) {
+            if (current_minimum < fixed_structure_acceptance_tolerance_loc && stop_first_solution) {
                 break;
             }
         }
@@ -796,25 +855,128 @@ SearchNode N_Qubit_Decomposition_Tree_Search::evaluate_path(
     N_Qubit_Decomposition_custom& cDecomp_custom_random, MinCnotBoundSolver& osr_bound_solver,
     std::vector<std::vector<int>>& all_cuts, double Fnorm, double osr_tol,
     std::uniform_real_distribution<>& distrib_real, std::mt19937& gen,
-    const GrayCodeCNOT& path) {
-    SearchNode ev_results(path);
+      const GrayCodeCNOT& path, const SearchNode* warm_start,
+      bool run_optimization, int iteration_loop_override,
+      int max_inner_iteration_override, int target_bound_override) {
+        SearchNode ev_results(path, qbit_num >= 4);
+    // On four or more qubits, cut-profile loss is only a necessary manifold
+    // condition and can optimize a structure that fixed-structure synthesis
+    // cannot realize. Fit candidate parameters against the target unitary,
+    // then retain OSR as the exact discrete residual-bound calculation.
+    bool use_hilbert_schmidt_guidance = qbit_num >= 2;
+    if (config.count("osr_use_hilbert_schmidt_guidance") > 0) {
+        config["osr_use_hilbert_schmidt_guidance"].get_property(
+            use_hilbert_schmidt_guidance
+        );
+    }
+    if (use_hilbert_schmidt_guidance && run_optimization) {
+        const bool deferred_retry = iteration_loop_override < 0;
+        long long guidance_inner_iterations = 250;
+        if (config.count("osr_hs_guidance_inner_iterations") > 0) {
+            config["osr_hs_guidance_inner_iterations"].get_property(
+                guidance_inner_iterations
+            );
+        }
+        // Every candidate gets one local HS solve. Only a candidate promoted
+        // by the deferred frontier receives one basin hop before OSR is
+        // measured again; broad per-candidate basin hopping remains disabled.
+        iteration_loop_override = deferred_retry
+            ? 1
+            : std::max(iteration_loop_override, 0);
+        if (max_inner_iteration_override <= 0) {
+            max_inner_iteration_override = static_cast<int>(
+                std::max<long long>(guidance_inner_iterations, 1)
+            );
+        }
+    }
     std::unique_ptr<Gates_block> gate_structure_loc(
-        construct_gate_structure_from_Gray_code(path, false));
+        construct_gate_structure_from_Gray_code(
+            path, use_hilbert_schmidt_guidance
+        ));
     cDecomp_custom_random.set_custom_gate_structure(gate_structure_loc.get());
     cDecomp_custom_random.set_optimization_blocks(gate_structure_loc->get_gate_num());
     std::vector<double> optimized_parameters(cDecomp_custom_random.get_parameter_num());
-    for (size_t idx = 0; idx < optimized_parameters.size(); idx++) {
-        optimized_parameters[idx] = distrib_real(gen);
+    bool inherited_parameters = false;
+    std::vector<bool> inherited_blocks(path.size(), false);
+    const size_t final_layer_parameters =
+        use_hilbert_schmidt_guidance
+            ? static_cast<size_t>(3 * qbit_num)
+            : 0;
+    if (qbit_num >= 3 && warm_start != nullptr &&
+        warm_start->optimized_parameters.size() ==
+            static_cast<size_t>(6 * warm_start->path.size()) +
+                final_layer_parameters &&
+        optimized_parameters.size() ==
+            static_cast<size_t>(6 * path.size()) +
+                final_layer_parameters) {
+        std::fill(
+            optimized_parameters.begin(),
+            optimized_parameters.end(), 0.0
+        );
+        int parent_idx = 0;
+        for (int child_idx = 0;
+             child_idx < path.size() && parent_idx < warm_start->path.size();
+             ++child_idx) {
+            if (path[child_idx] != warm_start->path[parent_idx])
+                continue;
+            std::copy_n(
+                warm_start->optimized_parameters.begin() + 6 * parent_idx,
+                6,
+                optimized_parameters.begin() + 6 * child_idx
+            );
+            inherited_blocks[child_idx] = true;
+            ++parent_idx;
+        }
+          inherited_parameters = parent_idx == warm_start->path.size();
+          if (inherited_parameters) {
+              if (final_layer_parameters > 0) {
+                  std::copy_n(
+                      warm_start->optimized_parameters.end() -
+                          final_layer_parameters,
+                      final_layer_parameters,
+                      optimized_parameters.end() - final_layer_parameters
+                  );
+              }
+              // Preserve the fitted parent and its final local layer exactly.
+              // Progressive candidates start inserted blocks at identity;
+              // only the explicitly multi-started final 3q class receives a
+              // full-range displacement to escape the identity basin.
+              const double new_block_perturbation =
+                  qbit_num == 3 && iteration_loop_override > 0
+                      ? M_PI
+                      : 0.0;
+              for (int child_idx = 0; child_idx < path.size(); ++child_idx) {
+                  if (inherited_blocks[child_idx])
+                      continue;
+                  for (int param_idx = 0; param_idx < 6; ++param_idx) {
+                      optimized_parameters[6 * child_idx + param_idx] =
+                          (distrib_real(gen) / (2.0 * M_PI) - 0.5) *
+                          2.0 * new_block_perturbation;
+                  }
+              }
+          }
+    }
+    if (!inherited_parameters) {
+        for (size_t idx = 0; idx < optimized_parameters.size(); idx++) {
+            optimized_parameters[idx] = distrib_real(gen);
+        }
     }
     cDecomp_custom_random.set_optimized_parameters(optimized_parameters.data(),
                                                     static_cast<int>(optimized_parameters.size()));
     Matrix U;
     Matrix_float U_float;
     Matrix_real_float params_float;
+    // Use one calibrated smooth objective for three- and four-qubit
+    // partitions. The former 4q-only 0.01 default made the profile soft-min
+    // effectively hard and silently ignored the configured generic value.
     double profile_temperature = 0.1;
     if (config.count("osr_profile_temperature") > 0)
         config["osr_profile_temperature"].get_property(profile_temperature);
-    double cut_smoothmax_temperature = 0.0;
+    // A zero temperature currently selects arithmetic averaging in the OSR
+    // objective rather than the hard-max limit.  For four-qubit profiles this
+    // dilutes the violated-cut gradient and creates the observed rank plateau.
+    // A small positive temperature keeps worst-cut pressure differentiable.
+    double cut_smoothmax_temperature = 0.1;
     if (config.count("osr_cut_smoothmax_temperature") > 0)
         config["osr_cut_smoothmax_temperature"].get_property(
             cut_smoothmax_temperature
@@ -822,7 +984,11 @@ SearchNode N_Qubit_Decomposition_Tree_Search::evaluate_path(
 
     N_Qubit_Decomposition_custom joint_optimizer =
         perform_optimization(nullptr, true);
-    if (config.count("max_iteration_loops") > 0) {
+    if (iteration_loop_override >= 0) {
+        joint_optimizer.set_iteration_loops(
+            qbit_num, iteration_loop_override
+        );
+    } else if (config.count("max_iteration_loops") > 0) {
         long long iteration_loop_count;
         config["max_iteration_loops"].get_property(iteration_loop_count);
         joint_optimizer.set_iteration_loops(
@@ -830,7 +996,16 @@ SearchNode N_Qubit_Decomposition_Tree_Search::evaluate_path(
             static_cast<int>(std::max<long long>(iteration_loop_count, 1))
         );
     }
-    joint_optimizer.set_cost_function_variant(OSR_ENTANGLEMENT);
+    if (max_inner_iteration_override >= 0) {
+        joint_optimizer.set_max_inner_iterations(
+            max_inner_iteration_override
+        );
+    }
+    joint_optimizer.set_cost_function_variant(
+        use_hilbert_schmidt_guidance
+            ? HILBERT_SCHMIDT_TEST
+            : OSR_ENTANGLEMENT
+    );
     joint_optimizer.set_custom_gate_structure(gate_structure_loc.get());
     joint_optimizer.set_optimization_blocks(gate_structure_loc->get_gate_num());
     joint_optimizer.set_optimized_parameters(
@@ -862,20 +1037,68 @@ SearchNode N_Qubit_Decomposition_Tree_Search::evaluate_path(
     };
 
     Matrix_real params = joint_optimizer.get_optimized_parameters();
+    std::vector<std::pair<int, double>> initial_osr_result =
+        evaluate_all_cuts(params);
+    double initial_kappa = std::numeric_limits<double>::infinity();
+    std::vector<int> initial_edge_counts;
     const int initial_min_cnots = osr_bound_solver.solve_min_cnots(
-        evaluate_all_cuts(params)
+        initial_osr_result, initial_kappa, initial_edge_counts
     );
-    int target_bound = std::max(initial_min_cnots - 1, 0);
-    while (true) {
+    bool use_parent_progress_target = qbit_num >= 4;
+    if (config.count("osr_parent_progress_target") > 0) {
+        config["osr_parent_progress_target"].get_property(
+            use_parent_progress_target
+        );
+    }
+      const int target_bound = target_bound_override >= 0
+          ? target_bound_override
+          : std::max(
+                use_parent_progress_target && warm_start != nullptr
+                    ? warm_start->get_min_cnots() - 1
+                    : initial_min_cnots - 1,
+                0
+            );
+    if (!run_optimization) {
         joint_optimizer.set_osr_params(
             all_cuts,
-            osr_bound_solver.enumerate_cut_coverages(target_bound),
+            osr_bound_solver.enumerate_cut_coverages(
+                target_bound
+            ),
             profile_temperature,
             cut_smoothmax_temperature
         );
-        joint_optimizer.start_decomposition();
-        params = joint_optimizer.get_optimized_parameters();
-
+        ev_results.screening_objective =
+            joint_optimizer.get_decomposition_error();
+        ev_results.osr_results.emplace_back(
+            initial_min_cnots, initial_kappa,
+            std::move(initial_edge_counts), std::move(initial_osr_result)
+        );
+        ev_results.optimized_parameters.resize(params.size());
+        std::copy_n(
+            params.get_data(), params.size(),
+            ev_results.optimized_parameters.begin()
+        );
+        return ev_results;
+    }
+    int optimization_target_bound = target_bound;
+    while (true) {
+        std::vector<std::vector<int>> target_profiles =
+            osr_bound_solver.enumerate_cut_coverages(
+                optimization_target_bound
+            );
+          joint_optimizer.set_osr_params(
+              all_cuts,
+              target_profiles,
+              profile_temperature,
+              cut_smoothmax_temperature
+          );
+          joint_optimizer.start_decomposition();
+          double smooth_objective =
+              joint_optimizer.get_decomposition_error();
+          double minimum_profile_loss =
+              joint_optimizer.get_osr_min_profile_loss();
+          params = joint_optimizer.get_optimized_parameters();
+        ev_results.screening_objective = smooth_objective;
         std::vector<std::pair<int, double>> osr_result =
             evaluate_all_cuts(params);
         double best_kappa = std::numeric_limits<double>::infinity();
@@ -883,6 +1106,17 @@ SearchNode N_Qubit_Decomposition_Tree_Search::evaluate_path(
         const int min_cnots = osr_bound_solver.solve_min_cnots(
             osr_result, best_kappa, best_edge_counts
         );
+        {
+            std::stringstream sstream;
+            sstream << "OSR calibration: path_depth=" << path.size()
+                    << ", target_bound=" << optimization_target_bound
+                    << ", profiles=" << target_profiles.size()
+                    << ", smooth=" << smooth_objective
+                    << ", profile_min=" << minimum_profile_loss
+                    << ", exact_min_cnots=" << min_cnots
+                    << ", exact_kappa=" << best_kappa << std::endl;
+            print(sstream, 2);
+        }
         ev_results.osr_results.emplace_back(
             min_cnots, best_kappa, std::move(best_edge_counts),
             std::move(osr_result)
@@ -892,10 +1126,14 @@ SearchNode N_Qubit_Decomposition_Tree_Search::evaluate_path(
         // tiers.  Finishing the zero tier is effectively free and is needed
         // to absorb boundary SWAPs.  Wider problems retain the deliberately
         // fast one-tier greedy schedule.
-        if (qbit_num != 2 || target_bound == 0)
+        if (qbit_num != 2 || optimization_target_bound == 0)
             break;
-        target_bound = 0;
+        optimization_target_bound = 0;
     }
+    ev_results.optimized_parameters.resize(params.size());
+    std::copy_n(
+        params.get_data(), params.size(), ev_results.optimized_parameters.begin()
+    );
     return ev_results;
 };
 
@@ -1015,6 +1253,9 @@ struct ForbiddenSubseqSet {
 };
 
 GrayCodeCNOT N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures_best_first() {
+    best_first_osr_solution_found = false;
+    best_first_solution_path = GrayCodeCNOT();
+    best_first_solution_parameters.clear();
     std::vector<std::vector<int>> all_cuts = unique_cuts(qbit_num);
     std::sort(all_cuts.begin(), all_cuts.end(), [](const std::vector<int>& a, const std::vector<int>& b){
         if (a.size() != b.size()) return a.size() < b.size();
@@ -1029,7 +1270,30 @@ GrayCodeCNOT N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures
             osr_optimization_tolerance_loc
         );
     }
-    double osr_tol = std::sqrt(osr_optimization_tolerance_loc);
+    // When Hilbert-Schmidt fitting supplies the continuous objective, OSR is a
+    // post-fit structural guide rather than an acceptance test.  The bounded
+    // screening solve is deliberately approximate, so applying the tighter OSR
+    // optimizer tolerance here can hide the correct edge before the final HS
+    // solve gets a chance to refine it.  Keep the two meanings independently
+    // configurable; final circuit acceptance is still guarded by the much
+    // tighter synthesis_acceptance_tolerance.
+    bool use_hilbert_schmidt_guidance = qbit_num >= 2;
+    if (config.count("osr_use_hilbert_schmidt_guidance") > 0) {
+        config["osr_use_hilbert_schmidt_guidance"].get_property(
+            use_hilbert_schmidt_guidance
+        );
+    }
+    double osr_guidance_tolerance_loc = 1e-4;
+    if (config.count("osr_guidance_tolerance") > 0) {
+        config["osr_guidance_tolerance"].get_property(
+            osr_guidance_tolerance_loc
+        );
+    }
+    const double osr_tol = std::sqrt(
+        use_hilbert_schmidt_guidance
+            ? osr_guidance_tolerance_loc
+            : osr_optimization_tolerance_loc
+    );
     MinCnotBoundSolver osr_bound_solver(qbit_num, all_cuts, topology);
     //std::priority_queue<SearchNode, std::vector<SearchNode>, std::greater<SearchNode>> heap;
     std::unique_ptr<SearchNode> top_heap;
@@ -1037,10 +1301,113 @@ GrayCodeCNOT N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures
     //ForbiddenSubseqSet forbidden(topology);
 
     N_Qubit_Decomposition_custom&& cDecomp_custom_random = perform_optimization(nullptr, true);
-    cDecomp_custom_random.set_cost_function_variant(OSR_ENTANGLEMENT);
+    cDecomp_custom_random.set_cost_function_variant(
+        use_hilbert_schmidt_guidance
+            ? HILBERT_SCHMIDT_TEST
+            : OSR_ENTANGLEMENT
+    );
+    long long hilbert_schmidt_guidance_inner_iterations = 250;
+    if (config.count("osr_hs_guidance_inner_iterations") > 0) {
+        config["osr_hs_guidance_inner_iterations"].get_property(
+            hilbert_schmidt_guidance_inner_iterations
+        );
+    }
+    long long final_three_qubit_restarts = 10;
+    if (config.count("osr_final_3q_restarts") > 0) {
+        config["osr_final_3q_restarts"].get_property(
+            final_three_qubit_restarts
+        );
+    } else if (config.count("osr_final_3q_basin_hops") > 0) {
+        // Backward-compatible spelling: these are now independent HS
+        // restarts rather than chained perturbations of one BFGS2 basin.
+        config["osr_final_3q_basin_hops"].get_property(
+            final_three_qubit_restarts
+        );
+    }
+    final_three_qubit_restarts = std::max<long long>(
+        final_three_qubit_restarts, 1
+    );
+    long long final_three_qubit_inner_iterations = 1000;
+    if (config.count("osr_final_3q_inner_iterations") > 0) {
+        config["osr_final_3q_inner_iterations"].get_property(
+            final_three_qubit_inner_iterations
+        );
+    }
+    final_three_qubit_inner_iterations = std::max<long long>(
+        final_three_qubit_inner_iterations, 1
+    );
     std::uniform_real_distribution<> distrib_real(0.0, 2 * M_PI);
 
-    std::function<bool(const GrayCodeCNOT&)> add_to_heap = [&](const GrayCodeCNOT& path) -> bool {
+    bool use_lazy_deferred_frontier = true;
+    if (config.count("osr_lazy_deferred_frontier") > 0) {
+        config["osr_lazy_deferred_frontier"].get_property(
+            use_lazy_deferred_frontier
+        );
+    }
+    // Four-qubit searches are long enough that consuming the shared RNG in a
+    // different candidate order can turn the same path into a pathological
+    // basin-hopping run.  Seed each path independently there; retain the
+    // established shared-RNG behavior for two- and three-qubit synthesis.
+    bool use_path_deterministic_rng = qbit_num >= 4;
+    if (config.count("osr_path_deterministic_rng") > 0) {
+        config["osr_path_deterministic_rng"].get_property(
+            use_path_deterministic_rng
+        );
+    }
+    long path_rng_seed = 0;
+    if (config.count("random_seed") > 0) {
+        config["random_seed"].get_property(path_rng_seed);
+    }
+      bool trace_candidate_placements = false;
+      if (config.count("osr_trace_candidate_placements") > 0) {
+          config["osr_trace_candidate_placements"].get_property(
+              trace_candidate_placements
+          );
+      }
+      auto evaluate_candidate_path = [&](
+          const GrayCodeCNOT& path, const SearchNode* warm_start,
+          bool run_optimization, int iteration_loop_override,
+          int max_inner_iteration_override,
+          int target_bound_override = -1) -> SearchNode {
+        return (use_path_deterministic_rng || !run_optimization)
+            ? [&]() {
+                uint64_t hash = 1469598103934665603ULL ^
+                                static_cast<uint64_t>(path_rng_seed);
+                for (int idx = 0; idx < path.size(); ++idx) {
+                    hash ^= static_cast<uint64_t>(path[idx] + 1);
+                    hash *= 1099511628211ULL;
+                }
+                auto path_gen = gen;
+                path_gen.seed(static_cast<unsigned long>(
+                    hash ^ (hash >> 32)
+                ));
+                return evaluate_path(
+                    cDecomp_custom_random, osr_bound_solver, all_cuts, Fnorm,
+                    osr_tol, distrib_real, path_gen, path, warm_start,
+                      run_optimization, iteration_loop_override,
+                      max_inner_iteration_override, target_bound_override
+                );
+            }()
+            : evaluate_path(
+                cDecomp_custom_random, osr_bound_solver, all_cuts, Fnorm,
+                osr_tol, distrib_real, gen, path, warm_start,
+                  run_optimization, iteration_loop_override,
+                  max_inner_iteration_override, target_bound_override
+            );
+    };
+
+      std::function<bool(const GrayCodeCNOT&, const SearchNode*, bool)>
+          add_to_heap = [&](const GrayCodeCNOT& path,
+                            const SearchNode* warm_start,
+                            bool full_restart_budget) -> bool {
+        // The path length is the synthesized CNOT count.  Paths beyond the
+        // strict-improvement bound cannot be valid answers and must not incur
+        // an optimization.  This is an exact bound, not an OSR-residual prune.
+        const int residual_target = warm_start == nullptr
+            ? 0
+            : std::max(0, warm_start->get_min_cnots() - 1);
+        if (path.size() + residual_target > level_limit)
+            return false;
         if (!is_unique_structure(path, topology))
             return false; // not unique structure
 
@@ -1057,14 +1424,15 @@ GrayCodeCNOT N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures
         //         return false;
         //     }
         // }
-        
+
         //std::chrono::time_point<std::chrono::high_resolution_clock> start = std::chrono::high_resolution_clock::now();
-        SearchNode sn = evaluate_path(cDecomp_custom_random, osr_bound_solver, all_cuts, Fnorm, osr_tol, distrib_real, gen, path);
+          SearchNode sn = evaluate_candidate_path(
+              path, warm_start, true,
+              full_restart_budget ? -1 : 0,
+              full_restart_budget ? -1 : 100,
+              -1
+        );
         //printf("%.2fs\n", std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now() - start).count()*1e-9);
-        // if (path.size()+sn.get_min_cnots() > level_limit) {
-        //     forbidden.insert_forbidden(path);
-        //     return false;
-        // }
 
         if (top_heap == nullptr || !(*top_heap < sn)) {
             top_heap.reset(new SearchNode(std::move(sn)));
@@ -1075,15 +1443,674 @@ GrayCodeCNOT N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures
 
     GrayCodeCNOT startpath;
     if (qbit_num > 1)
-        add_to_heap(startpath);
+        add_to_heap(startpath, nullptr, true);
 
     std::vector<int> full_topo_filter(topology.size());
     std::iota(full_topo_filter.begin(), full_topo_filter.end(), 0);
+
+    if (use_lazy_deferred_frontier && top_heap != nullptr) {
+        struct DeferredExpansion {
+            std::shared_ptr<SearchNode> parent;
+            std::vector<int> edge_order;
+              std::vector<int> edge_rank;
+              std::vector<GrayCodeCNOT> candidates;
+            std::shared_ptr<SearchNode> plateau_candidate;
+            size_t next_candidate;
+            int num_cnot;
+            bool plateau_expanded;
+            bool probe_only;
+            bool full_restart_budget;
+        };
+
+        std::shared_ptr<SearchNode> root(top_heap.release());
+        std::shared_ptr<SearchNode> best = root;
+        std::vector<DeferredExpansion> frontier;
+
+          auto fill_candidates = [&](DeferredExpansion& expansion) {
+              expansion.candidates.clear();
+              expansion.plateau_candidate.reset();
+              expansion.next_candidate = 0;
+              expansion.plateau_expanded = false;
+              expansion.full_restart_budget = false;
+              const int residual_target = std::max(
+                  0, expansion.parent->get_min_cnots() - 1
+              );
+              if (expansion.parent->path.size() + expansion.num_cnot +
+                      residual_target > level_limit) {
+                  return;
+              }
+              std::set<GrayCodeCNOT> unique_candidates;
+              generate_insertions(
+                expansion.parent->path, topology, expansion.edge_order,
+                  expansion.num_cnot,
+                  [&](const GrayCodeCNOT& path) {
+                      if (is_unique_structure(path, topology) &&
+                          unique_candidates.insert(path).second) {
+                          expansion.candidates.push_back(path);
+                      }
+                    return false;
+                }
+            );
+
+            const GrayCodeCNOT& parent_path = expansion.parent->path;
+            const std::vector<int>& edge_rank = expansion.edge_rank;
+            const size_t topology_size = topology.size();
+            auto inserted_edge_counts = [&](const GrayCodeCNOT& path) {
+                std::vector<int> counts(topology_size, 0);
+                for (int idx = 0; idx < path.size(); ++idx) {
+                    ++counts[path[idx]];
+                }
+                for (int idx = 0; idx < parent_path.size(); ++idx) {
+                    --counts[parent_path[idx]];
+                }
+                return counts;
+            };
+            auto insertion_motif_score = [&](const GrayCodeCNOT& path) {
+                if (qbit_num < 4 || expansion.num_cnot < 2 ||
+                    expansion.num_cnot > 4) {
+                    return std::make_tuple(0, 0, 0, 0);
+                }
+                std::vector<int> positions;
+                std::vector<int> edges;
+                int parent_idx = 0;
+                for (int child_idx = 0; child_idx < path.size(); ++child_idx) {
+                    if (parent_idx < parent_path.size() &&
+                        path[child_idx] == parent_path[parent_idx]) {
+                        ++parent_idx;
+                    } else {
+                        positions.push_back(child_idx);
+                        edges.push_back(path[child_idx]);
+                    }
+                }
+                if (edges.size() !=
+                    static_cast<size_t>(expansion.num_cnot)) {
+                    return std::make_tuple(9, 0, 0, 0);
+                }
+                auto overlaps = [&](int lhs_edge, int rhs_edge) {
+                    const int lhs_q0 = topology[lhs_edge][0];
+                    const int lhs_q1 = topology[lhs_edge][1];
+                    const int rhs_q0 = topology[rhs_edge][0];
+                    const int rhs_q1 = topology[rhs_edge][1];
+                    return lhs_q0 == rhs_q0 || lhs_q0 == rhs_q1 ||
+                           lhs_q1 == rhs_q0 || lhs_q1 == rhs_q1;
+                };
+                const int span = positions.back() - positions.front();
+                if (expansion.num_cnot == 2) {
+                    const bool identical = edges[0] == edges[1];
+                    if (identical && span == 1)
+                        return std::make_tuple(0, span, 0, 0);
+                    if (identical)
+                        return std::make_tuple(1, span, 0, 0);
+                    if (overlaps(edges[0], edges[1]))
+                        return std::make_tuple(2, span, 0, 0);
+                    return std::make_tuple(3, span, 0, 0);
+                }
+
+                if (expansion.num_cnot == 3) {
+                    const bool contiguous = span == 2;
+                    const bool all_identical =
+                        edges[0] == edges[1] && edges[1] == edges[2];
+                    const bool sandwich =
+                        edges[0] == edges[2] && edges[0] != edges[1] &&
+                        overlaps(edges[0], edges[1]);
+                    const int overlap_count =
+                        static_cast<int>(overlaps(edges[0], edges[1])) +
+                        static_cast<int>(overlaps(edges[0], edges[2])) +
+                        static_cast<int>(overlaps(edges[1], edges[2]));
+                    if (sandwich && contiguous)
+                        return std::make_tuple(0, span, 0, 0);
+                    if (all_identical && contiguous)
+                        return std::make_tuple(1, span, 0, 0);
+                    if (sandwich)
+                        return std::make_tuple(2, span, 0, 0);
+                    if (all_identical)
+                        return std::make_tuple(3, span, 0, 0);
+                    if (contiguous && overlap_count >= 2)
+                        return std::make_tuple(4, span, -overlap_count, 0);
+                    if (overlap_count >= 2)
+                        return std::make_tuple(5, span, -overlap_count, 0);
+                    if (overlap_count == 1)
+                        return std::make_tuple(6, span, -overlap_count, 0);
+                    return std::make_tuple(7, span, 0, 0);
+                }
+
+                const bool contiguous = span == 3;
+                const bool alternating =
+                    edges[0] == edges[2] && edges[1] == edges[3] &&
+                    edges[0] != edges[1] &&
+                    overlaps(edges[0], edges[1]);
+                const bool nested =
+                    edges[0] == edges[3] && edges[1] == edges[2] &&
+                    edges[0] != edges[1] &&
+                    overlaps(edges[0], edges[1]);
+                const bool paired =
+                    edges[0] == edges[1] && edges[2] == edges[3] &&
+                    overlaps(edges[0], edges[2]);
+                if (alternating && contiguous)
+                    return std::make_tuple(0, span, 0, 0);
+                if (nested && contiguous)
+                    return std::make_tuple(1, span, 0, 0);
+                if (paired && contiguous)
+                    return std::make_tuple(2, span, 0, 0);
+                if (alternating)
+                    return std::make_tuple(3, span, 0, 0);
+                if (nested)
+                    return std::make_tuple(4, span, 0, 0);
+                if (paired)
+                    return std::make_tuple(5, span, 0, 0);
+                return std::make_tuple(6, span, 0, 0);
+            };
+            auto placement_connectivity_score = [&](
+                const GrayCodeCNOT& path) {
+                if (qbit_num < 4 || expansion.num_cnot < 2) {
+                    return std::make_tuple(0, 0, 0, 0, 0, 0);
+                }
+                std::vector<bool> inserted(path.size(), true);
+                int parent_idx = 0;
+                for (int child_idx = 0;
+                     child_idx < path.size() &&
+                     parent_idx < parent_path.size(); ++child_idx) {
+                    if (path[child_idx] == parent_path[parent_idx]) {
+                        inserted[child_idx] = false;
+                        ++parent_idx;
+                    }
+                }
+
+                int best_growth = 0;
+                int best_connected = 0;
+                int longest_run = 0;
+                int run_count = 0;
+                int best_boundary_distance =
+                    static_cast<int>(parent_path.size());
+                int best_boundary_side = 2;
+                int inherited_before = 0;
+                for (int idx = 0; idx < path.size();) {
+                    if (!inserted[idx]) {
+                        ++inherited_before;
+                        ++idx;
+                        continue;
+                    }
+                    const int run_begin = idx;
+                    while (idx < path.size() && inserted[idx])
+                        ++idx;
+                    const int run_end = idx;
+                    ++run_count;
+                    longest_run = std::max(longest_run, run_end - run_begin);
+                    best_boundary_distance = std::min(
+                        best_boundary_distance,
+                        std::min(
+                            inherited_before,
+                            static_cast<int>(parent_path.size()) -
+                                inherited_before
+                        )
+                    );
+                    if (inherited_before == 0)
+                        best_boundary_side = 0;
+                    else if (inherited_before == parent_path.size())
+                        best_boundary_side = std::min(best_boundary_side, 1);
+
+                    auto score_from_boundary = [&](
+                        int boundary_idx, int first, int last, int step) {
+                        if (boundary_idx < 0 || boundary_idx >= path.size())
+                            return std::make_pair(0, 0);
+                        std::vector<bool> support(qbit_num, false);
+                        const int boundary_edge = path[boundary_idx];
+                        support[topology[boundary_edge][0]] = true;
+                        support[topology[boundary_edge][1]] = true;
+                        int growth = 0;
+                        int connected = 0;
+                        for (int pos = first; pos != last; pos += step) {
+                            const int edge = path[pos];
+                            const int q0 = topology[edge][0];
+                            const int q1 = topology[edge][1];
+                            if (!support[q0] && !support[q1])
+                                break;
+                            ++connected;
+                            growth += static_cast<int>(!support[q0]) +
+                                      static_cast<int>(!support[q1]);
+                            support[q0] = true;
+                            support[q1] = true;
+                        }
+                        return std::make_pair(growth, connected);
+                    };
+
+                    const std::pair<int, int> from_left =
+                        score_from_boundary(
+                            run_begin - 1, run_begin, run_end, 1
+                        );
+                    const std::pair<int, int> from_right =
+                        score_from_boundary(
+                            run_end, run_end - 1, run_begin - 1, -1
+                        );
+                    const std::pair<int, int> run_score =
+                        std::max(from_left, from_right);
+                    best_growth = std::max(best_growth, run_score.first);
+                    best_connected = std::max(
+                        best_connected, run_score.second
+                    );
+                }
+                return std::make_tuple(
+                    -best_growth, -best_connected, -longest_run,
+                    run_count, best_boundary_distance, best_boundary_side
+                );
+            };
+
+            // Three- and four-CNOT insertions are the first combinatorial
+            // placement classes on four qubits. Their useful constructive
+            // families are A-B-A sandwiches, same-edge triples (the
+            // local-equivalence SWAP family), and the alternating,
+            // nested, or paired four-CNOT blocks. Disconnected/generic words
+            // provide no stronger OSR signal and duplicate hundreds of local
+            // fits.
+            // One- and two-CNOT classes remain exhaustive, and a failed
+            // structured completion can still continue to a deeper class.
+            const bool structured_three_cnot_class =
+                qbit_num >= 4 && expansion.num_cnot == 3;
+            const bool structured_four_cnot_class =
+                qbit_num >= 4 && expansion.num_cnot == 4;
+            const bool prioritize_four_cnot_motif =
+                qbit_num >= 4 && expansion.num_cnot == 4;
+            if (structured_three_cnot_class ||
+                structured_four_cnot_class) {
+                expansion.candidates.erase(
+                    std::remove_if(
+                        expansion.candidates.begin(),
+                        expansion.candidates.end(),
+                        [&](const GrayCodeCNOT& path) {
+                            const int motif_class = std::get<0>(
+                                insertion_motif_score(path)
+                            );
+                            return motif_class > 2;
+                        }
+                    ),
+                    expansion.candidates.end()
+                );
+            }
+
+            std::map<std::vector<int>, std::tuple<int, size_t, double>>
+                continuation_scores;
+            const bool lazy_deep_class =
+                qbit_num >= 4 &&
+                expansion.num_cnot > expansion.parent->get_min_cnots();
+            const auto& parent_osr =
+                expansion.parent->get_best_osr_result();
+            struct RankedCandidate {
+                GrayCodeCNOT path;
+                std::tuple<int, double, double> screening;
+                std::tuple<int, size_t, double> continuation;
+                std::tuple<int, int, int, int> motif;
+                std::tuple<int, int, int, int, int, int> placement;
+                std::vector<int> edge_signature;
+            };
+            std::vector<RankedCandidate> ranked_candidates;
+            ranked_candidates.reserve(expansion.candidates.size());
+            for (const GrayCodeCNOT& path : expansion.candidates) {
+                const std::vector<int> counts = inserted_edge_counts(path);
+                auto continuation_it = continuation_scores.find(counts);
+                if (continuation_it == continuation_scores.end()) {
+                    continuation_it = continuation_scores.emplace(
+                        counts,
+                        osr_bound_solver.score_edge_multiset_for_search(
+                            std::get<3>(parent_osr), counts
+                        )
+                    ).first;
+                }
+                std::tuple<int, double, double> screening;
+                  if (lazy_deep_class) {
+                      screening = std::make_tuple(0, 0.0, 0.0);
+                  } else {
+                      // Evaluate the inherited circuit with new U3 blocks at
+                      // identity. This distinguishes placement before local
+                      // fitting while the OSR-guided class is still small.
+                      SearchNode screened = evaluate_candidate_path(
+                          path, expansion.parent.get(), false, -1, -1, -1
+                      );
+                      const auto& screened_osr =
+                          screened.get_best_osr_result();
+                      screening = std::make_tuple(
+                          std::get<0>(screened_osr),
+                          screened.screening_objective,
+                          std::get<1>(screened_osr)
+                      );
+                  }
+                std::vector<int> signature;
+                signature.reserve(expansion.num_cnot);
+                for (size_t edge = 0; edge < topology_size; ++edge) {
+                    for (int count = 0; count < counts[edge]; ++count) {
+                        signature.push_back(edge_rank[edge]);
+                    }
+                }
+                std::sort(signature.begin(), signature.end());
+                ranked_candidates.push_back(RankedCandidate{
+                    path,
+                    screening,
+                    continuation_it->second,
+                    insertion_motif_score(path),
+                    placement_connectivity_score(path),
+                    std::move(signature)
+                });
+            }
+
+            std::vector<size_t> candidate_order;
+            candidate_order.reserve(ranked_candidates.size());
+            for (size_t idx = 0; idx < ranked_candidates.size(); ++idx) {
+                candidate_order.push_back(idx);
+            }
+            std::stable_sort(
+                candidate_order.begin(), candidate_order.end(),
+                [&](size_t lhs_idx, size_t rhs_idx) {
+                      const RankedCandidate& lhs =
+                          ranked_candidates[lhs_idx];
+                      const RankedCandidate& rhs =
+                          ranked_candidates[rhs_idx];
+                      if (prioritize_four_cnot_motif &&
+                          lhs.motif != rhs.motif) {
+                          return lhs.motif < rhs.motif;
+                      }
+                      if (lhs.screening != rhs.screening) {
+                          return lhs.screening < rhs.screening;
+                      }
+                    if (std::get<0>(lhs.continuation) !=
+                        std::get<0>(rhs.continuation)) {
+                        return std::get<0>(lhs.continuation) <
+                               std::get<0>(rhs.continuation);
+                    }
+                    if (std::get<1>(lhs.continuation) !=
+                        std::get<1>(rhs.continuation)) {
+                        return std::get<1>(lhs.continuation) >
+                               std::get<1>(rhs.continuation);
+                    }
+                    if (std::get<2>(lhs.continuation) !=
+                        std::get<2>(rhs.continuation)) {
+                        return std::get<2>(lhs.continuation) <
+                               std::get<2>(rhs.continuation);
+                    }
+                    if (!prioritize_four_cnot_motif &&
+                        lhs.motif != rhs.motif) {
+                        return lhs.motif < rhs.motif;
+                    }
+                    // Finish ties with locality around the inherited path.
+                    if (lhs.placement != rhs.placement) {
+                        return lhs.placement < rhs.placement;
+                    }
+                    return lhs.edge_signature < rhs.edge_signature;
+                }
+            );
+            expansion.candidates.clear();
+            expansion.candidates.reserve(ranked_candidates.size());
+            for (size_t idx : candidate_order) {
+                expansion.candidates.push_back(
+                    std::move(ranked_candidates[idx].path)
+                );
+            }
+            // Past the cut-cover lower bound, exhaustive local fitting no
+            // longer follows an OSR descent signal and grows combinatorially.
+            // Keep those legal deeper classes in the optimistic search, but
+            // defer only their best structurally ranked candidate.
+            // The small 3q topology remains exhaustive because its known
+            // four-CNOT manifolds can sit beyond a two-CNOT cut-cover bound.
+            if (lazy_deep_class && expansion.candidates.size() > 1) {
+                expansion.candidates.resize(1);
+            }
+        };
+
+        auto make_expansion = [&](const std::shared_ptr<SearchNode>& parent) {
+            DeferredExpansion expansion;
+            expansion.parent = parent;
+            expansion.next_candidate = 0;
+            expansion.num_cnot = 1;
+            expansion.plateau_expanded = false;
+            expansion.probe_only = false;
+            expansion.full_restart_budget = false;
+            const auto& best_osr = parent->get_best_osr_result();
+            expansion.edge_order = osr_bound_solver.rank_edges_for_search(
+                std::get<3>(best_osr), std::get<0>(best_osr),
+                std::get<2>(best_osr)
+            );
+            expansion.edge_rank.resize(topology.size());
+            for (size_t rank = 0; rank < expansion.edge_order.size(); ++rank) {
+                expansion.edge_rank[expansion.edge_order[rank]] = rank;
+            }
+            fill_candidates(expansion);
+            return expansion;
+        };
+
+        if (root->get_min_cnots() == 0) {
+            best_first_osr_solution_found = true;
+            best_first_solution_path = root->path.copy();
+            best_first_solution_parameters = root->optimized_parameters;
+            return root->path;
+        }
+        if (root->path.size() < level_limit) {
+            frontier.push_back(make_expansion(root));
+        }
+
+        while (!frontier.empty()) {
+              DeferredExpansion& expansion = frontier.back();
+              if (expansion.next_candidate >= expansion.candidates.size()) {
+                  // A terminal probe validates a candidate before it is ever
+                  // committed. Failure resumes the still-active insertion
+                  // class; no committed ancestor or sibling is revisited.
+                  if (expansion.probe_only) {
+                      frontier.pop_back();
+                      continue;
+                  }
+                  if (expansion.plateau_candidate != nullptr) {
+                      std::shared_ptr<SearchNode> progress =
+                          expansion.plateau_candidate;
+                      frontier.clear();
+                      if (progress->path.size() < level_limit) {
+                          frontier.push_back(make_expansion(progress));
+                      }
+                      continue;
+                  }
+                // A lower surplus at the same exact residual is useful for
+                // ordering, but it is not evidence that another CNOT has
+                // reduced the synthesis bound.  Evaluate the complete
+                // insertion class, then descend through its best plateau
+                  // representative while retaining this parent as the exact
+                  // fallback for larger insertion classes.
+                ++expansion.num_cnot;
+                if (expansion.parent->path.size() + expansion.num_cnot >
+                    level_limit) {
+                    frontier.pop_back();
+                    continue;
+                }
+                fill_candidates(expansion);
+                continue;
+            }
+
+              GrayCodeCNOT candidate_path =
+                  expansion.candidates[expansion.next_candidate++];
+              std::shared_ptr<SearchNode> parent = expansion.parent;
+            if (trace_candidate_placements) {
+                std::stringstream sstream;
+                sstream << "OSR placement: parent_depth="
+                        << parent->path.size()
+                        << ", insertions=" << expansion.num_cnot
+                        << ", rank=" << expansion.next_candidate
+                        << ", path=";
+                for (int idx = 0; idx < candidate_path.size(); ++idx) {
+                    if (idx > 0)
+                        sstream << ',';
+                    sstream << static_cast<int>(candidate_path[idx]);
+                }
+                sstream << std::endl;
+                print(sstream, 2);
+            }
+              visited.clear();
+              top_heap.reset();
+              const SearchNode* optimization_warm_start = parent.get();
+              int target_bound_override = -1;
+              const int residual_target = target_bound_override >= 0
+                  ? target_bound_override
+                  : std::max(0, optimization_warm_start->get_min_cnots() - 1);
+              if (candidate_path.size() + residual_target > level_limit ||
+                  !is_unique_structure(candidate_path, topology)) {
+                  continue;
+              }
+              const bool final_three_qubit_insertion_class =
+                  qbit_num == 3 &&
+                  (expansion.num_cnot == 4 ||
+                   parent->path.size() + expansion.num_cnot +
+                       std::max(0, parent->get_min_cnots() - 1) ==
+                       level_limit);
+              bool alternating_four_cnot_motif = false;
+              if (final_three_qubit_insertion_class &&
+                  expansion.num_cnot == 4) {
+                  std::vector<int> inserted_edges;
+                  inserted_edges.reserve(4);
+                  int parent_idx = 0;
+                  for (int child_idx = 0;
+                       child_idx < candidate_path.size(); ++child_idx) {
+                      if (parent_idx < parent->path.size() &&
+                          candidate_path[child_idx] ==
+                              parent->path[parent_idx]) {
+                          ++parent_idx;
+                      } else {
+                          inserted_edges.push_back(candidate_path[child_idx]);
+                      }
+                  }
+                  alternating_four_cnot_motif =
+                      inserted_edges.size() == 4 &&
+                      inserted_edges[0] == inserted_edges[2] &&
+                      inserted_edges[1] == inserted_edges[3] &&
+                      inserted_edges[0] != inserted_edges[1];
+              }
+              const bool use_full_restart_budget =
+                  expansion.full_restart_budget ||
+                  final_three_qubit_insertion_class;
+              SearchNode evaluated = evaluate_candidate_path(
+                  candidate_path, optimization_warm_start, true,
+                  final_three_qubit_insertion_class
+                      ? 1
+                      : (use_full_restart_budget ? -1 : 0),
+                  alternating_four_cnot_motif
+                      ? static_cast<int>(final_three_qubit_inner_iterations)
+                      : (use_full_restart_budget
+                            ? -1
+                            : (use_hilbert_schmidt_guidance
+                            ? static_cast<int>(std::max<long long>(
+                                  hilbert_schmidt_guidance_inner_iterations, 1
+                              ))
+                            : 100)),
+                  target_bound_override
+              );
+              if (alternating_four_cnot_motif) {
+                  for (long long restart_idx = 1;
+                       restart_idx < final_three_qubit_restarts &&
+                           evaluated.get_min_cnots() != 0;
+                       ++restart_idx) {
+                      SearchNode retry = evaluate_candidate_path(
+                          candidate_path, optimization_warm_start, true,
+                          1,
+                          static_cast<int>(
+                              final_three_qubit_inner_iterations
+                          ),
+                          target_bound_override
+                      );
+                      if (evaluated > retry) {
+                          evaluated = std::move(retry);
+                      }
+                  }
+              }
+              top_heap.reset(new SearchNode(std::move(evaluated)));
+              if (top_heap == nullptr) {
+                  continue;
+              }
+            std::shared_ptr<SearchNode> candidate(top_heap.release());
+            if (trace_candidate_placements) {
+                std::stringstream sstream;
+                sstream << "OSR placement result: residual="
+                        << candidate->get_min_cnots() << std::endl;
+                print(sstream, 2);
+            }
+            if (*best > *candidate) {
+                best = candidate;
+            }
+            if (candidate->get_min_cnots() == 0) {
+                best_first_osr_solution_found = true;
+                best_first_solution_path = candidate->path.copy();
+                best_first_solution_parameters =
+                    candidate->optimized_parameters;
+                return candidate->path;
+            }
+            // Surplus is a tie-breaker between placements, not proof of an
+            // OSR graph step.  Immediate depth-first descent is justified
+            // only by a strict reduction in the exact residual CNOT bound.
+            const bool improves_parent =
+                candidate->get_min_cnots() < parent->get_min_cnots();
+            if (improves_parent && expansion.probe_only) {
+                // Continue a improving validation branch forward without
+                // committing it. This admits the important 2+1 insertion
+                // pattern when the cut-cover lower bound underestimates the
+                // true completion by one CNOT. If the continuation fails, the
+                // enclosing uncommitted candidate class simply resumes.
+                const int residual = candidate->get_min_cnots();
+                DeferredExpansion continuation = make_expansion(candidate);
+                continuation.num_cnot = residual;
+                continuation.probe_only = true;
+                fill_candidates(continuation);
+                if (!continuation.candidates.empty()) {
+                    frontier.push_back(std::move(continuation));
+                }
+                continue;
+            }
+            if (improves_parent && !expansion.probe_only) {
+                if (final_three_qubit_insertion_class) {
+                    // Finish this small same-depth class before accepting a
+                    // deeper continuation. A direct four-CNOT solution must
+                    // outrank a five-CNOT child of an earlier false lower
+                    // bound, and no committed structure is revisited.
+                    if (expansion.plateau_candidate == nullptr ||
+                        *expansion.plateau_candidate > *candidate) {
+                        expansion.plateau_candidate = candidate;
+                    }
+                    continue;
+                }
+                const int residual = candidate->get_min_cnots();
+                const bool validate_predicted_completion =
+                    residual > 0 && residual <= 2;
+                if (validate_predicted_completion) {
+                    // Cut-cover OSR is an optimistic lower bound: a residual
+                    // of one or two is not proof that those CNOTs can complete
+                    // the unitary. Before committing, exhaust that small,
+                    // predicted final insertion class and require a genuine
+                    // OSR-zero child. This is forward lookahead from an
+                    // uncommitted candidate, not structural backtracking.
+                    DeferredExpansion terminal_probe =
+                        make_expansion(candidate);
+                    terminal_probe.num_cnot = residual;
+                    terminal_probe.probe_only = true;
+                    fill_candidates(terminal_probe);
+                    if (!terminal_probe.candidates.empty()) {
+                        frontier.push_back(std::move(terminal_probe));
+                    }
+                    continue;
+                }
+
+                // The candidates are already ordered by placement-specific
+                // OSR/HS screening. Commit the first exact residual decrease
+                // and permanently discard every ancestor and sibling.
+                frontier.clear();
+                if (candidate->path.size() < level_limit) {
+                    frontier.push_back(make_expansion(candidate));
+                }
+                continue;
+            }
+        }
+        best_first_solution_path = best->path.copy();
+        best_first_solution_parameters = best->optimized_parameters;
+        return best->path;
+    }
 
     while (top_heap != nullptr) {
         std::unique_ptr<SearchNode> cur(top_heap.release());
         visited.clear(); // clear visited to save memory, relying on the fact that we won't revisit nodes anyway
         if (cur->get_min_cnots() == 0) {
+            best_first_osr_solution_found = true;
+            best_first_solution_path = cur->path.copy();
+            best_first_solution_parameters = cur->optimized_parameters;
             return cur->path;
         }
         const std::tuple<int, double, std::vector<int>, std::vector<std::pair<int, double>>>& cur_best_osr_result = cur->get_best_osr_result();
@@ -1112,12 +2139,14 @@ GrayCodeCNOT N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures
         while (true) {
             // safety guard
             if (cur->path.size() + num_cnot > level_limit) {
+                best_first_solution_path = cur->path.copy();
+                best_first_solution_parameters = cur->optimized_parameters;
                 return cur->path; // best solution found within level limit, return immediately
             }
 
             generate_insertions(cur->path, topology, topo_filter, num_cnot,
                 [&](const GrayCodeCNOT& newpath) {
-                    if (add_to_heap(newpath)) {
+                    if (add_to_heap(newpath, cur.get(), true)) {
                         return top_heap->get_min_cnots() == 0;
                     }
                     return false;
@@ -1222,7 +2251,23 @@ TreeSearchResult N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_struct
             osr_optimization_tolerance_loc
         );
     }
-    double osr_tol = std::sqrt(osr_optimization_tolerance_loc);
+    bool use_hilbert_schmidt_guidance = qbit_num >= 2;
+    if (config.count("osr_use_hilbert_schmidt_guidance") > 0) {
+        config["osr_use_hilbert_schmidt_guidance"].get_property(
+            use_hilbert_schmidt_guidance
+        );
+    }
+    double osr_guidance_tolerance_loc = 1e-4;
+    if (config.count("osr_guidance_tolerance") > 0) {
+        config["osr_guidance_tolerance"].get_property(
+            osr_guidance_tolerance_loc
+        );
+    }
+    const double osr_tol = std::sqrt(
+        use_hilbert_schmidt_guidance
+            ? osr_guidance_tolerance_loc
+            : osr_optimization_tolerance_loc
+    );
 
     // determine the concurrency of the calculation
     unsigned int nthreads = std::thread::hardware_concurrency();
@@ -1586,6 +2631,17 @@ N_Qubit_Decomposition_custom N_Qubit_Decomposition_Tree_Search::perform_optimiza
     optimization_config["optimization_tolerance"].set_property(
         "optimization_tolerance", cost_tolerance_loc
     );
+    if (qbit_num == 4) {
+        long long max_inner_iterations_4q = 1000;
+        if (config.count("max_inner_iterations_bfgs2_4q") > 0) {
+            config["max_inner_iterations_bfgs2_4q"].get_property(
+                max_inner_iterations_4q
+            );
+        }
+        optimization_config["max_inner_iterations_bfgs2"].set_property(
+            "max_inner_iterations_bfgs2", max_inner_iterations_4q
+        );
+    }
 
     N_Qubit_Decomposition_custom cDecomp_custom_random;
     if ( optimization_uses_float ) {
@@ -1613,10 +2669,17 @@ N_Qubit_Decomposition_custom N_Qubit_Decomposition_Tree_Search::perform_optimiza
     cDecomp_custom_random.set_optimizer(alg);
     cDecomp_custom_random.set_project_name(project_name);
     if (alg == ADAM || alg == BFGS2) {
-        int max_inner_iterations_loc = 10000;
+        int max_inner_iterations_loc = 1000;
         if (gate_structure_loc != nullptr) {
             int param_num_loc = gate_structure_loc->get_parameter_num();
-            max_inner_iterations_loc = static_cast<int>((double)param_num_loc / 852 * 10000000.0);
+            // This limit applies independently to every local solve in BFGS2
+            // basin hopping.  The old 10,000,000-at-852-parameters scaling
+            // allowed one rejected four-qubit plateau candidate to run for
+            // hours after per-solve counters were corrected.
+            const int scaled_budget = (param_num_loc * 10000 + 851) / 852;
+            if (scaled_budget > max_inner_iterations_loc) {
+                max_inner_iterations_loc = scaled_budget;
+            }
         }
         cDecomp_custom_random.set_max_inner_iterations(max_inner_iterations_loc);
         cDecomp_custom_random.set_random_shift_count_max(5);

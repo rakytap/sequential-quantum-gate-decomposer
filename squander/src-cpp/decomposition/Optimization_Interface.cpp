@@ -113,6 +113,7 @@ Optimization_Interface::Optimization_Interface( const Optimization_Interface& ot
     osr_rank_profiles = other.osr_rank_profiles;
     osr_profile_temperature = other.osr_profile_temperature;
     osr_cut_smoothmax_temperature = other.osr_cut_smoothmax_temperature;
+    osr_min_profile_loss = other.osr_min_profile_loss;
     number_of_iters.store(other.number_of_iters.load(std::memory_order_relaxed), std::memory_order_relaxed);
     adaptive_eta = other.adaptive_eta;
     radius = other.radius;
@@ -311,6 +312,7 @@ Optimization_Interface& Optimization_Interface::operator=( const Optimization_In
     osr_rank_profiles = other.osr_rank_profiles;
     osr_profile_temperature = other.osr_profile_temperature;
     osr_cut_smoothmax_temperature = other.osr_cut_smoothmax_temperature;
+    osr_min_profile_loss = other.osr_min_profile_loss;
     number_of_iters.store(other.number_of_iters.load(std::memory_order_relaxed), std::memory_order_relaxed);
     adaptive_eta = other.adaptive_eta;
     radius = other.radius;
@@ -1184,8 +1186,26 @@ void Optimization_Interface::optimization_problem_combined_non_static( Matrix_re
         if (cost_fnc == OSR_ENTANGLEMENT) {
             Upartial_float = get_osr_entanglement_test_and_deriv(
                 matrix_new, use_cuts, osr_rank_profiles, *f0,
-                osr_profile_temperature, osr_cut_smoothmax_temperature
+                osr_profile_temperature, osr_cut_smoothmax_temperature,
+                &instance->osr_min_profile_loss
             );
+
+            // The smooth profile objective deliberately retains gradients
+            // from nearby profiles and cuts, so its value has a positive
+            // entropy offset even when one exact profile has succeeded.
+            // Terminate BFGS and the enclosing basin-hopping loop against the
+            // exact min-profile/max-cut loss instead of that smooth value.
+            double osr_target_tolerance = 1e-6;
+            if (instance->config.count("osr_optimization_tolerance") > 0) {
+                instance->config["osr_optimization_tolerance"].get_property(
+                    osr_target_tolerance
+                );
+            }
+            if (instance->osr_min_profile_loss < osr_target_tolerance) {
+                *f0 = 0.0;
+                std::fill_n(grad.get_data(), grad.size(), 0.0);
+                return;
+            }
         }
         else {
             *f0 = instance->calculate_cost_function(matrix_new, &trace_tmp);
@@ -1392,7 +1412,8 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();////////////////////////////////
     if (cost_fnc == OSR_ENTANGLEMENT) {
         Upartial = get_osr_entanglement_test_and_deriv(
             matrix_new, use_cuts, osr_rank_profiles, *f0,
-            osr_profile_temperature, osr_cut_smoothmax_temperature
+            osr_profile_temperature, osr_cut_smoothmax_temperature,
+            &instance->osr_min_profile_loss
         );
     }
     else {
@@ -1507,7 +1528,6 @@ void Optimization_Interface::optimization_problem_combined( Matrix_real paramete
     instance->optimization_problem_combined_non_static(parameters, void_instance, f0, grad );
     return;
 }
-
 
 /**
 @brief Call to calculate both the cost function and the its gradient components.

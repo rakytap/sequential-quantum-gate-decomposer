@@ -18,6 +18,14 @@ from typing import Any, Dict, Iterable, Optional, TextIO
 
 PARTITIONING_ROOT = Path(__file__).resolve().parent
 DATASETS = ("IBMEagle", "QASMBenchmarks")
+DATASET_DESCRIPTIONS = {
+    "IBMEagle": "IBM Eagle",
+    "QASMBenchmarks": "QASMBenchmarks",
+}
+DATASET_LABELS = {
+    "IBMEagle": "ibm-eagle",
+    "QASMBenchmarks": "qasm-benchmarks",
+}
 DEFAULT_REMOTE_HOST = "157.181.172.111"
 DEFAULT_REMOTE_ROOT = "sequential-quantum-gate-decomposer/benchmarks/partitioning"
 STAGES = ("all_to_all", "routed", "final")
@@ -65,12 +73,20 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--include-4q",
+        dest="include_4q",
         action="store_true",
         help=(
-            "also fetch four-qubit results and emit all five tables; by "
-            "default only the two three-qubit tables are generated"
+            "fetch and compare four-qubit results in addition to three-qubit "
+            "results (default)"
         ),
     )
+    parser.add_argument(
+        "--3q-only",
+        dest="include_4q",
+        action="store_false",
+        help="fetch and compare only three-qubit results",
+    )
+    parser.set_defaults(include_4q=True)
     parser.add_argument(
         "-o",
         "--output",
@@ -107,18 +123,13 @@ def result_directory(
 
 def load_result_group(
     root: Path, partition_size: int, strategy: str
-) -> Dict[str, Dict[str, Any]]:
-    """Load and combine both datasets for one partition size and strategy."""
-    combined: Dict[str, Dict[str, Any]] = {}
+) -> Dict[str, Dict[str, Dict[str, Any]]]:
+    """Load both datasets separately for one partition size and strategy."""
+    grouped: Dict[str, Dict[str, Dict[str, Any]]] = {}
     for dataset in DATASETS:
         path = result_directory(root, dataset, partition_size, strategy) / "results.json"
-        dataset_results = load_results(path)
-        duplicates = combined.keys() & dataset_results.keys()
-        if duplicates:
-            names = ", ".join(sorted(duplicates))
-            raise RuntimeError(f"duplicate circuit names across datasets: {names}")
-        combined.update(dataset_results)
-    return combined
+        grouped[dataset] = load_results(path)
+    return grouped
 
 
 def fetch_files(
@@ -505,6 +516,7 @@ def write_comparison_tables(
     bqskit: Dict[str, Dict[str, Any]],
     partition_description: str,
     label_suffix: str,
+    dataset_description: str,
 ) -> int:
     rows = list(comparable_circuits(osr, bqskit))
     if not rows:
@@ -581,7 +593,8 @@ def write_comparison_tables(
     end_table(
         stream,
         (
-            f"{partition_description} partition CNOT counts for OSR and "
+            f"{dataset_description} {partition_description.lower()} partition "
+            "CNOT counts for OSR and "
             "BQSKit at matched block process-infidelity tolerance. Bold "
             "values are best within each paired stage."
         ),
@@ -664,7 +677,8 @@ def write_comparison_tables(
     end_table(
         stream,
         (
-            f"{partition_description} partition stage runtimes for OSR and "
+            f"{dataset_description} {partition_description.lower()} partition "
+            "stage runtimes for OSR and "
             "BQSKit at matched block process-infidelity tolerance, in minutes. "
             "Bold values are best within each paired stage."
         ),
@@ -711,6 +725,8 @@ def write_four_qubit_osr_only_table(
     stream: TextIO,
     osr: Dict[str, Dict[str, Any]],
     bqskit: Dict[str, Dict[str, Any]],
+    dataset_description: str,
+    label_suffix: str,
 ) -> int:
     rows = list(four_qubit_osr_only(osr, bqskit))
     totals = {
@@ -788,17 +804,101 @@ def write_four_qubit_osr_only_table(
     end_table(
         stream,
         (
-            "Completed four-qubit partition OSR results for circuits without "
+            f"Completed {dataset_description} four-qubit partition OSR results "
+            "for circuits without "
             "a completed four-qubit partition BQSKit result. Counts and stage "
             "runtimes are combined because no paired comparison is available."
         ),
-        "tab:osr-four-qubit-unpaired",
+        f"tab:osr-four-qubit-unpaired-{label_suffix}",
     )
     print(
         f"% Listed {len(rows)} completed four-qubit OSR-only circuits.",
         file=stream,
     )
     return len(rows)
+
+
+def write_regression_comments(
+    stream: TextIO,
+    osr_3q: Dict[str, Dict[str, Dict[str, Any]]],
+    bqskit_3q: Dict[str, Dict[str, Dict[str, Any]]],
+    osr_4q: Optional[Dict[str, Dict[str, Dict[str, Any]]]] = None,
+    bqskit_4q: Optional[Dict[str, Dict[str, Dict[str, Any]]]] = None,
+) -> None:
+    """Append an exhaustive, grep-friendly CNOT regression audit."""
+    print(file=stream)
+    print("% BEGIN CNOT REGRESSION AUDIT", file=stream)
+
+    partition_regressions = 0
+    if osr_4q is not None:
+        for dataset in DATASETS:
+            for name, four_entry in osr_4q[dataset].items():
+                three_entry = osr_3q[dataset].get(name)
+                if not is_complete(four_entry) or not is_complete(three_entry):
+                    continue
+                assert isinstance(four_entry, dict)
+                assert isinstance(three_entry, dict)
+                if metadata(four_entry) != metadata(three_entry):
+                    raise RuntimeError(
+                        f"{name}: 4q OSR metadata {metadata(four_entry)} does "
+                        f"not match 3q OSR metadata {metadata(three_entry)}"
+                    )
+                for stage in STAGES:
+                    three_count = cnot_count(three_entry, stage)
+                    four_count = cnot_count(four_entry, stage)
+                    if (
+                        three_count is None
+                        or four_count is None
+                        or four_count <= three_count
+                    ):
+                        continue
+                    partition_regressions += 1
+                    print(
+                        "% 4q OSR WORSE THAN 3q OSR: "
+                        f"{dataset}/{name} stage={stage} "
+                        f"4q={four_count} 3q={three_count} "
+                        f"delta=+{four_count - three_count}",
+                        file=stream,
+                    )
+    if partition_regressions == 0:
+        print("% 4q OSR WORSE THAN 3q OSR: none", file=stream)
+
+    method_regressions = 0
+    comparisons = [("3q", osr_3q, bqskit_3q)]
+    if osr_4q is not None and bqskit_4q is not None:
+        comparisons.append(("4q", osr_4q, bqskit_4q))
+    for partition_label, osr_group, bqskit_group in comparisons:
+        for dataset in DATASETS:
+            for name, osr_entry, bqskit_entry in comparable_circuits(
+                osr_group[dataset], bqskit_group[dataset]
+            ):
+                for stage in STAGES:
+                    osr_count = cnot_count(osr_entry, stage)
+                    bqskit_count = cnot_count(bqskit_entry, stage)
+                    if (
+                        osr_count is None
+                        or bqskit_count is None
+                        or osr_count <= bqskit_count
+                    ):
+                        continue
+                    method_regressions += 1
+                    print(
+                        "% OSR WORSE THAN BQSKIT: "
+                        f"partition={partition_label} {dataset}/{name} "
+                        f"stage={stage} OSR={osr_count} BQSKit={bqskit_count} "
+                        f"delta=+{osr_count - bqskit_count}",
+                        file=stream,
+                    )
+    if method_regressions == 0:
+        print("% OSR WORSE THAN BQSKIT: none", file=stream)
+
+    print(
+        "% CNOT REGRESSION SUMMARY: "
+        f"4q-vs-3q={partition_regressions} "
+        f"osr-vs-bqskit={method_regressions}",
+        file=stream,
+    )
+    print("% END CNOT REGRESSION AUDIT", file=stream)
 
 
 def main() -> int:
@@ -825,53 +925,98 @@ def main() -> int:
         if args.output:
             args.output.parent.mkdir(parents=True, exist_ok=True)
             with args.output.open("w", encoding="utf-8") as stream:
-                count_3q = write_comparison_tables(
-                    stream, osr, bqskit, "Three-qubit", "three-qubit"
-                )
+                count_3q = {}
+                for dataset in DATASETS:
+                    if count_3q:
+                        print(file=stream)
+                    count_3q[dataset] = write_comparison_tables(
+                        stream,
+                        osr[dataset],
+                        bqskit[dataset],
+                        "Three-qubit",
+                        f"three-qubit-{DATASET_LABELS[dataset]}",
+                        DATASET_DESCRIPTIONS[dataset],
+                    )
                 if args.include_4q:
                     assert osr_4q is not None and bqskit_4q is not None
-                    print(file=stream)
-                    count_4q = write_comparison_tables(
-                        stream,
-                        osr_4q,
-                        bqskit_4q,
-                        "Four-qubit",
-                        "four-qubit",
-                    )
-                    osr_only_4q = write_four_qubit_osr_only_table(
-                        stream, osr_4q, bqskit_4q
-                    )
+                    count_4q = {}
+                    osr_only_4q = {}
+                    for dataset in DATASETS:
+                        print(file=stream)
+                        count_4q[dataset] = write_comparison_tables(
+                            stream,
+                            osr_4q[dataset],
+                            bqskit_4q[dataset],
+                            "Four-qubit",
+                            f"four-qubit-{DATASET_LABELS[dataset]}",
+                            DATASET_DESCRIPTIONS[dataset],
+                        )
+                        osr_only_4q[dataset] = write_four_qubit_osr_only_table(
+                            stream,
+                            osr_4q[dataset],
+                            bqskit_4q[dataset],
+                            DATASET_DESCRIPTIONS[dataset],
+                            DATASET_LABELS[dataset],
+                        )
+                write_regression_comments(
+                    stream,
+                    osr,
+                    bqskit,
+                    osr_4q,
+                    bqskit_4q,
+                )
             if args.include_4q:
                 print(
-                    f"Wrote five tables to {args.output}: "
-                    f"{count_3q} paired three-qubit circuits, "
-                    f"{count_4q} paired four-qubit circuits, and "
-                    f"{osr_only_4q} unpaired four-qubit OSR circuits",
+                    f"Wrote ten dataset-specific tables to {args.output}: "
+                    f"{sum(count_3q.values())} paired three-qubit circuits, "
+                    f"{sum(count_4q.values())} paired four-qubit circuits, and "
+                    f"{sum(osr_only_4q.values())} unpaired four-qubit OSR circuits",
                     file=sys.stderr,
                 )
             else:
                 print(
-                    f"Wrote two three-qubit tables to {args.output}: "
-                    f"{count_3q} paired circuits",
+                    f"Wrote four dataset-specific three-qubit tables to "
+                    f"{args.output}: {sum(count_3q.values())} paired circuits",
                     file=sys.stderr,
                 )
         else:
-            write_comparison_tables(
-                sys.stdout, osr, bqskit, "Three-qubit", "three-qubit"
-            )
-            if args.include_4q:
-                assert osr_4q is not None and bqskit_4q is not None
-                print()
+            for dataset_index, dataset in enumerate(DATASETS):
+                if dataset_index:
+                    print()
                 write_comparison_tables(
                     sys.stdout,
-                    osr_4q,
-                    bqskit_4q,
-                    "Four-qubit",
-                    "four-qubit",
+                    osr[dataset],
+                    bqskit[dataset],
+                    "Three-qubit",
+                    f"three-qubit-{DATASET_LABELS[dataset]}",
+                    DATASET_DESCRIPTIONS[dataset],
                 )
-                write_four_qubit_osr_only_table(
-                    sys.stdout, osr_4q, bqskit_4q
-                )
+            if args.include_4q:
+                assert osr_4q is not None and bqskit_4q is not None
+                for dataset in DATASETS:
+                    print()
+                    write_comparison_tables(
+                        sys.stdout,
+                        osr_4q[dataset],
+                        bqskit_4q[dataset],
+                        "Four-qubit",
+                        f"four-qubit-{DATASET_LABELS[dataset]}",
+                        DATASET_DESCRIPTIONS[dataset],
+                    )
+                    write_four_qubit_osr_only_table(
+                        sys.stdout,
+                        osr_4q[dataset],
+                        bqskit_4q[dataset],
+                        DATASET_DESCRIPTIONS[dataset],
+                        DATASET_LABELS[dataset],
+                    )
+            write_regression_comments(
+                sys.stdout,
+                osr,
+                bqskit,
+                osr_4q,
+                bqskit_4q,
+            )
     except RuntimeError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1

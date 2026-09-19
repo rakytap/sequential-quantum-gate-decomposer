@@ -66,7 +66,10 @@ void Optimization_Interface::solve_layer_optimization_problem_BFGS2( int num_of_
         // maximal number of iteration loops
         int iteration_loops_max;
         try {
-            iteration_loops_max = std::max(iteration_loops[qbit_num], 1);
+            // Zero requests one local minimization without basin-hop retries.
+            // Tree search uses this for its progressive candidate pass and
+            // retains the configured full-budget fallback.
+            iteration_loops_max = std::max(iteration_loops[qbit_num], 0);
         }
         catch (...) {
             iteration_loops_max = 1;
@@ -94,6 +97,11 @@ CPU_time = 0.0;
         else {
             max_inner_iterations_loc =max_inner_iterations;
         }
+        // A per-optimizer probe limit may narrow the global configured
+        // budget. Full-budget optimizers retain the configured member value.
+        max_inner_iterations_loc = std::min<long long>(
+            max_inner_iterations_loc, max_inner_iterations
+        );
 
 
         bool export_circuit_2_binary_loc = false;
@@ -110,8 +118,8 @@ CPU_time = 0.0;
 
 
         double optimization_tolerance_loc;
-        if ( config.count("optimization_tolerance_adam") > 0 ) {
-             config["optimization_tolerance_adam"].get_property( optimization_tolerance_loc );  
+        if ( config.count("optimization_tolerance_bfgs2") > 0 ) {
+             config["optimization_tolerance_bfgs2"].get_property( optimization_tolerance_loc );
         }
         else if ( config.count("optimization_tolerance") > 0 ) {
              config["optimization_tolerance"].get_property( optimization_tolerance_loc );  
@@ -156,7 +164,7 @@ CPU_time = 0.0;
             config["use_dual_annealing"].get_property( use_dual_annealing );  
         }
         if (!use_basin_hopping && !use_de && !use_dual_annealing) {
-            use_dual_annealing = true; //use_basin_hopping = true;
+            use_basin_hopping = true;
         } 
 
         if (use_basin_hopping) {
@@ -195,11 +203,9 @@ CPU_time = 0.0;
             Matrix_real x_current = solution_guess.copy();   // current basin representative
             double current_minimum_hold = f_trial;
 
-            // The initial local solve may already satisfy the objective. Avoid
-            // an unnecessary perturbation and second BFGS solve in that case.
             for (long long iter_idx=0;
-                 iter_idx<iteration_loops_max
-                     && current_minimum >= optimization_tolerance_loc;
+                iter_idx<iteration_loops_max &&
+                    current_minimum >= optimization_tolerance_loc;
                  iter_idx++) {
 
                 // Match SciPy's AdaptiveStepsize ordering: update before the
@@ -253,6 +259,13 @@ CPU_time = 0.0;
                 } else {
                     ++no_improve_count;
                 }
+
+                // Basin hopping has reached the same prescribed objective
+                // used by the other BFGS2 global drivers.  Continuing to
+                // perturb and locally minimize cannot improve acceptance.
+                if (current_minimum < optimization_tolerance_loc) {
+                    break;
+                }
                 if ( iter_idx % 5000 == 0 ) {
                         std::stringstream sstream;
                         sstream << "BFGS2: processed iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "%, current minimum:" << current_minimum << std::endl;
@@ -276,9 +289,6 @@ CPU_time = 0.0;
     #endif
                 
                 
-                if (current_minimum < optimization_tolerance_loc ) {
-                    break;
-                }
                 if (no_improve_count > bh_niter_success) {
                     break;  // SciPy's niter_success criterion
                 }

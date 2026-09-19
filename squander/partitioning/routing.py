@@ -1362,8 +1362,12 @@ def synthesize_partition_alternatives(
     width = len(logical_qubits)
     if width < 1 or len(set(logical_qubits)) != width:
         raise ValueError("A partition must contain distinct logical qubits.")
-    if width > int(config.get("max_partition_size", width)):
-        raise ValueError("Partition exceeds the configured maximum width.")
+    # Routing synthesis is deliberately restricted to three-qubit blocks.
+    # Wider partitions are reserved for all-to-all optimization and the
+    # post-routing cleanup phase; permutation-aware routing at width four is
+    # combinatorial and is not a supported production mode.
+    if width > 3:
+        raise ValueError("Routing synthesis supports at most 3-qubit partitions.")
     unitary = np.asarray(unitary, dtype=np.complex128)
     dimension = 1 << width
     if unitary.shape != (dimension, dimension):
@@ -9822,12 +9826,10 @@ def route_circuit_exact(
     cached_routing_catalog = None
     pam_osr_only = bool(config.get("pam_osr_only", False))
     parameters = np.asarray(parameters, dtype=np.float64)
-    max_partition_size = int(
-        config.get(
-            "exact_routing_max_partition_size",
-            config.get("max_partition_size", 3),
-        )
-    )
+    # Keep routing independent of the wider partition size used by the A2A
+    # and post-routing optimization phases. Four-qubit routing catalogs are
+    # prohibitively combinatorial and must never be generated here.
+    max_partition_size = 3
     (
         allparts,
         _contracted_graph,

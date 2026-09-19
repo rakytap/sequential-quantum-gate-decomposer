@@ -51,7 +51,7 @@ protected:
     
     /// function pointer to evaluate the cost function and its gradient vector
     void (*export_fnc) (double , Matrix_real&, void* );    
-     
+
     /// additional data needed to evaluate the cost function
     void* meta_data;
 

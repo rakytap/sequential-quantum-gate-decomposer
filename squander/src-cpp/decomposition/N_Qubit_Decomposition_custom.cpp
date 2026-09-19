@@ -125,7 +125,11 @@ N_Qubit_Decomposition_custom::start_decomposition() {
    
     
 
-    // temporarily turn off OpenMP parallelism
+    // Tiny partition kernels are faster serially.  BLAS-specific thread
+    // control does not affect the OpenMP regions used by gate/gradient
+    // kernels, so scope both controls independently and restore the caller's
+    // setting after this optimization.
+    const int omp_num_threads = omp_get_max_threads();
 #if BLAS==0 // undefined BLAS
     num_threads = omp_get_max_threads();
     omp_set_num_threads(1);
@@ -136,6 +140,9 @@ N_Qubit_Decomposition_custom::start_decomposition() {
     num_threads = openblas_get_num_threads();
     openblas_set_num_threads(1);
 #endif
+    if (qbit_num <= 4) {
+        omp_set_num_threads(1);
+    }
 
     //measure the time for the decompositin
     tbb::tick_count start_time = tbb::tick_count::now();
@@ -186,9 +193,11 @@ N_Qubit_Decomposition_custom::start_decomposition() {
 #elif BLAS==2 //OpenBLAS
     openblas_set_num_threads(num_threads);
 #endif
+    if (qbit_num <= 4) {
+        omp_set_num_threads(omp_num_threads);
+    }
 
 }
-
 
 
 

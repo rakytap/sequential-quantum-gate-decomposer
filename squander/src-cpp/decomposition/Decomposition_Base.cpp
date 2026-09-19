@@ -1190,7 +1190,13 @@ int Decomposition_Base::get_parallel_configuration() {
          parallel = (int) value;
     }
     else {
-        parallel = 2;          
+        // Tiny partition decompositions are normally parallelized by the
+        // routing/catalog process pool.  Enabling TBB inside every 2-4 qubit
+        // worker creates severe nested oversubscription and is substantially
+        // slower than the sequential native kernels.  Preserve TBB as the
+        // default for larger standalone decompositions, and retain the
+        // explicit config override for either behavior.
+        parallel = qbit_num <= 4 ? 0 : 2;
     }
 
 

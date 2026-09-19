@@ -92,6 +92,8 @@ protected:
     std::vector<std::vector<int>> osr_rank_profiles;
     double osr_profile_temperature = 0.1;
     double osr_cut_smoothmax_temperature = 0.0;
+    /// Unshifted minimum profile loss from the latest OSR evaluation.
+    double osr_min_profile_loss = 1e100;
     
 
     /// number of iterations
@@ -431,6 +433,11 @@ static void optimization_problem_grad( Matrix_real parameters, void* void_instan
 @param grad Array containing the calculated gradient components.
 */
 static void optimization_problem_combined( Matrix_real parameters, void* void_instance, double* f0, Matrix_real& grad );
+
+/** Test the true optimization objective rather than an entropy-shifted surrogate. */
+double get_osr_min_profile_loss() const { return osr_min_profile_loss; }
+
+size_t get_osr_profile_count() const { return osr_rank_profiles.size(); }
 
 
 /**

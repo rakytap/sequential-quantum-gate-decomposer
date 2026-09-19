@@ -173,7 +173,7 @@ void BFGS_Powell::Optimize(Matrix_real& x, double& f)
         
         // perform line search in the direction search_direction
         line_search(x, g, search_direction, x0_search, g0_search, maximal_step, d__dot__g, f);
-    
+
         if (status == ZERO_STEP_SIZE_OCCURED) {
             return;
         }

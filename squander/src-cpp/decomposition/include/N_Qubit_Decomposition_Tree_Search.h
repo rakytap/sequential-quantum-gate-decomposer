@@ -110,6 +110,124 @@ public:
         );
         return {unique_coverages.begin(), unique_coverages.end()};
     }
+
+    std::vector<int> rank_edges_for_search(
+        const std::vector<std::pair<int, double>>& cut_bounds,
+        int current_min_cnots,
+        const std::vector<int>& preferred_edge_counts) const
+    {
+        struct EdgeRank {
+            int edge;
+            int total_after_edge;
+            double continuation_kappa;
+            int preferred_count;
+        };
+
+        std::vector<EdgeRank> ranks;
+        ranks.reserve(num_edges_);
+        for (int edge = 0; edge < num_edges_; ++edge) {
+            std::vector<std::pair<int, double>> remaining_bounds = cut_bounds;
+            for (size_t cut = 0; cut < cut_to_edges_.size(); ++cut) {
+                bool crosses_cut = false;
+                for (int crossing_edge : cut_to_edges_[cut]) {
+                    if (crossing_edge == edge) {
+                        crosses_cut = true;
+                        break;
+                    }
+                }
+                if (crosses_cut && remaining_bounds[cut].first > 0) {
+                    --remaining_bounds[cut].first;
+                }
+            }
+
+            double continuation_kappa = std::numeric_limits<double>::infinity();
+            std::vector<int> continuation_counts;
+            const int remaining_cnots = solve_min_cnots(
+                remaining_bounds, continuation_kappa, continuation_counts,
+                current_min_cnots
+            );
+            ranks.push_back({
+                edge,
+                remaining_cnots < 0 ? std::numeric_limits<int>::max()
+                                    : 1 + remaining_cnots,
+                continuation_kappa,
+                edge < static_cast<int>(preferred_edge_counts.size())
+                    ? preferred_edge_counts[edge] : 0
+            });
+        }
+
+        std::stable_sort(ranks.begin(), ranks.end(),
+            [](const EdgeRank& lhs, const EdgeRank& rhs) {
+                if (lhs.total_after_edge != rhs.total_after_edge) {
+                    return lhs.total_after_edge < rhs.total_after_edge;
+                }
+                if (lhs.continuation_kappa != rhs.continuation_kappa) {
+                    return lhs.continuation_kappa < rhs.continuation_kappa;
+                }
+                return lhs.preferred_count > rhs.preferred_count;
+            });
+
+        std::vector<int> edge_order;
+        edge_order.reserve(ranks.size());
+        for (const EdgeRank& rank : ranks) {
+            edge_order.push_back(rank.edge);
+        }
+        return edge_order;
+    }
+
+    std::tuple<int, size_t, double> score_edge_multiset_for_search(
+        const std::vector<std::pair<int, double>>& cut_bounds,
+        const std::vector<int>& inserted_edge_counts) const
+    {
+        if (inserted_edge_counts.size() != static_cast<size_t>(num_edges_)) {
+            throw std::invalid_argument(
+                "inserted edge-count size must match topology size"
+            );
+        }
+
+        std::vector<std::pair<int, double>> remaining_bounds = cut_bounds;
+        for (size_t cut = 0; cut < cut_to_edges_.size(); ++cut) {
+            int supplied = 0;
+            for (int edge : cut_to_edges_[cut]) {
+                supplied += inserted_edge_counts[edge];
+            }
+            remaining_bounds[cut].first = std::max(
+                remaining_bounds[cut].first - supplied, 0
+            );
+        }
+
+        double best_kappa = std::numeric_limits<double>::infinity();
+        std::vector<int> best_continuation;
+        const int remaining_cnots = solve_min_cnots(
+            remaining_bounds, best_kappa, best_continuation
+        );
+
+        size_t optimal_cover_count = 0;
+        std::vector<int> edge_counts(num_edges_, 0);
+        std::function<void(int, int)> count_compositions =
+            [&](int pos, int used_sum) {
+                if (pos == num_edges_ - 1) {
+                    edge_counts[pos] = remaining_cnots - used_sum;
+                    if (composition_satisfies(edge_counts, remaining_bounds)) {
+                        ++optimal_cover_count;
+                    }
+                    return;
+                }
+                const int remaining = remaining_cnots - used_sum;
+                for (int count = 0; count <= remaining; ++count) {
+                    edge_counts[pos] = count;
+                    count_compositions(pos + 1, used_sum + count);
+                }
+            };
+        if (num_edges_ > 0) {
+            count_compositions(0, 0);
+        }
+
+        return std::make_tuple(
+            remaining_cnots, optimal_cover_count, best_kappa
+        );
+    }
+
 private:
     int num_qubits_;
     int num_edges_;
@@ -219,19 +337,22 @@ private:
                 return false;
             }
 
-            // Secondary objective:
-            // minimize sum_c kappa_c * coverage_c
+            // Dense secondary signal among equal integer CNOT bounds.  The
+            // cut weight captures the full singular-value surplus, while the
+            // edge-cover surplus distinguishes feasible profiles that a hard
+            // active-cut/min-removal score collapses to the same value.
             double kappa_obj = 0.0;
             for (int c = 0; c < static_cast<int>(cut_to_edges_.size()); ++c) {
                 int coverage = 0;
-                for (int edge_idx : cut_to_edges_[c]) {
+                for (int edge_idx : cut_to_edges_[c])
                     coverage += edge_counts[edge_idx];
-                }
                 if (use_surplus) {
                     const int surplus = coverage - cut_bounds[c].first;
-                    kappa_obj += cut_bounds[c].second * static_cast<double>(surplus);
+                    kappa_obj += cut_bounds[c].second *
+                        static_cast<double>(surplus);
                 } else {
-                    kappa_obj += cut_bounds[c].second * static_cast<double>(coverage);
+                    kappa_obj += cut_bounds[c].second *
+                        static_cast<double>(coverage);
                 }
             }
 
@@ -259,7 +380,13 @@ private:
 struct SearchNode {
     std::vector<std::tuple<int, double, std::vector<int>, std::vector<std::pair<int, double>>>> osr_results;
     GrayCodeCNOT path;
-    SearchNode(GrayCodeCNOT path) : path(path) {}
+    std::vector<double> optimized_parameters;
+    double screening_objective;
+    bool use_optimistic_score;
+    SearchNode(GrayCodeCNOT path, bool use_optimistic_score_in = false)
+        : path(path),
+          screening_objective(std::numeric_limits<double>::infinity()),
+          use_optimistic_score(use_optimistic_score_in) {}
     int get_min_cnots() const {
         return std::get<0>(*std::min_element(osr_results.begin(), osr_results.end(),
                                 [](const std::tuple<int, double, std::vector<int>, std::vector<std::pair<int, double>>>& a, const std::tuple<int, double, std::vector<int>, std::vector<std::pair<int, double>>>& b) {
@@ -280,6 +407,17 @@ struct SearchNode {
     bool operator>(const SearchNode& other) const {
         const int min_cnots = get_min_cnots();
         const int other_min_cnots = other.get_min_cnots();
+        if (use_optimistic_score) {
+            if (min_cnots != other_min_cnots)
+                return min_cnots > other_min_cnots;
+            if (screening_objective != other.screening_objective)
+                return screening_objective > other.screening_objective;
+            const double kappa = std::get<1>(get_best_osr_result());
+            const double other_kappa = std::get<1>(other.get_best_osr_result());
+            if (kappa != other_kappa)
+                return kappa > other_kappa;
+            return path.size() > other.path.size();
+        }
         const int total_cnot_bound = path.size() + min_cnots;
         const int other_total_cnot_bound =
             other.path.size() + other_min_cnots;
@@ -351,6 +489,11 @@ class N_Qubit_Decomposition_Tree_Search : public Optimization_Interface {
 
   public:
   protected:
+    /// True when best-first search reached an OSR-zero candidate rather than
+    /// returning its best positive-residual fallback at the CNOT bound.
+    bool best_first_osr_solution_found = false;
+    GrayCodeCNOT best_first_solution_path;
+    std::vector<double> best_first_solution_parameters;
     /// The maximal number of adaptive layers used in the decomposition
     int level_limit;
     /// The minimal number of adaptive layers used in the decomposition
@@ -454,7 +597,10 @@ class N_Qubit_Decomposition_Tree_Search : public Optimization_Interface {
         N_Qubit_Decomposition_custom& cDecomp_custom_random, MinCnotBoundSolver& osr_bound_solver,
         std::vector<std::vector<int>>& all_cuts, double Fnorm, double osr_tol,
         std::uniform_real_distribution<>& distrib_real, std::mt19937& gen,
-        const GrayCodeCNOT& path);
+          const GrayCodeCNOT& path, const SearchNode* warm_start = nullptr,
+          bool run_optimization = true, int iteration_loop_override = -1,
+          int max_inner_iteration_override = -1,
+          int target_bound_override = -1);
 
     /**
     @brief Perform tree search over possible gate structures using Gray code enumeration and Operator Schmidt Rank (OSR)

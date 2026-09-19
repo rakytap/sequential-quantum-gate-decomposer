@@ -4329,6 +4329,29 @@ class qgd_Wide_Circuit_Optimization:
         allparts, g, go, rgo, single_qubit_chains, gate_to_qubit, gate_to_tqubit = (
             get_all_partitions(circ, max_partition_size)
         )
+        if max_partition_size >= 4:
+            # Exact optimization of a maximal window subsumes every rewrite
+            # available to a strict subset on the identical qubit support.
+            # Retain narrower-support partitions (notably 2-of-3 and 3-of-4)
+            # while removing the combinatorial family of dominated width-4
+            # windows.
+            parts_by_support = collections.defaultdict(list)
+            for part in allparts:
+                support = frozenset().union(
+                    *(gate_to_qubit[gate] for gate in part)
+                )
+                parts_by_support[support].append(part)
+            dominated_max_width_parts = {
+                part
+                for support, parts in parts_by_support.items()
+                if len(support) == max_partition_size
+                for part in parts
+                if any(part < other for other in parts)
+            }
+            allparts = [
+                part for part in allparts
+                if part not in dominated_max_width_parts
+            ]
         qbit_num_orig_circuit = circ.get_Qbit_Num()
         gate_dict = {i: gate for i, gate in enumerate(circ.get_Gates())}
         single_qubit_chains_pre = {x[0]: x for x in single_qubit_chains if rgo[x[0]]}

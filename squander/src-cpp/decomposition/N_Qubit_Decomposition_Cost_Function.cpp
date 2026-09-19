@@ -21,46 +21,15 @@ limitations under the License.
 */
 
 #include "N_Qubit_Decomposition_Cost_Function.h"
+#include "OSR_Eigen_SVD.h"
 #include "QGDTypes.h"
 
 #include <vector>
 #include <algorithm>
+#include <complex>
+#include <stdexcept>
 
-#define LAPACK_ROW_MAJOR               101
-#define LAPACK_COL_MAJOR               102
-
-
-
-#ifdef __cplusplus
-extern "C" 
-{
-#endif
-
-// LAPACKE function declarations using QGD_Complex16
-extern "C" int LAPACKE_zgesvd( int matrix_order, char jobu, char jobvt,
-                            int m, int n, QGD_Complex16* a,
-                            int lda, double* s, QGD_Complex16* u,
-                            int ldu, QGD_Complex16* vt,
-                            int ldvt, double* superb );
-
-extern "C" int LAPACKE_zgesdd(int matrix_order, char jobz, int m, int n, QGD_Complex16* a,
-                          int lda, double* s, QGD_Complex16* u, int ldu,
-                          QGD_Complex16* vt, int ldvt);
-extern "C" int LAPACKE_cgesvd( int matrix_order, char jobu, char jobvt,
-                            int m, int n, QGD_Complex8* a,
-                            int lda, float* s, QGD_Complex8* u,
-                            int ldu, QGD_Complex8* vt,
-                            int ldvt, float* superb );
-
-extern "C" int LAPACKE_cgesdd(int matrix_order, char jobz, int m, int n, QGD_Complex8* a,
-                          int lda, float* s, QGD_Complex8* u, int ldu,
-                          QGD_Complex8* vt, int ldvt);
-#define USE_SDD
 #define USE_COL_MAJ
-
-#ifdef __cplusplus
-}
-#endif
 
 
 
@@ -769,8 +738,8 @@ static inline size_t mat_idx(int row, int col, int nrows, int ncols) {
 //https://arxiv.org/pdf/2111.03132
 // Build the (dA*dA) x (dB*dB) OSR matrix M for cut A|B from U (2^n x 2^n), row-major.
 // M_{ (a' * dA + a), (b' * dB + b) } = U_{ (a',b'), (a,b) }.
-template<class MatrixT, class ComplexT>
-static std::vector<ComplexT> build_osr_matrix(const MatrixT& U, int n,
+template<class MatrixT, class RealT>
+static std::vector<std::complex<RealT>> build_osr_matrix(const MatrixT& U, int n,
                              const std::vector<int>& A, // qubits on A
                              int& m_rows, int& m_cols)
 {
@@ -787,7 +756,7 @@ static std::vector<ComplexT> build_osr_matrix(const MatrixT& U, int n,
 
     m_rows = dA * dA;
     m_cols = dB * dB;
-    std::vector<ComplexT> M;
+    std::vector<std::complex<RealT>> M;
     M.resize((size_t)m_rows * (size_t)m_cols);
 
     // Row-major indexing: U[in + out*N] is element (in, out)
@@ -800,7 +769,9 @@ static std::vector<ComplexT> build_osr_matrix(const MatrixT& U, int n,
             const int r = a + ap;   // row in M
             const int c = b + bp;   // col in M
             const auto& val = U[(size_t)in + (size_t)out * (size_t)N];
-            M[mat_idx(r, c, m_rows, m_cols)] = val;
+            M[mat_idx(r, c, m_rows, m_cols)] =
+                std::complex<RealT>(static_cast<RealT>(val.real),
+                                    static_cast<RealT>(val.imag));
         }
     }
     return M;
@@ -875,78 +846,6 @@ static void accumulate_grad_for_cut(MatrixT& accum, const std::vector<double>& G
     }
 }
 
-static int lapack_gesdd_dispatch(int lapack_layout, char jobz, int m, int n, QGD_Complex16* a,
-                          int lda, double* s, QGD_Complex16* u, int ldu,
-                          QGD_Complex16* vt, int ldvt) {
-    return LAPACKE_zgesdd(lapack_layout, jobz, m, n, a, lda, s, u, ldu, vt, ldvt);
-}
-
-static int lapack_gesdd_dispatch(int lapack_layout, char jobz, int m, int n, QGD_Complex8* a,
-                          int lda, float* s, QGD_Complex8* u, int ldu,
-                          QGD_Complex8* vt, int ldvt) {
-    return LAPACKE_cgesdd(lapack_layout, jobz, m, n, a, lda, s, u, ldu, vt, ldvt);
-}
-
-#ifndef USE_SDD
-static int lapack_gesvd_dispatch(int lapack_layout, char jobu, char jobvt, int m, int n, QGD_Complex16* a,
-                          int lda, double* s, QGD_Complex16* u, int ldu,
-                          QGD_Complex16* vt, int ldvt, double* superb) {
-    return LAPACKE_zgesvd(lapack_layout, jobu, jobvt, m, n, a, lda, s, u, ldu, vt, ldvt, superb);
-}
-
-static int lapack_gesvd_dispatch(int lapack_layout, char jobu, char jobvt, int m, int n, QGD_Complex8* a,
-                          int lda, float* s, QGD_Complex8* u, int ldu,
-                          QGD_Complex8* vt, int ldvt, float* superb) {
-    return LAPACKE_cgesvd(lapack_layout, jobu, jobvt, m, n, a, lda, s, u, ldu, vt, ldvt, superb);
-}
-#endif
-
-template<class ComplexT, class RealT>
-static std::vector<double> osr(std::vector<ComplexT>& A, int m_rows, int m_cols, double Fnorm)
-{
-    int k = std::min(m_rows, m_cols);
-    std::vector<RealT> S(k);
-#ifdef USE_COL_MAJ
-    constexpr int lapack_layout = LAPACK_COL_MAJOR;
-    const int lda  = m_rows;
-    const int ldu  = m_rows;
-    const int ldvt = k;       // VT is k x m_cols in col-major
-#else
-    constexpr int lapack_layout = LAPACK_ROW_MAJOR;
-    const int lda  = m_cols;
-    const int ldu  = k;       // U is m_rows x k in row-major
-    const int ldvt = m_cols;
-#endif
-#ifdef USE_SDD
-    int info = lapack_gesdd_dispatch(lapack_layout,
-                              'N',
-                              m_rows, m_cols,
-                              A.data(), lda,
-                              S.data(),
-                              nullptr, ldu,
-                              nullptr, ldvt);
-#else
-    std::vector<RealT> superb(std::max(1, k - 1));  // REQUIRED for complex *gesvd
-    // We don’t need U/V; job='N' for economy; gesvd is fine too.
-    int info = lapack_gesvd_dispatch(lapack_layout,
-                              'N','N',
-                              m_rows, m_cols,
-                              A.data(), lda,
-                              S.data(),
-                              nullptr, ldu,
-                              nullptr, ldvt,
-                              superb.data());
-#endif
-    if (info != 0) {
-        throw std::runtime_error("gesvd failed, info=" + std::to_string(info));
-    }
-    std::vector<double> normalized;
-    normalized.reserve(S.size());
-    for (RealT s : S) normalized.push_back(static_cast<double>(s)/Fnorm); //normalize
-    //std::copy(S.begin(), S.end(), std::ostream_iterator<double>(std::cout, " ")); std::cout << std::endl;
-    return normalized;
-}
-
 // Numerical rank via LAPACKE_zgesdd/svd (SVD)
 static int numerical_rank_osr(std::vector<double> S, double tol)
 {
@@ -984,7 +883,15 @@ std::vector<std::vector<int>> unique_cuts(int n)
 
         for (auto& S : combs) {
             if (r < n - r) {
-                cuts.push_back(S);
+                // Keep side A at least as large as side B.  The resulting
+                // OSR matrices are tall, which is the efficient canonical
+                // orientation for Eigen's column-major Jacobi SVD.
+                std::vector<int> comp;
+                comp.reserve(n - r);
+                for (int q = 0; q < n; ++q)
+                    if (std::find(S.begin(), S.end(), q) == S.end())
+                        comp.push_back(q);
+                cuts.push_back(std::move(comp));
             } else { // r == n - r (only for even n)
                 std::vector<int> comp;
                 for (int q = 0; q < n; ++q)
@@ -1257,12 +1164,16 @@ std::pair<int, double> operator_schmidt_rank(const Matrix& U, int n,
 {
     
     int mr=0, mc=0;
-    std::vector<QGD_Complex16> M = build_osr_matrix<Matrix, QGD_Complex16>(U, n, A_qubits, mr, mc);
-    std::vector<double> S = osr<QGD_Complex16, double>(M, mr, mc, Fnorm);
+    std::vector<std::complex<double>> M =
+        build_osr_matrix<Matrix, double>(U, n, A_qubits, mr, mc);
+    std::vector<double> S =
+        osr_eigen_singular_values(M, mr, mc, Fnorm);
     int min_cnot = numerical_rank_osr(S, tol);
+    const int kappa_rank = n >= 4 && min_cnot > 0
+        ? min_cnot - 1
+        : min_cnot;
     return std::pair<int, double>(min_cnot,
-        //tail_loss(S, static_cast<int>(lg_up(static_cast<uint32_t>(S.size()))))
-        weighted_loss_for_rank(S, min_cnot)
+        weighted_loss_for_rank(S, kappa_rank)
     );
 }
 
@@ -1272,11 +1183,16 @@ std::pair<int, double> operator_schmidt_rank(const Matrix_float& U, int n,
 {
 
     int mr=0, mc=0;
-    std::vector<QGD_Complex8> M = build_osr_matrix<Matrix_float, QGD_Complex8>(U, n, A_qubits, mr, mc);
-    std::vector<double> S = osr<QGD_Complex8, float>(M, mr, mc, Fnorm);
+    std::vector<std::complex<float>> M =
+        build_osr_matrix<Matrix_float, float>(U, n, A_qubits, mr, mc);
+    std::vector<double> S =
+        osr_eigen_singular_values(M, mr, mc, Fnorm);
     int min_cnot = numerical_rank_osr(S, tol);
+    const int kappa_rank = n >= 4 && min_cnot > 0
+        ? min_cnot - 1
+        : min_cnot;
     return std::pair<int, double>(min_cnot,
-        weighted_loss_for_rank(S, min_cnot)
+        weighted_loss_for_rank(S, kappa_rank)
     );
 }
 
@@ -1285,12 +1201,14 @@ static std::vector<std::vector<double>> profile_softmin_coefficients(
     const std::vector<std::vector<int>>& rank_profiles,
     double profile_temperature,
     double cut_smoothmax_temperature,
-    double& cost)
+    double& cost,
+    double* minimum_profile_loss_out = nullptr)
 {
-    if (rank_profiles.empty() || profile_temperature <= 0.0) {
+    if (rank_profiles.empty() || profile_temperature < 0.0 ||
+        cut_smoothmax_temperature < 0.0) {
         throw std::invalid_argument(
-            "OSR profile objective requires profiles and a positive "
-            "profile temperature"
+            "OSR profile objective requires profiles and non-negative "
+            "temperatures"
         );
     }
     const double cut_count = static_cast<double>(cuts_S.size());
@@ -1298,21 +1216,29 @@ static std::vector<std::vector<double>> profile_softmin_coefficients(
     std::vector<std::vector<double>> cut_coefficients(
         rank_profiles.size(), std::vector<double>(cuts_S.size(), 0.0)
     );
+    double minimum_max_cut_loss = std::numeric_limits<double>::infinity();
+
     for (size_t p = 0; p < rank_profiles.size(); ++p) {
         if (rank_profiles[p].size() != cuts_S.size()) {
             throw std::invalid_argument(
                 "OSR rank profile size must match cut count"
             );
         }
+
         std::vector<double> cut_losses(cuts_S.size(), 0.0);
         for (size_t c = 0; c < cuts_S.size(); ++c)
             cut_losses[c] = loss_for_rank(
                 cuts_S[c], rank_profiles[p][c]
             );
+
+        const double maximum = *std::max_element(
+            cut_losses.begin(), cut_losses.end()
+        );
+        minimum_max_cut_loss = std::min(
+            minimum_max_cut_loss, maximum
+        );
+
         if (cut_smoothmax_temperature > 0.0) {
-            const double maximum = *std::max_element(
-                cut_losses.begin(), cut_losses.end()
-            );
             double exponential_sum = 0.0;
             for (size_t c = 0; c < cuts_S.size(); ++c) {
                 cut_coefficients[p][c] = std::exp(
@@ -1327,33 +1253,54 @@ static std::vector<std::vector<double>> profile_softmin_coefficients(
             for (double& coefficient : cut_coefficients[p])
                 coefficient /= exponential_sum;
         } else {
-            for (size_t c = 0; c < cuts_S.size(); ++c) {
-                cut_coefficients[p][c] = 1.0 / cut_count;
-                losses[p] += cut_coefficients[p][c] * cut_losses[c];
-            }
+            // The zero-temperature limit is the exact maximum, not an
+            // arithmetic mean.  Its active-cut derivative is a valid
+            // subgradient of max_c loss[p][c].
+            const size_t active_cut = static_cast<size_t>(
+                std::distance(
+                    cut_losses.begin(),
+                    std::max_element(cut_losses.begin(), cut_losses.end())
+                )
+            );
+            losses[p] = cut_losses[active_cut];
+            cut_coefficients[p][active_cut] = 1.0;
         }
     }
 
     const double minimum = *std::min_element(losses.begin(), losses.end());
-    std::vector<double> weights(losses.size(), 0.0);
-    double weight_sum = 0.0;
-    for (size_t p = 0; p < losses.size(); ++p) {
-        weights[p] = std::exp(
-            -(losses[p] - minimum) / profile_temperature
-        );
-        weight_sum += weights[p];
-    }
-    for (double& weight : weights) weight /= weight_sum;
+    if (minimum_profile_loss_out != nullptr)
+        *minimum_profile_loss_out = minimum_max_cut_loss;
 
-    // Normalizing by the number of profiles makes this a nonnegative smooth
-    // minimum for nonnegative losses:
-    //   -tau log(mean_p exp(-L_p/tau)).
-    // Unlike the softmin-weighted expectation, its gradient is the positive
-    // convex combination of the profile gradients.  Negative coefficients
-    // can steer an optimizer away from an otherwise improving profile.
-    cost = minimum - profile_temperature * std::log(
-        weight_sum / static_cast<double>(losses.size())
-    );
+    std::vector<double> weights(losses.size(), 0.0);
+    if (profile_temperature > 0.0) {
+        double weight_sum = 0.0;
+        for (size_t p = 0; p < losses.size(); ++p) {
+            weights[p] = std::exp(
+                -(losses[p] - minimum) / profile_temperature
+            );
+            weight_sum += weights[p];
+        }
+        for (double& weight : weights)
+            weight /= weight_sum;
+
+        // Dense differentiable continuation of the exact
+        // min-profile/max-cut objective.
+        cost = minimum - profile_temperature * std::log(
+            weight_sum / static_cast<double>(losses.size())
+        );
+    } else {
+        // Exact min-profile objective with the active profile's derivative.
+        // This is the zero-temperature envelope subgradient and keeps the
+        // optimizer value identical to the acceptance metric.
+        const size_t active_profile = static_cast<size_t>(
+            std::distance(
+                losses.begin(),
+                std::min_element(losses.begin(), losses.end())
+            )
+        );
+        weights[active_profile] = 1.0;
+        cost = minimum;
+    }
     for (size_t p = 0; p < rank_profiles.size(); ++p)
         for (double& coefficient : cut_coefficients[p])
             coefficient *= weights[p];
@@ -1370,8 +1317,10 @@ static double get_osr_entanglement_test_impl(MatrixT& matrix, std::vector<std::v
     allS.reserve(cuts.size());
     for (const auto& cut : cuts) {
         int mr=0, mc=0;
-        std::vector<ComplexT> M = build_osr_matrix<MatrixT, ComplexT>(matrix, qbit_num, cut, mr, mc);
-        std::vector<double> S = osr<ComplexT, RealT>(M, mr, mc, Fnorm);
+        std::vector<std::complex<RealT>> M =
+            build_osr_matrix<MatrixT, RealT>(matrix, qbit_num, cut, mr, mc);
+        std::vector<double> S =
+            osr_eigen_singular_values(M, mr, mc, Fnorm);
         allS.emplace_back(S);
         //printf("%f ", S[0]);
     }
@@ -1392,22 +1341,6 @@ double get_osr_entanglement_test(Matrix_float& matrix, std::vector<std::vector<i
     return get_osr_entanglement_test_impl<Matrix_float, QGD_Complex8, float>(matrix, use_cuts, rank_profiles, profile_temperature, cut_smoothmax_temperature);
 }
 
-template<class ComplexT>
-struct OSRTriplet {
-    std::vector<double> singulars;
-    std::vector<ComplexT> left_factors;
-    std::vector<ComplexT> right_factors;
-
-    OSRTriplet() = default;
-
-    OSRTriplet(std::vector<double> s,
-               std::vector<ComplexT> u,
-               std::vector<ComplexT> vt)
-        : singulars(std::move(s)),
-          left_factors(std::move(u)),
-          right_factors(std::move(vt)) {}
-};
-
 // Build M with build_osr_matrix, then SVD (econ) and grab top triplet.
 template<class MatrixT, class ComplexT, class RealT>
 static OSRTriplet<ComplexT> top_k_triplet_for_cut(
@@ -1419,63 +1352,14 @@ static OSRTriplet<ComplexT> top_k_triplet_for_cut(
 ){
     // 1) Build M for this cut
     
-    std::vector<ComplexT> M = build_osr_matrix<MatrixT, ComplexT>(U, q, A, m_rows, m_cols);
+    std::vector<std::complex<RealT>> M =
+        build_osr_matrix<MatrixT, RealT>(U, q, A, m_rows, m_cols);
 
-    const int k = std::min(m_rows, m_cols);
-
-    // 2) Allocate outputs for SVD (econ)
-    std::vector<RealT> S(k);
-    std::vector<ComplexT> Umat((size_t)m_rows * (size_t)k); // m x k
-    std::vector<ComplexT> VTmat((size_t)k * (size_t)m_cols); // k x n
-
-    // 3) SVD: M = U * diag(S) * VT  (VT = V^H)
-    // Row-major API handles leading dims as col counts.
-#ifdef USE_COL_MAJ
-    constexpr int lapack_layout = LAPACK_COL_MAJOR;
-    const int lda  = m_rows;
-    const int ldu  = m_rows;
-    const int ldvt = k;       // VT is k x m_cols in col-major
-#else
-    constexpr int lapack_layout = LAPACK_ROW_MAJOR;
-    const int lda  = m_cols;
-    const int ldu  = k;       // U is m_rows x k in row-major
-    const int ldvt = m_cols;
-#endif
-#ifdef USE_SDD
-    int info = lapack_gesdd_dispatch(
-        lapack_layout,
-        'S',                    // econ / thin U, VT
-        m_rows, m_cols,
-        M.data(), lda,       // a, lda (row-major => lda = ncols)
-        S.data(),
-        Umat.data(), ldu,         // U is (m_rows x k), row-major => ldu = k
-        VTmat.data(), ldvt    // VT is (k x m_cols), row-major => ldvt = m_cols
-    );
-#else
-    std::vector<RealT> superb(std::max(1, k - 1));  // REQUIRED for complex *gesvd
-    int info = lapack_gesvd_dispatch(
-        lapack_layout,
-        'S', 'S',           // econ U, VT
-        m_rows, m_cols,
-        M.data(), lda,   // a, lda (row-major -> lda = n)
-        S.data(),
-        Umat.data(), ldu,    // U (m x k), ldu = k (row-major)
-        VTmat.data(), ldvt,     // VT (k x n), ldvt = n
-        superb.data()
-    );
-#endif
-    if (info != 0) {
-        throw std::runtime_error("gesvd failed, info=" + std::to_string(info));
-    }
-    std::vector<double> S_normalized;
-    S_normalized.reserve(S.size());
-    for (RealT s : S) S_normalized.push_back(static_cast<double>(s)/Fnorm); // normalized singular value
-
-    return OSRTriplet<ComplexT>(std::move(S_normalized), std::move(Umat), std::move(VTmat));
+    return osr_eigen_triplet(M, m_rows, m_cols, Fnorm);
 }
 
 template<class MatrixT, class ComplexT, class RealT>
-static MatrixT get_deriv_osr_entanglement_impl(MatrixT& matrix, std::vector<std::vector<int>>& use_cuts, const std::vector<std::vector<int>>& rank_profiles, double profile_temperature, double cut_smoothmax_temperature, double* cost_out=nullptr) {
+static MatrixT get_deriv_osr_entanglement_impl(MatrixT& matrix, std::vector<std::vector<int>>& use_cuts, const std::vector<std::vector<int>>& rank_profiles, double profile_temperature, double cut_smoothmax_temperature, double* cost_out=nullptr, double* minimum_profile_loss_out=nullptr) {
     int qbit_num = lg_down(matrix.rows);
     const auto& cuts = use_cuts.size() == 0 ? unique_cuts(qbit_num) : use_cuts;
     double Fnorm = std::sqrt(matrix.rows);
@@ -1499,7 +1383,8 @@ static MatrixT get_deriv_osr_entanglement_impl(MatrixT& matrix, std::vector<std:
     const std::vector<std::vector<double>> coefficients =
         profile_softmin_coefficients(
         allS, rank_profiles, profile_temperature,
-        cut_smoothmax_temperature, profile_cost
+        cut_smoothmax_temperature, profile_cost,
+        minimum_profile_loss_out
     );
     if (cost_out != nullptr) *cost_out = profile_cost;
     std::vector<std::vector<double>> combined(allS.size());
@@ -1537,12 +1422,12 @@ Matrix_float get_deriv_osr_entanglement(Matrix_float& matrix, std::vector<std::v
     return get_deriv_osr_entanglement_impl<Matrix_float, QGD_Complex8, float>(matrix, use_cuts, rank_profiles, profile_temperature, cut_smoothmax_temperature);
 }
 
-Matrix get_osr_entanglement_test_and_deriv(Matrix& matrix, std::vector<std::vector<int>>& use_cuts, const std::vector<std::vector<int>>& rank_profiles, double& cost, double profile_temperature, double cut_smoothmax_temperature) {
-    return get_deriv_osr_entanglement_impl<Matrix, QGD_Complex16, double>(matrix, use_cuts, rank_profiles, profile_temperature, cut_smoothmax_temperature, &cost);
+Matrix get_osr_entanglement_test_and_deriv(Matrix& matrix, std::vector<std::vector<int>>& use_cuts, const std::vector<std::vector<int>>& rank_profiles, double& cost, double profile_temperature, double cut_smoothmax_temperature, double* minimum_profile_loss) {
+    return get_deriv_osr_entanglement_impl<Matrix, QGD_Complex16, double>(matrix, use_cuts, rank_profiles, profile_temperature, cut_smoothmax_temperature, &cost, minimum_profile_loss);
 }
 
-Matrix_float get_osr_entanglement_test_and_deriv(Matrix_float& matrix, std::vector<std::vector<int>>& use_cuts, const std::vector<std::vector<int>>& rank_profiles, double& cost, double profile_temperature, double cut_smoothmax_temperature) {
-    return get_deriv_osr_entanglement_impl<Matrix_float, QGD_Complex8, float>(matrix, use_cuts, rank_profiles, profile_temperature, cut_smoothmax_temperature, &cost);
+Matrix_float get_osr_entanglement_test_and_deriv(Matrix_float& matrix, std::vector<std::vector<int>>& use_cuts, const std::vector<std::vector<int>>& rank_profiles, double& cost, double profile_temperature, double cut_smoothmax_temperature, double* minimum_profile_loss) {
+    return get_deriv_osr_entanglement_impl<Matrix_float, QGD_Complex8, float>(matrix, use_cuts, rank_profiles, profile_temperature, cut_smoothmax_temperature, &cost, minimum_profile_loss);
 }
 
 // Compute grad component = Re Tr( A^† B ) for A = dL/dU, B = dU/dθ
