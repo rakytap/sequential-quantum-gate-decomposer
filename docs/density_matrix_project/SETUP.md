@@ -182,7 +182,8 @@ conda install -y qiskit qiskit-aer -c conda-forge
 ## Next Documents
 
 - Project overview and roadmap: [`README.md`](README.md)
-- Architecture details: [`ARCHITECTURE.md`](ARCHITECTURE.md)
+- Architecture details: [`../specs/ARCHITECTURE_OVERVIEW.md`](../specs/ARCHITECTURE_OVERVIEW.md)
+- Commands and evidence lanes: [`../specs/TECH_STACK.md`](../specs/TECH_STACK.md)
 - External context: [`RESEARCH_ALIGNMENT.md`](RESEARCH_ALIGNMENT.md)
 - Delivered and planned work: [`CHANGELOG.md`](CHANGELOG.md)
 

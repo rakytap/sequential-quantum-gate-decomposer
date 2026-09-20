@@ -315,9 +315,6 @@ default main path.
 Channel-native / IR-first fusion remains a benchmark-driven follow-on branch,
 not a prerequisite for baseline Phase 3 closure.
 
-### Publication Target
-
-Major methods / systems paper.
 
 ### Exit Criteria
 
@@ -437,139 +434,7 @@ Bounded decision-study paper / methods note on the frozen v1 slice (see
 Detailed tasks, validation matrix, and gates:
 [`DETAILED_PLANNING_PHASE_3_1.md`](../phases/phase-3-1/DETAILED_PLANNING_PHASE_3_1.md).
 
-### Phase 4: Broader Noisy VQE/VQA Workflows And Optimizer Studies
-
-### Main Goal
-
-Build on the completed Phase 2 workflow and the Phase 3 backend to broaden the
-VQE/VQA surface, rather than adding those features during the partitioning
-phase.
-
-### Technical Focus
-
-- broader circuit-source support beyond the generated-`HEA` Phase 2 contract,
-- density-backend gradient and optimizer routing,
-- end-to-end noisy VQE/VQA workflows,
-- optimizer comparison under exact local noise,
-- BLS and baseline methods under matched conditions,
-- entropy, purity, and gradient instrumentation,
-- reproducible experiment management and configuration logging.
-
-### Primary Scientific Question
-
-How do workflow design and optimizer choices interact with realistic local noise
-once the exact backend and noise-aware partitioning path are both in place?
-
-### Main Deliverables
-
-- broader noisy VQE/VQA support beyond the frozen Phase 2 workflow,
-- density-backend gradient/optimizer infrastructure for the supported Phase 4
-surface,
-- optimizer comparison datasets,
-- one or more realistic application cases,
-- reproducible noisy training workflows suitable for publication and later thesis
-experiments.
-
-### Publication Target
-
-Applications / optimization paper.
-
-### Exit Criteria
-
-- at least one noisy VQE/VQA workflow beyond the Phase 2 baseline is robust and
-reproducible,
-- supported density-backend gradient and optimizer flows are stable enough for
-optimizer studies,
-- optimizer comparisons are strong enough for publication,
-- experiments can be scaled into the Phase 5 trainability campaign.
-
-### Phase 5: Trainability Analysis Under Realistic Noise
-
-### Main Goal
-
-Deliver the central scientific results of the PhD.
-
-### Technical Focus
-
-- gradient variance studies,
-- entropy and expressivity metrics,
-- barren-plateau diagnostics,
-- unital versus non-unital noise comparisons,
-- depth/noise/locality sweeps across representative ansatze and tasks.
-
-### Primary Scientific Question
-
-How do realistic noise models change trainability, entropy growth, expressivity,
-and barren-plateau behavior in variational quantum circuits?
-
-### Main Deliverables
-
-- publication-grade dataset,
-- phase diagrams and statistical summaries,
-- robust conclusions about noise-aware training design,
-- and thesis-level synthesis of the full project.
-
-### Publication Target
-
-Main thesis science paper and strongest-impact result.
-
-### Exit Criteria
-
-- complete analysis dataset exists,
-- conclusions are stable across repeated experiments,
-- figures and tables are ready for publication and thesis inclusion.
-
-## 5. Parallel Tracks That Should Not Derail The Main Path
-
-The following tracks are valuable, but should remain subordinate to the main
-five-phase plan unless benchmark evidence strongly justifies accelerating them.
-
-### 5.1 Channel-Native / Superoperator Fusion
-
-This parallel track is **formalized as Phase 3.1** in §4. Rationale, scope, exit
-criteria, and spec-driven contracts live in
-[`docs/density_matrix_project/phases/phase-3-1/`](../phases/phase-3-1/)
-(`DETAILED_PLANNING_PHASE_3_1.md`, `ADRs_PHASE_3_1.md`, and companion paper
-drafts). It remains subordinate to the main five-phase narrative unless the
-program explicitly prioritizes implementation before Phase 4.
-
-### 5.2 Stochastic Trajectories
-
-Why it matters:
-
-- it can reuse the stronger state-vector path,
-- and it may extend the accessible qubit range later.
-
-Why it is not first:
-
-- the exact density backend should remain the reference engine first,
-- and the PhD gains more from exactness early than from larger but approximate
-scale.
-
-### 5.3 MPDO And Other Tensor-Based Mixed-State Methods
-
-Why it matters:
-
-- it is the natural next step once exact dense density matrices become limiting,
-- and it opens a separate scaling paper.
-
-Why it is not first:
-
-- it introduces approximation immediately,
-- and the project still needs the exact backend as a scientific anchor.
-
-### 5.4 Hardware-Specific Scaling Tracks
-
-Examples:
-
-- GPU specialization,
-- distributed memory,
-- Groq / data-flow acceleration,
-- and storage-assisted scaling.
-
-These are valuable and align with the broader research plan, but they should be
-fed by the exact-backend results rather than replacing them.
-
+#
 ## 6. Decision Gates
 
 To keep the project coherent, use explicit decision gates.
@@ -603,42 +468,6 @@ dedicated branch is opened with stronger benchmark justification. Phase 3.1
 for that branch when opened; opening Phase 3.1 planning does not by itself
 satisfy ADR-007 for code delivery.
 
-### DG-3: Phase 3 To Phase 4 Handoff
-
-Question:
-
-- Are remaining limitations primarily broader workflow surface, gradients, and
-optimizer-facing features, rather than unresolved Phase 3 backend semantics or
-performance architecture?
-
-If yes:
-
-- proceed to Phase 4 broader noisy VQE/VQA work.
-
-If no:
-
-- close Phase 3 backend debt before expanding workflow scope.
-
-Phase 3.1 is **not** a prerequisite for clearing DG-3 unless remaining
-limitations are explicitly scoped as channel-native fusion debt rather than
-broader workflow or optimizer surface. The default handoff still assumes Phase 4
-can proceed when Phase 3 semantics and evidence are closed as delivered.
-
-### DG-4: Before Large-Scale Phase 5 Experiments
-
-Question:
-
-- Is exact dense density-matrix simulation still sufficient for the most
-important trainability experiments?
-
-If yes:
-
-- run Phase 5 at the planned scale on the exact backend and evidence bundle.
-
-If no:
-
-- introduce trajectories or MPDO-style methods, but benchmark them against the
-exact backend first.
 
 ## 7. Benchmark And Validation Matrix
 
@@ -692,29 +521,6 @@ premature expansions:
 - channel-native fused noisy partitions before benchmark evidence demands them,
 - approximate scaling methods before the exact backend is fully integrated,
 - publication claims based mainly on global depolarizing toy workloads.
-
-## 9. Suggested Calendar Alignment
-
-The original calendar mapping is now partly historical because Phases 1-3 have
-been delivered in code and documentation. The more important point remains the
-dependency order:
-
-- exact backend first,
-- noise-aware partitioning/fusion second,
-- broader VQE/VQA and optimizer science third,
-- trainability science fourth,
-- optional large-scale approximation branches only when justified.
-
-Current roadmap emphasis:
-
-
-| Period                        | Recommended emphasis                                                                                                                          |
-| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| Completed milestone window    | Phase 1 exact mixed-state foundation, Phase 2 exact noisy workflow integration, and Phase 3 bounded partitioning/fusion backend all delivered |
-| Current publication window    | Phase 2 and Phase 3 manuscript packaging, figure polishing, and venue shaping                                                                 |
-| Next implementation milestone | Phase 4 broader noisy VQE/VQA workflows, gradients, and optimizer studies                                                                     |
-| Optional follow-on milestone  | Phase 3.1 channel-native / superoperator fusion (specification in `phases/phase-3-1/`; scheduling relative to Phase 4 is program choice)     |
-| Later thesis milestones       | Phase 5 trainability studies plus any benchmark-justified scaling branches                                                                    |
 
 
 ## 10. Bottom Line

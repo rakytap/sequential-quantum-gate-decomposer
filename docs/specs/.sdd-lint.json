@@ -1,0 +1,15 @@
+{
+  "_comment": [
+    "Configuration for the SDD spec linters (check_artifacts.py, check_traceability.py).",
+    "Budgets are lines per artifact type and default to the values in the spec-driven-development",
+    "skill; override here only with a recorded reason. Waivers need a reason and are never added",
+    "for an in-flight milestone. milestone_slugs maps a relocated directory to its roadmap slug.",
+    "There is no root Makefile in this repository; list any `make <target>` an evidence row may",
+    "cite in known_make_targets, otherwise cite the underlying command."
+  ],
+  "size_budgets": {},
+  "known_make_targets": [],
+  "milestone_slugs": {},
+  "exclude": [],
+  "waivers": []
+}

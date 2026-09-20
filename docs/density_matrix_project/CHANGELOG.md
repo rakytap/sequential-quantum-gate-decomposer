@@ -96,7 +96,7 @@ Documented closure points:
 ### Delivered
 
 - Spec-driven phase contract, closure, and publication package in
-  `docs/density_matrix_project/phases/phase-3-1/`, including:
+  `docs/density_matrix_project/archive/phases/phase-3-1/`, including:
   `DETAILED_PLANNING_PHASE_3_1.md`, `ADRs_PHASE_3_1.md`,
   `PRE_IMPLEMENTATION_COMPLETION_CHECKLIST.md`,
   `CLOSURE_PLAN_PHASE_3_1.md`,
@@ -132,43 +132,34 @@ Documented closure points:
 
 ---
 
-## Phase 4 (Planned)
+## Documentation Baseline For Spec-Driven Milestones
 
-- Broaden noisy VQE/VQA integration beyond the frozen Phase 2 canonical
-  workflow.
-- Add density-backend gradient and optimizer routing for the supported Phase 4
-  workflow surface.
-- Optimizer evaluations under noise (including BLS workflows).
-- Scaling targets for noisy VQA experiments in the 16-20 qubit range.
-- Experiment runner and reproducible configuration logging.
+### Delivered
 
-Implementation acceptance criteria:
-- End-to-end noisy VQE/VQA workflows beyond the Phase 2 baseline are
-  functional.
-- Density-backend gradient and optimizer support exist for the supported Phase 4
-  workflow surface.
-- Optimizer comparison experiments are reproducible.
+- Archived the phase-based planning record read-only under
+  `docs/density_matrix_project/archive/` (`phases/phase-1` … `phase-3-1`,
+  `planning/PLANNING.md`, `planning/ADRs.md`, `planning/REFERENCES.md`).
+- Established `docs/specs/` as the single spec root with the current-state
+  references `ARCHITECTURE_OVERVIEW.md` (from the former `ARCHITECTURE.md`) and
+  `TECH_STACK.md`, plus the linter configuration `.sdd-lint.json`.
+- Replaced the phase-based `spec-driven-development` skill with the four-skill
+  stack (`create-product-statement`, `create-product-roadmap`,
+  `create-initreq-for-sdd`, `spec-driven-development`), the planner / critic /
+  implementer subagents, spec linters, and hooks; see `docs/sdd-skills-guide.md`.
 
----
+### Scope Notes
 
-## Phase 5 (Planned)
-
-- Trainability analysis framework under noise:
-  - gradient variance,
-  - entropy metrics,
-  - barren plateau diagnostics.
-- Controlled unital vs non-unital noise studies.
-- Batch experiment pipeline for statistical analyses and publication-ready data.
-
-Implementation acceptance criteria:
-- Complete trainability analysis dataset is produced.
-- Publication-grade figures and documented conclusions are generated.
+- Publication planning (`PUBLICATIONS.md`, per-phase paper surfaces) is no
+  longer part of the development workflow; delivered paper surfaces stay in the
+  archive for provenance.
+- Later milestones are defined by the product statement and roadmap under
+  `docs/specs/`, not by this changelog. This file records delivered scope only.
 
 ---
 
 ## Status Policy
 
 - `Complete`: implemented, tested, and merged in branch scope.
-- `Planned`: agreed roadmap item not fully implemented yet.
+- `Planned`: agreed roadmap item (`docs/specs/ROADMAP.md`) not fully implemented yet.
 - `In Progress`: active development in the current milestone window.
 

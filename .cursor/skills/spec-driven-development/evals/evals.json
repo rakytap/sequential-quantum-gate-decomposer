@@ -1,0 +1,59 @@
+{
+  "skill": "spec-driven-development",
+  "_comment": [
+    "This skill owns Layers 1-4: the milestone contract, ADRs, readiness, per-slice planning,",
+    "implementation and closeouts. Hard negatives are the three upstream skills, whose",
+    "vocabulary (vision, horizons, REQ-* baselines) overlaps most."
+  ],
+
+  "trigger": [
+    { "expect": "should_trigger", "prompt": "Produce the Layer 1 detailed planning, ADRs and readiness checklist for this milestone" },
+    { "expect": "should_trigger", "prompt": "Plan the first vertical slice: mini-spec, delivery stories and engineering tasks to a code-ready verdict" },
+    { "expect": "should_trigger", "prompt": "Implement the code-ready engineering tasks for this slice and keep it deployable" },
+    { "expect": "should_trigger", "prompt": "Write the slice closeout with acceptance verdicts and reproduce commands" },
+    { "expect": "should_trigger", "prompt": "This slice hit a contract gap — record a Step 4a handback instead of deciding it in code" },
+    { "expect": "should_trigger", "prompt": "Close out the milestone with its REQ-* evidence matrix and hand back to the roadmap" },
+    { "expect": "should_trigger", "prompt": "Add an ADR for a decision that affects more than one work package, with its rejected alternatives" },
+    { "expect": "should_trigger", "prompt": "Update ARCHITECTURE_OVERVIEW.md and TECH_STACK.md to match what actually shipped" },
+
+    { "expect": "should_not_trigger", "prompt": "Draft our durable product vision and North Star statement" },
+    { "expect": "should_not_trigger", "prompt": "Write a PR-FAQ and a Lean Canvas for this product idea" },
+    { "expect": "should_not_trigger", "prompt": "Sequence the remaining milestones on Now/Next/Later horizons by risk" },
+    { "expect": "should_not_trigger", "prompt": "Revalidate the remaining roadmap and promote the next milestone to Now" },
+    { "expect": "should_not_trigger", "prompt": "Write the REQ-* requirements baseline with EARS acceptance and NFRs" }
+  ],
+
+  "behavior": [
+    {
+      "prompt": "Run Steps 1-3 for milestone <slug>: spec-only, no product code.",
+      "expected_behavior": [
+        "Reads INITIAL_REQUIREMENTS.md first and lifts scope, acceptance and REQ-* traceability into the plan",
+        "Promotes open questions into the pre-implementation checklist as gaps",
+        "Breaks the milestone into goals with acceptance criteria rather than coding instructions",
+        "Records whether ARCHITECTURE_OVERVIEW.md / TECH_STACK.md must be created or updated",
+        "Writes no product code and does not split the whole milestone into Layer 3-4",
+        "Runs the adversarial critique pass and ends with an explicit implementation-ready or not-ready verdict",
+        "Runs specs_check.sh and reports it error-free"
+      ]
+    },
+    {
+      "prompt": "Plan the next vertical slice for this milestone, then stop.",
+      "expected_behavior": [
+        "Reads the Layer 1 contract and the previous slice's CLOSEOUT.md, not the previous slices' mini-specs",
+        "Plans this slice only, and does not pre-plan the remaining slices",
+        "Produces engineering tasks with objective done criteria, named tests, evidence-matrix rows and cited QA-* fitness functions",
+        "Keeps each artifact inside its size budget",
+        "Ends with an explicit code-ready or not-ready verdict and writes no product code"
+      ]
+    },
+    {
+      "prompt": "Implement slice 2. Engineering task ET-3 contradicts the frozen contract in the Layer 1 plan.",
+      "expected_behavior": [
+        "Stops rather than deciding the contradiction in code",
+        "Records task-2/STEP_4A_HANDBACK.md with the contract citation, the question, options with consequences, and the owning authority",
+        "Sets the slice closeout status to implementation handback and does not mark the slice shipped",
+        "Makes no design, scope, contract or ADR decision, and invents no acceptance criteria"
+      ]
+    }
+  ]
+}

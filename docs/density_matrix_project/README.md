@@ -50,24 +50,14 @@ Phase 3 is complete and established the noise-aware partitioning/fusion foundati
   deferred.
 
 Phase 3.1 is complete on its frozen v1 slice as a **bounded decision-study**
-follow-on for channel-native / superoperator fusion (PLANNING.md §5.1). The
-phase-local record in [`phases/phase-3-1/`](phases/phase-3-1/) now includes the
+follow-on for channel-native / superoperator fusion. The phase-local record in
+[`archive/phases/phase-3-1/`](archive/phases/phase-3-1/) includes the
 implemented strict/hybrid runtime surfaces, the full counted 26-row
 whole-workload matrix, a machine-readable decision artifact, a recorded
 pre-publication review state of `decision-study-ready`, and finalized
-phase-local paper surfaces in decision-study mode. Phase 3.1 remains optional
-relative to the default Phase 4 sequencing in the thesis plan, but it is **not**
-an unopened or docs-only branch anymore.
+phase-local paper surfaces in decision-study mode.
 
-Phase 4 is planned and will broaden the noisy VQE/VQA surface, gradients, and
-optimizer studies.
-
-Phase 5 is planned and will focus on trainability analysis under noise
-(gradient collapse, barren plateaus).
-
-
-## Main Roadmap (Phases 1–5 And Optional 3.1)
-
+## Delivered Phases
 
 | Phase | Goal                                                            | Status   |
 | ----- | --------------------------------------------------------------- | -------- |
@@ -75,32 +65,40 @@ Phase 5 is planned and will focus on trainability analysis under noise
 | 2     | Exact noisy backend integration for one canonical workflow       | Complete |
 | 3     | Noise-aware partitioning and gate fusion for mixed-state circuits | Complete |
 | 3.1   | Channel-native / superoperator fusion follow-on (optional)      | Complete (bounded decision study) |
-| 4     | Broader noisy VQE/VQA features, gradients, and optimizer studies | Planned |
-| 5     | Trainability analysis under noise (BP and expressivity studies) | Planned  |
 
-Phase 3.1 sits between 3 and 4 in the partitioning line but does not replace
-Phase 4 on the default critical path; its delivered result is a bounded
-decision-study milestone rather than a broader optimizer or trainability paper.
-See [`planning/PLANNING.md`](planning/PLANNING.md) §4 and §5.1.
+These phases were planned and delivered under the earlier phase-based
+convention; their contracts, evidence reviews, and paper surfaces are archived
+read-only under [`archive/`](archive/README.md).
 
+## What Comes Next
+
+Further work is planned with the spec-driven development stack described in
+[`docs/sdd-skills-guide.md`](../sdd-skills-guide.md), under the spec root
+[`docs/specs/`](../specs/README.md): a product statement (`CAP-*`, `QA-*`), an
+outcome roadmap (`M#`) that records Phases 1–3.1 as delivered, then one
+milestone at a time — requirements (`REQ-*`), Layer 1 contract, and vertical
+slices with closeouts. The current-state references
+[`ARCHITECTURE_OVERVIEW.md`](../specs/ARCHITECTURE_OVERVIEW.md) and
+[`TECH_STACK.md`](../specs/TECH_STACK.md) are already in place.
 
 Notes:
 
 - Scope here is density-matrix-specific work.
-- GPU kernel development is tracked separately and can be integrated per phase as
-available.
-- Stochastic trajectory methods are deferred to later project stages.
+- GPU kernel development is tracked separately and can be integrated per
+  milestone as available.
 
 ## Documentation Map
 
-- `[phases/phase-3-1/](phases/phase-3-1/)`: Phase 3.1 delivered contracts,
-  evidence review, and paper surfaces for the bounded channel-native /
-  superoperator decision-study follow-on.
-- `[CHANGELOG.md](CHANGELOG.md)`: delivered phase outputs and upcoming phase
-targets.
-- `[ARCHITECTURE.md](ARCHITECTURE.md)`: implementation structure and integration
-extension points.
-- `[SETUP.md](SETUP.md)`: environment setup, build, verification, troubleshooting.
+- [`CHANGELOG.md`](CHANGELOG.md): delivered phase outputs and status policy.
+- [`../specs/ARCHITECTURE_OVERVIEW.md`](../specs/ARCHITECTURE_OVERVIEW.md):
+  current-state architecture (containers, contexts, flows, risks, ADR links).
+- [`../specs/TECH_STACK.md`](../specs/TECH_STACK.md): build, environments, test
+  and evidence lanes.
+- [`SETUP.md`](SETUP.md): environment setup, build, verification, troubleshooting.
+- [`RESEARCH_ALIGNMENT.md`](RESEARCH_ALIGNMENT.md): mapping of delivered phases
+  to the PhD plan.
+- [`archive/`](archive/README.md): delivered Phase 1–3.1 contracts, the
+  program-level plan and ADRs, API references at closure.
 
 ## Minimal Hello World
 

@@ -1,0 +1,85 @@
+---
+description: When editing docs/specs, follow the spec-driven-development stack—product statement, roadmap, initial requirements, then layered milestone contracts—with one traceability spine (CAP-*/QA-* → M# → REQ-* → delivery story → engineering task → evidence), per-artifact size budgets, and specs_check.sh before you finish.
+globs: docs/specs/**
+alwaysApply: false
+---
+
+# Spec-driven work under `docs/specs/`
+
+Changes under `docs/specs/` follow the four-skill spec-driven-development stack. Route each
+artifact to its owning skill and keep the **traceability spine** unbroken:
+`CAP-*/QA-* → M# → REQ-* → delivery story → engineering task → evidence`.
+
+## Verify before you finish
+
+```bash
+bash .cursor/skills/spec-driven-development/scripts/specs_check.sh            # spine + artifact structure; errors must be zero
+bash .cursor/skills/spec-driven-development/scripts/specs_check.sh --strict   # every unwaived warning becomes an error
+```
+
+`specs_check.sh` reports a `REQ-*` citing no `CAP-*`/`QA-*`, a `REQ-*` no delivery story
+picks up, a delivery story citing no `REQ-*`, an evidence row naming no runnable command or
+lane, a `tests/…`, `benchmarks/…`, or `examples/…` path that no longer exists, a closeout
+that contradicts the files on disk, and missing Layer 1 or slice artifacts. Fix findings; do
+not silence them. A finding you intend to keep is waived in `docs/specs/.sdd-lint.json`
+**with a reason**, never on an in-flight milestone.
+
+A `stop` hook re-runs these linters when a session touched `docs/specs/`, so a broken spine
+comes back as a follow-up rather than a green summary.
+
+## Ownership
+
+| Artifact | Owning skill |
+|----------|--------------|
+| `PRODUCT_STATEMENT.md` (vision, `CAP-*`, `QA-*`) | `create-product-statement` |
+| `ROADMAP.md` (outcome milestones `M#`, Now/Next/Later) | `create-product-roadmap` |
+| `ARCHITECTURE_OVERVIEW.md` / `TECH_STACK.md` (current state) | `spec-driven-development` |
+| `milestones/<slug>/INITIAL_REQUIREMENTS.md` (`REQ-*`) | `create-initreq-for-sdd` |
+| `milestones/<slug>/` planning, `ADRS_*`, `PRE_IMPLEMENTATION_COMPLETION_CHECKLIST.md`, `<MILESTONE_ID>_CLOSEOUT.md`, `CHANGE_CONTROL.md`, `task-<n>/…` (`TASK_<n>_MINI_SPEC.md`, `DELIVERY_STORIES.md`, `ENGINEERING_TASKS.md`, `CLOSEOUT.md`, `STEP_4A_HANDBACK.md`) | `spec-driven-development` |
+| `.sdd-lint.json` (budgets, slug overrides, waivers) | `spec-driven-development` |
+
+## Working rules
+
+- Apply **spec-driven-development** (`.cursor/skills/spec-driven-development/SKILL.md`) for
+  canonical paths, the four-layer hierarchy, the architecture/design/testing practices, the
+  size budgets, and the reading order, before treating spec or planning work as complete.
+  Milestones are built **slice by slice**, each slice shippable; the first slice is a
+  **slice tracer**. The first roadmap milestone under this convention is the **product
+  walking skeleton**.
+- **New or substantive edits** to `PRODUCT_STATEMENT.md` follow **create-product-statement**;
+  to `ROADMAP.md`, **create-product-roadmap**; to `INITIAL_REQUIREMENTS.md`,
+  **create-initreq-for-sdd** — stable `REQ-*` ids traced to `CAP-*`/`QA-*`, acceptance
+  criteria with a negative scenario, NFR response measures, operational boundaries, handoff.
+- **Never renumber** a `CAP-*`, `QA-*`, or `REQ-*`. Extend, and mark a retired id superseded
+  with a one-line reason: evidence matrices, closeouts, and fitness tests cite these ids.
+- **Respect the size budgets** (300 requirements, 400 planning/ADRs, 250 checklist and
+  mini-spec, 200 delivery stories, 300 engineering tasks, 200/250 closeouts). Over budget
+  means the slice is too big — split it, do not append. Open every artifact with a context
+  header of at most ten lines.
+- **Read just-in-time.** Planning a slice reads the Layer 1 contract and the previous slice's
+  `CLOSEOUT.md`, not the previous slices' mini-specs. Revalidation reads the milestone
+  closeout, not slice task files.
+- **Evidence names its lane** — fast pytest (`-m "not slow"`), `slow`, a benchmark evidence
+  pipeline, the optional C++ tests, or the Qiskit Aer external reference — and every lane
+  runs in the `qgd` conda environment. Exactness is stated against the sequential
+  `NoisyCircuit` baseline with an explicit tolerance.
+- **Non-trivial** planning changes stay consistent with `DETAILED_PLANNING_*`, the milestone
+  **ADRs**, boundary maps, evidence matrices, `ARCHITECTURE_OVERVIEW.md`, `TECH_STACK.md`, and
+  `PRE_IMPLEMENTATION_COMPLETION_CHECKLIST.md` where they exist — never replace them with
+  informal notes.
+- **During code generation** (Step 4b) do not edit `docs/specs/**`: record a contract gap as
+  `task-<n>/STEP_4A_HANDBACK.md` through the planning role instead of deciding it in code.
+- **After a milestone ships**, revalidate the remaining `ROADMAP.md`. The product statement is
+  revisited **only** when a learning invalidates a core assumption.
+- **At milestone close**, produce `<MILESTONE_ID>_CLOSEOUT.md` (delivery record, `REQ-*`
+  evidence matrix, learnings) as the revalidation input. If the milestone produced a
+  `CHANGE_CONTROL.md`, confirm its sign-off before marking the milestone Delivered.
+- **Papers are not spec artifacts.** Abstracts, short papers, full papers and slides live
+  outside `docs/specs/` and consume a closeout's evidence matrix; a slice is never gated on
+  them.
+- **The archive is frozen.** Delivered Phases 1–3.1 under
+  `docs/density_matrix_project/archive/` keep the convention they shipped under; cite them,
+  never extend them. Revisions are **forward-only**.
+
+If the change is **trivial** (typos, formatting, link fixes, obvious metadata), you may skip
+the full workflow — but still run `specs_check.sh`.

@@ -1,0 +1,58 @@
+{
+  "skill": "create-product-statement",
+  "_comment": [
+    "Trigger cases test description routing only. Hard negatives are drawn from the three",
+    "neighbouring SDD skills, because those are the realistic mis-routes: 'plan the product'",
+    "plausibly matches all four. Behavior cases are run in a live session; grade the artifact",
+    "against the skill's completion criteria."
+  ],
+
+  "trigger": [
+    { "expect": "should_trigger", "prompt": "Draft our durable product vision and North Star statement" },
+    { "expect": "should_trigger", "prompt": "Write a PR-FAQ for this product so we can pressure-test the customer benefit" },
+    { "expect": "should_trigger", "prompt": "Produce a Lean Canvas covering the problem, segments and unfair advantage" },
+    { "expect": "should_trigger", "prompt": "Define the durable product capabilities CAP-* and quality attributes QA-*" },
+    { "expect": "should_trigger", "prompt": "Reframe our product strategy: who we serve, the core problem, and what we will never build" },
+    { "expect": "should_trigger", "prompt": "A milestone invalidated a core assumption, so revise the product statement" },
+    { "expect": "should_trigger", "prompt": "Our vision is a slogan with no teeth — sharpen it so it decides what not to build" },
+
+    { "expect": "should_not_trigger", "prompt": "Sequence the remaining milestones on Now/Next/Later horizons by risk" },
+    { "expect": "should_not_trigger", "prompt": "Revalidate the roadmap now that the db-schema-migrations milestone shipped" },
+    { "expect": "should_not_trigger", "prompt": "Write the REQ-* requirements baseline with EARS acceptance for the aws-deployment milestone" },
+    { "expect": "should_not_trigger", "prompt": "Produce the Layer 1 detailed planning and ADRs for this milestone" },
+    { "expect": "should_not_trigger", "prompt": "Implement the code-ready engineering tasks for slice 2 and record the closeout" },
+    { "expect": "should_not_trigger", "prompt": "Decompose this milestone into delivery stories for the first vertical slice" }
+  ],
+
+  "behavior": [
+    {
+      "prompt": "Read the material under docs/ and draft docs/specs/PRODUCT_STATEMENT.md. Ask clarifying questions first, then validate with a PR-FAQ.",
+      "expected_behavior": [
+        "Asks 3-7 concrete elicitation questions before drafting, or records an explicit Assumptions subsection when told to proceed",
+        "Produces all nine required sections in order",
+        "Gives every QA-* a response measure, and every CAP-* a why and a measurable success signal",
+        "Keeps stack, schema and architecture decisions out of the file",
+        "Records one validation lens plus the adversarial critique pass inline",
+        "States the handoff to create-product-roadmap and whether the current-state docs were seeded"
+      ]
+    },
+    {
+      "prompt": "The last milestone showed that our exact-backend scaling assumption was wrong. Update the product statement.",
+      "expected_behavior": [
+        "Treats the statement as durable and changes only what the evidence invalidated",
+        "Preserves existing CAP-*/QA-* ids rather than renumbering; marks anything retired as superseded with a reason",
+        "Appends a dated Change log entry naming the triggering milestone",
+        "Re-states that create-product-roadmap revalidation must follow"
+      ]
+    },
+    {
+      "prompt": "Review our product statement and tell me what is too vague to guide a roadmap.",
+      "expected_behavior": [
+        "Answers the question instead of rewriting the file",
+        "Names specific CAP-* that are outputs rather than outcomes, and QA-* missing a response measure",
+        "Flags any architecture or stack detail that belongs in ARCHITECTURE_OVERVIEW.md or TECH_STACK.md",
+        "Points at assumptions with no kill criterion"
+      ]
+    }
+  ]
+}

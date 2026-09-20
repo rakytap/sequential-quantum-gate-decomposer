@@ -1,0 +1,59 @@
+{
+  "skill": "create-initreq-for-sdd",
+  "_comment": [
+    "The hardest boundary in the stack: this skill authors REQ-* intent and acceptance, while",
+    "spec-driven-development authors the Layer 1 plan, ADRs and slice artifacts from it. Hard",
+    "negatives therefore lean on Layer 1-4 vocabulary."
+  ],
+
+  "trigger": [
+    { "expect": "should_trigger", "prompt": "Write the REQ-* requirements baseline for the aws-deployment milestone" },
+    { "expect": "should_trigger", "prompt": "Produce INITIAL_REQUIREMENTS.md with EARS acceptance criteria and NFRs for this milestone" },
+    { "expect": "should_trigger", "prompt": "We need testable Given/When/Then acceptance and a milestone glossary before planning" },
+    { "expect": "should_trigger", "prompt": "Define the agent operational boundaries: always do, ask first, never do" },
+    { "expect": "should_trigger", "prompt": "Requirements changed after a handback — evolve the existing requirements baseline and keep the REQ ids stable" },
+    { "expect": "should_trigger", "prompt": "Extract scope, requirements and acceptance criteria from this PRD into our milestone requirements structure" },
+    { "expect": "should_trigger", "prompt": "Add a negative scenario and a response measure to each requirement before we freeze it" },
+
+    { "expect": "should_not_trigger", "prompt": "Draft our durable product vision and North Star statement" },
+    { "expect": "should_not_trigger", "prompt": "Sequence the remaining milestones on Now/Next/Later horizons" },
+    { "expect": "should_not_trigger", "prompt": "Produce the Layer 1 detailed planning and the milestone ADRs" },
+    { "expect": "should_not_trigger", "prompt": "Plan the first vertical slice: mini-spec, delivery stories and engineering tasks" },
+    { "expect": "should_not_trigger", "prompt": "Implement this slice and record its closeout with reproduce commands" },
+    { "expect": "should_not_trigger", "prompt": "Revalidate the roadmap now that the milestone shipped" }
+  ],
+
+  "behavior": [
+    {
+      "prompt": "Use the first Now milestone in docs/specs/ROADMAP.md and produce its INITIAL_REQUIREMENTS.md.",
+      "expected_behavior": [
+        "Reads the milestone row in ROADMAP.md and the CAP-*/QA-* in PRODUCT_STATEMENT.md before drafting",
+        "Reads ARCHITECTURE_OVERVIEW.md and TECH_STACK.md for constraints without copying their content",
+        "Asks 3-7 clarifying questions, or records explicit assumptions when told to proceed",
+        "Writes the file at docs/specs/milestones/<slug>/ using the roadmap's exact slug",
+        "Gives every REQ-* a stable id, an upstream CAP-*/QA-* citation, BDD or EARS acceptance, and at least one negative scenario",
+        "Keeps every QA-*-realizing NFR's response measure",
+        "Records the adversarial critique pass and states the handoff to spec-driven-development"
+      ]
+    },
+    {
+      "prompt": "The Step 4a handback for slice 4 changed what REQ-006 has to guarantee. Update the requirements.",
+      "expected_behavior": [
+        "Edits the existing file rather than recreating it",
+        "Preserves existing REQ-* ids; marks anything retired as superseded with a one-line reason",
+        "Re-checks the changed requirement's acceptance and any NFR response measure it realizes",
+        "Appends a Change log entry naming the triggering handback",
+        "Does not re-plan Layers 2-4, and re-states the handoff so SDD re-ingests the file"
+      ]
+    },
+    {
+      "prompt": "Which of our requirements for this milestone are not actually testable?",
+      "expected_behavior": [
+        "Answers the question instead of rewriting the file",
+        "Names specific requirements whose acceptance is ambiguous or missing an error scenario",
+        "Flags NFRs with no response measure and requirements citing no CAP-*/QA-*",
+        "Suggests the concrete command or check that would prove each weak requirement"
+      ]
+    }
+  ]
+}

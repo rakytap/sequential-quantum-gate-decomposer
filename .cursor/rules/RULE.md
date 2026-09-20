@@ -23,10 +23,13 @@ USE qgd CONDA ENVIRONMENT FOR ALL BUILD AND TESTING.
 
 ## Spec-Driven Status Surfaces
 
-When updating implementation-status or slice-checklist sections under
-`docs/density_matrix_project/phases/`:
+Spec work lives under `docs/specs/` and follows `.cursor/skills/spec-driven-development/SKILL.md`
+(entry point: `docs/sdd-skills-guide.md`). When updating implementation status there:
 
-- Treat the current story/slice status file as the single owner of implementation progress.
+- `task-<n>/CLOSEOUT.md` is the single owner of a slice's implementation progress; `<MILESTONE_ID>_CLOSEOUT.md` owns milestone status.
 - Keep `PRE_IMPLEMENTATION_COMPLETION_CHECKLIST.md` as the Layer 1 contract closure surface only.
-- Only mark engineering-task checklist rows complete when the current plan explicitly closes them; do not retroactively certify upstream rows just because a later slice/task finished.
-- Preserve deferred IDs/work items so bounded slice completion does not read as full task or phase closure.
+- Only mark engineering-task checklist rows complete when the current slice explicitly closes them; do not retroactively certify upstream rows because a later slice finished.
+- Preserve deferred IDs/work items so bounded slice completion does not read as full milestone closure.
+- Run `bash .cursor/skills/spec-driven-development/scripts/specs_check.sh` before claiming spec work complete.
+
+`docs/density_matrix_project/archive/` holds the delivered Phase 1–3.1 record and is read-only.

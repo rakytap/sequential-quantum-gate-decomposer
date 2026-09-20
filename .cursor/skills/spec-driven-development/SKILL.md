@@ -1,385 +1,248 @@
 ---
 name: spec-driven-development
-description: >-
-  Guides spec-driven development under docs/density_matrix_project only:
-  phase planning, DETAILED_PLANNING, ADRs, task mini-specs, pre-implementation
-  checklists, API reference and publication docs. Applied when work touches that
-  tree or when the user mentions spec-driven development, phase contracts,
-  task-level specs, or the density matrix planning workflow.
+description: Plans and implements one milestone under docs/specs as layered contracts — Layer 1 planning and ADRs, Layer 2 mini-spec, Layer 3 delivery stories, Layer 4 engineering tasks — slice by slice, with REQ-* evidence matrices, closeouts, handbacks, and current-state docs. Use to plan, decompose, implement, verify, or close milestone slices. Not for product vision, roadmap sequencing, or paper writing.
 ---
 
-# Spec-Driven Development (Density Matrix Project)
+# Spec-driven development
 
-**Scope:** `docs/density_matrix_project/` only — not other SQUANDER trees unless
-the user explicitly extends scope.
+The specification is the authoritative description of intent and behavior; code and
+automated checks prove it. A spec stays short enough to read, debate, and update when
+reality changes. Deliver **one roadmap milestone** through Layers 1–4, **slice by slice**,
+where every slice is independently shippable: the extension builds, the named test lanes
+are green, and the evidence bundles it claims regenerate. Do not skip layers for
+non-trivial change; for a trivial change already covered by specs and tests, reduce
+ceremony but still update the test or leave a brief note.
 
-This skill documents the working model for spec-driven development in that
-documentation set. All phase work follows a layered hierarchy: contracts
-first, then task mini-specs, then stories, then code.
+## Position in the stack
 
-**Path rule:** Phase artifacts always live under
-`docs/density_matrix_project/phases/...` (no shorthand `phases/` from repo root).
+| Layer | Skill | Artifact |
+|-------|-------|----------|
+| Product | `create-product-statement` | `docs/specs/PRODUCT_STATEMENT.md` (`CAP-*`, `QA-*`) |
+| Roadmap | `create-product-roadmap` | `docs/specs/ROADMAP.md` (`M#`, Now/Next/Later) |
+| Milestone input | `create-initreq-for-sdd` | `milestones/<slug>/INITIAL_REQUIREMENTS.md` (`REQ-*`) |
+| **Layers 1–4** | **this skill** | `milestones/<slug>/…` — plan, ADRs, slices, closeouts |
 
-## Source-of-Truth Documents
+Traceability spine: `CAP-*/QA-* → M# → REQ-* → delivery story → engineering task →
+evidence`. Every link stays intact, and `specs_check.sh` proves it. Full stack diagram and
+shared glossary: `docs/sdd-skills-guide.md`. `docs/specs/` is the only spec root; the
+phase trees under `docs/density_matrix_project/archive/` are frozen history. Terms: a
+**Layer 2 mini-spec** is a work-package contract, not a Layer 4 engineering task; a
+**delivery story** is a Layer 3 behavioral slice, not a `REQ-*`; a **product walking
+skeleton** is the first roadmap milestone; a **slice tracer** is the first vertical slice
+inside any milestone.
 
-Phase work is driven by:
+## Reading order and context budget
 
-- `docs/density_matrix_project/planning/PLANNING.md` — high-level research plan
-- `docs/density_matrix_project/planning/PUBLICATIONS.md` — publication strategy
-- `docs/density_matrix_project/planning/` — ADRs, REFERENCES, etc.
-- `docs/density_matrix_project/phases/<phase-dir>/` — phase-specific outputs
+Read just-in-time. Pre-loading the whole milestone tree is what makes later slices drift.
 
-### Phase directories and sub-phases
+| At this point | Read | Do not read |
+|---------------|------|-------------|
+| Step 1 (Layer 1) | `PRODUCT_STATEMENT.md`, the milestone row in `ROADMAP.md`, `INITIAL_REQUIREMENTS.md`, `ARCHITECTURE_OVERVIEW.md`, `TECH_STACK.md` | any `task-<n>/` artifact, the archived phase trees |
+| Steps 2–3 (readiness) | the Layer 1 contract you just wrote | prior milestones' trees |
+| Step 4a (plan a slice) | the Layer 1 contract, plus the **previous slice's `CLOSEOUT.md`** | previous slices' mini-specs, stories, or task files |
+| Step 4b (generate code) | this slice's mini-spec, stories, and engineering tasks | the roadmap, the product statement |
+| Milestone close | every slice `CLOSEOUT.md`, the Layer 1 acceptance criteria | slice-level task files |
 
-- **Numeric phase:** `docs/density_matrix_project/phases/phase-2/`,
-  `phase-3/`, etc.
-- **Sub-phase (same artifact set, extended slug):** e.g.
-  `docs/density_matrix_project/phases/phase-3-1/` uses the same document
-  types as `phase-3/`, with phase-specific filenames using the underscore form
-  of the slug (e.g. `DETAILED_PLANNING_PHASE_3_1.md`, `ADRs_PHASE_3_1.md`,
-  `SHORT_PAPER_PHASE_3_1.md`, `ABSTRACT_PHASE_3_1.md`, `PAPER_PHASE_3_1.md`).
-  The narrative companion stays **`SHORT_PAPER_NARRATIVE.md`** in that directory
-  (unprefixed; same convention as `phase-3/`).
+Delegate wide discovery — codebase exploration, artifact audits — to a subagent and take
+back the summary. Persist anything the next slice needs in a file, never in conversation:
+after a slice closes, `task-<n>/CLOSEOUT.md` is the only thing that carried forward.
 
-## Four-Layer Hierarchy
+## The four layers
 
-### Layer 1: Phase Contract (whole-phase level)
+| Layer | Artifact | Answers |
+|-------|----------|---------|
+| 1 — milestone contract | `DETAILED_PLANNING_<MILESTONE_SLUG>.md`, `ADRS_<MILESTONE_SLUG>.md`, `PRE_IMPLEMENTATION_COMPLETION_CHECKLIST.md` | what this milestone is and is not, prerequisites, success criteria, work packages as **goals**, decisions spanning work packages, the gap list and readiness verdict |
+| 2 — work-package mini-spec | `task-<n>/TASK_<n>_MINI_SPEC.md` | required and unsupported behavior, acceptance evidence, affected interfaces, evidence matrix |
+| 3 — delivery stories | `task-<n>/DELIVERY_STORIES.md` | observable behavior and researcher- or system-relevant outcomes, not internal chores |
+| 4 — engineering tasks | `task-<n>/ENGINEERING_TASKS.md` | concrete red-first code, test, doc, benchmark, or evidence-pipeline work with objective done criteria |
 
-Define before implementation. Documents:
+If a decision affects multiple work packages or delivery stories, close it at milestone
+level; if it affects one work package, it may live in that mini-spec. Never fragment a
+cross-cutting choice across mini-specs. Templates: `references/templates-layer-2-4.md`;
+paths and naming: `references/artifact-map.md`.
 
-- **What Phase X is** and what it is not
-- **Prerequisites** before implementation can start
-- **Success criteria** for the phase
+## Milestone workflow
 
-Primary deliverables:
+Steps 1–3 and Step 4a are **spec-only** — no product code unless a spike is explicitly in
+scope. Step 4b is code generation. Then the milestone closes.
 
-| Document | Purpose |
-|----------|---------|
-| `DETAILED_PLANNING_PHASE_X.md` | Scope, tasks (as goals), acceptance criteria, traceability |
-| `ADRs_PHASE_X.md` | Architecture and scope decisions for the phase |
-| `PRE_IMPLEMENTATION_COMPLETION_CHECKLIST.md` | Gap list validating that the plan is detailed enough to implement |
+### Step 1 — Layer 1 contract
 
-Replace `PHASE_X` with the phase id matching the directory (e.g. `PHASE_2`,
-`PHASE_3_1`).
+Read `INITIAL_REQUIREMENTS.md` first when it exists and treat it as the authoritative
+product intent and acceptance baseline until Layer 1 supersedes it. Lift into
+`DETAILED_PLANNING_<MILESTONE_SLUG>.md`: in-scope / out-of-scope, success criteria,
+assumptions, milestone-level acceptance from `REQ-*` plus NFRs, and traceability rows
+`REQ-* → milestone goals`. Promote unresolved **open questions** into the
+pre-implementation checklist as gaps. Merge the three-tier operational boundaries
+(Always / Ask first / Never) into the milestone contract or agent runbook — they
+complement, not replace, acceptance criteria. If no init-req file exists, derive the same
+content from program-level sources or elicit it before locking Layer 1.
 
-**Practical rule:** If a decision affects multiple tasks, close it at the phase level (ADRs). If it affects only one task, defer to that task's mini-spec.
+Break the milestone into **goals with acceptance criteria**, not step-by-step coding
+instructions. Freeze the contracts the implementation must not contradict — support
+matrix, numeric thresholds, reference baselines, unsupported-behavior policy. Apply
+`references/practices-architecture.md` and `references/practices-testing.md`. Record
+whether `ARCHITECTURE_OVERVIEW.md` / `TECH_STACK.md` must be updated by this milestone.
+Do **not** split the whole milestone into Layer 3–4 upfront.
 
-### Layer 2: Task-Level Mini-Spec (before each task)
+### Step 2 — readiness review
 
-Before starting each task, define in a mini-spec:
+Decide whether Layer 1 is sufficient to start implementation and record a concise gap
+list in the checklist: open items, missing decisions, ambiguous contracts, missing
+current-state documentation.
 
-- Required behavior
-- Unsupported behavior
-- Acceptance evidence
-- Affected interfaces
-- Publication relevance (if any)
+### Step 3 — close the gaps
 
-**Location:**
-`docs/density_matrix_project/phases/phase-X/task-N/TASK_N_MINI_SPEC.md`
+For each open item, ask, decide, or escalate, and record the decision and its trade-offs
+in an ADR or in planning. Map each item to a concrete contract clarification. Re-read the
+updated docs for internal consistency. End with an explicit **implementation-ready /
+not-ready** verdict.
 
-Example:
-`docs/density_matrix_project/phases/phase-2/task-1/TASK_1_MINI_SPEC.md`
+Then run one **adversarial critique pass** before locking Layer 1 (`sdd-critic` or
+inline): which assumption would invalidate the most scope if wrong; which acceptance
+criterion is least testable; which `QA-*` has no fitness function; which goal has no
+evidence route; what belongs in a later milestone. Tighten or record every finding.
 
-### Layer 3: Stories (behavioral slices)
+### Step 4 — deliver slice by slice
 
-Stories describe **behavioral slices**, not code chores. Examples:
+The first slice is the **slice tracer**: a deliberately thin end-to-end path that proves
+the milestone's contracts, module boundaries, test route, and evidence route before
+broadening — one thin slice that validates the new scientific object, not horizontal
+infrastructure.
 
-- "Backend selection works for workflow X"
-- "Observable path supports Hamiltonian form Y"
-- "Unsupported gate families fail in a documented way"
+**Step 4a — plan the slice (spec-only).** For the current slice only: Layer 2 mini-spec
+as needed, then Layer 3 delivery stories, then Layer 4 engineering tasks. Specify each
+engineering task to a **code-ready** standard — objective done criteria, the tests to
+write, evidence-matrix rows with the lane they run in, and the `QA-*` fitness functions it
+must satisfy — precise enough that code generation needs no further design decision. If
+the slice surfaces a cross-slice contract change, a new ADR, or a readiness gap, resolve
+it in Layer 1 first. End with an explicit **code-ready / not-ready** verdict.
 
-### Layer 4: Engineering Tasks
+**Step 4b — generate code for the slice.** Implement the code-ready engineering tasks:
+code and tests against the acceptance tests, evidence matrix, and `QA-*` fitness
+functions, red-first. Ship the working chunk — builds, green, evidence regenerated,
+rollback-aware — and record `task-<n>/CLOSEOUT.md` with status `shipped`, the acceptance
+verdicts, and the reproduce commands. This pass makes **no** design, scope, contract, or
+ADR decision. If a task is ambiguous, blocked, or reveals a cross-slice gap, stop: record
+`task-<n>/STEP_4A_HANDBACK.md` with one question per gap (options, trade-offs,
+consequences, owning authority), set `task-<n>/CLOSEOUT.md` to `implementation handback`,
+and do not mark the slice shipped. Updating specs and current-state docs because reality
+differed is planning work, not code generation.
 
-Only here do you create:
+After a slice ships — or its handback is disposed, re-issues code-ready, and ships —
+return to Step 4a for the next slice. Do not pre-plan the remaining slices.
 
-- Code changes
-- Test additions
-- Benchmark runs
-- Doc updates
-- Validation runs
+### Milestone close
 
-## Industry Best-Practice Refinements
+When every slice is delivered and the outcome is met, produce
+`<MILESTONE_ID>_CLOSEOUT.md`: slices delivered, final acceptance status, the `REQ-*`
+evidence matrix, learnings, deferred items, and the roadmap handoff. Update
+`ARCHITECTURE_OVERVIEW.md` and `TECH_STACK.md` for any shipped change to architecture,
+stack, build, commands, or evidence pipelines. Confirm any `CHANGE_CONTROL.md` sign-off is
+recorded. Then hand control back to `create-product-roadmap` for revalidation. If a
+learning invalidated a core product assumption, that escalates to
+`create-product-statement`. A paper, abstract, or talk drawn from the milestone consumes
+the closeout's evidence matrix; it is not a spec artifact and does not live in `docs/specs/`.
 
-Apply these practices when authoring or reviewing phase artifacts:
+Templates for all four close and governance artifacts:
+`references/templates-closeout.md`.
 
-1. **Contract-first, decision-fast:** close cross-task decisions in ADRs early to
-   avoid implementation drift.
-2. **Behavior over mechanism:** write outcomes users/researchers can observe
-   before implementation details.
-3. **Testable acceptance language:** each required behavior should map to
-   reproducible evidence and a pass/fail criterion.
-4. **Traceability by default:** maintain requirement -> decision -> task ->
-   evidence links.
-5. **Explicit non-goals and unsupported behavior:** ambiguity is treated as
-   scope risk.
-6. **Publication-aware definitions of done:** claims in abstract/papers must be
-   backed by planned validation evidence.
-7. **Small vertical slices for delivery:** stories are the behavioral unit;
-   engineering tasks are implementation units under each story.
+## The planning / code-generation seam
 
-## Behavioral Story Template (Layer 3)
+All planning — the Layer 1 contract *and* each slice's just-in-time Layer 2/3/4 — is
+spec-only work owned by the planning role. Code generation is a separate, narrower pass:
+implement already-specified engineering tasks and nothing more. The seam sits **inside
+Step 4**, between 4a and 4b. Three committed subagents carry the roles, so the boundary is
+a capability rather than a promise:
 
-Use this template for story-level behavioral slices (not code chores):
+| Subagent | Enforcement | Owns |
+|----------|-------------|------|
+| `.cursor/agents/sdd-planner.md` | `readonly: true` — cannot write code | Layers 1–4 planning, verdicts |
+| `.cursor/agents/sdd-implementer.md` | write-enabled, must not edit `docs/specs/**` | Step 4b code and tests |
+| `.cursor/agents/sdd-critic.md` | `readonly: true` | adversarial critique before a verdict |
 
-```markdown
-### Story: [Behavioral outcome]
+Delegate with the Task tool: the planner returns a plan the parent writes to files, and the
+implementer reads those files. Never carry the handoff in chat memory. Models are pinned in
+the subagent files, not here.
 
-**User/Research value**
-- Why this behavior matters to the phase objective
+## Size budgets
 
-**Given / When / Then**
-- Given [initial system contract state]
-- When [workflow action]
-- Then [observable outcome and boundary behavior]
+An artifact past its budget is a slice that is too big. Split it; do not append. Open
+every artifact with a context header of at most ten lines — status, milestone or slice,
+scope, traces — so a partial read is still decision-useful.
 
-**Scope**
-- In: [what this story covers]
-- Out: [explicit exclusions]
+| Artifact | Lines | Artifact | Lines |
+|----------|-------|----------|-------|
+| `INITIAL_REQUIREMENTS.md` | 300 | `DELIVERY_STORIES.md` | 200 |
+| `DETAILED_PLANNING_*` | 400 | `ENGINEERING_TASKS.md` | 300 |
+| `ADRS_*` | 400 | `CLOSEOUT.md` (slice) | 200 |
+| `PRE_IMPLEMENTATION_COMPLETION_CHECKLIST.md` | 250 | `<MILESTONE_ID>_CLOSEOUT.md` | 250 |
+| `TASK_<n>_MINI_SPEC.md` | 250 | `STEP_4A_HANDBACK.md` | 200 |
 
-**Acceptance signals**
-- [Signal 1: measurable behavioral evidence]
-- [Signal 2: negative/unsupported behavior handling]
+## Verify
 
-**Traceability**
-- Phase requirement(s): [IDs or section references]
-- ADR decision(s): [ADR IDs]
+Run before any readiness, code-ready, shipped, or delivered claim. The linters are
+stdlib-only; the wrapper picks the `qgd` interpreter when conda is available.
+
+```bash
+bash .cursor/skills/spec-driven-development/scripts/specs_check.sh            # errors must be zero
+bash .cursor/skills/spec-driven-development/scripts/specs_check.sh --strict   # unwaived warnings become errors
+bash .cursor/skills/spec-driven-development/scripts/specs_check.sh docs/specs/milestones/<slug>
 ```
 
-Quality gate for stories:
-- independent enough to validate in isolation,
-- negotiable in implementation details,
-- valuable to workflow outcomes,
-- estimable and small enough for one implementation cycle,
-- testable via concrete acceptance signals.
+Fix findings; do not silence them. A finding you intend to keep is waived in
+`docs/specs/.sdd-lint.json` **with a reason**, never on an in-flight milestone.
+`--no-waivers` shows the debt the waivers suppress.
 
-## Engineering Task Template (Layer 4)
+## Completion criteria
 
-Use this template for implementation tasks created under a story:
+- **Layer 1 done:** the four Layer 1 files exist, the checklist states
+  implementation-ready or not-ready, `specs_check.sh` is error-free, and every `REQ-*`
+  maps to a milestone goal.
+- **Slice code-ready:** mini-spec (when warranted), delivery stories, and engineering
+  tasks exist for this slice only; each task names its tests, evidence rows and lanes, and
+  `QA-*` fitness functions; the verdict line is explicit.
+- **Slice shipped:** acceptance tests and fitness functions green in the named lanes, the
+  extension builds, `CLOSEOUT.md` status `shipped` with reproduce commands, current-state
+  docs updated if reality changed, `specs_check.sh` error-free.
+- **Milestone delivered:** `<MILESTONE_ID>_CLOSEOUT.md` covers every `REQ-*` with evidence,
+  any `CHANGE_CONTROL.md` sign-off is recorded, current-state docs are current, and control
+  is handed to `create-product-roadmap`.
 
-```markdown
-### Engineering Task: [Action-oriented title]
+## Gotchas in this repo
 
-**Implements story**
-- [Story title/reference]
+- Tests, benchmarks, and examples run in the **`qgd` conda environment**
+  (`conda run -n qgd --no-capture-output pytest …`). C++ or CMake changes need a rebuild
+  (`clean-rebuild` skill); `test-density-matrix` runs the suites; `TECH_STACK.md` lists
+  the lanes.
+- Evidence rows name their lane: fast pytest (`tests/density_matrix`, `tests/partitioning`,
+  `tests/VQE`, `-m "not slow"`), `slow`, a benchmark evidence pipeline
+  (`benchmarks/density_matrix/*/validation_pipeline.py`), the optional C++ tests
+  (`QGD_CTEST=1`), or the Qiskit Aer external reference.
+- The sequential `NoisyCircuit` executor is the exact baseline every partitioned, fused,
+  or new backend path is validated against; Aer is the external reference. A `QA-*` about
+  exactness becomes a fitness test against that baseline.
+- The delivered phase trees under `docs/density_matrix_project/archive/` use an earlier
+  convention. Read them for history; never extend them or copy their naming into
+  `docs/specs/` (mapping: `references/artifact-map.md`). Revisions are forward-only.
 
-**Change type**
-- code | tests | benchmark harness | docs | validation automation
+## References
 
-**Definition of done**
-- [Concrete completion condition 1]
-- [Concrete completion condition 2]
+Load only what the current step needs:
 
-**Execution checklist**
-- [ ] Implement targeted change
-- [ ] Add/adjust tests
-- [ ] Run validation/benchmarks needed by the story
-- [ ] Update docs/reproducibility artifacts
+| Read this | When |
+|-----------|------|
+| `references/artifact-map.md` — canonical paths, naming, budgets, current-state docs, legacy mapping | creating or naming an artifact |
+| `references/templates-layer-2-4.md` — mini-spec, delivery story, engineering task | Step 4a |
+| `references/templates-closeout.md` — slice and milestone closeout, handback, change control | slice close, milestone close, or handback |
+| `references/practices-architecture.md` — DDD, hexagonal, boundary maps, C4, ADR rubric | writing Layer 1 or an ADR |
+| `references/practices-testing.md` — BDD, test pyramid, evidence matrix, fitness functions, Definition of Ready/Done | writing acceptance, or gating a slice |
+| `references/rubrics.md` — planning and mini-spec rubrics, principles, anti-patterns | before a readiness or code-ready verdict |
 
-**Evidence produced**
-- [Test run reference]
-- [Benchmark/validation artifact]
+## Do not
 
-**Risks / rollback**
-- Risk: [known risk]
-- Rollback/mitigation: [how to revert or isolate impact]
-```
-
-Quality gate for engineering tasks:
-- maps to exactly one primary story outcome,
-- has objective done criteria,
-- produces evidence artifacts,
-- declares risk and mitigation.
-
-## Phase Workflow (Three Steps)
-
-The first step for any phase is creating the initial phase documents. Then validate, then close the checklist. Use the prompts below (substitute `phase-X` and `Phase X` for the target directory, e.g. `phase-2` / Phase 2, or `phase-3-1` / Phase 3.1).
-
-### Short Paper Surfaces (Two-Paper Model)
-
-Each phase produces two short paper surfaces with distinct roles:
-
-| Document | Purpose | Audience |
-|----------|---------|----------|
-| `SHORT_PAPER_PHASE_X.md` | Technical methods paper — structured sections, detailed validation plan, numerical thresholds, scope boundaries, claim boundary | Venue-ready technical audience |
-| `SHORT_PAPER_NARRATIVE.md` | Narrative positioning companion — scientific motivation, research arc, "why this phase matters", scientific positioning | General PhD-conference audience |
-
-The two surfaces are **not** different lengths of the same content. They serve
-genuinely different purposes:
-
-- **PHASE_X** answers "what is the contribution and how is it validated?"
-- **NARRATIVE** answers "why does this phase matter in the research arc?"
-
-Do **not** create a third `SHORT_PAPER_4PAGE.md`. The two surfaces above replace
-the earlier three-paper pattern (consolidated from phases 2-3 onward).
-
-### Publication Sync After Implementation
-
-Before revising `ABSTRACT_PHASE_X.md`, `SHORT_PAPER_PHASE_X.md`,
-`SHORT_PAPER_NARRATIVE.md`, or `PAPER_PHASE_X.md` after implementation work has
-started:
-
-1. Verify the current state from code, tests, and emitted artifacts, not only
-   from planning documents.
-2. Classify publication statements as:
-   - implemented and validated,
-   - implemented but only partially validated,
-   - scaffolded/planned only.
-3. Keep the technical short paper and full paper aligned to the current evidence
-   boundary.
-4. Keep `SHORT_PAPER_NARRATIVE.md` science-first unless the user explicitly asks
-   for a software/systems-paper framing:
-   - avoid repo file-path inventory,
-   - avoid internal task IDs and roadmap phrasing,
-   - avoid API-level detail that does not matter to the scientific audience.
-
-### Step 1: Create Initial Phase Documents
-
-Work out a detailed plan per `docs/density_matrix_project/planning/PLANNING.md` and all docs in `docs/density_matrix_project/planning/`, plus findings. Write into `DETAILED_PLANNING_PHASE_X.md`. Do not change code. Apply spec-driven development principles. Prepare publication outputs per `docs/density_matrix_project/planning/PUBLICATIONS.md` in 4 steps: (1) technical short paper in `SHORT_PAPER_PHASE_X.md`, (2) narrative positioning short paper in `SHORT_PAPER_NARRATIVE.md`, (3) abstract in `ABSTRACT_PHASE_X.md` for PhD conference presentation, (4) full paper in `PAPER_PHASE_X.md`. Put all phase documents in `docs/density_matrix_project/phases/phase-X/`. Break down implementation into tasks and acceptance criteria. Tasks are goals, not implementations. No code snippets in phase docs except API-reference ones after implementation. Document all phase decisions in `ADRs_PHASE_X.md`.
-
-**Example invocation (phase 2):** "Work out a detailed plan for phase 2 according to @docs/density_matrix_project/planning/PLANNING.md and according to all the documentation in @docs/density_matrix_project/planning and according to all the findings. Write it into file DETAILED_PLANNING_PHASE_2.md. Do not change code. Apply spec driven development principles. Prepare outputs per @docs/density_matrix_project/planning/PUBLICATIONS.md in 4 steps: (1) technical short paper in SHORT_PAPER_PHASE_2.md, (2) narrative positioning short paper in SHORT_PAPER_NARRATIVE.md, (3) abstract in ABSTRACT_PHASE_2.md for PhD conference presentation, (4) full paper in PAPER_PHASE_2.md. Put all new phase-2 documents in @docs/density_matrix_project/phases/phase-2. Break down the phase 2 implementation into tasks and acceptance criteria. Tasks are goals, not implementations. No code snippets in phase files except for the API reference related ones after the implementation. Document all phase-2 decisions in detail in ADRs_PHASE_2.md."
-
-### Step 2: Validate Completeness and Implementation Readiness
-
-Validate whether `DETAILED_PLANNING_PHASE_X.md` is detailed and thorough enough to start implementation. Turn the validation into a concise gap list in `PRE_IMPLEMENTATION_COMPLETION_CHECKLIST.md`.
-
-**Example invocation (phase 2):** "Validate if docs/density_matrix_project/phases/phase-2/DETAILED_PLANNING_PHASE_2.md is detailed and thorough enough to start implementation. Turn this validation into a concise gap list in docs/density_matrix_project/phases/phase-2/PRE_IMPLEMENTATION_COMPLETION_CHECKLIST.md."
-
-### Step 3: Close Pre-Implementation Checklist Items
-
-Close each open checklist item so the phase contract is solid. Ask questions or decide; record the decision and trade-offs. Map each open item to a concrete contract decision or clarification. Define the relevant phase decisions (e.g. backend-selection, observable, bridge, support-matrix, workflow-anchor, benchmark-minimum, acceptance-threshold) with trade-offs. Update planning, ADRs, and checklist. Re-read updated docs for internal consistency and verify the checklist is solidly closed and implementation-ready.
-
-**Example invocation (phase 2):** "Close the pre implementation checklist items for phase 2 to make the phase 2 contract solid enough. Ask question or decide but record the decision and the trade-offs. Review the Phase 2 pre-implementation checklist and map each open item to a concrete contract decision or required clarification. Define backend-selection, observable, bridge, support-matrix, workflow-anchor, benchmark-minimum, and acceptance-threshold decisions with trade-offs. Update the Phase 2 planning, ADR, and checklist docs to record decisions, trade-offs, and checklist closure. Re-read updated Phase 2 docs for internal consistency and verify the checklist is solidly closed and ready for implementation."
-
-Note: Adjust decision areas per phase — Phase 2 needs all listed; later phases may differ.
-
-### Sequence Summary
-
-1. **Step 1** → Creates DETAILED_PLANNING, ADRs, abstract, two short papers (technical + narrative), full paper under `docs/density_matrix_project/phases/phase-X/`.
-2. **Step 2** → Creates `PRE_IMPLEMENTATION_COMPLETION_CHECKLIST.md` with initial gap list.
-3. **Step 3** → Closes each gap; updates planning, ADRs, checklist until implementation-ready.
-4. **Implementation** → Create task mini-specs as needed; implement task by task.
-
-### After Layer 1 Closure
-
-Once `PRE_IMPLEMENTATION_COMPLETION_CHECKLIST.md` is fully closed and the phase
-is implementation-ready:
-
-- do **not** fully story-split the entire phase before coding,
-- create Layer 3 stories and Layer 4 engineering tasks only for the **first
-  vertical slice**,
-- prefer one thin end-to-end slice that validates the new scientific object
-  before broad horizontal infrastructure work,
-- expand bundle/pipeline/schema migration only after that first slice produces
-  real runtime and evidence feedback.
-
-## Spec-Driven Principles
-
-1. Define contracts, scope, and success criteria **before** implementation.
-2. Separate **required behavior** from implementation choices.
-3. Maintain traceability from milestone goals to validation evidence.
-4. Treat **unsupported** and **deferred** cases as documented outcomes.
-5. Use publication evidence requirements to guide "done."
-6. Keep task descriptions **goal-oriented**, not implementation-prescriptive.
-
-## Document Structure for Phase Planning
-
-`DETAILED_PLANNING_PHASE_X.md` should include:
-
-- Purpose and mission
-- Source-of-truth hierarchy
-- Traceability matrix (requirements → phase interpretation)
-- In-scope / out-of-scope
-- Assumptions
-- Success conditions
-- Frozen implementation contracts (backend, observable, bridge, support matrix, workflow anchor, benchmark minimum, numeric thresholds)
-- Task breakdown (goals, why, success looks like, evidence required)
-- Full-phase acceptance criteria
-- Validation and benchmark matrix
-- Risks and decision gates
-- Non-goals
-- Expected outcome
-
-## Template Validation Rubric (ADRs, Planning, Mini-Spec)
-
-Use this rubric to validate template quality before implementation starts.
-
-### ADR template must include
-
-- title and unique ADR ID,
-- status,
-- context,
-- decision,
-- rationale,
-- consequences,
-- rejected alternatives,
-- upstream alignment and traceability.
-
-### Detailed planning template must include
-
-- purpose/mission and source-of-truth hierarchy,
-- traceability matrix,
-- in-scope/out-of-scope boundaries,
-- assumptions and success conditions,
-- frozen implementation contracts and numeric thresholds,
-- task breakdown as goals plus evidence expectations,
-- acceptance criteria, validation matrix, risks, and decision gates.
-
-### Task mini-spec template must include
-
-- required behavior,
-- unsupported behavior,
-- acceptance evidence,
-- affected interfaces,
-- publication relevance.
-
-### Historical rubric snapshot (Phase 2, for calibration only)
-
-Phase 2 artifacts were reviewed once against this rubric; **new phases should
-be validated again** — this is not a standing “Pass” for future work.
-
-- **ADRs template:** Pass (all core ADR sections present and consistent).
-- **Detailed planning template:** Pass with strength (full contract structure,
-  thresholds, tasks, risks, gates).
-- **Task mini-spec template:** Pass (required sections present, behavior first).
-
-Improvements noted during that review (still recommended):
-- add explicit `Given/When/Then` behavioral wording where helpful,
-- add a lightweight assumptions/dependencies subsection to mini-specs when
-  external coupling is significant,
-- keep evidence references stable (IDs or artifact names) for auditability.
-
-## Pre-Implementation Checklist
-
-`PRE_IMPLEMENTATION_COMPLETION_CHECKLIST.md`:
-
-- Maps each open item to the contract that closes it
-- States readiness verdict (implementation-ready or not)
-- Records closure decisions and trade-offs
-- Includes a **Go / No-Go rule** for when implementation can begin
-
-## Do Not
-
-- Write implementation code in phase docs except API references post-implementation
-- Fully story-split the entire phase before starting
-- Defer multi-task decisions to task mini-specs (close at phase level)
-- Treat papers as a downstream retrofit — prepare them in parallel with planning
-
-## Additional Resources
-
-**Canonical workflow** (three steps, two-paper model, path rules) is this file.
-[reference.md](reference.md) holds copy-paste prompts and historical Phase 2
-closure examples; it must stay aligned with this SKILL — if in doubt, edit
-SKILL first, then mirror prompts in reference.
-
-## Example Phase 2 References
-
-- `docs/density_matrix_project/phases/phase-2/DETAILED_PLANNING_PHASE_2.md`
-- `docs/density_matrix_project/phases/phase-2/ADRs_PHASE_2.md`
-- `docs/density_matrix_project/phases/phase-2/PRE_IMPLEMENTATION_COMPLETION_CHECKLIST.md`
-- `docs/density_matrix_project/phases/phase-2/ABSTRACT_PHASE_2.md`
-- `docs/density_matrix_project/phases/phase-2/SHORT_PAPER_PHASE_2.md`
-- `docs/density_matrix_project/phases/phase-2/SHORT_PAPER_NARRATIVE.md`
-- `docs/density_matrix_project/phases/phase-2/PAPER_PHASE_2.md`
-
-Sub-phase example (same artifact set, `PHASE_3_1` filename stem):
-`docs/density_matrix_project/phases/phase-3-1/DETAILED_PLANNING_PHASE_3_1.md`
+- Put implementation code in milestone planning, unless the team allows an interface sketch.
+- Make design, scope, contract, or ADR decisions during Step 4b, or invent acceptance
+  criteria there. Stop and hand back instead.
+- Write paper, abstract, or slide surfaces inside `docs/specs/`, or gate a slice on them.
+- Answer a question by starting the workflow: answer from the specs and the codebase.

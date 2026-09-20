@@ -18,3 +18,5 @@ tmp/
 compile_commands.json
 .vscode/settings.json
 Test_GROQ_Hamiltonian.dat
+docs/density_matrix_project/cscs2026/
+.cursor/sdd-spec-edits.log

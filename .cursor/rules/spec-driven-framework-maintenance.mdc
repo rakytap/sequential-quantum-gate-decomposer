@@ -1,0 +1,87 @@
+---
+description: Keep the project SDD skills, subagents, linters, hooks and guide consistent when editing the framework itself.
+globs: ".cursor/skills/create-*/**,.cursor/skills/spec-driven-development/**,.cursor/agents/*.md,.cursor/hooks.json,.cursor/hooks/**,docs/sdd-skills-guide.md,AGENTS.md,docs/specs/.sdd-lint.json"
+alwaysApply: false
+---
+
+# SDD framework maintenance
+
+When editing the SDD skills, their subagents, their linters, their hooks, or
+`docs/sdd-skills-guide.md`, preserve the four-skill stack and its traceability spine:
+
+`CAP-*/QA-* → M# → REQ-* → delivery story → engineering task → evidence`
+
+## Verify before you finish
+
+```bash
+bash .cursor/skills/spec-driven-development/scripts/specs_check.sh            # artifact structure + spine on the real tree
+bash .cursor/skills/spec-driven-development/scripts/specs_check.sh --strict
+python3 -m py_compile .cursor/skills/spec-driven-development/scripts/*.py .cursor/hooks/*.py
+wc -l .cursor/skills/*/SKILL.md                                                # each body under 250 lines
+```
+
+If a change makes them fail, the change is incomplete — do not relax the check to match the
+change.
+
+## Skill shape
+
+- **Progressive disclosure is the architecture.** A `SKILL.md` is a router: workflow, gates,
+  budgets, and navigation. Detail lives in `references/`, each with a stated "read when".
+  Bodies stay under **250 lines** for the four SDD skills (500 is the spec ceiling, not a
+  target). New material defaults to a reference, not the body.
+- **References stay one level deep** from `SKILL.md`, and every reference over 100 lines
+  opens with a `Contents` list.
+- **The description is routing code, not a summary.** Keep it to the trigger plus the nearest
+  boundary, at most 60 words, and state what the skill is *not* for. Every description change
+  is an interface change: update that skill's `evals/evals.json` trigger cases with it.
+- **One copy per skill name.** `.cursor/skills/` holds project-authored skills. Never fork a
+  skill to add project context — add a rule under `.cursor/rules/` instead.
+- **No dated or time-sensitive content in a body.** Revision history goes in the skill's
+  `CHANGELOG.md`; model names go in `.cursor/agents/*.md`, never in a skill.
+- **One canonical definition.** The stack diagram, the shared glossary, and the end-to-end
+  flow live only in `docs/sdd-skills-guide.md`. Skills point at it.
+
+## Content that must survive
+
+- The distinction between the **product walking skeleton** (first roadmap milestone) and the
+  **slice tracer** (first vertical slice inside a milestone).
+- **Layer 2** as a task/work-package mini-spec at `task-<n>/TASK_<n>_MINI_SPEC.md`, distinct
+  from Layer 4 engineering tasks; Layer 3/4 as `DELIVERY_STORIES.md` / `ENGINEERING_TASKS.md`.
+- `ARCHITECTURE_OVERVIEW.md` and `TECH_STACK.md` as current-state self-documentation: read
+  during planning, updated at milestone close, and never a substitute for ADR rationale or
+  product intent.
+- The named milestone-close and governance artifacts: `<MILESTONE_ID>_CLOSEOUT.md`,
+  `task-<n>/CLOSEOUT.md`, `task-<n>/STEP_4A_HANDBACK.md`, `CHANGE_CONTROL.md`.
+- The **bidirectional** framing of `create-initreq-for-sdd` (create *and* evolve, preserving
+  stable `REQ-*` ids) and the **adversarial critique pass** in all four skills.
+- The **red-first (TDD)** Layer 4 engineering-task template.
+- DDD, clean/hexagonal, BDD, test pyramid, evidence matrices, `QA-*` fitness functions, ADRs,
+  C4, release/rollback, and operational-readiness guidance.
+- **Per-artifact size budgets** and the just-in-time reading order, including the rule that a
+  slice plan reads the previous slice's `CLOSEOUT.md` rather than its mini-specs.
+- The **planning / code-generation seam** as a capability boundary:
+  `.cursor/agents/sdd-planner.md` and `sdd-critic.md` are `readonly: true`;
+  `sdd-implementer.md` is write-enabled and must not edit `docs/specs/**`.
+- The repository-specific facts the skills rely on: the `qgd` conda lanes, the sequential
+  `NoisyCircuit` exact baseline and Qiskit Aer external reference, the benchmark evidence
+  pipelines, the frozen archive under `docs/density_matrix_project/archive/`, and the rule
+  that publication surfaces are not spec artifacts.
+
+## Changing the linters
+
+`scripts/` under the SDD skill are the framework's fitness functions. When you change a rule:
+
+- exercise the new rule against a throwaway milestone tree under `/tmp` (pass it as the
+  `--root`) before relying on it — a linter rule nobody has seen fire will silently stop
+  firing;
+- keep them **stdlib-only** and runnable with any Python ≥ 3.10, because the planning agent
+  and the `stop` hook call them mid-session through `python3`;
+- express historical exceptions as waivers in `docs/specs/.sdd-lint.json` **with a reason**,
+  never by weakening a check. Never waive a finding on an in-flight milestone.
+
+## Change together
+
+If one artifact changes a contract, template, path, term, budget, or check, update the
+companion skill(s), their `CHANGELOG.md`, the guide, `AGENTS.md`, and
+`spec-driven-docs-specs.mdc` in the same change. Revisions are **forward-only**: shipped
+slices keep the convention they shipped under, and the changelog says so.

@@ -1,0 +1,60 @@
+{
+  "skill": "create-product-roadmap",
+  "_comment": [
+    "Hard negatives are drawn from the neighbouring SDD skills. The sharpest boundary is",
+    "against create-initreq-for-sdd: 'open the next milestone' is roadmap work up to the",
+    "handoff, and requirements work after it."
+  ],
+
+  "trigger": [
+    { "expect": "should_trigger", "prompt": "Turn the product statement into Now/Next/Later outcome milestones" },
+    { "expect": "should_trigger", "prompt": "Sequence the remaining milestones by value, risk and dependency" },
+    { "expect": "should_trigger", "prompt": "The db-schema-migrations milestone shipped — revalidate the remaining roadmap from its closeout" },
+    { "expect": "should_trigger", "prompt": "Re-scope and split the milestones on the Later horizon and refresh the dependency graph" },
+    { "expect": "should_trigger", "prompt": "Which milestone should be promoted to Now, and what measurable outcome does it carry?" },
+    { "expect": "should_trigger", "prompt": "Make the first milestone a product walking skeleton and record the sequencing rationale" },
+    { "expect": "should_trigger", "prompt": "Append a revalidation log entry recording what we learned and what changed in the plan" },
+
+    { "expect": "should_not_trigger", "prompt": "Draft our durable product vision and North Star statement" },
+    { "expect": "should_not_trigger", "prompt": "Write a PR-FAQ to pressure-test the customer benefit" },
+    { "expect": "should_not_trigger", "prompt": "Write the REQ-* requirements baseline with EARS acceptance and NFRs for this milestone" },
+    { "expect": "should_not_trigger", "prompt": "Produce the Layer 1 detailed planning, ADRs and readiness checklist" },
+    { "expect": "should_not_trigger", "prompt": "Implement the code-ready engineering tasks for this slice and ship it" },
+    { "expect": "should_not_trigger", "prompt": "Write the Layer 2 mini-spec and the evidence matrix for the next work package" }
+  ],
+
+  "behavior": [
+    {
+      "prompt": "From docs/specs/PRODUCT_STATEMENT.md, draft docs/specs/ROADMAP.md as Now/Next/Later milestones.",
+      "expected_behavior": [
+        "Reads the product statement first and lists the CAP-*/QA-* it must cover",
+        "States every milestone as a measurable outcome, never as 'build feature X'",
+        "Gives each milestone a filesystem-safe milestone-slug and non-empty CAP-*/QA-* traces",
+        "Flags the first milestone as the product walking skeleton, including creating the current-state docs when missing",
+        "Runs the critique pass and asks the sequencing checkpoint question",
+        "States the handoff to create-initreq-for-sdd for the Now milestone"
+      ]
+    },
+    {
+      "prompt": "Milestone MC shipped. Revalidate the roadmap.",
+      "expected_behavior": [
+        "Reads MC_CLOSEOUT.md as the revalidation input rather than the slice-level task files",
+        "Confirms any CHANGE_CONTROL.md sign-off before marking the milestone Delivered",
+        "Records the outcome actually achieved with the measure actually hit",
+        "Names the concrete roadmap change caused by each learning",
+        "Confirms ARCHITECTURE_OVERVIEW.md and TECH_STACK.md are current, or records a follow-up",
+        "Appends a dated revalidation log entry and promotes the next milestone to Now",
+        "Escalates to create-product-statement only if a core assumption broke"
+      ]
+    },
+    {
+      "prompt": "Is our current milestone sequence right?",
+      "expected_behavior": [
+        "Answers from the roadmap and closeouts instead of rewriting the file",
+        "Checks that the next Now milestone still validates the riskiest remaining assumption",
+        "Flags orphan milestones, non-deployable milestones and date-stamped long-range commitments",
+        "Does not invent new milestones without saying they are proposals"
+      ]
+    }
+  ]
+}
