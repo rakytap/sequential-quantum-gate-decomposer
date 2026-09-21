@@ -81,12 +81,16 @@ Always activate the same environment first:
 conda activate qgd
 ```
 
-Python tests:
+Python tests (density-matrix regression lane; see `tests/conftest.py` for membership):
 
 ```bash
-pytest tests/density_matrix/ -v
-pytest tests/partitioning/ -v
-pytest tests/VQA/ -v
+pytest -m density_matrix -v
+```
+
+Fast lane (excludes `slow`):
+
+```bash
+pytest -m "density_matrix and not slow" -v
 ```
 
 Benchmark tests:

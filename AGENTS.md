@@ -53,7 +53,7 @@ abstracts are not spec artifacts and never gate a slice.
 ```bash
 bash .cursor/skills/spec-driven-development/scripts/specs_check.sh             # SDD structure + spine (errors only)
 bash .cursor/skills/spec-driven-development/scripts/specs_check.sh --strict    # + size budgets, stale evidence, legacy naming
-conda run -n qgd --no-capture-output pytest tests/density_matrix tests/partitioning tests/VQE -m "not slow"
+conda run -n qgd --no-capture-output pytest -m "density_matrix and not slow"
 conda run -n qgd --no-capture-output python benchmarks/density_matrix/correctness_evidence/validation_pipeline.py
 ```
 

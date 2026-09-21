@@ -29,6 +29,19 @@ import numpy as np
 from squander.gates.qgd_Circuit_Wrapper import qgd_Circuit_Wrapper
 
 
+def _circuit_extension_call(method, /, *args, is_f32=False, **kwargs):
+    """Call a circuit C-extension method without stale-binary keyword issues.
+
+    The installed extension may predate ``is_f32`` keyword support. Omit that
+    keyword on the default float64 path; pass it only when float32 is requested.
+    """
+    if is_f32:
+        return method(*args, is_f32=True, **kwargs)
+    if kwargs:
+        return method(*args, **kwargs)
+    return method(*args)
+
+
 from squander.gates.gates_Wrapper import (
     U1,
     U2,
@@ -512,7 +525,13 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
         if control_qbits is None:
             control_qbits = []
 
-        super().add_GENERAL(operation_mtx, target_qbits, control_qbits, is_f32=is_f32)
+        _circuit_extension_call(
+            super().add_GENERAL,
+            operation_mtx,
+            target_qbits,
+            control_qbits,
+            is_f32=is_f32,
+        )
 
     def get_Matrix(self, parameters_mtx, is_f32=False):
         """Retrieve the matrix representation of the circuit operation.
@@ -530,8 +549,11 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
             dtype=np.float32 if is_f32 else np.float64,
         )
 
-        # call the C wrapper function
-        return super().get_Matrix(parameters_mtx, is_f32=is_f32)
+        return _circuit_extension_call(
+            super().get_Matrix,
+            parameters_mtx,
+            is_f32=is_f32,
+        )
 
     def get_Parameter_Num(self):
         """Get the number of free parameters in the gate structure.
@@ -553,8 +575,13 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
             is_f32: Use float32/complex64 precision (bool, optional, default=False)
         """
 
-        # call the C wrapper function
-        super().apply_to(parameters_mtx, unitary_mtx, parallel=parallel, is_f32=is_f32)
+        _circuit_extension_call(
+            super().apply_to,
+            parameters_mtx,
+            unitary_mtx,
+            parallel=parallel,
+            is_f32=is_f32,
+        )
 
     def apply_from_right(self, parameters_mtx, unitary_mtx, parallel=1, is_f32=False):
         """Apply the gate circuit from the right on the input matrix.
@@ -566,8 +593,13 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
             is_f32: Use float32/complex64 precision (bool, optional, default=False)
         """
 
-        # call the C wrapper function
-        super().apply_from_right(parameters_mtx, unitary_mtx, parallel=parallel, is_f32=is_f32)
+        _circuit_extension_call(
+            super().apply_from_right,
+            parameters_mtx,
+            unitary_mtx,
+            parallel=parallel,
+            is_f32=is_f32,
+        )
 
     def apply_to_list(self, inputs, parameters_mtx, parallel=1, is_f32=False):
         """Apply the circuit to a list of input matrices with float32/float64 dispatch.
@@ -578,7 +610,13 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
             parallel: Parallel execution mode (int, optional, default=1)
             is_f32: Use float32/complex64 precision (bool, optional, default=False)
         """
-        super().apply_to_list(inputs, parameters_mtx, parallel, is_f32=is_f32)
+        _circuit_extension_call(
+            super().apply_to_list,
+            inputs,
+            parameters_mtx,
+            parallel=parallel,
+            is_f32=is_f32,
+        )
 
     def apply_derivate_to(self, parameters_mtx, unitary_mtx, parallel=1, is_f32=False):
         """Evaluate the derivative of the circuit on an input matrix w.r.t. all free parameters.
@@ -592,7 +630,13 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
         Returns:
             list of numpy arrays: One matrix per free parameter (complex128 or complex64 when is_f32=True)
         """
-        return super().apply_derivate_to(parameters_mtx, unitary_mtx, parallel, is_f32=is_f32)
+        return _circuit_extension_call(
+            super().apply_derivate_to,
+            parameters_mtx,
+            unitary_mtx,
+            parallel=parallel,
+            is_f32=is_f32,
+        )
 
     def apply_to_combined(self, parameters_mtx, unitary_mtx, parallel=1, is_f32=False):
         """Evaluate forward circuit action and all derivatives in one call.
@@ -609,7 +653,13 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
         Returns:
             list of numpy arrays: [forward_output, derivative_0, derivative_1, ...]
         """
-        return super().apply_to_combined(parameters_mtx, unitary_mtx, parallel, is_f32=is_f32)
+        return _circuit_extension_call(
+            super().apply_to_combined,
+            parameters_mtx,
+            unitary_mtx,
+            parallel=parallel,
+            is_f32=is_f32,
+        )
 
     def get_Second_Renyi_Entropy(
         self, parameters=None, input_state=None, qubit_list=None

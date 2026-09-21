@@ -66,36 +66,40 @@ python -c "from squander.density_matrix import DensityMatrix, NoisyCircuit; prin
 
 ### 2) Python Test Suite
 
-Run full density-matrix tests:
+Run the density-matrix regression lane (auto-tagged in `tests/conftest.py`):
 
 ```bash
-pytest tests/density_matrix/ -v
-pytest tests/partitioning/ -v
-pytest tests/VQE/ -v
-pytest examples/density_matrix/ -v
-pytest examples/VQE/ -v
-pytest benchmarks/density_matrix/ -v
+pytest -m density_matrix -v
 ```
 
 Notes:
-- `pytest.ini` sets `testpaths = ./tests`
-- marker available: `slow`
-- current test file: `tests/density_matrix/test_density_matrix.py`
+- `pytest.ini` sets `testpaths = ./tests` and ignores `tests/partitioning/evidence` by default
+- markers: `density_matrix` (project regression suite), `slow`
+- membership: `tests/density_matrix/`, noisy `tests/partitioning/` (not `test_partition.py`), `tests/VQE/test_VQE.py`
 
-Run only slow tests:
+Run only slow density-matrix tests:
 
 ```bash
-pytest tests/density_matrix/ -v -m slow
-pytest tests/partitioning/ -v -m slow
-pytest tests/VQE/ -v -m slow
+pytest -m "density_matrix and slow" -v
 ```
 
-Run only non-slow tests:
+Run only non-slow density-matrix tests:
 
 ```bash
-pytest tests/density_matrix/ -v -m "not slow"
-pytest tests/partitioning/ -v -m "not slow"
-pytest tests/VQE/ -v -m "not slow"
+pytest -m "density_matrix and not slow" -v
+```
+
+Optional evidence validators under `tests/partitioning/evidence` (not in default collection):
+
+```bash
+pytest tests/partitioning/evidence -o addopts= -m density_matrix -v
+```
+
+Examples and benchmark scripts (not pytest modules):
+
+```bash
+python examples/density_matrix/basic_usage.py
+pytest benchmarks/density_matrix/ -v
 ```
 
 Run a single test:

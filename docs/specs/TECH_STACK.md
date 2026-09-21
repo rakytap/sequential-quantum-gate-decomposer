@@ -37,8 +37,8 @@ ignores `tests/partitioning/evidence`, and defines the `slow` marker.
 
 | Lane | Command | Notes |
 |------|---------|-------|
-| **Fast pytest** | `pytest tests/density_matrix tests/partitioning tests/VQE -m "not slow"` | Default gate for a slice; minutes |
-| **Slow pytest** | `pytest tests/density_matrix tests/partitioning tests/VQE -m slow` | Long-running cases; run before a closeout |
+| **Fast pytest** | `pytest -m "density_matrix and not slow"` | Default gate for a slice; minutes |
+| **Slow pytest** | `pytest -m "density_matrix and slow"` | Long-running cases; run before a closeout |
 | **Benchmark tests** | `pytest benchmarks/density_matrix -v` | Validators for the evidence bundles |
 | **Correctness evidence pipeline** | `python benchmarks/density_matrix/correctness_evidence/validation_pipeline.py` | Regenerates counted correctness bundles vs the sequential reference (and Aer where required) |
 | **Performance evidence pipeline** | `python benchmarks/density_matrix/performance_evidence/validation_pipeline.py` | Regenerates performance/diagnosis bundles; run correctness first |

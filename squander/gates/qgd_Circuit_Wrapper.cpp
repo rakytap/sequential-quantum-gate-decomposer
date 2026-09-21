@@ -795,11 +795,11 @@ qgd_Circuit_Wrapper_get_Matrix( qgd_Circuit_Wrapper *self, PyObject *args, PyObj
     PyArrayObject * parameters_arr = NULL;
     int is_f32 = 0;
 
-    static char *kwlist[] = {(char*)"", (char*)"is_f32", NULL};
+    static char *kwlist[] = {(char*)"parameters", (char*)"is_f32", NULL};
 
     // parsing input arguments
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|p", kwlist, &parameters_arr, &is_f32))
-        return Py_BuildValue("i", -1);
+        return NULL;
 
     if (is_f32) {
         if (!PyArray_IS_C_CONTIGUOUS(parameters_arr)) {
@@ -866,7 +866,7 @@ qgd_Circuit_Wrapper_apply_to( qgd_Circuit_Wrapper *self, PyObject *args, PyObjec
     int parallel = 1;
     int is_f32 = 0;
     
-    static char *kwlist[] = {(char*)"", (char*)"", (char*)"parallel", (char*)"is_f32", NULL};
+    static char *kwlist[] = {(char*)"parameters", (char*)"unitary", (char*)"parallel", (char*)"is_f32", NULL};
 
 
     // parsing input arguments
@@ -1015,7 +1015,7 @@ qgd_Circuit_Wrapper_apply_from_right( qgd_Circuit_Wrapper *self, PyObject *args,
     int parallel = 1;
     int is_f32 = 0;
 
-    static char *kwlist[] = {(char*)"", (char*)"", (char*)"parallel", (char*)"is_f32", NULL};
+    static char *kwlist[] = {(char*)"parameters", (char*)"unitary", (char*)"parallel", (char*)"is_f32", NULL};
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "OO|ip", kwlist, &parameters_arr, &unitary_arg, &parallel, &is_f32 )) {
         PyErr_SetString(PyExc_Exception, "Unable to parse input");
