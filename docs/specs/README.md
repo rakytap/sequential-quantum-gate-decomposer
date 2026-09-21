@@ -1,14 +1,14 @@
 # `docs/specs/` — the spec root
 
 > **Status:** baseline established; product statement drafted (v0.3, at stakeholder checkpoint);
-> roadmap drafted (v0.5, source-verified scientific correction, at stakeholder checkpoint).
+> roadmap drafted (v0.6, scientific-yield refinements, at stakeholder checkpoint).
 > **How to work here:** `docs/sdd-skills-guide.md`. Editing this tree activates the
 > `spec-driven-docs-specs` rule.
 
 | Artifact | State | Produced by |
 |----------|-------|-------------|
 | `PRODUCT_STATEMENT.md` (`CAP-*`, `QA-*`) | draft v0.3 — `CAP-001…007`, `QA-001…012`, at stakeholder checkpoint | `create-product-statement` |
-| `ROADMAP.md` (`M#`, Now/Next/Later) | draft v0.5 — M1–M3A Delivered; M4 `canonical-attributed-energy` is Now walking skeleton; Phase 4 bounded to M4/M6/M7/M8/M9 plus the M5 risk screen; gradient product work gated by RG-2 | `create-product-roadmap` |
+| `ROADMAP.md` (`M#`, Now/Next/Later) | draft v0.6 — M1–M3A Delivered; M4 `canonical-attributed-energy` is Now walking skeleton; Phase 4 bounded to M4/M6/M7/M8/M9 plus the M5 detectability screen | `create-product-roadmap` |
 | `ARCHITECTURE_OVERVIEW.md` | current-state, seeded from delivered Phases 1–3.1 | `spec-driven-development` |
 | `TECH_STACK.md` | current-state | `spec-driven-development` |
 | `milestones/<slug>/INITIAL_REQUIREMENTS.md` (`REQ-*`) | per milestone | `create-initreq-for-sdd` |
