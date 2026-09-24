@@ -2210,15 +2210,17 @@ N_Qubit_Decomposition_adaptive::add_layer_to_imported_gate_structure() {
     std::stringstream sstream;
     sstream << "Add new layer to the adaptive gate structure." << std::endl;	        
     print(sstream, 2);
-
-    Gates_block* layer = construct_adaptive_gate_layers();
-
-
-    combine( layer );
+    
+    
+    Gates_block* layer = construct_adaptive_gate_layers();   
 
     Matrix_real tmp( 1, optimized_parameters_mtx.size() + layer->get_parameter_num() );
-    memset( tmp.get_data(), 0, tmp.size()*sizeof(double) );
-    memcpy( tmp.get_data(), optimized_parameters_mtx.get_data(), optimized_parameters_mtx.size()*sizeof(double) );
+    memset( tmp.get_data(), 0, tmp.size()*sizeof(double) );    
+    memcpy( tmp.get_data()+layer->get_parameter_num(), optimized_parameters_mtx.get_data(), optimized_parameters_mtx.size()*sizeof(double) );
+
+    layer->combine( this );    
+    release_gates();    
+    combine( layer );
 
     optimized_parameters_mtx = tmp;    
 
