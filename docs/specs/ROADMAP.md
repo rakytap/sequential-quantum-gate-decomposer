@@ -1,65 +1,65 @@
 # Roadmap — SQUANDER density-matrix track
 
-> **Status:** draft v0.6 (detectability, negative-result, and descriptive-evidence refinements), at stakeholder checkpoint ·
+> **Status:** draft v0.7 (scientific redesign after the 2026-09-23 review, two critique passes), at stakeholder checkpoint ·
 > **Owner skill:** `create-product-roadmap` ·
-> **Last revalidated:** 2026-09-21 — scientific-yield pass on v0.5; no milestone under the new
-> convention has closed yet ·
-> **Upstream:** [`PRODUCT_STATEMENT.md`](PRODUCT_STATEMENT.md) v0.3
-> (`CAP-001…007`, `QA-001…012`) ·
-> **Downstream:** `milestones/<slug>/INITIAL_REQUIREMENTS.md` via
-> `create-initreq-for-sdd` ·
-> **Sequencing inputs:** archived
-> [`PLANNING.md`](../density_matrix_project/archive/planning/PLANNING.md) §3, §6, §8;
-> [`RESEARCH_ALIGNMENT.md`](../density_matrix_project/RESEARCH_ALIGNMENT.md);
+> **Last revalidated:** 2026-09-23 — product statement v0.4 and SQUANDER feasibility pilots; no
+> milestone under the new convention has closed yet ·
+> **Upstream:** [`PRODUCT_STATEMENT.md`](PRODUCT_STATEMENT.md) v0.4 (`CAP-001…008`, `QA-001…013`) ·
+> **Downstream:** `milestones/<slug>/INITIAL_REQUIREMENTS.md` via `create-initreq-for-sdd` ·
+> **Sequencing inputs:** archived [`PLANNING.md`](../density_matrix_project/archive/planning/PLANNING.md)
+> §3, §6, §8; [`RESEARCH_ALIGNMENT.md`](../density_matrix_project/RESEARCH_ALIGNMENT.md);
 > [`PHASE4_REQS.md`](PHASE4_REQS.md) ·
 > **Not:** requirements, architecture or ADR rationale, dates, or publication planning.
 
 ## 1. Summary & horizon
 
 The [product vision](PRODUCT_STATEMENT.md#1-vision) is an exact open-system simulation module
-inside a circuit compiler/optimizer that treats noise channels as first-class planner inputs,
-never trades exactness, and proves every advertised path under a frozen, regenerable protocol.
-The destination is CAP-006 (noisy variational research on the exact backend). The current
-direction (Phase 4) ends at **research readiness** and is bounded to attributed exact energies
-(M4), a comparable-tier interop posture (M6), a fixed-parameter GAD anchor (M7), a canonical
-energy-only readiness surface with explicit refusals (M8), and an \(R=1\)
-representation-aware cost decision with a reuse *forecast* (M9). M5 is the roadmap's
-detectability screen for one gradient-magnitude effect. It does not decide whether the exact
-regime distinguishes competing scaling laws; that question remains M13. Gradient product surfaces, a second
-task/ansatz family, reuse activation, global strictness, cross-milestone reproduction, and
-trainability studies are Later or gated extensions.
+inside a circuit compiler/optimizer that treats noise channels as first-class objects of
+partitioning, fusion, and controlled scientific comparison, never trades exactness, and proves
+every advertised path under a frozen, regenerable protocol. The destination is CAP-006. Phase 4
+ends at **research readiness**; its delivery outcomes are attributed exact energies (M4), an
+overhead and kernel profile at comparable tiers (M6), a twirl-controlled GAD anchor (M7), a
+canonical energy-only readiness surface with declared dense noise schedules (M8), a
+same-complexity local channel application (M9A), and an \(R=1\) representation-aware cost
+decision on held-out workloads (M9). Two evidence-only studies run alongside and do not gate
+Phase 4: M5 compares non-unital amplitude damping with unital depolarizing at matched fidelity
+along depth, and M5B isolates unitality with GAD's exact Pauli twirl once M8 lands. Exact
+gradients (M8B), a second ansatz family, reuse activation, global strictness, cross-milestone
+reproduction, and trainability studies are Later or gated.
 
 | Horizon | Milestones |
 |---------|------------|
 | Delivered (archived, frozen) | M1 `phase-1` · M2 `phase-2` · M3 `phase-3` · M3A `phase-3-1` |
-| **Now** | **M4 `canonical-attributed-energy` — product walking skeleton** → M5 `canonical-sensitivity-screen` |
-| Next | M6 `interop-overhead-profile` → M7 `gad-channel-admission` → M8 `study-ready-noisy-workflow` → M9 `representation-aware-selection` |
-| Later (hypotheses) | M8A `second-family-workflow` · M10 `strict-parameter-domains` · M11 `clean-checkout-reproduction` · M12 `observed-reuse-amortization` · M13 `noisy-trainability-studies` |
+| **Now** | **M4 `canonical-attributed-energy` — product walking skeleton** · M5 `matched-fidelity-depth-screen` (evidence-only; handed off after M4) |
+| Next | M6 `interop-overhead-profile` → M7 `gad-channel-admission` → M8 `study-ready-noisy-workflow` → M9A `local-channel-application` → M9 `representation-aware-selection`; evidence-only M5B `twirl-isolation-screen` after M8 |
+| Later (hypotheses) | M8B `differentiable-noisy-objective` · M8A `second-family-workflow` · M10 `strict-parameter-domains` · M11 `clean-checkout-reproduction` · M12 `observed-reuse-amortization` · M13 `noisy-trainability-studies` |
 | Conditional | M5A `exact-regime-boundary` — opens only through review gate RG-1 |
 | Review gates (not milestones) | RG-1 exact-regime boundary · RG-2 differentiable objective · RG-3 selection inside the optimizer loop |
 
-One milestone tree is in flight at a time. QA-008 is a completion criterion for every
-milestone: 100% of that milestone's counted claims must regenerate from named lanes with
-tolerances, seeds, revision, and claim boundary pinned. Every exactness claim compares the full
-density matrix with the sequential `NoisyCircuit` reference; Qiskit Aer is the external
-reference. `QA-005 (scoped)` means strictness is claimed only on that milestone's advertised
-support matrix. M10 is the first milestone allowed to claim QA-005 globally. Every code-bearing
-milestone carries QA-009 into its requirements and evidence, even when non-interference is not
-its primary outcome.
+**Standing rules.** At most one code-bearing milestone tree plus one evidence-only study tree are
+in flight; a study tree adds evidence pipelines, never product code. Suffixed ids (M3A, M5A, M5B,
+M8A, M8B, M9A) record lineage, not order. QA-008 is a completion criterion for every milestone:
+100% of that milestone's counted claims must regenerate from named lanes with tolerances, seeds,
+revision, and claim boundary pinned. Every exactness claim compares the full density matrix with
+the sequential `NoisyCircuit` reference; Qiskit Aer is the external reference. `QA-005 (scoped)`
+means strictness is claimed only on that milestone's advertised support matrix; M10 is the first
+milestone allowed to claim QA-005 globally. Every code-bearing milestone carries QA-009 into its
+requirements and evidence. Every noise-class comparison is made at matched average gate fidelity,
+and every claim-bearing study follows QA-011's frozen protocol with fresh confirmatory seeds.
 
 ## 2. Strategic themes
 
 | Theme | Serves | `PHASE4_REQS.md` thread | Milestones |
 |-------|--------|-------------------------|------------|
-| **Trusted exact paths and evidence** — classify every advertised entry, calibrate fixed-parameter GAD under the per-step \((\gamma,p_\mathrm{exc})\) convention against closed forms and Aer, and make claims regenerable | CAP-001, CAP-002, CAP-007 · QA-001/002/003/005/008/010 | Channel Expansion; Verification and Calibration | M4, M7, M10, M11 |
-| **Inspectable noise-aware planning and cost** — attribute every route, record complete sequential/candidate build and application costs at \(R=1\), forecast but never credit break-even reuse \(R^*\), activate reuse only at observed \(R_\mathrm{obs}\), and profile interop overhead | CAP-003, CAP-004 · QA-004/006/007/012 | Partitioning and Fusion; Interop Optimization; Literature Positioning as a claim gate | M6, M9, M12 |
-| **Noisy variational research on the exact backend** — screen detectability of one gradient-magnitude effect early, deliver a canonical energy-only readiness surface, extend to a second family, and leave scaling discrimination to the pre-registered studies; gradient product surfaces wait behind RG-2 | CAP-005, CAP-006 · QA-002/005/011 | Readiness for noisy VQA training loops | M5, M5A, M8, M8A, M13 |
+| **Trusted exact paths and evidence** — classify every advertised entry; calibrate GAD, including its twirl and fidelity witnesses, against closed forms and Aer; make every claim regenerable | CAP-001, CAP-002, CAP-007 · QA-001/002/003/005/008/010 | Channel Expansion; Verification and Calibration | M4, M7, M10, M11 |
+| **Inspectable noise-aware planning and cost** — attribute every route; give fusion a same-complexity application before testing it at \(R=1\) on held-out workloads; forecast but never credit reuse; profile overhead and kernel throughput | CAP-003, CAP-004 · QA-004/006/007/012 | Partitioning and Fusion; Interop Optimization; Literature Positioning (software) | M6, M9A, M9, M12 |
+| **Noise-class trainability on the exact backend** — compare channel classes at matched fidelity along depth, isolate unitality with GAD's twirl, add exact scalable gradients, and reach pre-registered multi-family studies | CAP-002, CAP-005, CAP-006, CAP-008 · QA-002/005/011/013 | Readiness for noisy VQA training loops; Literature Positioning (scientific frame) | M5, M5B, M8, M8B, M8A, M13, M5A |
 
 ## 3. Milestone table
 
 M4 is the product walking skeleton for the new convention. M1–M3A were delivered under the
-archived phase convention and are recorded rather than re-planned; no
-`milestones/<slug>/` tree is created for them.
+archived phase convention and are recorded rather than re-planned; no `milestones/<slug>/` tree
+is created for them.
 
 | M# | slug | Outcome (measurable) | Horizon | Traces (CAP-*/QA-*) | Depends on | What ships (deployable) | Status |
 |----|------|----------------------|---------|---------------------|------------|-------------------------|--------|
@@ -68,17 +68,20 @@ archived phase convention and are recorded rather than re-planned; no
 | M3 | `phase-3` | Noisy circuits are first-class planner inputs and execute through a partitioned runtime with exact unitary-island fusion; 34 cases were counted, 0/6 representative cases passed the positive threshold, and 6/6 closed through diagnosis | Delivered | CAP-001, CAP-003, CAP-007 · QA-001, QA-005, QA-008 | M2 | Noisy planner, descriptors, runtime, and correctness/performance evidence — [`archive/phases/phase-3/`](../density_matrix_project/archive/phases/phase-3/) | Delivered |
 | M3A | `phase-3-1` | Exact strict/hybrid channel-native fusion closed as a bounded decision study: 17/26 `phase3_sufficient`, 9/26 `phase31_not_justified_yet`, 0/26 `phase31_justified` | Delivered | CAP-001, CAP-003, CAP-007 · QA-001, QA-002, QA-004, QA-005, QA-008 | M3 | Bounded channel-native modes and the 26-row decision bundle — [`archive/phases/phase-3-1/`](../density_matrix_project/archive/phases/phase-3-1/) | Delivered |
 | **M4** | **`canonical-attributed-energy`** | **Product walking skeleton.** From one public VQE instance, a researcher obtains exact noisy energy through bridge → planner → attributed runtime → exact core → observable; every route is labelled, every q4/6/8/10 result meets QA-001 on the full state, and energy agrees with the public optimizer path and Aer | Now | CAP-001, CAP-003, CAP-005, CAP-007 · QA-001, QA-002, QA-005 (scoped), QA-008, QA-009 | M2 and M3A outcomes | Public attributed-energy entry, route records, entry-point support matrix and negatives, counted state/energy rows, M4 closeout, updated current-state docs | Now — active |
-| M5 | `canonical-sensitivity-screen` | A pre-registered paired screen tests whether noise detectably changes the mean squared gradient per active coordinate at 4, 6, 8, and 10 qubits; `resolvable-on-screen` requires the frozen cross-width pattern, and the verdict does not claim scaling-law discrimination | Now | CAP-006, CAP-007 · QA-008, QA-009, QA-011 | M4 | Pre-registration, width-ordered pilot, validated gradient instrumentation, sensitivity evidence, machine-readable verdict and diagnosis | Now — queued after M4 |
-| M5A | `exact-regime-boundary` | If the M5-triggered review approves it, the practical exact-regime boundary is characterized under a frozen memory/time protocol while QA-001 remains satisfied | Conditional | CAP-001 · QA-001, QA-008 | M5 limiting verdict or exact-size diagnosis, plus review approval | Boundary evidence and escalation record; no approximate implementation | Conditional hypothesis |
-| M6 | `interop-overhead-profile` | Public-entry language-boundary overhead is measured at 4/6/8 qubits under QA-007; the confidence bound either meets the frozen bar or a component-level diagnosis resolves A4 | Next | CAP-004, CAP-007 · QA-007, QA-008, QA-009 | M4; M5 verdict recorded | Comparable-tier entries, paired/interleaved harness, profile artifact, and overhead fitness function | Next |
-| M7 | `gad-channel-admission` | Fixed-parameter generalized amplitude damping under the per-step \((\gamma,p_\mathrm{exc})\) convention is admitted on its declared core/planner entries; every counted state meets QA-001/002/010 and every malformed class fails before mutation; Gibbs-population wording requires a declared two-level Hamiltonian and basis, with no physical-time claim | Next | CAP-001, CAP-002, CAP-007 · QA-001, QA-002, QA-003, QA-005 (scoped), QA-008, QA-009, QA-010 | M4 support matrix | GAD operation/binding/API, planner and hybrid runtime support, strict-mode refusal, calibration and external evidence, published parameter convention | Next |
-| M8 | `study-ready-noisy-workflow` | The canonical XXZ/generated-HEA workflow runs fixed local unital and non-unital noise, including GAD, through one public exact energy evaluator at 4–10 qubits; one bounded derivative-free optimizer smoke emits parameter, energy, and route traces without a quality claim; a non-gating descriptive GAD-versus-depolarizing contrast is recorded at one small width; every unsupported mode is refused; all claims regenerate from a clean checkout | Next | CAP-002, CAP-005, CAP-007 · QA-001, QA-002, QA-005 (scoped), QA-008, QA-009 | M4; M7; M5 verdict and M6 posture recorded | Canonical energy-only readiness surface, GAD noise specification, support/refusal matrix, trace-schema smoke, descriptive contrast rows, workflow evidence, clean-checkout bundle | Next |
-| M9 | `representation-aware-selection` | On the frozen Phase 3.1 families plus a frozen static-subgraph candidate surface, every partition carries decomposed costs and an \(R=1\) QA-006 decision with \(R^*\) forecast only; every non-selected row names one dominant mechanism, and the version-pinned competitor matrix gates both the positive and diagnosis outcomes | Next | CAP-003, CAP-007 · QA-001, QA-004, QA-005 (scoped), QA-006, QA-008, QA-009 | M3A; M6; M8 closed | Frozen cost-policy ADR, \(R=1\) selector, mechanism taxonomy, cost records, competitor matrix, positive or diagnosis evidence | Next |
-| M8A | `second-family-workflow` | One pre-registered, independently motivated additional task/ansatz family lowers through the bridge, evaluates exact energy under its advertised fixed local noise at 4–10 qubits, meets QA-001/002, inherits the M8 refusal discipline, and regenerates from a clean checkout | Later | CAP-002, CAP-005, CAP-006, CAP-007 · QA-001, QA-002, QA-005 (scoped), QA-008, QA-009 | M8; M7 if its noise uses GAD | Second-family bridge, workload-ordered gates/noise with negatives, workflow evidence, clean-checkout bundle | Later hypothesis — readiness extension |
-| M10 | `strict-parameter-domains` | Every advertised out-of-domain parametric rate is rejected before mutation or uses an explicit caller-selected transform; no silent clamps remain and QA-005 is globally claimable | Later | CAP-001 · QA-003, QA-005, QA-008, QA-009 | M4 support matrix | Domain-semantics ADR, migrated advertised paths, and pinned negatives | Later hypothesis |
-| M11 | `clean-checkout-reproduction` | An external reproducer regenerates 100% of closed claim-bearing milestones among M4, M5, M5A, M6, M7, M8, M9, M8A, and M10 from a clean checkout | Later | CAP-007 · QA-008 | Every listed milestone that is closed | Regeneration index, runbook, and cross-milestone bundle | Later hypothesis |
-| M12 | `observed-reuse-amortization` | If M9 shows material candidate construction and independent optimizer traces yield \(R_\mathrm{obs}\) beyond forecast \(R^*\) with margin, reuse-conditioned caching is activated and meets QA-001/012; otherwise A3 is dropped and caching stays off | Later | CAP-003 · QA-001, QA-008, QA-009, QA-012 | M9 cost record and forecast; M8/M8A traces; independent of the \(R=1\) verdict | Parameter-dependent cache keys, hit/miss and build/apply accounting, amortization evidence | Later gated hypothesis |
-| M13 | `noisy-trainability-studies` | Pre-registered hypotheses are tested across at least two families, unital/non-unital sweeps, and seeded ensembles with effect sizes, uncertainty, null outcomes, and a regenerable dataset; gradient-based training arms require RG-2 | Later | CAP-006, CAP-007 · QA-008, QA-009, QA-011 | M5 verdict; M8A; M11; RG-2 for gradient-based arms | Study pipelines, reusable dataset, and analysis regeneration lane | Later hypothesis — scientific endpoint |
+| M5 | `matched-fidelity-depth-screen` | A pre-registered, confirmatory, evidence-only screen compares non-unital amplitude damping with unital local depolarizing matched in average gate fidelity on the canonical HEA under a declared dense schedule, along noise-weighted depth at 4 and 6 qubits with an 8-qubit confirmatory family; the paired log ratio of cost variance returns `separated`, `equivalent-within-margin`, or `inconclusive` for this channel-class contrast only | Now | CAP-002, CAP-006, CAP-007 · QA-008, QA-009, QA-011 | M2 outcome (delivered public energy and channels); handed off after M4 | Archived pre-registration, sensitivity lane, verdict and diagnosis bundle, descriptive gradient and collapse rows | Now — evidence-only |
+| M5A | `exact-regime-boundary` | If RG-1 approves, the practical exact-regime boundary (width, depth, memory, time) is characterized under a frozen protocol while QA-001 remains satisfied | Conditional | CAP-001 · QA-001, QA-008 | RG-1 (A1b) | Boundary evidence and escalation record; no approximate implementation | Conditional hypothesis |
+| M6 | `interop-overhead-profile` | On the public C++ energy entry, language-boundary overhead is bounded under QA-007 at 4/6/8 qubits and frozen workloads; on M4's planner/runtime route, which has no equal-work lower comparator, time is attributed to Python orchestration versus C++ kernels; per-operation kernel and parallel throughput are recorded | Next | CAP-004, CAP-007 · QA-007, QA-008, QA-009 | M4 | Comparable-tier harness, route attribution profile, kernel and parallel-throughput profiles, overhead fitness function | Next |
+| M7 | `gad-channel-admission` | Fixed-parameter GAD under the per-step \((\gamma,p_\mathrm{exc})\) convention is admitted on its declared core/planner entries; every counted state meets QA-001/002/010, including the translation-sign, Pauli-twirl, and fidelity-invariance witnesses; every malformed class fails before mutation; Gibbs wording needs a declared two-level Hamiltonian and basis | Next | CAP-001, CAP-002, CAP-007 · QA-001, QA-002, QA-003, QA-005 (scoped), QA-008, QA-009, QA-010 | M4 support matrix | GAD operation/binding/API, planner and hybrid support, strict refusal, calibration and twirl witnesses, Aer evidence, published convention | Next |
+| M8 | `study-ready-noisy-workflow` | The canonical XXZ/generated-HEA workflow runs declared dense schedules of depolarizing, phase damping, amplitude damping, and GAD through one public exact energy evaluator at 4–10 qubits, with thermal relaxation expressible only through a named, Aer-checked transform; a bounded derivative-free optimizer smoke emits trace-schema rows without a quality claim; every unsupported mode is refused; all claims regenerate from a clean checkout | Next | CAP-002, CAP-005, CAP-007 · QA-001, QA-002, QA-005 (scoped), QA-008, QA-009, QA-010 | M4; M7; M6 posture recorded | Energy-only readiness surface, schedule families, thermal-relaxation transform, support/refusal matrix, trace-schema smoke, clean-checkout bundle | Next |
+| M5B | `twirl-isolation-screen` | A pre-registered, evidence-only screen isolates unitality: amplitude damping against its exact Pauli twirl GAD(γ, ½), at equal fidelity and twirl, along noise-weighted depth on the canonical workload under the M5 protocol; verdict `separated`, `equivalent-within-margin`, or `inconclusive`; a short \(p_\mathrm{exc}\) sweep is descriptive | Next | CAP-002, CAP-006, CAP-007 · QA-008, QA-009, QA-010, QA-011 | M8 (GAD in the public energy); M5's archived protocol | Archived pre-registration, study lane, verdict bundle, descriptive sweep rows | Next — evidence-only |
+| M9A | `local-channel-application` | Every channel-native route on the frozen Phase 3.1 slice executes through local Kraus or superoperator application at the sequential reference's asymptotic complexity and execution tier, meets QA-001 and its QA-004 sentinels at 4–10 qubits, refuses supports above its declared width, and has its per-operation throughput measured against the sequential kernels | Next | CAP-001, CAP-003, CAP-004, CAP-007 · QA-001, QA-004, QA-005 (scoped), QA-008, QA-009 | M3A; M6 | Same-complexity application primitive, channel-native route integration, exactness evidence, throughput profile | Next |
+| M9 | `representation-aware-selection` | On M9A's application, a selection policy calibrated on one frozen workload set — the Phase 3.1 families plus a static-subgraph surface — is judged on a held-out set at \(R=1\), with \(R^*\) forecast only and 8–10 qubits decisive; every non-selected row names its mechanism; a pass-count cost model with operation-class constants predicts held-out costs within a frozen error; the competitor matrix gates both outcomes | Next | CAP-001, CAP-003, CAP-007 · QA-001, QA-004, QA-005 (scoped), QA-006, QA-008, QA-009 | M9A; M8 closed | Frozen cost-policy ADR, \(R=1\) selector, cost records, pass-count model, competitor matrix, positive or diagnosis evidence | Next |
+| M8B | `differentiable-noisy-objective` | Exact gradients of the noisy energy for fixed-noise U3/CNOT circuits, inside the existing optimizer loop, meet QA-013 at 4–10 qubits at no more than a frozen multiple of one energy evaluation `[confirm]`; unsupported parameterizations are refused | Later | CAP-005, CAP-007, CAP-008 · QA-001, QA-005 (scoped), QA-008, QA-009, QA-013 | RG-2 passed | Exact gradient method chosen by ADR, density-backend gradient entry, lifted refusal for supported modes, gradient-fidelity evidence lane | Later hypothesis — M13 enabler |
+| M8A | `second-family-workflow` | An independently motivated second ansatz family — by default the Hamiltonian variational ansatz for TFIM and XXZ, compiled to U3/CNOT with tied parameters — evaluates exact energy under declared dense schedules at 4–10 qubits, meets QA-001/002, inherits the M8 refusal discipline, and regenerates from a clean checkout; the TFIM task on the generated HEA is its tracer slice | Later | CAP-002, CAP-005, CAP-006, CAP-007 · QA-001, QA-002, QA-005 (scoped), QA-008, QA-009 | M8; M7 if its noise uses GAD | Second task and ansatz families, tied-parameter routing, workflow evidence, clean-checkout bundle | Later hypothesis — readiness extension |
+| M10 | `strict-parameter-domains` | Every advertised out-of-domain parametric rate is rejected before mutation or uses an explicit caller-selected transform; no silent clamps remain and QA-005 is globally claimable | Later | CAP-001, CAP-002, CAP-005 · QA-003, QA-005, QA-008, QA-009 | M4 support matrix | Domain-semantics ADR, migrated advertised paths, and pinned negatives | Later hypothesis |
+| M11 | `clean-checkout-reproduction` | An external reproducer regenerates 100% of closed claim-bearing milestones among M4, M5, M5A, M5B, M6, M7, M8, M9A, M9, M8A, M8B, and M10 from a clean checkout | Later | CAP-007 · QA-008 | Every listed milestone closed when M11 opens; that set is frozen then | Regeneration index, runbook, and cross-milestone bundle | Later hypothesis |
+| M12 | `observed-reuse-amortization` | If M9 shows material candidate construction and independent optimizer traces yield \(R_\mathrm{obs}\) beyond forecast \(R^*\) with margin, reuse-conditioned caching is activated and meets QA-001/012; otherwise A3 is dropped and caching stays off | Later | CAP-003 · QA-001, QA-008, QA-009, QA-012 | M9 cost record and forecast; M8/M8A/M8B traces; independent of the \(R=1\) verdict | Parameter-dependent cache keys, hit/miss and build/apply accounting, amortization evidence | Later gated hypothesis |
+| M13 | `noisy-trainability-studies` | Pre-registered studies across at least two task families and two ansatz families, matched-fidelity unital and non-unital sweeps, and seeded ensembles report effect sizes, uncertainty, nulls, and a regenerable dataset, with every result at \(n\le10\) labelled finite-size | Later | CAP-006, CAP-007 · QA-008, QA-009, QA-011; CAP-008 and QA-013 for gradient-based arms | M5 and M5B verdicts; M8A; M11; M8B for gradient-based arms | Study pipelines, reusable dataset, and analysis regeneration lane | Later hypothesis — scientific endpoint; expected to split |
 
 ### Review gates
 
@@ -87,12 +90,12 @@ themselves.
 
 | Gate | Trigger | Required before any milestone opens | Owner |
 |------|---------|-------------------------------------|-------|
-| **RG-1 Exact-regime boundary** | M5 `finite-size-limited`, or an `inconclusive` diagnosis that names the exact-size ceiling | Product-statement / ADR-008 review approval; M5A is post-Phase-4 by default, and inserting it earlier requires explicit `PHASE4_REQS.md` plus roadmap revalidation | Product owner via `create-product-statement` |
-| **RG-2 Differentiable objective** | Any gradient product surface, `(parameters) → (energy, gradient)` bridge, or gradient-based optimizer trace | Evolve `PRODUCT_STATEMENT.md` with a differentiable-objective `CAP-*` and gradient-fidelity `QA-*`; define coordinate-aware rules, fixed-noise/order boundaries, unsupported/shared-parameter refusal, independent controls, and tolerance; explicitly evolve `PHASE4_REQS.md` or place the work after Phase 4; then add a traced roadmap milestone | Product owner |
+| **RG-1 Exact-regime boundary** | A1b: a pre-registered width-model analysis fails to discriminate its models and the thesis question requires width scaling, or a study diagnosis names the exact-size ceiling | Product-statement / ADR-008 review approval; M5A is post-Phase-4 by default, and inserting it earlier requires explicit `PHASE4_REQS.md` plus roadmap revalidation | Product owner via `create-product-statement` |
+| **RG-2 Differentiable objective** | Opening M8B or any gradient product surface | The owner confirms product statement v0.4 (CAP-008, QA-013); M8 has closed; a pre-registered study needs gradient-based arms or gradient statistics beyond sampled coordinates; a frozen cost and memory budget exists | Product owner |
 | **RG-3 Selection inside the optimizer loop** | M9 ships the positive deployable | M9 revalidation; M12 \(R_\mathrm{obs}\) evidence for any reuse claim | Roadmap revalidation |
 
-Until RG-2 passes, gradients are benchmark-internal, control-validated instrumentation in
-evidence pipelines (M5 and, if needed, M13); the product surface refuses gradient modes.
+Until M8B closes, gradients are benchmark-internal, control-validated instrumentation in evidence
+pipelines (M5, M5B, M13); the product surface refuses gradient modes.
 
 ## 4. Per-milestone detail
 
@@ -145,216 +148,295 @@ evaluation, not at whole-optimizer-loop granularity.
 [`ARCHITECTURE_OVERVIEW.md`](ARCHITECTURE_OVERVIEW.md) with the attributed-energy flow and
 support boundary, and [`TECH_STACK.md`](TECH_STACK.md) with the evidence lane.
 
-### M5 — `canonical-sensitivity-screen` (Now · queued)
+### M5 — `matched-fidelity-depth-screen` (Now · evidence-only)
 
-**Outcome and why now.** A1—whether the exact regime resolves the intended effect rather than
-only exhibiting a finite-size example—kills the most scope if wrong. Fitting asymptotic
-barren-plateau exponents to four widths is ill-conditioned, so M5 asks one identifiable paired
-finite-size question and freezes every decision before data.
+**Outcome and why now.** Current theory splits by noise class: unital noise predicts
+noise-induced barren plateaus (Wang et al. 2021), while non-unital noise predicts limit sets and
+effectively shallow circuits whose final layers stay trainable (Singkanipa and Lidar 2025; Mele et
+al. 2026). A noise-versus-noiseless contrast cannot test this, because its answer is fixed by the
+chosen minimum effect. M5 compares amplitude damping (non-unital, anisotropic) with local
+depolarizing (unital, isotropic) matched in average gate fidelity — the quantity randomized
+benchmarking reports — along depth at fixed small width, the form of A1 the exact regime can
+answer (A1a). The arms differ in unitality and anisotropy together, so M5 claims a channel-class
+difference at matched fidelity only; isolating unitality needs GAD's exact twirl and is M5B's
+question. M5 needs only delivered channels and the public energy. An exploratory pilot already
+shows the effect, so M5 is a confirmation, and its value is a pre-registered, regenerable result
+on the production engine that later studies can cite.
 
-**Primary estimand.** Mean squared gradient per active stored coordinate,
-\[
-G(n,p,L)=\mathbb{E}_{\theta\sim\mu}\!
-\left[\lVert\nabla_\theta E(\theta;n,p,L)\rVert_2^2/K\right],
-\]
-with \(K\) the number of *active* coordinates. The primary contrast compares one fixed local
-noise point \(p_1\) with \(p=0\) by the paired difference
-\[
-\Delta G_n=\mathbb{E}_{\theta\sim\mu_n}\!
-\left[\frac{\lVert\nabla E(\theta;n,p_1,L_n)\rVert_2^2-
-\lVert\nabla E(\theta;n,0,L_n)\rVert_2^2}{K_n}\right]
-\]
-at each \(n\in\{4,6,8,10\}\), using common \(\theta\) draws. The depth rule \(L_n\),
-noise point, and active-coordinate rule are frozen before data.
+**Design (frozen and archived in requirements before counted data; `[confirm]` values there).**
+- *Arms.* AD(γ); `local_depolarizing` with \(p=1-\tfrac13\big(2\sqrt{1-\gamma}+1-\gamma\big)\), which
+  equalizes \(F_\mathrm{avg}\) because the implemented channel shrinks the Bloch vector by \(1-p\);
+  a noiseless reference.
+- *Workload.* The canonical generated HEA with XXZ under a declared dense schedule — one channel
+  on each qubit touched by each gate, one frozen γ. Edge qubits then receive half the channels of
+  interior ones, so exposure is per qubit: \(x_q=\sum_j-\log(1-\gamma_j)\) over qubit \(q\)'s
+  channels, identical in both arms at matched fidelity. Depths are ordered by the mean \(\bar x\),
+  and every row reports the per-qubit range. The canonical three-channel schedule remains the
+  continuity anchor.
+- *Families.* Primary: widths 4 and 6 × depths spanning \(\bar x\) from one layer to \(\ge5\) (at
+  γ = 0.05, one layer on 6 qubits is \(\bar x\approx0.17\)). Confirmatory: 8 qubits to
+  \(\bar x\ge2\). Design points are pre-selected from pilot and analytic evidence so that both arms'
+  cost variance stays above a frozen numerical-resolution floor; a counted point that falls below
+  it makes its family `inconclusive` and is never excluded afterwards.
+- *Sampling.* Seeds disjoint from the pilot; parameter draws shared across arms within each design
+  point; stored-coordinate periods follow the U3 multipliers {2,1,1}; sample sizes from the pilot's
+  variance and the frozen precision target.
 
-**Frozen before data.** Benchmark relevance; distribution \(\mu\) over stored coordinates
-(periods follow U3 multipliers); sampling unit = one exact-backend \(\theta\) draw at one width;
-per-width sample size from non-counted pilot variance, minimum effect/equivalence bound, and
-precision target; simultaneous or multiplicity-controlled paired intervals across all four
-widths; verdict boundaries. Widths are design points, not statistical replicates; no exponent
-is fitted or extrapolated. Secondary noise/depth points are descriptive unless separately
-controlled.
+**Estimands and inference.** Primary:
+\(\Delta_L=\log\mathrm{Var}_\theta E_\mathrm{AD}(L)-\log\mathrm{Var}_\theta E_\mathrm{dep}(L)\) at each
+design point; cost variance diagnoses plateaus as gradient variance does (Arrasmith et al. 2022) at
+one energy per draw. A studentized max-statistic paired bootstrap, resampling draws within design
+points, gives simultaneous two-sided 90% intervals over each family, so each side is a
+simultaneous one-sided 95% bound. The margin \(\delta\) comes from a stated relevance criterion, not
+from pilot effect sizes; the precision target is a maximum interval half-width. Secondary and
+descriptive only:
+last- and first-layer gradient variance from coordinate-aware two-term shifts,
+\(\partial_jE=\tfrac{m_j}{2}\big[E(p+\tfrac{\pi}{2m_j}e_j)-E(p-\tfrac{\pi}{2m_j}e_j)\big]\) with
+\(m_j\in\{2,1,1\}\), valid only for fixed noise and order and gated by a central finite-difference
+check on every row; and whether the depolarizing arm collapses onto \(\bar x\) across two rates
+at 4 qubits (A9).
 
-**What the verdict establishes.** M5 asks whether the pre-registered gradient-magnitude effect
-is detectable at the frozen design points. `resolvable-on-screen` does not show that 4–10
-qubits distinguish competing barren-plateau or trainability scaling laws. That discrimination
-remains M13 under QA-011. A single significant small-width interval is reported descriptively
-and cannot by itself produce the positive verdict.
+**Verdict (exactly one).**
+- `separated`: at every design point beyond a pre-registered \(\bar x\), the lower bound exceeds
+  \(+\delta\), in the primary family and, separately, in the 8-qubit confirmatory family;
+- `equivalent-within-margin`: every interval in both families lies within \([-\delta,+\delta]\) and
+  meets the precision target;
+- `inconclusive`: otherwise, including an effect of reversed sign, reported with its sign, and
+  any counted point below the resolution floor. There is no in-milestone extension; a follow-up
+  needs a new pre-registration.
 
-**Verdict (exactly one).** Intervals are simultaneous across the four widths. The default
-cross-width pattern, replaceable only by another pattern frozen in requirements before data:
-- `resolvable-on-screen`: the effect bound clears the minimum effect at both q4 and q6, and
-  the q8 and q10 intervals do not reverse its sign;
-- `finite-size-limited`: all four intervals meet the precision target and lie inside their
-  pre-registered equivalence bands; label this screened effect finite-size only and open RG-1;
-- `inconclusive`: neither rule holds, including any underpowered width; permit one
-  pre-registered extension in \(\theta\) draws. M5A stays closed unless diagnosis identifies
-  the exact-size ceiling and RG-1 approves.
+**What the verdict establishes.** Whether non-unital amplitude damping and unital depolarizing,
+at equal average fidelity, differ in cost variance along depth at 4–8 qubits on the canonical
+workload. It does not isolate unitality (M5B), discriminate width models (A1b), or establish
+training outcomes or GAD dependence (M13).
 
-**Gradient instrumentation (benchmark-internal, not a product surface).** For stored U3
-coordinate \(p_j\), derive the two-term rule from the declared multiplier \(m_j\):
-\[
-\partial_jE=\frac{m_j}{2}
-\left[E\!\left(p+\frac{\pi}{2m_j}e_j\right)-
-E\!\left(p-\frac{\pi}{2m_j}e_j\right)\right],
-\qquad m_j\in\{2,1,1\}.
-\]
-This is valid only for fixed parameter-independent noise and unchanged operation order. Every
-counted gradient must pass a central-finite-difference step study and independent analytic
-witnesses covering all three coordinates, including non-zero \(\phi/\lambda\) witnesses.
-Deferred to M13 unless rigorously defined there: minimum migration
-\(\Delta\theta^*\) (Euclidean parameter distance is gauge- and period-dependent), the
-gradient-norm coefficient of variation (previously misnamed SNR), and optimizer-conditioned
-optimal depth \(L^*\).
+**Feasibility (non-counted exploratory pilot, 2026-09-23).** At γ = 0.05 per channel, with 300,
+150, and 60 paired draws at 4, 6, and 8 qubits and 25 energies per draw, the full design ran in
+194 s on 120 processes. Coordinate-aware shifts matched finite differences within 1.7×10⁻¹⁰; the
+coordinate-blind rule returned ≈10⁻¹⁷ on a θ/2 coordinate whose true derivative was −7.1×10⁻².
+Cost-variance ratios (AD ÷ depolarizing, 95% bootstrap intervals) were 1.34 [1.16, 1.60], 11.9
+[8.5, 16.8], and 8.0×10³ [5.4×10³, 1.2×10⁴] at depths 4, 8, and 16 on 6 qubits, and 18 [10, 36]
+and 3.1×10⁴ [1.6×10⁴, 5.7×10⁴] at depths 8 and 16 on 8 qubits. The primary estimand alone needs
+about 10⁴ energies, minutes of serial compute.
 
-**Scope.** In: pre-registration, gradient-validation tracer, non-counted pilot, sensitivity
-lane, raw data, verdict, diagnosis. Out: asymptotic scaling, second family, product gradient
-routing, optimizer run, new channels/gates, and performance claims.
+**Scope.** In: the archived pre-registration, sensitivity lane, verdict and diagnosis bundle, and
+gradient instrumentation as evidence tooling. Out: product code, GAD, unitality isolation,
+width-model claims, optimizer runs, and performance claims.
 
-**Feasibility.** Python may orchestrate shifted calls to the delivered public energy evaluator,
-but "no C++ change" is not a correctness argument: the coordinate rule and controls must pass
-before any counted row. The non-counted pilot freezes variance and timing at q4 and q6 before
-\(S_8\) and \(S_{10}\) are committed. It records whether the effect is already far above the
-minimum effect or already inside the equivalence band at those two widths. The counted budget is
-\(\sum_n 4S_nK_n\) shifted evaluations. If unaffordable, shrink descriptive noise or depth
-points before data; never remove a primary width or reduce \(S_n\) below its precision rule
-without roadmap and requirements revalidation.
+**Riskiest assumption.** A1a, at 4–8 qubits and the frozen design.
 
-**Riskiest assumption.** A1, only at the frozen design points and estimand.
-
-**Dependencies and handoff.** M4. Handoff slug: `canonical-sensitivity-screen`.
-[`TECH_STACK.md`](TECH_STACK.md) gains the named sensitivity lane; no architecture change is
-expected.
+**Dependencies and handoff.** M2's delivered outcome: the public energy and the three channels.
+M5 is handed off after M4, so M4 remains the first milestone under the convention, and it runs as
+the evidence-only tree. Handoff slug: `matched-fidelity-depth-screen`.
+[`TECH_STACK.md`](TECH_STACK.md) gains the sensitivity lane; no architecture change is expected.
 
 ### M6 — `interop-overhead-profile` (Next)
 
-**Outcome and why next.** Phase 3 identified Python-level overhead but did not compare equivalent
-energy tiers. M6 resolves A4 and supplies the comparable-tier protocol M9 needs without blocking
+**Outcome and why next.** The public C++ energy is linear in operation count with a near-zero
+intercept (3.56 µs per operation at 4 qubits) and costs 12–15 ns per density-matrix entry per
+operation at 4–10 qubits, so the language crossing is unlikely to matter on that entry. M4's
+planner/runtime route keeps its orchestration in Python and has no equal-work lower comparator,
+so there M6 attributes time rather than bounding an overhead ratio. Kernel throughput sets every
+science budget above 6 qubits. M6 supplies the comparable tiers M9A and M9 need, without blocking
 the correctness-only M4.
 
-**Success measure.** At 4/6/8 qubits, at least 1,000 warmed public-entry calls are paired and
-interleaved with an equivalent lower-boundary entry differing only in the language crossing.
-State reset, allocation, materialization, batching, build, affinity, and warm-up are frozen.
-Report component times, uncertainty, and the one-sided 95% upper bound on
-`O = (T_public - T_lower) / T_public`. Meeting the QA-007 threshold satisfies the milestone;
-missing it closes only through a component-level diagnosis and leaves QA-007 unmet. If overhead
-is below the A4 kill threshold at every point, CAP-004 becomes a hold-the-line constraint.
+**Success measure.**
+- *C++ entry.* At 4/6/8 qubits and frozen workloads (depth, schedule), at least 1,000 warmed
+  public calls are paired and interleaved with a C++-level invocation of the same prebuilt
+  evaluator; state reset, allocation, materialization, batching, build, affinity, and warm-up are
+  frozen; report components, uncertainty, and the one-sided 95% upper bound on
+  `O = (T_public - T_lower) / T_public` under QA-007.
+- *Planner/runtime route.* Time split between Python orchestration and C++ kernels per partition
+  class, as a diagnosis; no QA-007 claim.
+- *Kernels.* Per operation type, throughput in ns per density-matrix entry; aggregate throughput of
+  independent evaluations under a frozen parallel protocol.
+- Meeting QA-007 on the C++ entry satisfies CAP-004's bar there; missing it closes through a
+  component diagnosis with QA-007 unmet; an upper bound below 5% at every width triggers A4's
+  kill, and CAP-004 becomes a hold-the-line constraint for that entry.
 
-**Scope and assumption.** In: harness, profile, validator, and at most one bounded interop-only
-fix. Out: algorithmic fusion, channels, GPU work, and optimizer changes. Riskiest assumption: A4.
+**Scope and assumption.** In: harness, profiles, validator, and at most one bounded interop-only
+fix. Out: kernel rewrites — findings such as the amplitude-damping kernel allocating and zeroing a
+full temporary matrix per application become ADR inputs for M9A — plus fusion, channels, GPU work,
+and optimizer changes. Riskiest assumption: A4.
 
-**Dependencies and handoff.** M4 and the recorded M5 verdict. Handoff slug:
-`interop-overhead-profile`. Update both current-state docs with the lane and measured overhead
-posture.
+**Dependencies and handoff.** M4. Handoff slug: `interop-overhead-profile`. Update both
+current-state docs with the lanes and measured posture.
 
 ### M7 — `gad-channel-admission` (Next)
 
 **Outcome and why next.** GAD is the non-unital calibration anchor named by CAP-002 and the
-contrast to unital depolarizing contraction toward \(I/2^n\). M7 admits it as a per-step
-fixed-parameter channel under the \((\gamma,p_\mathrm{exc})\) convention.
-“Gibbs-population-calibrated” is used only where requirements declare the two-level Hamiltonian
-\(H=\Delta|1\rangle\langle1|\), \(|0\rangle\) ground, \(\Delta>0\), \(\beta\ge0\), and
-\(p_\mathrm{exc}=(1+e^{\beta\Delta})^{-1}\). No relaxation-time, \(T_1\), or physical-time
-claim is made without a declared \(\gamma(t)\) law or rates, which M7 does not ship.
+controlled-unitality instrument: at fixed γ every GAD shares one Pauli twirl, GAD(γ, ½), and one
+average fidelity, so sweeping \(p_\mathrm{exc}\) changes only the non-unital displacement
+\(\nu=\gamma(1-2p_\mathrm{exc})\). M7 admits it as a per-step fixed-parameter channel under the
+\((\gamma,p_\mathrm{exc})\) convention. “Gibbs-population-calibrated” is used only where
+requirements declare \(H=\Delta|1\rangle\langle1|\), \(|0\rangle\) ground, \(\Delta>0\),
+\(\beta\ge0\), and \(p_\mathrm{exc}=(1+e^{\beta\Delta})^{-1}\); physical-time semantics arrive only
+with M8's named thermal-relaxation transform.
 
-**Success measure.** Fixed-parameter GAD under the `(gamma, p_exc)` convention:
-- matches the QA-010 population/coherence law ($\rho'_{11} = (1-\gamma)\rho_{11} + \gamma p_\mathrm{exc}$),
-  coherence scaling $\sqrt{1-\gamma}$, thermal fixed point $\mathrm{diag}(1-p_\mathrm{exc}, p_\mathrm{exc})$,
-  convergence for $\gamma > 0$, Hermiticity, and contractivity bounds;
+**Success measure.** Fixed-parameter GAD:
+- matches the QA-010 population law, coherence scaling \(\sqrt{1-\gamma}\), fixed point
+  \(\mathrm{diag}(1-p_\mathrm{exc},p_\mathrm{exc})\), \(k\)-step relaxation law, Hermiticity, and
+  contractivity;
+- meets the twirl witnesses — Bloch translation \(t_z=\gamma(1-2p_\mathrm{exc})\) with the
+  \(|0\rangle\)-ground sign, a Pauli-transfer diagonal independent of \(p_\mathrm{exc}\), and
+  \(F_\mathrm{avg}\) invariance — which catch a swapped ground/excited convention;
 - agrees with Aer at boundary and interior points and with the sequential reference on full
   states at 4–10 qubits for every advertised direct, partitioned, fused-island, and hybrid route;
 - rejects every enumerated non-finite, out-of-domain, invalid-target, parametric-mode, and
-  legacy-API request before mutation;
-- is explicitly refused by strict channel-native mode and takes a labelled baseline route in
-  hybrid mode.
+  legacy-API request before mutation, is refused by strict channel-native mode, and takes a
+  labelled baseline route in hybrid mode.
 
 **Scope.** In: fixed-parameter circuit-ordered GAD, binding/API, planner/runtime lowering,
-calibration, external rows, and published convention. Out: parametric GAD, strict
-channel-native GAD bundle, Gibbs convenience mapping, legacy API extension, VQE noise-spec
-integration (M8), and physical-time/rate semantics.
+calibration and twirl witnesses, external rows, and the published convention. Out: parametric
+GAD, a strict channel-native GAD bundle, Gibbs convenience mapping, legacy API extension, and the
+VQE noise-spec integration and thermal-relaxation transform (both M8).
 
-**Feasibility.** The four-Kraus form generalizes delivered amplitude damping, so the support
-delta is bounded: core operation, binding, planner vocabulary, runtime lowering, sequential
-reset validation, and Aer mapping. Population law, fixed point, and contractivity are
-closed-form. The milestone ADR—not this roadmap—decides where each implementation piece lives.
+**Feasibility.** The four-Kraus form generalizes delivered amplitude damping, so the support delta
+is bounded: core operation, binding, planner vocabulary, runtime lowering, sequential reset
+validation, and the Aer mapping (amplitude damping with an excited-state population). Every
+witness is closed-form. The milestone ADR decides where each piece lives.
 
 **Riskiest assumptions.** A5 (inventory sufficiency) and A6 (the sequential oracle resets
 correctly for a new channel).
 
-**Dependencies and handoff.** M4 support matrix. Handoff slug: `gad-channel-admission`.
-Update both current-state docs for the admitted inventory and route boundary.
+**Dependencies and handoff.** M4 support matrix. Handoff slug: `gad-channel-admission`. Update
+both current-state docs for the admitted inventory and route boundary.
 
 ### M8 — `study-ready-noisy-workflow` (Next)
 
-**Outcome and why next.** This is the bounded research-readiness outcome in `PHASE4_REQS.md`.
-It is a **canonical, energy-only readiness surface**: the delivered density backend supports
-the derivative-free `BAYES_OPT` and `COSINE` traces and refuses gradient entry points. M8 makes
-that surface complete, documented, refusal-pinned, GAD-capable, and regenerable. It precedes
-M9 so the research path does not depend on a fusion win. It ships neither a second family nor
-a gradient product API.
+**Outcome and why next.** This is the bounded readiness outcome of `PHASE4_REQS.md`: a canonical,
+energy-only surface on which pre-registered studies can declare their noise. The delivered
+backend supports the derivative-free `BAYES_OPT` and `COSINE` traces and refuses gradient entry
+points; M8 makes that surface complete, refusal-pinned, GAD-capable, physically parameterizable,
+and regenerable. It precedes M9 so the research path does not depend on a fusion win, and it
+ships neither a second family nor a gradient product API.
 
 **Success measure.**
-- The canonical XXZ/generated-HEA family lowers under advertised fixed local depolarizing,
-  phase damping, amplitude damping, and GAD at 4–10 qubits; full states meet QA-001 and energies
-  meet QA-002.
+- The canonical XXZ/generated-HEA family lowers under declared dense schedules — one channel on
+  each qubit touched by each gate, with fixed rates that may differ by gate type — of depolarizing,
+  phase damping, amplitude damping, and GAD at 4–10 qubits; full states meet QA-001, energies
+  QA-002. A schedule is called device-motivated only when its rates derive from gate durations and
+  \(T_1/T_2\) through the named transform.
+- **Thermal relaxation as a named transform.** A caller-selected transform maps
+  \((T_1,T_2,t,p_\mathrm{exc})\) to GAD with \(\gamma=1-e^{-t/T_1}\) followed by phase damping with
+  \(\lambda=1-e^{-2t/T_\varphi}\), \(1/T_\varphi=1/T_2-1/(2T_1)\), inside QA-010's declared domain;
+  it refuses \(T_2>2T_1\), is recorded in metadata, and matches Aer's thermal-relaxation channel.
+  The phase-damping code comment stating \(\lambda=1-e^{-t/T_2}\) is corrected in the same change.
 - One documented public entry returns exact noisy energy with M4 route attribution.
-- **Optimizer smoke—usability, not optimization quality.** One current derivative-free mode
-  (`BAYES_OPT` or `COSINE`, frozen in requirements) runs under a bounded iteration and
-  wall-clock budget with a pinned seed at q4 and one larger advertised width. It must complete,
-  emit finite best-energy history, and reproduce sampled visited energies through the public
-  evaluator. The emitted trace records iteration index, parameter vector, energy, and route
-  labels. That trace fixes the schema later used for \(R_\mathrm{obs}\); it supports no
-  convergence, optimality, or reuse claim. Upstream optimizer behavior is unchanged under QA-009.
-- **Descriptive GAD contrast, non-gating.** At one pre-registered small width, default q4,
-  report energy and purity across a short \(p_\mathrm{exc}\) grid and against one matched
-  local-depolarizing rate. Rows are marked `claim_bearing: false`, regenerate with the bundle,
-  and cannot pass or fail M8. The claim-bearing unital/non-unital study remains M13.
+- **Optimizer smoke — usability, not optimization quality.** One current derivative-free mode
+  (`BAYES_OPT` or `COSINE`, frozen in requirements) runs under a bounded iteration and wall-clock
+  budget with a pinned seed at 4 qubits and one larger advertised width. It must complete, emit a
+  finite best-energy history, and reproduce sampled visited energies through the public
+  evaluator. The trace records iteration index, parameter vector, energy, and route labels; it
+  fixes the schema later used for \(R_\mathrm{obs}\) and supports no convergence, optimality, or
+  reuse claim. Upstream optimizer behavior is unchanged under QA-009.
 - A support matrix preflight-refuses every gradient entry, gradient-based optimizer, non-HEA
   ansatz, non-generated source, unsupported gate/noise name, and parametric-noise request, each
   with a pinned negative.
 - 100% of M8's counted claims regenerate from a clean checkout.
 
-**Scope.** In: canonical GAD-capable noise specification, public energy-evaluator
-documentation, support/refusal matrix, trace-schema optimizer smoke, non-gating descriptive
-contrast, workflow evidence, clean-checkout proof. Out: second family (M8A), gradient product API or optimizer bridge (RG-2),
-trainability conclusions, selection in the optimizer loop, approximate methods, noisy
-re-synthesis, new gates, state-vector partitioner changes, and upstream optimizer changes.
+**Scope.** In: GAD-capable dense schedule families, the thermal-relaxation transform, public
+energy-evaluator documentation, support/refusal matrix, trace-schema smoke, workflow evidence,
+and clean-checkout proof. Out: scientific contrasts (M5B), the second family (M8A), gradient
+product API (M8B), trainability conclusions, selection in the optimizer loop, approximate methods,
+noisy re-synthesis, new gates, and changes to state-vector partitioners or upstream optimizers.
 
-**Feasibility.** Energy evaluation and the two derivative-free modes already exist; the support
-delta is GAD in the canonical noise specification, complete refusal evidence, a bounded smoke
-with a trace schema, one small-width descriptive contrast, and clean-checkout regeneration.
-The smoke has a frozen iteration/time cap and cannot support an optimization-quality or reuse
-claim. The descriptive contrast cannot change the milestone verdict.
+**Feasibility.** Energy evaluation, the two derivative-free modes, and a noise-insertion API that
+accepts arbitrary ordered lists already exist; the support delta is GAD in the noise
+specification, schedule generation, the transform, refusals, the smoke, and clean-checkout
+regeneration. A dense schedule costs about twice the canonical lowering per layer (measured at
+4–10 qubits). If the milestone exceeds its artifact budgets, the thermal-relaxation transform is
+the first candidate to split into its own milestone, named at requirements time.
 
-**Riskiest assumptions.** A5 (the inventory covers the selected study) and A7 (explicit refusal
-is usable).
+**Riskiest assumptions.** A5 (the inventory, including thermal relaxation, covers the study
+specifications) and A7 (explicit refusal is usable).
 
-**Dependencies and handoff.** M4 supplies the public attributed entry; M7 supplies GAD; the M5
-verdict and M6 posture are recorded but do not expand scope. Handoff slug:
-`study-ready-noisy-workflow`. Update both current-state docs and the non-spec API reference.
+**Dependencies and handoff.** M4 supplies the public attributed entry; M7 supplies GAD; M6's
+posture is recorded but does not expand scope. Handoff slug: `study-ready-noisy-workflow`. Update
+both current-state docs and the non-spec API reference.
+
+### M5B — `twirl-isolation-screen` (Next · evidence-only)
+
+**Outcome and why next.** With GAD in the public energy, unitality can be isolated exactly:
+amplitude damping AD(γ) = GAD(γ, 0) and its Pauli twirl GAD(γ, ½) share every Pauli-transfer
+diagonal entry and the average fidelity, and differ only in the non-unital displacement. M5B
+pre-registers that contrast along depth on the canonical workload — the controlled unitality
+experiment that current theory's disagreement calls for.
+
+**Success measure.** The M5 protocol (archived pre-registration, fresh seeds, primary and
+confirmatory families, max-statistic paired bootstrap, relevance-derived margin, no in-milestone
+extension), with primary estimand the log cost-variance ratio AD ÷ GAD(γ, ½) and the same three
+verdicts. Descriptive only: cost variance across a short \(p_\mathrm{exc}\) grid at fixed γ,
+last-layer gradient variance, and a fidelity-matched depolarizing arm, so M5's channel-class gap
+splits into a unitality part (AD against the twirl) and an anisotropy part (twirl against
+depolarizing). The exploratory pilot's twirl–depolarizing agreement, within 10% at every depth,
+is not a result here.
+
+**Scope.** In: pre-registration, study lane, verdict bundle, descriptive sweep rows. Out: product
+code, γ dependence of floors, width-model claims, and optimizer runs (M13).
+
+**Riskiest assumption.** A1a in its isolated-unitality form.
+
+**Dependencies and handoff.** M8 (GAD in the public energy, with M7's twirl witnesses) and M5's
+archived protocol; M5's variances inform its sample sizes, not its margin, and its verdict does
+not gate it. Evidence-only tree.
+Handoff slug: `twirl-isolation-screen`.
+
+### M9A — `local-channel-application` (Next)
+
+**Outcome and why next.** Phase 3.1 validly found no justified speedup for its shipped
+channel-native path, which builds each 2-qubit Kraus term with a Python loop over all \(4^n\)
+matrix entries and applies it through dense full-dimension products: at 10 qubits about 95 ms per
+term (70.7 ms embedding, 24.5 ms products with this host's multithreaded BLAS) against about 15 ms
+per sequential C++ operation. Whether fusion can pay at equal application complexity is open. M9A
+provides local Kraus or superoperator application at the sequential reference's asymptotic
+complexity and execution tier, so M9 can test A2 fairly; faster exact channel-native execution is
+useful on its own.
+
+**Success measure.** Every channel-native route on the frozen Phase 3.1 slice, strict and hybrid,
+executes through the new application and meets QA-001 against the sequential reference at 4–10
+qubits with its QA-004 sentinels; per-operation throughput (ns per density-matrix entry) is
+measured against the sequential kernels under M6's protocol; supports above the declared width are
+refused with a structured error.
+
+**Scope.** In: the primitive, starting with supports of at most two qubits, its integration into
+the channel-native routes, exactness evidence, and the throughput profile. Out: selection, cost
+records, reuse, GAD bundles, and GPU kernels.
+
+**Feasibility.** The main C++ engineering cost of the fusion track. Its ADR decides
+representation (Kraus rank versus superoperator), layout, and placement; the existing
+local-unitary kernels are the pattern. If it cannot ship, M9A closes through diagnosis, M9 does not
+open, A2 stays untested at equal complexity, and the Phase 4 outcome is partial (§5).
+
+**Riskiest assumption.** That same-complexity local application is achievable in the current
+execution tier without loss of exactness — A2's precondition.
+
+**Dependencies and handoff.** M3A; M6's comparable-tier protocol. Handoff slug:
+`local-channel-application`. Update both current-state docs with the primitive.
 
 ### M9 — `representation-aware-selection` (Next)
 
-**Outcome and why next.** M3A found 0/26 channel-native cases justified because composing raw
-Kraus bundles at \(R=1\) cost more than sequential application. M9 re-enters fusion with the
-unresolved variables explicit—representation, canonicalization, support, construction versus
-application cost, and comparable tiers—on the frozen Phase 3.1 families plus one frozen
-static-subgraph candidate surface. The candidate surface is a hypothesis, not a prescribed
-design. M9 tests A2 after M6 and after M8 secures research readiness.
+**Outcome and why next.** With M9A's same-complexity application in place, M9 re-enters fusion
+with representation, canonicalization, support, construction versus application cost, and
+comparable tiers explicit, on the frozen Phase 3.1 families plus one frozen static-subgraph
+candidate surface — a hypothesis, not a prescribed design. It tests A2 after M8 secures research
+readiness.
 
 **Success measure.** Before measurement, a milestone ADR freezes the candidate/motif surface,
-representation and canonicalization policy, calibrated work unit, memory ceiling, and
-positive-claim thresholds. Every partition records representation/support, logical
-transformations, diagnostic Choi rank, sequential/candidate construction and application work,
-peak memory, paired timings, and prediction error.
+representation and canonicalization policy, the calibration and held-out workload sets, memory
+ceiling, and positive-claim thresholds. The selection policy is calibrated on the first set and
+judged on the second. Every partition records representation/support, logical transformations,
+canonical complexity, sequential/candidate construction and application work, attributed memory,
+paired timings, and prediction error.
 - **Complete \(R=1\) decision.**
   \[
   T_s^{(1)}=B_s+A_s+L_s,\qquad
   T_c^{(1)}=B_c+A_c+L_c,
   \]
   where \(B\) is construction, \(A\) application, and \(L\) lookup/route-selection overhead.
-  Sequential build and overhead are measured, not assumed zero. QA-006 selection uses the
-  one-sided 95% upper bound of \(T_c^{(1)}/T_s^{(1)}\), with no reuse credit.
+  Sequential build and overhead are measured, not assumed zero. QA-006 selection uses
+  simultaneous one-sided 95% upper bounds of \(T_c^{(1)}/T_s^{(1)}\) on the held-out set, with no
+  reuse credit.
 - **Break-even forecast only.** The cost record reports both declared scenarios needed to avoid
   hiding reference reuse:
   \[
@@ -369,43 +451,58 @@ peak memory, paired timings, and prediction error.
   \]
   Each value is defined only for a positive denominator, carries uncertainty, and is rounded up
   for an integer reuse count; otherwise the record says “no break-even.” \(R^*\le1\) predicts
-  that no reuse is needed, but an actual win still requires the QA-006 one-sided confidence
-  bound at \(R=1\). These are forecast fields only and never enter M9 selection. Runtime/cache
-  instrumentation identifies the applicable reuse model; independently collected optimizer
-  traces provide \(R_\mathrm{obs}\). Only M12 may activate caching.
-- No candidate above sequential \(R=1\) cost or the memory ceiling is selected; every executed
-  selection meets QA-001/006, every route is attributed, and every motif class has a QA-004 sentinel.
+  that no reuse is needed, but an actual win still requires the QA-006 bound at \(R=1\). These are
+  forecast fields only and never enter M9 selection. Runtime/cache instrumentation identifies the
+  applicable reuse model; independently collected optimizer traces provide \(R_\mathrm{obs}\).
+  Only M12 may activate caching. These definitions move into M9's requirements at handoff.
+- **Pass-count cost model (transferability is a hypothesis).** Full-matrix passes per operation
+  class × entries × operation-class constants, with each fused object's Kraus-rank or
+  superoperator factor, calibrated on the first set, must predict held-out motifs and qubit counts
+  within a frozen relative error `[confirm]`. Transfer beyond SQUANDER is claimed only after the
+  model holds on a second implementation or execution tier.
+- Decisive design points are 8 and 10 qubits, where full-matrix passes dominate fixed per-call
+  and composition costs; 4 and 6 qubits are reported but cannot decide A2.
+- No held-out candidate above sequential \(R=1\) cost or the memory ceiling is selected; every
+  executed selection meets QA-001/006, every route is attributed, and every motif class has a
+  QA-004 sentinel.
 
-Every non-selected or diagnosis row names exactly one dominant mechanism from the taxonomy
-frozen before measurement: representation growth, construction cost, application cost, memory
-ceiling, or interop overhead. A mixed row names the largest measured component and lists the
-others. The version-pinned competitor matrix is required for both deployables. The positive
-deployable exposes selection for eligible static subgraphs only when that matrix supports the
-claim boundary. The diagnosis deployable keeps the planner non-selecting, publishes the cost
-record and dominant mechanism, and records A2 as killed. GAD motifs are excluded.
+Every non-selected or diagnosis row names its mechanism from the taxonomy frozen before
+measurement — representation growth, construction cost, application cost, memory ceiling, or
+interop overhead. A row names one dominant mechanism only if it exceeds the others by a frozen
+factor; otherwise it is labelled mixed, with components listed. The version-pinned competitor
+matrix is required for both deployables. The positive deployable exposes selection for eligible
+static subgraphs only when that matrix supports the claim boundary. The diagnosis deployable
+keeps the planner non-selecting, publishes the cost record, model, and mechanisms, and records A2
+as killed. GAD motifs are excluded.
 
-**Scope.** In: cost-record schema, frozen candidate surface, mechanism taxonomy, \(R=1\)
-selector, \(R^*\) forecast, performance pipeline, competitor matrix for both outcomes, positive
-or diagnosis deployable. Out: reuse-conditioned
-caching (M12), GAD Kraus bundle, approximate methods, GPU kernels.
+**Scope.** In: cost-record schema, frozen candidate surface and workload sets, mechanism
+taxonomy, \(R=1\) selector, \(R^*\) forecast, pass-count model, performance pipeline, competitor
+matrix for both outcomes, and the positive or diagnosis deployable. Out: the application
+primitive (M9A), reuse-conditioned caching (M12), a GAD Kraus bundle, approximate methods, and
+GPU kernels.
 
-**Feasibility.** The Phase 3.1 runtime provides a bounded execution surface but currently
-recomposes bundles and lacks build/apply instrumentation. The milestone ADR decides the
-candidate representation, canonicalization, instrumentation layer, and implementation
-placement; the roadmap prescribes none.
+**Riskiest assumption.** A2. The positive arm must beat sequential at \(R=1\) without reuse, at
+equal application complexity, on held-out workloads. A negative result remains useful through the
+cost diagnosis and cannot block M8.
 
-**Riskiest assumption.** A2. The positive arm must beat sequential at \(R=1\) without reuse.
-A negative result remains useful through the cost diagnosis and cannot block M8.
+**Dependencies and handoff.** M9A; closed M8. Handoff slug: `representation-aware-selection`.
+Update both current-state docs with the cost model, selection surface, and governing ADR.
 
-**Dependencies and handoff.** M3A, M6, and closed M8. Handoff slug:
-`representation-aware-selection`. Update both current-state docs with the cost model, selection
-surface, and governing ADR.
+### Later — M8B, M8A, M10–M13 and conditional M5A
 
-### Later — M8A, M10–M13 and conditional M5A
-
-- **M8A `second-family-workflow`.** Add exactly one pre-registered, independently motivated
-  task/ansatz family under the M8 refusal discipline and clean-checkout proof. It ships no
-  gradient product API.
+- **M8B `differentiable-noisy-objective`.** Opens only through RG-2. Exact gradients for
+  fixed-noise U3/CNOT circuits inside the existing optimizer loop, meeting QA-013 at 4–10 qubits;
+  the method is an ADR decision, with adjoint differentiation reusing the existing U3 derivative
+  kernels the leading candidate. Budget, assuming 200 optimizer steps per run: parameter shift at
+  8 qubits and depth 16 needs 1,344 energies per gradient (≈16 min serial), so a 240-run study
+  needs ≈12,800 CPU-hours, against ≈29 at an estimated three energy-equivalents per gradient. Kill
+  (A8): CAP-008 stays unmet and M13 uses cost variance, sampled-coordinate gradients, and
+  derivative-free optimizers.
+- **M8A `second-family-workflow`.** The thesis multi-family bar needs a second ansatz, not only a
+  second Hamiltonian. The default is the Hamiltonian variational ansatz — plateau-free without
+  noise for TFIM and mildly plateaued for XXZ (Wiersema et al. 2020) — compiled to U3/CNOT with
+  tied parameters; the TFIM task on the generated HEA, a Hamiltonian-only change, is the tracer
+  slice. Gradients for tied parameters need a chain rule and wait for an M8B extension.
 - **M10 `strict-parameter-domains`.** Replace clamps on advertised parametric paths with
   structured rejection or an explicit recorded transform under an Ask-first ADR. This is the
   global QA-005 milestone.
@@ -415,12 +512,21 @@ surface, and governing ADR.
   optimizer traces independently show \(R_\mathrm{obs}\) beyond forecast \(R^*\); it is the only
   milestone allowed to activate reuse-conditioned caching. It remains independent of M9's
   \(R=1\) verdict.
-- **M13 `noisy-trainability-studies`.** Execute the pre-registered multi-family scientific
-  endpoint. Minimum migration requires a gauge-invariant state/energy definition, the earlier
-  “SNR” becomes a gradient-norm coefficient of variation, and \(L^*\) is explicitly
-  optimizer-, budget-, and ensemble-conditioned. Gradient-based training arms require RG-2.
-- **M5A `exact-regime-boundary`.** Open only through RG-1. It characterizes the exact boundary
-  and records escalation; approximate methods or GPU dependency require product-statement revision.
+- **M13 `noisy-trainability-studies`.** The pre-registered, multi-family scientific endpoint,
+  expected to split at requirements time into a gradient-statistics study and an
+  optimization-landscape study. Its lead question carries M5B's isolated non-unital displacement
+  beyond cost variance: does \(\nu\) set effective trainable depth and optimization outcomes at
+  realistic relaxation rates, across both ansatz families? Further candidate questions the pilots
+  raise: how a late-layer floor, if
+  it exists, depends on \(p_\mathrm{exc}\) and γ (the pilot's small-γ runs had not reached one);
+  effective trainable depth; whether Pauli twirling of \(T_1\)-dominated noise removes a floor;
+  local-minimum proliferation under non-unital noise (Fontana et al., arXiv:2011.08763); and the
+  noiseless-energy penalty of the noisy optimum as a gauge-invariant migration measure.
+  Realistic-rate points are measured directly at depths of several \(1/\gamma_\mathrm{eff}\) (A9).
+  Results characterize a trainable window, never quantum advantage.
+- **M5A `exact-regime-boundary`.** Open only through RG-1 (A1b). It characterizes the exact
+  boundary and records escalation; approximate methods or a GPU dependency require
+  product-statement revision.
 
 ### Feasibility guidance (Now/Next)
 
@@ -430,11 +536,16 @@ is what exists today versus what the outcome needs; “kill” is the pre-regist
 | M# | Current support delta | Expected slices | Evidence lanes | Compute budget / kill condition |
 |----|-----------------------|-----------------|----------------|---------------------------------|
 | M4 | Public C++ density energy and planner→runtime state execution exist; attributed runtime energy, energy route rows, and the support matrix do not | 2–3: q4 partitioned tracer; fused/hybrid routes; q6–q10, Aer, negatives | fast pytest; correctness pipeline; Aer | Existing correctness protocol; any QA-001 route disagreement freezes downstream claims (A6) |
-| M5 | No density gradient product exists; benchmark instrumentation must derive U3 coordinate shifts from `{2,1,1}` and pass finite-difference plus analytic controls before counting | 3: q4 gradient tracer; q4/q6 pilot and threshold freeze; counted four-width verdict | new study-specific sensitivity lane; fast pytest witnesses | Pilot timing and variance at q4/q6 before committing \(S_8,S_{10}\); counted cost \(\sum_n 4S_nK_n\); shrink descriptive points first, never a primary width or \(S_n\) without formal revalidation |
-| M6 | No paired/interleaved equivalent-tier harness; legacy performance scripts do not isolate the language crossing | 2: harness/q4; q6/q8, validator, diagnosis | performance pipeline | ≥1000 warmed calls per tier/width plus repeats; inability to create equal-work tiers closes as diagnosis with QA-007 unmet |
-| M7 | GAD is absent from core, bindings, planner vocabulary, runtime bundles, and Aer mapping; amplitude damping is the template | 2–3: core/binding/calibration tracer; planner/runtime/refusals; q4–q10 Aer evidence | fast pytest; correctness pipeline; Aer; optional C++ | Existing correctness protocol; sequential–Aer disagreement beyond QA-002 freezes admission |
-| M8 | Canonical energy and `BAYES_OPT`/`COSINE` support exist; missing GAD noise specification, complete refusal matrix, trace-schema smoke, descriptive contrast, and clean-checkout bundle | 2–3: GAD-in-spec/matrix; q4–q10/Aer; smoke, descriptive q4 contrast, and clean checkout | fast pytest; workflow pipeline; Aer; clean-checkout lane | Fixed smoke iterations and wall-clock cap; descriptive rows are non-gating; if q10 is unaffordable, M8 is partial/missed unless formally revalidated before data |
-| M9 | Channel-native runtime recomposes per call; records lack build/apply split, Choi rank, and partition/representation-attributed memory accounting; no candidate surface, mechanism taxonomy, or competitor matrix is frozen | 3–4: schema/instrumentation over 26-row matrix; candidate surface, taxonomy, and \(R=1\) selector; competitor matrix and either verdict; split is mandatory if any Layer artifact exceeds its budget | performance pipeline; correctness pipeline; fast no-regression tests | Paired/interleaved trials under memory ceiling; if no candidate upper bound is ≤1 at \(R=1\), ship the mechanism-labelled diagnosis and competitor matrix, kill A2, and retain \(R^*\) only as an M12 forecast |
+| M5 | Delivered channels, public energy, and the insertion API suffice; instrumentation must derive shifts from U3 multipliers {2,1,1} and pass finite-difference checks | 2–3: q4 tracer with instrumentation checks; archived pre-registration; counted families and verdict | new sensitivity lane; fast pytest witnesses | Pilot: full design with secondary gradients in 194 s on 120 processes; primary estimand ≈10⁴ energies. Descriptive points shrink first; a primary design point is never dropped without a new pre-registration |
+| M6 | No paired/interleaved equal-work harness for the C++ entry; no route attribution or per-operation kernel profile | 2: C++-entry harness and kernel profile at q4; q6/q8, route attribution, validator, diagnosis | performance pipeline | ≥1000 warmed calls per tier and width plus repeats; without a C++-level comparator the entry closes as diagnosis with QA-007 unmet |
+| M7 | GAD is absent from core, bindings, planner vocabulary, runtime bundles, and Aer mapping; amplitude damping is the template | 2–3: core/binding/calibration and twirl witnesses; planner/runtime/refusals; q4–q10 Aer evidence | fast pytest; correctness pipeline; Aer; optional C++ | Existing correctness protocol; a sequential–Aer disagreement beyond QA-002 or a failed twirl witness freezes admission |
+| M8 | Energy, `BAYES_OPT`/`COSINE`, and the insertion API exist; GAD in the specification, schedule families, the thermal transform, the refusal matrix, the smoke, and the clean-checkout bundle do not | 3: schedules, GAD-in-spec, and matrix at q4; transform with Aer and q4–q10; smoke and clean checkout | fast pytest; workflow pipeline; Aer; clean-checkout lane | Dense schedules cost about 2× canonical lowering; if q10 is unaffordable, M8 is partial/missed unless formally revalidated before data; the transform is the first split candidate if budgets are exceeded |
+| M5B | Needs M8's GAD in the public energy; otherwise reuses M5's lane | 2: q4 tracer; archived pre-registration, families, and verdict | sensitivity lane | Same order as M5, one extra arm; no in-milestone extension |
+| M9A | Channel-native application embeds Kraus terms at full dimension; no same-complexity C++ primitive exists | 2–3: primitive with QA-001 on the strict slice; hybrid routes and sentinels; throughput profile at 8–10 qubits | correctness pipeline; performance pipeline; fast pytest; optional C++ | Existing correctness protocol; if exactness or the declared complexity cannot be met, close as diagnosis; M9 does not open and the Phase 4 outcome is partial |
+| M9 | Records lack build/apply split, canonical complexity, and attributed memory; no candidate surface, workload sets, taxonomy, pass-count model, or competitor matrix | 3–4: schema and instrumentation; candidate surface, sets, taxonomy, and selector; model, competitor matrix, and verdict; split mandatory if any Layer artifact exceeds its budget | performance pipeline; correctness pipeline; fast no-regression tests | Paired/interleaved trials under the memory ceiling at 8–10 qubits; if no held-out candidate bound is ≤1 at \(R=1\), ship the mechanism-labelled diagnosis, model, and competitor matrix, kill A2, and keep \(R^*\) as an M12 forecast |
+
+Throughput note: under 120 concurrent processes, per-energy time rose 1.5–2.1× over single-process
+runs, so independent evaluations reach about 55–80× serial throughput on the 128-core host.
 
 ## 5. Sequencing rationale
 
@@ -442,23 +553,33 @@ is what exists today versus what the outcome needs; “kill” is the pre-regist
   public object that crosses every currently connectable product boundary. Full-state checks
   prevent energy agreement from hiding a wrong state. GAD-only admission is a channel slice, not
   a product skeleton; interop alone is a measurement.
-- **Detectability before scaling claims.** M5 tests one gradient-magnitude effect with a
-  q4-and-q6 pattern and no sign reversal at q8 or q10. Its pilot fixes q4 and q6 variance and
-  timing before the larger sample counts. Scaling-law discrimination remains M13.
-- **Interop → GAD → energy-only readiness → selection.** M6 supplies comparable tiers; M7 the
-  bounded \((\gamma,p_\mathrm{exc})\) anchor; M8 the canonical energy-only surface on delivered
-  derivative-free traces with refusals pinned; M9 then tests selective fusion without holding
-  the research path hostage.
-- **\(R=1\) decision first, reuse forecast only.** Phase 3.1's 0/26 was an \(R=1\) result with
-  raw bundles. M9 must win or lose at \(R=1\) under complete cost accounting; every negative
-  row names one dominant mechanism, and the competitor matrix accompanies both outcomes.
-  \(R^*\) is a forecast, and only M12 may activate caching after \(R_\mathrm{obs}\) is observed.
-- **Gradients wait for a contract.** No current `CAP-*`/`QA-*` defines a differentiable
-  objective or gradient fidelity. RG-2 makes product-statement evolution the entry ticket.
-  U3 multipliers `{2,1,1}` and the stored \(\theta/2\) coordinate make a coordinate-blind
-  shift rule a correctness bug, not an implementation detail.
-- **Phase 4 stays bounded.** Its delivery outcomes are M4, M6, M7, M8, and M9, with M5 as an
-  early scientific-risk screen. M8A, M10–M13, and all review-gated work remain Later or conditional.
+- **The contested scientific question, early and honestly scoped.** M5 asks, with delivered
+  channels, whether channel class changes the cost landscape at matched fidelity along depth; it is
+  a pre-registered confirmation of an exploratory effect, handed off after M4 and run as the
+  evidence-only tree. M5B then isolates unitality with GAD's exact twirl as soon as M8 lands, which
+  is where the scientific novelty lies.
+- **Profile → knob → readiness → primitive → fair fusion.** M6 profiles the C++ entry, attributes
+  the runtime route, and measures kernels; M7 adds the twirl-controlled knob; M8 makes declared and
+  thermal noise expressible and Aer-checked; M9A gives fusion a same-complexity application; M9
+  then tests selection at \(R=1\) on held-out workloads, at the sizes where passes dominate.
+- **\(R=1\) decision first, reuse forecast only.** Phase 3.1's 0/26 holds for its shipped
+  full-dimension path. M9 must win or lose at \(R=1\) under complete cost accounting and equal
+  application complexity; every negative row names its mechanism, and the competitor matrix
+  accompanies both outcomes. \(R^*\) is a forecast; only M12 may activate caching.
+- **Gradients planned, not smuggled.** CAP-008 and QA-013 define the contract; M8B follows Phase 4
+  behind RG-2, which needs the owner's confirmation, a closed M8, a pre-registered need, and a cost
+  and memory budget. Until then, gradients stay benchmark-internal, derived from U3 multipliers
+  {2,1,1}, because a coordinate-blind shift is a correctness bug.
+- **Phase 4 outcome verdict.** Phase 4 is **achieved** when M4, M7, and M8 achieve their outcomes,
+  M6 meets QA-007 on the C++ entry (A4's kill, an upper bound below 5%, implies it), M9A ships the
+  same-complexity application, and M9 reaches a held-out QA-006 decision, positive or diagnosis,
+  with its version-pinned competitor matrix, which is the Literature Positioning deliverable.
+  It is **partial** otherwise: M4, M7, or M8 closes without its outcome, QA-007 is unmet on the
+  C++ entry, or M9A cannot ship, in which case M9 does not open. A partial verdict triggers
+  roadmap revalidation and, if needed, a `PHASE4_REQS.md` revision. If A2 dies, the fusion
+  deliverable is the attributed evaluation-mode route, the primitive, the cost model, and the
+  mechanism-labelled diagnosis — not a default speedup. M5 and M5B are evidence-only and do not
+  gate Phase 4.
 - **Archived order and gates remain intact.** M2 stays the exact workflow anchor; M3/M3A are not
   reopened; workflow broadening follows their delivered baseline; trainability follows
   readiness; invasive fusion or scaling work remains evidence- and review-gated.
@@ -472,12 +593,15 @@ is what exists today versus what the outcome needs; “kill” is the pre-regist
 
 | Assumption | Validated by | Consequence if it fails |
 |------------|--------------|-------------------------|
-| A1 Exact regime resolves the target effect | M5 detects one gradient-magnitude effect only; M13 tests scaling discrimination | A finite-size-limited M5 verdict opens RG-1; scaling claims remain closed until M13 |
-| A2 Selective fusion finds paying workloads | M9 QA-006 at \(R=1\), with \(R^*\) forecast but never credited | Ship diagnosis, keep planner non-selecting, do not open selection-in-loop |
-| A3 Real traces contain amortizing reuse | M12, gated on M9 cost record and independently observed \(R_\mathrm{obs}\) from M8/M8A traces | Drop reuse and optimize per evaluation only |
-| A4 Interop overhead materially limits iteration | M6 | Make CAP-004 a hold-the-line constraint |
-| A5 Inventory through GAD covers core studies | M7 GAD anchor, M8 canonical specification, M8A second family | Revisit CAP-002 through Ask-first; no speculative breadth |
-| A6 Sequential executor is a trustworthy oracle | M4, M7, every new path | Freeze downstream claims until disagreement is resolved |
+| A1a Depth and noise-class effects are resolvable at matched fidelity | M5 (channel class); M5B (isolated unitality); M13 | Noise-class results become finite-size observations; the thesis emphasis moves to methods |
+| A1b Pre-specified width models are discriminable at \(n\le10\) | M13 pre-registered sensitivity analysis | Report finite-size observations only; RG-1 only if the thesis question needs width scaling |
+| A2 Selective fusion finds paying workloads | M9A same-complexity application, then M9 at \(R=1\) on held-out workloads; \(R^*\) forecast only | Ship diagnosis and cost model; keep the planner non-selecting; no selection-in-loop |
+| A3 Real traces contain amortizing reuse | M12, gated on M9's cost record and independently observed \(R_\mathrm{obs}\) from M8/M8A/M8B traces | Drop reuse and optimize per evaluation only |
+| A8 An exact gradient costs a small multiple of one energy | M8B (QA-013) | CAP-008 unmet; M13 uses cost variance, sampled-coordinate gradients, and derivative-free optimizers |
+| A9 Noise-weighted depth licenses strong-noise proxies | M5 collapse check (unital arm); M13 direct realistic-rate measurements | Realistic-rate points need direct deep runs at 4–6 qubits |
+| A4 Interop overhead materially limits iteration | M6 on the C++ entry; route attribution on the runtime path | CAP-004 becomes a hold-the-line constraint for that entry |
+| A5 Inventory through GAD covers the core studies | M7; M8 thermal transform; M8A | Revisit CAP-002 through Ask-first; no speculative breadth |
+| A6 Sequential executor is a trustworthy oracle | M4, M7, M9A, every new path | Freeze downstream claims until disagreement is resolved |
 | A7 Researchers accept explicit refusal over clamping | M8 in use; M10 migration | Improve diagnostics or explicit transforms; never restore silence |
 
 ### Roadmap risks
@@ -485,84 +609,89 @@ is what exists today versus what the outcome needs; “kill” is the pre-regist
 | Risk | Mitigation |
 |------|------------|
 | M4 expands into channels, timing, or optimizer integration | Bind it to the support matrix and one-evaluation outcome |
-| M5 verdict is over-read as scaling discrimination | Positive verdict requires the q4-and-q6 pattern without q8/q10 sign reversal; one width is descriptive; the closeout states that scaling discrimination remains M13 |
-| Benchmark gradient applies a coordinate-blind shift | Derive shifts from U3 multipliers `{2,1,1}`; require finite-difference and analytic controls including \(\phi/\lambda\) witnesses; keep gradients benchmark-internal until RG-2 |
-| M5 estimand is diluted by structurally inactive coordinates | Freeze the active-coordinate rule before data |
-| M5 compute \(\sum_n 4S_nK_n\) exceeds budget | Freeze q4/q6 timing and variance before \(S_8,S_{10}\); shrink descriptive points first; never drop a primary width or \(S_n\) without formal revalidation |
+| The evidence-only tree drifts into product code | Study trees add pipelines only; any product change moves to a code-bearing milestone |
+| M5's channel-class contrast is read as a unitality result | M5 claims channel class only; M5B isolates unitality with GAD(γ, ½) |
+| The pilot anticipates M5's verdict | M5 is labelled a confirmation; fresh seeds, an archived analysis plan, and a relevance-derived margin; M5B carries the open question |
+| Fidelity matching uses the wrong depolarizing convention | Derive \(p\) from the implemented Bloch shrink \(1-p\); verify equal \(F_\mathrm{avg}\) numerically at every design point |
+| Multiplicity or optional stopping inflates error | One simultaneous family per study, a separate confirmatory family, two-sided simultaneous intervals for equivalence, descriptive secondaries, and no in-milestone extension |
+| Noise-weighted depth is ambiguous under uneven insertion | Per-qubit exposure \(x_q\), a frozen scalar summary, and the per-qubit range on every row |
+| Benchmark gradient applies a coordinate-blind shift | Derive shifts from multipliers {2,1,1}; a finite-difference gate on every row; gradients stay benchmark-internal until M8B |
+| Realistic rates need very deep circuits | A9: unital proxies via noise-weighted depth; non-unital points measured directly at 4–6 qubits (≈0.07 and ≈1.7 ms per dense layer) |
+| The planner/runtime route has no equal-work comparator | M6 closes it as an attribution diagnosis; QA-007 applies only where a comparator exists |
+| Phase 4 is declared closed without its outcomes | The §5 outcome-verdict rule distinguishes achieved from partial |
+| M9A's primitive is costly or late | Its ADR starts at supports of at most two qubits; if it cannot ship, M9 does not open and the Phase 4 outcome is partial |
+| M9 credits unobserved reuse or overfits its selector | Selection stays at \(R=1\) on a held-out set; \(R^*\) is forecast-only; caching activates only in M12 |
+| M9 candidate family has no eligible static subgraph | Record “no candidate” and use the attributed baseline route; the surface remains an ADR hypothesis |
+| M9 revives an unjustified novelty or transferability claim | The competitor matrix gates both outcomes; transfer needs a second implementation or tier |
+| The second family is only a second Hamiltonian | M8A requires an independent ansatz; TFIM on the HEA is its tracer slice only |
+| M8B adjoint memory at 10 qubits | Checkpointing per ADR; RG-2 needs a frozen cost and memory budget |
 | Deferred thresholds remain open | Freeze each `[confirm]` value in the first citing `INITIAL_REQUIREMENTS.md` |
 | Optional Aer dependency drifts | Pin versions in every QA-002 evidence bundle |
-| Scoped QA-005 is mistaken for global compliance | Label every scoped trace; reserve global claim for M10 |
-| M9 credits unobserved reuse | Selection and QA-006 remain \(R=1\); \(R^*\) is forecast-only; caching activates only in M12 after \(R_\mathrm{obs}\) |
-| M9 candidate family has no eligible static subgraph | Record “no candidate” and use the attributed baseline route; candidate surface remains an ADR hypothesis |
-| Phase 4 creeps into gradient or second-family product work | §1 boundary, RG-2, and M8A Later placement |
-| GAD receives unconditioned Gibbs or time language | Per-step \((\gamma,p_\mathrm{exc})\); Gibbs wording only with declared Hamiltonian/basis/\(\beta,\Delta\); no time claim without \(\gamma(t)\) |
-| M8 optimizer smoke is read as optimization quality or observed reuse | Assert completion and exact reruns; traces define the schema only, with no convergence or \(R_\mathrm{obs}\) claim |
-| Descriptive GAD contrast is read as a trainability result | One small width, `claim_bearing: false`, and no pass/fail effect on M8; M13 owns the study |
-| M9 diagnosis lacks a mechanism | Every negative row names one dominant class from the frozen taxonomy |
-| M9 revives an unjustified novelty claim | Require the version-pinned competitor matrix for both positive and diagnosis outcomes |
+| Scoped QA-005 is mistaken for global compliance | Label every scoped trace; reserve the global claim for M10 |
+| GAD receives unconditioned Gibbs or time language | Per-step \((\gamma,p_\mathrm{exc})\); Gibbs only with declared Hamiltonian, basis, \(\beta\), \(\Delta\); time only through M8's named transform |
+| Trainability results are read as quantum advantage | Product-statement Never guardrail; effective shallowness is reported beside every floor |
 | Two noise representations drift | Keep legacy `NoiseChannel` non-claim-bearing and unextended |
 
 ### Revalidation log
 
-- **2026-09-21 — v0.6, scientific-yield refinements of v0.5.** *Changed:* M5's positive
-  verdict now requires a pre-registered q4-and-q6 effect without a q8 or q10 sign reversal, and
-  its pilot freezes those two widths before committing the larger sample counts. The screen is
-  explicitly a detectability result; scaling-law discrimination stays in M13. M8's optimizer
-  smoke now emits parameter, energy, and route traces as a schema only, plus one non-gating
-  descriptive GAD-versus-depolarizing contrast. M9 requires a dominant-mechanism label on every
-  negative row and the competitor matrix for both the positive and diagnosis deployables.
-- **2026-09-21 — v0.5, source-verified scientific correction of v0.4.**
-  *Learned:* U3 stored coordinates have multipliers `{2,1,1}` with physical \(\theta\) stored
-  as \(\theta/2\), so v0.4's universal
-  \(\tfrac12[E(p+\pi/2)-E(p-\pi/2)]\) rule is identically wrong on that coordinate; density
-  optimizer support is `BAYES_OPT`/`COSINE` only and gradient entry is refused; the
-  channel-native runtime recomposes bundles per call and existing records lack build/application
-  decomposition; GAD is absent; QA-006 forbids reuse credit at \(R=1\), QA-012 makes
-  unobserved reuse forecast-only, and no current `CAP-*`/`QA-*` covers a differentiable product
-  objective. *Changed:* M5 now has one paired, coordinate-aware, control-validated estimand;
-  \(\Delta\theta^*\), misnamed SNR, and \(L^*\) moved to M13 under definition conditions;
-  M8 became canonical energy-only readiness with a derivative-free smoke and refusal matrix;
-  M8A adds the second family Later; RG-2 gates any gradient product work; M9 selects only at
-  \(R=1\) under complete sequential/candidate costs and emits \(R^*\) as forecast; M12 alone
-  activates caching after observed \(R_\mathrm{obs}\); GAD language and the Phase 4 boundary
-  were tightened; feasibility guidance and kill conditions were added. Final critique then
-  froze M5 to one paired-difference estimand with simultaneous width-wise intervals, made both
-  sequential reuse models and lookup overhead explicit in M9 forecasts, prohibited silent M8
-  width reduction, and completed QA-008/009 traces.
-- **2026-09-21 — v0.4, scientific research enhancement (Phase 4 goals & thesis alignment).**
-  *Learned:* Evaluating $n \in \{4,6,8,10\}$ solely against asymptotic barren-plateau scaling
-  risks premature false-negative escalation; static $R=1$ fusion testing repeats Phase 3.1's 0/26
-  outcome; and legacy C++ VQE code throws on gradient requests.
-  *Changed:* M5 enhanced with finite-size landscape observables ($\Delta\theta^*$, SNR, $L^*(p)$);
-  M7 explicitly anchored to non-unital thermal relaxation ($p_\mathrm{exc} \leftrightarrow \beta \Delta$);
-  M8 equipped with exact 2-point parameter-shift gradient routing and a Python-level SciPy optimizer bridge;
-  M9 enhanced with subgraph factoring and a break-even reuse predictor ($R^*$).
-- **2026-09-20 — roadmap created after archived Phase 3.1 closure and revalidated through two
-  critique revisions (v0.1–v0.3).** Phase 3 had 34 counted supported cases, with 0/6 representative cases
-  passing the positive threshold and 6/6 closing through diagnosis; therefore M6 separates
-  interop cost before another fusion claim. Phase 3.1 classified 17/26 cases
-  `phase3_sufficient`, 9/26 `phase31_not_justified_yet`, and 0/26
-  `phase31_justified`; therefore M9 re-enters fusion only through a representation-aware cost
-  record and kill criterion, while M12 treats reuse independently. Critique moved A1 forward
-  into M5, replaced the original GAD-only skeleton with the positive attributed-energy M4,
-  separated GAD from selection, promoted bounded study readiness ahead of selection, scoped
-  QA-005 until clamp migration, and made M5A review-gated.
+- **2026-09-23 — v0.7, scientific redesign after the PhD research review; product statement
+  v0.4; two critique passes.** *Learned:* a noise-versus-noiseless screen is settled (exploratory
+  NumPy pilot: noise cut gradient variance by ≈20% at depth 1 and ≈70–75% at depth 4). At matched fidelity, non-unital
+  amplitude damping keeps cost and last-layer gradient variance orders of magnitude above unital
+  references along depth; on SQUANDER itself (non-counted), cost variance exceeded
+  fidelity-matched depolarizing by 8.0×10³ at depth 16 on 6 qubits and 3.1×10⁴ on 8 qubits.
+  Phase 3.1's shipped channel-native path costs ≈95 ms per 2-qubit Kraus term at 10 qubits against
+  ≈15 ms per sequential operation, so whether same-complexity application changes its verdict is
+  open. The C++ energy has a near-zero per-call intercept and costs 12–15 ns per entry per
+  operation. A parameter-shift gradient at 8 qubits, depth 16 costs 1,344 energies. Unital decay
+  collapsed onto noise-weighted depth in the pilot; non-unital variance did not and had not
+  plateaued at small γ. The phase-damping comment's \(T_2\) mapping contradicts its Kraus form, and
+  the canonical schedule has three channels. *Changed:* M5 redesigned and renamed
+  `matched-fidelity-depth-screen` (no tree existed) as a confirmatory, evidence-only channel-class
+  screen with a frozen max-statistic protocol, depending only on M2's delivered outcome; M5B
+  `twirl-isolation-screen` added to isolate unitality after M8; M6 retargeted to the C++ entry,
+  route attribution, and kernels; M7 gains twirl witnesses; M8 gains declared dense schedules and
+  the thermal-relaxation transform; M9A `local-channel-application` split from M9, which now
+  validates on held-out workloads and treats model transfer as a hypothesis; a Phase 4
+  outcome-verdict rule added; M8B added after Phase 4 behind a tightened RG-2; M8A requires an
+  independent ansatz; M13 trimmed and expected to split; RG-1 retargeted to A1b; A8–A9 added.
+  The second critic pass added two-sided simultaneous equivalence intervals, per-qubit exposure
+  (dense HEA schedules give edge qubits half the interior channels), the rule that M9 does not
+  open if M9A fails, a deterministic Phase 4 verdict, and M13's lead question.
+- **2026-09-21 — v0.6.** M5's positive verdict required a q4-and-q6 pattern; M8 gained the
+  trace-schema smoke and a descriptive contrast; M9 gained the mechanism taxonomy and the
+  competitor matrix for both outcomes.
+- **2026-09-21 — v0.5.** Source-verified correction: coordinate-aware U3 shifts, \(R=1\) selection
+  with \(R^*\) forecast only, energy-only M8, M8A and RG-2 added, GAD language bounded.
+- **2026-09-21 — v0.4.** Scientific enhancements, later corrected by v0.5 (a universal shift rule
+  and reuse-credited selection).
+- **2026-09-20 — v0.1–v0.3.** Roadmap created after the Phase 3.1 closure with M4 as walking
+  skeleton; Phase 3 (34 counted, 0/6 positive, 6/6 diagnosis) and Phase 3.1 (17/9/0) outcomes
+  recorded; A1 screened early; GAD separated from selection; QA-005 scoped until clamp migration.
 
 ### Critique verdict
 
-- Outcome honesty: delivered milestones record the thresholds actually met, including negative
-  performance decisions.
-- Sequencing: M4 validates integration risk; M5 screens detectability without settling scaling
-  discrimination; A4 precedes A2; study readiness precedes and is independent of A2; A3 is gated last.
-- Deferred work is visible: gradient product work sits behind RG-2 with its required upstream
-  contracts named; the second family is M8A; reuse activation is M12; strict migration is M10;
-  M5's removed observables are conditional M13 work.
-- Deployability: M4–M8 are bounded to a few slices; M9 must split during requirements if its
-  frozen matrix does not fit any Layer artifact budget.
-- Orphans: none. Every milestone has non-empty CAP/QA traces.
-- Escalation: no current evidence breaks the North Star; M5 is the explicit A1 review trigger.
+- Outcome honesty: delivered rows are unchanged, and Phase 3.1's verdict is kept within its claim
+  boundary; the open question about same-complexity application lives in A2, M9A, and M9.
+- Sequencing: M4 validates integration risk; M5 confirms a channel-class effect and M5B isolates
+  unitality; A4 and kernel costs are measured and the primitive exists before A2 is tested; study
+  readiness precedes and is independent of A2; gradients (A8) precede M13's gradient-based arms;
+  A3 is gated last.
+- Inference: every claim-bearing study freezes one simultaneous family, a confirmatory family,
+  fresh seeds, per-qubit exposure, and a relevance-derived margin before data; equivalence needs
+  two-sided simultaneous intervals within the margin; secondaries are descriptive; there is no
+  optional stopping.
+- Deferred work is visible: gradient product work is M8B behind RG-2; the second ansatz is M8A;
+  reuse activation is M12; strict migration is M10; width models are A1b with RG-1.
+- Deployability: M4–M9A are bounded to a few slices; M9 must split during requirements if its
+  frozen matrix does not fit any Layer artifact budget; M13 is expected to split.
+- Orphans: none. Every milestone has non-empty CAP/QA traces; CAP-008 and QA-013 are traced by M8B
+  and by M13's gradient-based arms.
+- Escalation: this change revises the product statement to v0.4; no further escalation.
 
-**Critique verdict:** Ready — scientific-yield refinements recorded (v0.6); M4 handoff unchanged.
+**Critique verdict:** Ready for the stakeholder checkpoint. The first adversarial pass raised 14
+blocking findings and the second raised 6; all are resolved, and a confirmation pass found no
+remaining blocker.
 
 ### Stakeholder checkpoint and handoff
 
@@ -572,4 +701,5 @@ is what exists today versus what the outcome needs; “kill” is the pre-regist
 **Handoff:** invoke `create-initreq-for-sdd` for M4 `canonical-attributed-energy` with its
 outcome, support matrix, CAP-001/003/005/007 and QA-001/002/005-scoped/008/009 traces,
 dependencies, deployable result, and the instruction to update—not create—the current-state
-architecture and stack docs at close.
+architecture and stack docs at close. M5 `matched-fidelity-depth-screen` follows through the same
+skill as the evidence-only tree once M4 has been handed off.

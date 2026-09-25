@@ -1,14 +1,14 @@
 # `docs/specs/` — the spec root
 
-> **Status:** baseline established; product statement drafted (v0.3, at stakeholder checkpoint);
-> roadmap drafted (v0.6, scientific-yield refinements, at stakeholder checkpoint).
+> **Status:** baseline established; product statement drafted (v0.4, at stakeholder checkpoint);
+> roadmap drafted (v0.7, scientific redesign, at stakeholder checkpoint).
 > **How to work here:** `docs/sdd-skills-guide.md`. Editing this tree activates the
 > `spec-driven-docs-specs` rule.
 
 | Artifact | State | Produced by |
 |----------|-------|-------------|
-| `PRODUCT_STATEMENT.md` (`CAP-*`, `QA-*`) | draft v0.3 — `CAP-001…007`, `QA-001…012`, at stakeholder checkpoint | `create-product-statement` |
-| `ROADMAP.md` (`M#`, Now/Next/Later) | draft v0.6 — M1–M3A Delivered; M4 `canonical-attributed-energy` is Now walking skeleton; Phase 4 bounded to M4/M6/M7/M8/M9 plus the M5 detectability screen | `create-product-roadmap` |
+| `PRODUCT_STATEMENT.md` (`CAP-*`, `QA-*`) | draft v0.4 — `CAP-001…008`, `QA-001…013`, at stakeholder checkpoint | `create-product-statement` |
+| `ROADMAP.md` (`M#`, Now/Next/Later) | draft v0.7 — M1–M3A Delivered; M4 `canonical-attributed-energy` is Now walking skeleton; Phase 4 outcomes are M4/M6/M7/M8/M9A/M9, with evidence-only studies M5 `matched-fidelity-depth-screen` and M5B `twirl-isolation-screen` alongside | `create-product-roadmap` |
 | `ARCHITECTURE_OVERVIEW.md` | current-state, seeded from delivered Phases 1–3.1 | `spec-driven-development` |
 | `TECH_STACK.md` | current-state | `spec-driven-development` |
 | `milestones/<slug>/INITIAL_REQUIREMENTS.md` (`REQ-*`) | per milestone | `create-initreq-for-sdd` |
