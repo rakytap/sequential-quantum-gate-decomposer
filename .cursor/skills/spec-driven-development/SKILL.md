@@ -192,7 +192,8 @@ bash .cursor/skills/spec-driven-development/scripts/specs_check.sh docs/specs/mi
 
 Fix findings; do not silence them. A finding you intend to keep is waived in
 `docs/specs/.sdd-lint.json` **with a reason**, never on an in-flight milestone.
-`--no-waivers` shows the debt the waivers suppress.
+`--no-waivers` shows the debt the waivers suppress. A milestone holding only its requirements
+baseline reports `L1_NOT_STARTED` (info) until Step 1; then each missing Layer 1 file is an error.
 
 ## Completion criteria
 

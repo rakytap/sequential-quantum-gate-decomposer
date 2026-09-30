@@ -4,6 +4,18 @@ Revision history lives here rather than in `SKILL.md`: dated notes and "effectiv
 caveats are time-sensitive content that costs tokens on every activation and goes stale.
 Revisions are **forward-only** — a slice keeps the convention it shipped under.
 
+## rev C — requirements-baseline stage in the artifact linter
+
+A milestone directory holding only `INITIAL_REQUIREMENTS.md` used to report three
+`L1_MISSING_ARTIFACT` errors, so `create-initreq-for-sdd` could never meet its own
+"`specs_check.sh` runs clean" criterion, and a waiver was not an option because the
+milestone is in flight by definition. `check_artifacts.py` now reports that stage as one
+`L1_NOT_STARTED` info finding. As soon as any Layer 1 file, `task-<n>` slice, milestone
+closeout, or `CHANGE_CONTROL.md` exists, each missing Layer 1 file is an error again, so a
+partial Layer 1 or a slice without Layer 1 still fails. The rule was exercised against
+throwaway trees for each of those states before adoption. No milestone had delivered under
+the new convention, so nothing shipped under the old rule.
+
 ## rev B — adoption of the four-skill SDD stack
 
 Replaced the phase-based, publication-coupled skill (rev A) with the layered milestone

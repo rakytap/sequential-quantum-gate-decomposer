@@ -314,7 +314,9 @@ the recorded waivers suppress.
 no delivery story picks up, a delivery story citing no `REQ-*`, an evidence row naming no
 runnable command or lane, a `tests/…`, `benchmarks/…`, or `examples/…` path that no longer
 exists, a milestone closeout contradicting the files on disk, and a missing Layer 1 or slice
-artifact. Scope it to one milestone by passing the directory as an argument.
+artifact. A milestone that holds only its `INITIAL_REQUIREMENTS.md` reports `L1_NOT_STARTED`
+(info) instead, until a Layer 1 file, a slice, a closeout, or change control appears. Scope it
+to one milestone by passing the directory as an argument.
 
 The product suites themselves (`pytest` lanes, benchmark evidence pipelines, optional C++
 tests, Qiskit Aer reference) are listed in `docs/specs/TECH_STACK.md` and run in the `qgd`
@@ -374,6 +376,11 @@ role-and-permission seam between planning and code generation. See each `SKILL.m
 
 ## Revision history
 
+- **rev F (this repository)** — The artifact linter gained a requirements-baseline stage: a
+  milestone holding only `INITIAL_REQUIREMENTS.md` reports `L1_NOT_STARTED` (info) rather
+  than three `L1_MISSING_ARTIFACT` errors, so `create-initreq-for-sdd` can finish with a clean
+  `specs_check.sh`. Missing Layer 1 files remain errors once planning, a slice, a closeout, or
+  change control exists (`spec-driven-development` rev C, `create-initreq-for-sdd` rev F).
 - **rev E (this repository)** — The four-skill stack was adopted for the SQUANDER
   density-matrix track, replacing the phase-based `spec-driven-development` skill that
   delivered Phases 1–3.1. Those phases and the program-level plan were archived read-only

@@ -109,8 +109,8 @@ log entry.
 - Every `QA-*`-realizing NFR carries a response measure or an owned `[confirm]` marker.
 - Operational boundaries state Always / Ask first / Never.
 - Open questions are written so each can be closed by a decision.
-- The critique pass is recorded inline, `specs_check.sh` runs clean, and the handoff is
-  stated.
+- The critique pass is recorded inline, `specs_check.sh` runs clean (its `L1_NOT_STARTED`
+  info is expected), and the handoff is stated.
 
 ## Verify
 
@@ -119,8 +119,10 @@ bash .cursor/skills/spec-driven-development/scripts/specs_check.sh   # orphan RE
 ```
 
 `check_traceability.py` reports a `REQ-*` that cites no `CAP-*`/`QA-*` as an error, and a
-`REQ-*` that no delivery story ever picks up as an orphan once slices exist. Fix findings
-rather than silencing them.
+`REQ-*` that no delivery story ever picks up as an orphan once slices exist. Until
+`spec-driven-development` Step 1 writes Layer 1, `check_artifacts.py` reports the milestone
+as `L1_NOT_STARTED` (info): the expected handoff state, not a gap. Fix findings rather than
+silencing them.
 
 ## Gotchas in this repo
 

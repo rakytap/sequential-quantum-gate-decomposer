@@ -20,8 +20,9 @@ bash .cursor/skills/spec-driven-development/scripts/specs_check.sh --strict   # 
 `specs_check.sh` reports a `REQ-*` citing no `CAP-*`/`QA-*`, a `REQ-*` no delivery story
 picks up, a delivery story citing no `REQ-*`, an evidence row naming no runnable command or
 lane, a `tests/…`, `benchmarks/…`, or `examples/…` path that no longer exists, a closeout
-that contradicts the files on disk, and missing Layer 1 or slice artifacts. Fix findings; do
-not silence them. A finding you intend to keep is waived in `docs/specs/.sdd-lint.json`
+that contradicts the files on disk, and missing Layer 1 or slice artifacts; a milestone that
+holds only `INITIAL_REQUIREMENTS.md` reports `L1_NOT_STARTED` (info) until Layer 1 starts.
+Fix findings; do not silence them. A finding you intend to keep is waived in `docs/specs/.sdd-lint.json`
 **with a reason**, never on an in-flight milestone.
 
 A `stop` hook re-runs these linters when a session touched `docs/specs/`, so a broken spine

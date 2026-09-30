@@ -3,6 +3,13 @@
 Revision history lives here rather than in `SKILL.md`, where dated notes cost tokens on
 every activation and go stale. Revisions are forward-only.
 
+## rev F — a requirements-only milestone lints clean
+
+The completion criterion "`specs_check.sh` runs clean" was unsatisfiable: the artifact
+linter reported the three not-yet-written Layer 1 files as errors, and waivers are
+forbidden on an in-flight milestone. With `spec-driven-development` rev C, that stage
+reports `L1_NOT_STARTED` (info) instead; the criterion and the Verify section now say so.
+
 ## rev E — imported into the SQUANDER density-matrix repository
 
 Copied from the reference SDD stack unchanged in method; only the repo-specific parts

@@ -57,6 +57,9 @@ conda run -n qgd --no-capture-output pytest -m "density_matrix and not slow"
 conda run -n qgd --no-capture-output python benchmarks/density_matrix/correctness_evidence/validation_pipeline.py
 ```
 
+A milestone that holds only `INITIAL_REQUIREMENTS.md` reports `L1_NOT_STARTED` (info); every
+missing Layer 1 file is an error once planning, a slice, a closeout, or change control exists.
+
 The `test-density-matrix` skill runs the full workflow (smoke import, pytest lanes, example,
 optional Aer comparison, optional C++ tests) and defines the report format.
 

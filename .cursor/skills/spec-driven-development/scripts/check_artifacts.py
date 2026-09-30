@@ -8,6 +8,10 @@ Run from the repo root:
 
 or run both linters through `scripts/specs_check.sh`.
 
+A milestone holding only INITIAL_REQUIREMENTS.md -- no Layer 1 file, slice, milestone
+closeout, or change control yet -- reports L1_NOT_STARTED (info) instead of missing-Layer-1
+errors; once any of those exists, every missing Layer 1 file is an error again.
+
 Exit status: 0 when there are no unwaived errors, 1 otherwise. Warnings become
 errors with --strict. Waivers and size budgets live in docs/specs/.sdd-lint.json.
 """
@@ -47,6 +51,16 @@ NO_HANDBACK_CLAIM_RE = re.compile(
 LEGACY_STORY_RE = re.compile(r"^TASK_\d+_DELIVERY_STORIES\.md$")
 LEGACY_TASKS_RE = re.compile(r"^TASK_\d+_ENGINEERING_TASKS\.md$")
 
+# Anything matching these, or any task-<n> slice, means work downstream of the
+# requirements baseline has begun, so Layer 1 must be complete.
+LAYER1_STARTED_GLOBS = (
+    "DETAILED_PLANNING_*.md",
+    "ADRS_*.md",
+    "PRE_IMPLEMENTATION_COMPLETION_CHECKLIST.md",
+    "*_CLOSEOUT.md",
+    "CHANGE_CONTROL.md",
+)
+
 
 def check_context_header(reporter: Reporter, path: Path) -> None:
     lines = read_lines(path)
@@ -79,6 +93,17 @@ def check_size(reporter: Reporter, path: Path, budgets: dict[str, int]) -> None:
         )
 
 
+def layer1_started(milestone: Path) -> bool:
+    """True once the milestone holds anything beyond its requirements baseline.
+
+    Before that, the milestone sits between create-initreq-for-sdd and
+    spec-driven-development Step 1, where an absent Layer 1 is the next step, not a gap.
+    """
+    if slice_dirs(milestone):
+        return True
+    return any(any(milestone.glob(pattern)) for pattern in LAYER1_STARTED_GLOBS)
+
+
 def check_layer1(
     reporter: Reporter, milestone: Path, budgets: dict[str, int], slug: str
 ) -> None:
@@ -88,6 +113,15 @@ def check_layer1(
         f"ADRS_{slug}.md": "milestone ADRs",
         "PRE_IMPLEMENTATION_COMPLETION_CHECKLIST.md": "readiness checklist",
     }
+    if (milestone / "INITIAL_REQUIREMENTS.md").is_file() and not layer1_started(milestone):
+        reporter.add(
+            "L1_NOT_STARTED",
+            "info",
+            milestone,
+            "requirements baseline only; Layer 1 is not started (spec-driven-development "
+            "Steps 1-3 write the plan, ADRs, and readiness checklist)",
+        )
+        required = {"INITIAL_REQUIREMENTS.md": required["INITIAL_REQUIREMENTS.md"]}
     for name, purpose in required.items():
         path = milestone / name
         if not path.is_file():
