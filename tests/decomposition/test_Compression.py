@@ -63,7 +63,8 @@ class Test_Decomposition:
 		            'max_inner_iterations': 300000, 	
 		            'max_inner_iterations_compression': 10000, 
 		            'max_inner_iterations_final': 1000, 	
-	                'randomized_adaptive_layers': 1,
+            'randomized_adaptive_layers': 1,
+            'random_seed': 42,
 	                'export_circuit_2_binary': 1,
 		            'optimization_tolerance': 1e-8 }
 
@@ -370,5 +371,4 @@ class Test_Decomposition:
         assert( decomposition_error < 1e-3 )
     
         
-
 
