@@ -149,6 +149,7 @@ class Test_Decomposition:
 		        'max_inner_iterations_compression': 10000, 
 		        'max_inner_iterations_final': 1000, 	
 	            'randomized_adaptive_layers': 1,
+	            'random_seed': 42,
 	            'export_circuit_2_binary': 1,
 		        'optimization_tolerance': 1e-8 }
 
@@ -230,6 +231,7 @@ class Test_Decomposition:
 		        'max_inner_iterations_compression': 10000, 
 		        'max_inner_iterations_final': 1000, 	
 	            'randomized_adaptive_layers': 1,
+	            'random_seed': 42,
 	            'export_circuit_2_binary': 1,
 		        'optimization_tolerance': 1e-8 }
         
@@ -299,6 +301,7 @@ class Test_Decomposition:
 		        'max_inner_iterations_final': 5000, 		
 		        'Randomized_Radius': 0.3, 
                 'randomized_adaptive_layers': 1,
+                'random_seed': 42,
 		        'optimization_tolerance_agent': 1e-4,
 		        'optimization_tolerance': 1e-5,
                 'agent_num': 10}
