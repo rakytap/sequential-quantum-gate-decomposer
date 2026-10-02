@@ -27,10 +27,12 @@ limitations under the License.
 #include <dlfcn.h>
 #include <unistd.h>
 #include <tbb/queuing_rw_mutex.h>
+#include <atomic>
 
 namespace {
 
 tbb::queuing_rw_mutex libmutex;
+std::atomic<bool> groq_dfe_backend(false);
 
 void unload_dfe_lib_unlocked();
 int init_dfe_lib_unlocked(const int accelerator_num, int qbit_num, int initialize_id_in);
@@ -93,6 +95,7 @@ void uploadMatrix2DFE_unlocked( Matrix& input ) {
 
 void unload_dfe_lib_unlocked()
 {
+    groq_dfe_backend.store(false);
     if (handle) {
         releive_DFE_dll();
         dlclose(handle);
@@ -156,6 +159,10 @@ int init_dfe_lib_unlocked( const int accelerator_num, int qbit_num, int initiali
         throw err;
     } 
     else {
+
+        // Probe this library's scope, not RTLD_DEFAULT: unrelated Groq libraries
+        // may also be loaded in a process using the FPGA backend.
+        groq_dfe_backend.store(dlsym(handle, "groq_iop_init") != NULL);
 
         get_accelerator_avail_num_dll = (size_t (*)())dlsym(handle, "get_accelerator_avail_num");
         get_accelerator_free_num_dll  = (size_t (*)())dlsym(handle, "get_accelerator_free_num");
@@ -249,3 +256,7 @@ int get_chained_gates_num() {
 
 }
 
+
+bool is_groq_dfe() {
+    return groq_dfe_backend.load();
+}
