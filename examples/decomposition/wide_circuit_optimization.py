@@ -211,7 +211,11 @@ def save_dataset_stats_cache(entries, cache_path=DATASET_STATS_CACHE):
     )
 
 
-def result_paths(max_partition_size, strategy):
+def result_paths(
+    max_partition_size,
+    strategy,
+    base_directory=PARTITIONING_BENCHMARK_ROOT,
+):
     """Return strategy-specific result directories and their JSON files."""
     if max_partition_size not in (3, 4):
         raise ValueError(
@@ -226,7 +230,7 @@ def result_paths(max_partition_size, strategy):
         raise ValueError(f"Invalid strategy name for result paths: {strategy!r}")
     suffix = f"{max_partition_size}qbit_{strategy}"
     result_directories = {
-        dataset: PARTITIONING_BENCHMARK_ROOT / f"{dataset}_results_{suffix}"
+        dataset: Path(base_directory) / f"{dataset}_results_{suffix}"
         for dataset in BENCHMARK_DATASETS
     }
     for result_directory in result_directories.values():
@@ -388,7 +392,8 @@ def optimize_circuit_worker(
             audit_jsonl_path, audit_gzip_path, run_metadata
         )
         audit_verification = optimizer.verify_rewrite_audit(
-            audit_gzip_path, expected_sha256=audit_sha256
+            rewrite_audit, expected_sha256=audit_sha256,
+            audit_path=audit_gzip_path,
         )
         result_entry["rewrite_audit"] = {
             "schema_version": rewrite_audit["schema_version"],
@@ -469,6 +474,13 @@ def result_configuration(config, qubit_num):
         "routing_column_max_iteration_loops",
         "routing_column_synthesis_mode",
         "max_equal_cnot_optimization_rounds",
+        "osr_narrow_partitions_first",
+        "osr_adaptive_partition_order",
+        "osr_partition_order_portfolio",
+        "osr_rank_constructive_pair_class",
+        "osr_rank_degenerate_cover_class",
+        "osr_eager_projection_restarts",
+        "osr_path_deterministic_rng",
         "exact_routing_fallback_retry_count",
         "exact_routing_catalog_progress",
         "exact_routing_catalog_progress_interval",
@@ -500,16 +512,17 @@ def result_configuration(config, qubit_num):
     )
     snapshot = {key: config.get(key) for key in keys}
     partition_size = int(config["max_partition_size"])
+    uses_osr_search = config.get("use_osr", False) or config.get(
+        "use_graph_search", False
+    )
     partition_size_end = partition_size
     if (
         config.get("strategy") not in ("bqskit", "qiskit")
         and config.get("auto_expand_partition_size", False)
-        and (config.get("use_osr", False) or config.get("use_graph_search", False))
+        and uses_osr_search
     ):
         partition_size_end = min(4, qubit_num)
-    snapshot["partition_size_schedule"] = list(
-        range(partition_size, partition_size_end + 1)
-    )
+    snapshot["partition_size_schedule"] = [partition_size_end]
     return snapshot
 
 
@@ -527,9 +540,33 @@ if __name__ == "__main__":
         action="store_true",
         help="Retry circuits already recorded with status=timeout.",
     )
+    parser.add_argument(
+        "--circuit",
+        action="append",
+        default=[],
+        help=(
+            "Process only this circuit basename or dataset/basename; may be "
+            "specified more than once."
+        ),
+    )
+    parser.add_argument(
+        "--output-root",
+        type=Path,
+        help=(
+            "Write isolated result directories below this repository-local "
+            "directory instead of the archived benchmark root."
+        ),
+    )
     args = parser.parse_args()
     if args.timeout_hours < 0:
         parser.error("--timeout-hours must be nonnegative")
+    output_root = (
+        PARTITIONING_BENCHMARK_ROOT
+        if args.output_root is None
+        else args.output_root.expanduser().resolve()
+    )
+    if not output_root.is_relative_to(REPOSITORY_ROOT):
+        parser.error("--output-root must be inside the repository root")
     circuit_timeout = (
         None if args.timeout_hours == 0 else args.timeout_hours * 60.0 * 60.0
     )
@@ -543,7 +580,7 @@ if __name__ == "__main__":
         "strategy": "TreeSearch",  # possible values: "TreeSearch", "qiskit", "bqskit", "TabuSearch"
         "test_subcircuits": False,
         "test_final_circuit": False,
-        "max_partition_size": 4,
+        "max_partition_size": 3,
         "beam": None,
         "use_osr": True,
         "use_graph_search": True,
@@ -568,8 +605,14 @@ if __name__ == "__main__":
         "max_iteration_loops": 8,
         "max_inner_iterations_bfgs2": 1000,
     }
+    if config["max_partition_size"] == 4 and config["use_osr"]:
+        # Preserve dependency-first ordering within the single 4q pass.
+        # Adaptive reversal can commit a wide rewrite before the smaller
+        # partitions reach their CNOT-reduced form.
+        config.setdefault("osr_narrow_partitions_first", True)
+        config.setdefault("osr_adaptive_partition_order", False)
     result_directories, result_files = result_paths(
-        config["max_partition_size"], config["strategy"]
+        config["max_partition_size"], config["strategy"], output_root
     )
 
     # Inputs are curated in-repository, so no generated-file or reset filtering
@@ -602,6 +645,24 @@ if __name__ == "__main__":
         )
     if cache_misses or current_stats != cached_stats:
         save_dataset_stats_cache(current_stats)
+    if args.circuit:
+        requested = set(args.circuit)
+        matched = set()
+        selected_files = []
+        for item in files:
+            _, dataset, filepath, _ = item
+            labels = {filepath.name, f"{dataset}/{filepath.name}"}
+            selected = requested & labels
+            if selected:
+                matched.update(selected)
+                selected_files.append(item)
+        unmatched = requested - matched
+        if unmatched:
+            parser.error(
+                "unknown --circuit selection(s): "
+                + ", ".join(sorted(unmatched))
+            )
+        files = selected_files
     print(
         f"Dataset statistics: {cache_hits} cached, {cache_misses} parsed; "
         f"cache={DATASET_STATS_CACHE.relative_to(REPOSITORY_ROOT)}"

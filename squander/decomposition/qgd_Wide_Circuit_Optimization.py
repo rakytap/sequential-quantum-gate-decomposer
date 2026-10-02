@@ -382,6 +382,12 @@ def _verify_squander_basis_replay(event):
         raise AssertionError("Basis conversion input hash mismatch.")
     if _exact_state_sha256(output_state) != event["output_sha256"]:
         raise AssertionError("Basis conversion output hash mismatch.")
+    if not event.get("conversion_applied", True):
+        if input_state != output_state:
+            raise AssertionError(
+                "A skipped CNOT-basis conversion changed the circuit state."
+            )
+        return input_state, output_state
     qiskit_circuit = QuantumCircuit.from_qasm_str(event["input"]["qasm"])
     circuit, parameters = Qiskit_IO.convert_Qiskit_to_Squander(qiskit_circuit)
     converted, converted_parameters = circuit_to_CNOT_basis(circuit, parameters)
@@ -1637,7 +1643,17 @@ def load_rewrite_audit(path):
         return json.load(audit_file)
 
 
-def verify_rewrite_audit(audit_or_path, tolerance=None, expected_sha256=None):
+def _file_sha256_streaming(path):
+    """Hash large archived artifacts without retaining their bytes."""
+    digest = hashlib.sha256()
+    with open(path, "rb") as source:
+        for block in iter(lambda: source.read(1024 * 1024), b""):
+            digest.update(block)
+    return digest.hexdigest()
+
+
+def verify_rewrite_audit(audit_or_path, tolerance=None, expected_sha256=None,
+                         *, audit_path=None):
     """Replay a complete optimization certificate and hard-fail any mismatch.
 
     The replay starts with the archived input gate/parameter stream, reruns
@@ -1647,22 +1663,24 @@ def verify_rewrite_audit(audit_or_path, tolerance=None, expected_sha256=None):
     Every local unitary metric is independently recomputed in complex128 and
     compared by its IEEE-754 binary64 bits with the stored value.
     """
-    audit_path = None
     if isinstance(audit_or_path, (str, os.PathLike)):
+        if audit_path is not None and os.fspath(audit_path) != os.fspath(audit_or_path):
+            raise ValueError("audit_path does not match the audit being verified")
         audit_path = os.fspath(audit_or_path)
-        if expected_sha256 is not None:
-            with open(audit_or_path, "rb") as audit_file:
-                actual_sha256 = hashlib.sha256(audit_file.read()).hexdigest()
-            if actual_sha256 != expected_sha256:
-                raise AssertionError(
-                    f"Rewrite audit digest mismatch: {actual_sha256} != "
-                    f"{expected_sha256}."
-                )
-        audit = load_rewrite_audit(audit_or_path)
     else:
-        if expected_sha256 is not None:
-            raise ValueError("A SHA-256 digest can only verify an on-disk audit.")
         audit = audit_or_path
+        audit_path = os.fspath(audit_path) if audit_path is not None else None
+    if expected_sha256 is not None:
+        if audit_path is None:
+            raise ValueError("A SHA-256 digest can only verify an on-disk audit.")
+        actual_sha256 = _file_sha256_streaming(audit_path)
+        if actual_sha256 != expected_sha256:
+            raise AssertionError(
+                f"Rewrite audit digest mismatch: {actual_sha256} != "
+                f"{expected_sha256}."
+            )
+    if isinstance(audit_or_path, (str, os.PathLike)):
+        audit = load_rewrite_audit(audit_path)
     if audit.get("schema_version") != REWRITE_AUDIT_SCHEMA_VERSION:
         raise AssertionError(
             f"Unsupported rewrite audit schema {audit.get('schema_version')}."
@@ -1923,8 +1941,7 @@ def save_rewrite_audit(jsonl_path, output_path, run_metadata=None):
     finally:
         if os.path.exists(temporary_path):
             os.unlink(temporary_path)
-    with open(output_path, "rb") as audit_file:
-        digest = hashlib.sha256(audit_file.read()).hexdigest()
+    digest = _file_sha256_streaming(output_path)
     return audit, digest
 
 
@@ -3537,6 +3554,13 @@ class qgd_Wide_Circuit_Optimization:
         # that useful plateau motion with convergence, but bound it so a
         # sequence of equivalent rewrites cannot run indefinitely.
         config.setdefault("max_equal_cnot_optimization_rounds", 3)
+        config.setdefault("osr_narrow_partitions_first", True)
+        config.setdefault("osr_adaptive_partition_order", True)
+        config.setdefault("osr_partition_order_portfolio", False)
+        config.setdefault("osr_rank_constructive_pair_class", False)
+        config.setdefault("osr_rank_degenerate_cover_class", True)
+        config.setdefault("osr_eager_projection_restarts", True)
+        config.setdefault("osr_path_deterministic_rng", True)
         config.setdefault(
             "circuit_validation_tolerance",
             _default_circuit_validation_tolerance(config),
@@ -3586,7 +3610,7 @@ class qgd_Wide_Circuit_Optimization:
             "routing_column_max_iteration_loops",
             int(config["max_iteration_loops"]),
         )
-        config.setdefault("routing_column_synthesis_mode", "topology-osr")
+        config.setdefault("routing_column_synthesis_mode", "best-of-both")
         config.setdefault("exact_routing_catalog_progress", True)
         config.setdefault("exact_routing_catalog_progress_interval", 25)
         config.setdefault("exact_routing_light_sabre_seed_count", 32)
@@ -3655,7 +3679,7 @@ class qgd_Wide_Circuit_Optimization:
         config.setdefault("exact_routing_layout_total_passes", 8)
         config.setdefault("exact_routing_layout_candidate_limit", 2)
         config.setdefault(
-            "exact_routing_layout_portfolio_timeout_seconds", None
+            "exact_routing_layout_portfolio_timeout_seconds", 10.0
         )
         # A fixed two-minute no-improvement stop repeatedly terminated the
         # global solve at its root and returned the original weak seed. The
@@ -4212,6 +4236,7 @@ class qgd_Wide_Circuit_Optimization:
             remapped back to the original qubit indices of ``subcircuit``.
         """
 
+        config = dict(config)
         qbit_num_orig_circuit = subcircuit.get_Qbit_Num()
 
         involved_qbits = subcircuit.get_Qbits()
@@ -4225,6 +4250,16 @@ class qgd_Wide_Circuit_Optimization:
         mini_topology = None
         if config["topology"] is not None:
             mini_topology = extract_subtopology(involved_qbits, qbit_map, config)
+        elif config.get("use_osr", False) or config.get(
+            "use_graph_search", False
+        ):
+            # CNOT direction is locally equivalent in a circuit with arbitrary
+            # one-qubit layers.  Supplying one canonical edge per unordered
+            # pair avoids doubling the A2A graph-search alphabet when no
+            # hardware topology was requested.
+            mini_topology = (
+                qgd_Wide_Circuit_Optimization.all_to_all_topology(qbit_num)
+            )
         # remap the subcircuit to a smaller qubit register
         remapped_subcircuit = subcircuit.Remap_Qbits(qbit_map, qbit_num)
 
@@ -4268,7 +4303,7 @@ class qgd_Wide_Circuit_Optimization:
         return tuple(result)
 
     @staticmethod
-    def build_partition_topo_deps(allparts):
+    def build_partition_topo_deps(allparts, largest_first=False):
         """Order partition gate-sets by dependencies and build a reverse-dependency map.
 
         Args:
@@ -4277,6 +4312,8 @@ class qgd_Wide_Circuit_Optimization:
         Returns:
             ``(ordered_parts, rg_new)`` where ``ordered_parts`` lists partitions in
             topological order and ``rg_new`` maps each new index to predecessors.
+            When ``largest_first`` is true, containment edges are reversed so an
+            exact maximal partition is attempted before its strict subpartitions.
         """
         gate_to_parts = {}
         for i, part in enumerate(allparts):
@@ -4292,8 +4329,12 @@ class qgd_Wide_Circuit_Optimization:
                         and (len(part) < len(allparts[other_part]))
                         or part < allparts[other_part]
                     ):
-                        g[i].add(other_part)
-                        rg[other_part].add(i)
+                        if largest_first:
+                            g[other_part].add(i)
+                            rg[i].add(other_part)
+                        else:
+                            g[i].add(other_part)
+                            rg[other_part].add(i)
         rg_ret = {i: set(rg[i]) for i in range(len(allparts))}
         S = collections.deque(m for m in rg if len(rg[m]) == 0)
         L = []
@@ -4364,7 +4405,8 @@ class qgd_Wide_Circuit_Optimization:
         partitioned_circuit = Circuit(qbit_num_orig_circuit)
         params = []
         allparts, part_deps = qgd_Wide_Circuit_Optimization.build_partition_topo_deps(
-            allparts
+            allparts,
+            largest_first=max_partition_size >= 4,
         )
         for part in allparts:
             surrounded_chains = {
@@ -4440,7 +4482,7 @@ class qgd_Wide_Circuit_Optimization:
         )
 
     @staticmethod
-    def get_fingerprint(circ, params):
+    def get_fingerprint(circ, params, topology=None):
         """Hashable signature of gate layout and parameters (for decomposition caching).
 
         Args:
@@ -4450,10 +4492,36 @@ class qgd_Wide_Circuit_Optimization:
         Returns:
             Tuple usable as a dict key for memoizing decompositions.
         """
-        return (circ.get_Qbit_Num(),) + tuple(
-            (gate.get_Name(), tuple(gate.get_Involved_Qbits()))
+        involved_qbits = sorted(circ.get_Qbits())
+        qbit_map = {
+            qbit: local_idx for local_idx, qbit in enumerate(involved_qbits)
+        }
+        induced_topology = ()
+        if topology is not None:
+            induced_topology = tuple(
+                sorted(
+                    {
+                        tuple(
+                            sorted((qbit_map[int(edge[0])], qbit_map[int(edge[1])]))
+                        )
+                        for edge in topology
+                        if int(edge[0]) in qbit_map and int(edge[1]) in qbit_map
+                    }
+                )
+            )
+        gate_signature = tuple(
+            (
+                gate.get_Name(),
+                tuple(qbit_map[qbit] for qbit in gate.get_Involved_Qbits()),
+            )
             for gate in circ.get_Gates()
-        ) + tuple(params)
+        )
+        return (
+            len(involved_qbits),
+            induced_topology,
+            gate_signature,
+            tuple(params),
+        )
 
     @staticmethod
     def get_structure_fingerprint(circ):
@@ -4734,21 +4802,56 @@ class qgd_Wide_Circuit_Optimization:
             self.check_compare_circuits(circ, parameters, newcirc, newparameters)
             circ, parameters = newcirc, newparameters
         else:
-            part_size_start = self.max_partition_size
+            uses_osr_search = self.config.get("use_osr", False) or self.config.get(
+                "use_graph_search", False
+            )
+            # Optimize one partition width per WCO pass. Lower-width
+            # subpartitions are already represented in the max-width
+            # dependency DAG; rebuilding a second outer DAG at width three
+            # duplicates work and substantially enlarges the routing master.
             part_size_end = self.max_partition_size
-            if self.config.get("auto_expand_partition_size", False) and (
-                self.config.get("use_osr", False)
-                or self.config.get("use_graph_search", False)
-            ):
+            if self.config.get("auto_expand_partition_size", False) and uses_osr_search:
                 part_size_end = min(4, circ.get_Qbit_Num())
+            part_size_schedule = [part_size_end]
             count = CNOTGateCount(circ, 0)
             fingerprint_dict = {}
             audit_round = 0
-            for max_part_size in range(part_size_start, part_size_end + 1):
+            for max_part_size in part_size_schedule:
                 # instantiate the object for optimizing wide circuits
                 wide_circuit_optimizer = qgd_Wide_Circuit_Optimization(
                     {**self.config, "max_partition_size": max_part_size}
                 )
+                configured_narrow_first = bool(
+                    self.config.get("osr_narrow_partitions_first", True)
+                )
+                if (
+                    uses_osr_search
+                    and self.config.get("osr_adaptive_partition_order", True)
+                    and circ.get_Qbit_Num() <= max_part_size + 1
+                ):
+                    # For circuits no more than one qubit wider than the
+                    # synthesis window, maximal partitions are effectively
+                    # global and should not be preconditioned by an
+                    # irreversible narrow-window trajectory.  On genuinely
+                    # wide circuits, retain narrow-first dependency ordering
+                    # to expose inexpensive reusable local reductions.
+                    configured_narrow_first = False
+                partition_order_schedule = (
+                    [configured_narrow_first, not configured_narrow_first]
+                    if uses_osr_search
+                    and max_part_size >= 4
+                    and self.config.get("osr_partition_order_portfolio", True)
+                    else [configured_narrow_first]
+                )
+                partition_order_index = 0
+                wide_circuit_optimizer.config[
+                    "osr_narrow_partitions_first"
+                ] = partition_order_schedule[partition_order_index]
+                basis_phase_pending = uses_osr_search and max_part_size >= 4
+                if basis_phase_pending:
+                    wide_circuit_optimizer.config[
+                        "_preserve_high_level_partitions"
+                    ] = True
                 equal_count_rounds = 0
                 seen_round_fingerprints = {
                     qgd_Wide_Circuit_Optimization.get_structure_fingerprint(circ)
@@ -4787,6 +4890,51 @@ class qgd_Wide_Circuit_Optimization:
                                 circ
                             )
                         }
+                        if basis_phase_pending:
+                            gate_counts = circ.get_Gate_Nums()
+                            has_high_level_entangler = any(
+                                gate_name != "CNOT"
+                                and CNOT_COUNT_DICT.get(gate_name, 0) > 0
+                                and gate_count > 0
+                                for gate_name, gate_count in gate_counts.items()
+                            )
+                            if not has_high_level_entangler:
+                                # Preserving high-level partitions is useful
+                                # only while an atomic non-CNOT entangler such
+                                # as CCX/CSWAP remains. Once the accepted
+                                # circuit is already in a CNOT entangling
+                                # basis, the normalized phase subsumes the
+                                # preserved phase. Transition immediately
+                                # instead of spending a complete failed sweep
+                                # merely to discover that conversion is due.
+                                basis_phase_pending = False
+                                wide_circuit_optimizer.config[
+                                    "_preserve_high_level_partitions"
+                                ] = False
+                                fingerprint_dict.clear()
+                                seen_round_fingerprints = set()
+                        continue
+
+                    if basis_phase_pending:
+                        # Coarse high-level gates expose useful maximal
+                        # windows, but their atomic boundaries hide rewrites
+                        # spanning the CNOT realization of adjacent gates.
+                        # Enter a basis-normalized phase at the same partition
+                        # width and rebuild that width's DAG; this is one WCO
+                        # schedule, not a narrower cleanup pass.
+                        basis_phase_pending = False
+                        wide_circuit_optimizer.config[
+                            "_preserve_high_level_partitions"
+                        ] = False
+                        # A cached unchanged result records one stochastic
+                        # synthesis attempt, not a proof that the unitary has
+                        # no better realization.  The basis-normalized DAG is
+                        # a distinct search phase with different overlapping
+                        # windows, so stale misses must not suppress all of
+                        # its local solves.
+                        fingerprint_dict.clear()
+                        equal_count_rounds = 0
+                        seen_round_fingerprints = set()
                         continue
 
                     fingerprint = (
@@ -4795,13 +4943,25 @@ class qgd_Wide_Circuit_Optimization:
                         )
                     )
                     equal_count_rounds += 1
-                    if fingerprint in seen_round_fingerprints:
-                        break
+                    order_converged = (
+                        fingerprint in seen_round_fingerprints
+                        or equal_count_rounds >= int(
+                            self.config["max_equal_cnot_optimization_rounds"]
+                        )
+                    )
+                    if order_converged:
+                        partition_order_index += 1
+                        if partition_order_index >= len(
+                            partition_order_schedule
+                        ):
+                            break
+                        wide_circuit_optimizer.config[
+                            "osr_narrow_partitions_first"
+                        ] = partition_order_schedule[partition_order_index]
+                        equal_count_rounds = 0
+                        seen_round_fingerprints = {fingerprint}
+                        continue
                     seen_round_fingerprints.add(fingerprint)
-                    if equal_count_rounds >= int(
-                        self.config["max_equal_cnot_optimization_rounds"]
-                    ):
-                        break
         self.config["optimization_time"] = time.time() - start_time
         if self.config["strategy"] in ("bqskit", "qiskit"):
             stage_name = (
@@ -4852,7 +5012,24 @@ class qgd_Wide_Circuit_Optimization:
                 orig_parameters,
                 range(circ.get_Qbit_Num()),
             )
-        circ, orig_parameters = circuit_to_CNOT_basis(circ, orig_parameters)
+        preserve_high_level_partitions = self.config.get(
+            "_preserve_high_level_partitions",
+            self.max_partition_size >= 4
+            and self.config.get("strategy") == "TreeSearch"
+            and (
+                self.config.get("use_osr", False)
+                or self.config.get("use_graph_search", False)
+            ),
+        )
+        convert_to_cnot_basis = (
+            not preserve_high_level_partitions
+            or (
+                self.config.get("_rewrite_audit_stage") == "all_to_all"
+                and self.config.get("max_partition_size", 3) >= 4
+            )
+        )
+        if convert_to_cnot_basis:
+            circ, orig_parameters = circuit_to_CNOT_basis(circ, orig_parameters)
         if audit_enabled:
             basis_output_representation = _squander_audit_representation(
                 circ,
@@ -4865,6 +5042,7 @@ class qgd_Wide_Circuit_Optimization:
                     "component": "squander_basis_replay",
                     "stage": self.config.get("_rewrite_audit_stage"),
                     "started_ns": basis_started_ns,
+                    "conversion_applied": convert_to_cnot_basis,
                     "input": basis_input_representation,
                     "output": basis_output_representation,
                     "input_sha256": _exact_state_sha256(
@@ -4922,9 +5100,43 @@ class qgd_Wide_Circuit_Optimization:
         optimized_parameter_list: List[Optional[List[np.ndarray]]] = [None] * len(
             subcircuits
         )
-
         # list of AsyncResult objects
         async_results = [None] * len(subcircuits)
+
+        def make_cache_value(result_circuit, result_parameters, source_circuit):
+            """Store a partition result in source-local qubit coordinates."""
+            source_qbits = sorted(source_circuit.get_Qbits())
+            qbit_map = {
+                qbit: local_idx
+                for local_idx, qbit in enumerate(source_qbits)
+            }
+            canonical_circuit = result_circuit.Remap_Qbits(
+                qbit_map, len(source_qbits)
+            ).get_Flat_Circuit()
+            return (
+                canonical_circuit,
+                np.asarray(result_parameters).copy(),
+                len(source_qbits),
+            )
+
+        def restore_cache_value(cache_value, source_circuit):
+            """Map a source-local cached result onto this partition support."""
+            canonical_circuit, cached_parameters, cached_width = cache_value
+            source_qbits = sorted(source_circuit.get_Qbits())
+            if len(source_qbits) != cached_width:
+                raise RuntimeError(
+                    "Partition cache width does not match the source support."
+                )
+            inverse_qbit_map = {
+                local_idx: qbit
+                for local_idx, qbit in enumerate(source_qbits)
+            }
+            return (
+                canonical_circuit.Remap_Qbits(
+                    inverse_qbit_map, source_circuit.get_Qbit_Num()
+                ).get_Flat_Circuit(),
+                cached_parameters.copy(),
+            )
 
         def process_result(partition_idx):
             """Finalize async decomposition for partition ``partition_idx`` and update caches / lists."""
@@ -4940,7 +5152,9 @@ class qgd_Wide_Circuit_Optimization:
                 None
                 if fingerprint_dict is None
                 else qgd_Wide_Circuit_Optimization.get_fingerprint(
-                    subcircuit, subcircuit_parameters
+                    subcircuit,
+                    subcircuit_parameters,
+                    self.config.get("topology"),
                 )
             )
             callback_fnc = lambda x: self.CompareAndPickCircuits(
@@ -4949,21 +5163,42 @@ class qgd_Wide_Circuit_Optimization:
                 lambda c: (CNOTGateCount(c), SingleQubitGateCount(c)),
             )
             if fingerprint_dict is not None and fingerprint in fingerprint_dict:
-                new_subcircuit, new_parameters = fingerprint_dict[fingerprint]
+                new_subcircuit, new_parameters = restore_cache_value(
+                    fingerprint_dict[fingerprint], subcircuit
+                )
             else:
                 new_subcircuit, new_parameters = callback_fnc(
                     async_results[partition_idx][0](*async_results[partition_idx][1])
-                    if in_parent
+                    if run_inline
                     else async_results[partition_idx].get(timeout=None)
                 )
 
-                if fingerprint_dict is not None:
-                    fingerprint_dict[fingerprint] = (new_subcircuit, new_parameters)
+                # A stochastic synthesis miss is not a proof of irreducibility.
+                # In path-deterministic mode, however, replaying the same
+                # canonical unitary executes exactly the same complete path and
+                # restart portfolio, so recomputation cannot add an independent
+                # attempt.  Cache that deterministic outcome as well as every
+                # strict constructive improvement.
+                if (
+                    fingerprint_dict is not None
+                    and (
+                        self.config.get("osr_path_deterministic_rng", False)
+                        or CNOTGateCount(new_subcircuit)
+                        < CNOTGateCount(subcircuit)
+                    )
+                ):
+                    fingerprint_dict[fingerprint] = make_cache_value(
+                        new_subcircuit, new_parameters, subcircuit
+                    )
                     fingerprint_dict[
                         qgd_Wide_Circuit_Optimization.get_fingerprint(
-                            new_subcircuit, new_parameters
+                            new_subcircuit,
+                            new_parameters,
+                            self.config.get("topology"),
                         )
-                    ] = (new_subcircuit, new_parameters)
+                    ] = make_cache_value(
+                        new_subcircuit, new_parameters, new_subcircuit
+                    )
                     trim_subcirc, trim_parameters = (
                         qgd_Wide_Circuit_Optimization.strip_single_qubit_head_tails(
                             new_subcircuit, new_parameters
@@ -4971,20 +5206,161 @@ class qgd_Wide_Circuit_Optimization:
                     )
                     fingerprint_dict[
                         qgd_Wide_Circuit_Optimization.get_fingerprint(
-                            trim_subcirc, trim_parameters
+                            trim_subcirc,
+                            trim_parameters,
+                            self.config.get("topology"),
                         )
-                    ] = (trim_subcirc, trim_parameters)
+                    ] = make_cache_value(
+                        trim_subcirc, trim_parameters, trim_subcirc
+                    )
             optimized_subcircuits[partition_idx] = new_subcircuit
             optimized_parameter_list[partition_idx] = new_parameters
 
         worker_count = self.config.get("partition_workers")
         if worker_count is None:
-            worker_count = mp.cpu_count()
+            configured_parallelism = int(self.config.get("parallel", 0))
+            worker_count = configured_parallelism if configured_parallelism > 0 else 1
         worker_count = max(1, min(worker_count, len(subcircuits)))
+        restart_on_partition_improvement = bool(
+            self.config.get(
+                "restart_on_partition_improvement",
+                self.config.get("use_osr", False)
+                or self.config.get("use_graph_search", False),
+            )
+        )
+        # A selected rewrite changes every overlapping partition unitary.  In
+        # the optimistic OSR scheduler, evaluate maximal candidates in the
+        # dependency order and rebuild immediately after the first strict
+        # reduction instead of spending work on stale descendants.  Keeping
+        # this path serial is intentional: externally parallel benchmark
+        # workers provide circuit-level concurrency, while speculative local
+        # tasks would violate the restart semantics.
+        run_inline = (
+            in_parent or worker_count == 1 or restart_on_partition_improvement
+        )
+        restart_partition_idx = None
+
+        def preserve_original(partition_idx):
+            if optimized_subcircuits[partition_idx] is not None:
+                return
+            subcircuit = subcircuits[partition_idx]
+            start_idx = subcircuit.get_Parameter_Start_Index()
+            optimized_subcircuits[partition_idx] = subcircuit
+            optimized_parameter_list[partition_idx] = parameters[
+                start_idx : start_idx + subcircuit.get_Parameter_Num()
+            ]
+
+        partition_depth = {}
+        if part_deps is not None:
+            for partition_idx in range(len(part_deps)):
+                partition_depth[partition_idx] = (
+                    0
+                    if not part_deps[partition_idx]
+                    else 1
+                    + max(
+                        partition_depth[parent_idx]
+                        for parent_idx in part_deps[partition_idx]
+                    )
+                )
+        trailing_depth = 1 + max(partition_depth.values(), default=0)
+
+        partition_schmidt_bounds = {}
+
+        def partition_schmidt_bound(partition_idx):
+            """Cheap rigorous CNOT lower bound used only for scheduling/pruning."""
+            if partition_idx in partition_schmidt_bounds:
+                return partition_schmidt_bounds[partition_idx]
+
+            subcircuit = subcircuits[partition_idx]
+            incumbent_count = CNOTGateCount(subcircuit)
+            involved_qbits = subcircuit.get_Qbits()
+            qbit_num = len(involved_qbits)
+            if (
+                not restart_on_partition_improvement
+                or qbit_num <= 1
+                or qbit_num > 4
+                or incumbent_count <= 1
+            ):
+                lower_bound = incumbent_count if incumbent_count <= 1 else 0
+            else:
+                # Partition objects retain the parent register width.  Mirror
+                # PartitionDecompositionProcess's local remap before forming
+                # the tiny (at most 16x16) unitary.
+                qbit_map = {
+                    qbit: local_idx
+                    for local_idx, qbit in enumerate(involved_qbits)
+                }
+                remapped = subcircuit.Remap_Qbits(qbit_map, qbit_num)
+                start_idx = subcircuit.get_Parameter_Start_Index()
+                subcircuit_parameters = parameters[
+                    start_idx : start_idx + subcircuit.get_Parameter_Num()
+                ]
+                unitary = remapped.get_Matrix(
+                    np.asarray(subcircuit_parameters, dtype=np.float64)
+                )
+                if self.config["topology"] is None:
+                    mini_topology = (
+                        qgd_Wide_Circuit_Optimization.all_to_all_topology(
+                            qbit_num
+                        )
+                    )
+                else:
+                    mini_topology = extract_subtopology(
+                        involved_qbits, qbit_map, self.config
+                    )
+                # Use the same conservative numerical rank scale as the OSR
+                # optimizer.  A weaker lower bound only changes priority; an
+                # incumbent that saturates it is mathematically irreducible.
+                from squander.partitioning.routing import (
+                    cnot_schmidt_lower_bound,
+                )
+
+                lower_bound = cnot_schmidt_lower_bound(
+                    unitary,
+                    mini_topology,
+                    rank_tolerance=np.sqrt(OSR_OPTIMIZATION_TOLERANCE),
+                )
+            partition_schmidt_bounds[partition_idx] = lower_bound
+            return lower_bound
+
+        def partition_schedule_key(partition_idx):
+            # Within one dependency frontier, first try the window with the
+            # largest rigorously available reduction interval.  This directly
+            # prioritizes constructive OSR work over expensive irreducibility
+            # proofs while changing only evaluation order.
+            incumbent_count = CNOTGateCount(subcircuits[partition_idx])
+            lower_bound = partition_schmidt_bound(partition_idx)
+            gate_counts = subcircuits[partition_idx].get_Gate_Nums()
+            noncanonical_gate_count = sum(
+                count
+                for gate_name, count in gate_counts.items()
+                if gate_name not in ("CNOT", "U3")
+            )
+            width_priority = (
+                len(subcircuits[partition_idx].get_Qbits())
+                if self.config.get("osr_narrow_partitions_first", True)
+                else 0
+            )
+            return (
+                width_priority,
+                # The rigorous bound is also the minimum constructive graph
+                # depth indicated by OSR, so it is the strongest available
+                # predictor of synthesis cost.  At equal depth, maximize the
+                # certified reduction interval.  Dependency depth is only a
+                # final tie-break: a selected exact rewrite rebuilds the DAG.
+                lower_bound,
+                -(incumbent_count - lower_bound),
+                -partition_depth.get(partition_idx, trailing_depth),
+                -noncanonical_gate_count,
+                partition_idx,
+            )
+
         with (
-            contextlib.nullcontext() if in_parent else Pool(processes=worker_count)
+            contextlib.nullcontext() if run_inline else Pool(processes=worker_count)
         ) as pool:
-            remaining = list(range(len(subcircuits)))
+            remaining = sorted(
+                range(len(subcircuits)), key=partition_schedule_key
+            )
             while remaining:
                 still_remaining = []
                 #  code for iterate over partitions and optimize them
@@ -5000,77 +5376,78 @@ class qgd_Wide_Circuit_Optimization:
                         None
                         if fingerprint_dict is None
                         else qgd_Wide_Circuit_Optimization.get_fingerprint(
-                            subcircuit, subcircuit_parameters
+                            subcircuit,
+                            subcircuit_parameters,
+                            self.config.get("topology"),
                         )
                     )
                     if fingerprint_dict is not None and fingerprint in fingerprint_dict:
                         (
                             optimized_subcircuits[partition_idx],
                             optimized_parameter_list[partition_idx],
-                        ) = fingerprint_dict[fingerprint]
-                        continue
+                        ) = restore_cache_value(
+                            fingerprint_dict[fingerprint], subcircuit
+                        )
                     # With a required reduction of one CNOT, a CNOT-basis block
                     # containing at most one CNOT has no search depth to explore.
                     # Local one-qubit gates cannot reduce the operator Schmidt
                     # rank of a single CNOT, so avoid an exact-synthesis call and
                     # cache this mathematically irreducible result immediately.
-                    if CNOTGateCount(subcircuit) <= 1:
+                    elif (
+                        CNOTGateCount(subcircuit) <= 1
+                        or partition_schmidt_bound(partition_idx)
+                        >= CNOTGateCount(subcircuit)
+                    ):
                         optimized_subcircuits[partition_idx] = subcircuit
                         optimized_parameter_list[partition_idx] = (
                             subcircuit_parameters
                         )
                         if fingerprint_dict is not None:
-                            fingerprint_dict[fingerprint] = (
+                            fingerprint_dict[fingerprint] = make_cache_value(
                                 subcircuit,
                                 subcircuit_parameters,
+                                subcircuit,
                             )
-                        continue
-                    if part_deps is not None and partition_idx in part_deps:
-                        any_optimized, any_remaining = False, False
-                        for dep_idx in part_deps[partition_idx]:
-                            if optimized_subcircuits[dep_idx] is None and (
-                                async_results[dep_idx] is None
-                                or not isinstance(async_results[dep_idx], tuple)
-                                and not async_results[dep_idx].ready()
-                            ):
-                                any_remaining = True
-                                continue
-                            elif optimized_subcircuits[dep_idx] is None:
-                                process_result(dep_idx)
-
-                            optimized_subcircuits_loc = optimized_subcircuits[dep_idx]
-                            assert isinstance(optimized_subcircuits_loc, Circuit)
-                            assert optimized_subcircuits_loc is not None
-
-                            if CNOTGateCount(optimized_subcircuits_loc) < CNOTGateCount(
-                                subcircuits[dep_idx]
-                            ):  # if the dependency partition was optimized, skip
-                                any_optimized = True
-                                break
-                        if any_optimized:
-                            optimized_subcircuits[partition_idx] = subcircuit
-                            optimized_parameter_list[partition_idx] = (
-                                subcircuit_parameters
+                    else:
+                        # call a process to decompose a subcircuit
+                        config = {
+                            **self.config,
+                            "tree_level_max": qgd_Wide_Circuit_Optimization.partition_tree_level_max(
+                                self.config, subcircuit
+                            ),
+                        }
+                        if config.get("verbosity", 0) >= 2:
+                            lower_bound = partition_schmidt_bound(partition_idx)
+                            print(
+                                "OSR partition schedule: "
+                                f"index={partition_idx}, "
+                                f"depth={partition_depth.get(partition_idx, trailing_depth)}, "
+                                f"width={len(subcircuit.get_Qbits())}, "
+                                f"cnots={CNOTGateCount(subcircuit)}, "
+                                f"schmidt_bound={lower_bound}, "
+                                f"gap={CNOTGateCount(subcircuit) - lower_bound}",
+                                flush=True,
                             )
-                            continue
-                        if any_remaining:
-                            still_remaining.append(partition_idx)
-                            continue
-                    # call a process to decompose a subcircuit
-                    config = {
-                        **self.config,
-                        "tree_level_max": qgd_Wide_Circuit_Optimization.partition_tree_level_max(
-                            self.config, subcircuit
-                        ),
-                    }
-                    fargs = (
-                        self.PartitionDecompositionProcess,
-                        (subcircuit, subcircuit_parameters, config, None),
-                    )
-                    # print("Dispatching", subcircuit.get_Involved_Qubits(), "qubits with", CNOGateCount(subcircuit, 0), "CNOT gates, partition ", partition_idx)
-                    async_results[partition_idx] = (
-                        fargs if in_parent else pool.apply_async(*fargs)  # type: ignore[union-attr]
-                    )
+                        fargs = (
+                            self.PartitionDecompositionProcess,
+                            (subcircuit, subcircuit_parameters, config, None),
+                        )
+                        # print("Dispatching", subcircuit.get_Involved_Qubits(), "qubits with", CNOGateCount(subcircuit, 0), "CNOT gates, partition ", partition_idx)
+                        async_results[partition_idx] = (
+                            fargs if run_inline else pool.apply_async(*fargs)  # type: ignore[union-attr]
+                        )
+
+                    if restart_on_partition_improvement and run_inline:
+                        process_result(partition_idx)
+                        if CNOTGateCount(
+                            optimized_subcircuits[partition_idx]
+                        ) < CNOTGateCount(subcircuit):
+                            restart_partition_idx = partition_idx
+                            for deferred_idx in range(len(subcircuits)):
+                                preserve_original(deferred_idx)
+                            break
+                if restart_partition_idx is not None:
+                    break
                 if len(remaining) == len(still_remaining):
                     time.sleep(0.1)
                 remaining = still_remaining
@@ -5094,6 +5471,14 @@ class qgd_Wide_Circuit_Optimization:
                     return_selection=True,
                 )
             )
+            if (
+                restart_partition_idx is not None
+                and restart_partition_idx not in selected_indices
+            ):
+                raise RuntimeError(
+                    "The strict maximal-partition rewrite was not selected "
+                    "by exact global recombination."
+                )
         else:
             selected_indices = list(range(len(subcircuits)))
             selected_gate_sets = [None] * len(selected_indices)

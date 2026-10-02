@@ -1196,6 +1196,34 @@ std::pair<int, double> operator_schmidt_rank(const Matrix_float& U, int n,
     );
 }
 
+double operator_schmidt_entropy(const Matrix& U, int n,
+                                const std::vector<int>& A_qubits,
+                                double Fnorm)
+{
+    int mr = 0;
+    int mc = 0;
+    std::vector<std::complex<double>> M =
+        build_osr_matrix<Matrix, double>(U, n, A_qubits, mr, mc);
+    const std::vector<double> singulars =
+        osr_eigen_singular_values(M, mr, mc, Fnorm);
+    double squared_norm = 0.0;
+    for (double singular : singulars) {
+        squared_norm += singular * singular;
+    }
+    if (squared_norm <= 0.0) {
+        return 0.0;
+    }
+    double entropy = 0.0;
+    for (double singular : singulars) {
+        const double probability =
+            singular * singular / squared_norm;
+        if (probability > 0.0) {
+            entropy -= probability * std::log2(probability);
+        }
+    }
+    return entropy;
+}
+
 static std::vector<std::vector<double>> profile_softmin_coefficients(
     const std::vector<std::vector<double>>& cuts_S,
     const std::vector<std::vector<int>>& rank_profiles,

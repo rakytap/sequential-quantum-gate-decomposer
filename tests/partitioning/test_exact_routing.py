@@ -134,7 +134,7 @@ def test_exact_osr_is_the_wide_router_default():
     optimizer = qgd_Wide_Circuit_Optimization({})
 
     assert optimizer.config["routing-strategy"] == "exact-osr"
-    assert optimizer.config["routing_column_synthesis_mode"] == "topology-osr"
+    assert optimizer.config["routing_column_synthesis_mode"] == "best-of-both"
     assert optimizer.config["exact_routing_master"] == "benders"
     assert optimizer.config["exact_routing_lazy_osr"] is False
     assert optimizer.config["exact_routing_synthesis_restarts"] == 1

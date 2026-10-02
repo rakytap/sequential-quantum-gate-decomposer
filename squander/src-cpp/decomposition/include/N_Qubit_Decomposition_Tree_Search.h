@@ -111,6 +111,39 @@ public:
         return {unique_coverages.begin(), unique_coverages.end()};
     }
 
+    std::vector<std::vector<int>> enumerate_min_edge_covers(
+        const std::vector<std::pair<int, double>>& cut_bounds,
+        int max_total = -1) const
+    {
+        if (cut_bounds.size() != cuts_.size()) {
+            throw std::invalid_argument(
+                "cut_bounds size must match cuts size"
+            );
+        }
+        const int minimum = solve_min_cnots(cut_bounds, max_total);
+        if (minimum < 0 || num_edges_ <= 0) return {};
+
+        std::vector<std::vector<int>> covers;
+        std::vector<int> edge_counts(num_edges_, 0);
+        std::function<void(int, int)> enumerate_compositions =
+            [&](int pos, int used_sum) {
+                if (pos == num_edges_ - 1) {
+                    edge_counts[pos] = minimum - used_sum;
+                    if (composition_satisfies(edge_counts, cut_bounds)) {
+                        covers.push_back(edge_counts);
+                    }
+                    return;
+                }
+                const int remaining = minimum - used_sum;
+                for (int count = 0; count <= remaining; ++count) {
+                    edge_counts[pos] = count;
+                    enumerate_compositions(pos + 1, used_sum + count);
+                }
+            };
+        enumerate_compositions(0, 0);
+        return covers;
+    }
+
     std::vector<int> rank_edges_for_search(
         const std::vector<std::pair<int, double>>& cut_bounds,
         int current_min_cnots,
@@ -600,7 +633,9 @@ class N_Qubit_Decomposition_Tree_Search : public Optimization_Interface {
           const GrayCodeCNOT& path, const SearchNode* warm_start = nullptr,
           bool run_optimization = true, int iteration_loop_override = -1,
           int max_inner_iteration_override = -1,
-          int target_bound_override = -1);
+          int target_bound_override = -1,
+          const std::vector<double>* supplied_parameters = nullptr,
+          bool score_optimized_osr = true);
 
     /**
     @brief Perform tree search over possible gate structures using Gray code enumeration and Operator Schmidt Rank (OSR)

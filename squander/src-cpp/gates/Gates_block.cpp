@@ -566,6 +566,207 @@ static void build_suffix_gates(
         }
     }
 }
+
+template<typename MatrixType>
+struct TraceDerivativeWorkspace {
+    std::vector<MatrixType> forward_inputs;
+    std::vector<MatrixType> gate_gradients;
+    std::vector<Gate*> nested_gates;
+    std::vector<QGD_Complex16> nested_traces;
+    MatrixType local_input;
+    MatrixType derivative_kernel;
+    MatrixType suffix;
+};
+
+template<typename MatrixType, typename ParametersType>
+static void apply_to_trace_derivatives_impl(
+    const std::vector<Gate*>& gates,
+    int parameter_count,
+    int matrix_size,
+    ParametersType& parameters,
+    const ParametersType& precomputed_sincos,
+    MatrixType& input,
+    int parallel,
+    MatrixType* output,
+    std::vector<QGD_Complex16>& traces,
+    MatrixType* suffix_seed = nullptr) {
+
+    traces.resize(static_cast<size_t>(parameter_count));
+    for (auto& trace : traces) {
+        trace.real = 0.0;
+        trace.imag = 0.0;
+    }
+    if (gates.empty()) {
+        if (output != nullptr) {
+            input.copy_to(*output);
+        }
+        return;
+    }
+
+    static tbb::enumerable_thread_specific<std::deque<TraceDerivativeWorkspace<MatrixType>>> workspace_tls;
+    std::deque<TraceDerivativeWorkspace<MatrixType>>& workspaces = workspace_tls.local();
+    int& depth = gates_block_derivative_depth.local();
+    if (workspaces.size() <= static_cast<size_t>(depth)) {
+        workspaces.resize(static_cast<size_t>(depth) + 1);
+    }
+    TraceDerivativeWorkspace<MatrixType>& workspace = workspaces[static_cast<size_t>(depth)];
+    struct DepthGuard {
+        int& depth;
+        explicit DepthGuard(int& value) : depth(value) { ++depth; }
+        ~DepthGuard() { --depth; }
+    } guard(depth);
+
+    build_forward_inputs(gates, input, parameters, precomputed_sincos, parallel, workspace.forward_inputs);
+    if (output != nullptr) {
+        workspace.forward_inputs.back().copy_to(*output);
+        Gate* last = gates.back();
+        const int last_parameter_count = last->get_parameter_num();
+        if (last_parameter_count == 0) {
+            last->apply_to(*output, parallel);
+        }
+        else {
+            const int start = last->get_parameter_start_idx();
+            ParametersType local_parameters(parameters.get_data() + start, 1, last_parameter_count);
+            ParametersType local_sincos(precomputed_sincos.get_data() + 2 * start, last_parameter_count, 2);
+            if (last->get_type() == ADAPTIVE_OPERATION) {
+                last->apply_to(local_parameters, *output, parallel);
+            }
+            else {
+                last->apply_to_inner(local_parameters, local_sincos, *output, parallel);
+            }
+        }
+    }
+
+    if (parameter_count == 0) {
+        return;
+    }
+    if (suffix_seed != nullptr) {
+        suffix_seed->copy_to(workspace.suffix);
+    }
+    else {
+        reset_identity(workspace.suffix, matrix_size);
+    }
+    for (size_t gate_idx = gates.size(); gate_idx-- > 0;) {
+        Gate* gate = gates[gate_idx];
+        const int gate_parameter_count = gate->get_parameter_num();
+        const int start = gate->get_parameter_start_idx();
+        if (gate_parameter_count > 0) {
+            const int target = gate->get_target_qbit();
+            if (gate->get_type() == U3_OPERATION && gate_parameter_count == 3 &&
+                target >= 0 && (1 << target) < matrix_size) {
+                // Tr(suffix * dU3 * prefix) depends on just a 2x2 environment.
+                // Contract it once rather than materializing three full derivative matrices.
+                const MatrixType& prefix = workspace.forward_inputs[gate_idx];
+                const int target_mask = 1 << target;
+                double environment_real[4] = {};
+                double environment_imag[4] = {};
+                for (int base = 0; base < matrix_size; ++base) {
+                    if (base & target_mask) {
+                        continue;
+                    }
+                    for (int row = 0; row < matrix_size; ++row) {
+                        for (int output_bit = 0; output_bit < 2; ++output_bit) {
+                            const int column = base | (output_bit * target_mask);
+                            const auto& left = workspace.suffix[row * workspace.suffix.stride + column];
+                            for (int input_bit = 0; input_bit < 2; ++input_bit) {
+                                const int input_row = base | (input_bit * target_mask);
+                                const auto& right = prefix[input_row * prefix.stride + row];
+                                const int index = 2 * output_bit + input_bit;
+                                environment_real[index] += static_cast<double>(left.real) * right.real -
+                                    static_cast<double>(left.imag) * right.imag;
+                                environment_imag[index] += static_cast<double>(left.real) * right.imag +
+                                    static_cast<double>(left.imag) * right.real;
+                            }
+                        }
+                    }
+                }
+                ParametersType local_sincos(precomputed_sincos.get_data() + 2 * start,
+                                            gate_parameter_count, 2);
+                for (int parameter_idx = 0; parameter_idx < gate_parameter_count; ++parameter_idx) {
+                    gate->derivative_kernel_to(local_sincos, parameter_idx, workspace.derivative_kernel);
+                    double real = 0.0;
+                    double imag = 0.0;
+                    for (int output_bit = 0; output_bit < 2; ++output_bit) {
+                        for (int input_bit = 0; input_bit < 2; ++input_bit) {
+                            const int index = 2 * output_bit + input_bit;
+                            const auto& kernel = workspace.derivative_kernel[
+                                output_bit * workspace.derivative_kernel.stride + input_bit];
+                            real += environment_real[index] * kernel.real - environment_imag[index] * kernel.imag;
+                            imag += environment_real[index] * kernel.imag + environment_imag[index] * kernel.real;
+                        }
+                    }
+                    QGD_Complex16& trace = traces[static_cast<size_t>(start) + parameter_idx];
+                    trace.real = real;
+                    trace.imag = imag;
+                }
+            }
+            else if (gate->get_type() == BLOCK_OPERATION) {
+                // Chain rule inside the block, seeded by all gates after it.
+                // This avoids constructing one full derivative matrix per
+                // nested parameter just to contract its final trace.
+                Gates_block* block = static_cast<Gates_block*>(gate);
+                workspace.nested_gates.clear();
+                const int nested_gate_count = block->get_gate_num();
+                for (int idx = 0; idx < nested_gate_count; ++idx) {
+                    workspace.nested_gates.push_back(block->get_gate(idx));
+                }
+                ParametersType local_parameters(parameters.get_data() + start,
+                                                1, gate_parameter_count);
+                ParametersType local_sincos(precomputed_sincos.get_data() + 2 * start,
+                                            gate_parameter_count, 2);
+                apply_to_trace_derivatives_impl(
+                    workspace.nested_gates, gate_parameter_count, matrix_size,
+                    local_parameters, local_sincos,
+                    workspace.forward_inputs[gate_idx], parallel,
+                    static_cast<MatrixType*>(nullptr),
+                    workspace.nested_traces, &workspace.suffix
+                );
+                for (int idx = 0; idx < gate_parameter_count; ++idx) {
+                    traces[static_cast<size_t>(start + idx)] =
+                        workspace.nested_traces[static_cast<size_t>(idx)];
+                }
+            }
+            else {
+                ParametersType local_parameters(parameters.get_data() + start, 1, gate_parameter_count);
+                workspace.forward_inputs[gate_idx].copy_to(workspace.local_input);
+                gate->apply_derivate_to(local_parameters, workspace.local_input, parallel, workspace.gate_gradients);
+                for (size_t parameter_idx = 0; parameter_idx < workspace.gate_gradients.size(); ++parameter_idx) {
+                    const MatrixType& derivative = workspace.gate_gradients[parameter_idx];
+                    double real = 0.0;
+                    double imag = 0.0;
+                    for (int row = 0; row < matrix_size; ++row) {
+                        for (int col = 0; col < matrix_size; ++col) {
+                            const auto& a = workspace.suffix[row * workspace.suffix.stride + col];
+                            const auto& b = derivative[col * derivative.stride + row];
+                            real += static_cast<double>(a.real) * b.real - static_cast<double>(a.imag) * b.imag;
+                            imag += static_cast<double>(a.real) * b.imag + static_cast<double>(a.imag) * b.real;
+                        }
+                    }
+                    QGD_Complex16& trace = traces[static_cast<size_t>(start) + parameter_idx];
+                    trace.real = real;
+                    trace.imag = imag;
+                }
+            }
+        }
+
+        if (gate_idx == 0) {
+            break;
+        }
+        if (gate_parameter_count == 0 && gate->get_type() != BLOCK_OPERATION) {
+            gate->apply_from_right(workspace.suffix);
+        }
+        else {
+            ParametersType local_parameters(parameters.get_data() + start, 1, gate_parameter_count);
+            ParametersType local_sincos(precomputed_sincos.get_data() + 2 * start, gate_parameter_count, 2);
+            if (gate->get_type() == ADAPTIVE_OPERATION) {
+                gate->apply_from_right(local_parameters, workspace.suffix);
+            }
+            else {
+                gate->apply_from_right_inner(local_parameters, local_sincos, workspace.suffix);
+            }
+        }
+    }
+}
 } // anonymous namespace
 
 
@@ -1409,6 +1610,20 @@ Gates_block::apply_to_combined_inner( Matrix_real_float& parameters_mtx_in, cons
             }
         );
     }
+}
+
+
+void
+Gates_block::apply_to_trace_derivatives( Matrix_real& parameters_mtx, Matrix& input, int parallel, Matrix& output, std::vector<QGD_Complex16>& traces ) {
+    Matrix_real precomputed_sincos = precompute_block_sincos(parameters_mtx);
+    apply_to_trace_derivatives_impl(gates, parameter_num, matrix_size, parameters_mtx, precomputed_sincos, input, parallel, &output, traces);
+}
+
+
+void
+Gates_block::apply_to_trace_derivatives( Matrix_real_float& parameters_mtx, Matrix_float& input, int parallel, Matrix_float& output, std::vector<QGD_Complex16>& traces ) {
+    Matrix_real_float precomputed_sincos = precompute_block_sincos(parameters_mtx);
+    apply_to_trace_derivatives_impl(gates, parameter_num, matrix_size, parameters_mtx, precomputed_sincos, input, parallel, &output, traces);
 }
 
 

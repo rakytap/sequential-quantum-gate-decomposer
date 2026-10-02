@@ -988,6 +988,13 @@ int Decomposition_Base::set_iteration_loops( std::map<int, int> iteration_loops_
 }
 
 
+void Decomposition_Base::set_random_seed( std::mt19937::result_type seed ) {
+
+    gen.seed(seed);
+
+}
+
+
 
 /**
 @brief Initializes default layer numbers

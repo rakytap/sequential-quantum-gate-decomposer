@@ -426,6 +426,15 @@ def display_name(filename: str) -> str:
     return filename[:-5] if filename.endswith(".qasm") else filename
 
 
+def provenance_caption_suffix(rows: Iterable[tuple]) -> str:
+    if any(row[0] == "tfim.qasm" for row in rows):
+        return (
+            " The tfim row is the QFAST/QSearch tfim-4-60 benchmark; "
+            "it is not an original QASMBenchmarks circuit."
+        )
+    return ""
+
+
 def display_count(value: Optional[int]) -> str:
     return "--" if value is None else str(value)
 
@@ -597,6 +606,7 @@ def write_comparison_tables(
             "CNOT counts for OSR and "
             "BQSKit at matched block process-infidelity tolerance. Bold "
             "values are best within each paired stage."
+            f"{provenance_caption_suffix(rows)}"
         ),
         f"tab:osr-bqskit-{label_suffix}-counts",
     )
@@ -681,6 +691,7 @@ def write_comparison_tables(
             "stage runtimes for OSR and "
             "BQSKit at matched block process-infidelity tolerance, in minutes. "
             "Bold values are best within each paired stage."
+            f"{provenance_caption_suffix(rows)}"
         ),
         f"tab:osr-bqskit-{label_suffix}-times",
     )
@@ -808,6 +819,7 @@ def write_four_qubit_osr_only_table(
             "for circuits without "
             "a completed four-qubit partition BQSKit result. Counts and stage "
             "runtimes are combined because no paired comparison is available."
+            f"{provenance_caption_suffix(rows)}"
         ),
         f"tab:osr-four-qubit-unpaired-{label_suffix}",
     )
@@ -892,6 +904,85 @@ def write_regression_comments(
     if method_regressions == 0:
         print("% OSR WORSE THAN BQSKIT: none", file=stream)
 
+    availability_counts = {
+        "bqskit_without_osr": 0,
+        "osr_without_bqskit": 0,
+        "osr_failed": 0,
+        "bqskit_failed": 0,
+        "osr_timeout": 0,
+        "bqskit_timeout": 0,
+    }
+    for partition_label, osr_group, bqskit_group in comparisons:
+        for dataset in DATASETS:
+            osr_results = osr_group[dataset]
+            bqskit_results = bqskit_group[dataset]
+            for name in sorted(osr_results.keys() | bqskit_results.keys()):
+                osr_entry = osr_results.get(name)
+                bqskit_entry = bqskit_results.get(name)
+                for method, entry in (("OSR", osr_entry), ("BQSKIT", bqskit_entry)):
+                    if not isinstance(entry, dict):
+                        continue
+                    status = entry.get("status")
+                    if status not in ("failed", "timeout"):
+                        continue
+                    availability_counts[f"{method.lower()}_{status}"] += 1
+                    failure = entry.get("failure")
+                    reason = (
+                        failure.strip().splitlines()[-1].strip()
+                        if isinstance(failure, str) and failure.strip()
+                        else None
+                    )
+                    print(
+                        f"% {method} RUN {status.upper()}: "
+                        f"partition={partition_label} {dataset}/{name}"
+                        + (f" reason={reason}" if reason else ""),
+                        file=stream,
+                    )
+
+                osr_complete = is_complete(osr_entry)
+                bqskit_complete = is_complete(bqskit_entry)
+                if osr_complete == bqskit_complete:
+                    continue
+                if bqskit_complete:
+                    availability_counts["bqskit_without_osr"] += 1
+                    missing_status = (
+                        osr_entry.get("status", "incomplete")
+                        if isinstance(osr_entry, dict)
+                        else "missing"
+                    )
+                    print(
+                        "% BQSKIT RESULT WITHOUT OSR: "
+                        f"partition={partition_label} {dataset}/{name} "
+                        f"BQSKit_final={cnot_count(bqskit_entry, 'final')} "
+                        f"OSR_status={missing_status}",
+                        file=stream,
+                    )
+                else:
+                    availability_counts["osr_without_bqskit"] += 1
+                    missing_status = (
+                        bqskit_entry.get("status", "incomplete")
+                        if isinstance(bqskit_entry, dict)
+                        else "missing"
+                    )
+                    print(
+                        "% OSR RESULT WITHOUT BQSKIT: "
+                        f"partition={partition_label} {dataset}/{name} "
+                        f"OSR_final={cnot_count(osr_entry, 'final')} "
+                        f"BQSKit_status={missing_status}",
+                        file=stream,
+                    )
+    if availability_counts["bqskit_without_osr"] == 0:
+        print("% BQSKIT RESULT WITHOUT OSR: none", file=stream)
+    if availability_counts["osr_without_bqskit"] == 0:
+        print("% OSR RESULT WITHOUT BQSKIT: none", file=stream)
+    print(
+        "% RESULT AVAILABILITY SUMMARY: "
+        + " ".join(
+            f"{key}={value}" for key, value in availability_counts.items()
+        ),
+        file=stream,
+    )
+
     print(
         "% CNOT REGRESSION SUMMARY: "
         f"4q-vs-3q={partition_regressions} "
@@ -899,6 +990,23 @@ def write_regression_comments(
         file=stream,
     )
     print("% END CNOT REGRESSION AUDIT", file=stream)
+
+
+def write_benchmark_provenance(stream: TextIO) -> None:
+    """Record benchmark aliases that do not match their storage directory."""
+    print(file=stream)
+    print("% BEGIN BENCHMARK PROVENANCE", file=stream)
+    print(
+        "% QASMBenchmarks/tfim.qasm is the QFAST/QSearch tfim-4-60 "
+        "benchmark, not an original QASMBenchmarks circuit.",
+        file=stream,
+    )
+    print(
+        "% Published calibration target: 12 CNOTs from QSearch. This is a "
+        "best published numerical result, not a proven lower bound.",
+        file=stream,
+    )
+    print("% END BENCHMARK PROVENANCE", file=stream)
 
 
 def main() -> int:
@@ -965,6 +1073,7 @@ def main() -> int:
                     osr_4q,
                     bqskit_4q,
                 )
+                write_benchmark_provenance(stream)
             if args.include_4q:
                 print(
                     f"Wrote ten dataset-specific tables to {args.output}: "
@@ -1017,6 +1126,7 @@ def main() -> int:
                 osr_4q,
                 bqskit_4q,
             )
+            write_benchmark_provenance(sys.stdout)
     except RuntimeError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1

@@ -1176,7 +1176,19 @@ void Optimization_Interface::optimization_problem_combined_non_static( Matrix_re
         Matrix_float Umtx_loc = instance->get_Umtx_float();
         static tbb::enumerable_thread_specific<std::vector<Matrix_float>> combined_result_tls;
         std::vector<Matrix_float>& combined_result = combined_result_tls.local();
-        instance->Gates_block::apply_to_combined( parameters_float, Umtx_loc, parallel, combined_result );
+        const bool trace_only = parallel == 0 && qbit_num >= 2 && qbit_num <= 4
+            && Umtx_loc.rows == Umtx_loc.cols && cost_fnc == HILBERT_SCHMIDT_TEST;
+        std::vector<QGD_Complex16>* derivative_traces = nullptr;
+        if (trace_only) {
+            static tbb::enumerable_thread_specific<std::vector<QGD_Complex16>> derivative_traces_tls;
+            derivative_traces = &derivative_traces_tls.local();
+            combined_result.resize(1);
+            instance->Gates_block::apply_to_trace_derivatives(
+                parameters_float, Umtx_loc, parallel, combined_result[0], *derivative_traces);
+        }
+        else {
+            instance->Gates_block::apply_to_combined( parameters_float, Umtx_loc, parallel, combined_result );
+        }
         Matrix_float& matrix_new = combined_result[0];
 
         Matrix_float trace_tmp(1,3);
@@ -1216,6 +1228,13 @@ void Optimization_Interface::optimization_problem_combined_non_static( Matrix_re
         }
 
         auto calculate_gradient_component = [&](int idx) {
+            if (trace_only) {
+                const double d = 1.0 / matrix_new.cols;
+                const QGD_Complex16& derivative_trace = (*derivative_traces)[static_cast<size_t>(idx)];
+                grad[idx] = -2.0*d*d*trace_tmp[0].real*derivative_trace.real
+                    -2.0*d*d*trace_tmp[0].imag*derivative_trace.imag;
+                return;
+            }
             double grad_comp;
             Matrix_float& deriv_mtx = combined_result[static_cast<size_t>(idx) + 1];
             switch (cost_fnc) {
@@ -1405,7 +1424,19 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();////////////////////////////////
     Matrix Umtx_loc = instance->get_Umtx();
     static tbb::enumerable_thread_specific<std::vector<Matrix>> combined_result_tls;
     std::vector<Matrix>& combined_result = combined_result_tls.local();
-    instance->apply_to_combined( parameters, Umtx_loc, parallel, combined_result );
+    const bool trace_only = parallel == 0 && qbit_num >= 2 && qbit_num <= 4
+        && Umtx_loc.rows == Umtx_loc.cols && cost_fnc == HILBERT_SCHMIDT_TEST;
+    std::vector<QGD_Complex16>* derivative_traces = nullptr;
+    if (trace_only) {
+        static tbb::enumerable_thread_specific<std::vector<QGD_Complex16>> derivative_traces_tls;
+        derivative_traces = &derivative_traces_tls.local();
+        combined_result.resize(1);
+        instance->Gates_block::apply_to_trace_derivatives(
+            parameters, Umtx_loc, parallel, combined_result[0], *derivative_traces);
+    }
+    else {
+        instance->apply_to_combined( parameters, Umtx_loc, parallel, combined_result );
+    }
     Matrix& matrix_new = combined_result[0];
 
     Matrix Upartial;
@@ -1425,6 +1456,13 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();////////////////////////////////
 
 
     auto calculate_gradient_component = [&](int idx) {
+        if (trace_only) {
+            const double d = 1.0 / matrix_new.cols;
+            const QGD_Complex16& derivative_trace = (*derivative_traces)[static_cast<size_t>(idx)];
+            grad[idx] = -2.0*d*d*trace_tmp[0].real*derivative_trace.real
+                -2.0*d*d*trace_tmp[0].imag*derivative_trace.imag;
+            return;
+        }
         double grad_comp;
         Matrix& deriv_mtx = combined_result[static_cast<size_t>(idx) + 1];
         switch (cost_fnc) {

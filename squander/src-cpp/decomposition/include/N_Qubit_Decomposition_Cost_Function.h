@@ -145,6 +145,9 @@ std::pair<int, double> operator_schmidt_rank(const Matrix& U, int n,
 std::pair<int, double> operator_schmidt_rank(const Matrix_float& U, int n,
                           const std::vector<int>& A_qubits,
                           double Fnorm, double tol = 1e-10);
+double operator_schmidt_entropy(const Matrix& U, int n,
+                                const std::vector<int>& A_qubits,
+                                double Fnorm);
 std::vector<std::vector<int>> unique_cuts(int n);
 double get_osr_entanglement_test(Matrix& matrix, std::vector<std::vector<int>>& use_cuts, const std::vector<std::vector<int>>& rank_profiles, double profile_temperature=0.1, double cut_smoothmax_temperature=0.0);
 double get_osr_entanglement_test(Matrix_float& matrix, std::vector<std::vector<int>>& use_cuts, const std::vector<std::vector<int>>& rank_profiles, double profile_temperature=0.1, double cut_smoothmax_temperature=0.0);

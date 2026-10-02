@@ -138,7 +138,9 @@ N_Qubit_Decomposition_custom::start_decomposition() {
     MKL_Set_Num_Threads(1);
 #elif BLAS==2 //OpenBLAS
     num_threads = openblas_get_num_threads();
-    openblas_set_num_threads(1);
+    if (num_threads != 1) {
+        openblas_set_num_threads(1);
+    }
 #endif
     if (qbit_num <= 4) {
         omp_set_num_threads(1);
@@ -191,14 +193,15 @@ N_Qubit_Decomposition_custom::start_decomposition() {
 #elif BLAS==1 //MKL
     MKL_Set_Num_Threads(num_threads);
 #elif BLAS==2 //OpenBLAS
-    openblas_set_num_threads(num_threads);
+    if (num_threads != 1) {
+        openblas_set_num_threads(num_threads);
+    }
 #endif
     if (qbit_num <= 4) {
         omp_set_num_threads(omp_num_threads);
     }
 
 }
-
 
 
 
