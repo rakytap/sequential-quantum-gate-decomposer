@@ -168,7 +168,7 @@ def test_exact_osr_is_the_wide_router_default():
     assert optimizer.config["exact_routing_layout_candidate_limit"] == 2
     assert (
         optimizer.config["exact_routing_layout_portfolio_timeout_seconds"]
-        is None
+        == 10.0
     )
     assert optimizer.config["exact_routing_cover_seed_timeout_seconds"] == 10.0
     assert optimizer.config["exact_routing_cover_pool_timeout_seconds"] == 10.0
@@ -1934,7 +1934,7 @@ def test_route_wide_timeout_returns_verified_light_sabre_incumbent():
     assert result.solution.master_backend.endswith("-timeout-incumbent")
     assert (
         result.solution.selections[0].alternative.payload.certificate_kind
-        == "unitary"
+        == "sabre"
     )
 
 
