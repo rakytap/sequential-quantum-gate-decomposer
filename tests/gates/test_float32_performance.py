@@ -6,10 +6,6 @@ import pytest
 
 from squander import CNOT, U3
 
-# Pin to a single core to eliminate CPU migration / frequency variance across runs.
-if hasattr(os, "sched_setaffinity"):
-    os.sched_setaffinity(0, {0})
-
 
 def _has_avx2():
     """Return True if the CPU supports AVX2 (needed for efficient float32 SIMD)."""
@@ -76,6 +72,37 @@ def _time_apply(gate, dtype):
     return time.process_time() - start
 
 
+@pytest.mark.parametrize("gate_factory", [_make_u3, _make_cnot], ids=["U3", "CNOT"])
+def test_float32_apply_to_hot_path_matches_float64(gate_factory):
+    gate = gate_factory()
+    matrix64, matrix32 = _make_inputs()
+    _apply(gate, matrix64, _parameters(gate, np.float64), is_f32=False)
+    _apply(gate, matrix32, _parameters(gate, np.float32), is_f32=True)
+    np.testing.assert_allclose(matrix32, matrix64, rtol=2e-5, atol=2e-5)
+
+
+@pytest.fixture
+def pin_performance_core():
+    if not hasattr(os, "sched_getaffinity") or not hasattr(os, "sched_setaffinity"):
+        yield
+        return
+    original_affinity = os.sched_getaffinity(0)
+    if not original_affinity:
+        pytest.skip("No CPU is available for performance pinning")
+    try:
+        os.sched_setaffinity(0, {min(original_affinity)})
+    except OSError:
+        pytest.skip("Cannot pin this process to one CPU")
+    try:
+        yield
+    finally:
+        os.sched_setaffinity(0, original_affinity)
+
+
+@pytest.mark.skipif(
+    os.environ.get("SQUANDER_RUN_PERFORMANCE_TESTS") != "1",
+    reason="Timing assertions require SQUANDER_RUN_PERFORMANCE_TESTS=1 on a controlled runner",
+)
 @pytest.mark.parametrize(
     "gate_factory,gate_name,min_speedup",
     [
@@ -83,7 +110,9 @@ def _time_apply(gate, dtype):
         pytest.param(_make_cnot, "CNOT", MIN_CNOT_SPEEDUP, id="CNOT"),
     ],
 )
-def test_float32_apply_to_hot_path_has_expected_speed(gate_factory, gate_name, min_speedup):
+def test_float32_apply_to_hot_path_has_expected_speed(
+    gate_factory, gate_name, min_speedup, pin_performance_core
+):
     """Float32 should be a real HPC path, not just accepted at the API boundary."""
     if _has_avx2() is False:
         pytest.skip("CPU lacks AVX2 — float32 SIMD path cannot meet speedup threshold")
