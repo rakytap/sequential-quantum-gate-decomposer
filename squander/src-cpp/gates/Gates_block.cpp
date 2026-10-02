@@ -4000,16 +4000,21 @@ std::cout << "number of gates: " << gatesNum << std::endl;
 void Gates_block::adjust_parameters_for_derivation( DFEgate_kernel_type* DFEgates, const int gatesNum, int& gate_idx, int& gate_set_index) {
 
         int parameter_idx = parameter_num;
-        const int ttl_parameter_base = gate_set_index - parameter_num + 1;
+        const bool groq_backend = is_groq_dfe();
+        const int parameter_base = gate_set_index - parameter_num + 1;
         //int gate_set_index = parameter_num-1;
 
         int32_t parameter_shift = (int32_t)(M_PI/2*(1<<25));
 
-        for(size_t op_idx=0; op_idx<gates.size(); ++op_idx) { // TTL: DFE follows CPU gate order 
+        // Groq follows CPU gate order; FPGA keeps its historical reverse order.
+        for(size_t step=0; step<gates.size(); ++step) {
+            const size_t op_idx = groq_backend ? step : gates.size() - step - 1;
 
             Gate* gate = gates[op_idx];
-            parameter_idx = gate->get_parameter_start_idx() + gate->get_parameter_num();
-            gate_set_index = ttl_parameter_base + parameter_idx - 1;
+            if (groq_backend) {
+                parameter_idx = gate->get_parameter_start_idx() + gate->get_parameter_num();
+                gate_set_index = parameter_base + parameter_idx - 1;
+            }
 //std::cout <<   gate_idx << " " <<   gate_set_index << " " << gate->get_type() << std::endl;        
 
             if (gate->get_type() == CNOT_OPERATION) {
@@ -4349,14 +4354,19 @@ void Gates_block::convert_to_DFE_gates( const Matrix_real& parameters_mtx, DFEga
    	
         int& gate_idx = start_index;
         int parameter_idx = parameter_num;
+	const bool groq_backend = is_groq_dfe();
 	double *parameters_data = parameters_mtx.get_data();
 	//const_cast <Matrix_real&>(parameters);
 
 
-        for(size_t op_idx=0; op_idx<gates.size(); ++op_idx) { // TTL: DFE follows CPU gate order 
+        // Groq follows CPU gate order; FPGA keeps its historical reverse order.
+        for(size_t step=0; step<gates.size(); ++step) {
+            const size_t op_idx = groq_backend ? step : gates.size() - step - 1;
 
             Gate* gate = gates[op_idx];
-            parameter_idx = gate->get_parameter_start_idx() + gate->get_parameter_num();
+            if (groq_backend) {
+                parameter_idx = gate->get_parameter_start_idx() + gate->get_parameter_num();
+            }
             DFEgate_kernel_type& DFEGate = DFEgates[gate_idx];
 
             if (gate->get_type() == CNOT_OPERATION) {
@@ -4432,7 +4442,8 @@ void Gates_block::convert_to_DFE_gates( const Matrix_real& parameters_mtx, DFEga
                 DFEGate.target_qbit = gate->get_target_qbit();
                 DFEGate.control_qbit = -1;
                 DFEGate.gate_type = U3_OPERATION;
-                DFEGate.ThetaOver2 = (int32_t)(theta*(1<<25)); // TTL: parameter is already theta/2
+                // Keep the fixed-point ABI; Groq's CPU parameter is already theta/2.
+                DFEGate.ThetaOver2 = (int32_t)((groq_backend ? theta : theta/2.0)*(1<<25));
                 DFEGate.Phi = (int32_t)(phi*(1<<25));
                 DFEGate.Lambda = (int32_t)(lambda*(1<<25));
                 DFEGate.metadata = 0;

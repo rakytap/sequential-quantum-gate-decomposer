@@ -113,6 +113,11 @@ int calcqgdKernelDFE(size_t rows, size_t cols, DFEgate_kernel_type* gates, int g
 */
 int get_chained_gates_num();
 
+/** Identify the loaded Groq unitary backend without changing the DFE plugin ABI.
+ *  Unknown libraries, including FPGA simulators, retain FPGA conventions.
+ */
+bool is_groq_dfe();
+
 
 class DFE_Lib_Read_Lock {
 public:
