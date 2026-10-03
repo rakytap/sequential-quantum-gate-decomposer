@@ -8809,7 +8809,7 @@ def solve_exact_routing_ilp(
             cat="Binary",
         )
         for logical in range(logical_qubit_count):
-            prob += pulp.lpSum(location_start[logical]) == 1
+            prob += pulp.lpSum(location_start[logical].values()) == 1
             position_start[logical] = pulp.lpSum(
                 path_position[physical] * location_start[logical][physical]
                 for physical in range(physical_qubit_count)
@@ -8823,8 +8823,8 @@ def solve_exact_routing_ilp(
     position_out = {}
     for stage in stages:
         for logical in range(logical_qubit_count):
-            prob += pulp.lpSum(location_in[stage][logical]) == 1
-            prob += pulp.lpSum(location_out[stage][logical]) == 1
+            prob += pulp.lpSum(location_in[stage][logical].values()) == 1
+            prob += pulp.lpSum(location_out[stage][logical].values()) == 1
             position_in[stage, logical] = pulp.lpSum(
                 path_position[physical] * location_in[stage][logical][physical]
                 for physical in range(physical_qubit_count)
