@@ -10,7 +10,7 @@ on:
 jobs:
   build-and-test-linux:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
 
     steps:
     - name: Checkout
@@ -43,6 +43,10 @@ jobs:
         python setup.py build_ext -q
 
     - name: Test
+      env:
+        OPENBLAS_NUM_THREADS: '1'
+        OMP_NUM_THREADS: '1'
+        MKL_NUM_THREADS: '1'
       run: |
         pytest tests/ -x -v --tb=line --durations=25 --durations-min=0.1 --ignore=tests/decomposition/test_wide_circuit_optimization.py
 
