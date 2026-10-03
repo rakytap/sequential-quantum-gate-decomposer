@@ -17,6 +17,11 @@ class PulpVariables:
     def dicts(self, *args, **kwargs):
         add_variable_dicts = getattr(self.problem, "add_variable_dicts", None)
         if add_variable_dicts is not None:
+            # PuLP 4 converts Binary to Integer during recursive dict creation.
+            # Without explicit bounds, inner dimensions become unbounded.
+            if kwargs.get("cat") == "Binary":
+                kwargs.setdefault("lowBound", 0)
+                kwargs.setdefault("upBound", 1)
             return add_variable_dicts(*args, **kwargs)
         return self.pulp.LpVariable.dicts(*args, **kwargs)
 
