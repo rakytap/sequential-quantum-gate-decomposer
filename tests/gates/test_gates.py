@@ -21,8 +21,8 @@ import inspect
 import json
 import numpy as np
 import pytest
-import subprocess
-import sys
+
+from tests.gates._subprocess_worker import GateSubprocess
 
 from qiskit import QuantumCircuit
 
@@ -56,6 +56,15 @@ NATIVE_UNSAFE_APPLY_GATES = {"Gate"}
 DERIVATIVE_TEST_EXCLUDED_GATES = set()
 RECT_COLS_MAX = 32
 F32_TOL = 2e-4
+
+
+@pytest.fixture(scope="module")
+def gate_subprocess():
+    worker = GateSubprocess()
+    try:
+        yield worker.run
+    finally:
+        worker.close()
 
 
 def _discover_parameterized_gate_names():
@@ -279,7 +288,7 @@ class TestGates:
             assert np.linalg.norm(state_out - expected) < 1e-8
 
     @pytest.mark.parametrize("gate_name", [name for name in ALL_GATE_NAMES if name != "Gate"])
-    def test_gate_apply_to_float32_float64_parity(self, gate_name):
+    def test_gate_apply_to_float32_float64_parity(self, gate_name, gate_subprocess):
         script = f"""
 import json
 import numpy as np
@@ -315,12 +324,7 @@ except Exception as exc:
     print(json.dumps({{"status": "exception", "message": str(exc)}}))
 """
 
-        proc = subprocess.run(
-            [sys.executable, "-c", script],
-            capture_output=True,
-            text=True,
-            check=False,
-        )
+        proc = gate_subprocess(script)
 
         if proc.returncode != 0:
             pytest.fail(
@@ -333,7 +337,7 @@ except Exception as exc:
         assert result["err"] < 1e-4, f"float32/float64 parity mismatch for {gate_name}: {result['err']}"
 
     @pytest.mark.parametrize("gate_name", [name for name in ALL_GATE_NAMES if name != "Gate"])
-    def test_gate_get_matrix_float32_float64_parity(self, gate_name):
+    def test_gate_get_matrix_float32_float64_parity(self, gate_name, gate_subprocess):
         script = f"""
 import json
 import numpy as np
@@ -359,12 +363,7 @@ except Exception as exc:
     print(json.dumps({{"status": "exception", "message": str(exc)}}))
 """
 
-        proc = subprocess.run(
-            [sys.executable, "-c", script],
-            capture_output=True,
-            text=True,
-            check=False,
-        )
+        proc = gate_subprocess(script)
 
         if proc.returncode != 0:
             pytest.fail(
@@ -379,7 +378,7 @@ except Exception as exc:
         assert result["err"] < 1e-4, f"float32/float64 get_Matrix parity mismatch for {gate_name}: {result['err']}"
 
     @pytest.mark.parametrize("gate_name", [name for name in ALL_GATE_NAMES if name != "Gate"])
-    def test_gate_apply_from_right_float32_float64_parity(self, gate_name):
+    def test_gate_apply_from_right_float32_float64_parity(self, gate_name, gate_subprocess):
         script = f"""
 import json
 import numpy as np
@@ -412,12 +411,7 @@ except Exception as exc:
     print(json.dumps({{"status": "exception", "message": str(exc)}}))
 """
 
-        proc = subprocess.run(
-            [sys.executable, "-c", script],
-            capture_output=True,
-            text=True,
-            check=False,
-        )
+        proc = gate_subprocess(script)
 
         if proc.returncode != 0:
             pytest.fail(
@@ -430,7 +424,7 @@ except Exception as exc:
         assert result["err"] < 1e-4, f"float32/float64 apply_from_right parity mismatch for {gate_name}: {result['err']}"
 
     @pytest.mark.parametrize("gate_name", [name for name in ALL_GATE_NAMES if name != "Gate"])
-    def test_gate_apply_to_list_float32_float64_parity(self, gate_name):
+    def test_gate_apply_to_list_float32_float64_parity(self, gate_name, gate_subprocess):
         script = f"""
 import json
 import numpy as np
@@ -468,12 +462,7 @@ except Exception as exc:
     print(json.dumps({{"status": "exception", "message": str(exc)}}))
 """
 
-        proc = subprocess.run(
-            [sys.executable, "-c", script],
-            capture_output=True,
-            text=True,
-            check=False,
-        )
+        proc = gate_subprocess(script)
 
         if proc.returncode != 0:
             pytest.fail(
@@ -486,7 +475,7 @@ except Exception as exc:
         assert result["max_err"] < 1e-4, f"float32/float64 apply_to_list parity mismatch for {gate_name}: {result['max_err']}"
 
     @pytest.mark.parametrize("gate_name", [name for name in ALL_GATE_NAMES if name != "Gate"])
-    def test_gate_apply_rectangular_sweep_paths(self, gate_name):
+    def test_gate_apply_rectangular_sweep_paths(self, gate_name, gate_subprocess):
         script = f"""
 import json
 import numpy as np
@@ -606,12 +595,7 @@ except Exception as exc:
     print(json.dumps({{"status": "exception", "message": str(exc)}}))
 """
 
-        proc = subprocess.run(
-            [sys.executable, "-c", script],
-            capture_output=True,
-            text=True,
-            check=False,
-        )
+        proc = gate_subprocess(script)
 
         if proc.returncode != 0:
             pytest.fail(
@@ -629,7 +613,7 @@ except Exception as exc:
         assert result["list_err32"] < 5e-5, result
 
     @pytest.mark.parametrize("gate_name", DERIVATIVE_GATE_NAMES)
-    def test_gate_apply_derivate_wrapper_smoke(self, gate_name):
+    def test_gate_apply_derivate_wrapper_smoke(self, gate_name, gate_subprocess):
         script = f"""
 import json
 import numpy as np
@@ -674,12 +658,7 @@ except Exception as exc:
     print(json.dumps({{"status": "exception", "message": str(exc)}}))
 """
 
-        proc = subprocess.run(
-            [sys.executable, "-c", script],
-            capture_output=True,
-            text=True,
-            check=False,
-        )
+        proc = gate_subprocess(script)
 
         if proc.returncode != 0:
             pytest.fail(
@@ -691,7 +670,7 @@ except Exception as exc:
         assert result["status"] == "ok", result
 
     @pytest.mark.parametrize("gate_name", DERIVATIVE_GATE_NAMES)
-    def test_gate_apply_to_combined_wrapper_smoke(self, gate_name):
+    def test_gate_apply_to_combined_wrapper_smoke(self, gate_name, gate_subprocess):
         script = f"""
 import json
 import numpy as np
@@ -735,12 +714,7 @@ except Exception as exc:
     print(json.dumps({{"status": "exception", "message": str(exc)}}))
 """
 
-        proc = subprocess.run(
-            [sys.executable, "-c", script],
-            capture_output=True,
-            text=True,
-            check=False,
-        )
+        proc = gate_subprocess(script)
 
         if proc.returncode != 0:
             pytest.fail(
@@ -770,7 +744,7 @@ except Exception as exc:
         "gate_name",
         [name for name in ALL_GATE_NAMES if name not in (QISKIT_EXCLUDED_GATES | {"Gate"})],
     )
-    def test_qiskit_io_roundtrip_per_gate(self, gate_name):
+    def test_qiskit_io_roundtrip_per_gate(self, gate_name, gate_subprocess):
         script = f"""
 import json
 import numpy as np
@@ -820,12 +794,7 @@ except Exception as exc:
     print(json.dumps({{"status": "exception", "message": str(exc)}}))
 """
 
-        proc = subprocess.run(
-            [sys.executable, "-c", script],
-            capture_output=True,
-            text=True,
-            check=False,
-        )
+        proc = gate_subprocess(script)
 
         if proc.returncode != 0:
             pytest.fail(
@@ -849,7 +818,7 @@ except Exception as exc:
         "gate_name",
         [name for name in ALL_GATE_NAMES if name != "Gate"],
     )
-    def test_squander_invert_circuit(self, gate_name):
+    def test_squander_invert_circuit(self, gate_name, gate_subprocess):
         script = f"""
 import json
 import numpy as np
@@ -881,12 +850,7 @@ except Exception as exc:
     print(json.dumps({{"status": "exception", "message": str(exc), "trace": traceback.format_exc()}}))
 """
 
-        proc = subprocess.run(
-            [sys.executable, "-c", script],
-            capture_output=True,
-            text=True,
-            check=False,
-        )
+        proc = gate_subprocess(script)
 
         if proc.returncode != 0:
             pytest.fail(

@@ -26,6 +26,7 @@ limitations under the License.
 #include "Adam.h"
 
 
+#include <algorithm>
 #include <fstream>
 
 
@@ -216,8 +217,7 @@ void Optimization_Interface::solve_layer_optimization_problem_ADAM( int num_of_p
                 
                 if ( adaptive_eta_loc )  {
                     double new_eta = 1e-3 * f0;
-                    optimizer.eta = new_eta > 1e-6 ? new_eta : 1e-6;
-                    optimizer.eta = new_eta < 1e-1 ? new_eta : 1e-1;
+                    optimizer.eta = std::max(1e-6, std::min(new_eta, 1e-1));
                 }
                 
             }
