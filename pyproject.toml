@@ -42,7 +42,7 @@ dependencies = [
     "scipy",
     "networkx",
     "pybind11",
-    "pulp>=2.7",
+    "pulp>=2.7,<4",
     "python-sat>=1.8.dev16",
 ]
 
