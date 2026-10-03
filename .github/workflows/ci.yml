@@ -48,7 +48,7 @@ jobs:
         OMP_NUM_THREADS: '1'
         MKL_NUM_THREADS: '1'
       run: |
-        pytest tests/ -x -v --tb=line --durations=25 --durations-min=0.1 --ignore=tests/decomposition/test_wide_circuit_optimization.py
+        pytest tests/ -x -v --tb=line --durations=25 --durations-min=0.1
 
   build-and-test-windows:
     runs-on: windows-latest

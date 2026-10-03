@@ -3,9 +3,11 @@
 Tests for wide-circuit optimization flow.
 """
 
+import os
 from pathlib import Path
 
 import numpy as np
+import pytest
 
 from squander import utils
 import squander.decomposition.qgd_Wide_Circuit_Optimization as Wide_Circuit_Optimization
@@ -23,6 +25,39 @@ def _load_qasm_as_squander_circuit(qasm_path):
     return circ, parameters
 
 
+def test_wide_circuit_optimization_three_qubit_all_to_all():
+    """Run a small real OSR/WCO rewrite and check its unitary."""
+    circ = Circuit(3)
+    circ.add_CNOT(0, 2)
+    circ.add_CNOT(1, 2)
+    parameters = np.empty((0,), dtype=np.float64)
+    optimizer = Wide_Circuit_Optimization.qgd_Wide_Circuit_Optimization(
+        {
+            "strategy": "TreeSearch",
+            "pre-opt-strategy": "TreeSearch",
+            "max_partition_size": 3,
+            "topology": None,
+            "use_osr": True,
+            "use_graph_search": True,
+            "parallel": 0,
+            "test_subcircuits": False,
+            "test_final_circuit": False,
+        }
+    )
+
+    opt_circ, opt_params = optimizer.OptimizeWideCircuit(circ, parameters)
+    assert opt_circ.get_Qbit_Num() == circ.get_Qbit_Num()
+    assert CNOTGateCount(opt_circ, 0) <= CNOTGateCount(circ, 0)
+    original = np.asarray(circ.get_Matrix(parameters, is_f32=False))
+    result = np.asarray(opt_circ.get_Matrix(opt_params, is_f32=False))
+    phase = np.angle(np.vdot(original, result))
+    assert np.linalg.norm(original - result * np.exp(-1j * phase)) < 1e-8
+
+
+@pytest.mark.skipif(
+    os.environ.get("SQUANDER_RUN_WCO_STRESS_TESTS") != "1",
+    reason="Set SQUANDER_RUN_WCO_STRESS_TESTS=1 for the 14-qubit routing stress case",
+)
 def test_wide_circuit_optimization_bv_n14():
     """Run one wide-circuit optimization pass on bv_n14 and validate outputs."""
     qasm_file = (
