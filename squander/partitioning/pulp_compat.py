@@ -32,6 +32,9 @@ class PulpSolveBackend(str):
 
 def cbc_solver(pulp, **kwargs):
     """PuLP 4 uses COIN_CMD and installs CBC through its cbc extra."""
+    # Exact routing must not terminate at CBC's nonzero default absolute gap.
+    kwargs.setdefault("gapRel", 0.0)
+    kwargs.setdefault("gapAbs", 0.0)
     solver_type = getattr(pulp, "PULP_CBC_CMD", None)
     if solver_type is None:
         solver_type = pulp.COIN_CMD
@@ -42,6 +45,16 @@ def pulp_solve_status(pulp, problem, backend):
     """Read status from the solve result, not PuLP 4's removed problem.status."""
     solve_result = getattr(backend, "solve_result", None)
     if hasattr(solve_result, "status_str"):
+        if (
+            solve_result.status_str == "GapLimit"
+            and solve_result.has_solution
+            and solve_result.best_bound is not None
+            and solve_result.objective is not None
+            and solve_result.best_bound == solve_result.objective
+        ):
+            # Equal primal and dual objectives certify optimality, regardless
+            # of CBC's termination label. A merely small gap is not enough.
+            return "Optimal"
         return solve_result.status_str
     if solve_result is not None:
         return pulp.LpStatus[int(solve_result)]
