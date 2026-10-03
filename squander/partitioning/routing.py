@@ -30,6 +30,7 @@ from pathlib import Path
 from typing import Any, Iterable, Mapping, Sequence
 
 import numpy as np
+from squander.partitioning.pulp_compat import PulpVariables, pulp_solve_status
 
 
 Permutation = tuple[int, ...]
@@ -3317,7 +3318,8 @@ def solve_exact_routing_ilp_dense(
                 partition_before.add((left, right))
 
     prob = pulp.LpProblem("ExactPermutationAwareRouting", pulp.LpMinimize)
-    x = pulp.LpVariable.dicts("cfg", range(len(nodes)), cat="Binary")
+    _pv = PulpVariables(prob, pulp)
+    x = _pv.dicts("cfg", range(len(nodes)), cat="Binary")
     selected_partition = {
         partition: pulp.lpSum(x[node] for node in node_ids)
         for partition, node_ids in enumerate(nodes_by_partition)
@@ -3341,7 +3343,7 @@ def solve_exact_routing_ilp_dense(
         prob += expression <= 1, f"one_configuration_{partition}"
 
     order_bound = max(1, len(partition_sets))
-    order = pulp.LpVariable.dicts(
+    order = _pv.dicts(
         "partition_order",
         range(len(partition_sets)),
         lowBound=0,
@@ -3378,10 +3380,10 @@ def solve_exact_routing_ilp_dense(
     outgoing_arcs = collections.defaultdict(list)
     for logical, qubit_nodes in nodes_on_qubit.items():
         for node in qubit_nodes:
-            source[logical, node] = pulp.LpVariable(
+            source[logical, node] = _pv(
                 f"source_q{logical}_n{node}", cat="Binary"
             )
-            sink[logical, node] = pulp.LpVariable(
+            sink[logical, node] = _pv(
                 f"sink_q{logical}_n{node}", cat="Binary"
             )
         for left in qubit_nodes:
@@ -3407,24 +3409,24 @@ def solve_exact_routing_ilp_dense(
                 right_index = node_qubit_index[right, logical]
                 if output_physical != right_alternative.input_physical[right_index]:
                     continue
-                variable = pulp.LpVariable(
+                variable = _pv(
                     f"flow_q{logical}_n{left}_n{right}", cat="Binary"
                 )
                 arcs[logical, left, right] = variable
                 outgoing_arcs[logical, left].append(variable)
                 incoming_arcs[logical, right].append(variable)
 
-    initial = pulp.LpVariable.dicts(
+    initial = _pv.dicts(
         "initial_mapping",
         (range(logical_qubit_count), range(physical_qubit_count)),
         cat="Binary",
     )
-    final = pulp.LpVariable.dicts(
+    final = _pv.dicts(
         "final_mapping",
         (range(logical_qubit_count), range(physical_qubit_count)),
         cat="Binary",
     )
-    idle = pulp.LpVariable.dicts(
+    idle = _pv.dicts(
         "idle_mapping",
         (range(logical_qubit_count), range(physical_qubit_count)),
         cat="Binary",
@@ -3525,16 +3527,17 @@ def solve_exact_routing_ilp_dense(
     solver_name = _solve_pulp_with_gurobi_or_cbc(
         prob, pulp, **solve_kwargs
     )
-    if pulp.LpStatus[prob.status] != "Optimal":
+    status = pulp_solve_status(pulp, prob, solver_name)
+    if status != "Optimal":
         if timeout_seconds is not None:
             raise ExactRoutingLimitExceeded(
                 f"The {solver_name} routing ILP did not prove optimality "
                 f"within {timeout_seconds} seconds; status="
-                f"{pulp.LpStatus[prob.status]}."
+                f"{status}."
             )
         raise ValueError(
             "No optimal compatible exact-cover routing solution exists: "
-            f"status={pulp.LpStatus[prob.status]}."
+            f"status={status}."
         )
 
     selected_nodes = {
@@ -3732,7 +3735,8 @@ def solve_exact_routing_ilp_lazy_cuts(
         )
 
     prob = pulp.LpProblem("SparseExactPermutationAwareRouting", pulp.LpMinimize)
-    x = pulp.LpVariable.dicts("cfg", range(len(nodes)), cat="Binary")
+    _pv = PulpVariables(prob, pulp)
+    x = _pv.dicts("cfg", range(len(nodes)), cat="Binary")
     selected_partition = {
         partition: pulp.lpSum(x[node] for node in node_ids)
         for partition, node_ids in enumerate(nodes_by_partition)
@@ -4010,7 +4014,7 @@ def solve_exact_routing_ilp_lazy_cuts(
             callback=gurobi_lazy_mapping_cuts,
             **solve_kwargs,
         )
-        status = pulp.LpStatus[prob.status]
+        status = pulp_solve_status(pulp, prob, solver_name)
         if status != "Optimal":
             if timeout_seconds is not None:
                 raise ExactRoutingLimitExceeded(
@@ -4427,7 +4431,8 @@ def _solve_exact_routing_ilp_flow_restricted(
         partition_boundaries[partition] = boundaries
 
     prob = pulp.LpProblem("WireBoundaryExactRouting", pulp.LpMinimize)
-    x = pulp.LpVariable.dicts("cfg", range(len(nodes)), cat="Binary")
+    _pv = PulpVariables(prob, pulp)
+    x = _pv.dicts("cfg", range(len(nodes)), cat="Binary")
     selected_partition = {
         partition: pulp.lpSum(x[node] for node in node_ids)
         for partition, node_ids in enumerate(nodes_by_partition)
@@ -4453,7 +4458,7 @@ def _solve_exact_routing_ilp_flow_restricted(
         for boundary in range(wire_boundary_count[logical]):
             variables = []
             for physical in range(physical_qubit_count):
-                variable = pulp.LpVariable(
+                variable = _pv(
                     f"location_q{logical}_b{boundary}_p{physical}",
                     cat="Binary",
                 )
@@ -4707,7 +4712,13 @@ def _solve_exact_routing_ilp_flow_restricted(
             and prob.solverModel.Status == _GRB.INTERRUPTED
         ):
             raise KeyboardInterrupt
-        status = pulp.LpStatus[prob.status]
+        status = (
+            "Optimal" if prob.solverModel.Status == _GRB.OPTIMAL
+            else "Infeasible" if prob.solverModel.Status == _GRB.INFEASIBLE
+            else "NotSolved"
+        ) if solver_name == "gurobi-persistent" else pulp_solve_status(
+            pulp, prob, solver_name
+        )
         proven_optimal = status == "Optimal"
         has_gurobi_incumbent = (
             str(solver_name).lower().startswith("gurobi")
@@ -7539,7 +7550,8 @@ def _solve_fixed_cover_path_order_ilp(
     }
 
     prob = pulp.LpProblem("FixedCoverPathOrderRouting", pulp.LpMinimize)
-    at_stage = pulp.LpVariable.dicts(
+    _pv = PulpVariables(prob, pulp)
+    at_stage = _pv.dicts(
         "order_stage", (partitions, stages), cat="Binary"
     )
     for partition in partitions:
@@ -7564,14 +7576,14 @@ def _solve_fixed_cover_path_order_ilp(
         prob += partition_stage[left] + 1 <= partition_stage[right]
 
     before_in = {
-        (stage, left, right): pulp.LpVariable(
+        (stage, left, right): _pv(
             f"order_in_{stage}_{left}_{right}", cat="Binary"
         )
         for stage in stages
         for left, right in pairs
     }
     before_out = {
-        (stage, left, right): pulp.LpVariable(
+        (stage, left, right): _pv(
             f"order_out_{stage}_{left}_{right}", cat="Binary"
         )
         for stage in stages
@@ -7658,7 +7670,7 @@ def _solve_fixed_cover_path_order_ilp(
     reversals = {}
     for stage in range(partition_count - 1):
         for left, right in pairs:
-            reversal = pulp.LpVariable(
+            reversal = _pv(
                 f"order_reverse_{stage}_{left}_{right}", cat="Binary"
             )
             reversals[stage, left, right] = reversal
@@ -7680,7 +7692,7 @@ def _solve_fixed_cover_path_order_ilp(
                 < path_position[fixed_mapping[right]]
             )
             fixed_initial_before[left, right] = fixed
-            reversal = pulp.LpVariable(
+            reversal = _pv(
                 f"order_reverse_initial_{left}_{right}", cat="Binary"
             )
             initial_reversals[left, right] = reversal
@@ -7759,7 +7771,7 @@ def _solve_fixed_cover_path_order_ilp(
         prob, pulp, callback=None, **solve_kwargs
     )
     model = getattr(prob, "solverModel", None)
-    status = pulp.LpStatus[prob.status]
+    status = pulp_solve_status(pulp, prob, solver_name)
     proven_optimal = status == "Optimal"
     has_incumbent = bool(
         model is not None and getattr(model, "SolCount", 0) >= 1
@@ -8701,23 +8713,24 @@ def solve_exact_routing_ilp(
     )
     stages = range(stage_count)
     prob = pulp.LpProblem("GlobalPathExactRouting", pulp.LpMinimize)
-    selected = pulp.LpVariable.dicts(
+    _pv = PulpVariables(prob, pulp)
+    selected = _pv.dicts(
         "selected", list(partitions_with_templates), cat="Binary"
     )
-    at_stage = pulp.LpVariable.dicts(
+    at_stage = _pv.dicts(
         "stage",
         (partitions_with_templates, stages),
         cat="Binary",
     )
     config = {
-        (partition, index): pulp.LpVariable(
+        (partition, index): _pv(
             f"config_{partition}_{index}", cat="Binary"
         )
         for partition in partitions_with_templates
         for index in range(len(templates[partition]))
     }
     interval_start = {
-        partition: pulp.LpVariable(
+        partition: _pv(
             f"interval_{partition}",
             lowBound=0,
             upBound=physical_qubit_count - len(logicals_by_partition[partition]),
@@ -8725,7 +8738,7 @@ def solve_exact_routing_ilp(
         )
         for partition in partitions_with_templates
     }
-    active = pulp.LpVariable.dicts("active", stages, cat="Binary")
+    active = _pv.dicts("active", stages, cat="Binary")
 
     for partition in partitions_with_templates:
         prob += pulp.lpSum(at_stage[partition][stage] for stage in stages) == selected[partition]
@@ -8777,12 +8790,12 @@ def solve_exact_routing_ilp(
                 <= gate_stage[gate] + stage_count * same_block
             )
 
-    location_in = pulp.LpVariable.dicts(
+    location_in = _pv.dicts(
         "map_in",
         (stages, range(logical_qubit_count), range(physical_qubit_count)),
         cat="Binary",
     )
-    location_out = pulp.LpVariable.dicts(
+    location_out = _pv.dicts(
         "map_out",
         (stages, range(logical_qubit_count), range(physical_qubit_count)),
         cat="Binary",
@@ -8790,7 +8803,7 @@ def solve_exact_routing_ilp(
     location_start = None
     position_start = {}
     if initial_mapping is not None:
-        location_start = pulp.LpVariable.dicts(
+        location_start = _pv.dicts(
             "map_start",
             (range(logical_qubit_count), range(physical_qubit_count)),
             cat="Binary",
@@ -8850,13 +8863,13 @@ def solve_exact_routing_ilp(
     for partition in partitions_with_templates:
         involved = set(logicals_by_partition[partition])
         for logical in involved:
-            partition_position_in[partition, logical] = pulp.LpVariable(
+            partition_position_in[partition, logical] = _pv(
                 f"partition_in_{partition}_{logical}",
                 lowBound=0,
                 upBound=physical_qubit_count - 1,
                 cat="Integer",
             )
-            partition_position_out[partition, logical] = pulp.LpVariable(
+            partition_position_out[partition, logical] = _pv(
                 f"partition_out_{partition}_{logical}",
                 lowBound=0,
                 upBound=physical_qubit_count - 1,
@@ -8925,7 +8938,7 @@ def solve_exact_routing_ilp(
     before_out = {}
     if location_start is not None:
         for left, right in pairs:
-            before_start[left, right] = pulp.LpVariable(
+            before_start[left, right] = _pv(
                 f"before_start_{left}_{right}", cat="Binary"
             )
             before = before_start[left, right]
@@ -8933,10 +8946,10 @@ def solve_exact_routing_ilp(
             prob += position_start[right] - position_start[left] <= -1 + big_m * before
     for stage in stages:
         for left, right in pairs:
-            before_in[stage, left, right] = pulp.LpVariable(
+            before_in[stage, left, right] = _pv(
                 f"before_in_{stage}_{left}_{right}", cat="Binary"
             )
-            before_out[stage, left, right] = pulp.LpVariable(
+            before_out[stage, left, right] = _pv(
                 f"before_out_{stage}_{left}_{right}", cat="Binary"
             )
             for before, positions in (
@@ -8949,7 +8962,7 @@ def solve_exact_routing_ilp(
     initial_reversals = {}
     if location_start is not None:
         for left, right in pairs:
-            reversal = pulp.LpVariable(
+            reversal = _pv(
                 f"reverse_initial_{left}_{right}", cat="Binary"
             )
             initial_reversals[left, right] = reversal
@@ -8961,7 +8974,7 @@ def solve_exact_routing_ilp(
     reversals = {}
     for stage in range(stage_count - 1):
         for left, right in pairs:
-            reversal = pulp.LpVariable(
+            reversal = _pv(
                 f"reverse_{stage}_{left}_{right}", cat="Binary"
             )
             reversals[stage, left, right] = reversal
@@ -9199,7 +9212,7 @@ def solve_exact_routing_ilp(
     solver_name = _solve_pulp_with_gurobi_or_cbc(
         prob, pulp, callback=None, **solve_kwargs
     )
-    status = pulp.LpStatus[prob.status]
+    status = pulp_solve_status(pulp, prob, solver_name)
     model = getattr(prob, "solverModel", None)
     has_incumbent = bool(
         model is not None and getattr(model, "SolCount", 0) >= 1
@@ -9440,10 +9453,11 @@ def solve_exact_routing_benders(
     if zero_swap_local_cnot_lower_bound < 0:
         raise ValueError("The zero-SWAP local-cost bound cannot be negative.")
     prob = pulp.LpProblem("ExactRoutingBenders", pulp.LpMinimize)
-    x = pulp.LpVariable.dicts(
+    _pv = PulpVariables(prob, pulp)
+    x = _pv.dicts(
         "partition", list(master_partitions), cat="Binary"
     )
-    recourse_cost = pulp.LpVariable(
+    recourse_cost = _pv(
         "routing_recourse_cnot_cost",
         lowBound=minimum_transition_cnot_cost,
         cat="Integer",

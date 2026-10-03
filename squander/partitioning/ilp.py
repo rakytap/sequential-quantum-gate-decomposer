@@ -1,5 +1,6 @@
 import os, heapq
 from squander.partitioning.tools import get_qubits, build_dependency, parts_to_float_ops, total_float_ops
+from squander.partitioning.pulp_compat import PulpVariables, PulpSolveBackend, cbc_solver
 
 _GUROBI_FALLBACK_WARNING_PRINTED = False
 _GUROBI_AVAILABLE = None
@@ -47,18 +48,18 @@ def _solve_pulp_with_gurobi_or_cbc(prob, pulp, callback=None, **gurobi_kwargs):
             cbc_kwargs["timeLimit"] = gurobi_kwargs["timeLimit"]
         if gurobi_kwargs.get("Threads") is not None:
             cbc_kwargs["threads"] = gurobi_kwargs["Threads"]
-        prob.solve(pulp.PULP_CBC_CMD(msg=False, **cbc_kwargs))
-        return "cbc"
+        solve_result = prob.solve(cbc_solver(pulp, msg=False, **cbc_kwargs))
+        return PulpSolveBackend("cbc", solve_result)
     # Once Gurobi has initialized successfully, a solve-time exception is a
     # failure of this model/run (most importantly, an out-of-memory signal).
     # Starting CBC on the same live PuLP model can double memory pressure and
     # leaves ``solverModel`` pointing at a freed Gurobi object.
     solver = pulp.GUROBI(manageEnv=True, msg=False, **gurobi_kwargs)
     if callback is None:
-        prob.solve(solver)
+        solve_result = prob.solve(solver)
     else:
-        prob.solve(solver, callback=callback)
-    return "gurobi"
+        solve_result = prob.solve(solver, callback=callback)
+    return PulpSolveBackend("gurobi", solve_result)
 
 
 def topo_sort_partitions(c, parts):
@@ -150,9 +151,10 @@ def find_next_biggest_partition(c, max_qubits_per_partition, prevparts=None):
 
     num_gates = len(gatedict)
     prob = pulp.LpProblem("MaxSinglePartition", pulp.LpMinimize)
-    a = pulp.LpVariable.dicts("a", (i for i in range(num_gates)), cat="Binary") #is gate i in previous partition to p
-    x = pulp.LpVariable.dicts("x", (i for i in range(num_gates)), cat="Binary") #is gate i in partition p
-    z = pulp.LpVariable.dicts("z", (q for q in all_qubits), cat="Binary") #is qubit q in paritition p
+    _pv = PulpVariables(prob, pulp)
+    a = _pv.dicts("a", (i for i in range(num_gates)), cat="Binary") #is gate i in previous partition to p
+    x = _pv.dicts("x", (i for i in range(num_gates)), cat="Binary") #is gate i in partition p
+    z = _pv.dicts("z", (q for q in all_qubits), cat="Binary") #is qubit q in paritition p
     # Constraint 1: not gate is in both a and x
     for i in gatedict:
         prob += x[i] + a[i] <= 1
@@ -752,10 +754,11 @@ def ilp_global_optimal(
                     return [i for i in range(N) if int(round(x[i].getAttr("X")))], ({i for i in pre if int(round(pre[i].getAttr("X")))}, {i for i in post if int(round(post[i].getAttr("X")))}) if weighted_info is not None and single_qubit_chains is not None else None
     import pulp
     prob = pulp.LpProblem("OptimalPartitioning", pulp.LpMinimize)
-    x = pulp.LpVariable.dicts("x", (i for i in range(N)), cat="Binary") #is partition i included
+    _pv = PulpVariables(prob, pulp)
+    x = _pv.dicts("x", (i for i in range(N)), cat="Binary") #is partition i included
     for i in g: prob += pulp.lpSum(x[j] for j in gate_to_parts[i]) == 1 #constraint that all gates are included exactly once
     if use_order:
-        order = pulp.LpVariable.dicts("ord", (i for i in range(N)), lowBound=0, upBound=N-1, cat="Continuous") #order of the partition
+        order = _pv.dicts("ord", (i for i in range(N)), lowBound=0, upBound=N-1, cat="Continuous") #order of the partition
         succ = get_part_cycle_graph(g, gate_to_parts)
         for u in succ:
             for v in succ[u]:
@@ -768,9 +771,9 @@ def ilp_global_optimal(
     elif weighted_info is None: prob.setObjective(pulp.lpSum(x[i] for i in range(N)))
     else:
         Npre, Npost, Nprepost = len(single_qubit_chains_pre), len(single_qubit_chains_post), len(single_qubit_chains_prepost)
-        pre = pulp.LpVariable.dicts("pre", list(single_qubit_chains_pre), cat="Binary")
-        post = pulp.LpVariable.dicts("post", list(single_qubit_chains_post), cat="Binary")
-        noprepost = pulp.LpVariable.dicts("prepost", list(single_qubit_chains_prepost), cat="Binary")
+        pre = _pv.dicts("pre", list(single_qubit_chains_pre), cat="Binary")
+        post = _pv.dicts("post", list(single_qubit_chains_post), cat="Binary")
+        noprepost = _pv.dicts("prepost", list(single_qubit_chains_prepost), cat="Binary")
         S, t, u, targets = [], {}, {}, {}
         surrounded = {s: [] for s in noprepost}
         for i in range(N):
@@ -789,7 +792,7 @@ def ilp_global_optimal(
                     if s in single_qubit_chains_pre:
                         v = gate_to_tqubit[s]
                         if v in cqubits:
-                            a = pulp.LpVariable(f"pre_t_{i}_{s}", cat="Binary")
+                            a = _pv(f"pre_t_{i}_{s}", cat="Binary")
                             for z in fortet_inequalities(pre[s], x[i], a): prob += z
                             targets[i].setdefault(v, []).append(a)
                         elif not s in fullpart:
@@ -801,7 +804,7 @@ def ilp_global_optimal(
                     if s in single_qubit_chains_post:
                         v = gate_to_tqubit[s]
                         if v in cqubits:
-                            a = pulp.LpVariable(f"post_t_{i}_{s}", cat="Binary")
+                            a = _pv(f"post_t_{i}_{s}", cat="Binary")
                             for z in fortet_inequalities(post[s], x[i], a): prob += z
                             targets[i].setdefault(v, []).append(a)
                         elif not s in fullpart:
@@ -810,22 +813,22 @@ def ilp_global_optimal(
                                 if s in noprepost: prob += post[s] + pre[single_qubit_chains_prepost[s][0]] >= x[i]
                                 else: prob += post[s] >= x[i]
             Nu = len(targets[i]); Nt = Nu+1
-            t[i] = pulp.LpVariable.dicts(f"t_{i}", range(Nt), cat="Binary")
-            u[i] = pulp.LpVariable.dicts(f"u_{i}", list(targets[i]), cat="Binary")
+            t[i] = _pv.dicts(f"t_{i}", range(Nt), cat="Binary")
+            u[i] = _pv.dicts(f"u_{i}", list(targets[i]), cat="Binary")
             for s in u[i]: prob += u[i][s] <= x[i]
             for target in targets[i]:
                 for a in targets[i][target]: prob += u[i][target] >= a
             prob += pulp.lpSum(t[i][j] for j in range(Nt)) == x[i] #only one target count selected
             prob += pulp.lpSum(j*t[i][j] for j in range(Nt)) == pulp.lpSum(u[i][s] for s in u[i])
             if is_pure and impurities:
-                isimpure = pulp.LpVariable(f"impurity_{i}", cat="Binary")
+                isimpure = _pv(f"impurity_{i}", cat="Binary")
                 for z in impurities: prob += isimpure >= z
             gate_qubits = len(qubits)
             for j in range(Nt):
                 control_qubits = len(cqubits) - j
                 g_size = 2**(gate_qubits-control_qubits)
                 if is_pure and j==0 and impurities:
-                    t0 = pulp.LpVariable.dicts(f"t0_{i}", range(2), cat="Binary")
+                    t0 = _pv.dicts(f"t0_{i}", range(2), cat="Binary")
                     for z in fortet_inequalities(t[i][j], isimpure, t0[0]): prob += z
                     for z in fortet_inequalities(t[i][j], 1-isimpure, t0[1]): prob += z
                     S.append(t0[0] * (2**max_qubits_per_partition * (g_size * (4 + 2) + 2 * (g_size - 1))))
@@ -867,9 +870,7 @@ def ilp_global_optimal(
             if solver == "cbc":
                 use_gurobi = False
         else:
-            prob.solve(pulp.PULP_CBC_CMD(msg=False))
-        #prob.solve(pulp.PULP_CBC_CMD(msg=False))
-        #print(f"Status: {pulp.LpStatus[prob.status]}")
+            prob.solve(cbc_solver(pulp, msg=False))
         L = [i for i in range(N) if int(round(pulp.value(x[i])))]
         badsccs = sol_to_badsccs(g, allparts, L)
         if not badsccs: break #if all partitions do not have any cycles with more than one element per SCC terminate

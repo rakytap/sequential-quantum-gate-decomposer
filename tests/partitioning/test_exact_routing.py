@@ -1159,6 +1159,7 @@ def test_line_topology_breaks_the_initial_mapping_reflection_symmetry():
 def test_ilp_submits_a_feasible_sabre_incumbent_as_a_mip_start(monkeypatch):
     import pulp
     from squander.partitioning import ilp as partitioning_ilp
+    from squander.partitioning.pulp_compat import PulpSolveBackend, cbc_solver
 
     captured = {}
 
@@ -1173,12 +1174,15 @@ def test_ilp_submits_a_feasible_sabre_incumbent_as_a_mip_start(monkeypatch):
             if variable.varValue is None
         ]
         captured["violated"] = [
-            name
-            for name, constraint in prob.constraints.items()
+            constraint.name
+            for constraint in (
+                prob.constraints() if callable(prob.constraints)
+                else prob.constraints.values()
+            )
             if not constraint.valid(1e-7)
         ]
-        prob.solve(pulp.PULP_CBC_CMD(msg=False, warmStart=True))
-        return "cbc"
+        solve_result = prob.solve(cbc_solver(pulp, msg=False, warmStart=True))
+        return PulpSolveBackend("cbc", solve_result)
 
     monkeypatch.setattr(
         partitioning_ilp, "_solve_pulp_with_gurobi_or_cbc", solve_with_cbc
@@ -1252,10 +1256,11 @@ def test_ilp_rejects_a_cyclic_partition_quotient():
 def test_cbc_global_stages_reject_a_convex_cyclic_cover(monkeypatch):
     import pulp
     from squander.partitioning import ilp as partitioning_ilp
+    from squander.partitioning.pulp_compat import PulpSolveBackend, cbc_solver
 
     def solve_with_cbc(prob, _pulp, callback=None, **_kwargs):
-        prob.solve(pulp.PULP_CBC_CMD(msg=False))
-        return "cbc"
+        solve_result = prob.solve(cbc_solver(pulp, msg=False))
+        return PulpSolveBackend("cbc", solve_result)
 
     monkeypatch.setattr(
         partitioning_ilp, "_solve_pulp_with_gurobi_or_cbc", solve_with_cbc
