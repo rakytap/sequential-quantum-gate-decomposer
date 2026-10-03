@@ -45,7 +45,9 @@ dot( Matrix &A, Matrix &B ) {
     MKL_Set_Num_Threads(1);
 #elif BLAS==2 //OpenBLAS
     int NumThreads = openblas_get_num_threads();
-    openblas_set_num_threads(1);
+    if (NumThreads != 1) {
+        openblas_set_num_threads(1);
+    }
 #endif
 
 
@@ -112,7 +114,9 @@ dot( Matrix &A, Matrix &B ) {
 #elif BLAS==1 //MKL
     MKL_Set_Num_Threads(NumThreads);
 #elif BLAS==2 //OpenBLAS
-    openblas_set_num_threads(NumThreads);
+    if (NumThreads != 1) {
+        openblas_set_num_threads(NumThreads);
+    }
 #endif
 
     return C;
@@ -560,7 +564,9 @@ dot( Matrix_float &A, Matrix_float &B ) {
     MKL_Set_Num_Threads(1);
 #elif BLAS==2
     int NumThreads = openblas_get_num_threads();
-    openblas_set_num_threads(1);
+    if (NumThreads != 1) {
+        openblas_set_num_threads(1);
+    }
 #endif
 
     // determine transpose flags
@@ -606,10 +612,11 @@ dot( Matrix_float &A, Matrix_float &B ) {
 #elif BLAS==1
     MKL_Set_Num_Threads(NumThreads);
 #elif BLAS==2
-    openblas_set_num_threads(NumThreads);
+    if (NumThreads != 1) {
+        openblas_set_num_threads(NumThreads);
+    }
 #endif
 
     return C;
 }
-
 

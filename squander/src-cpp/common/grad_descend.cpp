@@ -87,6 +87,12 @@ double Grad_Descend::Start_Optimization(Matrix_real &x, long maximal_iterations_
 
     variable_num       = x.size();
 
+    // Start_Optimization denotes one independent local minimization.  In
+    // particular, basin hopping invokes it repeatedly on the same optimizer
+    // instance, and every basin must receive the configured evaluation
+    // budget rather than inheriting the previous basin's exhausted counter.
+    function_call_count = 0;
+
     
     // set the maximal number of iterations
     maximal_iterations = maximal_iterations_in;

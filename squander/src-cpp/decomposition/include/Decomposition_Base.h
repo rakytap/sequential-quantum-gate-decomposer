@@ -347,6 +347,9 @@ int set_iteration_loops( int n, int iteration_loops_in );
 */
 int set_iteration_loops( std::map<int, int> iteration_loops_in );
 
+/** Seed this decomposition's stochastic optimization steps. */
+void set_random_seed( std::mt19937::result_type seed );
+
 
 /**
 @brief Initializes default layer numbers
@@ -373,7 +376,6 @@ void set_convergence_threshold( double convergence_threshold_in );
 @return Returns with the error of the decomposition
 */
 double get_decomposition_error( );
-
 
 /**
 @brief Call to get the obtained minimum of the cost function

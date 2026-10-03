@@ -167,7 +167,18 @@ N_Qubit_Decomposition::start_decomposition(bool finalize_decomp) {
         finalize_decomposition();
 
         int optimization_block_orig = optimization_block;
-        if ( optimization_block > 0 ) {
+        if (config.count("optimization_block_final") > 0) {
+            long long optimization_block_final;
+            config["optimization_block_final"].get_property(
+                optimization_block_final);
+            if (optimization_block_final > 0) {
+                optimization_block = static_cast<int>(optimization_block_final);
+            }
+            else if (optimization_block > 0) {
+                optimization_block = optimization_block*3;
+            }
+        }
+        else if ( optimization_block > 0 ) {
             optimization_block = optimization_block*3;
         }
         //max_outer_iterations = 4;
@@ -520,6 +531,5 @@ int N_Qubit_Decomposition::set_identical_blocks( std::map<int, int> identical_bl
     return 0;
 
 }
-
 
 

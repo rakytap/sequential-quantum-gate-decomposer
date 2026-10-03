@@ -24,8 +24,9 @@ if(DEFINED ENV{CONDA_PREFIX})
     message(STATUS "Configured BUILD_RPATH to prioritize conda libraries: ${CONDA_LIB_DIR}")
 endif()
 
-# specify the C++ standard
-set(CMAKE_CXX_STANDARD 11)
+# Eigen 5 requires C++14.  Keep one explicit project-wide baseline so fetched
+# and system-installed Eigen builds compile with identical language features.
+set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON) #for lib not just dll when no exports
 
@@ -67,6 +68,11 @@ endif()
 enable_testing()
 
 option(ENABLE_AVX "Enable AVX/AVX2/AVX512 kernels and compiler flags" ON)
+option(
+  SQUANDER_PROFILE_BUILD
+  "Opt in to profiling-friendly frame pointers (never enabled by default)"
+  OFF
+)
 
 if(SKBUILD)
     message(STATUS "The project is built using scikit-build")
@@ -456,12 +462,27 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   list(APPEND CXX_FLAGS_DEBUG "-Wall" "-Wpedantic" "-Wextra" "-fexceptions" "-DDEBUG" "-fno-builtin-malloc" "-fno-builtin-calloc" "-fno-builtin-realloc" "-fno-builtin-free" "-fpermissive" "-g")
   list(APPEND CXX_FLAGS_RELEASE "-Wall" "-O3" "-m64" "-ggdb" "-DNDEBUG" "-fno-builtin-malloc" "-fno-builtin-calloc" "-fno-builtin-realloc" "-fno-builtin-free" "-fpermissive")
 
+  if (SQUANDER_PROFILE_BUILD)
+    # Frame pointers preserve useful native call stacks without changing the
+    # optimizer's inlining decisions.  Disabling inlining makes Eigen's
+    # fixed-size expression templates catastrophically unrepresentative.
+    list(APPEND CXX_FLAGS_RELEASE "-fno-omit-frame-pointer")
+    list(APPEND CXX_FLAGS_DEBUG "-fno-omit-frame-pointer")
+  endif()
+
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   # using GCC
   message("-- Using GNU compiler")
   # setting basic compile flags for GCC
   list(APPEND CXX_FLAGS_DEBUG "-Wall" "-Wpedantic" "-Wextra" "-fexceptions" "-DDEBUG" "-fno-builtin-malloc" "-fno-builtin-calloc" "-fno-builtin-realloc" "-fno-builtin-free" "-fpermissive" "-g3" "-ggdb")
   list(APPEND CXX_FLAGS_RELEASE "-Wall" "-O3" "-m64" "-ggdb" "-DNDEBUG" "-fno-builtin-malloc" "-fno-builtin-calloc" "-fno-builtin-realloc" "-fno-builtin-free" "-fpermissive" "-ftree-vectorize")
+
+  if (SQUANDER_PROFILE_BUILD)
+    # Keep profiling builds optimized and representative; perf only needs
+    # frame pointers here, while Eigen depends on aggressive inlining.
+    list(APPEND CXX_FLAGS_RELEASE "-fno-omit-frame-pointer")
+    list(APPEND CXX_FLAGS_DEBUG "-fno-omit-frame-pointer")
+  endif()
 
   if (${HAVE_AVX512F_EXTENSIONS})
     list(APPEND CXX_FLAGS_RELEASE "-mavx512f" "-mfma" "-DUSE_AVX")
@@ -832,6 +853,7 @@ list(APPEND qgd_files
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/decomposition/N_Qubit_Decomposition_adaptive.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/decomposition/N_Qubit_Decomposition_custom.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/decomposition/N_Qubit_Decomposition_Cost_Function.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/decomposition/OSR_Eigen_SVD.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/decomposition/Sub_Matrix_Decomposition_Cost_Function.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/decomposition/Sub_Matrix_Decomposition.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/decomposition/N_Qubit_Decomposition_Tree_Search.cpp
@@ -905,6 +927,49 @@ endif()
 
 add_library(qgd SHARED
     ${qgd_files})
+
+# Eigen's complex<float> eigensolver triggers GCC's historical psABI note
+# about the GCC 4.4 calling convention.  It is irrelevant to supported
+# toolchains; suppress it only for the Eigen-heavy translation unit.
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  set_source_files_properties(
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/decomposition/OSR_Eigen_SVD.cpp
+    PROPERTIES COMPILE_OPTIONS "-Wno-psabi"
+  )
+endif()
+
+# OSR evaluates decompositions of only a few tiny matrices (4x4, 16x4,
+# 64x4, and 16x16).
+# Use Eigen's header-only, fixed-size implementation for those SVDs rather
+# than paying the BLAS/LAPACK dispatch and thread-management cost per call.
+find_package(Eigen3 5.0.1 NO_MODULE QUIET)
+if(NOT TARGET Eigen3::Eigen)
+  if(CMAKE_VERSION VERSION_LESS 3.11)
+    message(FATAL_ERROR
+      "Eigen 5.0.1 was not found. Install Eigen or configure with CMake 3.11+ "
+      "so it can be fetched automatically.")
+  endif()
+
+  message(STATUS "Eigen 5.0.1 not found on system; fetching Eigen 5.0.1")
+  include(FetchContent)
+  FetchContent_Declare(
+    eigen
+    GIT_REPOSITORY https://gitlab.com/libeigen/eigen.git
+    GIT_TAG        5.0.1
+    GIT_SHALLOW    TRUE
+  )
+  FetchContent_GetProperties(eigen)
+  if(NOT eigen_POPULATED)
+    FetchContent_Populate(eigen)
+  endif()
+
+  # Eigen is header-only.  Exposing just its include directory avoids adding
+  # Eigen's own tests, benchmarks, and documentation to the SQUANDER build.
+  add_library(squander_eigen INTERFACE)
+  target_include_directories(squander_eigen SYSTEM INTERFACE
+    "${eigen_SOURCE_DIR}")
+  add_library(Eigen3::Eigen ALIAS squander_eigen)
+endif()
 # Ensure nlohmann/json is available for CI and local builds. Prefer a
 # vendored single-header in-tree to avoid FetchContent/configuring the
 # upstream CMake project (which can fail on some CI macOS/toolchain combos).
@@ -953,6 +1018,7 @@ target_compile_options(qgd PUBLIC
 
 # adding linking options
 target_link_libraries( qgd PRIVATE
+    Eigen3::Eigen
     ${BLAS_LIBRARIES}
     ${LAPACK_LIBRARIES}
     ${LAPACKE_LIBRARIES}
@@ -1040,7 +1106,7 @@ target_link_libraries(squander_common INTERFACE
     ${OpenMP_CXX_LIBRARIES}
 )
 
-target_compile_features(squander_common INTERFACE cxx_std_11)
+target_compile_features(squander_common INTERFACE cxx_std_14)
 
 
 # adding CMAKE files for Python extensions
