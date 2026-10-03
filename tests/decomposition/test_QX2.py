@@ -46,6 +46,7 @@ class Test_Decomposition:
 
         qbit_num = 4
         matrix_size = 2**qbit_num
+        reordered_qbits = (2, 3, 1, 0)
 
         target_circuit = QuantumCircuit(qbit_num)
         for qbit in range(qbit_num):
@@ -55,7 +56,8 @@ class Test_Decomposition:
                 0.4 - 0.09 * qbit,
                 qbit,
             )
-        target_circuit.cx(0, 3)
+        # The custom structure's first CNOT is (0, 3) after reordering.
+        target_circuit.cx(reordered_qbits[0], reordered_qbits[3])
         Umtx = np.asarray(utils.get_unitary_from_qiskit_circuit(target_circuit))
         decomp = N_Qubit_Decomposition(
             Umtx.conj().T,
@@ -67,7 +69,6 @@ class Test_Decomposition:
             },
         )
 
-        reordered_qbits = (2, 3, 1, 0)
         decomp.Reorder_Qubits(reordered_qbits)
         decomp.set_Gate_Structure(
             {
