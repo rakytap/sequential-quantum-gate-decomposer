@@ -26,6 +26,9 @@ from benchmarks.density_matrix.correctness_evidence import (
     external_correctness_validation as external_correctness,
 )
 from benchmarks.density_matrix.correctness_evidence import (
+    mf1a_fused_validation as mf1a_fused,
+)
+from benchmarks.density_matrix.correctness_evidence import (
     mf1a_q4_baseline_validation as mf1a_q4_baseline,
 )
 from benchmarks.density_matrix.correctness_evidence import (
@@ -105,6 +108,9 @@ _CASE_SLICE_REGISTRY: tuple[_CaseSuiteEntry, ...] = (
     _CaseSuiteEntry(
         mf1a_q4_baseline, "build_cases", "build_artifact_bundle", mf1a_sibling=True
     ),
+    _CaseSuiteEntry(
+        mf1a_fused, "build_cases", "build_artifact_bundle", mf1a_sibling=True
+    ),
     _CaseSuiteEntry(correctness_matrix, "build_cases", "build_artifact_bundle"),
     _CaseSuiteEntry(sequential_correctness, "build_cases", "build_artifact_bundle"),
     _CaseSuiteEntry(external_correctness, "build_cases", "build_artifact_bundle"),
@@ -182,40 +188,43 @@ def _format_stdout_line(
 def run_pipeline(
     *, historical_output_dir: Path | None = None
 ) -> list[tuple[str, str, Path | None]]:
-    results: list[tuple[str, str, Path | None]] = []
-
+    built_case_slices: list[tuple[_CaseSuiteEntry, Any, dict[str, Any]]] = []
     for entry in _CASE_SLICE_REGISTRY:
         mod = entry.module
         cases = getattr(mod, entry.cases_attr)()
         bundle = getattr(mod, entry.bundle_attr)(cases)
-        if entry.mf1a_sibling is True:
-            output_path = _write_slice_bundle(mod, bundle)
-            results.append((mod.SUITE_NAME, bundle["status"], output_path))
-            continue
+        built_case_slices.append((entry, mod, bundle))
 
-        outside_copy: Path | None = None
-        if historical_output_dir is not None:
-            relative = _artifact_layout_relative(mod)
-            outside_copy = historical_output_dir / relative
-            outside_copy.parent.mkdir(parents=True, exist_ok=True)
-            write_artifact_bundle(bundle, outside_copy.parent, mod.ARTIFACT_FILENAME)
-        results.append((mod.SUITE_NAME, bundle["status"], outside_copy))
-
+    built_nullary_slices: list[tuple[_NullarySuiteEntry, Any, dict[str, Any]]] = []
     for entry in _NULLARY_BUNDLE_REGISTRY:
         mod = entry.module
         bundle = getattr(mod, entry.bundle_attr)()
+        built_nullary_slices.append((entry, mod, bundle))
+
+    results: list[tuple[str, str, Path | None]] = []
+    for entry, mod, bundle in built_case_slices:
+        output_path: Path | None = None
         if entry.mf1a_sibling is True:
             output_path = _write_slice_bundle(mod, bundle)
-            results.append((mod.SUITE_NAME, bundle["status"], output_path))
-            continue
-
-        outside_copy = None
-        if historical_output_dir is not None:
+        elif historical_output_dir is not None:
             relative = _artifact_layout_relative(mod)
             outside_copy = historical_output_dir / relative
             outside_copy.parent.mkdir(parents=True, exist_ok=True)
             write_artifact_bundle(bundle, outside_copy.parent, mod.ARTIFACT_FILENAME)
-        results.append((mod.SUITE_NAME, bundle["status"], outside_copy))
+            output_path = outside_copy
+        results.append((mod.SUITE_NAME, bundle["status"], output_path))
+
+    for entry, mod, bundle in built_nullary_slices:
+        output_path = None
+        if entry.mf1a_sibling is True:
+            output_path = _write_slice_bundle(mod, bundle)
+        elif historical_output_dir is not None:
+            relative = _artifact_layout_relative(mod)
+            outside_copy = historical_output_dir / relative
+            outside_copy.parent.mkdir(parents=True, exist_ok=True)
+            write_artifact_bundle(bundle, outside_copy.parent, mod.ARTIFACT_FILENAME)
+            output_path = outside_copy
+        results.append((mod.SUITE_NAME, bundle["status"], output_path))
 
     return results
 

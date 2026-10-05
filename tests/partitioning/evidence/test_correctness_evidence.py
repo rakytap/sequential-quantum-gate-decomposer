@@ -733,6 +733,513 @@ def test_mf1a_q4_baseline_exit_aggregate_requires_sibling_and_included_passes():
     )
 
 
+def _mf1a_fused_module():
+    from benchmarks.density_matrix.correctness_evidence import (
+        mf1a_fused_validation as fused_mod,
+    )
+
+    return fused_mod
+
+
+def _clean_mf1a_fused_provenance() -> dict:
+    fused = _mf1a_fused_module()
+    return {
+        "implementation_revision": "a" * 40,
+        "clean_start": True,
+        "dirty_paths": [],
+        "command": fused.REGENERATION_COMMAND,
+        "environment": {
+            "conda_default_env": "qgd",
+            "conda_prefix": "/tmp/qgd",
+            "python_executable": "/tmp/qgd/bin/python",
+            "python_version": "3.13.0",
+        },
+        "dependencies": {"numpy": "test", "scipy": "test", "squander": "test"},
+        "extension_identities": [
+            {"path": "squander/density_matrix/_density_matrix_cpp.so", "sha256": "b" * 64}
+        ],
+        "input_artifact_identities": [],
+        "provenance_pass": True,
+    }
+
+
+def _mf1a_fused_synthetic_case(
+    fused,
+    *,
+    anchor_qbits: int,
+    workload: str,
+    fused_region_count: int,
+    classifications: list[str],
+) -> dict:
+    route = fused.ROUTE
+    return {
+        "record_schema_version": fused.RECORD_SCHEMA_VERSION,
+        "manifest_schema_version": fused.MANIFEST_SCHEMA_VERSION,
+        "route": route,
+        "anchor_qbits": anchor_qbits,
+        "workload": workload,
+        "planner_setting": {"max_partition_qubits": 2},
+        "parameters": [0.0],
+        "seed_policy": "deterministic_workload_no_random_seed",
+        "realization": {
+            "requested_path": route,
+            "realized_path": route,
+            "partition_count": 2,
+            "exact_output_present": True,
+            "actual_fused_execution": fused_region_count > 0,
+            "fused_region_count": fused_region_count,
+            "fused_region_classifications": classifications,
+            "fused_regions": [],
+        },
+        "qa001": {
+            "qa001_pass": True,
+            "frobenius_norm_diff": 1e-14,
+            "max_abs_diff": 1e-14,
+            "trace_abs_deviation": 1e-14,
+            "lambda_min": -1e-14,
+        },
+        "milestone_counted": False,
+        "completeness_claim": False,
+        "claim_boundary": fused.CLAIM_BOUNDARY,
+        "provenance": _clean_mf1a_fused_provenance(),
+    }
+
+
+def test_mf1a_fused_manifest_is_the_four_frozen_ids():
+    fused = _mf1a_fused_module()
+    manifest = fused.build_manifest()
+    assert manifest["schema_version"] == fused.MANIFEST_SCHEMA_VERSION
+    cells = manifest["cells"]
+    assert len(cells) == 4
+    assert [cell["anchor_qbits"] for cell in cells] == [4, 6, 8, 10]
+    assert [cell["workload"] for cell in cells] == [
+        "phase2_xxz_hea_q4_continuity",
+        "phase2_xxz_hea_q6_continuity",
+        "layered_nearest_neighbor_q8_sparse_seed20260318",
+        "layered_nearest_neighbor_q10_sparse_seed20260318",
+    ]
+    assert all(cell["route"] == fused.ROUTE for cell in cells)
+    assert all(cell["max_partition_qubits"] == 2 for cell in cells)
+
+
+def test_mf1a_fused_q8_q10_builder_calls_match_frozen_ids():
+    from benchmarks.density_matrix.planner_surface import workloads
+
+    fused = _mf1a_fused_module()
+    assert fused.FROZEN_STRUCTURED_BUILDER_CALLS == (
+        {
+            "family_name": "layered_nearest_neighbor",
+            "qbit_num": 8,
+            "noise_pattern": "sparse",
+            "seed": 20260318,
+            "max_partition_qubits": 2,
+        },
+        {
+            "family_name": "layered_nearest_neighbor",
+            "qbit_num": 10,
+            "noise_pattern": "sparse",
+            "seed": 20260318,
+            "max_partition_qubits": 2,
+        },
+    )
+    for kwargs in fused.FROZEN_STRUCTURED_BUILDER_CALLS:
+        descriptor_set = workloads.build_structured_descriptor_set(**kwargs)
+        assert (
+            descriptor_set.workload_id
+            == f"layered_nearest_neighbor_q{kwargs['qbit_num']}_sparse_seed20260318"
+        )
+
+
+def test_mf1a_fused_realization_requires_a_fused_region():
+    fused = _mf1a_fused_module()
+    manifest_cells = fused.build_manifest()["cells"]
+    good = _mf1a_fused_synthetic_case(
+        fused,
+        anchor_qbits=4,
+        workload=manifest_cells[0]["workload"],
+        fused_region_count=4,
+        classifications=["actually_fused"],
+    )
+    assert fused._route_realization_pass(good)
+    zero_fusion = _mf1a_fused_synthetic_case(
+        fused,
+        anchor_qbits=4,
+        workload=manifest_cells[0]["workload"],
+        fused_region_count=0,
+        classifications=[],
+    )
+    assert not fused._route_realization_pass(zero_fusion)
+
+
+def test_mf1a_fused_qa001_tolerances_match_q4():
+    fused = _mf1a_fused_module()
+    assert fused.evaluate_mf1a_qa001 is mf1a.evaluate_mf1a_qa001
+    assert fused.MF1A_QA001_MATRIX_TOL is mf1a.MF1A_QA001_MATRIX_TOL
+    assert fused.MF1A_QA001_LAMBDA_MIN_FLOOR is mf1a.MF1A_QA001_LAMBDA_MIN_FLOOR
+    assert fused._QA001_REGENERATION_TOLERANCES is mf1a._QA001_REGENERATION_TOLERANCES
+    assert fused._QA001_VALUE_KEYS is mf1a._QA001_VALUE_KEYS
+
+
+def test_mf1a_fused_allowlist_is_length_four_and_q4_stays_length_one():
+    fused = _mf1a_fused_module()
+    assert len(fused.FUSED_REGENERATION_ALLOWLIST) == 4
+    assert fused.FUSED_REGENERATION_ALLOWLIST == (
+        "cases[0].provenance.implementation_revision",
+        "cases[1].provenance.implementation_revision",
+        "cases[2].provenance.implementation_revision",
+        "cases[3].provenance.implementation_revision",
+    )
+    assert len(mf1a.Q4_REGENERATION_ALLOWLIST) == 1
+    assert fused._allowlisted_revision_difference is not mf1a._allowlisted_revision_difference
+
+
+def test_mf1a_fused_revision_only_passes():
+    fused = _mf1a_fused_module()
+    manifest_cells = fused.build_manifest()["cells"]
+    prior_cases = [
+        _mf1a_fused_synthetic_case(
+            fused,
+            anchor_qbits=cell["anchor_qbits"],
+            workload=cell["workload"],
+            fused_region_count=1,
+            classifications=["actually_fused"],
+        )
+        for cell in manifest_cells
+    ]
+    for case in prior_cases:
+        case["provenance"]["implementation_revision"] = "a" * 40
+    prior = fused.build_artifact_bundle(prior_cases, prior_bundle=None)
+    current_cases = copy.deepcopy(prior_cases)
+    for case in current_cases:
+        case["provenance"]["implementation_revision"] = "b" * 40
+    current = fused.build_artifact_bundle(current_cases, prior_bundle=prior)
+    assert current["regeneration"]["pass"] is True
+
+    uneven_current = copy.deepcopy(prior_cases)
+    for index, case in enumerate(uneven_current):
+        case["provenance"]["implementation_revision"] = f"{index:040x}"
+    bundle = fused.build_artifact_bundle(uneven_current, prior_bundle=prior)
+    assert bundle["regeneration"]["pass"] is False
+    assert (
+        bundle["regeneration"]["first_mismatch"]
+        == "cases[0].provenance.implementation_revision"
+    )
+
+    single_case_current_moved = copy.deepcopy(prior_cases)
+    single_case_current_moved[2]["provenance"]["implementation_revision"] = "d" * 40
+    bundle = fused.build_artifact_bundle(single_case_current_moved, prior_bundle=prior)
+    assert bundle["status"] == "fail"
+    assert bundle["regeneration"]["pass"] is False
+    assert (
+        bundle["regeneration"]["first_mismatch"]
+        == "cases[2].provenance.implementation_revision"
+    )
+
+    prior_mut = copy.deepcopy(prior)
+    prior_mut["cases"][1]["provenance"]["implementation_revision"] = "d" * 40
+    current_cases = copy.deepcopy(prior_cases)
+    bundle = fused.build_artifact_bundle(current_cases, prior_bundle=prior_mut)
+    assert bundle["status"] == "fail"
+    assert bundle["regeneration"]["pass"] is False
+    assert (
+        bundle["regeneration"]["first_mismatch"]
+        == "cases[1].provenance.implementation_revision"
+    )
+
+    for case_index in (1, 2, 3):
+        provenance_fail_cases = copy.deepcopy(prior_cases)
+        provenance_fail_cases[case_index]["provenance"]["provenance_pass"] = False
+        bundle = fused.build_artifact_bundle(provenance_fail_cases, prior_bundle=None)
+        assert bundle["status"] == "fail"
+        assert bundle["summary"]["first_failure"] == "provenance"
+
+
+def test_mf1a_fused_second_field_fails():
+    fused = _mf1a_fused_module()
+    manifest_cells = fused.build_manifest()["cells"]
+    prior_cases = [
+        _mf1a_fused_synthetic_case(
+            fused,
+            anchor_qbits=cell["anchor_qbits"],
+            workload=cell["workload"],
+            fused_region_count=1,
+            classifications=["actually_fused"],
+        )
+        for cell in manifest_cells
+    ]
+    for case in prior_cases:
+        case["provenance"]["implementation_revision"] = "a" * 40
+    prior = fused.build_artifact_bundle(prior_cases, prior_bundle=None)
+    current_cases = copy.deepcopy(prior_cases)
+    for case in current_cases:
+        case["provenance"]["implementation_revision"] = "b" * 40
+    current_cases[1]["workload"] = "substituted_workload"
+    bundle = fused.build_artifact_bundle(current_cases, prior_bundle=prior)
+    assert bundle["regeneration"]["pass"] is False
+    assert bundle["regeneration"]["first_mismatch"] == "cases[1].workload"
+
+
+def test_mf1a_fused_finding_bands_follow_layer1():
+    fused = _mf1a_fused_module()
+    assert fused.classify_near_threshold_measure("frobenius_norm_diff", 5e-14) == (
+        "expected_range"
+    )
+    assert fused.classify_near_threshold_measure("max_abs_diff", 5e-12) == (
+        "outside_expected"
+    )
+    assert fused.classify_near_threshold_measure("trace_abs_deviation", 5e-11) == (
+        "finding"
+    )
+    assert fused.classify_near_threshold_measure("frobenius_norm_diff", 2e-10) == (
+        "qa001_fail"
+    )
+    assert fused.classify_near_threshold_measure("lambda_min", -5e-14) == "no_finding"
+    assert fused.classify_near_threshold_measure("lambda_min", -5e-13) == "finding"
+    assert fused.classify_near_threshold_measure("lambda_min", -2e-12) == "qa001_fail"
+    manifest_cells = fused.build_manifest()["cells"]
+    lambda_finding_cases = [
+        _mf1a_fused_synthetic_case(
+            fused,
+            anchor_qbits=cell["anchor_qbits"],
+            workload=cell["workload"],
+            fused_region_count=1,
+            classifications=["actually_fused"],
+        )
+        for cell in manifest_cells
+    ]
+    lambda_finding_cases[0]["qa001"]["lambda_min"] = -5e-13
+    bundle = fused.build_artifact_bundle(lambda_finding_cases, prior_bundle=None)
+    assert bundle["status"] == "pass"
+    assert bundle["summary"]["first_failure"] is None
+    findings = bundle["summary"]["findings"]
+    assert len(findings) == 1
+    assert set(findings[0].keys()) == {
+        "route",
+        "anchor_qbits",
+        "workload",
+        "measure",
+        "value",
+        "cause_hypothesis",
+    }
+    assert findings[0] == {
+        "route": fused.ROUTE,
+        "anchor_qbits": 4,
+        "workload": "phase2_xxz_hea_q4_continuity",
+        "measure": "lambda_min",
+        "value": -5e-13,
+        "cause_hypothesis": "lambda_min below -1e-13 Layer 1 finding band",
+    }
+
+
+def test_mf1a_fused_rejects_non_revision_value():
+    fused = _mf1a_fused_module()
+    manifest_cells = fused.build_manifest()["cells"]
+    prior_cases = [
+        _mf1a_fused_synthetic_case(
+            fused,
+            anchor_qbits=cell["anchor_qbits"],
+            workload=cell["workload"],
+            fused_region_count=1,
+            classifications=["actually_fused"],
+        )
+        for cell in manifest_cells
+    ]
+    for case in prior_cases:
+        case["provenance"]["implementation_revision"] = "a" * 40
+    prior = fused.build_artifact_bundle(prior_cases, prior_bundle=None)
+    invalid_values = ("g" * 40, "c" * 39, "", "C" * 40)
+    for value in invalid_values:
+        current_cases = copy.deepcopy(prior_cases)
+        current_cases[0]["provenance"]["implementation_revision"] = value
+        bundle = fused.build_artifact_bundle(current_cases, prior_bundle=prior)
+        assert bundle["regeneration"]["pass"] is False
+        assert (
+            bundle["regeneration"]["first_mismatch"]
+            == "cases[0].provenance.implementation_revision"
+        )
+        prior_mut = copy.deepcopy(prior)
+        prior_mut["cases"][1]["provenance"]["implementation_revision"] = value
+        current_cases = copy.deepcopy(prior_cases)
+        bundle = fused.build_artifact_bundle(current_cases, prior_bundle=prior_mut)
+        assert bundle["regeneration"]["pass"] is False
+        assert (
+            bundle["regeneration"]["first_mismatch"]
+            == "cases[1].provenance.implementation_revision"
+        )
+    current_cases = copy.deepcopy(prior_cases)
+    del current_cases[2]["provenance"]["implementation_revision"]
+    bundle = fused.build_artifact_bundle(current_cases, prior_bundle=prior)
+    assert bundle["regeneration"]["pass"] is False
+    assert (
+        bundle["regeneration"]["first_mismatch"]
+        == "cases[2].provenance.implementation_revision"
+    )
+    prior_mut = copy.deepcopy(prior)
+    del prior_mut["cases"][2]["provenance"]["implementation_revision"]
+    current_cases = copy.deepcopy(prior_cases)
+    bundle = fused.build_artifact_bundle(current_cases, prior_bundle=prior_mut)
+    assert bundle["regeneration"]["pass"] is False
+    assert (
+        bundle["regeneration"]["first_mismatch"]
+        == "cases[2].provenance.implementation_revision"
+    )
+    for value in invalid_values:
+        current_uniform = copy.deepcopy(prior_cases)
+        for case in current_uniform:
+            case["provenance"]["implementation_revision"] = value
+        bundle = fused.build_artifact_bundle(current_uniform, prior_bundle=prior)
+        assert bundle["regeneration"]["pass"] is False
+        assert (
+            bundle["regeneration"]["first_mismatch"]
+            == "cases[0].provenance.implementation_revision"
+        )
+        prior_mut = copy.deepcopy(prior)
+        for case in prior_mut["cases"]:
+            case["provenance"]["implementation_revision"] = value
+        current_uniform = copy.deepcopy(prior_cases)
+        bundle = fused.build_artifact_bundle(current_uniform, prior_bundle=prior_mut)
+        assert bundle["regeneration"]["pass"] is False
+        assert (
+            bundle["regeneration"]["first_mismatch"]
+            == "cases[0].provenance.implementation_revision"
+        )
+    current_uniform = copy.deepcopy(prior_cases)
+    for case in current_uniform:
+        del case["provenance"]["implementation_revision"]
+    bundle = fused.build_artifact_bundle(current_uniform, prior_bundle=prior)
+    assert bundle["regeneration"]["pass"] is False
+    assert (
+        bundle["regeneration"]["first_mismatch"]
+        == "cases[0].provenance.implementation_revision"
+    )
+    prior_mut = copy.deepcopy(prior)
+    for case in prior_mut["cases"]:
+        del case["provenance"]["implementation_revision"]
+    current_uniform = copy.deepcopy(prior_cases)
+    bundle = fused.build_artifact_bundle(current_uniform, prior_bundle=prior_mut)
+    assert bundle["regeneration"]["pass"] is False
+    assert (
+        bundle["regeneration"]["first_mismatch"]
+        == "cases[0].provenance.implementation_revision"
+    )
+
+
+def test_mf1a_fused_rejects_case_count():
+    fused = _mf1a_fused_module()
+    manifest_cells = fused.build_manifest()["cells"]
+    prior_cases = [
+        _mf1a_fused_synthetic_case(
+            fused,
+            anchor_qbits=cell["anchor_qbits"],
+            workload=cell["workload"],
+            fused_region_count=1,
+            classifications=["actually_fused"],
+        )
+        for cell in manifest_cells
+    ]
+    prior = fused.build_artifact_bundle(prior_cases, prior_bundle=None)
+    too_many = copy.deepcopy(prior_cases)
+    too_many.append(copy.deepcopy(too_many[0]))
+    bundle = fused.build_artifact_bundle(too_many, prior_bundle=prior)
+    assert bundle["regeneration"]["pass"] is False
+    assert bundle["regeneration"]["first_mismatch"] == "manifest_exact_set"
+
+    too_few = copy.deepcopy(prior_cases[:3])
+    bundle = fused.build_artifact_bundle(too_few, prior_bundle=prior)
+    assert bundle["regeneration"]["pass"] is False
+    assert bundle["regeneration"]["first_mismatch"] in {
+        "manifest_exact_set",
+        "bundle_structure",
+    }
+
+
+def test_mf1a_fused_rejects_substituted_or_reordered_id():
+    fused = _mf1a_fused_module()
+    manifest_cells = fused.build_manifest()["cells"]
+    prior_cases = [
+        _mf1a_fused_synthetic_case(
+            fused,
+            anchor_qbits=cell["anchor_qbits"],
+            workload=cell["workload"],
+            fused_region_count=1,
+            classifications=["actually_fused"],
+        )
+        for cell in manifest_cells
+    ]
+    prior = fused.build_artifact_bundle(prior_cases, prior_bundle=None)
+    substituted = copy.deepcopy(prior_cases)
+    substituted[2]["workload"] = "layered_nearest_neighbor_q8_sparse_seed99999999"
+    bundle = fused.build_artifact_bundle(substituted, prior_bundle=prior)
+    assert bundle["regeneration"]["pass"] is False
+    assert bundle["regeneration"]["first_mismatch"] == "manifest_exact_set"
+
+    reordered = copy.deepcopy(prior_cases)
+    reordered[2], reordered[3] = reordered[3], reordered[2]
+    bundle = fused.build_artifact_bundle(reordered, prior_bundle=prior)
+    assert bundle["regeneration"]["pass"] is False
+    assert bundle["regeneration"]["first_mismatch"] == "manifest_exact_set"
+
+
+def test_mf1a_fused_pipeline_builds_every_sibling_before_writing_any(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    events: list[tuple[str, str]] = []
+    fake_root = tmp_path / "mf1a_fake_siblings"
+
+    def make_fake_sibling(name: str) -> SimpleNamespace:
+        module = SimpleNamespace(
+            SUITE_NAME=f"correctness_evidence_mf1a_fake_{name}",
+            ARTIFACT_FILENAME=f"fake_{name}_bundle.json",
+            DEFAULT_OUTPUT_DIR=fake_root / name,
+        )
+
+        def build_cases() -> list:
+            events.append(("build_cases", name))
+            return []
+
+        def build_artifact_bundle(_cases: list | None = None) -> dict:
+            events.append(("build_artifact_bundle", name))
+            return {"status": "pass", "cases": []}
+
+        module.build_cases = build_cases
+        module.build_artifact_bundle = build_artifact_bundle
+        return module
+
+    fake_a = make_fake_sibling("a")
+    fake_b = make_fake_sibling("b")
+    patched_registry = (
+        validation_pipeline._CaseSuiteEntry(
+            fake_a, "build_cases", "build_artifact_bundle", mf1a_sibling=True
+        ),
+        validation_pipeline._CaseSuiteEntry(
+            fake_b, "build_cases", "build_artifact_bundle", mf1a_sibling=True
+        ),
+    )
+    monkeypatch.setattr(validation_pipeline, "_CASE_SLICE_REGISTRY", patched_registry)
+    monkeypatch.setattr(validation_pipeline, "_NULLARY_BUNDLE_REGISTRY", ())
+
+    original_write = validation_pipeline._write_slice_bundle
+
+    def log_write(module, bundle: dict) -> Path:
+        events.append(("write", module.SUITE_NAME))
+        return original_write(module, bundle)
+
+    monkeypatch.setattr(validation_pipeline, "_write_slice_bundle", log_write)
+    validation_pipeline.run_pipeline()
+
+    first_write_index = next(
+        (index for index, event in enumerate(events) if event[0] == "write"), None
+    )
+    build_indices = [
+        index
+        for index, event in enumerate(events)
+        if event[0].startswith("build")
+    ]
+    assert first_write_index is not None
+    assert build_indices
+    assert all(build_index < first_write_index for build_index in build_indices)
+
+
 _MF1A_HISTORICAL_ARTIFACT_DIR_NAMES: tuple[str, ...] = (
     "correctness_package",
     "output_integrity",
@@ -865,6 +1372,8 @@ def test_mf1a_historical_registered_siblings_still_written(
         fake_root / "mf1a" / "q4_baseline" / mf1a.ARTIFACT_FILENAME
     )
     assert sibling_path.is_file()
+    fused_sibling_path = fake_root / "mf1a" / "fused" / _mf1a_fused_module().ARTIFACT_FILENAME
+    assert fused_sibling_path.is_file()
 
 
 def test_mf1a_historical_all_statuses_returned_g07_unchanged(
@@ -965,7 +1474,7 @@ def test_mf1a_historical_nonsibling_paths_match_req007():
         else:
             nonsibling_dirs.add(relative.as_posix())
 
-    assert sibling_dirs == {"mf1a/q4_baseline"}
+    assert sibling_dirs == {"mf1a/q4_baseline", "mf1a/fused"}
     assert nonsibling_dirs == set(_MF1A_HISTORICAL_ARTIFACT_DIR_NAMES)
 
 
