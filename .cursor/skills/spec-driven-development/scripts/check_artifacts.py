@@ -12,8 +12,9 @@ A milestone holding only INITIAL_REQUIREMENTS.md -- no Layer 1 file, slice, mile
 closeout, or change control yet -- reports L1_NOT_STARTED (info) instead of missing-Layer-1
 errors; once any of those exists, every missing Layer 1 file is an error again.
 
-Exit status: 0 when there are no unwaived errors, 1 otherwise. Warnings become
-errors with --strict. Waivers and size budgets live in docs/specs/.sdd-lint.json.
+Exit status: 0 when there are no unwaived errors, 1 otherwise. With --strict,
+warnings become errors except an absent-closeout SLICE_MISSING_CLOSEOUT whose
+stage parse is step-4a. Waivers and size budgets live in docs/specs/.sdd-lint.json.
 """
 
 from __future__ import annotations
@@ -43,6 +44,38 @@ CONTEXT_HEADER_RE = re.compile(
     re.IGNORECASE,
 )
 CONTEXT_HEADER_WINDOW = 12
+SDD_STAGE_WINDOW = 12
+
+_SDD_STAGE_LINE_RE = re.compile(
+    r"^[ \t]*(?:>[ \t]*)?\*\*SDD stage:\*\*[ \t]*(.*)$"
+)
+
+PLACEHOLDER_STATUS = frozenset(
+    {
+        "placeholder",
+        "placeholders",
+        "tbd",
+        "todo",
+        "planning",
+        "draft",
+        "wip",
+        "stub",
+        "fixme",
+    }
+)
+
+CLOSEOUT_STATUS_RE = re.compile(r"\*\*Status:\*\*\s*([^\n·]+)")
+CLOSEOUT_HEADING_RE = re.compile(r"^##[ \t]+\S")
+CLOSEOUT_FENCE_RE = re.compile(r"^[ \t]*```")
+
+SLICE_MISSING_CLOSEOUT_ABSENT_MSG = (
+    "no slice closeout; a shipped or handed-back slice must record its "
+    "verdict and reproduce commands"
+)
+SLICE_MISSING_CLOSEOUT_PLACEHOLDER_MSG = (
+    "CLOSEOUT.md is not substantive; an empty or placeholder closeout does not "
+    "clear SLICE_MISSING_CLOSEOUT"
+)
 
 NO_HANDBACK_CLAIM_RE = re.compile(
     r"No\s+`?STEP_4A_HANDBACK\.md`?\s+(was|were)\s+raised", re.IGNORECASE
@@ -63,6 +96,74 @@ LAYER1_STARTED_GLOBS = (
 )
 
 ADR_AMENDMENTS_PREFIX = "ADR_AMENDMENTS_"
+
+
+def parse_sdd_stage(tasks_path: Path) -> str:
+    """Return step-4a, step-4b-authorized, missing, duplicate, or other."""
+    lines = read_lines(tasks_path)[:SDD_STAGE_WINDOW]
+    values: list[str] = []
+    for line in lines:
+        match = _SDD_STAGE_LINE_RE.match(line)
+        if match:
+            values.append(match.group(1).strip(" \t"))
+    if not values:
+        return "missing"
+    if len(values) > 1:
+        return "duplicate"
+    value = values[0]
+    if value == "step-4a":
+        return "step-4a"
+    if value == "step-4b-authorized":
+        return "step-4b-authorized"
+    return "other"
+
+
+def closeout_kind(path: Path) -> str:
+    """Return absent, placeholder, or substantive (substantive-closeout rule)."""
+    if not path.is_file():
+        return "absent"
+    text = read_text(path)
+    if not text.strip():
+        return "placeholder"
+    status = CLOSEOUT_STATUS_RE.search(text)
+    if not status:
+        return "placeholder"
+    status_value = status.group(1).strip()
+    if not status_value:
+        return "placeholder"
+    if status_value.casefold() in PLACEHOLDER_STATUS:
+        return "placeholder"
+    lines = text.splitlines()
+    if not any(CLOSEOUT_HEADING_RE.match(ln) for ln in lines):
+        return "placeholder"
+    if not any(CLOSEOUT_FENCE_RE.match(ln) for ln in lines):
+        return "placeholder"
+    return "substantive"
+
+
+def emit_closeout_status_checks(
+    reporter: Reporter, closeout: Path, slice_dir: Path, text: str
+) -> None:
+    status = CLOSEOUT_STATUS_RE.search(text)
+    if status:
+        value = status.group(1).strip().lower()
+        handback = slice_dir / "STEP_4A_HANDBACK.md"
+        if "handback" in value and not handback.is_file():
+            reporter.add(
+                "CLOSEOUT_HANDBACK_MISSING",
+                "error",
+                closeout,
+                "status is 'implementation handback' but STEP_4A_HANDBACK.md "
+                "does not exist in this slice",
+            )
+    else:
+        reporter.add(
+            "CLOSEOUT_NO_STATUS",
+            "warn",
+            closeout,
+            "no '**Status:**' marker; slice closeouts must state shipped or "
+            "implementation handback",
+        )
 
 
 def check_context_header(reporter: Reporter, path: Path) -> None:
@@ -230,36 +331,31 @@ def check_slice(reporter: Reporter, slice_dir: Path, budgets: dict[str, int]) ->
                 "Layer 3 stories and Layer 4 tasks",
             )
 
-    if not closeout.is_file():
+    stage = parse_sdd_stage(tasks)
+    kind = closeout_kind(closeout)
+    if kind == "absent":
         reporter.add(
             "SLICE_MISSING_CLOSEOUT",
             "warn",
             closeout,
-            "no slice closeout; a shipped or handed-back slice must record its "
-            "verdict and reproduce commands",
+            SLICE_MISSING_CLOSEOUT_ABSENT_MSG,
+            strict_keep_warn=(stage == "step-4a"),
+        )
+    elif kind == "placeholder":
+        reporter.add(
+            "SLICE_MISSING_CLOSEOUT",
+            "warn",
+            closeout,
+            SLICE_MISSING_CLOSEOUT_PLACEHOLDER_MSG,
+            strict_keep_warn=False,
+        )
+        emit_closeout_status_checks(
+            reporter, closeout, slice_dir, read_text(closeout)
         )
     else:
-        text = read_text(closeout)
-        status = re.search(r"\*\*Status:\*\*\s*([^\n·]+)", text)
-        if status:
-            value = status.group(1).strip().lower()
-            handback = slice_dir / "STEP_4A_HANDBACK.md"
-            if "handback" in value and not handback.is_file():
-                reporter.add(
-                    "CLOSEOUT_HANDBACK_MISSING",
-                    "error",
-                    closeout,
-                    "status is 'implementation handback' but STEP_4A_HANDBACK.md "
-                    "does not exist in this slice",
-                )
-        else:
-            reporter.add(
-                "CLOSEOUT_NO_STATUS",
-                "warn",
-                closeout,
-                "no '**Status:**' marker; slice closeouts must state shipped or "
-                "implementation handback",
-            )
+        emit_closeout_status_checks(
+            reporter, closeout, slice_dir, read_text(closeout)
+        )
 
     for path in sorted(slice_dir.glob("*.md")):
         check_size(reporter, path, budgets)

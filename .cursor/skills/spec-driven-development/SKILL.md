@@ -177,7 +177,7 @@ stdlib-only; the wrapper picks the `qgd` interpreter when conda is available.
 
 ```bash
 bash .cursor/skills/spec-driven-development/scripts/specs_check.sh            # errors must be zero
-bash .cursor/skills/spec-driven-development/scripts/specs_check.sh --strict   # unwaived warnings become errors
+bash .cursor/skills/spec-driven-development/scripts/specs_check.sh --strict   # warnings become errors except absent-closeout SLICE_MISSING_CLOSEOUT at step-4a
 bash .cursor/skills/spec-driven-development/scripts/specs_check.sh docs/specs/milestones/<slug>
 ```
 
@@ -187,13 +187,14 @@ Fix findings; do not silence them. A finding you intend to keep is waived in
 baseline reports `L1_NOT_STARTED` (info) until Step 1; then each missing Layer 1 file is an error.
 
 Gate by stage (precedent: ADR-F1A-008 decision 1, M-F1a). **Code-ready:** normal
-`specs_check.sh` has 0 errors, and its only warning is `SLICE_MISSING_CLOSEOUT` for slices
-that have not reached Step 4b. Under `--strict` that same finding is the one known
-planning-stage result. It stays visible and is recorded in the checklist. It is never
-waived and never fixed with a placeholder `CLOSEOUT.md`. Any other strict finding blocks
-code-ready. **Slice close:** after the real `CLOSEOUT.md` exists, `--strict` must be fully
-clean. For a clean-start evidence slice, the commit order is the two-commit sequence in
-Step 4b. ADR-F1A-009 supersedes ADR-F1A-008 decision 2 for that ordering.
+`specs_check.sh` has 0 errors; its only warning may be `SLICE_MISSING_CLOSEOUT` for a
+slice whose `ENGINEERING_TASKS.md` stage parse is `step-4a` and whose `CLOSEOUT.md` is
+absent. Under `--strict` that absent-closeout warning stays a warning; any other stage
+parse, a placeholder or non-substantive closeout, or any other finding is a strict error.
+It is never waived and never cleared with a placeholder file. Any other strict finding
+blocks code-ready. **Slice close:** after a substantive `CLOSEOUT.md` exists, `--strict`
+must be fully clean. For a clean-start evidence slice, the commit order is the two-commit
+sequence in Step 4b. ADR-F1A-009 supersedes ADR-F1A-008 decision 2 for that ordering.
 
 ## Completion criteria
 

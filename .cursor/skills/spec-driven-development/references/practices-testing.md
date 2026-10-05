@@ -97,7 +97,7 @@ Counted evidence that records clean_start must begin from an empty `git status -
 A slice with counted clean-start evidence is done only after the two-commit close in
 `SKILL.md` Step 4b: Reviewer implementation review, C1 without generated artifacts or
 `CLOSEOUT.md`, one counted run from a clean C1, the written oracle/cell independence gate,
-the real `CLOSEOUT.md` with normal and `--strict` checks fully clean, Reviewer evidence
+the substantive `CLOSEOUT.md` with normal and `--strict` checks fully clean, Reviewer evidence
 review, C2 with the counted bundle and closeout, then clean-C2 regeneration with the
 outputs restored and not committed.
 
@@ -108,7 +108,7 @@ dependency-free (stdlib only):
 
 ```bash
 bash .cursor/skills/spec-driven-development/scripts/specs_check.sh            # both linters, errors only
-bash .cursor/skills/spec-driven-development/scripts/specs_check.sh --strict   # every unwaived warning becomes an error
+bash .cursor/skills/spec-driven-development/scripts/specs_check.sh --strict   # warnings become errors except absent-closeout SLICE_MISSING_CLOSEOUT at step-4a
 ```
 
 Add `--no-waivers` to see the full debt — size budgets, stale evidence commands, legacy

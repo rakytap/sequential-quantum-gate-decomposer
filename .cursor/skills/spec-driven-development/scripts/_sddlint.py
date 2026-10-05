@@ -138,12 +138,15 @@ class Reporter:
         path: Path | str,
         message: str,
         line: int | None = None,
+        *,
+        strict_keep_warn: bool = False,
     ) -> None:
         rel = rel_to(self.root, path)
         if self.config.is_excluded(rel):
             return
         if self.strict and severity == "warn":
-            severity = "error"
+            if not (strict_keep_warn and code == "SLICE_MISSING_CLOSEOUT"):
+                severity = "error"
         reason = self.config.waiver_for(code, rel) if self.honor_waivers else None
         self.findings.append(
             Finding(
@@ -306,7 +309,7 @@ def base_parser(description: str) -> argparse.ArgumentParser:
     parser.add_argument(
         "--strict",
         action="store_true",
-        help="treat warnings as errors",
+        help="treat warnings as errors (except absent-closeout SLICE_MISSING_CLOSEOUT when stage is step-4a)",
     )
     parser.add_argument(
         "--no-waivers",

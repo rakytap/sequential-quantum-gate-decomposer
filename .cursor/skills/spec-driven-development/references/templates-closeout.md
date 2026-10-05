@@ -17,7 +17,7 @@ planning. Keep them tight.
 or `implementation handback` when Step 4b hit a contract/ADR gap — in that case point to
 `STEP_4A_HANDBACK.md` and do not mark the slice shipped. Budget: 200 lines.
 
-```markdown
+````markdown
 # <M#> slice <n> closeout — <one-line slice descriptor>
 > **Status:** shipped | implementation handback · **Date:** <date> · **Work package:** <WP> · **Scope:** <e.g. test-only / code+tests>
 
@@ -31,11 +31,13 @@ or `implementation handback` when Step 4b hit a contract/ADR gap — in that cas
 | Signal / TD / ET | Verdict | Evidence |
 
 ## Evidence commands (reproduce)
+```bash
 <commands>
+```
 
 ## Remaining slices (indicative, just-in-time)
 <only if the milestone continues>
-```
+````
 
 The closeout is also the compaction contract: after a slice, the session's memory is
 gone, so anything the next slice needs must be in this file.

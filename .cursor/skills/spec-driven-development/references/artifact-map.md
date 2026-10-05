@@ -46,7 +46,7 @@ All under `docs/specs/milestones/<milestone-slug>/task-<n>/`:
 |------|-------|---------|
 | `TASK_<n>_MINI_SPEC.md` | 2 | Work-package contract: required/unsupported behavior, evidence matrix, interfaces |
 | `DELIVERY_STORIES.md` | 3 | Behavioral slices with acceptance signals and traceability |
-| `ENGINEERING_TASKS.md` | 4 | Red-first implementation tasks with done criteria |
+| `ENGINEERING_TASKS.md` | 4 | Red-first implementation tasks with done criteria; the first 12 lines carry exactly one own-line `**SDD stage:**` field |
 | `CLOSEOUT.md` | — | Slice verdict: `shipped` or `implementation handback` |
 | `STEP_4A_HANDBACK.md` | — | Questions back to planning when Step 4b hits a contract/ADR gap |
 

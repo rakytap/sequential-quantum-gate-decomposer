@@ -91,6 +91,11 @@ concrete acceptance signals.
 Engineering tasks are TDD-shaped: the failing test comes first, so the acceptance tests
 become the executable mirror of the spec.
 
+Open `ENGINEERING_TASKS.md` with a context header (status, slice, traces). During Step 4a
+planning, put exactly one own-line `**SDD stage:**` field in the first 12 lines with value
+`step-4a`. The planning role sets `step-4b-authorized` in the code-ready closure writer pass
+(C1; not stamped in this tooling commit).
+
 ```markdown
 ### Engineering Task: [Action-oriented title]
 

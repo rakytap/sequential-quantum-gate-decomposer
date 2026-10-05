@@ -2,7 +2,7 @@
 # Run both SDD spec linters (artifact structure + traceability spine) over docs/specs.
 #
 #   bash .cursor/skills/spec-driven-development/scripts/specs_check.sh                 # errors only
-#   bash .cursor/skills/spec-driven-development/scripts/specs_check.sh --strict        # warnings become errors
+#   bash .cursor/skills/spec-driven-development/scripts/specs_check.sh --strict        # warnings become errors (except absent-closeout SLICE_MISSING_CLOSEOUT at step-4a)
 #   bash .cursor/skills/spec-driven-development/scripts/specs_check.sh docs/specs/milestones/<slug>
 #   bash .cursor/skills/spec-driven-development/scripts/specs_check.sh --no-waivers    # show suppressed debt
 #

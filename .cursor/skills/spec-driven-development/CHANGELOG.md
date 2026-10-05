@@ -4,6 +4,33 @@ Revision history lives here rather than in `SKILL.md`: dated notes and "effectiv
 caveats are time-sensitive content that costs tokens on every activation and goes stale.
 Revisions are **forward-only** — a slice keeps the convention it shipped under.
 
+## rev F — stage-aware `SLICE_MISSING_CLOSEOUT` (ADR-F1A-008 Amendment 1)
+
+- **`parse_sdd_stage()`** reads exactly one own-line `**SDD stage:**` in the first 12 lines
+  of `ENGINEERING_TASKS.md` (`SDD_STAGE_WINDOW = 12`, independent of `CONTEXT_HEADER_WINDOW`).
+  Only the literal value `step-4a` is exempt from `--strict` promotion for an absent
+  `CLOSEOUT.md`.
+- **`closeout_kind()`** (`substantive-closeout`): placeholder or empty closeouts still emit
+  `SLICE_MISSING_CLOSEOUT` (non-exempt message) and run the status branch; substantive
+  closeouts silence that finding. Present closeouts without `**Status:**` still get
+  `CLOSEOUT_NO_STATUS` on the status branch (ADR-F1A-008 Amendment 1 bound 3 / HEAD behavior).
+- **`Reporter.add(..., strict_keep_warn=False)`** in `_sddlint.py` implements the promotion
+  exception; companion docs and `specs_check.sh` comment updated.
+- **`exercise_slice_closeout_stage.py`**: throwaway `--root` negative controls before relying
+  on the rule. At the implementation HEAD the live `docs/specs` tree has no
+  `SLICE_MISSING_CLOSEOUT` because both slice closeouts exist and are substantive.
+
+**Negative controls** (throwaway `--root`, normal and `--strict` unless noted):
+
+NC-P1-4a-absent, NC-P1-4b-absent, NC-P1-missing-absent, NC-P1-dup-absent,
+NC-P1-other-stage, NC-P1-empty-value, NC-P1-shared-middot, NC-P1-shared-prefix,
+NC-P1-line13, NC-P1-line13-extra, NC-P1-html, NC-P1-unicode, NC-P1-nbsp,
+NC-P1-injected-warn, NC-P1-injected-warn-4b, NC-P1-injected-warn-missing,
+NC-P1-injected-warn-dup, NC-P1-injected-error, NC-P1-empty, NC-P1-ws,
+NC-P1-status-stub, NC-P1-status-stub-4b, NC-P1-status-placeholder, NC-P1-comment,
+NC-P1-placeholder-handback, NC-P1-substantive-4a, NC-P1-substantive-nostage,
+NC-P1-substantive-4b, NC-P1-handback, NC-P1-multi, NC-P1-residual-shaped-stub.
+
 ## rev E — ADR companion file and skill-rule maintenance (P0b)
 
 - **`ADR_AMENDMENTS_<SLUG>.md`**: optional single continuation beside `ADRS_<SLUG>.md`

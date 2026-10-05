@@ -14,7 +14,7 @@ artifact to its owning skill and keep the **traceability spine** unbroken:
 
 ```bash
 bash .cursor/skills/spec-driven-development/scripts/specs_check.sh            # spine + artifact structure; errors must be zero
-bash .cursor/skills/spec-driven-development/scripts/specs_check.sh --strict   # every unwaived warning becomes an error
+bash .cursor/skills/spec-driven-development/scripts/specs_check.sh --strict   # warnings become errors except absent-closeout SLICE_MISSING_CLOSEOUT at step-4a
 ```
 
 `specs_check.sh` reports a `REQ-*` citing no `CAP-*`/`QA-*`, a `REQ-*` no delivery story

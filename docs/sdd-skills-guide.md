@@ -303,7 +303,7 @@ spec work is complete:
 
 ```bash
 bash .cursor/skills/spec-driven-development/scripts/specs_check.sh            # spine + structure (errors only)
-bash .cursor/skills/spec-driven-development/scripts/specs_check.sh --strict   # every unwaived warning becomes an error
+bash .cursor/skills/spec-driven-development/scripts/specs_check.sh --strict   # warnings become errors except absent-closeout SLICE_MISSING_CLOSEOUT at step-4a
 bash .cursor/skills/spec-driven-development/scripts/specs_check.sh --no-waivers
 ```
 
