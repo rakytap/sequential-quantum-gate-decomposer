@@ -43,7 +43,7 @@ historical paths. Before step (c), `git status --porcelain --untracked-files=all
 - [x] `docs/specs/milestones/exactness-reconfirmation/task-1/TASK_1_MINI_SPEC.md`
 - [x] `docs/specs/milestones/exactness-reconfirmation/task-1/DELIVERY_STORIES.md`
 - [x] `docs/specs/milestones/exactness-reconfirmation/task-1/ENGINEERING_TASKS.md`
-- [ ] `task-2/CLOSEOUT.md` at step (d) only; it is not a C1 path
+- [x] `task-2/CLOSEOUT.md` at step (d) only; it is not a C1 path
 
 No generator, `squander/`, `evidence_io.py`, `artifact_root`, historical JSON, or gitignore.
 P0b landed at `5a5168fd`. `ADR_AMENDMENTS_<SLUG>.md` is checker-visible (slug check and
