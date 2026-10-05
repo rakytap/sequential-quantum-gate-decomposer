@@ -1,17 +1,19 @@
 # Task / Work Package 3: q4 regeneration comparator allowlist
 > **Status:** Closed code-ready under ADR-F1A-008 on 2026-10-05 by Squander Architect; Step 4b under ADR-F1A-010 · **Slice:** M-F1a slice 3 (Slice B) ·
 > **Milestone:** M-F1a `exactness-reconfirmation` · **Planning-base HEAD:**
-> `99bf9d519f7aac58d8f1e6502c60912decb85995` · **Lock sha256:**
+> `99bf9d519f7aac58d8f1e6502c60912decb85995` · **Lock:** KB
+> `2026-10-05-SLICE-B-COMPARATOR-ALLOWLIST-LOCK.md` sha256
 > `cbc7c08160f745e1922a1ad4e0b7f71427a1bf3c81bf884bae52b13563118d09` ·
 > **Traces:** REQ-004, REQ-006 · QA-008 · ADR-F1A-008, ADR-F1A-009 (+ Amendment 1),
 > ADR-F1A-010 · **No push/PR** · **Baseline route verified:** q4 history only
 
 ## 1. Purpose
 
-Slice B replaces option (i) for the q4 sibling only. `_regeneration_result` skips a
-difference when the only case-field path is `cases[0].provenance.implementation_revision`
-and both values are distinct full lowercase 40-hex git revisions. The allowlist constant
-has length 1. No bundle schema change. The regenerated q4 bundle is never committed.
+Slice B replaces option (i) for the q4 sibling only. The allowlist constant has length 1.
+`_allowlisted_revision_difference` skips `cases[0].provenance.implementation_revision`
+only when both values are distinct full lowercase 40-hex git revisions. A pass still
+requires every other compared field to match (§3.2). No bundle schema change. The
+regenerated q4 bundle is never committed.
 Baseline route verified applies to q4 history only. This slice adds no counted cell.
 
 Live bundle at this HEAD:
@@ -29,7 +31,7 @@ Committed `cases[0].provenance.implementation_revision` is
 | Path | Edit |
 |------|------|
 | `benchmarks/density_matrix/correctness_evidence/mf1a_q4_baseline_validation.py` | `Q4_REGENERATION_ALLOWLIST`, `_is_full_git_revision`, `_allowlisted_revision_difference`, provenance-loop skip in `_regeneration_result` |
-| `tests/partitioning/evidence/test_correctness_evidence.py` | §5 tests only |
+| `tests/partitioning/evidence/test_correctness_evidence.py` | §3.5 tests only (lock §5) |
 | `.cursor/skills/test-density-matrix/references/regeneration-acceptance.md` | milestone-agnostic replacement (lock §6) |
 
 `.cursor/skills/test-density-matrix/SKILL.md` is unchanged (lines 200–204 stay byte-identical).
@@ -228,7 +230,7 @@ At (g) the new revision equals the C2 SHA. A failed (c) stops before (d). Extens
 | REQ-004, QA-008 | regeneration unit tests | `pytest tests/partitioning/evidence/test_correctness_evidence.py -o addopts="" -k mf1a_q4_baseline_regeneration` | 14 collected; red-before list fails at unmodified HEAD; all 14 pass after the patch | DS-B2; ET-B1 |
 | REQ-004, REQ-006 | module gate | `pytest tests/partitioning/evidence/test_correctness_evidence.py -o addopts="" -k mf1a` | existing q4 tests, seven historical tests, and twelve new tests pass | ET-B1 |
 | REQ-004, QA-008 | proof runs (c) and (g) | `python benchmarks/density_matrix/correctness_evidence/validation_pipeline.py` | §3.8 table; extension pin `05f01747e986dabba73073c11c9b00fdb326afdd703e59cd5cfe27af6631cc77`; q4 restored, not committed | DS-B4; ET-B4 |
-| REQ-004 | spec fitness | `bash .cursor/skills/spec-driven-development/scripts/specs_check.sh` | this Step 4a tree: `SLICE_MISSING_CLOSEOUT` for task-3 only; after (d), clean | this mini-spec |
+| REQ-004 | spec fitness | `bash .cursor/skills/spec-driven-development/scripts/specs_check.sh` and the same command `--strict` | At `step-4a`, both modes warn `SLICE_MISSING_CLOSEOUT` for task-3. Between C1 and (d), with stage `step-4b-authorized`, `--strict` reports that finding as one error. After (d), both modes are clean. | this mini-spec |
 
 ## 6. Affected interfaces and rollback
 
