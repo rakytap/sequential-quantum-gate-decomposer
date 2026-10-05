@@ -33,19 +33,7 @@ inside any milestone.
 
 ## Reading order and context budget
 
-Read just-in-time. Pre-loading the whole milestone tree is what makes later slices drift.
-
-| At this point | Read | Do not read |
-|---------------|------|-------------|
-| Step 1 (Layer 1) | `PRODUCT_STATEMENT.md`, the milestone row in `ROADMAP.md`, `INITIAL_REQUIREMENTS.md`, `ARCHITECTURE_OVERVIEW.md`, `TECH_STACK.md` | any `task-<n>/` artifact, the archived phase trees |
-| Steps 2–3 (readiness) | the Layer 1 contract you just wrote | prior milestones' trees |
-| Step 4a (plan a slice) | the Layer 1 contract, plus the **previous slice's `CLOSEOUT.md`** | previous slices' mini-specs, stories, or task files |
-| Step 4b (generate code) | this slice's mini-spec, stories, and engineering tasks | the roadmap, the product statement |
-| Milestone close | every slice `CLOSEOUT.md`, the Layer 1 acceptance criteria | slice-level task files |
-
-Delegate wide discovery — codebase exploration, artifact audits — to a subagent and take
-back the summary. Persist anything the next slice needs in a file, never in conversation:
-after a slice closes, `task-<n>/CLOSEOUT.md` is the only thing that carried forward.
+Read just-in-time; table and delegation rules: `references/reading-order.md`.
 
 ## The four layers
 
@@ -130,42 +118,9 @@ and do not mark the slice shipped. Updating specs and current-state docs because
 differed is planning work, not code generation.
 
 **Step 4b — slice close for clean-start evidence (two-commit).** When a slice's counted
-evidence records `clean_start`, close the slice in this order (precedent: ADR-F1A-009,
-M-F1a q4 tracer). For that slice, this order replaces "write the closeout, Reviewer, then
-commit":
-
-1. **(a) Reviewer implementation review** of the uncommitted implementation diff.
-2. **(b) Local implementation commit C1**: planning docs, implementation, and tests only.
-   C1 holds no generated artifact and no `CLOSEOUT.md`. An optional planning-docs C0 may
-   precede C1.
-3. **(c) Counted clean-start run**: from an empty `git status --porcelain` at C1, run the
-   slice's single evidence command once and keep its counted evidence.
-4. **Pre-(d) independence gate**: Tester confirms in writing that the oracle and the cell
-   are independent. The note names the code paths and objects on each side, shows that
-   the oracle is not the cell's own output read back, and explains any bitwise agreement
-   (see Gotchas). If independence is not established, stop: write no `CLOSEOUT.md` and
-   make no C2.
-5. **(d) Real slice close**: write `task-<n>/CLOSEOUT.md` citing C1. Normal and
-   `--strict` `specs_check.sh` and traceability must then be fully clean.
-6. **(e) Reviewer evidence review** of the counted evidence, the real closeout, and the
-   clean verification results.
-7. **(f) Local evidence commit C2**: the counted bundle and `CLOSEOUT.md`.
-8. **(g) Clean-C2 regeneration**: Tester reruns regeneration from a clean C2, accepts it
-   under the revision-only mismatch rule (option (i); `test-density-matrix`
-   § Regeneration acceptance), and restores every generated output. Regeneration outputs
-   are never committed.
-
-No push or pull request is part of this sequence. Clean-start rules, including how to park
-a dirty non-counted run: `references/practices-testing.md` § Clean-start evidence and
-slice-close order.
-
-**Planning-doc header sync.** Before the Reviewer implementation review (a), sweep
-`docs/specs/milestones/<slug>/`: the checklist, every `task-<n>/` mini-spec, stories, and
-engineering tasks. Bring each context header and each authorization or status line to the
-current position. No header may still say "C1 awaits Reviewer" or "Step 4b blocked" once
-authorization has moved. A quick check is
-`rg -n "awaits Reviewer|Step 4b blocked|not committed" docs/specs/milestones/<slug>/`. The
-synced docs belong in C1 (or C0), so they do not dirty the counted run.
+evidence records `clean_start`, close the slice in the two-commit order in
+`references/two-commit-close.md` (precedent: ADR-F1A-009, M-F1a q4 tracer). That order
+replaces "write the closeout, Reviewer, then commit" for those slices.
 
 After a slice ships — or its handback is disposed, re-issues code-ready, and ships —
 return to Step 4a for the next slice. Do not pre-plan the remaining slices.
@@ -182,40 +137,30 @@ learning invalidated a core product assumption, that escalates to
 `create-product-statement`. A paper, abstract, or talk drawn from the milestone consumes
 the closeout's evidence matrix; it is not a spec artifact and does not live in `docs/specs/`.
 
-**Full milestone review (new guidance).** After the last slice of an implementation
-milestone is delivered and `<MILESTONE_ID>_CLOSEOUT.md` is drafted, and before the report
-to Research Manager, Reviewer runs one full milestone review with model
-`claude-opus-5-5`, context `1m`, effort `max`. The review covers every slice
-`CLOSEOUT.md`, the Layer 1 acceptance criteria, the `REQ-*` evidence matrix, and the
-milestone's commits. Record its verdict and findings in the milestone closeout before
-handing control to `create-product-roadmap`.
+**Full milestone review.** After the last slice of an implementation milestone is delivered
+and `<MILESTONE_ID>_CLOSEOUT.md` is drafted, and before the report to Research Manager,
+Reviewer runs one full milestone review. The review covers every slice `CLOSEOUT.md`, the
+Layer 1 acceptance criteria, the `REQ-*` evidence matrix, and the milestone's commits.
+Record its verdict and findings in the milestone closeout before handing control to
+`create-product-roadmap`.
 
 Templates for all four close and governance artifacts:
 `references/templates-closeout.md`.
 
 ## The planning / code-generation seam
 
-All planning — the Layer 1 contract *and* each slice's just-in-time Layer 2/3/4 — is
-spec-only work owned by the planning role. Code generation is a separate, narrower pass:
-implement already-specified engineering tasks and nothing more. The seam sits **inside
-Step 4**, between 4a and 4b. Three committed subagents carry the roles, so the boundary is
-a capability rather than a promise:
-
-| Subagent | Enforcement | Owns |
-|----------|-------------|------|
-| `.cursor/agents/sdd-planner.md` | `readonly: true` — cannot write code | Layers 1–4 planning, verdicts |
-| `.cursor/agents/sdd-implementer.md` | write-enabled, must not edit `docs/specs/**` | Step 4b code and tests |
-| `.cursor/agents/sdd-critic.md` | `readonly: true` | adversarial critique before a verdict |
-
-Delegate with the Task tool: the planner returns a plan the parent writes to files, and the
-implementer reads those files. Never carry the handoff in chat memory. Models are pinned in
-the subagent files, not here.
+Subagents, enforcement, and delegation: `references/planning-code-seam.md`.
 
 ## Size budgets
 
-An artifact past its budget is a slice that is too big. Split it; do not append. Open
-every artifact with a context header of at most ten lines — status, milestone or slice,
-scope, traces — so a partial read is still decision-useful.
+An artifact past its budget is a slice that is too big. Split it; do not append. When
+`ADRS_<MILESTONE_SLUG>.md` hits its 400-line budget, continue in exactly one
+`ADR_AMENDMENTS_<MILESTONE_SLUG>.md` beside it (same slug, same context-header rule).
+New ADR ids continue the milestone sequence; amendments to earlier ADRs live in the
+companion, not in the primary file. Index the companion from `ADRS_<MILESTONE_SLUG>.md`.
+Do not open a second continuation file (`ADRS_<SLUG>_2`, `ADRS2_*`, or a second
+`ADR_AMENDMENTS_*`). Open every artifact with a context header of at most ten lines —
+status, milestone or slice, scope, traces — so a partial read is still decision-useful.
 
 | Artifact | Lines | Artifact | Lines |
 |----------|-------|----------|-------|
@@ -267,28 +212,8 @@ Step 4b. ADR-F1A-009 supersedes ADR-F1A-008 decision 2 for that ordering.
 
 ## Gotchas in this repo
 
-- Tests, benchmarks, and examples run in the **`qgd` conda environment**
-  (`conda run -n qgd --no-capture-output pytest …`). C++ or CMake changes need a rebuild
-  (`clean-rebuild` skill); `test-density-matrix` runs the suites; `TECH_STACK.md` lists
-  the lanes.
-- Evidence rows name their lane: fast pytest (`tests/density_matrix`, `tests/partitioning`,
-  `tests/VQE`, `-m "not slow"`), `slow`, a benchmark evidence pipeline
-  (`benchmarks/density_matrix/*/validation_pipeline.py`), the optional C++ tests
-  (`QGD_CTEST=1`), or the Qiskit Aer external reference.
-- The sequential `NoisyCircuit` executor is the exact baseline every partitioned, fused,
-  or new backend path is validated against; Aer is the external reference. A `QA-*` about
-  exactness becomes a fitness test against that baseline.
-- Oracle independence (G-10) proves separate execution, not separate kernels. The cell
-  and the sequential oracle are separate calls, and each allocates its own
-  `DensityMatrix`. Neither reads the other's output back, so bitwise agreement is
-  legitimate and the closeout records its reason. Both still share
-  `_build_runtime_circuit` lowering and the `NoisyCircuit` gate and noise kernels. A
-  kernel-level bug therefore appears on both sides, and this oracle cannot detect it.
-  Record that limitation in the closeout. Do not redefine or replace the oracle to close
-  it.
-- The delivered phase trees under `docs/density_matrix_project/archive/` use an earlier
-  convention. Read them for history; never extend them or copy their naming into
-  `docs/specs/` (mapping: `references/artifact-map.md`). Revisions are forward-only.
+Density-matrix track conventions (conda lanes, exact baseline, G-10 oracle limit, archive):
+`references/repo-gotchas.md`.
 
 ## References
 
@@ -297,11 +222,15 @@ Load only what the current step needs:
 | Read this | When |
 |-----------|------|
 | `references/artifact-map.md` — canonical paths, naming, budgets, current-state docs, legacy mapping | creating or naming an artifact |
+| `references/reading-order.md` — just-in-time table and delegation | any milestone step |
 | `references/templates-layer-2-4.md` — mini-spec, delivery story, engineering task | Step 4a |
 | `references/templates-closeout.md` — slice and milestone closeout, handback, change control | slice close, milestone close, or handback |
+| `references/two-commit-close.md` — C0/C1/counted run/C2 order, header sync, independence gate | Step 4b slice close with clean-start evidence |
 | `references/practices-architecture.md` — DDD, hexagonal, boundary maps, C4, ADR rubric | writing Layer 1 or an ADR |
 | `references/practices-testing.md` — BDD, test pyramid, evidence matrix, fitness functions, Definition of Ready/Done | writing acceptance, or gating a slice |
 | `references/rubrics.md` — planning and mini-spec rubrics, principles, anti-patterns | before a readiness or code-ready verdict |
+| `references/repo-gotchas.md` — qgd lanes, exact baseline, G-10, archive | Step 4b or slice close in this repo |
+| `references/planning-code-seam.md` — subagents, readonly seam, Task delegation | Step 4a / 4b handoff |
 
 ## Do not
 
@@ -313,4 +242,4 @@ Load only what the current step needs:
 - Commit with `git add -A` or `git add .`, or while untracked or generated evidence
   artifacts that are not this commit's intended paths sit in the worktree. Stage an exact
   path list (`git add -- <path> …`); Reviewer checks the porcelain before each local
-  commit (new guidance; see `AGENTS.md` non-negotiable 7).
+  commit (see `AGENTS.md` non-negotiable 7).

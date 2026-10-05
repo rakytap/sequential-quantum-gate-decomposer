@@ -87,10 +87,12 @@ closeout's evidence matrix and live outside `docs/specs/`.
 
 An artifact that no longer fits in working memory stops being read and starts being skimmed,
 so every artifact type has a line budget enforced as a warning by `specs_check.sh --strict`:
-300 for `INITIAL_REQUIREMENTS.md`, 400 for planning and ADRs, 250 for the readiness checklist
-and each mini-spec, 200 for delivery stories, 300 for engineering tasks, 200 for a slice
-closeout, 250 for a milestone closeout. **Over budget means the slice is too big** — split
-it, do not append. Budgets apply to every milestone under `docs/specs/`; the archived phases
+300 for `INITIAL_REQUIREMENTS.md`, 400 for planning, primary ADRs, and the optional
+`ADR_AMENDMENTS_*` companion, 250 for the readiness checklist and each mini-spec, 200 for
+delivery stories, 300 for engineering tasks, 200 for a slice closeout, 250 for a milestone
+closeout. **Over budget means the slice is too big** — split it, do not append; when
+`ADRS_*` overflows, continue in exactly one `ADR_AMENDMENTS_*` beside it (same slug).
+Budgets apply to every milestone under `docs/specs/`; the archived phases
 predate them (their Layer 1 files ran to 1,000–1,300 lines, which is the failure mode the
 budgets exist to prevent).
 

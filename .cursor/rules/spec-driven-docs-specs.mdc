@@ -36,7 +36,7 @@ comes back as a follow-up rather than a green summary.
 | `ROADMAP.md` (outcome milestones `M#`, Now/Next/Later) | `create-product-roadmap` |
 | `ARCHITECTURE_OVERVIEW.md` / `TECH_STACK.md` (current state) | `spec-driven-development` |
 | `milestones/<slug>/INITIAL_REQUIREMENTS.md` (`REQ-*`) | `create-initreq-for-sdd` |
-| `milestones/<slug>/` planning, `ADRS_*`, `PRE_IMPLEMENTATION_COMPLETION_CHECKLIST.md`, `<MILESTONE_ID>_CLOSEOUT.md`, `CHANGE_CONTROL.md`, `task-<n>/…` (`TASK_<n>_MINI_SPEC.md`, `DELIVERY_STORIES.md`, `ENGINEERING_TASKS.md`, `CLOSEOUT.md`, `STEP_4A_HANDBACK.md`) | `spec-driven-development` |
+| `milestones/<slug>/` planning, `ADRS_*`, optional `ADR_AMENDMENTS_<SLUG>.md` companion, `PRE_IMPLEMENTATION_COMPLETION_CHECKLIST.md`, `<MILESTONE_ID>_CLOSEOUT.md`, `CHANGE_CONTROL.md`, `task-<n>/…` (`TASK_<n>_MINI_SPEC.md`, `DELIVERY_STORIES.md`, `ENGINEERING_TASKS.md`, `CLOSEOUT.md`, `STEP_4A_HANDBACK.md`) | `spec-driven-development` |
 | `.sdd-lint.json` (budgets, slug overrides, waivers) | `spec-driven-development` |
 
 ## Working rules

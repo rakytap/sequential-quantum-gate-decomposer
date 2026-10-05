@@ -277,6 +277,8 @@ def budget_for(path: Path, budgets: dict[str, int]) -> int | None:
         return budgets.get("DETAILED_PLANNING")
     if name.startswith("ADRS"):
         return budgets.get("ADRS")
+    if name.startswith("ADR_AMENDMENTS"):
+        return budgets.get("ADRS")
     if name.endswith("DELIVERY_STORIES.md"):
         return budgets.get("DELIVERY_STORIES.md")
     if name.endswith("ENGINEERING_TASKS.md"):

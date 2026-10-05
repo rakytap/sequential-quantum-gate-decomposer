@@ -56,10 +56,13 @@ LEGACY_TASKS_RE = re.compile(r"^TASK_\d+_ENGINEERING_TASKS\.md$")
 LAYER1_STARTED_GLOBS = (
     "DETAILED_PLANNING_*.md",
     "ADRS_*.md",
+    "ADR_AMENDMENTS_*.md",
     "PRE_IMPLEMENTATION_COMPLETION_CHECKLIST.md",
     "*_CLOSEOUT.md",
     "CHANGE_CONTROL.md",
 )
+
+ADR_AMENDMENTS_PREFIX = "ADR_AMENDMENTS_"
 
 
 def check_context_header(reporter: Reporter, path: Path) -> None:
@@ -132,13 +135,32 @@ def check_layer1(
                 f"missing {purpose}; Layer 1 is incomplete for this milestone",
             )
 
+    canonical_adrs = f"ADRS_{slug}.md"
+    canonical_amendments = f"{ADR_AMENDMENTS_PREFIX}{slug}.md"
+    allowed_adr = {canonical_adrs, canonical_amendments}
+    for path in sorted(milestone.glob("ADR*.md")):
+        if path.name not in allowed_adr:
+            reporter.add(
+                "ADR_FORBIDDEN_CONTINUATION",
+                "error",
+                path,
+                "only ADRS_<SLUG>.md and at most one ADR_AMENDMENTS_<SLUG>.md are allowed "
+                "at milestone root",
+            )
+
     # Catch a planning/ADR file whose slug does not match its directory: the
     # uppercase-underscore form of the directory name is the naming contract.
-    for path in sorted(milestone.glob("DETAILED_PLANNING_*.md")) + sorted(
+    slugged = sorted(milestone.glob("DETAILED_PLANNING_*.md")) + sorted(
         milestone.glob("ADRS_*.md")
-    ):
+    ) + sorted(milestone.glob("ADR_AMENDMENTS_*.md"))
+    for path in slugged:
         stem = path.stem
-        suffix = stem.split("_", 2)[-1] if stem.startswith("DETAILED_PLANNING") else stem[len("ADRS_") :]
+        if stem.startswith("DETAILED_PLANNING"):
+            suffix = stem.split("_", 2)[-1]
+        elif stem.startswith(ADR_AMENDMENTS_PREFIX):
+            suffix = stem[len(ADR_AMENDMENTS_PREFIX) :]
+        else:
+            suffix = stem[len("ADRS_") :]
         if suffix != slug:
             reporter.add(
                 "SLUG_MISMATCH",

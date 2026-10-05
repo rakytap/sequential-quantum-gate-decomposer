@@ -33,6 +33,7 @@ All under `docs/specs/milestones/<milestone-slug>/`:
 | `INITIAL_REQUIREMENTS.md` | `REQ-*` baseline from `create-initreq-for-sdd` (upstream input) |
 | `DETAILED_PLANNING_<MILESTONE_SLUG>.md` | Scope, goals, frozen contracts, acceptance, traceability |
 | `ADRS_<MILESTONE_SLUG>.md` | Decisions affecting more than one work package |
+| `ADR_AMENDMENTS_<MILESTONE_SLUG>.md` | Optional single continuation when `ADRS_*` hits its budget |
 | `PRE_IMPLEMENTATION_COMPLETION_CHECKLIST.md` | Gap list and the ready / not-ready verdict |
 | `<MILESTONE_ID>_CLOSEOUT.md` | Delivery record; the input to roadmap revalidation |
 | `CHANGE_CONTROL.md` | Only when a deviation needs formal governance sign-off |
@@ -107,6 +108,7 @@ skimmed. Budgets are in lines and are enforced as warnings by `check_artifacts.p
 | `INITIAL_REQUIREMENTS.md` | 300 |
 | `DETAILED_PLANNING_*` | 400 |
 | `ADRS_*` | 400 |
+| `ADR_AMENDMENTS_*` | 400 |
 | `PRE_IMPLEMENTATION_COMPLETION_CHECKLIST.md` | 250 |
 | `TASK_<n>_MINI_SPEC.md` | 250 |
 | `DELIVERY_STORIES.md` | 200 |

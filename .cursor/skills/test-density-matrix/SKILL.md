@@ -153,45 +153,7 @@ unset LDFLAGS LIBRARY_PATH QGD_CTEST
 
 ## Common Failures and Fixes
 
-### pybind11 not found
-
-```bash
-conda activate qgd
-pip install pybind11
-python setup.py build_ext
-```
-
-### TBB headers or libs not found
-
-```bash
-conda install -y tbb-devel -c conda-forge
-export TBB_INC_DIR=~/.conda/envs/qgd/include
-export TBB_LIB_DIR=~/.conda/envs/qgd/lib
-rm -rf _skbuild
-python setup.py build_ext
-```
-
-### `ModuleNotFoundError: No module named 'squander.density_matrix'`
-
-```bash
-python setup.py build_ext
-python -m pip install -e .
-ls squander/density_matrix/_density_matrix_cpp*.so
-```
-
-### Qiskit installation issues on Python 3.13
-
-```bash
-conda install -y qiskit qiskit-aer -c conda-forge
-```
-
-### `./test_standalone/test_density_matrix_cpp: No such file or directory`
-
-The C++ test binary is built under `_skbuild/*/cmake-build/...`, not
-`./test_standalone/` in this workflow.
-
-Fix: use the optional C++ test workflow above exactly (including `rm -rf _skbuild`
-before build, then execute discovered `_skbuild/*/.../test_density_matrix_cpp` path).
+See `references/common-failures.md` (SETUP.md remains authoritative).
 
 ## Output Format for Reporting Results
 
@@ -210,16 +172,8 @@ Density matrix test report:
 
 ## Bounded state-vector (SV) regression lane
 
-Quantum simulation tests are slow, so run only what the change needs. Run this lane when a slice could affect SV behaviour, or when a counted run requires SV non-regression. Skip VQE unless the change touches VQE or variational code paths. Use read-only flags so the run leaves no cache or bytecode in a clean tree:
-
-```bash
-PYTHONDONTWRITEBYTECODE=1 conda run -n qgd --no-capture-output python -m pytest tests/gates tests/decomposition \
-  --ignore=tests/decomposition/test_wide_circuit_optimization.py \
-  --deselect tests/decomposition/test_QX2.py::Test_Decomposition::test_N_Qubit_Decomposition_QX2 \
-  -p no:cacheprovider -q
-```
-
-Reference on rocky-squander (2x EPYC 7542): 805 passed and 1 deselected in about 31 min. With VQE (tests/VQE) added, it was 864 tests in about 38 min. Always run it in the background (see Long runs: tmux). Claim wording: "no state-vector regression attributable to this slice; one known flaky SV test listed and deselected". Never write "all SV tests green".
+Quantum simulation tests are slow, so run only what the change needs. Command, deselects,
+and claim wording: `references/sv-regression-lane.md`.
 
 ## KNOWN-FLAKY list
 
@@ -233,8 +187,6 @@ The test is seeded (random_state=0, optimizer random_seed=1) but still nondeterm
 
 ## Snapshot and restore around validation_pipeline.py
 
-`benchmarks/density_matrix/correctness_evidence/validation_pipeline.py` rewrites the q4 bundle AND six tracked sibling bundles: correctness_package, external_correctness, output_integrity, runtime_classification, sequential_correctness, and unsupported_boundary. The rewrites change real content (partition-member records, runtime/RSS, residual values, unsupported_boundary reason strings), not just timestamps, even when every status stays pass. correctness_matrix and summary_consistency were not rewritten on disk.
-
 After every `validation_pipeline.py` run, restore all eight historical bundles from HEAD,
 and never commit them. This standing rule holds until Research Manager revises it; it is
 not tied to any open drift work or a particular slice.
@@ -242,36 +194,19 @@ not tied to any open drift work or a particular slice.
 Research Manager gate: no C1 and no C2 may include any of the eight, and any commit that
 touches them is blocked.
 
-Only six of the eight are Phase-3 evidence under ADR-F1A-005.
+Procedure and which files the pipeline rewrites: `references/validation-pipeline-restore.md`.
+Banned in-place evidence CLIs on rocky-squander: same reference § host policy.
 
-1. Before running: check that HEAD is the counted revision and that `git status --porcelain --untracked-files=all` is empty. Copy the committed bundle(s) to /tmp/<run>/.
-2. After running: copy every rewritten bundle to /tmp/<run>/ with its sha256 value, and diff it against the committed version.
-3. Restore each tracked file with `git show <counted-sha>:<path> > <path>`. Never use stash, reset, checkout, or clean. Then confirm `git diff --quiet` and an empty porcelain.
-4. Report content drift in the siblings as a finding for Tech Lead. It is not a pass/fail item unless a status changes.
+## Regeneration acceptance
 
-## Rocky-squander: banned in-place evidence runs
-
-On rocky-squander, nobody runs the standalone per-suite CLIs,
-`phase31_validation_pipeline.py`, or the `performance_evidence` pipeline, because they
-rewrite evidence in place. This holds until a later Research Manager decision.
-
-## Regeneration acceptance (option i)
-
-Regenerating at a commit after the one that produced the committed bundle is EXPECTED to exit 1, with status=fail and summary.first_failure=regeneration, because provenance.implementation_revision changes. Run it once with no env overrides, then accept only if all of these hold:
-
-- The QA-001 metrics (Frobenius, max-abs, |Tr-1|) match the committed bundle within 1e-10, and lambda_min >= -1e-12.
-- The route and label fields are identical.
-- qa001_pass, provenance_pass, and clean_start are true, dirty_paths is empty, and implementation_revision equals HEAD.
-- The other eight suites keep status=pass.
-- An unfiltered recursive field diff (regenerated vs committed) shows ONLY these differences: cases[0].provenance.implementation_revision, status pass->fail, summary.first_failure=regeneration, regeneration.prior_present false->true, regeneration.pass true->false, and regeneration.first_mismatch=cases[0].provenance.implementation_revision. Any other difference is a FAIL.
-
-After that, restore every rewritten file to the HEAD bytes, as in the snapshot section. (At C2 a2928bf1 there were exactly 6 differences and 0 unexpected.)
+Milestone-specific regeneration exceptions and revision-only mismatch rules live in that
+milestone's ADRs (not in this skill body). Shape and restore discipline:
+`references/regeneration-acceptance.md`.
 
 ## Long runs: tmux
 
-Run the pipeline and any pytest lane over a few minutes in a detached tmux session named for the tester and run, for example `tmux new-session -d -s tester-<slice>-<step> -c <checkout>`. Send output to a log under /tmp/<run>/ and record the exit code to a file. Never attach to, kill, or reuse sessions you didn't create, such as the build session mf1a-q4-build. Give a time estimate when starting.
+Run the pipeline and any pytest lane over a few minutes in a detached tmux session named for the tester and run, for example `tmux new-session -d -s tester-<slice>-<step> -c <checkout>`. Send output to a log under /tmp/<run>/ and record the exit code to a file. Never attach to, kill, or reuse sessions you didn't create. Give a time estimate when starting.
 
 ## QA-001 exactness predicate (lambda_min witness)
 
-When a counted density-matrix predicate cites QA-001 (ADR-F1A-002, docs/specs/milestones/exactness-reconfirmation/ADRS_EXACTNESS_RECONFIRMATION.md), compute lambda_min(rho) only with the existing DensityMatrix.eigenvalues() contract. LAPACK zheev reads the upper triangle of rho as stored, and the minimum returned eigenvalue is lambda_min. Check finiteness of every entry and residual first. A solver failure or a non-finite eigenvalue fails the row. Do not symmetrize: (rho + rho^dagger)/2 is forbidden. Do not add a Hermiticity gate or cite QA-010. This is an eigensolver convention, not a Hermiticity check. The thresholds are frozen: ||delta rho||_F <= 1e-10, max-abs <= 1e-10, |Tr rho - 1| <= 1e-10, lambda_min >= -1e-12, all against the sequential oracle. Record each value and its pass/fail. Older rho_is_valid, energy, and Aer fields may appear as context but never decide the counted status.
-
+When a counted run cites QA-001, follow `references/qa001-exactness-predicate.md`.

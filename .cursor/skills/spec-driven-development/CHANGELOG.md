@@ -4,6 +4,46 @@ Revision history lives here rather than in `SKILL.md`: dated notes and "effectiv
 caveats are time-sensitive content that costs tokens on every activation and goes stale.
 Revisions are **forward-only** — a slice keeps the convention it shipped under.
 
+## rev E — ADR companion file and skill-rule maintenance (P0b)
+
+- **`ADR_AMENDMENTS_<SLUG>.md`**: optional single continuation beside `ADRS_<SLUG>.md`
+  (400-line budget, slug check, context header). Forbidden at milestone root: any other
+  `ADR*.md` (including `ADRS_<SLUG>_2`, `ADRS2_*`, `ADR_AMENDMENTS2_*`, `ADRs_*`,
+  `ADR_ADDENDUM_*`, bare `ADR_AMENDMENTS.md`, or a second companion).
+- **`check_artifacts.py`**: allows only `ADRS_<SLUG>.md` and `ADR_AMENDMENTS_<SLUG>.md`;
+  `ADR_FORBIDDEN_CONTINUATION` and `SLUG_MISMATCH` for violations. **`_sddlint.py`**: same
+  ADR budget for amendments.
+- **`artifact-map.md`**, **`docs/sdd-skills-guide.md`**, **`.cursor/rules/spec-driven-docs-specs.mdc`**, and the SDD skill size-budget section document the companion.
+- **Skill bodies**: moved two-commit close detail to `references/two-commit-close.md`
+  (step (g) follows slice ADRs/mini-spec, not a hard-wired option (i)); moved reading order,
+  repo gotchas, and planning/code seam to `references/`; **removed** milestone-review model
+  pins from `SKILL.md` (not relocated into `two-commit-close.md`); removed "(new guidance)"
+  markers from the skill tree.
+- **`references/repo-gotchas.md`**: density-track gotchas moved verbatim from P0 `SKILL.md`.
+
+**Negative controls** (throwaway `--root`, normal and `--strict`):
+
+| NC | Setup | Result |
+|----|-------|--------|
+| NC-0 | Unmodified exactness-reconfirmation tree | 0 errors, 1 warn `SLICE_MISSING_CLOSEOUT` (task-2); strict: same finding only; companion accepted |
+| NC-1 | Companion padded to 401 lines | `SIZE_BUDGET` |
+| NC-2 | Companion exactly 400 lines | no `SIZE_BUDGET` on companion |
+| NC-3 | `ADR_AMENDMENTS_WRONG_SLUG.md` | `SLUG_MISMATCH` |
+| NC-4a | `ADRS_EXACTNESS_RECONFIRMATION_2.md` | `ADR_FORBIDDEN_CONTINUATION` |
+| NC-4b | `ADRS2_EXACTNESS_RECONFIRMATION.md` | `ADR_FORBIDDEN_CONTINUATION` |
+| NC-4c | Second `ADR_AMENDMENTS_*` (wrong slug) | `ADR_FORBIDDEN_CONTINUATION` (+ `SLUG_MISMATCH` when slug wrong) |
+| NC-4d | `ADR_AMENDMENTS2_EXACTNESS_RECONFIRMATION.md` | `ADR_FORBIDDEN_CONTINUATION` |
+| NC-4e | `ADRs_EXACTNESS_RECONFIRMATION.md` | `ADR_FORBIDDEN_CONTINUATION` |
+| NC-4f | bare `ADR_AMENDMENTS.md` | `ADR_FORBIDDEN_CONTINUATION` |
+| NC-4g | `ADR_ADDENDUM_EXACTNESS_RECONFIRMATION.md` | `ADR_FORBIDDEN_CONTINUATION` |
+| NC-5 | Companion context header stripped | `MISSING_CONTEXT_HEADER` |
+| NC-6 | `ADRS_*` padded to 401 lines | `SIZE_BUDGET` |
+| NC-7 | Only `exactness-reconfirmation` under `docs/specs/milestones/` on the real tree | vacuous (no second milestone to scan) |
+| NC-7b | Throwaway tree: copy `exactness-reconfirmation` → `synthetic-no-companion`, delete `ADR_AMENDMENTS_*`, rename slugged Layer 1 files/headers, drop `task-2`; lint full `--root` tree | normal/strict: same as NC-0 (`SLICE_MISSING_CLOSEOUT` only); **no** `ADR_FORBIDDEN_CONTINUATION`, `SLUG_MISMATCH`, or `SIZE_BUDGET` on the companion-less milestone |
+
+**KNOWN GAP:** `check_traceability.py` never resolves ADR ids (only REQ/CAP/QA/milestone at
+lines 43–46); dangling `ADR-F1A-NNN` references are not detected — deferred by Tech Lead.
+
 ## rev D — slice-close practice from the M-F1a q4 tracer
 
 Folded the M-F1a q4 tracer lessons into the skill as default practice, citing that
