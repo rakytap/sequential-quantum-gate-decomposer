@@ -1,7 +1,10 @@
 from collections.abc import Callable
 import copy
+import hashlib
+import os
 from pathlib import Path
 import sys
+from types import SimpleNamespace
 
 import pytest
 
@@ -403,3 +406,307 @@ def test_mf1a_q4_baseline_exit_aggregate_requires_sibling_and_included_passes():
             for name, status, path in passing
         ]
     )
+
+
+_MF1A_HISTORICAL_ARTIFACT_DIR_NAMES: tuple[str, ...] = (
+    "correctness_package",
+    "output_integrity",
+    "runtime_classification",
+    "sequential_correctness",
+    "external_correctness",
+    "unsupported_boundary",
+    "correctness_matrix",
+    "summary_consistency",
+)
+
+_MF1A_HISTORICAL_BUNDLE_FILENAMES: dict[str, str] = {
+    "correctness_package": "correctness_package_bundle.json",
+    "output_integrity": "output_integrity_bundle.json",
+    "runtime_classification": "runtime_classification_bundle.json",
+    "sequential_correctness": "sequential_correctness_bundle.json",
+    "external_correctness": "external_correctness_bundle.json",
+    "unsupported_boundary": "unsupported_boundary_bundle.json",
+    "correctness_matrix": "correctness_matrix_bundle.json",
+    "summary_consistency": "summary_consistency_bundle.json",
+}
+
+_CORRECTNESS_EVIDENCE_ARTIFACT_ROOT = (
+    REPO_ROOT / "benchmarks" / "density_matrix" / "artifacts" / "correctness_evidence"
+)
+
+
+def _mf1a_historical_repo_bundle_paths() -> tuple[Path, ...]:
+    return tuple(
+        _CORRECTNESS_EVIDENCE_ARTIFACT_ROOT
+        / directory
+        / _MF1A_HISTORICAL_BUNDLE_FILENAMES[directory]
+        for directory in _MF1A_HISTORICAL_ARTIFACT_DIR_NAMES
+    )
+
+
+def _mf1a_historical_redirected_bundle_paths(fake_root: Path) -> tuple[Path, ...]:
+    return tuple(
+        fake_root / directory / _MF1A_HISTORICAL_BUNDLE_FILENAMES[directory]
+        for directory in _MF1A_HISTORICAL_ARTIFACT_DIR_NAMES
+    )
+
+
+def _sha256_file(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _mf1a_historical_registry_modules() -> list:
+    return [
+        entry.module
+        for entry in validation_pipeline._CASE_SLICE_REGISTRY
+        + validation_pipeline._NULLARY_BUNDLE_REGISTRY
+    ]
+
+
+def _mf1a_historical_redirect_outputs(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    fake_root = tmp_path / "redirected" / "correctness_evidence"
+    fake_root.mkdir(parents=True, exist_ok=True)
+    monkeypatch.setattr(validation_pipeline, "DEFAULT_OUTPUT_ROOT", fake_root)
+    monkeypatch.setattr(
+        "benchmarks.density_matrix.correctness_evidence.common.DEFAULT_OUTPUT_ROOT",
+        fake_root,
+    )
+    repo_artifact_root = _CORRECTNESS_EVIDENCE_ARTIFACT_ROOT
+    for module in _mf1a_historical_registry_modules():
+        relative_dir = module.DEFAULT_OUTPUT_DIR.relative_to(repo_artifact_root)
+        monkeypatch.setattr(module, "DEFAULT_OUTPUT_DIR", fake_root / relative_dir)
+    for module in _mf1a_historical_registry_modules():
+        resolved = module.DEFAULT_OUTPUT_DIR.resolve()
+        assert not resolved.is_relative_to(REPO_ROOT.resolve())
+    return fake_root
+
+
+class _Mf1aHistoricalBuilderCalled(RuntimeError):
+    """Raised when a stub builder runs during a pre-build refusal check."""
+
+
+def _mf1a_historical_stub_builders(
+    monkeypatch: pytest.MonkeyPatch, *, fail_on_call: bool = False
+) -> dict[str, int]:
+    calls = {"build_cases": 0, "build_artifact_bundle": 0}
+
+    def stub_cases() -> list:
+        calls["build_cases"] += 1
+        if fail_on_call:
+            raise _Mf1aHistoricalBuilderCalled("build_cases must not run")
+        return []
+
+    def stub_bundle(_cases=None) -> dict:
+        calls["build_artifact_bundle"] += 1
+        if fail_on_call:
+            raise _Mf1aHistoricalBuilderCalled("build_artifact_bundle must not run")
+        return {"status": "pass", "summary": {}, "cases": []}
+
+    for entry in validation_pipeline._CASE_SLICE_REGISTRY:
+        monkeypatch.setattr(entry.module, entry.cases_attr, stub_cases)
+        monkeypatch.setattr(entry.module, entry.bundle_attr, stub_bundle)
+    for entry in validation_pipeline._NULLARY_BUNDLE_REGISTRY:
+        monkeypatch.setattr(entry.module, entry.bundle_attr, stub_bundle)
+    return calls
+
+
+def test_mf1a_historical_suites_bytes_unchanged_after_run(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    fake_root = _mf1a_historical_redirect_outputs(tmp_path, monkeypatch)
+    redirected_paths = _mf1a_historical_redirected_bundle_paths(fake_root)
+    for repo_path, redirected_path in zip(
+        _mf1a_historical_repo_bundle_paths(), redirected_paths, strict=True
+    ):
+        redirected_path.parent.mkdir(parents=True, exist_ok=True)
+        redirected_path.write_bytes(repo_path.read_bytes())
+
+    before = {path: _sha256_file(path) for path in redirected_paths}
+    _mf1a_historical_stub_builders(monkeypatch)
+    validation_pipeline.run_pipeline()
+
+    for path, digest in before.items():
+        assert _sha256_file(path) == digest
+
+
+def test_mf1a_historical_registered_siblings_still_written(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    fake_root = _mf1a_historical_redirect_outputs(tmp_path, monkeypatch)
+    _mf1a_historical_stub_builders(monkeypatch)
+    validation_pipeline.run_pipeline()
+
+    sibling_path = (
+        fake_root / "mf1a" / "q4_baseline" / mf1a.ARTIFACT_FILENAME
+    )
+    assert sibling_path.is_file()
+
+
+def test_mf1a_historical_all_statuses_returned_g07_unchanged(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    _mf1a_historical_redirect_outputs(tmp_path, monkeypatch)
+    _mf1a_historical_stub_builders(monkeypatch)
+    results = validation_pipeline.run_pipeline()
+    names = {name for name, _, _ in results}
+    assert names == set(validation_pipeline.registered_suite_names())
+    statuses = {name: status for name, status, _ in results}
+    assert all(status == "pass" for status in statuses.values())
+    assert validation_pipeline.g07_exit_passes(results)
+
+
+def test_mf1a_historical_output_dir_refuses_in_repo_and_symlink(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+):
+    repo_root = validation_pipeline._find_repo_root()
+    assert repo_root is not None
+    in_repo = _CORRECTNESS_EVIDENCE_ARTIFACT_ROOT / "correctness_matrix"
+
+    _mf1a_historical_redirect_outputs(tmp_path, monkeypatch)
+    _mf1a_historical_stub_builders(monkeypatch, fail_on_call=True)
+    with pytest.raises(SystemExit) as exc:
+        validation_pipeline.main(["--historical-output-dir", str(in_repo)])
+    assert exc.value.code == 2
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert (
+        captured.err
+        == f"refused: --historical-output-dir resolves inside the repository ({in_repo.resolve()}; repo {repo_root.resolve()})\n"
+    )
+
+    outside = tmp_path / "outside_symlink_parent"
+    outside.mkdir()
+    symlink = outside / "into_repo"
+    symlink.symlink_to(in_repo.resolve())
+    _mf1a_historical_stub_builders(monkeypatch, fail_on_call=True)
+    with pytest.raises(SystemExit) as exc:
+        validation_pipeline.main(["--historical-output-dir", str(symlink)])
+    assert exc.value.code == 2
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert (
+        captured.err
+        == f"refused: --historical-output-dir resolves inside the repository ({symlink.resolve()}; repo {repo_root.resolve()})\n"
+    )
+
+
+def test_mf1a_historical_suite_without_sibling_field_not_written(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    fake_root = _mf1a_historical_redirect_outputs(tmp_path, monkeypatch)
+    _mf1a_historical_stub_builders(monkeypatch)
+    validation_pipeline.run_pipeline()
+
+    for directory in _MF1A_HISTORICAL_ARTIFACT_DIR_NAMES:
+        bundle_path = fake_root / directory / _MF1A_HISTORICAL_BUNDLE_FILENAMES[directory]
+        assert not bundle_path.exists()
+
+    fake_module = SimpleNamespace(
+        SUITE_NAME="correctness_evidence_mf1a_historical_fake_truthy_sibling",
+        ARTIFACT_FILENAME="fake_truthy_sibling_bundle.json",
+        DEFAULT_OUTPUT_DIR=fake_root / "fake_truthy_sibling",
+    )
+    fake_module.DEFAULT_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    patched_registry = validation_pipeline._CASE_SLICE_REGISTRY + (
+        validation_pipeline._CaseSuiteEntry(
+            fake_module,
+            "build_cases",
+            "build_artifact_bundle",
+            1,
+        ),
+    )
+    monkeypatch.setattr(validation_pipeline, "_CASE_SLICE_REGISTRY", patched_registry)
+    fake_module.build_cases = lambda: []
+    fake_module.build_artifact_bundle = lambda _cases: {"status": "pass"}
+    validation_pipeline.run_pipeline()
+    assert not (fake_root / "fake_truthy_sibling" / fake_module.ARTIFACT_FILENAME).exists()
+
+
+def test_mf1a_historical_nonsibling_paths_match_req007():
+    repo_artifact_root = _CORRECTNESS_EVIDENCE_ARTIFACT_ROOT
+    sibling_dirs: set[str] = set()
+    nonsibling_dirs: set[str] = set()
+    for entry in validation_pipeline._CASE_SLICE_REGISTRY:
+        relative = entry.module.DEFAULT_OUTPUT_DIR.relative_to(repo_artifact_root)
+        target = relative.as_posix()
+        if entry.mf1a_sibling is True:
+            sibling_dirs.add(target)
+        else:
+            nonsibling_dirs.add(target)
+    for entry in validation_pipeline._NULLARY_BUNDLE_REGISTRY:
+        relative = entry.module.DEFAULT_OUTPUT_DIR.relative_to(repo_artifact_root)
+        if entry.mf1a_sibling is True:
+            sibling_dirs.add(relative.as_posix())
+        else:
+            nonsibling_dirs.add(relative.as_posix())
+
+    assert sibling_dirs == {"mf1a/q4_baseline"}
+    assert nonsibling_dirs == set(_MF1A_HISTORICAL_ARTIFACT_DIR_NAMES)
+
+
+def test_mf1a_historical_output_dir_writes_outside_repo(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+):
+    fake_root = _mf1a_historical_redirect_outputs(tmp_path, monkeypatch)
+    _mf1a_historical_stub_builders(monkeypatch)
+    historical_dir = tmp_path / "historical_mirror"
+    historical_dir.mkdir()
+
+    stale = historical_dir / "correctness_matrix" / "correctness_matrix_bundle.json"
+    stale.parent.mkdir(parents=True)
+    stale.write_text('{"status": "stale"}', encoding="utf-8")
+
+    exit_code = validation_pipeline.main(["--historical-output-dir", str(historical_dir)])
+    assert exit_code == 0
+
+    outside_lines = [
+        line
+        for line in capsys.readouterr().out.splitlines()
+        if "verified, written outside repo" in line
+    ]
+    assert len(outside_lines) == len(_MF1A_HISTORICAL_ARTIFACT_DIR_NAMES)
+
+    for directory in _MF1A_HISTORICAL_ARTIFACT_DIR_NAMES:
+        bundle_path = (
+            historical_dir / directory / _MF1A_HISTORICAL_BUNDLE_FILENAMES[directory]
+        )
+        assert bundle_path.is_file()
+        assert bundle_path.read_text(encoding="utf-8") != '{"status": "stale"}'
+
+    sibling_path = fake_root / "mf1a" / "q4_baseline" / mf1a.ARTIFACT_FILENAME
+    assert sibling_path.is_file()
+
+    written_files = list(historical_dir.rglob("*.json"))
+    assert len(written_files) == len(_MF1A_HISTORICAL_ARTIFACT_DIR_NAMES)
+    all_files = [path for path in historical_dir.rglob("*") if path.is_file()]
+    assert len(all_files) == len(_MF1A_HISTORICAL_ARTIFACT_DIR_NAMES)
+
+
+@pytest.fixture(autouse=True)
+def _mf1a_historical_review_mutations(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Optional env-gated mutations for Reviewer red evidence (does not edit validation_pipeline.py)."""
+    if os.environ.get("MF1A_MUTATION_A_WRITE_ALL") == "1":
+
+        def _run_pipeline_write_all(*, historical_output_dir: Path | None = None):
+            results: list[tuple[str, str, Path | None]] = []
+            for entry in validation_pipeline._CASE_SLICE_REGISTRY:
+                mod = entry.module
+                cases = getattr(mod, entry.cases_attr)()
+                bundle = getattr(mod, entry.bundle_attr)(cases)
+                output_path = validation_pipeline._write_slice_bundle(mod, bundle)
+                results.append((mod.SUITE_NAME, bundle["status"], output_path))
+            for entry in validation_pipeline._NULLARY_BUNDLE_REGISTRY:
+                mod = entry.module
+                bundle = getattr(mod, entry.bundle_attr)()
+                output_path = validation_pipeline._write_slice_bundle(mod, bundle)
+                results.append((mod.SUITE_NAME, bundle["status"], output_path))
+            return results
+
+        monkeypatch.setattr(validation_pipeline, "run_pipeline", _run_pipeline_write_all)
+
+    if os.environ.get("MF1A_MUTATION_D_NO_REFUSE") == "1":
+        monkeypatch.setattr(
+            validation_pipeline,
+            "_validate_historical_output_dir",
+            lambda raw: Path(raw).expanduser().resolve(strict=False),
+        )

@@ -5,7 +5,7 @@
 > **Upstream:** accepted `INITIAL_REQUIREMENTS.md` v0.3, `PRODUCT_STATEMENT.md` at
 > `ceb469c8`, and `ROADMAP.md` at `1cb3d20c` ·
 > **Traces:** REQ-001…008 · CAP-001, CAP-007 · QA-001, QA-005, QA-008, QA-009 ·
-> **Authorization:** Research Manager, 2026-10-04, Layer 1 only ·
+> **Authorization:** Research Manager, 2026-10-04, Layer 1; Step 4b per ADR-F1A-010 when Architect closes that slice code-ready under ADR-F1A-008 with the four items unchanged ·
 > **Decisions:** `ADRS_EXACTNESS_RECONFIRMATION.md` · **Verdict:** see readiness checklist
 
 ## 1. Purpose and authority
@@ -169,7 +169,7 @@ slice decomposition is created in Layer 1.
 | REQ-002, REQ-006, QA-001 | fitness checks | `conda run -n qgd --no-capture-output pytest tests/partitioning -m "density_matrix and not slow"` | fast pytest | accepted QA-001 predicate passes against the sequential oracle |
 | REQ-003, QA-005 | attribution checks | `conda run -n qgd --no-capture-output pytest tests/partitioning/test_partitioned_channel_native_phase31_hybrid_slice.py -m "not slow"` | fast pytest | all hybrid partitions labelled and witness-consistent; each counted hybrid cell has genuine channel-native execution |
 | REQ-005, QA-009 | closure CI gate | `.github/workflows/ci.yml` job `build-and-test-linux` via the existing `workflow_dispatch` trigger only; local preflight uses `conda run -n qgd --no-capture-output pytest tests/ -x -v --tb=line --ignore=tests/decomposition/test_wide_circuit_optimization.py` | CI plus local pytest | actual CI job and local preflight pass; state-vector default and density opt-in checks pass |
-| REQ-007 | static historical boundary review | `git diff --exit-code 1cb3d20c -- docs/density_matrix_project/archive/phases/phase-3-1 benchmarks/density_matrix/performance_evidence benchmarks/density_matrix/planner_surface/workloads.py tests/partitioning/evidence/test_phase31_counted_matrix_validation.py` plus the same paths under `git status --porcelain --untracked-files=all --` | non-executable repository review | both outputs empty and pinned content identities match; frozen archive and complete transitive 26-case inventory/schema/classification assets unchanged; no timing builder executes |
+| REQ-007 | static historical boundary review | `git diff --exit-code 1cb3d20c -- docs/density_matrix_project/archive/phases/phase-3-1 benchmarks/density_matrix/performance_evidence benchmarks/density_matrix/planner_surface/workloads.py tests/partitioning/evidence/test_phase31_counted_matrix_validation.py benchmarks/density_matrix/artifacts/correctness_evidence/correctness_package/ benchmarks/density_matrix/artifacts/correctness_evidence/output_integrity/ benchmarks/density_matrix/artifacts/correctness_evidence/runtime_classification/ benchmarks/density_matrix/artifacts/correctness_evidence/sequential_correctness/ benchmarks/density_matrix/artifacts/correctness_evidence/external_correctness/ benchmarks/density_matrix/artifacts/correctness_evidence/unsupported_boundary/ benchmarks/density_matrix/artifacts/correctness_evidence/correctness_matrix/ benchmarks/density_matrix/artifacts/correctness_evidence/summary_consistency/` plus the same paths under `git status --porcelain --untracked-files=all --` | non-executable repository review | both outputs empty and pinned content identities match; frozen archive, complete transitive 26-case inventory/schema/classification assets, and the eight historical correctness-evidence bundle directories (`correctness_package_bundle.json`, `output_integrity_bundle.json`, `runtime_classification_bundle.json`, `sequential_correctness_bundle.json`, `external_correctness_bundle.json`, `unsupported_boundary_bundle.json`, `correctness_matrix_bundle.json`, `summary_consistency_bundle.json`) unchanged; no timing builder executes |
 | REQ-008 | spec fitness and doc review | `bash .cursor/skills/spec-driven-development/scripts/specs_check.sh --strict` | spec lint / doc review | zero errors or warnings; current-state descriptions match evidence |
 | Boundary only | external context | `conda run -n qgd --no-capture-output python benchmarks/density_matrix/validate_squander_vs_qiskit.py` | optional Qiskit Aer reference | non-counted context only; does not determine M-F1a status |
 
@@ -187,8 +187,28 @@ slice decomposition is created in Layer 1.
 - **Branch CI does not run automatically:** local `qgd` execution is preflight only; the
   actual `build-and-test-linux` CI job remains a closure gate through the existing
   `workflow_dispatch` trigger only. Trigger-policy changes are out of scope.
-- **Planning turns into delivery:** the readiness verdict remains not-ready until separate
-  authorization opens Step 4a. No Developer or Tester handoff exists in this Layer 1 pass.
+- **Planning turns into delivery:** Step 4b for each slice takes effect when Architect closes
+  that slice's Step 4a code-ready under ADR-F1A-008 and the verdict states the four
+  ADR-F1A-010 items unchanged. A separate authorization does not open Step 4b.
+- **Near-threshold residuals are reported, never gated:** each slice CLOSEOUT tabulates the
+  four QA-001 values for every counted row. A Frobenius, max-abs, or `|Tr(rho) - 1|` value
+  above `1e-11`, or a `lambda_min` below `-1e-13`, is a finding even when the row passes;
+  values above `1e-13` are marked as outside the expected range (Research Manager decision
+  record 2026-10-05 §(b)). Each finding names route, anchor, workload, measure, value, and a
+  cause hypothesis; a `lambda_min` finding also reports the oracle's `lambda_min` from the
+  same `DensityMatrix.eigenvalues()` call as a non-counted diagnostic outside the bundle.
+  Matrix-residual findings are flagged to Research Manager at slice close. No finding changes
+  a pass or fail result, a tolerance, the oracle, or the counted set.
+- **Extension and environment identity are pinned:** every M-F1a bundle records the SHA-256
+  of the loaded `_density_matrix_cpp` extension and the `qgd` environment and dependency
+  versions, and regeneration compares them exactly. No rebuild, reinstall, or environment
+  change happens on the evidence checkout during M-F1a unless an authorized C++/CMake change
+  requires it. Before each counted run and each regeneration, Tester compares `sha256sum`
+  of the loaded `_density_matrix_cpp` `.so` with `extension_identities[0].sha256` from
+  `git show HEAD:benchmarks/density_matrix/artifacts/correctness_evidence/mf1a/q4_baseline/mf1a_q4_baseline_bundle.json`
+  (`05f01747…cc77` at `a2928bf1` is display only; generalize this pin before Slice B) and
+  the recorded versions; a mismatch stops the run and goes to Tech Lead, and a C++-driven
+  rebuild is a scope question for Research Manager.
 
 ## 11. Expected outcome
 

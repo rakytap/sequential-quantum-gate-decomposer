@@ -349,3 +349,13 @@ Before step (d), Tester must satisfy the checklist's pre-CLOSEOUT scientific gat
 **Consequences.** Research Manager authorized this order and this ADR on 2026-10-05 for the q4 baseline cell only. C1 still waits on the Reviewer pre-C1 implementation pass; writing this ADR does not authorize C1 by itself. The checklist owns the pre-CLOSEOUT scientific gate and records completion before step (d).
 
 **Upstream alignment:** REQ-004, REQ-007 · QA-008 · ADR-F1A-004, ADR-F1A-008 · G-09, G-10.
+
+## Continuation ADRs (2026-10-05)
+
+Amendments and ADRs accepted after the q4 tracer close are final text in
+`ADR_AMENDMENTS_EXACTNESS_RECONFIRMATION.md`:
+
+- ADR-F1A-008 Amendment 1 (stage-aware closeout check)
+- ADR-F1A-010 (Step 4b authorization for the remaining M-F1a slices)
+- ADR-F1A-009 Amendment 1 (per-slice two-commit close)
+- ADR-F1A-011 (historical suites verify-only under the M-F1a command)

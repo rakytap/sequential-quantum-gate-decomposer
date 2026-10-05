@@ -7,7 +7,7 @@
 > **Traces:** REQ-001, REQ-002, REQ-004, REQ-005, REQ-006, REQ-007 ·
 > QA-001, QA-008, QA-009 · ADR-F1A-001, ADR-F1A-002, ADR-F1A-004…006 ·
 > **Authorization:** Research Manager G-01 and ADR-F1A-009 authorize Step 4b for the q4
-> baseline cell only; C1 is `a50ae79f`; C2 awaits Reviewer, then Tech Lead · **No push/PR**
+> baseline cell only; C1 is `a50ae79f`; C2 is `a2928bf1` · **No push/PR**
 
 ## 1. Purpose and slice boundary
 
@@ -196,5 +196,5 @@ remain untouched.
 **Planning review closed as code-ready by Architect on 2026-10-05 under ADR-F1A-008, for the
 q4 baseline cell only (`phase2_xxz_hea_q4_continuity` on
 `partitioned_density_descriptor_baseline`).** Step 5 `CLOSEOUT.md` is shipped for that cell.
-Local C2 is pending Reviewer evidence review and then the Tech Lead commit. No waiver or
+C2 is `a2928bf1`. No waiver or
 placeholder was used. The G-07 process-exit aggregate is unchanged.
