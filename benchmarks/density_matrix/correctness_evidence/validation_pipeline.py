@@ -26,6 +26,9 @@ from benchmarks.density_matrix.correctness_evidence import (
     external_correctness_validation as external_correctness,
 )
 from benchmarks.density_matrix.correctness_evidence import (
+    mf1a_q4_baseline_validation as mf1a_q4_baseline,
+)
+from benchmarks.density_matrix.correctness_evidence import (
     output_integrity_validation as output_integrity,
 )
 from benchmarks.density_matrix.correctness_evidence import (
@@ -52,6 +55,7 @@ def _write_slice_bundle(module: Any, bundle: dict) -> Path:
 
 # (module, build_cases_attr, build_bundle_attr)
 _CASE_SLICE_REGISTRY: tuple[tuple[Any, str, str], ...] = (
+    (mf1a_q4_baseline, "build_cases", "build_artifact_bundle"),
     (correctness_matrix, "build_cases", "build_artifact_bundle"),
     (sequential_correctness, "build_cases", "build_artifact_bundle"),
     (external_correctness, "build_cases", "build_artifact_bundle"),
@@ -65,6 +69,36 @@ _NULLARY_BUNDLE_REGISTRY: tuple[tuple[Any, str], ...] = (
     (correctness_package, "build_artifact_bundle"),
     (summary_consistency, "build_artifact_bundle"),
 )
+
+_G07_EXCLUDED_SUITES = frozenset(
+    {
+        external_correctness.SUITE_NAME,
+        output_integrity.SUITE_NAME,
+    }
+)
+
+
+def registered_suite_names() -> tuple[str, ...]:
+    return tuple(
+        [module.SUITE_NAME for module, _, _ in _CASE_SLICE_REGISTRY]
+        + [module.SUITE_NAME for module, _ in _NULLARY_BUNDLE_REGISTRY]
+    )
+
+
+def g07_included_suite_names() -> tuple[str, ...]:
+    return tuple(
+        name for name in registered_suite_names() if name not in _G07_EXCLUDED_SUITES
+    )
+
+
+def g07_exit_passes(results: list[tuple[str, str, Path]]) -> bool:
+    statuses = {suite_name: status for suite_name, status, _ in results}
+    included = g07_included_suite_names()
+    return (
+        set(statuses) == set(registered_suite_names())
+        and mf1a_q4_baseline.SUITE_NAME in statuses
+        and all(statuses.get(name) == "pass" for name in included)
+    )
 
 
 def run_pipeline() -> list[tuple[str, str, Path]]:
@@ -100,7 +134,7 @@ def main(argv: list[str] | None = None) -> int:
     for suite_name, status, output_path in results:
         if not args.quiet:
             print(f"{suite_name}: status={status} path={output_path}")
-    return 0 if all(status == "pass" for _, status, _ in results) else 1
+    return 0 if g07_exit_passes(results) else 1
 
 
 if __name__ == "__main__":

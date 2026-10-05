@@ -1,4 +1,5 @@
 from collections.abc import Callable
+import copy
 from pathlib import Path
 import sys
 
@@ -44,6 +45,10 @@ from benchmarks.density_matrix.correctness_evidence.correctness_bundle_validatio
 )
 from benchmarks.density_matrix.correctness_evidence.summary_consistency_validation import (
     build_artifact_bundle as build_summary_consistency_bundle,
+)
+from benchmarks.density_matrix.correctness_evidence import (
+    mf1a_q4_baseline_validation as mf1a,
+    validation_pipeline,
 )
 from tests.partitioning.evidence.bundle_assertions import (
     assert_correctness_full_package_bundle,
@@ -232,3 +237,169 @@ def test_correctness_evidence_summary_consistency_closes_only_from_counted_suppo
     assert bundle["summary"]["summary_consistency_pass"] is True
     assert bundle["summary"]["main_correctness_claim_completed"] is True
     assert bundle["summary"]["counted_supported_cases"] == 25
+
+
+def _clean_mf1a_provenance() -> dict:
+    return {
+        "implementation_revision": "a" * 40,
+        "clean_start": True,
+        "dirty_paths": [],
+        "command": mf1a.REGENERATION_COMMAND,
+        "environment": {
+            "conda_default_env": "qgd",
+            "conda_prefix": "/tmp/qgd",
+            "python_executable": "/tmp/qgd/bin/python",
+            "python_version": "3.13.0",
+        },
+        "dependencies": {"numpy": "test", "scipy": "test", "squander": "test"},
+        "extension_identities": [
+            {"path": "squander/density_matrix/_density_matrix_cpp.so", "sha256": "b" * 64}
+        ],
+        "input_artifact_identities": [],
+        "provenance_pass": True,
+    }
+
+
+def test_mf1a_q4_baseline_manifest_accepts_only_the_reviewed_cell():
+    assert mf1a.build_manifest() == {
+        "schema_version": mf1a.MANIFEST_SCHEMA_VERSION,
+        "cells": [
+            {
+                "anchor_qbits": 4,
+                "workload": "phase2_xxz_hea_q4_continuity",
+                "route": "partitioned_density_descriptor_baseline",
+                "max_partition_qubits": 2,
+            }
+        ],
+    }
+    with pytest.raises(ValueError, match="exactly one reviewed"):
+        mf1a.validate_manifest_cells([])
+
+
+def test_mf1a_q4_baseline_record_has_complete_provenance_and_claim_boundary():
+    cases = mf1a.build_cases(provenance=_clean_mf1a_provenance())
+    assert len(cases) == 1
+    case = cases[0]
+    assert case["record_schema_version"] == mf1a.RECORD_SCHEMA_VERSION
+    assert case["milestone_counted"] is False
+    assert case["completeness_claim"] is False
+    assert case["provenance"]["provenance_pass"] is True
+    assert case["parameters"] == pytest.approx(
+        [0.05 * index for index in range(1, 19)]
+    )
+    assert "q4 baseline tracer only" in case["claim_boundary"]
+
+
+def test_mf1a_q4_baseline_dirty_pre_run_is_non_counted():
+    provenance = _clean_mf1a_provenance()
+    provenance.update(
+        clean_start=False, dirty_paths=["tests/example.py"], provenance_pass=False
+    )
+    bundle = mf1a.build_artifact_bundle(
+        mf1a.build_cases(provenance=provenance), prior_bundle=None
+    )
+    assert bundle["status"] == "fail"
+    assert bundle["summary"]["first_failure"] == "provenance"
+    assert bundle["cases"][0]["milestone_counted"] is False
+
+
+def test_mf1a_q4_baseline_aer_and_energy_context_are_non_counted():
+    cases = mf1a.build_cases(provenance=_clean_mf1a_provenance())
+    baseline = mf1a.build_artifact_bundle(cases, prior_bundle=None)
+    contextual = mf1a.build_artifact_bundle(
+        cases,
+        prior_bundle=None,
+        non_counted_context={"aer": "fail", "energy": "fail"},
+    )
+    assert contextual["status"] == baseline["status"] == "pass"
+
+
+def test_mf1a_q4_baseline_record_rejects_fused_realization():
+    cases = mf1a.build_cases(provenance=_clean_mf1a_provenance())
+    cases[0]["realization"]["actual_fused_execution"] = True
+    bundle = mf1a.build_artifact_bundle(cases, prior_bundle=None)
+    assert bundle["status"] == "fail"
+    assert bundle["summary"]["first_failure"] == "route_realization"
+
+
+def test_mf1a_q4_baseline_bundle_schema_and_summary():
+    bundle = mf1a.build_artifact_bundle(
+        mf1a.build_cases(provenance=_clean_mf1a_provenance()), prior_bundle=None
+    )
+    assert bundle["schema_version"] == mf1a.BUNDLE_SCHEMA_VERSION
+    assert bundle["suite_name"] == mf1a.SUITE_NAME
+    assert bundle["status"] == "pass"
+    assert bundle["summary"]["qa001_passes"] == 1
+    assert bundle["summary"]["milestone_counted_cases"] == 0
+
+
+def test_mf1a_q4_baseline_regeneration_accepts_frozen_residuals():
+    cases = mf1a.build_cases(provenance=_clean_mf1a_provenance())
+    prior = mf1a.build_artifact_bundle(cases, prior_bundle=None)
+    current = mf1a.build_artifact_bundle(cases, prior_bundle=prior)
+    assert current["status"] == "pass"
+    assert current["regeneration"]["pass"] is True
+
+
+def test_mf1a_q4_baseline_regeneration_rejects_categorical_or_residual_drift():
+    cases = mf1a.build_cases(provenance=_clean_mf1a_provenance())
+    prior = copy.deepcopy(mf1a.build_artifact_bundle(cases, prior_bundle=None))
+    prior["cases"][0]["route"] = "wrong"
+    current = mf1a.build_artifact_bundle(cases, prior_bundle=prior)
+    assert current["status"] == "fail"
+    assert current["regeneration"]["first_mismatch"] == "cases[0].route"
+
+    prior = copy.deepcopy(mf1a.build_artifact_bundle(cases, prior_bundle=None))
+    prior["cases"][0]["qa001"]["frobenius_norm_diff"] += 2e-10
+    current = mf1a.build_artifact_bundle(cases, prior_bundle=prior)
+    assert current["status"] == "fail"
+    assert current["regeneration"]["first_mismatch"].endswith(
+        "frobenius_norm_diff"
+    )
+
+
+def test_mf1a_q4_baseline_exit_aggregate_uses_exact_g07_set():
+    results = [
+        (name, "pass", Path("/tmp") / f"{name}.json")
+        for name in validation_pipeline.registered_suite_names()
+    ]
+    assert validation_pipeline.g07_exit_passes(results)
+    included = set(validation_pipeline.g07_included_suite_names())
+    registered = set(validation_pipeline.registered_suite_names())
+    assert registered - included == {
+        "correctness_evidence_external_correctness",
+        "correctness_evidence_output_integrity",
+    }
+    assert mf1a.SUITE_NAME in included
+
+
+def test_mf1a_q4_baseline_exit_aggregate_requires_sibling_and_included_passes():
+    passing = [
+        (name, "pass", Path("/tmp") / f"{name}.json")
+        for name in validation_pipeline.registered_suite_names()
+    ]
+    assert not validation_pipeline.g07_exit_passes(
+        [item for item in passing if item[0] != mf1a.SUITE_NAME]
+    )
+    assert not validation_pipeline.g07_exit_passes(
+        [
+            (name, "fail" if name == mf1a.SUITE_NAME else status, path)
+            for name, status, path in passing
+        ]
+    )
+    assert validation_pipeline.g07_exit_passes(
+        [
+            (
+                name,
+                "fail"
+                if name
+                in {
+                    "correctness_evidence_external_correctness",
+                    "correctness_evidence_output_integrity",
+                }
+                else status,
+                path,
+            )
+            for name, status, path in passing
+        ]
+    )
