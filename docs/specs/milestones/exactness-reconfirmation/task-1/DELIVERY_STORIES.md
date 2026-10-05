@@ -7,7 +7,7 @@
 > **Traces:** REQ-001, REQ-002, REQ-004, REQ-005, REQ-006, REQ-007 ·
 > QA-001, QA-008, QA-009 ·
 > **Authorization:** Research Manager G-01 and ADR-F1A-009 authorize Step 4b for the q4
-> baseline cell only; local C1 awaits Reviewer clearance · **No push/PR**
+> baseline cell only; C1 is `a50ae79f`; C2 awaits Reviewer, then Tech Lead · **No push/PR**
 
 ## DS-1 — A researcher receives the exact q4 baseline verdict
 

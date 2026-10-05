@@ -1,0 +1,128 @@
+{
+  "cases": [
+    {
+      "anchor_qbits": 4,
+      "claim_boundary": "This is the q4 baseline tracer only; it makes no complete M-F1a, external-protocol, Aer, energy, or frozen-matrix claim.",
+      "completeness_claim": false,
+      "manifest_schema_version": "correctness_evidence_mf1a_q4_baseline_manifest_v1",
+      "milestone_counted": false,
+      "parameters": [
+        0.05,
+        0.1,
+        0.15,
+        0.2,
+        0.25,
+        0.3,
+        0.35,
+        0.39999999999999997,
+        0.44999999999999996,
+        0.49999999999999994,
+        0.5499999999999999,
+        0.6,
+        0.65,
+        0.7,
+        0.75,
+        0.7999999999999999,
+        0.85,
+        0.9
+      ],
+      "planner_setting": {
+        "max_partition_qubits": 2
+      },
+      "provenance": {
+        "clean_start": true,
+        "command": "conda run -n qgd --no-capture-output python benchmarks/density_matrix/correctness_evidence/validation_pipeline.py",
+        "dependencies": {
+          "numpy": "2.3.5",
+          "scipy": "1.16.3",
+          "squander": "1.9.7"
+        },
+        "dirty_paths": [],
+        "environment": {
+          "conda_default_env": "qgd",
+          "conda_prefix": "/home/zkegli/.conda/envs/qgd",
+          "python_executable": "/home/zkegli/.conda/envs/qgd/bin/python",
+          "python_version": "3.13.9"
+        },
+        "extension_identities": [
+          {
+            "path": "squander/density_matrix/_density_matrix_cpp.cpython-313-x86_64-linux-gnu.so",
+            "sha256": "05f01747e986dabba73073c11c9b00fdb326afdd703e59cd5cfe27af6631cc77"
+          }
+        ],
+        "implementation_revision": "a50ae79f636afcd97627424f6460a0e552184345",
+        "input_artifact_identities": [],
+        "provenance_pass": true
+      },
+      "qa001": {
+        "eigensolver_pass": true,
+        "finite_eigenvalues_pass": true,
+        "finite_entries_pass": true,
+        "finite_residuals_pass": true,
+        "first_failure": null,
+        "frobenius_norm_diff": 0.0,
+        "frobenius_norm_diff_pass": true,
+        "lambda_min": -8.000366383372531e-17,
+        "lambda_min_pass": true,
+        "max_abs_diff": 0.0,
+        "max_abs_diff_pass": true,
+        "qa001_pass": true,
+        "trace_abs_deviation": 2.9181576996470275e-17,
+        "trace_abs_deviation_pass": true
+      },
+      "realization": {
+        "actual_fused_execution": false,
+        "exact_output_present": true,
+        "fused_region_classifications": [
+          "supported_but_unfused",
+          "deferred_or_unsupported_candidate",
+          "supported_but_unfused",
+          "supported_but_unfused",
+          "supported_but_unfused",
+          "supported_but_unfused"
+        ],
+        "fused_region_count": 0,
+        "partition_count": 5,
+        "realized_path": "partitioned_density_descriptor_baseline",
+        "requested_path": "partitioned_density_descriptor_baseline"
+      },
+      "record_schema_version": "correctness_evidence_mf1a_q4_baseline_case_v1",
+      "route": "partitioned_density_descriptor_baseline",
+      "seed_policy": "deterministic_workload_no_random_seed",
+      "workload": "phase2_xxz_hea_q4_continuity"
+    }
+  ],
+  "manifest": {
+    "cells": [
+      {
+        "anchor_qbits": 4,
+        "max_partition_qubits": 2,
+        "route": "partitioned_density_descriptor_baseline",
+        "workload": "phase2_xxz_hea_q4_continuity"
+      }
+    ],
+    "schema_version": "correctness_evidence_mf1a_q4_baseline_manifest_v1"
+  },
+  "non_counted_context": {},
+  "regeneration": {
+    "first_mismatch": null,
+    "pass": true,
+    "prior_present": false
+  },
+  "schema_version": "correctness_evidence_mf1a_q4_baseline_bundle_v1",
+  "status": "pass",
+  "suite_name": "correctness_evidence_mf1a_q4_baseline_bundle_v1",
+  "summary": {
+    "completeness_claim": false,
+    "first_failure": null,
+    "milestone_counted_cases": 0,
+    "qa001_passes": 1,
+    "total_cases": 1
+  },
+  "tolerances": {
+    "frobenius_norm_diff_max": 1e-10,
+    "lambda_min_floor": -1e-12,
+    "max_abs_diff_max": 1e-10,
+    "trace_abs_deviation_max": 1e-10
+  }
+}

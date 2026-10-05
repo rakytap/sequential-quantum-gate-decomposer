@@ -8,7 +8,7 @@
 > **Stop rule:** route/oracle disagreement is reported through planning handback; never
 > change the oracle, predicate, workload, parameters, planner setting, or denominator ·
 > **Authorization:** Research Manager G-01 and ADR-F1A-009 authorize Step 4b for the q4
-> baseline cell only; local C1 awaits Reviewer clearance · **No push/PR**
+> baseline cell only; C1 is `a50ae79f`; C2 awaits Reviewer, then Tech Lead · **No push/PR**
 
 ## ET-1 — Prove the q4 baseline output under the exact QA-001 predicate
 
@@ -54,6 +54,10 @@
 - `conda run -n qgd --no-capture-output pytest tests/partitioning/test_partitioned_runtime.py -m "density_matrix and not slow" -k "mf1a_q4_baseline or mf1a_qa001" -v`
 - QA-001 fitness evidence for REQ-002 and REQ-006.
 
+**Counted coverage**
+- `CLOSEOUT.md` records the counted q4 cell passing QA-001: Frobenius, max-abs, and
+  `|Tr-1|` at most `1e-10`, and `lambda_min` at or above the floor `-1e-12`, all finite.
+
 **Risks / rollback**
 - Risk: an older validity helper silently adds Hermiticity or a different eigenvalue floor.
 - Mitigation: negative tests and a single predicate source forbid older helper semantics.
@@ -98,6 +102,10 @@
 **Evidence produced**
 - `conda run -n qgd --no-capture-output pytest tests/partitioning/evidence/test_correctness_evidence.py -o addopts="" -k mf1a_q4_baseline -v`
 - Manifest/provenance evidence for REQ-001, REQ-004, REQ-006, and QA-008.
+
+**Counted coverage**
+- `CLOSEOUT.md` records the reviewed baseline route, partition count 5, no fused region,
+  clean-start provenance at C1 `a50ae79f`, and `completeness_claim` false.
 
 **Risks / rollback**
 - Risk: a passing tracer is mistaken for a complete milestone.
@@ -169,6 +177,23 @@
 - Rollback: remove only the tracer registration, sibling bundle behavior, tests, and
   generated tracer artifact.
 
+## Step-8 regeneration decision
+
+Tech Lead decision, option (i): the regeneration comparator stays unchanged. It requires
+`provenance.implementation_revision` to equal the prior bundle's revision, so regenerating
+at C2 differs in that field and the G-07 exit will be 1.
+
+Step-8 regeneration at C2 (comparator unchanged) is accepted when:
+
+- the q4 QA-001 metrics agree with the committed bundle within 1e-10 (Frobenius, max-abs, |Tr-1|), with lambda_min >= -1e-12;
+- the route fields are identical;
+- per-case `qa001.qa001_pass` and `provenance.provenance_pass` are true, and clean_start is true at C2;
+- the other eight suites keep status=pass;
+- every other field is identical apart from `cases[0].provenance.implementation_revision` and the fields that follow from that expected mismatch: `status` fail, `summary.first_failure` regeneration, `regeneration.prior_present` true, `regeneration.pass` false, `regeneration.first_mismatch` `cases[0].provenance.implementation_revision`. The G-07 exit 1 is therefore expected.
+
+Tester reports a field-level diff.
+Changing the comparator is a possible later framework item, not part of this slice.
+
 ## ET-4 — Prove non-interference and historical immutability
 
 **Implements delivery story**
@@ -226,9 +251,6 @@ slice implements them.
 
 **Planning review closed as code-ready by Architect on 2026-10-05 under ADR-F1A-008, for the
 q4 baseline cell only (`phase2_xxz_hea_q4_continuity` on
-`partitioned_density_descriptor_baseline`). Strict `SLICE_MISSING_CLOSEOUT` is recorded as
-expected until Step 4b. No waiver, no placeholder.** Every task has an owning story,
-objective done criteria, named red-first tests in existing test surfaces, evidence lanes,
-risks, rollback, and the closed G-07 exit aggregate. This verdict records code-ready planning
-only; G-01 governs the separate q4-only implementation authorization. No `CLOSEOUT.md`
-exists before delivery.
+`partitioned_density_descriptor_baseline`).** Step 5 `CLOSEOUT.md` is shipped for that cell.
+Local C2 is pending Reviewer evidence review and then the Tech Lead commit. No waiver or
+placeholder was used. The G-07 exit aggregate is unchanged.

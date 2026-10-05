@@ -1,6 +1,6 @@
 # Pre-implementation completion checklist — M-F1a `exactness-reconfirmation`
-> **Status:** Layer 1 v0.1 · **Verdict:** task-1 code-ready for the q4 baseline cell only;
-> milestone remains open ·
+> **Status:** Layer 1 v0.1 · **Verdict:** task-1 code-ready; Step 5 CLOSEOUT shipped for
+> the q4 tracer cell; milestone remains open; local C2 pending Reviewer then Tech Lead ·
 > **Milestone:** M-F1a `exactness-reconfirmation` ·
 > **Owner skill:** `spec-driven-development` Steps 2–3 ·
 > **Inputs:** accepted `INITIAL_REQUIREMENTS.md` v0.3,
@@ -8,7 +8,8 @@
 > `ADRS_EXACTNESS_RECONFIRMATION.md` · **Traces:** REQ-001…008 ·
 > **Authorization:** Research Manager, 2026-10-05, Step 4b and Developer/Tester handoff for
 > the q4 baseline cell only, effective after the Architect code-ready re-close now recorded ·
-> **Boundary:** no other route, anchor, workload, slice, closeout, or delivery is authorized
+> **Boundary:** q4 tracer `CLOSEOUT.md` is written; no other route, anchor, workload, or
+> slice is authorized, and C2 is not committed
 
 ## 1. Readiness rule
 
@@ -60,18 +61,19 @@ Even after authorization, implementation may not begin unless:
 | G-03 | Existing evidence lacks complete route-anchor coverage and M-F1a provenance | future slice delivery against goals G1–G5 | future implementation evidence | open — implementation outcome |
 | G-04 | CI does not trigger automatically on this feature branch | ADR-F1A-006 requires local preflight and the actual Linux CI job through the existing `workflow_dispatch` trigger only at closure; trigger-policy changes remain out of scope | future closeout | closed as gate definition |
 | G-05 | Current-state docs do not yet describe M-F1a | ADR-F1A-007 defers truthful updates until milestone close | future closeout | closed as timing decision |
-| G-06 | Normal and strict checks for the current tree with the q4 slice draft | commands in §6 below | SDD planning role | closed as run: normal 0 errors/1 expected closeout warning; strict 1 closeout error; traceability clean |
+| G-06 | Normal and strict checks after the real q4 closeout | commands in §6 below | SDD planning role | closed as run: normal 0 errors/0 warnings; strict 0 errors/0 warnings; no `SLICE_MISSING_CLOSEOUT`; traceability clean |
 | G-07 | Process-exit aggregate adds the required sibling, excludes exactly external correctness and the whole output-integrity suite, retains every other registered suite, preserves excluded statuses, and fails on missing/failing sibling or included suite | Architect's 2026-10-04 exit contract written consistently into the mini-spec, pipeline evidence row, DS-3, and ET-3 | Architect | **closed as slice contract; does not make code-ready** |
-| G-08 | Strict `SLICE_MISSING_CLOSEOUT` is expected until Step 4b and remains recorded with no waiver and no placeholder | ADR-F1A-008 defines the planning-stage code-ready gate and the post-Step-4b strict-clean slice-close gate | Research Manager / SDD planning authority | **closed as gate definition by ADR-F1A-008** |
-| G-09 | Two-commit slice-close order: Reviewer implementation review → local C1 without artifact or closeout → counted clean-start run at C1 → real closeout and clean spec checks → Reviewer evidence review → local C2 → clean-C2 regeneration with outputs restored | ADR-F1A-009; accepted by Research Manager on 2026-10-05 for the q4 baseline cell only | Research Manager / Reviewer | **closed — accepted sequence** |
-| G-10 | Pre-CLOSEOUT scientific independence gate: Tester confirms in writing that oracle and cell are independent, names each side's code paths and objects, shows the oracle is not the cell's own output read back, and explains why agreement is bitwise; if independence fails, stop before `CLOSEOUT.md` and do not create C2; the real closeout must state the bitwise agreement and reason | Tester written confirmation recorded before ADR-F1A-009 step (d) | Tester / Reviewer | **open — blocks CLOSEOUT and C2** |
+| G-08 | Real q4 `CLOSEOUT.md` exists and strict `SLICE_MISSING_CLOSEOUT` is absent, with no waiver and no placeholder | `task-1/CLOSEOUT.md` status `shipped`; normal and strict spec checks fully clean | SDD planning authority | **closed — strict clean after CLOSEOUT** |
+| G-09 | Two-commit slice-close order through the counted run and real closeout; C2 is not committed | ADR-F1A-009 steps (a)–(d) are done for the q4 docs and counted run; Reviewer evidence review and the Tech Lead C2 commit remain | Research Manager / Reviewer / Tech Lead | **steps (a)–(d) done; C2 pending** |
+| G-10 | Pre-CLOSEOUT scientific independence gate | Tester written independence confirmed on the dirty run and the counted run; `task-1/CLOSEOUT.md` states the bitwise agreement and the shared-kernel limitation | Tester / Reviewer | **closed** |
 
 No requirements-level or cross-work-package design question remains open. G-02 records the
-Architect's q4-only code-ready re-close. G-01 is now effective for Step 4b and the
-Developer/Tester handoff on that cell only. G-08 remains closed as the gate definition.
-G-09 fixes the accepted two-commit close sequence; G-10 is the mandatory scientific gate
-before the real closeout. G-03 remains open as the implementation outcome; it authorizes no
-other slice or scope.
+Architect's q4-only code-ready re-close. G-01 is effective for Step 4b and the
+Developer/Tester handoff on that cell only. G-08 is closed because the real closeout exists
+and strict lint no longer reports a missing closeout. G-09 records steps (a)–(d) as done and
+leaves C2 for Reviewer and then Tech Lead. G-10 is closed by the Tester confirmation recorded
+in the closeout. G-03 remains open as the implementation outcome; it authorizes no other
+slice or scope.
 
 ## 4. Decision closures and trade-offs
 
@@ -93,7 +95,7 @@ other slice or scope.
 
 | Readiness concern | Layer 1 disposition |
 |-------------------|---------------------|
-| Slice tracer | task-1 is code-ready and Step 4b-authorized only for `phase2_xxz_hea_q4_continuity` on `partitioned_density_descriptor_baseline`; local C1 still awaits Reviewer clearance under ADR-F1A-009 |
+| Slice tracer | task-1 is code-ready and Step 4b-authorized only for `phase2_xxz_hea_q4_continuity` on `partitioned_density_descriptor_baseline`; C1 is `a50ae79f`; C2 awaits Reviewer, then Tech Lead |
 | Required boundary decisions | ADR-F1A-001…009 accepted |
 | Evidence lanes | detailed plan §9 |
 | Current-state doc impact | both existing docs update at milestone close |
@@ -103,8 +105,8 @@ other slice or scope.
 | Operational failure | counted disagreement fails and freezes downstream claims |
 
 This table records the q4-only Step 4b and Developer/Tester authorization from G-01 and
-ADR-F1A-009. It authorizes no other route, anchor, workload, `task-<n>/`, push, or pull
-request; local C1 remains blocked until Reviewer clears the remaining pre-C1 blockers.
+ADR-F1A-009. C1 is `a50ae79f`. It authorizes no other route, anchor, workload, `task-<n>/`,
+push, or pull request. C2 awaits Reviewer, then Tech Lead.
 
 ## 6. Verification commands
 
@@ -132,7 +134,7 @@ Step 4b and slice close follow ADR-F1A-009:
    normal and `--strict` checks and traceability must then be fully clean.
 6. **(e)** Reviewer completes evidence review.
 7. **(f)** After that pass, create local evidence commit C2.
-8. **(g)** Regenerate from clean C2, then restore the generated outputs and do not commit them.
+8. **(g)** Regenerate from clean C2 under the Tech Lead step-8 decision in `task-1/CLOSEOUT.md`: the comparator stays unchanged, a revision-only mismatch exits 1 and is expected, Tester reports a field-level diff, then restore the generated outputs and do not commit them.
 
 ## 7. Adversarial critique and disposition
 
@@ -145,7 +147,7 @@ Step 4b and slice close follow ADR-F1A-009:
 | Reproducibility gap | Existing metadata does not pin revision, command, denominator, inputs, or clean-start state | ADR-F1A-004 freezes complete provenance and makes a dirty pre-run non-counted or failed |
 | Historical-boundary gap | A tracked diff alone misses untracked archive additions; an all-evidence command would execute timing suites | detailed plan §9 and ADR-F1A-005 combine tracked/untracked archive review with targeted correctness regressions only |
 | Non-interference gap | A local run cannot replace the clean CI environment | ADR-F1A-006 keeps the actual Linux CI job as closure gate and local `qgd` execution as preflight |
-| Authorization drift | Accepted v0.3 predates the later planning authorizations | plan/checklist record Layer 1, q4-only Step 4a, and q4 baseline Step 4b authorization; local C1 remains blocked pending Reviewer, and every other cell remains unauthorized |
+| Authorization drift | Accepted v0.3 predates the later planning authorizations | plan/checklist record Layer 1, q4-only Step 4a, and q4 baseline Step 4b authorization; C1 is recorded and C2 remains pending Reviewer then Tech Lead; every other cell remains unauthorized |
 | Scope pressure | Aer, energy, timing, speedup, new channels, and later milestones could enter through existing rows | Scope §2 and ADR-F1A-002/-004/-005 keep them non-counted, historical, or out |
 | Documentation timing | Planning could make current-state docs describe unshipped behavior | ADR-F1A-007 defers updates until executable evidence passes |
 
@@ -153,13 +155,9 @@ Every finding is tightened into a contract or recorded boundary; none is silentl
 
 ## 8. Verdict
 
-**Planning review closed as code-ready by Architect on 2026-10-05 under ADR-F1A-008, for
-task-1's q4 baseline cell only.** The milestone remains open. G-01 is effective only for
-`phase2_xxz_hea_q4_continuity` on `partitioned_density_descriptor_baseline`; G-03 remains
-open as the implementation outcome; G-08 remains closed as the gate definition. G-09 fixes
-the two-commit slice close: C1 follows Reviewer implementation review, the counted run starts
-clean at C1, the real closeout follows that run and G-10's scientific confirmation, and C2
-follows Reviewer evidence review. Clean-C2 regeneration restores outputs without committing
-them. Strict `SLICE_MISSING_CLOSEOUT` remains expected until the real closeout, recorded with
-no waiver and no placeholder. No other route, anchor, workload, slice, or milestone scope is
-code-ready.
+**Planning review remains closed as code-ready by Architect on 2026-10-05 under ADR-F1A-008,
+for task-1's q4 baseline cell only. Step 5 `CLOSEOUT.md` is written and shipped for that
+cell.** The milestone remains open. G-03 remains open. G-08 is closed because strict lint is
+fully clean after the real closeout, with no waiver. G-10 is closed. G-09 steps (a)–(d) are
+done; local C2 is pending Reviewer evidence review and then the Tech Lead commit. No other
+route, anchor, workload, slice, or milestone scope is authorized.
