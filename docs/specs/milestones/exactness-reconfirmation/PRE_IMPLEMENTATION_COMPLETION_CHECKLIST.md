@@ -1,6 +1,8 @@
 # Pre-implementation completion checklist — M-F1a `exactness-reconfirmation`
 > **Status:** Layer 1 v0.1 · **Verdict:** task-1 shipped at C2 `a2928bf1`; task-2 Step 4a
-> closed code-ready on 2026-10-05 under ADR-F1A-008; milestone remains open ·
+> closed code-ready on 2026-10-05 under ADR-F1A-008, Slice A C2 `2a2f8c137`; task-3 (Slice B)
+> Step 4a closed code-ready on 2026-10-05 under ADR-F1A-008; Step 4b under ADR-F1A-010;
+> milestone remains open ·
 > **Milestone:** M-F1a `exactness-reconfirmation` ·
 > **Owner skill:** `spec-driven-development` Steps 2–3 ·
 > **Inputs:** accepted `INITIAL_REQUIREMENTS.md` v0.3,
@@ -9,12 +11,14 @@
 > **Authorization:** Research Manager, 2026-10-05, Step 4b and Developer/Tester handoff for
 > the q4 baseline cell only, effective after the Architect code-ready re-close now recorded ·
 > **Boundary:** q4 tracer `CLOSEOUT.md` is shipped and C2 is `a2928bf1`; task-2 Step 4a
-> is closed code-ready; Step 4b handoff is Tech Lead under ADR-F1A-010
+> is closed code-ready; task-3 Step 4a is closed code-ready; Step 4b handoff is Tech Lead
+> under ADR-F1A-010 for Slice B (task-3)
 
 ## 1. Readiness rule
 
-Task-1 is shipped for the q4 baseline cell. Task-2 Step 4a is open as planning and is not
-code-ready. Every later slice's Step 4b waits on ADR-F1A-010. The milestone remains open.
+Task-1 is shipped for the q4 baseline cell. Task-2 Step 4a closed code-ready on 2026-10-05
+under ADR-F1A-008. Task-3 (Slice B) Step 4a closed code-ready on 2026-10-05 under ADR-F1A-008;
+its Step 4b is under ADR-F1A-010. The milestone remains open.
 
 Even after authorization, implementation may not begin unless:
 
@@ -61,14 +65,14 @@ Even after authorization, implementation may not begin unless:
 | G-05 | Current-state docs do not yet describe M-F1a | ADR-F1A-007 defers truthful updates until milestone close | future closeout | closed as timing decision |
 | G-06 | Normal and strict checks after the real q4 closeout | commands in §6 below | SDD planning role | closed as run: normal 0 errors/0 warnings; strict 0 errors/0 warnings; no `SLICE_MISSING_CLOSEOUT`; traceability clean |
 | G-07 | Process-exit aggregate adds the required sibling, excludes exactly external correctness and the whole output-integrity suite, retains every other registered suite, preserves excluded statuses, and fails on missing/failing sibling or included suite | Architect's 2026-10-04 exit contract written consistently into the mini-spec, pipeline evidence row, DS-3, and ET-3 | Architect | **closed as slice contract; does not make code-ready** |
-| G-08 | Real q4 `CLOSEOUT.md` exists; task-2 `CLOSEOUT.md` written at step (d) (ET-A6; not committed) so `SLICE_MISSING_CLOSEOUT` clears for task-2 once present | `task-1/CLOSEOUT.md` status `shipped`; `task-2/CLOSEOUT.md` at step (d) | SDD planning authority | **q4 closed; Slice A closeout present; C2 pending Reviewer** |
-| G-09 | Two-commit close per slice (ADR-F1A-009, Amendment 1) | q4 tracer: C1 `a50ae79f`, C2 `a2928bf1`; Slice A (task-2): C1 `92e95f54` (parent `5a5168fd`); C2 pending Reviewer then Tech Lead. The q4 step-(g) result ("6 differences, 0 unexpected") exists only in the Tester's off-repo observation and is unverified | Research Manager / Reviewer / Tech Lead | **q4 closed; Slice A C1 recorded; C2 pending Reviewer** |
+| G-08 | Real q4 `CLOSEOUT.md` exists; task-2 `CLOSEOUT.md` written at step (d) and committed in Slice A C2 `2a2f8c137`, so `SLICE_MISSING_CLOSEOUT` is clear for task-2 | `task-1/CLOSEOUT.md` status `shipped`; `task-2/CLOSEOUT.md` at Slice A C2 `2a2f8c137` | SDD planning authority | **q4 closed; Slice A closeout present at C2 `2a2f8c137`** |
+| G-09 | Two-commit close per slice (ADR-F1A-009, Amendment 1) | q4 tracer: C1 `a50ae79f`, C2 `a2928bf1`; Slice A (task-2): C1 `92e95f54` (parent `5a5168fd`); C2 `2a2f8c137`. The q4 step-(g) result ("6 differences, 0 unexpected") exists only in the Tester's off-repo observation and is unverified | Research Manager / Reviewer / Tech Lead | **q4 closed; Slice A C1 `92e95f54` and C2 `2a2f8c137` recorded** |
 | G-10 | Pre-CLOSEOUT scientific independence gate | Tester written independence confirmed on the dirty run and the counted run; `task-1/CLOSEOUT.md` states the bitwise agreement and the shared-kernel limitation | Tester / Reviewer | **closed** |
 
 No requirements-level or cross-work-package design question remains open. G-02 records the
 Architect's q4-only code-ready re-close. G-01 retains the q4 authorization as history and cites
 ADR-F1A-010 for Step 4b on the remaining M-F1a inventory: each slice's handoff follows that
-slice's Step 4a code-ready close with the four ADR-F1A-010 items unchanged. G-08 stays closed for the q4 closeout; task-2 `CLOSEOUT.md` is written at step (d) (uncommitted), so `SLICE_MISSING_CLOSEOUT` clears for that slice; C2 is pending Reviewer then Tech Lead. G-09 records q4 C1 `a50ae79f` and C2 `a2928bf1`, Slice A C1 `92e95f54` (parent `5a5168fd`), and the per-slice rule stays in force. G-10 is closed by the Tester confirmation recorded
+slice's Step 4a code-ready close with the four ADR-F1A-010 items unchanged. G-08 stays closed for the q4 closeout; task-2 `CLOSEOUT.md` is written at step (d) and committed in Slice A C2 `2a2f8c137`, so `SLICE_MISSING_CLOSEOUT` is clear for that slice. G-09 records q4 C1 `a50ae79f` and C2 `a2928bf1`, Slice A C1 `92e95f54` (parent `5a5168fd`) and C2 `2a2f8c137`, and the per-slice rule stays in force. G-10 is closed by the Tester confirmation recorded
 in the closeout. G-03 remains open as the implementation outcome; it authorizes no other
 slice or scope.
 
@@ -92,7 +96,7 @@ slice or scope.
 
 | Readiness concern | Layer 1 disposition |
 |-------------------|---------------------|
-| Slice tracer | task-1 shipped for `phase2_xxz_hea_q4_continuity` on `partitioned_density_descriptor_baseline`; C1 `a50ae79f`; C2 `a2928bf1`; task-2 Step 4a closed code-ready on 2026-10-05 under ADR-F1A-008 |
+| Slice tracer | task-1 shipped for `phase2_xxz_hea_q4_continuity` on `partitioned_density_descriptor_baseline`; C1 `a50ae79f`; C2 `a2928bf1`; task-2 Step 4a closed code-ready on 2026-10-05 under ADR-F1A-008; task-3 (Slice B) Step 4a closed code-ready on 2026-10-05 under ADR-F1A-008 |
 | Required boundary decisions | ADR-F1A-001…011 accepted (008 Amend1, 009 Amend1, 010, and 011 in `ADR_AMENDMENTS_EXACTNESS_RECONFIRMATION.md`) |
 | Evidence lanes | detailed plan §9 |
 | Current-state doc impact | both existing docs update at milestone close |
@@ -136,7 +140,7 @@ Step 4b and slice close follow ADR-F1A-009:
    normal and `--strict` checks and traceability must then be fully clean.
 6. **(e)** Reviewer completes evidence review.
 7. **(f)** After that pass, create local evidence commit C2.
-8. **(g)** Regenerate from clean C2 under the Tech Lead step-8 decision in `task-1/CLOSEOUT.md`: the comparator stays unchanged, a revision-only mismatch exits 1 and is expected, Tester reports a field-level diff, then restore the generated outputs and do not commit them.
+8. **(g)** Regenerate from clean C2 under ADR-F1A-009 Amendment 1. When the only case-field difference is `cases[0].provenance.implementation_revision`, the command exits 0, `status` is pass, and `regeneration.pass` is true. Tester reports the field-level diff, restores the generated outputs, and does not commit them. Task-1 step-8 option (i) text stays the historical record of that slice.
 
 ## 7. Adversarial critique and disposition
 
@@ -161,7 +165,8 @@ Every finding is tightened into a contract or recorded boundary; none is silentl
 for task-1's q4 baseline cell only. Step 5 `CLOSEOUT.md` is written and shipped for that
 cell, and C2 is `a2928bf1`.** The milestone remains open. G-03 remains open. G-08 is closed
 for that q4 closeout. Task-2 Step 4a closed code-ready on 2026-10-05 under ADR-F1A-008.
-Task-2 `CLOSEOUT.md` is written at step (d) (ET-A6; not committed); C2 is pending Reviewer
-then Tech Lead. G-10 is closed. G-09 records the q4 two-commit close as done, Slice A C1
-`92e95f54`, and keeps the per-slice rule in force. Step 4b handoff is Tech Lead under
-ADR-F1A-010.
+Task-2 `CLOSEOUT.md` is written at step (d) and committed in Slice A C2 `2a2f8c137`.
+Task-3 (Slice B) Step 4a closed code-ready on 2026-10-05 under ADR-F1A-008; Step 4b under
+ADR-F1A-010. G-10 is closed. G-09 records the q4 two-commit close as done, Slice A C1
+`92e95f54` and C2 `2a2f8c137`, and keeps the per-slice rule in force. Step 4b handoff is
+Tech Lead under ADR-F1A-010.

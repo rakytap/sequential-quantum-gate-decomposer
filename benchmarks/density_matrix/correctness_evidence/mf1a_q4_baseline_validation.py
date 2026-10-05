@@ -61,6 +61,27 @@ _QA001_REGENERATION_TOLERANCES = {
     "trace_abs_deviation": 1e-10,
     "lambda_min": 1e-12,
 }
+Q4_REGENERATION_ALLOWLIST = (
+    "cases[0].provenance.implementation_revision",
+)
+
+
+def _is_full_git_revision(value: Any) -> bool:
+    return (
+        isinstance(value, str)
+        and len(value) == 40
+        and all(character in "0123456789abcdef" for character in value)
+    )
+
+
+def _allowlisted_revision_difference(path: str, current: Any, prior: Any) -> bool:
+    return (
+        len(Q4_REGENERATION_ALLOWLIST) == 1
+        and path == Q4_REGENERATION_ALLOWLIST[0]
+        and _is_full_git_revision(current)
+        and _is_full_git_revision(prior)
+        and current != prior
+    )
 
 
 def _density_array(value: DensityMatrix | np.ndarray) -> np.ndarray:
@@ -382,13 +403,16 @@ def _regeneration_result(
         "dependencies",
         "provenance_pass",
     ):
-        if current_case["provenance"].get(key) != prior_case.get("provenance", {}).get(
-            key
-        ):
+        path = f"cases[0].provenance.{key}"
+        current_value = current_case["provenance"].get(key)
+        prior_value = prior_case.get("provenance", {}).get(key)
+        if _allowlisted_revision_difference(path, current_value, prior_value):
+            continue
+        if current_value != prior_value:
             return {
                 "prior_present": True,
                 "pass": False,
-                "first_mismatch": f"cases[0].provenance.{key}",
+                "first_mismatch": path,
             }
     current_qa001_categorical = {
         key: value

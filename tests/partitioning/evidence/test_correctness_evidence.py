@@ -361,6 +361,331 @@ def test_mf1a_q4_baseline_regeneration_rejects_categorical_or_residual_drift():
     )
 
 
+@pytest.fixture(scope="module")
+def mf1a_q4_baseline_regeneration_cases():
+    return mf1a.build_cases(provenance=_clean_mf1a_provenance())
+
+
+def _mf1a_case_field_diff_paths(
+    left: object, right: object, prefix: str = "cases[0]"
+) -> list[str]:
+    if isinstance(left, dict) and isinstance(right, dict):
+        paths: list[str] = []
+        for key in sorted(set(left) | set(right)):
+            child_prefix = f"{prefix}.{key}"
+            if key not in left or key not in right:
+                paths.append(child_prefix)
+            else:
+                paths.extend(
+                    _mf1a_case_field_diff_paths(left[key], right[key], child_prefix)
+                )
+        return paths
+    if isinstance(left, list) and isinstance(right, list):
+        if len(left) != len(right):
+            return [prefix]
+        paths: list[str] = []
+        for index, (left_item, right_item) in enumerate(zip(left, right)):
+            paths.extend(
+                _mf1a_case_field_diff_paths(
+                    left_item, right_item, f"{prefix}[{index}]"
+                )
+            )
+        return paths
+    if left != right:
+        return [prefix]
+    return []
+
+
+def test_mf1a_q4_baseline_regeneration_allowlist_is_length_one():
+    assert mf1a.Q4_REGENERATION_ALLOWLIST == (
+        "cases[0].provenance.implementation_revision",
+    )
+    assert len(mf1a.Q4_REGENERATION_ALLOWLIST) == 1
+    assert "cases[*].provenance.implementation_revision" not in mf1a.Q4_REGENERATION_ALLOWLIST
+    assert mf1a.BUNDLE_SCHEMA_VERSION == (
+        "correctness_evidence_mf1a_q4_baseline_bundle_v1"
+    )
+    assert mf1a.RECORD_SCHEMA_VERSION == (
+        "correctness_evidence_mf1a_q4_baseline_case_v1"
+    )
+    assert mf1a.MANIFEST_SCHEMA_VERSION == (
+        "correctness_evidence_mf1a_q4_baseline_manifest_v1"
+    )
+    assert set(mf1a._QA001_REGENERATION_TOLERANCES) == {
+        "frobenius_norm_diff",
+        "max_abs_diff",
+        "trace_abs_deviation",
+        "lambda_min",
+    }
+    assert mf1a._QA001_REGENERATION_TOLERANCES == {
+        "frobenius_norm_diff": 1e-10,
+        "max_abs_diff": 1e-10,
+        "trace_abs_deviation": 1e-10,
+        "lambda_min": 1e-12,
+    }
+
+
+def test_mf1a_q4_baseline_regeneration_passes_on_revision_only(
+    mf1a_q4_baseline_regeneration_cases,
+):
+    prior_cases = copy.deepcopy(mf1a_q4_baseline_regeneration_cases)
+    prior = mf1a.build_artifact_bundle(prior_cases, prior_bundle=None)
+    current_cases = copy.deepcopy(mf1a_q4_baseline_regeneration_cases)
+    current_cases[0]["provenance"]["implementation_revision"] = "c" * 40
+    current = mf1a.build_artifact_bundle(current_cases, prior_bundle=prior)
+    assert current["status"] == "pass"
+    assert current["regeneration"]["pass"] is True
+    assert current["regeneration"]["first_mismatch"] is None
+    assert current["regeneration"]["prior_present"] is True
+    assert current["summary"]["first_failure"] is None
+    assert set(current["regeneration"]) == {"prior_present", "pass", "first_mismatch"}
+    assert current["schema_version"] == prior["schema_version"]
+    case_diff = _mf1a_case_field_diff_paths(
+        prior["cases"][0], current["cases"][0]
+    )
+    assert case_diff == ["cases[0].provenance.implementation_revision"]
+
+
+def test_mf1a_q4_baseline_regeneration_fails_on_revision_plus_second_field(
+    mf1a_q4_baseline_regeneration_cases,
+):
+    prior_cases = copy.deepcopy(mf1a_q4_baseline_regeneration_cases)
+    prior = mf1a.build_artifact_bundle(prior_cases, prior_bundle=None)
+
+    current_cases = copy.deepcopy(mf1a_q4_baseline_regeneration_cases)
+    current_cases[0]["provenance"]["implementation_revision"] = "c" * 40
+    current_cases[0]["seed_policy"] = "changed"
+    bundle = mf1a.build_artifact_bundle(current_cases, prior_bundle=prior)
+    assert bundle["regeneration"]["pass"] is False
+    assert bundle["regeneration"]["first_mismatch"] == "cases[0].seed_policy"
+    assert bundle["summary"]["first_failure"] == "regeneration"
+
+    current_cases = copy.deepcopy(mf1a_q4_baseline_regeneration_cases)
+    current_cases[0]["provenance"]["implementation_revision"] = "c" * 40
+    current_cases[0]["provenance"]["clean_start"] = False
+    bundle = mf1a.build_artifact_bundle(current_cases, prior_bundle=prior)
+    assert bundle["regeneration"]["pass"] is False
+    assert bundle["regeneration"]["first_mismatch"] == "cases[0].provenance.clean_start"
+    assert bundle["summary"]["first_failure"] == "regeneration"
+
+    current_cases = copy.deepcopy(mf1a_q4_baseline_regeneration_cases)
+    current_cases[0]["provenance"]["implementation_revision"] = "c" * 40
+    prior_mut = copy.deepcopy(prior)
+    prior_mut["cases"][0]["route"] = "wrong"
+    bundle = mf1a.build_artifact_bundle(current_cases, prior_bundle=prior_mut)
+    assert bundle["regeneration"]["pass"] is False
+    assert bundle["regeneration"]["first_mismatch"] == "cases[0].route"
+    assert bundle["summary"]["first_failure"] == "regeneration"
+
+    current_cases = copy.deepcopy(mf1a_q4_baseline_regeneration_cases)
+    current_cases[0]["provenance"]["implementation_revision"] = "c" * 40
+    current_cases[0]["realization"]["actual_fused_execution"] = True
+    bundle = mf1a.build_artifact_bundle(current_cases, prior_bundle=prior)
+    assert bundle["status"] == "fail"
+    assert bundle["regeneration"]["first_mismatch"] == "cases[0].realization"
+    assert bundle["summary"]["first_failure"] == "route_realization"
+
+
+def test_mf1a_q4_baseline_regeneration_fails_on_extension_sha256(
+    mf1a_q4_baseline_regeneration_cases,
+):
+    prior_cases = copy.deepcopy(mf1a_q4_baseline_regeneration_cases)
+    prior = mf1a.build_artifact_bundle(prior_cases, prior_bundle=None)
+    current_cases = copy.deepcopy(mf1a_q4_baseline_regeneration_cases)
+    current_cases[0]["provenance"]["implementation_revision"] = "c" * 40
+
+    prior_mut = copy.deepcopy(prior)
+    prior_mut["cases"][0]["provenance"]["extension_identities"][0]["sha256"] = "e" * 64
+    bundle = mf1a.build_artifact_bundle(current_cases, prior_bundle=prior_mut)
+    assert bundle["regeneration"]["pass"] is False
+    assert (
+        bundle["regeneration"]["first_mismatch"]
+        == "cases[0].provenance.extension_identities"
+    )
+
+    prior_mut = copy.deepcopy(prior)
+    prior_mut["cases"][0]["provenance"]["extension_identities"][0]["path"] = (
+        "other/path.so"
+    )
+    bundle = mf1a.build_artifact_bundle(current_cases, prior_bundle=prior_mut)
+    assert bundle["regeneration"]["pass"] is False
+    assert (
+        bundle["regeneration"]["first_mismatch"]
+        == "cases[0].provenance.extension_identities"
+    )
+
+
+def test_mf1a_q4_baseline_regeneration_fails_on_input_identity(
+    mf1a_q4_baseline_regeneration_cases,
+):
+    prior_cases = copy.deepcopy(mf1a_q4_baseline_regeneration_cases)
+    prior = mf1a.build_artifact_bundle(prior_cases, prior_bundle=None)
+    current_cases = copy.deepcopy(mf1a_q4_baseline_regeneration_cases)
+    current_cases[0]["provenance"]["implementation_revision"] = "c" * 40
+    prior_mut = copy.deepcopy(prior)
+    prior_mut["cases"][0]["provenance"]["input_artifact_identities"] = [
+        {"path": "inputs/foo.json", "sha256": "f" * 64}
+    ]
+    bundle = mf1a.build_artifact_bundle(current_cases, prior_bundle=prior_mut)
+    assert bundle["regeneration"]["pass"] is False
+    assert (
+        bundle["regeneration"]["first_mismatch"]
+        == "cases[0].provenance.input_artifact_identities"
+    )
+
+
+def test_mf1a_q4_baseline_regeneration_fails_on_dependency_version(
+    mf1a_q4_baseline_regeneration_cases,
+):
+    prior_cases = copy.deepcopy(mf1a_q4_baseline_regeneration_cases)
+    prior = mf1a.build_artifact_bundle(prior_cases, prior_bundle=None)
+    current_cases = copy.deepcopy(mf1a_q4_baseline_regeneration_cases)
+    current_cases[0]["provenance"]["implementation_revision"] = "c" * 40
+    prior_mut = copy.deepcopy(prior)
+    prior_mut["cases"][0]["provenance"]["dependencies"]["numpy"] = "other"
+    bundle = mf1a.build_artifact_bundle(current_cases, prior_bundle=prior_mut)
+    assert bundle["regeneration"]["pass"] is False
+    assert (
+        bundle["regeneration"]["first_mismatch"]
+        == "cases[0].provenance.dependencies"
+    )
+
+
+def test_mf1a_q4_baseline_regeneration_fails_on_environment_identity(
+    mf1a_q4_baseline_regeneration_cases,
+):
+    prior_cases = copy.deepcopy(mf1a_q4_baseline_regeneration_cases)
+    prior = mf1a.build_artifact_bundle(prior_cases, prior_bundle=None)
+    current_cases = copy.deepcopy(mf1a_q4_baseline_regeneration_cases)
+    current_cases[0]["provenance"]["implementation_revision"] = "c" * 40
+    prior_mut = copy.deepcopy(prior)
+    prior_mut["cases"][0]["provenance"]["environment"]["python_version"] = "3.13.1"
+    bundle = mf1a.build_artifact_bundle(current_cases, prior_bundle=prior_mut)
+    assert bundle["regeneration"]["pass"] is False
+    assert (
+        bundle["regeneration"]["first_mismatch"]
+        == "cases[0].provenance.environment"
+    )
+
+
+def test_mf1a_q4_baseline_regeneration_fails_on_manifest_version(
+    mf1a_q4_baseline_regeneration_cases,
+):
+    prior_cases = copy.deepcopy(mf1a_q4_baseline_regeneration_cases)
+    prior = mf1a.build_artifact_bundle(prior_cases, prior_bundle=None)
+    current_cases = copy.deepcopy(mf1a_q4_baseline_regeneration_cases)
+    current_cases[0]["provenance"]["implementation_revision"] = "c" * 40
+
+    prior_mut = copy.deepcopy(prior)
+    prior_mut["schema_version"] = "other"
+    bundle = mf1a.build_artifact_bundle(current_cases, prior_bundle=prior_mut)
+    assert bundle["regeneration"]["pass"] is False
+    assert bundle["regeneration"]["first_mismatch"] == "bundle_structure"
+
+    prior_mut = copy.deepcopy(prior)
+    prior_mut["cases"][0]["manifest_schema_version"] = "other"
+    bundle = mf1a.build_artifact_bundle(current_cases, prior_bundle=prior_mut)
+    assert bundle["regeneration"]["pass"] is False
+    assert bundle["regeneration"]["first_mismatch"] == "cases[0].manifest_schema_version"
+
+
+def test_mf1a_q4_baseline_regeneration_fails_on_residual_above_comparator_despite_allowlist(
+    mf1a_q4_baseline_regeneration_cases,
+):
+    prior_cases = copy.deepcopy(mf1a_q4_baseline_regeneration_cases)
+    prior = mf1a.build_artifact_bundle(prior_cases, prior_bundle=None)
+    current_cases = copy.deepcopy(mf1a_q4_baseline_regeneration_cases)
+    current_cases[0]["provenance"]["implementation_revision"] = "c" * 40
+    prior_mut = copy.deepcopy(prior)
+    prior_mut["cases"][0]["qa001"]["frobenius_norm_diff"] += 2e-10
+    bundle = mf1a.build_artifact_bundle(current_cases, prior_bundle=prior_mut)
+    assert bundle["regeneration"]["pass"] is False
+    assert (
+        bundle["regeneration"]["first_mismatch"]
+        == "cases[0].qa001.frobenius_norm_diff"
+    )
+    assert bundle["summary"]["first_failure"] == "regeneration"
+
+
+def test_mf1a_q4_baseline_regeneration_passes_when_residual_within_comparator(
+    mf1a_q4_baseline_regeneration_cases,
+):
+    prior_cases = copy.deepcopy(mf1a_q4_baseline_regeneration_cases)
+    prior = mf1a.build_artifact_bundle(prior_cases, prior_bundle=None)
+    current_cases = copy.deepcopy(mf1a_q4_baseline_regeneration_cases)
+    current_cases[0]["provenance"]["implementation_revision"] = "c" * 40
+    prior_mut = copy.deepcopy(prior)
+    prior_mut["cases"][0]["qa001"]["frobenius_norm_diff"] += 5e-11
+    bundle = mf1a.build_artifact_bundle(current_cases, prior_bundle=prior_mut)
+    assert bundle["status"] == "pass"
+    assert bundle["regeneration"]["pass"] is True
+    assert bundle["regeneration"]["first_mismatch"] is None
+
+
+def test_mf1a_q4_baseline_regeneration_rejects_non_revision_value(
+    mf1a_q4_baseline_regeneration_cases,
+):
+    prior_cases = copy.deepcopy(mf1a_q4_baseline_regeneration_cases)
+    prior = mf1a.build_artifact_bundle(prior_cases, prior_bundle=None)
+
+    for bad_revision in ("g" * 40, "c" * 39, "", "C" * 40):
+        current_cases = copy.deepcopy(mf1a_q4_baseline_regeneration_cases)
+        current_cases[0]["provenance"]["implementation_revision"] = bad_revision
+        bundle = mf1a.build_artifact_bundle(current_cases, prior_bundle=prior)
+        assert bundle["regeneration"]["pass"] is False
+        assert (
+            bundle["regeneration"]["first_mismatch"]
+            == "cases[0].provenance.implementation_revision"
+        )
+
+    current_cases = copy.deepcopy(mf1a_q4_baseline_regeneration_cases)
+    del current_cases[0]["provenance"]["implementation_revision"]
+    bundle = mf1a.build_artifact_bundle(current_cases, prior_bundle=prior)
+    assert bundle["regeneration"]["pass"] is False
+    assert (
+        bundle["regeneration"]["first_mismatch"]
+        == "cases[0].provenance.implementation_revision"
+    )
+
+    current_cases = copy.deepcopy(mf1a_q4_baseline_regeneration_cases)
+    current_cases[0]["provenance"]["implementation_revision"] = "c" * 40
+    prior_mut = copy.deepcopy(prior)
+    prior_mut["cases"][0]["provenance"]["implementation_revision"] = "A" * 40
+    bundle = mf1a.build_artifact_bundle(current_cases, prior_bundle=prior_mut)
+    assert bundle["regeneration"]["pass"] is False
+    assert (
+        bundle["regeneration"]["first_mismatch"]
+        == "cases[0].provenance.implementation_revision"
+    )
+
+    prior_mut = copy.deepcopy(prior)
+    del prior_mut["cases"][0]["provenance"]["implementation_revision"]
+    bundle = mf1a.build_artifact_bundle(current_cases, prior_bundle=prior_mut)
+    assert bundle["regeneration"]["pass"] is False
+    assert (
+        bundle["regeneration"]["first_mismatch"]
+        == "cases[0].provenance.implementation_revision"
+    )
+
+
+def test_mf1a_q4_baseline_regeneration_allowlist_does_not_cover_a_second_case(
+    mf1a_q4_baseline_regeneration_cases,
+):
+    prior_cases = copy.deepcopy(mf1a_q4_baseline_regeneration_cases)
+    prior = mf1a.build_artifact_bundle(prior_cases, prior_bundle=None)
+    current_cases = copy.deepcopy(mf1a_q4_baseline_regeneration_cases)
+    second_case = copy.deepcopy(current_cases[0])
+    second_case["provenance"]["implementation_revision"] = "c" * 40
+    current_cases.append(second_case)
+    bundle = mf1a.build_artifact_bundle(current_cases, prior_bundle=prior)
+    assert bundle["regeneration"]["first_mismatch"] == "manifest_exact_set"
+
+    prior_two = copy.deepcopy(prior)
+    prior_two["cases"].append(copy.deepcopy(prior_two["cases"][0]))
+    result = mf1a._regeneration_result(current_cases[0], prior_two)
+    assert result["first_mismatch"] == "bundle_structure"
+
+
 def test_mf1a_q4_baseline_exit_aggregate_uses_exact_g07_set():
     results = [
         (name, "pass", Path("/tmp") / f"{name}.json")
