@@ -47,6 +47,30 @@ python setup.py build_ext
 python -m pip install -e .
 ```
 
+## rocky-squander cmake and TBB (build shell only)
+
+On rocky-squander, a login PATH often prefers Xilinx Vitis 2020.1 cmake 3.3.2,
+which fails with `libidn.so.11` and is older than the repo’s CMake ≥3.15 need.
+Do **not** use the first `cmake` on a default PATH.
+
+Use a **temporary build shell** (do not export this PATH into an interactive session):
+
+```bash
+export CONDA_PREFIX="$HOME/.conda/envs/qgd"
+export CONDA_DEFAULT_ENV=qgd
+export PATH="$CONDA_PREFIX/bin:/usr/bin:/bin"
+export TBB_INC_DIR="$CONDA_PREFIX/include"
+export TBB_LIB_DIR="$CONDA_PREFIX/lib"
+cmake --version   # must be qgd 4.2.0; fallback: /usr/bin/cmake 3.31.8
+python setup.py build_ext
+python -m pip install -e .
+ldd squander/libqgd.so | rg tbb   # must resolve under $CONDA_PREFIX/lib
+```
+
+Symptoms if skipped:
+- cmake: `libidn.so.11: cannot open shared object file`
+- import: `undefined symbol …get_thread_reference_vertex` (wrong TBB via RPATH)
+
 ## Verification (Smoke Check)
 
 ```bash

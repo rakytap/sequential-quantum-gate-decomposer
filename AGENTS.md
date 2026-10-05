@@ -27,6 +27,13 @@ this file is the copy that other tools read.
 6. **Prefer the existing convention.** Match surrounding C++ and Python style, reuse the
    ubiquitous language from `docs/specs/PRODUCT_STATEMENT.md` once it exists, and reuse
    before abstracting.
+7. **Commits are path-exact and Reviewer-gated (new guidance; no Reviewer skill exists
+   yet).** Before any local commit, Reviewer confirms that
+   `git status --porcelain --untracked-files=all` shows no untracked or generated
+   evidence artifact other than the paths this commit intends to add, for example the
+   counted bundle in an evidence commit C2. No validation-run debris remains: no
+   rewritten historical bundles and no stray `mf1a` run outputs. Stage with an exact path
+   list, `git add -- <path1> <path2> …`. Never use `git add -A` or `git add .`.
 
 ## Spec-driven development
 

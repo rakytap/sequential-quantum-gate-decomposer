@@ -129,6 +129,44 @@ consequences, owning authority), set `task-<n>/CLOSEOUT.md` to `implementation h
 and do not mark the slice shipped. Updating specs and current-state docs because reality
 differed is planning work, not code generation.
 
+**Step 4b — slice close for clean-start evidence (two-commit).** When a slice's counted
+evidence records `clean_start`, close the slice in this order (precedent: ADR-F1A-009,
+M-F1a q4 tracer). For that slice, this order replaces "write the closeout, Reviewer, then
+commit":
+
+1. **(a) Reviewer implementation review** of the uncommitted implementation diff.
+2. **(b) Local implementation commit C1**: planning docs, implementation, and tests only.
+   C1 holds no generated artifact and no `CLOSEOUT.md`. An optional planning-docs C0 may
+   precede C1.
+3. **(c) Counted clean-start run**: from an empty `git status --porcelain` at C1, run the
+   slice's single evidence command once and keep its counted evidence.
+4. **Pre-(d) independence gate**: Tester confirms in writing that the oracle and the cell
+   are independent. The note names the code paths and objects on each side, shows that
+   the oracle is not the cell's own output read back, and explains any bitwise agreement
+   (see Gotchas). If independence is not established, stop: write no `CLOSEOUT.md` and
+   make no C2.
+5. **(d) Real slice close**: write `task-<n>/CLOSEOUT.md` citing C1. Normal and
+   `--strict` `specs_check.sh` and traceability must then be fully clean.
+6. **(e) Reviewer evidence review** of the counted evidence, the real closeout, and the
+   clean verification results.
+7. **(f) Local evidence commit C2**: the counted bundle and `CLOSEOUT.md`.
+8. **(g) Clean-C2 regeneration**: Tester reruns regeneration from a clean C2, accepts it
+   under the revision-only mismatch rule (option (i); `test-density-matrix`
+   § Regeneration acceptance), and restores every generated output. Regeneration outputs
+   are never committed.
+
+No push or pull request is part of this sequence. Clean-start rules, including how to park
+a dirty non-counted run: `references/practices-testing.md` § Clean-start evidence and
+slice-close order.
+
+**Planning-doc header sync.** Before the Reviewer implementation review (a), sweep
+`docs/specs/milestones/<slug>/`: the checklist, every `task-<n>/` mini-spec, stories, and
+engineering tasks. Bring each context header and each authorization or status line to the
+current position. No header may still say "C1 awaits Reviewer" or "Step 4b blocked" once
+authorization has moved. A quick check is
+`rg -n "awaits Reviewer|Step 4b blocked|not committed" docs/specs/milestones/<slug>/`. The
+synced docs belong in C1 (or C0), so they do not dirty the counted run.
+
 After a slice ships — or its handback is disposed, re-issues code-ready, and ships —
 return to Step 4a for the next slice. Do not pre-plan the remaining slices.
 
@@ -143,6 +181,14 @@ recorded. Then hand control back to `create-product-roadmap` for revalidation. I
 learning invalidated a core product assumption, that escalates to
 `create-product-statement`. A paper, abstract, or talk drawn from the milestone consumes
 the closeout's evidence matrix; it is not a spec artifact and does not live in `docs/specs/`.
+
+**Full milestone review (new guidance).** After the last slice of an implementation
+milestone is delivered and `<MILESTONE_ID>_CLOSEOUT.md` is drafted, and before the report
+to Research Manager, Reviewer runs one full milestone review with model
+`claude-opus-5-5`, context `1m`, effort `max`. The review covers every slice
+`CLOSEOUT.md`, the Layer 1 acceptance criteria, the `REQ-*` evidence matrix, and the
+milestone's commits. Record its verdict and findings in the milestone closeout before
+handing control to `create-product-roadmap`.
 
 Templates for all four close and governance artifacts:
 `references/templates-closeout.md`.
@@ -195,6 +241,15 @@ Fix findings; do not silence them. A finding you intend to keep is waived in
 `--no-waivers` shows the debt the waivers suppress. A milestone holding only its requirements
 baseline reports `L1_NOT_STARTED` (info) until Step 1; then each missing Layer 1 file is an error.
 
+Gate by stage (precedent: ADR-F1A-008 decision 1, M-F1a). **Code-ready:** normal
+`specs_check.sh` has 0 errors, and its only warning is `SLICE_MISSING_CLOSEOUT` for slices
+that have not reached Step 4b. Under `--strict` that same finding is the one known
+planning-stage result. It stays visible and is recorded in the checklist. It is never
+waived and never fixed with a placeholder `CLOSEOUT.md`. Any other strict finding blocks
+code-ready. **Slice close:** after the real `CLOSEOUT.md` exists, `--strict` must be fully
+clean. For a clean-start evidence slice, the commit order is the two-commit sequence in
+Step 4b. ADR-F1A-009 supersedes ADR-F1A-008 decision 2 for that ordering.
+
 ## Completion criteria
 
 - **Layer 1 done:** the four Layer 1 files exist, the checklist states
@@ -205,7 +260,7 @@ baseline reports `L1_NOT_STARTED` (info) until Step 1; then each missing Layer 1
   `QA-*` fitness functions; the verdict line is explicit.
 - **Slice shipped:** acceptance tests and fitness functions green in the named lanes, the
   extension builds, `CLOSEOUT.md` status `shipped` with reproduce commands, current-state
-  docs updated if reality changed, `specs_check.sh` error-free.
+  docs updated if reality changed, `specs_check.sh` error-free, and `--strict` fully clean.
 - **Milestone delivered:** `<MILESTONE_ID>_CLOSEOUT.md` covers every `REQ-*` with evidence,
   any `CHANGE_CONTROL.md` sign-off is recorded, current-state docs are current, and control
   is handed to `create-product-roadmap`.
@@ -223,6 +278,14 @@ baseline reports `L1_NOT_STARTED` (info) until Step 1; then each missing Layer 1
 - The sequential `NoisyCircuit` executor is the exact baseline every partitioned, fused,
   or new backend path is validated against; Aer is the external reference. A `QA-*` about
   exactness becomes a fitness test against that baseline.
+- Oracle independence (G-10) proves separate execution, not separate kernels. The cell
+  and the sequential oracle are separate calls, and each allocates its own
+  `DensityMatrix`. Neither reads the other's output back, so bitwise agreement is
+  legitimate and the closeout records its reason. Both still share
+  `_build_runtime_circuit` lowering and the `NoisyCircuit` gate and noise kernels. A
+  kernel-level bug therefore appears on both sides, and this oracle cannot detect it.
+  Record that limitation in the closeout. Do not redefine or replace the oracle to close
+  it.
 - The delivered phase trees under `docs/density_matrix_project/archive/` use an earlier
   convention. Read them for history; never extend them or copy their naming into
   `docs/specs/` (mapping: `references/artifact-map.md`). Revisions are forward-only.
@@ -247,3 +310,7 @@ Load only what the current step needs:
   criteria there. Stop and hand back instead.
 - Write paper, abstract, or slide surfaces inside `docs/specs/`, or gate a slice on them.
 - Answer a question by starting the workflow: answer from the specs and the codebase.
+- Commit with `git add -A` or `git add .`, or while untracked or generated evidence
+  artifacts that are not this commit's intended paths sit in the worktree. Stage an exact
+  path list (`git add -- <path> …`); Reviewer checks the porcelain before each local
+  commit (new guidance; see `AGENTS.md` non-negotiable 7).

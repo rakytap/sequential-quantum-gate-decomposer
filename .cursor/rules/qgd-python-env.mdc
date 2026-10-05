@@ -5,4 +5,6 @@ alwaysApply: true
 
 For this repository, run Python for **tests**, **benchmarks**, and **examples** with the **qgd** conda environment, e.g. `conda run -n qgd python -m pytest …` or activate `qgd` first. Do not assume the system or default `python` matches project dependencies.
 
+On rocky-squander, never build with the first `cmake` on PATH: it is Xilinx Vitis 2020.1's bundled cmake 3.3.2, which fails with a missing `libidn.so.11` and is older than the repo's CMake >= 3.15 requirement. In a build-only shell, pin PATH to the qgd env cmake (4.2.0; fallback `/usr/bin/cmake` 3.31.8) and set `CONDA_PREFIX` to the qgd env so the TBB RPATH resolves to qgd, not base anaconda. No host change is needed; procedure in `.cursor/skills/clean-rebuild/SKILL.md`.
+
 See also `docs/density_matrix_project/SETUP.md` and `.cursor/rules/RULE.md` for broader build and setup guidance.

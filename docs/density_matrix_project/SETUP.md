@@ -160,6 +160,17 @@ rm -rf _skbuild
 python setup.py build_ext
 ```
 
+### rocky-squander: Vitis cmake on PATH or wrong TBB at import
+
+Symptom:
+- rocky-squander: Vitis cmake 3.3.2 earlier on PATH → `libidn.so.11`;
+- or the smoke import fails with a TBB undefined symbol (`…get_thread_reference_vertex`).
+
+Fix:
+- Prefer conda env qgd cmake 4.2.0 (or `/usr/bin/cmake` 3.31.8) in a build-only PATH.
+- If smoke import fails with a TBB undefined symbol, rebuild with `CONDA_PREFIX` pointing at qgd (not base anaconda) and confirm `ldd` links qgd `libtbb`.
+- Full build-shell procedure: `.cursor/skills/clean-rebuild/SKILL.md` § rocky-squander cmake and TBB (build shell only).
+
 ### `ModuleNotFoundError: No module named 'squander.density_matrix'`
 
 Fix:

@@ -11,6 +11,7 @@ when gating a slice in or out. This is where a spec becomes provable.
 - Quality attributes as fitness functions
 - Definition of Ready
 - Definition of Done
+- Clean-start evidence and slice-close order
 - Verification commands
 
 ## BDD and specification by example
@@ -88,6 +89,17 @@ A slice is done when:
 - `task-<n>/CLOSEOUT.md` records the verdict and the reproduce commands.
 
 The **slice tracer** additionally proves the deployment path end-to-end.
+
+## Clean-start evidence and slice-close order
+
+Counted evidence that records clean_start must begin from an empty `git status --porcelain` at the recorded implementation revision. That covers the whole worktree, tracked and untracked, with no path exclusions, output paths included. Clean-start detection is never narrowed to make a run pass. Uncommitted planning or spec docs dirty the tree too, so commit them with or before the implementation commit (C1). A run from a dirty tree is non-counted and must fail its provenance gate. Park its outputs outside the checkout, record their sha256 and failure facts in the checklist, and never delete them unrecorded. Generated outputs of a clean-start run don't retroactively invalidate it. Rerun regeneration checks from the clean evidence commit (C2) against the committed bundle, then restore that rerun's outputs. Never waive, never count a dirty run, and never commit CLOSEOUT before the counted run.
+
+A slice with counted clean-start evidence is done only after the two-commit close in
+`SKILL.md` Step 4b: Reviewer implementation review, C1 without generated artifacts or
+`CLOSEOUT.md`, one counted run from a clean C1, the written oracle/cell independence gate,
+the real `CLOSEOUT.md` with normal and `--strict` checks fully clean, Reviewer evidence
+review, C2 with the counted bundle and closeout, then clean-C2 regeneration with the
+outputs restored and not committed.
 
 ## Verification commands
 

@@ -4,6 +4,16 @@ Revision history lives here rather than in `SKILL.md`: dated notes and "effectiv
 caveats are time-sensitive content that costs tokens on every activation and goes stale.
 Revisions are **forward-only** — a slice keeps the convention it shipped under.
 
+## rev D — slice-close practice from the M-F1a q4 tracer
+
+Folded the M-F1a q4 tracer lessons into the skill as default practice, citing that
+milestone's ADRs as precedent: the two-commit slice close for clean-start evidence
+(ADR-F1A-009), the code-ready versus slice-close gate split (ADR-F1A-008 decision 1),
+whole-worktree clean-start evidence with dirty non-counted runs parked outside the checkout
+(ADR-F1A-004), planning-header sync before the pre-C1 Reviewer pass, the G-10 shared-kernel
+limitation, a full Reviewer milestone review at milestone close, and path-exact commits.
+No linter or script changed. Slices already shipped keep the convention they shipped under.
+
 ## rev C — requirements-baseline stage in the artifact linter
 
 A milestone directory holding only `INITIAL_REQUIREMENTS.md` used to report three
