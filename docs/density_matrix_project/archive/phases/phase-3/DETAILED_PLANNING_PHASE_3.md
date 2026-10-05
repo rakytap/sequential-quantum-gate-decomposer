@@ -959,10 +959,13 @@ weaken both the paper and the broader PhD path.
   `validation_pipeline.py` entry point that emits eight
   machine-reviewable slice bundles under
   `benchmarks/density_matrix/artifacts/correctness_evidence/`.
-- The current correctness matrix is pinned to the currently selected
-  planner-calibration candidate, `span_budget_q2`, rather than to the full
-  comparison family, while preserving planner-calibration provenance fields on
-  every positive record.
+- The freeze-commit correctness matrix was planned under
+  planner-calibration candidate `span_budget_q4` rather than the full
+  comparison family (the same 25/4/17 counts were also recorded under the
+  earlier `span_budget_q2` plan; the counting path does not read the budget;
+  the budget label is timing-selected and not reproducible across recomputes),
+  while preserving planner-calibration provenance fields on every positive
+  record.
 - The current counted supported matrix contains `25` positive cases:
   - `4` continuity-anchor cases at 4, 6, 8, and 10 qubits,
   - `3` mandatory microcases,
@@ -1024,9 +1027,12 @@ partitioned runtime exists.
   machine-reviewable slice bundles under
   `benchmarks/density_matrix/artifacts/performance_evidence/`.
 - The current benchmark package remains aligned with the current
-  correctness-evidence package and the currently selected bounded
-  planner-calibration
-  `span_budget_q2` surface rather than reopening the broader comparison family.
+  correctness-evidence package and the freeze-commit bounded
+  planner-calibration `span_budget_q4` surface (the same 25/4/17 counts were
+  also recorded under the earlier `span_budget_q2` plan; the counting path
+  does not read the budget; the budget label is timing-selected and not
+  reproducible across recomputes) rather than reopening the broader comparison
+  family.
 - The current counted supported benchmark matrix contains `34` positive cases:
   - `4` continuity-anchor cases at 4, 6, 8, and 10 qubits,
   - and `30` structured-family cases across the three required families at 8

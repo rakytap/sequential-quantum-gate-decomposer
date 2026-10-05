@@ -7,6 +7,8 @@ The wording should track the delivered fused-runtime, planner-calibration,
 correctness-evidence, and performance-evidence surfaces directly, while final
 publication packaging still remains to be tightened.
 
+**Erratum — 2026-10-05.** See Paper § Erratum — 2026-10-05 in `PAPER_PHASE_3.md` for span_budget and reproducibility clarifications.
+
 ## Abstract
 
 Exact density-matrix simulation is the cleanest classical reference for studying
@@ -69,8 +71,10 @@ slice, and required performance recording on representative 8- and 10-qubit
 structured families.
 
 Evidence-closure rule:
-Only mandatory, complete, supported correctness and reproducibility evidence,
-plus either measurable benefit or benchmark-grounded limitation reporting,
+Only mandatory, complete, supported correctness and reproducibility evidence
+(statuses, summaries, pass flags, and counted conclusions under the stated
+tolerances—not bit-identical floating-point dumps), plus either measurable
+benefit or benchmark-grounded limitation reporting,
 closes the main Paper 2 claim.
 
 Phase positioning:
@@ -208,8 +212,10 @@ The current validation baseline has two layers:
 Current correctness-evidence findings now make that baseline concrete:
 
 - the delivered correctness-evidence package records `25` counted supported
-  cases on the
-  currently selected `span_budget_q2` surface,
+  cases on the freeze-commit `span_budget_q4` surface (the same 25/4/17
+  counts were also recorded under the earlier `span_budget_q2` plan; the
+  counting path does not read the budget; the budget label is
+  timing-selected and not reproducible across recomputes),
 - it records `4` required external-reference cases (`3` microcases plus the
   4-qubit continuity anchor),
 - and it keeps `17` explicit unsupported-boundary cases visible instead of

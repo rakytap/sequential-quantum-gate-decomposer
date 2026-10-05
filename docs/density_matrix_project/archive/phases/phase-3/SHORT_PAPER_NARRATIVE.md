@@ -51,9 +51,12 @@ families retained as design-space or comparison references until separately
 implemented.
 
 Current correctness-evidence refinement:
-the delivered correctness package is now pinned to the currently selected
-`span_budget_q2` surface and emitted through one shared `correctness_evidence` bundle
-family. It records `25` counted supported cases, a bounded Qiskit Aer slice of
+the delivered correctness package at freeze was planned under
+`span_budget_q4` and emitted through one shared `correctness_evidence` bundle
+family (the same 25/4/17 counts were also recorded under the earlier
+`span_budget_q2` plan; the counting path does not read the budget; the
+budget label is timing-selected and not reproducible across recomputes). It
+records `25` counted supported cases, a bounded Qiskit Aer slice of
 `4` cases, and `17` explicit unsupported-boundary cases that remain visible
 instead of being filtered away.
 
@@ -76,9 +79,11 @@ No silent sequential fallback is part of the Phase 3 contract for benchmarks
 that claim partitioned density behavior.
 
 Evidence-closure rule:
-Only mandatory, complete, supported correctness and reproducibility evidence,
-plus either measured benefit or benchmark-grounded limitation reporting, closes
-the main Paper 2 claim.
+Only mandatory, complete, supported correctness and reproducibility evidence
+(statuses, summaries, pass flags, and counted conclusions under the stated
+tolerances—not bit-identical floating-point dumps), plus either measured
+benefit or benchmark-grounded limitation reporting, closes the main Paper 2
+claim.
 
 Phase positioning:
 Paper 2 is the Phase 3 methods milestone between exact noisy integration and

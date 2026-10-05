@@ -490,8 +490,11 @@ Current performance-evidence benchmark finding:
 
 - the emitted benchmark package is now aligned with that bounded planner-calibration claim
   surface rather than with the longer-horizon planner ladder,
-- the current diagnosis closure therefore speaks about the delivered
-  `span_budget_q2` baseline plus its measured sensitivity surface,
+- the current diagnosis closure therefore speaks about the freeze-commit
+  `span_budget_q4` baseline (the same 25/4/17 counts were also recorded under
+  the earlier `span_budget_q2` plan; the counting path does not read the
+  budget; the budget label is timing-selected and not reproducible across
+  recomputes) plus its measured sensitivity surface,
 - and the broader adapted `kahn` / `tdag` / `gtqcp` / `ilp` / `ilp-fusion` /
   `ilp-fusion-ca` ladder should still be read as design-space or follow-on
   context rather than as already-benchmarked noisy-planner implementations.

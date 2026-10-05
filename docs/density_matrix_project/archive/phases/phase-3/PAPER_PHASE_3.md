@@ -15,6 +15,14 @@ including the emitted `correctness_evidence` correctness bundles and
 `performance_evidence` benchmark bundles. The final publication-facing package
 still requires further tightening before submission-ready wording is frozen.
 
+## Erratum — 2026-10-05
+
+**Erratum — 2026-10-05.** Two clarifications apply to the Squander Phase 3 publication drafts (`PAPER_PHASE_3.md`, `ABSTRACT_PHASE_3.md`, `SHORT_PAPER_PHASE_3.md`, `SHORT_PAPER_NARRATIVE.md`).
+
+**(a) Planner span budget.** Text that says the correctness package is pinned to `span_budget_q2` was written against bundles planned at max span 2 (724 partitions) at commit `39e3b9f5`, where the full published 25/4/17 counts were recorded. The freeze commit `30f90ea0` (2026-03-21) re-planned the same package at `span_budget_q4` (max span 4, 331 partitions) and again recorded the same published 25/4/17 counts, the same pass flags, and identical 17 negative records. The counting path does not read the budget; the negative builders hard-code `max_partition_qubits=1`. Calibration records 25/25 supported cases at q2, q3, and q4; the 4 Aer and 17 negative counts were not observed at q3. The budget does change fusion classification and timing (which these papers do not quote as published speedups). Budget selection is timing-based and not reproducible across recomputes (q2→q4 flipped on a 1.8% margin; four recomputes gave q4, q3, q2, q2). No run has isolated the budget alone. Wording about “the selected budget” must therefore state that the package was planned under `span_budget_q4` at freeze; that the same 25/4/17 counts were also recorded under the earlier `span_budget_q2` plan; that the counting path does not read the budget; and that the budget label is timing-selected and not reproducible across recomputes. Mention q3 only as 25/25 supported cases in calibration, if at all.
+
+**(c) Numeric reproducibility.** Phase 3 floating-point fields are not bit-reproducible on the current build. The largest observed numeric drift is 6.7×10⁻¹⁶, more than five orders of magnitude below the 1×10⁻¹⁰ acceptance tolerance, and is consistent with a C++ kernel rebuild (exact inducing commit unverified). Statuses, summaries, pass flags, and the 25/4/17 counts do not change. “Reproducibility” in these drafts means a machine-reviewable evidence package with tolerance-gated agreement and stable categorical outcomes, not bit-identical float dumps.
+
 ## Abstract Summary
 
 This document is the full-paper draft surface for the planned Phase 3 methods
@@ -44,9 +52,10 @@ Supporting claims:
   execution mode on eligible substructures
 - a benchmark-calibrated density-aware planning policy on a bounded candidate
   surface
-- a machine-reviewable correctness, benchmark, and reproducibility package, with
-  the current benchmark closure now occurring through the diagnosis branch of
-  the phase-level threshold-or-diagnosis rule
+- a machine-reviewable correctness, benchmark, and reproducibility package
+  (tolerance-gated agreement and stable categorical outcomes; not bit-identical
+  floats on the current build), with the current benchmark closure now occurring
+  through the diagnosis branch of the phase-level threshold-or-diagnosis rule
 
 Explicit non-claims:
 - fully channel-native or superoperator-native fused noisy blocks are outside
@@ -74,9 +83,11 @@ slice, and required performance recording on representative 8- and 10-qubit
 structured families.
 
 Evidence-closure rule:
-Only mandatory, complete, supported correctness and reproducibility evidence,
-plus either measured benefit or benchmark-grounded limitation reporting, closes
-the main Paper 2 claim.
+Only mandatory, complete, supported correctness and reproducibility evidence
+(statuses, summaries, pass flags, and counted conclusions under the stated
+tolerances—not bit-identical floating-point dumps), plus either measured
+benefit or benchmark-grounded limitation reporting, closes the main Paper 2
+claim.
 
 Phase positioning:
 Paper 2 is the Phase 3 noise-aware partitioning and fusion milestone in the
@@ -425,8 +436,10 @@ concretely:
 - the delivered correctness matrix contains `25` counted supported cases,
 - the required external slice contains `4` cases (`3` mandatory microcases plus
   the 4-qubit continuity anchor),
-- the package is pinned to the currently selected `span_budget_q2`
-  planner-calibration surface,
+- the freeze-commit correctness package was planned under `span_budget_q4`;
+  the same 25/4/17 counts were also recorded under the earlier
+  `span_budget_q2` plan, and the counting path does not read the budget; the
+  budget label is timing-selected and not reproducible across recomputes,
 - and `17` explicit unsupported-boundary cases remain visible across planner-
   entry, descriptor-generation, and runtime-stage evidence rather than being
   hidden inside summary-only exclusions.

@@ -8,6 +8,8 @@ calibration, correctness-evidence, and performance-evidence surfaces directly.
 Final Phase 3 publication packaging still requires further tightening before
 submission-ready wording is frozen.
 
+**Erratum — 2026-10-05.** See Paper § Erratum — 2026-10-05 in `PAPER_PHASE_3.md` for span_budget and reproducibility clarifications.
+
 Exact density-matrix simulation is a scientifically strong foundation for noisy
 variational quantum research, but its computational cost quickly limits the
 scale of exact studies. SQUANDER already provides two important ingredients for
@@ -62,8 +64,11 @@ sequential reference, do not reduce peak memory, and point primarily to
 supported islands left unfused plus Python-level fused-path overhead.
 
 The correctness-evidence surface now closes the exactness side of that package
-on the currently selected `span_budget_q2` planning surface. The emitted
-correctness-evidence bundles record
+on the freeze-commit `span_budget_q4` planning surface (the same 25/4/17
+counts were also recorded under the earlier `span_budget_q2` plan; the
+counting path does not read the budget; the budget label is timing-selected
+and not reproducible across recomputes). The emitted correctness-evidence
+bundles record
 `25` counted supported cases, Qiskit Aer agreement on all `3` mandatory
 microcases plus the 4-qubit continuity anchor, and `17` explicit unsupported-
 boundary cases kept visible across planner-entry, descriptor-generation, and
@@ -118,9 +123,11 @@ external micro-validation at 2 to 4 qubits and required performance recording
 on representative 8- and 10-qubit structured families.
 
 Evidence-closure rule:
-Only mandatory, complete, supported correctness and reproducibility evidence,
-plus either measured benefit or benchmark-grounded limitation reporting, closes
-the main Paper 2 claim.
+Only mandatory, complete, supported correctness and reproducibility evidence
+(statuses, summaries, pass flags, and counted conclusions under the stated
+tolerances—not bit-identical floating-point dumps), plus either measured
+benefit or benchmark-grounded limitation reporting, closes the main Paper 2
+claim.
 
 Phase positioning:
 Paper 2 is the Phase 3 noise-aware partitioning and fusion milestone in the
