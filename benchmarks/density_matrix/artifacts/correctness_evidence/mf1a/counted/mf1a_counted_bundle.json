@@ -1,0 +1,5633 @@
+{
+  "cases": [
+    {
+      "anchor_qbits": 4,
+      "claim_boundary": "Counted M-F1a denominator evidence for the ADR-F1A-001 route-by-anchor set: partitioned_density_descriptor_baseline, partitioned_density_descriptor_fused_unitary_islands, phase31_channel_native, and phase31_channel_native_hybrid at anchors 4, 6, 8, and 10 with max_partition_qubits 2, each against execute_sequential_density_reference under QA-001. No complete M-F1a, state-vector, external-protocol, Aer, energy, or frozen-matrix claim.",
+      "completeness_claim": false,
+      "manifest_schema_version": "correctness_evidence_mf1a_q4_baseline_manifest_v1",
+      "milestone_counted": true,
+      "parameters": [
+        0.05,
+        0.1,
+        0.15,
+        0.2,
+        0.25,
+        0.3,
+        0.35,
+        0.39999999999999997,
+        0.44999999999999996,
+        0.49999999999999994,
+        0.5499999999999999,
+        0.6,
+        0.65,
+        0.7,
+        0.75,
+        0.7999999999999999,
+        0.85,
+        0.9
+      ],
+      "planner_setting": {
+        "max_partition_qubits": 2
+      },
+      "provenance": {
+        "clean_start": true,
+        "command": "conda run -n qgd --no-capture-output python benchmarks/density_matrix/correctness_evidence/validation_pipeline.py",
+        "dependencies": {
+          "numpy": "2.3.5",
+          "scipy": "1.16.3",
+          "squander": "1.9.7"
+        },
+        "dirty_paths": [],
+        "environment": {
+          "conda_default_env": "qgd",
+          "conda_prefix": "/home/zkegli/.conda/envs/qgd",
+          "python_executable": "/home/zkegli/.conda/envs/qgd/bin/python",
+          "python_version": "3.13.9"
+        },
+        "extension_identities": [
+          {
+            "path": "squander/density_matrix/_density_matrix_cpp.cpython-313-x86_64-linux-gnu.so",
+            "sha256": "05f01747e986dabba73073c11c9b00fdb326afdd703e59cd5cfe27af6631cc77"
+          }
+        ],
+        "implementation_revision": "314fee7cfd536dff79dd9efd16138f57e7ffbd9f",
+        "input_artifact_identities": [],
+        "provenance_pass": true
+      },
+      "qa001": {
+        "eigensolver_pass": true,
+        "finite_eigenvalues_pass": true,
+        "finite_entries_pass": true,
+        "finite_residuals_pass": true,
+        "first_failure": null,
+        "frobenius_norm_diff": 0.0,
+        "frobenius_norm_diff_pass": true,
+        "lambda_min": -8.000366383372531e-17,
+        "lambda_min_pass": true,
+        "max_abs_diff": 0.0,
+        "max_abs_diff_pass": true,
+        "qa001_pass": true,
+        "trace_abs_deviation": 2.9181576996470275e-17,
+        "trace_abs_deviation_pass": true
+      },
+      "realization": {
+        "actual_fused_execution": false,
+        "exact_output_present": true,
+        "fused_region_classifications": [
+          "supported_but_unfused",
+          "deferred_or_unsupported_candidate",
+          "supported_but_unfused",
+          "supported_but_unfused",
+          "supported_but_unfused",
+          "supported_but_unfused"
+        ],
+        "fused_region_count": 0,
+        "partition_count": 5,
+        "realized_path": "partitioned_density_descriptor_baseline",
+        "requested_path": "partitioned_density_descriptor_baseline"
+      },
+      "record_schema_version": "correctness_evidence_mf1a_q4_baseline_case_v1",
+      "route": "partitioned_density_descriptor_baseline",
+      "seed_policy": "deterministic_workload_no_random_seed",
+      "workload": "phase2_xxz_hea_q4_continuity"
+    },
+    {
+      "anchor_qbits": 6,
+      "claim_boundary": "Counted M-F1a denominator evidence for the ADR-F1A-001 route-by-anchor set: partitioned_density_descriptor_baseline, partitioned_density_descriptor_fused_unitary_islands, phase31_channel_native, and phase31_channel_native_hybrid at anchors 4, 6, 8, and 10 with max_partition_qubits 2, each against execute_sequential_density_reference under QA-001. No complete M-F1a, state-vector, external-protocol, Aer, energy, or frozen-matrix claim.",
+      "completeness_claim": false,
+      "manifest_schema_version": "correctness_evidence_mf1a_baseline_manifest_v1",
+      "milestone_counted": true,
+      "parameters": [
+        0.05,
+        0.1,
+        0.15,
+        0.2,
+        0.25,
+        0.3,
+        0.35,
+        0.39999999999999997,
+        0.44999999999999996,
+        0.49999999999999994,
+        0.5499999999999999,
+        0.6,
+        0.65,
+        0.7,
+        0.75,
+        0.7999999999999999,
+        0.85,
+        0.9,
+        0.95,
+        1.0,
+        1.0499999999999998,
+        1.0999999999999999,
+        1.15,
+        1.2,
+        1.25,
+        1.3,
+        1.3499999999999999,
+        1.4,
+        1.45,
+        1.5
+      ],
+      "planner_setting": {
+        "max_partition_qubits": 2
+      },
+      "provenance": {
+        "clean_start": true,
+        "command": "conda run -n qgd --no-capture-output python benchmarks/density_matrix/correctness_evidence/validation_pipeline.py",
+        "dependencies": {
+          "numpy": "2.3.5",
+          "scipy": "1.16.3",
+          "squander": "1.9.7"
+        },
+        "dirty_paths": [],
+        "environment": {
+          "conda_default_env": "qgd",
+          "conda_prefix": "/home/zkegli/.conda/envs/qgd",
+          "python_executable": "/home/zkegli/.conda/envs/qgd/bin/python",
+          "python_version": "3.13.9"
+        },
+        "extension_identities": [
+          {
+            "path": "squander/density_matrix/_density_matrix_cpp.cpython-313-x86_64-linux-gnu.so",
+            "sha256": "05f01747e986dabba73073c11c9b00fdb326afdd703e59cd5cfe27af6631cc77"
+          }
+        ],
+        "implementation_revision": "314fee7cfd536dff79dd9efd16138f57e7ffbd9f",
+        "input_artifact_identities": [],
+        "provenance_pass": true
+      },
+      "qa001": {
+        "eigensolver_pass": true,
+        "finite_eigenvalues_pass": true,
+        "finite_entries_pass": true,
+        "finite_residuals_pass": true,
+        "first_failure": null,
+        "frobenius_norm_diff": 0.0,
+        "frobenius_norm_diff_pass": true,
+        "lambda_min": -3.739601561235775e-16,
+        "lambda_min_pass": true,
+        "max_abs_diff": 0.0,
+        "max_abs_diff_pass": true,
+        "qa001_pass": true,
+        "trace_abs_deviation": 2.230067808723434e-16,
+        "trace_abs_deviation_pass": true
+      },
+      "realization": {
+        "actual_fused_execution": false,
+        "exact_output_present": true,
+        "fused_region_classifications": [
+          "supported_but_unfused",
+          "deferred_or_unsupported_candidate",
+          "supported_but_unfused",
+          "supported_but_unfused",
+          "supported_but_unfused",
+          "supported_but_unfused",
+          "supported_but_unfused",
+          "supported_but_unfused"
+        ],
+        "fused_region_count": 0,
+        "partition_count": 7,
+        "realized_path": "partitioned_density_descriptor_baseline",
+        "requested_path": "partitioned_density_descriptor_baseline"
+      },
+      "record_schema_version": "correctness_evidence_mf1a_baseline_case_v1",
+      "route": "partitioned_density_descriptor_baseline",
+      "seed_policy": "deterministic_workload_no_random_seed",
+      "workload": "phase2_xxz_hea_q6_continuity"
+    },
+    {
+      "anchor_qbits": 8,
+      "claim_boundary": "Counted M-F1a denominator evidence for the ADR-F1A-001 route-by-anchor set: partitioned_density_descriptor_baseline, partitioned_density_descriptor_fused_unitary_islands, phase31_channel_native, and phase31_channel_native_hybrid at anchors 4, 6, 8, and 10 with max_partition_qubits 2, each against execute_sequential_density_reference under QA-001. No complete M-F1a, state-vector, external-protocol, Aer, energy, or frozen-matrix claim.",
+      "completeness_claim": false,
+      "manifest_schema_version": "correctness_evidence_mf1a_baseline_manifest_v1",
+      "milestone_counted": true,
+      "parameters": [
+        0.05,
+        0.1,
+        0.15000000000000002,
+        0.2,
+        0.25000000000000006,
+        0.30000000000000004,
+        0.35000000000000003,
+        0.4000000000000001,
+        0.45000000000000007,
+        0.5000000000000001,
+        0.5500000000000002,
+        0.6000000000000002,
+        0.6500000000000001,
+        0.7000000000000002,
+        0.7500000000000002,
+        0.8000000000000002,
+        0.8500000000000002,
+        0.9000000000000002,
+        0.9500000000000002,
+        1.0000000000000002,
+        1.0500000000000003,
+        1.1000000000000003,
+        1.1500000000000004,
+        1.2000000000000002,
+        1.2500000000000002,
+        1.3000000000000003,
+        1.3500000000000003,
+        1.4000000000000004,
+        1.4500000000000004,
+        1.5000000000000002,
+        1.5500000000000003,
+        1.6000000000000003,
+        1.6500000000000004,
+        1.7000000000000004,
+        1.7500000000000004,
+        1.8000000000000005,
+        1.8500000000000003,
+        1.9000000000000004,
+        1.9500000000000004,
+        2.0000000000000004,
+        2.0500000000000003,
+        2.1
+      ],
+      "planner_setting": {
+        "max_partition_qubits": 2
+      },
+      "provenance": {
+        "clean_start": true,
+        "command": "conda run -n qgd --no-capture-output python benchmarks/density_matrix/correctness_evidence/validation_pipeline.py",
+        "dependencies": {
+          "numpy": "2.3.5",
+          "scipy": "1.16.3",
+          "squander": "1.9.7"
+        },
+        "dirty_paths": [],
+        "environment": {
+          "conda_default_env": "qgd",
+          "conda_prefix": "/home/zkegli/.conda/envs/qgd",
+          "python_executable": "/home/zkegli/.conda/envs/qgd/bin/python",
+          "python_version": "3.13.9"
+        },
+        "extension_identities": [
+          {
+            "path": "squander/density_matrix/_density_matrix_cpp.cpython-313-x86_64-linux-gnu.so",
+            "sha256": "05f01747e986dabba73073c11c9b00fdb326afdd703e59cd5cfe27af6631cc77"
+          }
+        ],
+        "implementation_revision": "314fee7cfd536dff79dd9efd16138f57e7ffbd9f",
+        "input_artifact_identities": [],
+        "provenance_pass": true
+      },
+      "qa001": {
+        "eigensolver_pass": true,
+        "finite_eigenvalues_pass": true,
+        "finite_entries_pass": true,
+        "finite_residuals_pass": true,
+        "first_failure": null,
+        "frobenius_norm_diff": 0.0,
+        "frobenius_norm_diff_pass": true,
+        "lambda_min": -7.293389508168806e-16,
+        "lambda_min_pass": true,
+        "max_abs_diff": 0.0,
+        "max_abs_diff_pass": true,
+        "qa001_pass": true,
+        "trace_abs_deviation": 4.471485812981168e-16,
+        "trace_abs_deviation_pass": true
+      },
+      "realization": {
+        "actual_fused_execution": false,
+        "exact_output_present": true,
+        "fused_region_classifications": [
+          "supported_but_unfused",
+          "deferred_or_unsupported_candidate",
+          "supported_but_unfused",
+          "supported_but_unfused",
+          "supported_but_unfused",
+          "supported_but_unfused",
+          "supported_but_unfused",
+          "supported_but_unfused",
+          "supported_but_unfused",
+          "supported_but_unfused"
+        ],
+        "fused_region_count": 0,
+        "partition_count": 9,
+        "realized_path": "partitioned_density_descriptor_baseline",
+        "requested_path": "partitioned_density_descriptor_baseline"
+      },
+      "record_schema_version": "correctness_evidence_mf1a_baseline_case_v1",
+      "route": "partitioned_density_descriptor_baseline",
+      "seed_policy": "deterministic_workload_no_random_seed",
+      "workload": "phase2_xxz_hea_q8_continuity"
+    },
+    {
+      "anchor_qbits": 10,
+      "claim_boundary": "Counted M-F1a denominator evidence for the ADR-F1A-001 route-by-anchor set: partitioned_density_descriptor_baseline, partitioned_density_descriptor_fused_unitary_islands, phase31_channel_native, and phase31_channel_native_hybrid at anchors 4, 6, 8, and 10 with max_partition_qubits 2, each against execute_sequential_density_reference under QA-001. No complete M-F1a, state-vector, external-protocol, Aer, energy, or frozen-matrix claim.",
+      "completeness_claim": false,
+      "manifest_schema_version": "correctness_evidence_mf1a_baseline_manifest_v1",
+      "milestone_counted": true,
+      "parameters": [
+        0.05,
+        0.1,
+        0.15000000000000002,
+        0.2,
+        0.25000000000000006,
+        0.30000000000000004,
+        0.35000000000000003,
+        0.4000000000000001,
+        0.45000000000000007,
+        0.5000000000000001,
+        0.5500000000000002,
+        0.6000000000000002,
+        0.6500000000000001,
+        0.7000000000000002,
+        0.7500000000000002,
+        0.8000000000000002,
+        0.8500000000000002,
+        0.9000000000000002,
+        0.9500000000000002,
+        1.0000000000000002,
+        1.0500000000000003,
+        1.1000000000000003,
+        1.1500000000000004,
+        1.2000000000000002,
+        1.2500000000000002,
+        1.3000000000000003,
+        1.3500000000000003,
+        1.4000000000000004,
+        1.4500000000000004,
+        1.5000000000000002,
+        1.5500000000000003,
+        1.6000000000000003,
+        1.6500000000000004,
+        1.7000000000000004,
+        1.7500000000000004,
+        1.8000000000000005,
+        1.8500000000000003,
+        1.9000000000000004,
+        1.9500000000000004,
+        2.0000000000000004,
+        2.0500000000000003,
+        2.1,
+        2.1500000000000004,
+        2.2,
+        2.2500000000000004,
+        2.3000000000000003,
+        2.35,
+        2.4000000000000004,
+        2.45,
+        2.5000000000000004,
+        2.5500000000000003,
+        2.6000000000000005,
+        2.6500000000000004,
+        2.7
+      ],
+      "planner_setting": {
+        "max_partition_qubits": 2
+      },
+      "provenance": {
+        "clean_start": true,
+        "command": "conda run -n qgd --no-capture-output python benchmarks/density_matrix/correctness_evidence/validation_pipeline.py",
+        "dependencies": {
+          "numpy": "2.3.5",
+          "scipy": "1.16.3",
+          "squander": "1.9.7"
+        },
+        "dirty_paths": [],
+        "environment": {
+          "conda_default_env": "qgd",
+          "conda_prefix": "/home/zkegli/.conda/envs/qgd",
+          "python_executable": "/home/zkegli/.conda/envs/qgd/bin/python",
+          "python_version": "3.13.9"
+        },
+        "extension_identities": [
+          {
+            "path": "squander/density_matrix/_density_matrix_cpp.cpython-313-x86_64-linux-gnu.so",
+            "sha256": "05f01747e986dabba73073c11c9b00fdb326afdd703e59cd5cfe27af6631cc77"
+          }
+        ],
+        "implementation_revision": "314fee7cfd536dff79dd9efd16138f57e7ffbd9f",
+        "input_artifact_identities": [],
+        "provenance_pass": true
+      },
+      "qa001": {
+        "eigensolver_pass": true,
+        "finite_eigenvalues_pass": true,
+        "finite_entries_pass": true,
+        "finite_residuals_pass": true,
+        "first_failure": null,
+        "frobenius_norm_diff": 0.0,
+        "frobenius_norm_diff_pass": true,
+        "lambda_min": -6.532809892436136e-16,
+        "lambda_min_pass": true,
+        "max_abs_diff": 0.0,
+        "max_abs_diff_pass": true,
+        "qa001_pass": true,
+        "trace_abs_deviation": 6.687694700104658e-16,
+        "trace_abs_deviation_pass": true
+      },
+      "realization": {
+        "actual_fused_execution": false,
+        "exact_output_present": true,
+        "fused_region_classifications": [
+          "supported_but_unfused",
+          "deferred_or_unsupported_candidate",
+          "supported_but_unfused",
+          "supported_but_unfused",
+          "supported_but_unfused",
+          "supported_but_unfused",
+          "supported_but_unfused",
+          "supported_but_unfused",
+          "supported_but_unfused",
+          "supported_but_unfused",
+          "supported_but_unfused",
+          "supported_but_unfused"
+        ],
+        "fused_region_count": 0,
+        "partition_count": 11,
+        "realized_path": "partitioned_density_descriptor_baseline",
+        "requested_path": "partitioned_density_descriptor_baseline"
+      },
+      "record_schema_version": "correctness_evidence_mf1a_baseline_case_v1",
+      "route": "partitioned_density_descriptor_baseline",
+      "seed_policy": "deterministic_workload_no_random_seed",
+      "workload": "phase2_xxz_hea_q10_continuity"
+    },
+    {
+      "anchor_qbits": 4,
+      "claim_boundary": "Counted M-F1a denominator evidence for the ADR-F1A-001 route-by-anchor set: partitioned_density_descriptor_baseline, partitioned_density_descriptor_fused_unitary_islands, phase31_channel_native, and phase31_channel_native_hybrid at anchors 4, 6, 8, and 10 with max_partition_qubits 2, each against execute_sequential_density_reference under QA-001. No complete M-F1a, state-vector, external-protocol, Aer, energy, or frozen-matrix claim.",
+      "completeness_claim": false,
+      "manifest_schema_version": "correctness_evidence_mf1a_fused_manifest_v1",
+      "milestone_counted": true,
+      "parameters": [
+        0.05,
+        0.1,
+        0.15,
+        0.2,
+        0.25,
+        0.3,
+        0.35,
+        0.39999999999999997,
+        0.44999999999999996,
+        0.49999999999999994,
+        0.5499999999999999,
+        0.6,
+        0.65,
+        0.7,
+        0.75,
+        0.7999999999999999,
+        0.85,
+        0.9
+      ],
+      "planner_setting": {
+        "max_partition_qubits": 2
+      },
+      "provenance": {
+        "clean_start": true,
+        "command": "conda run -n qgd --no-capture-output python benchmarks/density_matrix/correctness_evidence/validation_pipeline.py",
+        "dependencies": {
+          "numpy": "2.3.5",
+          "scipy": "1.16.3",
+          "squander": "1.9.7"
+        },
+        "dirty_paths": [],
+        "environment": {
+          "conda_default_env": "qgd",
+          "conda_prefix": "/home/zkegli/.conda/envs/qgd",
+          "python_executable": "/home/zkegli/.conda/envs/qgd/bin/python",
+          "python_version": "3.13.9"
+        },
+        "extension_identities": [
+          {
+            "path": "squander/density_matrix/_density_matrix_cpp.cpython-313-x86_64-linux-gnu.so",
+            "sha256": "05f01747e986dabba73073c11c9b00fdb326afdd703e59cd5cfe27af6631cc77"
+          }
+        ],
+        "implementation_revision": "314fee7cfd536dff79dd9efd16138f57e7ffbd9f",
+        "input_artifact_identities": [],
+        "provenance_pass": true
+      },
+      "qa001": {
+        "eigensolver_pass": true,
+        "finite_eigenvalues_pass": true,
+        "finite_entries_pass": true,
+        "finite_residuals_pass": true,
+        "first_failure": null,
+        "frobenius_norm_diff": 2.9693283641947435e-16,
+        "frobenius_norm_diff_pass": true,
+        "lambda_min": -1.2663332938240537e-16,
+        "lambda_min_pass": true,
+        "max_abs_diff": 1.1114420827879992e-16,
+        "max_abs_diff_pass": true,
+        "qa001_pass": true,
+        "trace_abs_deviation": 2.223868516624865e-16,
+        "trace_abs_deviation_pass": true
+      },
+      "realization": {
+        "actual_fused_execution": true,
+        "exact_output_present": true,
+        "fused_region_classifications": [
+          "supported_but_unfused",
+          "deferred_or_unsupported_candidate",
+          "actually_fused",
+          "actually_fused",
+          "actually_fused",
+          "actually_fused"
+        ],
+        "fused_region_count": 4,
+        "fused_regions": [
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "supported_but_unfused",
+            "global_target_qbits": [
+              1
+            ],
+            "operation_names": [
+              "U3"
+            ],
+            "partition_index": 0,
+            "reason": "singleton_unitary_region"
+          },
+          {
+            "candidate_kind": "noise_boundary",
+            "classification": "deferred_or_unsupported_candidate",
+            "global_target_qbits": [
+              0,
+              1
+            ],
+            "operation_names": [
+              "U3",
+              "local_depolarizing",
+              "U3",
+              "CNOT"
+            ],
+            "partition_index": 0,
+            "reason": "explicit_noise_boundary"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              0,
+              1
+            ],
+            "operation_names": [
+              "U3",
+              "CNOT"
+            ],
+            "partition_index": 0,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              2,
+              3
+            ],
+            "operation_names": [
+              "U3",
+              "U3"
+            ],
+            "partition_index": 1,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              2,
+              3
+            ],
+            "operation_names": [
+              "CNOT",
+              "U3"
+            ],
+            "partition_index": 3,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              1,
+              2
+            ],
+            "operation_names": [
+              "U3",
+              "CNOT"
+            ],
+            "partition_index": 4,
+            "reason": "eligible_unitary_island"
+          }
+        ],
+        "partition_count": 5,
+        "realized_path": "partitioned_density_descriptor_fused_unitary_islands",
+        "requested_path": "partitioned_density_descriptor_fused_unitary_islands"
+      },
+      "record_schema_version": "correctness_evidence_mf1a_fused_case_v1",
+      "route": "partitioned_density_descriptor_fused_unitary_islands",
+      "seed_policy": "deterministic_workload_no_random_seed",
+      "workload": "phase2_xxz_hea_q4_continuity"
+    },
+    {
+      "anchor_qbits": 6,
+      "claim_boundary": "Counted M-F1a denominator evidence for the ADR-F1A-001 route-by-anchor set: partitioned_density_descriptor_baseline, partitioned_density_descriptor_fused_unitary_islands, phase31_channel_native, and phase31_channel_native_hybrid at anchors 4, 6, 8, and 10 with max_partition_qubits 2, each against execute_sequential_density_reference under QA-001. No complete M-F1a, state-vector, external-protocol, Aer, energy, or frozen-matrix claim.",
+      "completeness_claim": false,
+      "manifest_schema_version": "correctness_evidence_mf1a_fused_manifest_v1",
+      "milestone_counted": true,
+      "parameters": [
+        0.05,
+        0.1,
+        0.15,
+        0.2,
+        0.25,
+        0.3,
+        0.35,
+        0.39999999999999997,
+        0.44999999999999996,
+        0.49999999999999994,
+        0.5499999999999999,
+        0.6,
+        0.65,
+        0.7,
+        0.75,
+        0.7999999999999999,
+        0.85,
+        0.9,
+        0.95,
+        1.0,
+        1.0499999999999998,
+        1.0999999999999999,
+        1.15,
+        1.2,
+        1.25,
+        1.3,
+        1.3499999999999999,
+        1.4,
+        1.45,
+        1.5
+      ],
+      "planner_setting": {
+        "max_partition_qubits": 2
+      },
+      "provenance": {
+        "clean_start": true,
+        "command": "conda run -n qgd --no-capture-output python benchmarks/density_matrix/correctness_evidence/validation_pipeline.py",
+        "dependencies": {
+          "numpy": "2.3.5",
+          "scipy": "1.16.3",
+          "squander": "1.9.7"
+        },
+        "dirty_paths": [],
+        "environment": {
+          "conda_default_env": "qgd",
+          "conda_prefix": "/home/zkegli/.conda/envs/qgd",
+          "python_executable": "/home/zkegli/.conda/envs/qgd/bin/python",
+          "python_version": "3.13.9"
+        },
+        "extension_identities": [
+          {
+            "path": "squander/density_matrix/_density_matrix_cpp.cpython-313-x86_64-linux-gnu.so",
+            "sha256": "05f01747e986dabba73073c11c9b00fdb326afdd703e59cd5cfe27af6631cc77"
+          }
+        ],
+        "implementation_revision": "314fee7cfd536dff79dd9efd16138f57e7ffbd9f",
+        "input_artifact_identities": [],
+        "provenance_pass": true
+      },
+      "qa001": {
+        "eigensolver_pass": true,
+        "finite_eigenvalues_pass": true,
+        "finite_entries_pass": true,
+        "finite_residuals_pass": true,
+        "first_failure": null,
+        "frobenius_norm_diff": 3.577839219129891e-16,
+        "frobenius_norm_diff_pass": true,
+        "lambda_min": -3.126699215167542e-16,
+        "lambda_min_pass": true,
+        "max_abs_diff": 6.973502068242161e-17,
+        "max_abs_diff_pass": true,
+        "qa001_pass": true,
+        "trace_abs_deviation": 4.44259297716833e-16,
+        "trace_abs_deviation_pass": true
+      },
+      "realization": {
+        "actual_fused_execution": true,
+        "exact_output_present": true,
+        "fused_region_classifications": [
+          "supported_but_unfused",
+          "deferred_or_unsupported_candidate",
+          "actually_fused",
+          "actually_fused",
+          "actually_fused",
+          "actually_fused",
+          "actually_fused",
+          "actually_fused"
+        ],
+        "fused_region_count": 6,
+        "fused_regions": [
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "supported_but_unfused",
+            "global_target_qbits": [
+              1
+            ],
+            "operation_names": [
+              "U3"
+            ],
+            "partition_index": 0,
+            "reason": "singleton_unitary_region"
+          },
+          {
+            "candidate_kind": "noise_boundary",
+            "classification": "deferred_or_unsupported_candidate",
+            "global_target_qbits": [
+              0,
+              1
+            ],
+            "operation_names": [
+              "U3",
+              "local_depolarizing",
+              "U3",
+              "CNOT"
+            ],
+            "partition_index": 0,
+            "reason": "explicit_noise_boundary"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              0,
+              1
+            ],
+            "operation_names": [
+              "U3",
+              "CNOT"
+            ],
+            "partition_index": 0,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              2,
+              3
+            ],
+            "operation_names": [
+              "U3",
+              "U3"
+            ],
+            "partition_index": 1,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              2,
+              3
+            ],
+            "operation_names": [
+              "CNOT",
+              "U3"
+            ],
+            "partition_index": 3,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              1,
+              2
+            ],
+            "operation_names": [
+              "U3",
+              "CNOT"
+            ],
+            "partition_index": 4,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              4,
+              5
+            ],
+            "operation_names": [
+              "U3",
+              "U3",
+              "CNOT",
+              "U3"
+            ],
+            "partition_index": 5,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              3,
+              4
+            ],
+            "operation_names": [
+              "U3",
+              "CNOT"
+            ],
+            "partition_index": 6,
+            "reason": "eligible_unitary_island"
+          }
+        ],
+        "partition_count": 7,
+        "realized_path": "partitioned_density_descriptor_fused_unitary_islands",
+        "requested_path": "partitioned_density_descriptor_fused_unitary_islands"
+      },
+      "record_schema_version": "correctness_evidence_mf1a_fused_case_v1",
+      "route": "partitioned_density_descriptor_fused_unitary_islands",
+      "seed_policy": "deterministic_workload_no_random_seed",
+      "workload": "phase2_xxz_hea_q6_continuity"
+    },
+    {
+      "anchor_qbits": 8,
+      "claim_boundary": "Counted M-F1a denominator evidence for the ADR-F1A-001 route-by-anchor set: partitioned_density_descriptor_baseline, partitioned_density_descriptor_fused_unitary_islands, phase31_channel_native, and phase31_channel_native_hybrid at anchors 4, 6, 8, and 10 with max_partition_qubits 2, each against execute_sequential_density_reference under QA-001. No complete M-F1a, state-vector, external-protocol, Aer, energy, or frozen-matrix claim.",
+      "completeness_claim": false,
+      "manifest_schema_version": "correctness_evidence_mf1a_fused_manifest_v1",
+      "milestone_counted": true,
+      "parameters": [
+        0.05,
+        0.1,
+        0.15000000000000002,
+        0.2,
+        0.25,
+        0.3,
+        0.35000000000000003,
+        0.4,
+        0.45,
+        0.5,
+        0.55,
+        0.6000000000000001,
+        0.6500000000000001,
+        0.7000000000000001,
+        0.7500000000000001,
+        0.8,
+        0.8500000000000001,
+        0.9000000000000001,
+        0.9500000000000001,
+        1.0,
+        1.05,
+        1.1,
+        1.1500000000000001,
+        1.2000000000000002,
+        1.2500000000000002,
+        1.3,
+        1.35,
+        1.4000000000000001,
+        1.4500000000000002,
+        1.5000000000000002,
+        1.55,
+        1.6,
+        1.6500000000000001,
+        1.7000000000000002,
+        1.7500000000000002,
+        1.8,
+        1.85,
+        1.9000000000000001,
+        1.9500000000000002,
+        2.0,
+        2.05,
+        2.1,
+        2.15,
+        2.1999999999999997,
+        2.25,
+        2.3,
+        2.35,
+        2.4,
+        2.45,
+        2.5,
+        2.55,
+        2.6,
+        2.65,
+        2.7,
+        2.75,
+        2.8,
+        2.85,
+        2.9,
+        2.95,
+        3.0,
+        3.05,
+        3.1,
+        3.15,
+        3.2,
+        3.25,
+        3.3,
+        3.35,
+        3.4,
+        3.45,
+        3.5,
+        3.55,
+        3.6
+      ],
+      "planner_setting": {
+        "max_partition_qubits": 2
+      },
+      "provenance": {
+        "clean_start": true,
+        "command": "conda run -n qgd --no-capture-output python benchmarks/density_matrix/correctness_evidence/validation_pipeline.py",
+        "dependencies": {
+          "numpy": "2.3.5",
+          "scipy": "1.16.3",
+          "squander": "1.9.7"
+        },
+        "dirty_paths": [],
+        "environment": {
+          "conda_default_env": "qgd",
+          "conda_prefix": "/home/zkegli/.conda/envs/qgd",
+          "python_executable": "/home/zkegli/.conda/envs/qgd/bin/python",
+          "python_version": "3.13.9"
+        },
+        "extension_identities": [
+          {
+            "path": "squander/density_matrix/_density_matrix_cpp.cpython-313-x86_64-linux-gnu.so",
+            "sha256": "05f01747e986dabba73073c11c9b00fdb326afdd703e59cd5cfe27af6631cc77"
+          }
+        ],
+        "implementation_revision": "314fee7cfd536dff79dd9efd16138f57e7ffbd9f",
+        "input_artifact_identities": [],
+        "provenance_pass": true
+      },
+      "qa001": {
+        "eigensolver_pass": true,
+        "finite_eigenvalues_pass": true,
+        "finite_entries_pass": true,
+        "finite_residuals_pass": true,
+        "first_failure": null,
+        "frobenius_norm_diff": 9.780623393747385e-16,
+        "frobenius_norm_diff_pass": true,
+        "lambda_min": -3.1639239455454017e-16,
+        "lambda_min_pass": true,
+        "max_abs_diff": 1.0007415106216804e-16,
+        "max_abs_diff_pass": true,
+        "qa001_pass": true,
+        "trace_abs_deviation": 4.47362466282333e-16,
+        "trace_abs_deviation_pass": true
+      },
+      "realization": {
+        "actual_fused_execution": true,
+        "exact_output_present": true,
+        "fused_region_classifications": [
+          "actually_fused",
+          "actually_fused",
+          "actually_fused",
+          "actually_fused",
+          "supported_but_unfused",
+          "supported_but_unfused",
+          "supported_but_unfused",
+          "supported_but_unfused",
+          "actually_fused",
+          "actually_fused",
+          "actually_fused",
+          "actually_fused",
+          "supported_but_unfused",
+          "supported_but_unfused",
+          "supported_but_unfused",
+          "actually_fused",
+          "actually_fused",
+          "actually_fused",
+          "actually_fused",
+          "supported_but_unfused",
+          "supported_but_unfused",
+          "supported_but_unfused",
+          "supported_but_unfused"
+        ],
+        "fused_region_count": 12,
+        "fused_regions": [
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              0,
+              1
+            ],
+            "operation_names": [
+              "U3",
+              "U3"
+            ],
+            "partition_index": 0,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              2,
+              3
+            ],
+            "operation_names": [
+              "U3",
+              "U3"
+            ],
+            "partition_index": 1,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              4,
+              5
+            ],
+            "operation_names": [
+              "U3",
+              "U3"
+            ],
+            "partition_index": 2,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              6,
+              7
+            ],
+            "operation_names": [
+              "U3",
+              "U3"
+            ],
+            "partition_index": 3,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "supported_but_unfused",
+            "global_target_qbits": [
+              0,
+              1
+            ],
+            "operation_names": [
+              "CNOT"
+            ],
+            "partition_index": 4,
+            "reason": "singleton_unitary_region"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "supported_but_unfused",
+            "global_target_qbits": [
+              2,
+              3
+            ],
+            "operation_names": [
+              "CNOT"
+            ],
+            "partition_index": 5,
+            "reason": "singleton_unitary_region"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "supported_but_unfused",
+            "global_target_qbits": [
+              4,
+              5
+            ],
+            "operation_names": [
+              "CNOT"
+            ],
+            "partition_index": 6,
+            "reason": "singleton_unitary_region"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "supported_but_unfused",
+            "global_target_qbits": [
+              6,
+              7
+            ],
+            "operation_names": [
+              "CNOT"
+            ],
+            "partition_index": 7,
+            "reason": "singleton_unitary_region"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              0,
+              1
+            ],
+            "operation_names": [
+              "U3",
+              "U3"
+            ],
+            "partition_index": 8,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              2,
+              3
+            ],
+            "operation_names": [
+              "U3",
+              "U3"
+            ],
+            "partition_index": 9,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              4,
+              5
+            ],
+            "operation_names": [
+              "U3",
+              "U3"
+            ],
+            "partition_index": 10,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              6,
+              7
+            ],
+            "operation_names": [
+              "U3",
+              "U3"
+            ],
+            "partition_index": 11,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "supported_but_unfused",
+            "global_target_qbits": [
+              1,
+              2
+            ],
+            "operation_names": [
+              "CNOT"
+            ],
+            "partition_index": 12,
+            "reason": "singleton_unitary_region"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "supported_but_unfused",
+            "global_target_qbits": [
+              3,
+              4
+            ],
+            "operation_names": [
+              "CNOT"
+            ],
+            "partition_index": 13,
+            "reason": "singleton_unitary_region"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "supported_but_unfused",
+            "global_target_qbits": [
+              5,
+              6
+            ],
+            "operation_names": [
+              "CNOT"
+            ],
+            "partition_index": 14,
+            "reason": "singleton_unitary_region"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              0,
+              1
+            ],
+            "operation_names": [
+              "U3",
+              "U3"
+            ],
+            "partition_index": 15,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              2,
+              3
+            ],
+            "operation_names": [
+              "U3",
+              "U3"
+            ],
+            "partition_index": 16,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              4,
+              5
+            ],
+            "operation_names": [
+              "U3",
+              "U3"
+            ],
+            "partition_index": 17,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              6,
+              7
+            ],
+            "operation_names": [
+              "U3",
+              "U3"
+            ],
+            "partition_index": 18,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "supported_but_unfused",
+            "global_target_qbits": [
+              0,
+              1
+            ],
+            "operation_names": [
+              "CNOT"
+            ],
+            "partition_index": 19,
+            "reason": "singleton_unitary_region"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "supported_but_unfused",
+            "global_target_qbits": [
+              2,
+              3
+            ],
+            "operation_names": [
+              "CNOT"
+            ],
+            "partition_index": 20,
+            "reason": "singleton_unitary_region"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "supported_but_unfused",
+            "global_target_qbits": [
+              4,
+              5
+            ],
+            "operation_names": [
+              "CNOT"
+            ],
+            "partition_index": 21,
+            "reason": "singleton_unitary_region"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "supported_but_unfused",
+            "global_target_qbits": [
+              6,
+              7
+            ],
+            "operation_names": [
+              "CNOT"
+            ],
+            "partition_index": 22,
+            "reason": "singleton_unitary_region"
+          }
+        ],
+        "partition_count": 24,
+        "realized_path": "partitioned_density_descriptor_fused_unitary_islands",
+        "requested_path": "partitioned_density_descriptor_fused_unitary_islands"
+      },
+      "record_schema_version": "correctness_evidence_mf1a_fused_case_v1",
+      "route": "partitioned_density_descriptor_fused_unitary_islands",
+      "seed_policy": "structured_family_seed_20260318",
+      "workload": "layered_nearest_neighbor_q8_sparse_seed20260318"
+    },
+    {
+      "anchor_qbits": 10,
+      "claim_boundary": "Counted M-F1a denominator evidence for the ADR-F1A-001 route-by-anchor set: partitioned_density_descriptor_baseline, partitioned_density_descriptor_fused_unitary_islands, phase31_channel_native, and phase31_channel_native_hybrid at anchors 4, 6, 8, and 10 with max_partition_qubits 2, each against execute_sequential_density_reference under QA-001. No complete M-F1a, state-vector, external-protocol, Aer, energy, or frozen-matrix claim.",
+      "completeness_claim": false,
+      "manifest_schema_version": "correctness_evidence_mf1a_fused_manifest_v1",
+      "milestone_counted": true,
+      "parameters": [
+        0.05,
+        0.1,
+        0.15000000000000002,
+        0.2,
+        0.25,
+        0.3,
+        0.35000000000000003,
+        0.4,
+        0.45,
+        0.5,
+        0.55,
+        0.6000000000000001,
+        0.6500000000000001,
+        0.7000000000000001,
+        0.7500000000000001,
+        0.8,
+        0.8500000000000001,
+        0.9000000000000001,
+        0.9500000000000001,
+        1.0,
+        1.05,
+        1.1,
+        1.1500000000000001,
+        1.2000000000000002,
+        1.2500000000000002,
+        1.3,
+        1.35,
+        1.4000000000000001,
+        1.4500000000000002,
+        1.5000000000000002,
+        1.55,
+        1.6,
+        1.6500000000000001,
+        1.7000000000000002,
+        1.7500000000000002,
+        1.8,
+        1.85,
+        1.9000000000000001,
+        1.9500000000000002,
+        2.0,
+        2.05,
+        2.1,
+        2.15,
+        2.1999999999999997,
+        2.25,
+        2.3,
+        2.35,
+        2.4,
+        2.45,
+        2.5,
+        2.55,
+        2.6,
+        2.65,
+        2.7,
+        2.75,
+        2.8,
+        2.85,
+        2.9,
+        2.95,
+        3.0,
+        3.05,
+        3.1,
+        3.15,
+        3.2,
+        3.25,
+        3.3,
+        3.35,
+        3.4,
+        3.45,
+        3.5,
+        3.55,
+        3.6,
+        3.65,
+        3.7,
+        3.75,
+        3.8,
+        3.85,
+        3.9,
+        3.95,
+        4.0,
+        4.05,
+        4.1,
+        4.15,
+        4.2,
+        4.25,
+        4.3,
+        4.35,
+        4.4,
+        4.45,
+        4.5,
+        4.55,
+        4.6,
+        4.65,
+        4.7,
+        4.75,
+        4.8,
+        4.8500000000000005,
+        4.9,
+        4.95,
+        5.0,
+        5.05,
+        5.1000000000000005,
+        5.15,
+        5.2,
+        5.25,
+        5.3,
+        5.3500000000000005,
+        5.4,
+        5.45,
+        5.5,
+        5.55,
+        5.6000000000000005,
+        5.65,
+        5.7,
+        5.75,
+        5.8,
+        5.8500000000000005,
+        5.9,
+        5.95,
+        6.0
+      ],
+      "planner_setting": {
+        "max_partition_qubits": 2
+      },
+      "provenance": {
+        "clean_start": true,
+        "command": "conda run -n qgd --no-capture-output python benchmarks/density_matrix/correctness_evidence/validation_pipeline.py",
+        "dependencies": {
+          "numpy": "2.3.5",
+          "scipy": "1.16.3",
+          "squander": "1.9.7"
+        },
+        "dirty_paths": [],
+        "environment": {
+          "conda_default_env": "qgd",
+          "conda_prefix": "/home/zkegli/.conda/envs/qgd",
+          "python_executable": "/home/zkegli/.conda/envs/qgd/bin/python",
+          "python_version": "3.13.9"
+        },
+        "extension_identities": [
+          {
+            "path": "squander/density_matrix/_density_matrix_cpp.cpython-313-x86_64-linux-gnu.so",
+            "sha256": "05f01747e986dabba73073c11c9b00fdb326afdd703e59cd5cfe27af6631cc77"
+          }
+        ],
+        "implementation_revision": "314fee7cfd536dff79dd9efd16138f57e7ffbd9f",
+        "input_artifact_identities": [],
+        "provenance_pass": true
+      },
+      "qa001": {
+        "eigensolver_pass": true,
+        "finite_eigenvalues_pass": true,
+        "finite_entries_pass": true,
+        "finite_residuals_pass": true,
+        "first_failure": null,
+        "frobenius_norm_diff": 1.5280319455352105e-15,
+        "frobenius_norm_diff_pass": true,
+        "lambda_min": -5.624660599613144e-16,
+        "lambda_min_pass": true,
+        "max_abs_diff": 1.3887720738058084e-16,
+        "max_abs_diff_pass": true,
+        "qa001_pass": true,
+        "trace_abs_deviation": 1.1103269987108257e-15,
+        "trace_abs_deviation_pass": true
+      },
+      "realization": {
+        "actual_fused_execution": true,
+        "exact_output_present": true,
+        "fused_region_classifications": [
+          "actually_fused",
+          "actually_fused",
+          "actually_fused",
+          "actually_fused",
+          "actually_fused",
+          "supported_but_unfused",
+          "supported_but_unfused",
+          "supported_but_unfused",
+          "supported_but_unfused",
+          "supported_but_unfused",
+          "actually_fused",
+          "actually_fused",
+          "actually_fused",
+          "actually_fused",
+          "actually_fused",
+          "supported_but_unfused",
+          "supported_but_unfused",
+          "supported_but_unfused",
+          "supported_but_unfused",
+          "actually_fused",
+          "actually_fused",
+          "actually_fused",
+          "actually_fused",
+          "actually_fused",
+          "supported_but_unfused",
+          "supported_but_unfused",
+          "supported_but_unfused",
+          "supported_but_unfused",
+          "supported_but_unfused",
+          "actually_fused",
+          "actually_fused",
+          "actually_fused",
+          "actually_fused",
+          "actually_fused",
+          "supported_but_unfused",
+          "supported_but_unfused",
+          "supported_but_unfused",
+          "supported_but_unfused"
+        ],
+        "fused_region_count": 20,
+        "fused_regions": [
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              0,
+              1
+            ],
+            "operation_names": [
+              "U3",
+              "U3"
+            ],
+            "partition_index": 0,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              2,
+              3
+            ],
+            "operation_names": [
+              "U3",
+              "U3"
+            ],
+            "partition_index": 1,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              4,
+              5
+            ],
+            "operation_names": [
+              "U3",
+              "U3"
+            ],
+            "partition_index": 2,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              6,
+              7
+            ],
+            "operation_names": [
+              "U3",
+              "U3"
+            ],
+            "partition_index": 3,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              8,
+              9
+            ],
+            "operation_names": [
+              "U3",
+              "U3"
+            ],
+            "partition_index": 4,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "supported_but_unfused",
+            "global_target_qbits": [
+              0,
+              1
+            ],
+            "operation_names": [
+              "CNOT"
+            ],
+            "partition_index": 5,
+            "reason": "singleton_unitary_region"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "supported_but_unfused",
+            "global_target_qbits": [
+              2,
+              3
+            ],
+            "operation_names": [
+              "CNOT"
+            ],
+            "partition_index": 6,
+            "reason": "singleton_unitary_region"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "supported_but_unfused",
+            "global_target_qbits": [
+              4,
+              5
+            ],
+            "operation_names": [
+              "CNOT"
+            ],
+            "partition_index": 7,
+            "reason": "singleton_unitary_region"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "supported_but_unfused",
+            "global_target_qbits": [
+              6,
+              7
+            ],
+            "operation_names": [
+              "CNOT"
+            ],
+            "partition_index": 8,
+            "reason": "singleton_unitary_region"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "supported_but_unfused",
+            "global_target_qbits": [
+              8,
+              9
+            ],
+            "operation_names": [
+              "CNOT"
+            ],
+            "partition_index": 9,
+            "reason": "singleton_unitary_region"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              0,
+              1
+            ],
+            "operation_names": [
+              "U3",
+              "U3"
+            ],
+            "partition_index": 10,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              2,
+              3
+            ],
+            "operation_names": [
+              "U3",
+              "U3"
+            ],
+            "partition_index": 11,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              4,
+              5
+            ],
+            "operation_names": [
+              "U3",
+              "U3"
+            ],
+            "partition_index": 12,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              6,
+              7
+            ],
+            "operation_names": [
+              "U3",
+              "U3"
+            ],
+            "partition_index": 13,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              8,
+              9
+            ],
+            "operation_names": [
+              "U3",
+              "U3"
+            ],
+            "partition_index": 14,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "supported_but_unfused",
+            "global_target_qbits": [
+              1,
+              2
+            ],
+            "operation_names": [
+              "CNOT"
+            ],
+            "partition_index": 15,
+            "reason": "singleton_unitary_region"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "supported_but_unfused",
+            "global_target_qbits": [
+              3,
+              4
+            ],
+            "operation_names": [
+              "CNOT"
+            ],
+            "partition_index": 16,
+            "reason": "singleton_unitary_region"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "supported_but_unfused",
+            "global_target_qbits": [
+              5,
+              6
+            ],
+            "operation_names": [
+              "CNOT"
+            ],
+            "partition_index": 17,
+            "reason": "singleton_unitary_region"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "supported_but_unfused",
+            "global_target_qbits": [
+              7,
+              8
+            ],
+            "operation_names": [
+              "CNOT"
+            ],
+            "partition_index": 18,
+            "reason": "singleton_unitary_region"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              0,
+              1
+            ],
+            "operation_names": [
+              "U3",
+              "U3"
+            ],
+            "partition_index": 19,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              2,
+              3
+            ],
+            "operation_names": [
+              "U3",
+              "U3"
+            ],
+            "partition_index": 20,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              4,
+              5
+            ],
+            "operation_names": [
+              "U3",
+              "U3"
+            ],
+            "partition_index": 21,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              6,
+              7
+            ],
+            "operation_names": [
+              "U3",
+              "U3"
+            ],
+            "partition_index": 22,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              8,
+              9
+            ],
+            "operation_names": [
+              "U3",
+              "U3"
+            ],
+            "partition_index": 23,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "supported_but_unfused",
+            "global_target_qbits": [
+              0,
+              1
+            ],
+            "operation_names": [
+              "CNOT"
+            ],
+            "partition_index": 24,
+            "reason": "singleton_unitary_region"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "supported_but_unfused",
+            "global_target_qbits": [
+              2,
+              3
+            ],
+            "operation_names": [
+              "CNOT"
+            ],
+            "partition_index": 25,
+            "reason": "singleton_unitary_region"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "supported_but_unfused",
+            "global_target_qbits": [
+              4,
+              5
+            ],
+            "operation_names": [
+              "CNOT"
+            ],
+            "partition_index": 26,
+            "reason": "singleton_unitary_region"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "supported_but_unfused",
+            "global_target_qbits": [
+              6,
+              7
+            ],
+            "operation_names": [
+              "CNOT"
+            ],
+            "partition_index": 27,
+            "reason": "singleton_unitary_region"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "supported_but_unfused",
+            "global_target_qbits": [
+              8,
+              9
+            ],
+            "operation_names": [
+              "CNOT"
+            ],
+            "partition_index": 28,
+            "reason": "singleton_unitary_region"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              0,
+              1
+            ],
+            "operation_names": [
+              "U3",
+              "U3"
+            ],
+            "partition_index": 29,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              2,
+              3
+            ],
+            "operation_names": [
+              "U3",
+              "U3"
+            ],
+            "partition_index": 30,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              4,
+              5
+            ],
+            "operation_names": [
+              "U3",
+              "U3"
+            ],
+            "partition_index": 31,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              6,
+              7
+            ],
+            "operation_names": [
+              "U3",
+              "U3"
+            ],
+            "partition_index": 32,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              8,
+              9
+            ],
+            "operation_names": [
+              "U3",
+              "U3"
+            ],
+            "partition_index": 33,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "supported_but_unfused",
+            "global_target_qbits": [
+              1,
+              2
+            ],
+            "operation_names": [
+              "CNOT"
+            ],
+            "partition_index": 34,
+            "reason": "singleton_unitary_region"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "supported_but_unfused",
+            "global_target_qbits": [
+              3,
+              4
+            ],
+            "operation_names": [
+              "CNOT"
+            ],
+            "partition_index": 35,
+            "reason": "singleton_unitary_region"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "supported_but_unfused",
+            "global_target_qbits": [
+              5,
+              6
+            ],
+            "operation_names": [
+              "CNOT"
+            ],
+            "partition_index": 36,
+            "reason": "singleton_unitary_region"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "supported_but_unfused",
+            "global_target_qbits": [
+              7,
+              8
+            ],
+            "operation_names": [
+              "CNOT"
+            ],
+            "partition_index": 37,
+            "reason": "singleton_unitary_region"
+          }
+        ],
+        "partition_count": 38,
+        "realized_path": "partitioned_density_descriptor_fused_unitary_islands",
+        "requested_path": "partitioned_density_descriptor_fused_unitary_islands"
+      },
+      "record_schema_version": "correctness_evidence_mf1a_fused_case_v1",
+      "route": "partitioned_density_descriptor_fused_unitary_islands",
+      "seed_policy": "structured_family_seed_20260318",
+      "workload": "layered_nearest_neighbor_q10_sparse_seed20260318"
+    },
+    {
+      "anchor_qbits": 4,
+      "claim_boundary": "Counted M-F1a denominator evidence for the ADR-F1A-001 route-by-anchor set: partitioned_density_descriptor_baseline, partitioned_density_descriptor_fused_unitary_islands, phase31_channel_native, and phase31_channel_native_hybrid at anchors 4, 6, 8, and 10 with max_partition_qubits 2, each against execute_sequential_density_reference under QA-001. No complete M-F1a, state-vector, external-protocol, Aer, energy, or frozen-matrix claim.",
+      "completeness_claim": false,
+      "manifest_schema_version": "correctness_evidence_mf1a_strict_manifest_v1",
+      "milestone_counted": true,
+      "parameters": [
+        0.05,
+        0.1,
+        0.15,
+        0.2,
+        0.25,
+        0.3,
+        0.35,
+        0.39999999999999997,
+        0.44999999999999996,
+        0.49999999999999994,
+        0.5499999999999999,
+        0.6,
+        0.65,
+        0.7,
+        0.75,
+        0.7999999999999999,
+        0.85,
+        0.9
+      ],
+      "planner_setting": {
+        "max_partition_qubits": 2
+      },
+      "provenance": {
+        "clean_start": true,
+        "command": "conda run -n qgd --no-capture-output python benchmarks/density_matrix/correctness_evidence/validation_pipeline.py",
+        "dependencies": {
+          "numpy": "2.3.5",
+          "scipy": "1.16.3",
+          "squander": "1.9.7"
+        },
+        "dirty_paths": [],
+        "environment": {
+          "conda_default_env": "qgd",
+          "conda_prefix": "/home/zkegli/.conda/envs/qgd",
+          "python_executable": "/home/zkegli/.conda/envs/qgd/bin/python",
+          "python_version": "3.13.9"
+        },
+        "extension_identities": [
+          {
+            "path": "squander/density_matrix/_density_matrix_cpp.cpython-313-x86_64-linux-gnu.so",
+            "sha256": "05f01747e986dabba73073c11c9b00fdb326afdd703e59cd5cfe27af6631cc77"
+          }
+        ],
+        "implementation_revision": "314fee7cfd536dff79dd9efd16138f57e7ffbd9f",
+        "input_artifact_identities": [],
+        "provenance_pass": true
+      },
+      "qa001": {
+        "eigensolver_pass": true,
+        "finite_eigenvalues_pass": true,
+        "finite_entries_pass": true,
+        "finite_residuals_pass": true,
+        "first_failure": null,
+        "frobenius_norm_diff": 3.1308576355623446e-16,
+        "frobenius_norm_diff_pass": true,
+        "lambda_min": 5.377073501111824e-10,
+        "lambda_min_pass": true,
+        "max_abs_diff": 1.2412670766236366e-16,
+        "max_abs_diff_pass": true,
+        "qa001_pass": true,
+        "trace_abs_deviation": 2.2205381901673875e-16,
+        "trace_abs_deviation_pass": true
+      },
+      "realization": {
+        "channel_native_partition_count": 2,
+        "exact_output_present": true,
+        "fused_regions": [
+          {
+            "candidate_kind": "channel_native_motif",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              0,
+              1
+            ],
+            "operation_names": [
+              "U3",
+              "U3",
+              "CNOT",
+              "amplitude_damping",
+              "phase_damping",
+              "U3"
+            ],
+            "partition_index": 0,
+            "reason": "channel_native_motif_kraus_count_4"
+          },
+          {
+            "candidate_kind": "channel_native_motif",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              2,
+              3
+            ],
+            "operation_names": [
+              "U3",
+              "U3",
+              "CNOT",
+              "amplitude_damping",
+              "phase_damping",
+              "U3"
+            ],
+            "partition_index": 1,
+            "reason": "channel_native_motif_kraus_count_4"
+          }
+        ],
+        "partition_count": 2,
+        "partitions": [
+          {
+            "partition_index": 0
+          },
+          {
+            "partition_index": 1
+          }
+        ],
+        "realized_path": "phase31_channel_native",
+        "requested_path": "phase31_channel_native"
+      },
+      "record_schema_version": "correctness_evidence_mf1a_strict_case_v1",
+      "route": "phase31_channel_native",
+      "seed_policy": "deterministic_workload_no_random_seed",
+      "workload": "phase31_local_support_q4_spectator_embedding_smoke"
+    },
+    {
+      "anchor_qbits": 6,
+      "claim_boundary": "Counted M-F1a denominator evidence for the ADR-F1A-001 route-by-anchor set: partitioned_density_descriptor_baseline, partitioned_density_descriptor_fused_unitary_islands, phase31_channel_native, and phase31_channel_native_hybrid at anchors 4, 6, 8, and 10 with max_partition_qubits 2, each against execute_sequential_density_reference under QA-001. No complete M-F1a, state-vector, external-protocol, Aer, energy, or frozen-matrix claim.",
+      "completeness_claim": false,
+      "manifest_schema_version": "correctness_evidence_mf1a_strict_manifest_v1",
+      "milestone_counted": true,
+      "parameters": [
+        0.05,
+        0.1,
+        0.15000000000000002,
+        0.2,
+        0.25,
+        0.3,
+        0.35000000000000003,
+        0.4,
+        0.45,
+        0.5,
+        0.55,
+        0.6000000000000001,
+        0.6500000000000001,
+        0.7000000000000001,
+        0.7500000000000001,
+        0.8,
+        0.8500000000000001,
+        0.9000000000000001,
+        0.9500000000000001,
+        1.0,
+        1.05,
+        1.1,
+        1.1500000000000001,
+        1.2000000000000002,
+        1.2500000000000002,
+        1.3,
+        1.35
+      ],
+      "planner_setting": {
+        "max_partition_qubits": 2
+      },
+      "provenance": {
+        "clean_start": true,
+        "command": "conda run -n qgd --no-capture-output python benchmarks/density_matrix/correctness_evidence/validation_pipeline.py",
+        "dependencies": {
+          "numpy": "2.3.5",
+          "scipy": "1.16.3",
+          "squander": "1.9.7"
+        },
+        "dirty_paths": [],
+        "environment": {
+          "conda_default_env": "qgd",
+          "conda_prefix": "/home/zkegli/.conda/envs/qgd",
+          "python_executable": "/home/zkegli/.conda/envs/qgd/bin/python",
+          "python_version": "3.13.9"
+        },
+        "extension_identities": [
+          {
+            "path": "squander/density_matrix/_density_matrix_cpp.cpython-313-x86_64-linux-gnu.so",
+            "sha256": "05f01747e986dabba73073c11c9b00fdb326afdd703e59cd5cfe27af6631cc77"
+          }
+        ],
+        "implementation_revision": "314fee7cfd536dff79dd9efd16138f57e7ffbd9f",
+        "input_artifact_identities": [],
+        "provenance_pass": true
+      },
+      "qa001": {
+        "eigensolver_pass": true,
+        "finite_eigenvalues_pass": true,
+        "finite_entries_pass": true,
+        "finite_residuals_pass": true,
+        "first_failure": null,
+        "frobenius_norm_diff": 2.821095327914436e-16,
+        "frobenius_norm_diff_pass": true,
+        "lambda_min": 4.494674600666298e-14,
+        "lambda_min_pass": true,
+        "max_abs_diff": 8.431011452062427e-17,
+        "max_abs_diff_pass": true,
+        "qa001_pass": true,
+        "trace_abs_deviation": 2.2244737567201944e-16,
+        "trace_abs_deviation_pass": true
+      },
+      "realization": {
+        "channel_native_partition_count": 3,
+        "exact_output_present": true,
+        "fused_regions": [
+          {
+            "candidate_kind": "channel_native_motif",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              0,
+              1
+            ],
+            "operation_names": [
+              "U3",
+              "U3",
+              "CNOT",
+              "amplitude_damping",
+              "phase_damping",
+              "U3"
+            ],
+            "partition_index": 0,
+            "reason": "channel_native_motif_kraus_count_4"
+          },
+          {
+            "candidate_kind": "channel_native_motif",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              2,
+              3
+            ],
+            "operation_names": [
+              "U3",
+              "U3",
+              "CNOT",
+              "amplitude_damping",
+              "phase_damping",
+              "U3"
+            ],
+            "partition_index": 1,
+            "reason": "channel_native_motif_kraus_count_4"
+          },
+          {
+            "candidate_kind": "channel_native_motif",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              4,
+              5
+            ],
+            "operation_names": [
+              "U3",
+              "U3",
+              "CNOT",
+              "amplitude_damping",
+              "phase_damping",
+              "U3"
+            ],
+            "partition_index": 2,
+            "reason": "channel_native_motif_kraus_count_4"
+          }
+        ],
+        "partition_count": 3,
+        "partitions": [
+          {
+            "partition_index": 0
+          },
+          {
+            "partition_index": 1
+          },
+          {
+            "partition_index": 2
+          }
+        ],
+        "realized_path": "phase31_channel_native",
+        "requested_path": "phase31_channel_native"
+      },
+      "record_schema_version": "correctness_evidence_mf1a_strict_case_v1",
+      "route": "phase31_channel_native",
+      "seed_policy": "deterministic_workload_no_random_seed",
+      "workload": "mf1a_strict_spectator_embed_q6"
+    },
+    {
+      "anchor_qbits": 8,
+      "claim_boundary": "Counted M-F1a denominator evidence for the ADR-F1A-001 route-by-anchor set: partitioned_density_descriptor_baseline, partitioned_density_descriptor_fused_unitary_islands, phase31_channel_native, and phase31_channel_native_hybrid at anchors 4, 6, 8, and 10 with max_partition_qubits 2, each against execute_sequential_density_reference under QA-001. No complete M-F1a, state-vector, external-protocol, Aer, energy, or frozen-matrix claim.",
+      "completeness_claim": false,
+      "manifest_schema_version": "correctness_evidence_mf1a_strict_manifest_v1",
+      "milestone_counted": true,
+      "parameters": [
+        0.05,
+        0.1,
+        0.15000000000000002,
+        0.2,
+        0.25,
+        0.3,
+        0.35000000000000003,
+        0.4,
+        0.45,
+        0.5,
+        0.55,
+        0.6000000000000001,
+        0.6500000000000001,
+        0.7000000000000001,
+        0.7500000000000001,
+        0.8,
+        0.8500000000000001,
+        0.9000000000000001,
+        0.9500000000000001,
+        1.0,
+        1.05,
+        1.1,
+        1.1500000000000001,
+        1.2000000000000002,
+        1.2500000000000002,
+        1.3,
+        1.35,
+        1.4000000000000001,
+        1.4500000000000002,
+        1.5000000000000002,
+        1.55,
+        1.6,
+        1.6500000000000001,
+        1.7000000000000002,
+        1.7500000000000002,
+        1.8
+      ],
+      "planner_setting": {
+        "max_partition_qubits": 2
+      },
+      "provenance": {
+        "clean_start": true,
+        "command": "conda run -n qgd --no-capture-output python benchmarks/density_matrix/correctness_evidence/validation_pipeline.py",
+        "dependencies": {
+          "numpy": "2.3.5",
+          "scipy": "1.16.3",
+          "squander": "1.9.7"
+        },
+        "dirty_paths": [],
+        "environment": {
+          "conda_default_env": "qgd",
+          "conda_prefix": "/home/zkegli/.conda/envs/qgd",
+          "python_executable": "/home/zkegli/.conda/envs/qgd/bin/python",
+          "python_version": "3.13.9"
+        },
+        "extension_identities": [
+          {
+            "path": "squander/density_matrix/_density_matrix_cpp.cpython-313-x86_64-linux-gnu.so",
+            "sha256": "05f01747e986dabba73073c11c9b00fdb326afdd703e59cd5cfe27af6631cc77"
+          }
+        ],
+        "implementation_revision": "314fee7cfd536dff79dd9efd16138f57e7ffbd9f",
+        "input_artifact_identities": [],
+        "provenance_pass": true
+      },
+      "qa001": {
+        "eigensolver_pass": true,
+        "finite_eigenvalues_pass": true,
+        "finite_entries_pass": true,
+        "finite_residuals_pass": true,
+        "first_failure": null,
+        "frobenius_norm_diff": 3.6150676838438986e-16,
+        "frobenius_norm_diff_pass": true,
+        "lambda_min": -4.2093924356896503e-19,
+        "lambda_min_pass": true,
+        "max_abs_diff": 1.1188630228279524e-16,
+        "max_abs_diff_pass": true,
+        "qa001_pass": true,
+        "trace_abs_deviation": 1.1230019866474994e-17,
+        "trace_abs_deviation_pass": true
+      },
+      "realization": {
+        "channel_native_partition_count": 4,
+        "exact_output_present": true,
+        "fused_regions": [
+          {
+            "candidate_kind": "channel_native_motif",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              0,
+              1
+            ],
+            "operation_names": [
+              "U3",
+              "U3",
+              "CNOT",
+              "amplitude_damping",
+              "phase_damping",
+              "U3"
+            ],
+            "partition_index": 0,
+            "reason": "channel_native_motif_kraus_count_4"
+          },
+          {
+            "candidate_kind": "channel_native_motif",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              2,
+              3
+            ],
+            "operation_names": [
+              "U3",
+              "U3",
+              "CNOT",
+              "amplitude_damping",
+              "phase_damping",
+              "U3"
+            ],
+            "partition_index": 1,
+            "reason": "channel_native_motif_kraus_count_4"
+          },
+          {
+            "candidate_kind": "channel_native_motif",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              4,
+              5
+            ],
+            "operation_names": [
+              "U3",
+              "U3",
+              "CNOT",
+              "amplitude_damping",
+              "phase_damping",
+              "U3"
+            ],
+            "partition_index": 2,
+            "reason": "channel_native_motif_kraus_count_4"
+          },
+          {
+            "candidate_kind": "channel_native_motif",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              6,
+              7
+            ],
+            "operation_names": [
+              "U3",
+              "U3",
+              "CNOT",
+              "amplitude_damping",
+              "phase_damping",
+              "U3"
+            ],
+            "partition_index": 3,
+            "reason": "channel_native_motif_kraus_count_4"
+          }
+        ],
+        "partition_count": 4,
+        "partitions": [
+          {
+            "partition_index": 0
+          },
+          {
+            "partition_index": 1
+          },
+          {
+            "partition_index": 2
+          },
+          {
+            "partition_index": 3
+          }
+        ],
+        "realized_path": "phase31_channel_native",
+        "requested_path": "phase31_channel_native"
+      },
+      "record_schema_version": "correctness_evidence_mf1a_strict_case_v1",
+      "route": "phase31_channel_native",
+      "seed_policy": "deterministic_workload_no_random_seed",
+      "workload": "mf1a_strict_spectator_embed_q8"
+    },
+    {
+      "anchor_qbits": 10,
+      "claim_boundary": "Counted M-F1a denominator evidence for the ADR-F1A-001 route-by-anchor set: partitioned_density_descriptor_baseline, partitioned_density_descriptor_fused_unitary_islands, phase31_channel_native, and phase31_channel_native_hybrid at anchors 4, 6, 8, and 10 with max_partition_qubits 2, each against execute_sequential_density_reference under QA-001. No complete M-F1a, state-vector, external-protocol, Aer, energy, or frozen-matrix claim.",
+      "completeness_claim": false,
+      "manifest_schema_version": "correctness_evidence_mf1a_strict_manifest_v1",
+      "milestone_counted": true,
+      "parameters": [
+        0.05,
+        0.1,
+        0.15000000000000002,
+        0.2,
+        0.25,
+        0.3,
+        0.35000000000000003,
+        0.4,
+        0.45,
+        0.5,
+        0.55,
+        0.6000000000000001,
+        0.6500000000000001,
+        0.7000000000000001,
+        0.7500000000000001,
+        0.8,
+        0.8500000000000001,
+        0.9000000000000001,
+        0.9500000000000001,
+        1.0,
+        1.05,
+        1.1,
+        1.1500000000000001,
+        1.2000000000000002,
+        1.2500000000000002,
+        1.3,
+        1.35,
+        1.4000000000000001,
+        1.4500000000000002,
+        1.5000000000000002,
+        1.55,
+        1.6,
+        1.6500000000000001,
+        1.7000000000000002,
+        1.7500000000000002,
+        1.8,
+        1.85,
+        1.9000000000000001,
+        1.9500000000000002,
+        2.0,
+        2.05,
+        2.1,
+        2.15,
+        2.1999999999999997,
+        2.25
+      ],
+      "planner_setting": {
+        "max_partition_qubits": 2
+      },
+      "provenance": {
+        "clean_start": true,
+        "command": "conda run -n qgd --no-capture-output python benchmarks/density_matrix/correctness_evidence/validation_pipeline.py",
+        "dependencies": {
+          "numpy": "2.3.5",
+          "scipy": "1.16.3",
+          "squander": "1.9.7"
+        },
+        "dirty_paths": [],
+        "environment": {
+          "conda_default_env": "qgd",
+          "conda_prefix": "/home/zkegli/.conda/envs/qgd",
+          "python_executable": "/home/zkegli/.conda/envs/qgd/bin/python",
+          "python_version": "3.13.9"
+        },
+        "extension_identities": [
+          {
+            "path": "squander/density_matrix/_density_matrix_cpp.cpython-313-x86_64-linux-gnu.so",
+            "sha256": "05f01747e986dabba73073c11c9b00fdb326afdd703e59cd5cfe27af6631cc77"
+          }
+        ],
+        "implementation_revision": "314fee7cfd536dff79dd9efd16138f57e7ffbd9f",
+        "input_artifact_identities": [],
+        "provenance_pass": true
+      },
+      "qa001": {
+        "eigensolver_pass": true,
+        "finite_eigenvalues_pass": true,
+        "finite_entries_pass": true,
+        "finite_residuals_pass": true,
+        "first_failure": null,
+        "frobenius_norm_diff": 6.88860437595402e-16,
+        "frobenius_norm_diff_pass": true,
+        "lambda_min": -4.562371846352225e-18,
+        "lambda_min_pass": true,
+        "max_abs_diff": 1.1123893155135927e-16,
+        "max_abs_diff_pass": true,
+        "qa001_pass": true,
+        "trace_abs_deviation": 4.440896675668171e-16,
+        "trace_abs_deviation_pass": true
+      },
+      "realization": {
+        "channel_native_partition_count": 5,
+        "exact_output_present": true,
+        "fused_regions": [
+          {
+            "candidate_kind": "channel_native_motif",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              0,
+              1
+            ],
+            "operation_names": [
+              "U3",
+              "U3",
+              "CNOT",
+              "amplitude_damping",
+              "phase_damping",
+              "U3"
+            ],
+            "partition_index": 0,
+            "reason": "channel_native_motif_kraus_count_4"
+          },
+          {
+            "candidate_kind": "channel_native_motif",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              2,
+              3
+            ],
+            "operation_names": [
+              "U3",
+              "U3",
+              "CNOT",
+              "amplitude_damping",
+              "phase_damping",
+              "U3"
+            ],
+            "partition_index": 1,
+            "reason": "channel_native_motif_kraus_count_4"
+          },
+          {
+            "candidate_kind": "channel_native_motif",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              4,
+              5
+            ],
+            "operation_names": [
+              "U3",
+              "U3",
+              "CNOT",
+              "amplitude_damping",
+              "phase_damping",
+              "U3"
+            ],
+            "partition_index": 2,
+            "reason": "channel_native_motif_kraus_count_4"
+          },
+          {
+            "candidate_kind": "channel_native_motif",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              6,
+              7
+            ],
+            "operation_names": [
+              "U3",
+              "U3",
+              "CNOT",
+              "amplitude_damping",
+              "phase_damping",
+              "U3"
+            ],
+            "partition_index": 3,
+            "reason": "channel_native_motif_kraus_count_4"
+          },
+          {
+            "candidate_kind": "channel_native_motif",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              8,
+              9
+            ],
+            "operation_names": [
+              "U3",
+              "U3",
+              "CNOT",
+              "amplitude_damping",
+              "phase_damping",
+              "U3"
+            ],
+            "partition_index": 4,
+            "reason": "channel_native_motif_kraus_count_4"
+          }
+        ],
+        "partition_count": 5,
+        "partitions": [
+          {
+            "partition_index": 0
+          },
+          {
+            "partition_index": 1
+          },
+          {
+            "partition_index": 2
+          },
+          {
+            "partition_index": 3
+          },
+          {
+            "partition_index": 4
+          }
+        ],
+        "realized_path": "phase31_channel_native",
+        "requested_path": "phase31_channel_native"
+      },
+      "record_schema_version": "correctness_evidence_mf1a_strict_case_v1",
+      "route": "phase31_channel_native",
+      "seed_policy": "deterministic_workload_no_random_seed",
+      "workload": "mf1a_strict_spectator_embed_q10"
+    },
+    {
+      "anchor_qbits": 4,
+      "claim_boundary": "Counted M-F1a denominator evidence for the ADR-F1A-001 route-by-anchor set: partitioned_density_descriptor_baseline, partitioned_density_descriptor_fused_unitary_islands, phase31_channel_native, and phase31_channel_native_hybrid at anchors 4, 6, 8, and 10 with max_partition_qubits 2, each against execute_sequential_density_reference under QA-001. No complete M-F1a, state-vector, external-protocol, Aer, energy, or frozen-matrix claim.",
+      "completeness_claim": false,
+      "manifest_schema_version": "correctness_evidence_mf1a_hybrid_manifest_v1",
+      "milestone_counted": true,
+      "parameters": [
+        0.05,
+        0.1,
+        0.15,
+        0.2,
+        0.25,
+        0.3,
+        0.35,
+        0.39999999999999997,
+        0.44999999999999996,
+        0.49999999999999994,
+        0.5499999999999999,
+        0.6,
+        0.65,
+        0.7,
+        0.75,
+        0.7999999999999999,
+        0.85,
+        0.9
+      ],
+      "planner_setting": {
+        "max_partition_qubits": 2
+      },
+      "provenance": {
+        "clean_start": true,
+        "command": "conda run -n qgd --no-capture-output python benchmarks/density_matrix/correctness_evidence/validation_pipeline.py",
+        "dependencies": {
+          "numpy": "2.3.5",
+          "scipy": "1.16.3",
+          "squander": "1.9.7"
+        },
+        "dirty_paths": [],
+        "environment": {
+          "conda_default_env": "qgd",
+          "conda_prefix": "/home/zkegli/.conda/envs/qgd",
+          "python_executable": "/home/zkegli/.conda/envs/qgd/bin/python",
+          "python_version": "3.13.9"
+        },
+        "extension_identities": [
+          {
+            "path": "squander/density_matrix/_density_matrix_cpp.cpython-313-x86_64-linux-gnu.so",
+            "sha256": "05f01747e986dabba73073c11c9b00fdb326afdd703e59cd5cfe27af6631cc77"
+          }
+        ],
+        "implementation_revision": "314fee7cfd536dff79dd9efd16138f57e7ffbd9f",
+        "input_artifact_identities": [],
+        "provenance_pass": true
+      },
+      "qa001": {
+        "eigensolver_pass": true,
+        "finite_eigenvalues_pass": true,
+        "finite_entries_pass": true,
+        "finite_residuals_pass": true,
+        "first_failure": null,
+        "frobenius_norm_diff": 3.3052113640942523e-16,
+        "frobenius_norm_diff_pass": true,
+        "lambda_min": -1.2685030285337034e-16,
+        "lambda_min_pass": true,
+        "max_abs_diff": 9.714651563132523e-17,
+        "max_abs_diff_pass": true,
+        "qa001_pass": true,
+        "trace_abs_deviation": 4.447501528577144e-16,
+        "trace_abs_deviation_pass": true
+      },
+      "realization": {
+        "channel_native_partition_count": 2,
+        "exact_output_present": true,
+        "fused_regions": [
+          {
+            "candidate_kind": "channel_native_motif",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              0,
+              1
+            ],
+            "operation_names": [
+              "U3",
+              "local_depolarizing",
+              "U3",
+              "CNOT",
+              "amplitude_damping"
+            ],
+            "partition_index": 0,
+            "reason": "channel_native_motif_kraus_count_8"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              2,
+              3
+            ],
+            "operation_names": [
+              "U3",
+              "U3"
+            ],
+            "partition_index": 1,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "channel_native_motif",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              0
+            ],
+            "operation_names": [
+              "phase_damping"
+            ],
+            "partition_index": 2,
+            "reason": "channel_native_motif_kraus_count_2"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              2,
+              3
+            ],
+            "operation_names": [
+              "CNOT",
+              "U3"
+            ],
+            "partition_index": 3,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              1,
+              2
+            ],
+            "operation_names": [
+              "U3",
+              "CNOT"
+            ],
+            "partition_index": 4,
+            "reason": "eligible_unitary_island"
+          }
+        ],
+        "partition_count": 5,
+        "partitions": [
+          {
+            "partition_index": 0,
+            "partition_route_reason": "eligible_channel_native_motif",
+            "partition_runtime_class": "phase31_channel_native"
+          },
+          {
+            "partition_index": 1,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          },
+          {
+            "partition_index": 2,
+            "partition_route_reason": "eligible_channel_native_motif",
+            "partition_runtime_class": "phase31_channel_native"
+          },
+          {
+            "partition_index": 3,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          },
+          {
+            "partition_index": 4,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          }
+        ],
+        "realized_path": "phase31_channel_native_hybrid",
+        "requested_path": "phase31_channel_native_hybrid",
+        "route_reason_counts": {
+          "eligible_channel_native_motif": 2,
+          "pure_unitary_partition": 3
+        },
+        "runtime_class_counts": {
+          "phase31_channel_native": 2,
+          "phase3_unitary_island_fused": 3
+        }
+      },
+      "record_schema_version": "correctness_evidence_mf1a_hybrid_case_v1",
+      "route": "phase31_channel_native_hybrid",
+      "seed_policy": "deterministic_workload_no_random_seed",
+      "workload": "phase2_xxz_hea_q4_continuity"
+    },
+    {
+      "anchor_qbits": 6,
+      "claim_boundary": "Counted M-F1a denominator evidence for the ADR-F1A-001 route-by-anchor set: partitioned_density_descriptor_baseline, partitioned_density_descriptor_fused_unitary_islands, phase31_channel_native, and phase31_channel_native_hybrid at anchors 4, 6, 8, and 10 with max_partition_qubits 2, each against execute_sequential_density_reference under QA-001. No complete M-F1a, state-vector, external-protocol, Aer, energy, or frozen-matrix claim.",
+      "completeness_claim": false,
+      "manifest_schema_version": "correctness_evidence_mf1a_hybrid_manifest_v1",
+      "milestone_counted": true,
+      "parameters": [
+        0.05,
+        0.1,
+        0.15,
+        0.2,
+        0.25,
+        0.3,
+        0.35,
+        0.39999999999999997,
+        0.44999999999999996,
+        0.49999999999999994,
+        0.5499999999999999,
+        0.6,
+        0.65,
+        0.7,
+        0.75,
+        0.7999999999999999,
+        0.85,
+        0.9,
+        0.95,
+        1.0,
+        1.0499999999999998,
+        1.0999999999999999,
+        1.15,
+        1.2,
+        1.25,
+        1.3,
+        1.3499999999999999,
+        1.4,
+        1.45,
+        1.5
+      ],
+      "planner_setting": {
+        "max_partition_qubits": 2
+      },
+      "provenance": {
+        "clean_start": true,
+        "command": "conda run -n qgd --no-capture-output python benchmarks/density_matrix/correctness_evidence/validation_pipeline.py",
+        "dependencies": {
+          "numpy": "2.3.5",
+          "scipy": "1.16.3",
+          "squander": "1.9.7"
+        },
+        "dirty_paths": [],
+        "environment": {
+          "conda_default_env": "qgd",
+          "conda_prefix": "/home/zkegli/.conda/envs/qgd",
+          "python_executable": "/home/zkegli/.conda/envs/qgd/bin/python",
+          "python_version": "3.13.9"
+        },
+        "extension_identities": [
+          {
+            "path": "squander/density_matrix/_density_matrix_cpp.cpython-313-x86_64-linux-gnu.so",
+            "sha256": "05f01747e986dabba73073c11c9b00fdb326afdd703e59cd5cfe27af6631cc77"
+          }
+        ],
+        "implementation_revision": "314fee7cfd536dff79dd9efd16138f57e7ffbd9f",
+        "input_artifact_identities": [],
+        "provenance_pass": true
+      },
+      "qa001": {
+        "eigensolver_pass": true,
+        "finite_eigenvalues_pass": true,
+        "finite_entries_pass": true,
+        "finite_residuals_pass": true,
+        "first_failure": null,
+        "frobenius_norm_diff": 4.272077160601183e-16,
+        "frobenius_norm_diff_pass": true,
+        "lambda_min": -3.5760287788537404e-16,
+        "lambda_min_pass": true,
+        "max_abs_diff": 8.333897564733124e-17,
+        "max_abs_diff_pass": true,
+        "qa001_pass": true,
+        "trace_abs_deviation": 4.4501705749386485e-16,
+        "trace_abs_deviation_pass": true
+      },
+      "realization": {
+        "channel_native_partition_count": 2,
+        "exact_output_present": true,
+        "fused_regions": [
+          {
+            "candidate_kind": "channel_native_motif",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              0,
+              1
+            ],
+            "operation_names": [
+              "U3",
+              "local_depolarizing",
+              "U3",
+              "CNOT",
+              "amplitude_damping"
+            ],
+            "partition_index": 0,
+            "reason": "channel_native_motif_kraus_count_8"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              2,
+              3
+            ],
+            "operation_names": [
+              "U3",
+              "U3"
+            ],
+            "partition_index": 1,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "channel_native_motif",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              0
+            ],
+            "operation_names": [
+              "phase_damping"
+            ],
+            "partition_index": 2,
+            "reason": "channel_native_motif_kraus_count_2"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              2,
+              3
+            ],
+            "operation_names": [
+              "CNOT",
+              "U3"
+            ],
+            "partition_index": 3,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              1,
+              2
+            ],
+            "operation_names": [
+              "U3",
+              "CNOT"
+            ],
+            "partition_index": 4,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              4,
+              5
+            ],
+            "operation_names": [
+              "U3",
+              "U3",
+              "CNOT",
+              "U3"
+            ],
+            "partition_index": 5,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              3,
+              4
+            ],
+            "operation_names": [
+              "U3",
+              "CNOT"
+            ],
+            "partition_index": 6,
+            "reason": "eligible_unitary_island"
+          }
+        ],
+        "partition_count": 7,
+        "partitions": [
+          {
+            "partition_index": 0,
+            "partition_route_reason": "eligible_channel_native_motif",
+            "partition_runtime_class": "phase31_channel_native"
+          },
+          {
+            "partition_index": 1,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          },
+          {
+            "partition_index": 2,
+            "partition_route_reason": "eligible_channel_native_motif",
+            "partition_runtime_class": "phase31_channel_native"
+          },
+          {
+            "partition_index": 3,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          },
+          {
+            "partition_index": 4,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          },
+          {
+            "partition_index": 5,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          },
+          {
+            "partition_index": 6,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          }
+        ],
+        "realized_path": "phase31_channel_native_hybrid",
+        "requested_path": "phase31_channel_native_hybrid",
+        "route_reason_counts": {
+          "eligible_channel_native_motif": 2,
+          "pure_unitary_partition": 5
+        },
+        "runtime_class_counts": {
+          "phase31_channel_native": 2,
+          "phase3_unitary_island_fused": 5
+        }
+      },
+      "record_schema_version": "correctness_evidence_mf1a_hybrid_case_v1",
+      "route": "phase31_channel_native_hybrid",
+      "seed_policy": "deterministic_workload_no_random_seed",
+      "workload": "phase2_xxz_hea_q6_continuity"
+    },
+    {
+      "anchor_qbits": 8,
+      "claim_boundary": "Counted M-F1a denominator evidence for the ADR-F1A-001 route-by-anchor set: partitioned_density_descriptor_baseline, partitioned_density_descriptor_fused_unitary_islands, phase31_channel_native, and phase31_channel_native_hybrid at anchors 4, 6, 8, and 10 with max_partition_qubits 2, each against execute_sequential_density_reference under QA-001. No complete M-F1a, state-vector, external-protocol, Aer, energy, or frozen-matrix claim.",
+      "completeness_claim": false,
+      "manifest_schema_version": "correctness_evidence_mf1a_hybrid_manifest_v1",
+      "milestone_counted": true,
+      "parameters": [
+        0.05,
+        0.1,
+        0.15000000000000002,
+        0.2,
+        0.25,
+        0.3,
+        0.35000000000000003,
+        0.4,
+        0.45,
+        0.5,
+        0.55,
+        0.6000000000000001,
+        0.6500000000000001,
+        0.7000000000000001,
+        0.7500000000000001,
+        0.8,
+        0.8500000000000001,
+        0.9000000000000001,
+        0.9500000000000001,
+        1.0,
+        1.05,
+        1.1,
+        1.1500000000000001,
+        1.2000000000000002,
+        1.2500000000000002,
+        1.3,
+        1.35,
+        1.4000000000000001,
+        1.4500000000000002,
+        1.5000000000000002,
+        1.55,
+        1.6,
+        1.6500000000000001,
+        1.7000000000000002,
+        1.7500000000000002,
+        1.8,
+        1.85,
+        1.9000000000000001,
+        1.9500000000000002,
+        2.0,
+        2.05,
+        2.1,
+        2.15,
+        2.1999999999999997,
+        2.25,
+        2.3,
+        2.35,
+        2.4,
+        2.45,
+        2.5,
+        2.55,
+        2.6,
+        2.65,
+        2.7,
+        2.75,
+        2.8,
+        2.85,
+        2.9,
+        2.95,
+        3.0,
+        3.05,
+        3.1,
+        3.15,
+        3.2,
+        3.25,
+        3.3,
+        3.35,
+        3.4,
+        3.45,
+        3.5,
+        3.55,
+        3.6,
+        3.65,
+        3.7,
+        3.75,
+        3.8,
+        3.85,
+        3.9,
+        3.95,
+        4.0,
+        4.05,
+        4.1,
+        4.15,
+        4.2,
+        4.25,
+        4.3,
+        4.35,
+        4.4,
+        4.45,
+        4.5,
+        4.55,
+        4.6,
+        4.65,
+        4.7,
+        4.75,
+        4.8,
+        4.8500000000000005,
+        4.9,
+        4.95,
+        5.0,
+        5.05,
+        5.1000000000000005,
+        5.15,
+        5.2,
+        5.25,
+        5.3,
+        5.3500000000000005,
+        5.4,
+        5.45,
+        5.5,
+        5.55,
+        5.6000000000000005,
+        5.65,
+        5.7,
+        5.75,
+        5.8,
+        5.8500000000000005,
+        5.9,
+        5.95,
+        6.0,
+        6.05,
+        6.1000000000000005,
+        6.15,
+        6.2,
+        6.25,
+        6.3,
+        6.3500000000000005,
+        6.4,
+        6.45,
+        6.5,
+        6.55,
+        6.6000000000000005,
+        6.65,
+        6.7,
+        6.75,
+        6.8,
+        6.8500000000000005,
+        6.9
+      ],
+      "planner_setting": {
+        "max_partition_qubits": 2
+      },
+      "provenance": {
+        "clean_start": true,
+        "command": "conda run -n qgd --no-capture-output python benchmarks/density_matrix/correctness_evidence/validation_pipeline.py",
+        "dependencies": {
+          "numpy": "2.3.5",
+          "scipy": "1.16.3",
+          "squander": "1.9.7"
+        },
+        "dirty_paths": [],
+        "environment": {
+          "conda_default_env": "qgd",
+          "conda_prefix": "/home/zkegli/.conda/envs/qgd",
+          "python_executable": "/home/zkegli/.conda/envs/qgd/bin/python",
+          "python_version": "3.13.9"
+        },
+        "extension_identities": [
+          {
+            "path": "squander/density_matrix/_density_matrix_cpp.cpython-313-x86_64-linux-gnu.so",
+            "sha256": "05f01747e986dabba73073c11c9b00fdb326afdd703e59cd5cfe27af6631cc77"
+          }
+        ],
+        "implementation_revision": "314fee7cfd536dff79dd9efd16138f57e7ffbd9f",
+        "input_artifact_identities": [],
+        "provenance_pass": true
+      },
+      "qa001": {
+        "eigensolver_pass": true,
+        "finite_eigenvalues_pass": true,
+        "finite_entries_pass": true,
+        "finite_residuals_pass": true,
+        "first_failure": null,
+        "frobenius_norm_diff": 1.1950331317130647e-15,
+        "frobenius_norm_diff_pass": true,
+        "lambda_min": 3.3242998164648414e-06,
+        "lambda_min_pass": true,
+        "max_abs_diff": 6.711973323575862e-17,
+        "max_abs_diff_pass": true,
+        "qa001_pass": true,
+        "trace_abs_deviation": 8.887366529864145e-16,
+        "trace_abs_deviation_pass": true
+      },
+      "realization": {
+        "channel_native_partition_count": 11,
+        "exact_output_present": true,
+        "fused_regions": [
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              0,
+              1
+            ],
+            "operation_names": [
+              "U3",
+              "U3"
+            ],
+            "partition_index": 0,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              2,
+              3
+            ],
+            "operation_names": [
+              "U3",
+              "U3"
+            ],
+            "partition_index": 1,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              4,
+              5
+            ],
+            "operation_names": [
+              "U3",
+              "U3"
+            ],
+            "partition_index": 2,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              6,
+              7
+            ],
+            "operation_names": [
+              "U3",
+              "U3"
+            ],
+            "partition_index": 3,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              0,
+              1
+            ],
+            "operation_names": [
+              "CNOT",
+              "U3",
+              "U3",
+              "CNOT"
+            ],
+            "partition_index": 4,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              2,
+              3
+            ],
+            "operation_names": [
+              "CNOT",
+              "U3",
+              "U3",
+              "CNOT"
+            ],
+            "partition_index": 5,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              4,
+              5
+            ],
+            "operation_names": [
+              "CNOT",
+              "U3",
+              "U3",
+              "CNOT"
+            ],
+            "partition_index": 6,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              6,
+              7
+            ],
+            "operation_names": [
+              "CNOT",
+              "U3",
+              "U3",
+              "CNOT"
+            ],
+            "partition_index": 7,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "channel_native_motif",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              0,
+              1
+            ],
+            "operation_names": [
+              "local_depolarizing",
+              "amplitude_damping"
+            ],
+            "partition_index": 8,
+            "reason": "channel_native_motif_kraus_count_8"
+          },
+          {
+            "candidate_kind": "channel_native_motif",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              2,
+              3
+            ],
+            "operation_names": [
+              "phase_damping",
+              "local_depolarizing"
+            ],
+            "partition_index": 9,
+            "reason": "channel_native_motif_kraus_count_8"
+          },
+          {
+            "candidate_kind": "channel_native_motif",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              4,
+              5
+            ],
+            "operation_names": [
+              "amplitude_damping",
+              "phase_damping"
+            ],
+            "partition_index": 10,
+            "reason": "channel_native_motif_kraus_count_4"
+          },
+          {
+            "candidate_kind": "channel_native_motif",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              6,
+              7
+            ],
+            "operation_names": [
+              "local_depolarizing",
+              "amplitude_damping"
+            ],
+            "partition_index": 11,
+            "reason": "channel_native_motif_kraus_count_8"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              0,
+              1
+            ],
+            "operation_names": [
+              "U3",
+              "U3"
+            ],
+            "partition_index": 12,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              2,
+              3
+            ],
+            "operation_names": [
+              "U3",
+              "U3"
+            ],
+            "partition_index": 13,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              4,
+              5
+            ],
+            "operation_names": [
+              "U3",
+              "U3"
+            ],
+            "partition_index": 14,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              6,
+              7
+            ],
+            "operation_names": [
+              "U3",
+              "U3"
+            ],
+            "partition_index": 15,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              1,
+              2
+            ],
+            "operation_names": [
+              "CNOT",
+              "U3",
+              "U3",
+              "CNOT"
+            ],
+            "partition_index": 16,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              3,
+              4
+            ],
+            "operation_names": [
+              "CNOT",
+              "U3",
+              "U3",
+              "CNOT"
+            ],
+            "partition_index": 17,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              5,
+              6
+            ],
+            "operation_names": [
+              "CNOT",
+              "U3",
+              "U3",
+              "CNOT"
+            ],
+            "partition_index": 18,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "channel_native_motif",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              1,
+              2
+            ],
+            "operation_names": [
+              "phase_damping",
+              "local_depolarizing"
+            ],
+            "partition_index": 19,
+            "reason": "channel_native_motif_kraus_count_8"
+          },
+          {
+            "candidate_kind": "channel_native_motif",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              3,
+              4
+            ],
+            "operation_names": [
+              "amplitude_damping",
+              "phase_damping"
+            ],
+            "partition_index": 20,
+            "reason": "channel_native_motif_kraus_count_4"
+          },
+          {
+            "candidate_kind": "channel_native_motif",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              5,
+              6
+            ],
+            "operation_names": [
+              "local_depolarizing",
+              "amplitude_damping"
+            ],
+            "partition_index": 21,
+            "reason": "channel_native_motif_kraus_count_8"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              0,
+              1
+            ],
+            "operation_names": [
+              "U3",
+              "U3"
+            ],
+            "partition_index": 22,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              2,
+              3
+            ],
+            "operation_names": [
+              "U3",
+              "U3"
+            ],
+            "partition_index": 23,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              4,
+              5
+            ],
+            "operation_names": [
+              "U3",
+              "U3"
+            ],
+            "partition_index": 24,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              6,
+              7
+            ],
+            "operation_names": [
+              "U3",
+              "U3"
+            ],
+            "partition_index": 25,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              0,
+              1
+            ],
+            "operation_names": [
+              "CNOT",
+              "U3",
+              "U3",
+              "CNOT"
+            ],
+            "partition_index": 26,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              2,
+              3
+            ],
+            "operation_names": [
+              "CNOT",
+              "U3",
+              "U3",
+              "CNOT"
+            ],
+            "partition_index": 27,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              4,
+              5
+            ],
+            "operation_names": [
+              "CNOT",
+              "U3",
+              "U3",
+              "CNOT"
+            ],
+            "partition_index": 28,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              6,
+              7
+            ],
+            "operation_names": [
+              "CNOT",
+              "U3",
+              "U3",
+              "CNOT"
+            ],
+            "partition_index": 29,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "channel_native_motif",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              0,
+              1
+            ],
+            "operation_names": [
+              "phase_damping",
+              "local_depolarizing"
+            ],
+            "partition_index": 30,
+            "reason": "channel_native_motif_kraus_count_8"
+          },
+          {
+            "candidate_kind": "channel_native_motif",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              2,
+              3
+            ],
+            "operation_names": [
+              "amplitude_damping",
+              "phase_damping"
+            ],
+            "partition_index": 31,
+            "reason": "channel_native_motif_kraus_count_4"
+          },
+          {
+            "candidate_kind": "channel_native_motif",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              4,
+              5
+            ],
+            "operation_names": [
+              "local_depolarizing",
+              "amplitude_damping"
+            ],
+            "partition_index": 32,
+            "reason": "channel_native_motif_kraus_count_8"
+          },
+          {
+            "candidate_kind": "channel_native_motif",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              6,
+              7
+            ],
+            "operation_names": [
+              "phase_damping",
+              "local_depolarizing"
+            ],
+            "partition_index": 33,
+            "reason": "channel_native_motif_kraus_count_8"
+          }
+        ],
+        "partition_count": 34,
+        "partitions": [
+          {
+            "partition_index": 0,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          },
+          {
+            "partition_index": 1,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          },
+          {
+            "partition_index": 2,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          },
+          {
+            "partition_index": 3,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          },
+          {
+            "partition_index": 4,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          },
+          {
+            "partition_index": 5,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          },
+          {
+            "partition_index": 6,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          },
+          {
+            "partition_index": 7,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          },
+          {
+            "partition_index": 8,
+            "partition_route_reason": "eligible_channel_native_motif",
+            "partition_runtime_class": "phase31_channel_native"
+          },
+          {
+            "partition_index": 9,
+            "partition_route_reason": "eligible_channel_native_motif",
+            "partition_runtime_class": "phase31_channel_native"
+          },
+          {
+            "partition_index": 10,
+            "partition_route_reason": "eligible_channel_native_motif",
+            "partition_runtime_class": "phase31_channel_native"
+          },
+          {
+            "partition_index": 11,
+            "partition_route_reason": "eligible_channel_native_motif",
+            "partition_runtime_class": "phase31_channel_native"
+          },
+          {
+            "partition_index": 12,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          },
+          {
+            "partition_index": 13,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          },
+          {
+            "partition_index": 14,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          },
+          {
+            "partition_index": 15,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          },
+          {
+            "partition_index": 16,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          },
+          {
+            "partition_index": 17,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          },
+          {
+            "partition_index": 18,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          },
+          {
+            "partition_index": 19,
+            "partition_route_reason": "eligible_channel_native_motif",
+            "partition_runtime_class": "phase31_channel_native"
+          },
+          {
+            "partition_index": 20,
+            "partition_route_reason": "eligible_channel_native_motif",
+            "partition_runtime_class": "phase31_channel_native"
+          },
+          {
+            "partition_index": 21,
+            "partition_route_reason": "eligible_channel_native_motif",
+            "partition_runtime_class": "phase31_channel_native"
+          },
+          {
+            "partition_index": 22,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          },
+          {
+            "partition_index": 23,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          },
+          {
+            "partition_index": 24,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          },
+          {
+            "partition_index": 25,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          },
+          {
+            "partition_index": 26,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          },
+          {
+            "partition_index": 27,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          },
+          {
+            "partition_index": 28,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          },
+          {
+            "partition_index": 29,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          },
+          {
+            "partition_index": 30,
+            "partition_route_reason": "eligible_channel_native_motif",
+            "partition_runtime_class": "phase31_channel_native"
+          },
+          {
+            "partition_index": 31,
+            "partition_route_reason": "eligible_channel_native_motif",
+            "partition_runtime_class": "phase31_channel_native"
+          },
+          {
+            "partition_index": 32,
+            "partition_route_reason": "eligible_channel_native_motif",
+            "partition_runtime_class": "phase31_channel_native"
+          },
+          {
+            "partition_index": 33,
+            "partition_route_reason": "eligible_channel_native_motif",
+            "partition_runtime_class": "phase31_channel_native"
+          }
+        ],
+        "realized_path": "phase31_channel_native_hybrid",
+        "requested_path": "phase31_channel_native_hybrid",
+        "route_reason_counts": {
+          "eligible_channel_native_motif": 11,
+          "pure_unitary_partition": 23
+        },
+        "runtime_class_counts": {
+          "phase31_channel_native": 11,
+          "phase3_unitary_island_fused": 23
+        }
+      },
+      "record_schema_version": "correctness_evidence_mf1a_hybrid_case_v1",
+      "route": "phase31_channel_native_hybrid",
+      "seed_policy": "structured_family_seed_20260318",
+      "workload": "phase31_pair_repeat_q8_dense_seed20260318"
+    },
+    {
+      "anchor_qbits": 10,
+      "claim_boundary": "Counted M-F1a denominator evidence for the ADR-F1A-001 route-by-anchor set: partitioned_density_descriptor_baseline, partitioned_density_descriptor_fused_unitary_islands, phase31_channel_native, and phase31_channel_native_hybrid at anchors 4, 6, 8, and 10 with max_partition_qubits 2, each against execute_sequential_density_reference under QA-001. No complete M-F1a, state-vector, external-protocol, Aer, energy, or frozen-matrix claim.",
+      "completeness_claim": false,
+      "manifest_schema_version": "correctness_evidence_mf1a_hybrid_manifest_v1",
+      "milestone_counted": true,
+      "parameters": [
+        0.05,
+        0.1,
+        0.15,
+        0.2,
+        0.25,
+        0.3,
+        0.35,
+        0.39999999999999997,
+        0.44999999999999996,
+        0.49999999999999994,
+        0.5499999999999999,
+        0.6,
+        0.65,
+        0.7,
+        0.75,
+        0.7999999999999999,
+        0.85,
+        0.9,
+        0.95,
+        1.0,
+        1.0499999999999998,
+        1.0999999999999999,
+        1.15,
+        1.2,
+        1.25,
+        1.3,
+        1.3499999999999999,
+        1.4,
+        1.45,
+        1.5,
+        1.5499999999999998,
+        1.5999999999999999,
+        1.65,
+        1.7,
+        1.75,
+        1.7999999999999998,
+        1.8499999999999999,
+        1.9,
+        1.95,
+        1.9999999999999998,
+        2.05,
+        2.0999999999999996,
+        2.1499999999999995,
+        2.1999999999999997,
+        2.2499999999999996,
+        2.3,
+        2.3499999999999996,
+        2.3999999999999995,
+        2.4499999999999997,
+        2.4999999999999996,
+        2.55,
+        2.5999999999999996,
+        2.6499999999999995,
+        2.6999999999999997,
+        2.7499999999999996,
+        2.7999999999999994,
+        2.8499999999999996,
+        2.8999999999999995,
+        2.9499999999999997,
+        2.9999999999999996,
+        3.0499999999999994,
+        3.0999999999999996,
+        3.1499999999999995,
+        3.1999999999999997,
+        3.2499999999999996,
+        3.2999999999999994,
+        3.3499999999999996,
+        3.3999999999999995,
+        3.4499999999999997,
+        3.4999999999999996,
+        3.5499999999999994,
+        3.5999999999999996,
+        3.6499999999999995,
+        3.6999999999999997,
+        3.7499999999999996,
+        3.7999999999999994,
+        3.8499999999999996,
+        3.8999999999999995,
+        3.9499999999999993,
+        3.9999999999999996,
+        4.05,
+        4.1,
+        4.1499999999999995,
+        4.199999999999999,
+        4.249999999999999,
+        4.3,
+        4.35,
+        4.3999999999999995,
+        4.449999999999999,
+        4.499999999999999,
+        4.55,
+        4.6,
+        4.6499999999999995,
+        4.699999999999999,
+        4.749999999999999,
+        4.8,
+        4.85,
+        4.8999999999999995,
+        4.949999999999999,
+        4.999999999999999,
+        5.05,
+        5.1,
+        5.1499999999999995,
+        5.199999999999999,
+        5.249999999999999,
+        5.3,
+        5.35,
+        5.3999999999999995,
+        5.449999999999999,
+        5.499999999999999,
+        5.549999999999999,
+        5.6,
+        5.6499999999999995,
+        5.699999999999999,
+        5.749999999999999,
+        5.799999999999999,
+        5.85,
+        5.8999999999999995,
+        5.949999999999999,
+        5.999999999999999,
+        6.049999999999999,
+        6.1,
+        6.1499999999999995,
+        6.199999999999999,
+        6.249999999999999,
+        6.299999999999999,
+        6.35,
+        6.3999999999999995,
+        6.449999999999999,
+        6.499999999999999,
+        6.549999999999999,
+        6.6,
+        6.6499999999999995,
+        6.699999999999999,
+        6.749999999999999,
+        6.799999999999999,
+        6.85,
+        6.8999999999999995,
+        6.949999999999999,
+        6.999999999999999,
+        7.049999999999999,
+        7.1,
+        7.1499999999999995,
+        7.199999999999999,
+        7.249999999999999,
+        7.299999999999999,
+        7.35,
+        7.3999999999999995,
+        7.449999999999999,
+        7.499999999999999,
+        7.549999999999999,
+        7.599999999999999,
+        7.6499999999999995,
+        7.699999999999999,
+        7.749999999999999,
+        7.799999999999999,
+        7.849999999999999,
+        7.8999999999999995,
+        7.949999999999999,
+        7.999999999999999,
+        8.049999999999999,
+        8.1,
+        8.15,
+        8.2,
+        8.25,
+        8.3,
+        8.35,
+        8.4,
+        8.45,
+        8.5,
+        8.55,
+        8.6,
+        8.65,
+        8.7,
+        8.75,
+        8.8,
+        8.85,
+        8.9,
+        8.95,
+        9.0,
+        9.05,
+        9.1,
+        9.15,
+        9.2,
+        9.25,
+        9.3,
+        9.35,
+        9.4,
+        9.45,
+        9.5,
+        9.55,
+        9.6,
+        9.65,
+        9.7,
+        9.75,
+        9.8,
+        9.85,
+        9.9,
+        9.95,
+        10.0,
+        10.05,
+        10.1,
+        10.15,
+        10.2,
+        10.25,
+        10.3,
+        10.35,
+        10.4,
+        10.45,
+        10.5,
+        10.55,
+        10.6,
+        10.65,
+        10.7,
+        10.75,
+        10.799999999999999,
+        10.85,
+        10.9,
+        10.95,
+        11.0,
+        11.049999999999999,
+        11.1,
+        11.15,
+        11.2,
+        11.25,
+        11.299999999999999,
+        11.35,
+        11.4
+      ],
+      "planner_setting": {
+        "max_partition_qubits": 2
+      },
+      "provenance": {
+        "clean_start": true,
+        "command": "conda run -n qgd --no-capture-output python benchmarks/density_matrix/correctness_evidence/validation_pipeline.py",
+        "dependencies": {
+          "numpy": "2.3.5",
+          "scipy": "1.16.3",
+          "squander": "1.9.7"
+        },
+        "dirty_paths": [],
+        "environment": {
+          "conda_default_env": "qgd",
+          "conda_prefix": "/home/zkegli/.conda/envs/qgd",
+          "python_executable": "/home/zkegli/.conda/envs/qgd/bin/python",
+          "python_version": "3.13.9"
+        },
+        "extension_identities": [
+          {
+            "path": "squander/density_matrix/_density_matrix_cpp.cpython-313-x86_64-linux-gnu.so",
+            "sha256": "05f01747e986dabba73073c11c9b00fdb326afdd703e59cd5cfe27af6631cc77"
+          }
+        ],
+        "implementation_revision": "314fee7cfd536dff79dd9efd16138f57e7ffbd9f",
+        "input_artifact_identities": [],
+        "provenance_pass": true
+      },
+      "qa001": {
+        "eigensolver_pass": true,
+        "finite_eigenvalues_pass": true,
+        "finite_entries_pass": true,
+        "finite_residuals_pass": true,
+        "first_failure": null,
+        "frobenius_norm_diff": 1.267417402565507e-15,
+        "frobenius_norm_diff_pass": true,
+        "lambda_min": 8.138224767895199e-07,
+        "lambda_min_pass": true,
+        "max_abs_diff": 2.2551476121048698e-17,
+        "max_abs_diff_pass": true,
+        "qa001_pass": true,
+        "trace_abs_deviation": 3.7845147027053217e-17,
+        "trace_abs_deviation_pass": true
+      },
+      "realization": {
+        "channel_native_partition_count": 18,
+        "exact_output_present": true,
+        "fused_regions": [
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              0,
+              1
+            ],
+            "operation_names": [
+              "U3",
+              "U3"
+            ],
+            "partition_index": 0,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              2,
+              3
+            ],
+            "operation_names": [
+              "U3",
+              "U3"
+            ],
+            "partition_index": 1,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              4,
+              5
+            ],
+            "operation_names": [
+              "U3",
+              "U3"
+            ],
+            "partition_index": 2,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              6,
+              7
+            ],
+            "operation_names": [
+              "U3",
+              "U3"
+            ],
+            "partition_index": 3,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              8,
+              9
+            ],
+            "operation_names": [
+              "U3",
+              "U3"
+            ],
+            "partition_index": 4,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              0,
+              1
+            ],
+            "operation_names": [
+              "CNOT",
+              "U3",
+              "U3",
+              "CNOT"
+            ],
+            "partition_index": 5,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              2,
+              3
+            ],
+            "operation_names": [
+              "CNOT",
+              "U3",
+              "U3",
+              "CNOT"
+            ],
+            "partition_index": 6,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              4,
+              5
+            ],
+            "operation_names": [
+              "CNOT",
+              "U3",
+              "U3",
+              "CNOT"
+            ],
+            "partition_index": 7,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              6,
+              7
+            ],
+            "operation_names": [
+              "CNOT",
+              "U3",
+              "U3",
+              "CNOT"
+            ],
+            "partition_index": 8,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              8,
+              9
+            ],
+            "operation_names": [
+              "CNOT",
+              "U3",
+              "U3",
+              "CNOT"
+            ],
+            "partition_index": 9,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "channel_native_motif",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              0,
+              1
+            ],
+            "operation_names": [
+              "local_depolarizing",
+              "amplitude_damping"
+            ],
+            "partition_index": 10,
+            "reason": "channel_native_motif_kraus_count_8"
+          },
+          {
+            "candidate_kind": "channel_native_motif",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              2,
+              3
+            ],
+            "operation_names": [
+              "phase_damping",
+              "local_depolarizing"
+            ],
+            "partition_index": 11,
+            "reason": "channel_native_motif_kraus_count_8"
+          },
+          {
+            "candidate_kind": "channel_native_motif",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              4,
+              5
+            ],
+            "operation_names": [
+              "amplitude_damping",
+              "phase_damping"
+            ],
+            "partition_index": 12,
+            "reason": "channel_native_motif_kraus_count_4"
+          },
+          {
+            "candidate_kind": "channel_native_motif",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              6,
+              7
+            ],
+            "operation_names": [
+              "local_depolarizing",
+              "amplitude_damping"
+            ],
+            "partition_index": 13,
+            "reason": "channel_native_motif_kraus_count_8"
+          },
+          {
+            "candidate_kind": "channel_native_motif",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              8,
+              9
+            ],
+            "operation_names": [
+              "phase_damping",
+              "local_depolarizing"
+            ],
+            "partition_index": 14,
+            "reason": "channel_native_motif_kraus_count_8"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              0,
+              1
+            ],
+            "operation_names": [
+              "U3",
+              "U3"
+            ],
+            "partition_index": 15,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              2,
+              3
+            ],
+            "operation_names": [
+              "U3",
+              "U3"
+            ],
+            "partition_index": 16,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              4,
+              5
+            ],
+            "operation_names": [
+              "U3",
+              "U3"
+            ],
+            "partition_index": 17,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              6,
+              7
+            ],
+            "operation_names": [
+              "U3",
+              "U3"
+            ],
+            "partition_index": 18,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              8,
+              9
+            ],
+            "operation_names": [
+              "U3",
+              "U3"
+            ],
+            "partition_index": 19,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              1,
+              2
+            ],
+            "operation_names": [
+              "CNOT",
+              "U3",
+              "U3",
+              "CNOT"
+            ],
+            "partition_index": 20,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              3,
+              4
+            ],
+            "operation_names": [
+              "CNOT",
+              "U3",
+              "U3",
+              "CNOT"
+            ],
+            "partition_index": 21,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              5,
+              6
+            ],
+            "operation_names": [
+              "CNOT",
+              "U3",
+              "U3",
+              "CNOT"
+            ],
+            "partition_index": 22,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              7,
+              8
+            ],
+            "operation_names": [
+              "CNOT",
+              "U3",
+              "U3",
+              "CNOT"
+            ],
+            "partition_index": 23,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "channel_native_motif",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              1,
+              2
+            ],
+            "operation_names": [
+              "amplitude_damping",
+              "phase_damping"
+            ],
+            "partition_index": 24,
+            "reason": "channel_native_motif_kraus_count_4"
+          },
+          {
+            "candidate_kind": "channel_native_motif",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              3,
+              4
+            ],
+            "operation_names": [
+              "local_depolarizing",
+              "amplitude_damping"
+            ],
+            "partition_index": 25,
+            "reason": "channel_native_motif_kraus_count_8"
+          },
+          {
+            "candidate_kind": "channel_native_motif",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              5,
+              6
+            ],
+            "operation_names": [
+              "phase_damping",
+              "local_depolarizing"
+            ],
+            "partition_index": 26,
+            "reason": "channel_native_motif_kraus_count_8"
+          },
+          {
+            "candidate_kind": "channel_native_motif",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              7,
+              8
+            ],
+            "operation_names": [
+              "amplitude_damping",
+              "phase_damping"
+            ],
+            "partition_index": 27,
+            "reason": "channel_native_motif_kraus_count_4"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              0,
+              1
+            ],
+            "operation_names": [
+              "U3",
+              "U3"
+            ],
+            "partition_index": 28,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              2,
+              3
+            ],
+            "operation_names": [
+              "U3",
+              "U3"
+            ],
+            "partition_index": 29,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              4,
+              5
+            ],
+            "operation_names": [
+              "U3",
+              "U3"
+            ],
+            "partition_index": 30,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              6,
+              7
+            ],
+            "operation_names": [
+              "U3",
+              "U3"
+            ],
+            "partition_index": 31,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              8,
+              9
+            ],
+            "operation_names": [
+              "U3",
+              "U3"
+            ],
+            "partition_index": 32,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              0,
+              1
+            ],
+            "operation_names": [
+              "CNOT",
+              "U3",
+              "U3",
+              "CNOT"
+            ],
+            "partition_index": 33,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              2,
+              3
+            ],
+            "operation_names": [
+              "CNOT",
+              "U3",
+              "U3",
+              "CNOT"
+            ],
+            "partition_index": 34,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              4,
+              5
+            ],
+            "operation_names": [
+              "CNOT",
+              "U3",
+              "U3",
+              "CNOT"
+            ],
+            "partition_index": 35,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              6,
+              7
+            ],
+            "operation_names": [
+              "CNOT",
+              "U3",
+              "U3",
+              "CNOT"
+            ],
+            "partition_index": 36,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              8,
+              9
+            ],
+            "operation_names": [
+              "CNOT",
+              "U3",
+              "U3",
+              "CNOT"
+            ],
+            "partition_index": 37,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "channel_native_motif",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              0,
+              1
+            ],
+            "operation_names": [
+              "local_depolarizing",
+              "amplitude_damping"
+            ],
+            "partition_index": 38,
+            "reason": "channel_native_motif_kraus_count_8"
+          },
+          {
+            "candidate_kind": "channel_native_motif",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              2,
+              3
+            ],
+            "operation_names": [
+              "phase_damping",
+              "local_depolarizing"
+            ],
+            "partition_index": 39,
+            "reason": "channel_native_motif_kraus_count_8"
+          },
+          {
+            "candidate_kind": "channel_native_motif",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              4,
+              5
+            ],
+            "operation_names": [
+              "amplitude_damping",
+              "phase_damping"
+            ],
+            "partition_index": 40,
+            "reason": "channel_native_motif_kraus_count_4"
+          },
+          {
+            "candidate_kind": "channel_native_motif",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              6,
+              7
+            ],
+            "operation_names": [
+              "local_depolarizing",
+              "amplitude_damping"
+            ],
+            "partition_index": 41,
+            "reason": "channel_native_motif_kraus_count_8"
+          },
+          {
+            "candidate_kind": "channel_native_motif",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              8,
+              9
+            ],
+            "operation_names": [
+              "phase_damping",
+              "local_depolarizing"
+            ],
+            "partition_index": 42,
+            "reason": "channel_native_motif_kraus_count_8"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              0,
+              1
+            ],
+            "operation_names": [
+              "U3",
+              "U3"
+            ],
+            "partition_index": 43,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              2,
+              3
+            ],
+            "operation_names": [
+              "U3",
+              "U3"
+            ],
+            "partition_index": 44,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              4,
+              5
+            ],
+            "operation_names": [
+              "U3",
+              "U3"
+            ],
+            "partition_index": 45,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              6,
+              7
+            ],
+            "operation_names": [
+              "U3",
+              "U3"
+            ],
+            "partition_index": 46,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              8,
+              9
+            ],
+            "operation_names": [
+              "U3",
+              "U3"
+            ],
+            "partition_index": 47,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              1,
+              2
+            ],
+            "operation_names": [
+              "CNOT",
+              "U3",
+              "U3",
+              "CNOT"
+            ],
+            "partition_index": 48,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              3,
+              4
+            ],
+            "operation_names": [
+              "CNOT",
+              "U3",
+              "U3",
+              "CNOT"
+            ],
+            "partition_index": 49,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              5,
+              6
+            ],
+            "operation_names": [
+              "CNOT",
+              "U3",
+              "U3",
+              "CNOT"
+            ],
+            "partition_index": 50,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              7,
+              8
+            ],
+            "operation_names": [
+              "CNOT",
+              "U3",
+              "U3",
+              "CNOT"
+            ],
+            "partition_index": 51,
+            "reason": "eligible_unitary_island"
+          },
+          {
+            "candidate_kind": "channel_native_motif",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              1,
+              2
+            ],
+            "operation_names": [
+              "amplitude_damping",
+              "phase_damping"
+            ],
+            "partition_index": 52,
+            "reason": "channel_native_motif_kraus_count_4"
+          },
+          {
+            "candidate_kind": "channel_native_motif",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              3,
+              4
+            ],
+            "operation_names": [
+              "local_depolarizing",
+              "amplitude_damping"
+            ],
+            "partition_index": 53,
+            "reason": "channel_native_motif_kraus_count_8"
+          },
+          {
+            "candidate_kind": "channel_native_motif",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              5,
+              6
+            ],
+            "operation_names": [
+              "phase_damping",
+              "local_depolarizing"
+            ],
+            "partition_index": 54,
+            "reason": "channel_native_motif_kraus_count_8"
+          },
+          {
+            "candidate_kind": "channel_native_motif",
+            "classification": "actually_fused",
+            "global_target_qbits": [
+              7,
+              8
+            ],
+            "operation_names": [
+              "amplitude_damping",
+              "phase_damping"
+            ],
+            "partition_index": 55,
+            "reason": "channel_native_motif_kraus_count_4"
+          }
+        ],
+        "partition_count": 56,
+        "partitions": [
+          {
+            "partition_index": 0,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          },
+          {
+            "partition_index": 1,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          },
+          {
+            "partition_index": 2,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          },
+          {
+            "partition_index": 3,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          },
+          {
+            "partition_index": 4,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          },
+          {
+            "partition_index": 5,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          },
+          {
+            "partition_index": 6,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          },
+          {
+            "partition_index": 7,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          },
+          {
+            "partition_index": 8,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          },
+          {
+            "partition_index": 9,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          },
+          {
+            "partition_index": 10,
+            "partition_route_reason": "eligible_channel_native_motif",
+            "partition_runtime_class": "phase31_channel_native"
+          },
+          {
+            "partition_index": 11,
+            "partition_route_reason": "eligible_channel_native_motif",
+            "partition_runtime_class": "phase31_channel_native"
+          },
+          {
+            "partition_index": 12,
+            "partition_route_reason": "eligible_channel_native_motif",
+            "partition_runtime_class": "phase31_channel_native"
+          },
+          {
+            "partition_index": 13,
+            "partition_route_reason": "eligible_channel_native_motif",
+            "partition_runtime_class": "phase31_channel_native"
+          },
+          {
+            "partition_index": 14,
+            "partition_route_reason": "eligible_channel_native_motif",
+            "partition_runtime_class": "phase31_channel_native"
+          },
+          {
+            "partition_index": 15,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          },
+          {
+            "partition_index": 16,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          },
+          {
+            "partition_index": 17,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          },
+          {
+            "partition_index": 18,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          },
+          {
+            "partition_index": 19,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          },
+          {
+            "partition_index": 20,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          },
+          {
+            "partition_index": 21,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          },
+          {
+            "partition_index": 22,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          },
+          {
+            "partition_index": 23,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          },
+          {
+            "partition_index": 24,
+            "partition_route_reason": "eligible_channel_native_motif",
+            "partition_runtime_class": "phase31_channel_native"
+          },
+          {
+            "partition_index": 25,
+            "partition_route_reason": "eligible_channel_native_motif",
+            "partition_runtime_class": "phase31_channel_native"
+          },
+          {
+            "partition_index": 26,
+            "partition_route_reason": "eligible_channel_native_motif",
+            "partition_runtime_class": "phase31_channel_native"
+          },
+          {
+            "partition_index": 27,
+            "partition_route_reason": "eligible_channel_native_motif",
+            "partition_runtime_class": "phase31_channel_native"
+          },
+          {
+            "partition_index": 28,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          },
+          {
+            "partition_index": 29,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          },
+          {
+            "partition_index": 30,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          },
+          {
+            "partition_index": 31,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          },
+          {
+            "partition_index": 32,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          },
+          {
+            "partition_index": 33,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          },
+          {
+            "partition_index": 34,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          },
+          {
+            "partition_index": 35,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          },
+          {
+            "partition_index": 36,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          },
+          {
+            "partition_index": 37,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          },
+          {
+            "partition_index": 38,
+            "partition_route_reason": "eligible_channel_native_motif",
+            "partition_runtime_class": "phase31_channel_native"
+          },
+          {
+            "partition_index": 39,
+            "partition_route_reason": "eligible_channel_native_motif",
+            "partition_runtime_class": "phase31_channel_native"
+          },
+          {
+            "partition_index": 40,
+            "partition_route_reason": "eligible_channel_native_motif",
+            "partition_runtime_class": "phase31_channel_native"
+          },
+          {
+            "partition_index": 41,
+            "partition_route_reason": "eligible_channel_native_motif",
+            "partition_runtime_class": "phase31_channel_native"
+          },
+          {
+            "partition_index": 42,
+            "partition_route_reason": "eligible_channel_native_motif",
+            "partition_runtime_class": "phase31_channel_native"
+          },
+          {
+            "partition_index": 43,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          },
+          {
+            "partition_index": 44,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          },
+          {
+            "partition_index": 45,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          },
+          {
+            "partition_index": 46,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          },
+          {
+            "partition_index": 47,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          },
+          {
+            "partition_index": 48,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          },
+          {
+            "partition_index": 49,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          },
+          {
+            "partition_index": 50,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          },
+          {
+            "partition_index": 51,
+            "partition_route_reason": "pure_unitary_partition",
+            "partition_runtime_class": "phase3_unitary_island_fused"
+          },
+          {
+            "partition_index": 52,
+            "partition_route_reason": "eligible_channel_native_motif",
+            "partition_runtime_class": "phase31_channel_native"
+          },
+          {
+            "partition_index": 53,
+            "partition_route_reason": "eligible_channel_native_motif",
+            "partition_runtime_class": "phase31_channel_native"
+          },
+          {
+            "partition_index": 54,
+            "partition_route_reason": "eligible_channel_native_motif",
+            "partition_runtime_class": "phase31_channel_native"
+          },
+          {
+            "partition_index": 55,
+            "partition_route_reason": "eligible_channel_native_motif",
+            "partition_runtime_class": "phase31_channel_native"
+          }
+        ],
+        "realized_path": "phase31_channel_native_hybrid",
+        "requested_path": "phase31_channel_native_hybrid",
+        "route_reason_counts": {
+          "eligible_channel_native_motif": 18,
+          "pure_unitary_partition": 38
+        },
+        "runtime_class_counts": {
+          "phase31_channel_native": 18,
+          "phase3_unitary_island_fused": 38
+        }
+      },
+      "record_schema_version": "correctness_evidence_mf1a_hybrid_case_v1",
+      "route": "phase31_channel_native_hybrid",
+      "seed_policy": "structured_family_seed_20260318",
+      "workload": "phase31_pair_repeat_q10_dense_seed20260318"
+    }
+  ],
+  "manifest": {
+    "cells": [
+      {
+        "anchor_qbits": 4,
+        "max_partition_qubits": 2,
+        "parameter_count": 18,
+        "route": "partitioned_density_descriptor_baseline",
+        "seed_policy": "deterministic_workload_no_random_seed",
+        "workload": "phase2_xxz_hea_q4_continuity"
+      },
+      {
+        "anchor_qbits": 6,
+        "max_partition_qubits": 2,
+        "parameter_count": 30,
+        "route": "partitioned_density_descriptor_baseline",
+        "seed_policy": "deterministic_workload_no_random_seed",
+        "workload": "phase2_xxz_hea_q6_continuity"
+      },
+      {
+        "anchor_qbits": 8,
+        "max_partition_qubits": 2,
+        "parameter_count": 42,
+        "route": "partitioned_density_descriptor_baseline",
+        "seed_policy": "deterministic_workload_no_random_seed",
+        "workload": "phase2_xxz_hea_q8_continuity"
+      },
+      {
+        "anchor_qbits": 10,
+        "max_partition_qubits": 2,
+        "parameter_count": 54,
+        "route": "partitioned_density_descriptor_baseline",
+        "seed_policy": "deterministic_workload_no_random_seed",
+        "workload": "phase2_xxz_hea_q10_continuity"
+      },
+      {
+        "anchor_qbits": 4,
+        "max_partition_qubits": 2,
+        "parameter_count": 18,
+        "route": "partitioned_density_descriptor_fused_unitary_islands",
+        "seed_policy": "deterministic_workload_no_random_seed",
+        "workload": "phase2_xxz_hea_q4_continuity"
+      },
+      {
+        "anchor_qbits": 6,
+        "max_partition_qubits": 2,
+        "parameter_count": 30,
+        "route": "partitioned_density_descriptor_fused_unitary_islands",
+        "seed_policy": "deterministic_workload_no_random_seed",
+        "workload": "phase2_xxz_hea_q6_continuity"
+      },
+      {
+        "anchor_qbits": 8,
+        "max_partition_qubits": 2,
+        "parameter_count": 72,
+        "route": "partitioned_density_descriptor_fused_unitary_islands",
+        "seed_policy": "structured_family_seed_20260318",
+        "workload": "layered_nearest_neighbor_q8_sparse_seed20260318"
+      },
+      {
+        "anchor_qbits": 10,
+        "max_partition_qubits": 2,
+        "parameter_count": 120,
+        "route": "partitioned_density_descriptor_fused_unitary_islands",
+        "seed_policy": "structured_family_seed_20260318",
+        "workload": "layered_nearest_neighbor_q10_sparse_seed20260318"
+      },
+      {
+        "anchor_qbits": 4,
+        "max_partition_qubits": 2,
+        "parameter_count": 18,
+        "route": "phase31_channel_native",
+        "seed_policy": "deterministic_workload_no_random_seed",
+        "workload": "phase31_local_support_q4_spectator_embedding_smoke"
+      },
+      {
+        "anchor_qbits": 6,
+        "max_partition_qubits": 2,
+        "parameter_count": 27,
+        "route": "phase31_channel_native",
+        "seed_policy": "deterministic_workload_no_random_seed",
+        "workload": "mf1a_strict_spectator_embed_q6"
+      },
+      {
+        "anchor_qbits": 8,
+        "max_partition_qubits": 2,
+        "parameter_count": 36,
+        "route": "phase31_channel_native",
+        "seed_policy": "deterministic_workload_no_random_seed",
+        "workload": "mf1a_strict_spectator_embed_q8"
+      },
+      {
+        "anchor_qbits": 10,
+        "max_partition_qubits": 2,
+        "parameter_count": 45,
+        "route": "phase31_channel_native",
+        "seed_policy": "deterministic_workload_no_random_seed",
+        "workload": "mf1a_strict_spectator_embed_q10"
+      },
+      {
+        "anchor_qbits": 4,
+        "max_partition_qubits": 2,
+        "parameter_count": 18,
+        "route": "phase31_channel_native_hybrid",
+        "seed_policy": "deterministic_workload_no_random_seed",
+        "workload": "phase2_xxz_hea_q4_continuity"
+      },
+      {
+        "anchor_qbits": 6,
+        "max_partition_qubits": 2,
+        "parameter_count": 30,
+        "route": "phase31_channel_native_hybrid",
+        "seed_policy": "deterministic_workload_no_random_seed",
+        "workload": "phase2_xxz_hea_q6_continuity"
+      },
+      {
+        "anchor_qbits": 8,
+        "max_partition_qubits": 2,
+        "parameter_count": 138,
+        "route": "phase31_channel_native_hybrid",
+        "seed_policy": "structured_family_seed_20260318",
+        "workload": "phase31_pair_repeat_q8_dense_seed20260318"
+      },
+      {
+        "anchor_qbits": 10,
+        "max_partition_qubits": 2,
+        "parameter_count": 228,
+        "route": "phase31_channel_native_hybrid",
+        "seed_policy": "structured_family_seed_20260318",
+        "workload": "phase31_pair_repeat_q10_dense_seed20260318"
+      }
+    ],
+    "schema_version": "correctness_evidence_mf1a_counted_manifest_v1"
+  },
+  "non_counted_context": {},
+  "regeneration": {
+    "first_mismatch": null,
+    "pass": true,
+    "prior_present": false
+  },
+  "schema_version": "correctness_evidence_mf1a_counted_bundle_v1",
+  "status": "pass",
+  "suite_name": "correctness_evidence_mf1a_counted_bundle_v1",
+  "summary": {
+    "completeness_claim": false,
+    "findings": [],
+    "first_failure": null,
+    "milestone_counted_cases": 16,
+    "outside_expected_markers": [],
+    "qa001_passes": 16,
+    "total_cases": 16
+  },
+  "tolerances": {
+    "frobenius_norm_diff_max": 1e-10,
+    "lambda_min_floor": -1e-12,
+    "max_abs_diff_max": 1e-10,
+    "trace_abs_deviation_max": 1e-10
+  }
+}
