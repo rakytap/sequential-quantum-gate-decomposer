@@ -1,16 +1,25 @@
-# EXACTNESS_RECONFIRMATION Closeout — `exactness-reconfirmation` (counted 16-cell draft)
+# EXACTNESS_RECONFIRMATION Closeout — `exactness-reconfirmation` (counted 16-cell admin close)
 
-> **Status:** draft ready for Reviewer Opus milestone review · **Date:** 2026-10-06 ·
-> **Milestone:** M-F1a `exactness-reconfirmation` · **completeness_claim:** false · milestone remains open ·
-> **HEAD / task-9 C2:** `0a66f9747f61e153a9aea6484310443d63643f08` ·
-> **Task-9 C1:** `314fee7cfd536dff79dd9efd16138f57e7ffbd9f` ·
-> **No push/PR**
+> **Status:** admin close recorded (RM `completeness_claim` flip 2026-10-06) · **Date:** 2026-10-06 ·
+> **Milestone:** M-F1a `exactness-reconfirmation` · **completeness_claim:** true (RM admin; docs handoff) ·
+> **Docs HEAD (G-05):** `11795eedb4715cd014e1647db044f1b6b40d6283` · **Counted C2:** `0a66f974` ·
+> **G-04 pin:** `031996f4` rocky-local PASS · **No push/PR**
 
-This draft is the input to the full milestone review. It does not close the milestone and it does not interpret the counted result for Research Manager.
+**M-F1a exactness reconfirmed** for the ADR-F1A-001 counted denominator (16/16 QA-001), with stated
+disclosures: baseline shared-kernel agreement with the sequential oracle; strict cells are products
+of disjoint pair states. Admin close at docs HEAD `11795eed` (G-04 rocky PASS recorded at
+`031996f4`). The frozen counted bundle (`a22ee685…`) may still record `completeness_claim` false
+at generation time; this RM admin flip supersedes that JSON flag for milestone handoff.
 
 ## 1. Summary
 
-The frozen 16-cell denominator is recorded. All 16 counted cases pass QA-001. `summary.findings` is `[]`. `summary.milestone_counted_cases` is 16. `completeness_claim` stays false. Provisional sibling evidence through C.4 stays historical. G-04, G-05, the Opus review, the Research Manager report, and the O-10 push are still ahead.
+The frozen 16-cell denominator is recorded. All 16 counted cases pass QA-001. `summary.findings` is
+`[]`. `summary.milestone_counted_cases` is 16. G-04 rocky-local project CI PASS at HEAD
+`031996f4` (1067 passed, 1 QX2 deselected, exit 0, wall 40m56s;
+`/tmp/mf1a-g04-rocky-ci/REPORT.md`; pytest.log `/tmp/mf1a-g04-rocky-ci/pytest.log`). G-05
+ADR-F1A-007 docs at commit `11795eed`. Research Manager admin flip 2026-10-06 sets
+`completeness_claim` true for handoff. Provisional sibling evidence through C.4 stays historical.
+Roadmap revalidation and optional O-10 origin sync remain ahead.
 
 ## 2. Slices delivered
 
@@ -38,9 +47,15 @@ Bundle `benchmarks/density_matrix/artifacts/correctness_evidence/mf1a/counted/mf
 Counted M-F1a denominator evidence for the ADR-F1A-001 route-by-anchor set: partitioned_density_descriptor_baseline, partitioned_density_descriptor_fused_unitary_islands, phase31_channel_native, and phase31_channel_native_hybrid at anchors 4, 6, 8, and 10 with max_partition_qubits 2, each against execute_sequential_density_reference under QA-001. No complete M-F1a, state-vector, external-protocol, Aer, energy, or frozen-matrix claim.
 ```
 
-`completeness_claim` is false. Reason, verbatim from `task-9/CLOSEOUT.md`:
-
-The counted bundle is the route-by-anchor denominator only. The Linux CI job (G-04, G6), the current-state docs (G-05, G7), the milestone closeout, the full milestone review, and the Research Manager report are still open. `true` would move the claim, which returns to Research Manager.
+**Research Manager admin flip (2026-10-06).** `completeness_claim` is **true** for milestone handoff.
+Authorized wording (RM brief): **M-F1a exactness reconfirmed** for the ADR-F1A-001 counted
+denominator (16/16 QA-001), with stated disclosures: baseline shared-kernel agreement with the
+sequential oracle; strict cells are products of disjoint pair states. Admin close at docs HEAD
+`11795eed` (G-04 rocky PASS recorded at `031996f4`). Bundle sha
+`a22ee685038170cb0991a9ae2195b20ad4c977b111409b312cc708fa9e6872f9` is unchanged QA-001 evidence;
+its JSON may still show `completeness_claim` false as recorded at generation—docs supersede for
+handoff. Historical task-9 reason (pre-flip): the counted bundle was the route-by-anchor
+denominator only until G-04, G-05, and RM admin close completed (`task-9/CLOSEOUT.md`).
 
 ## 4. Disclosures
 
@@ -67,10 +82,10 @@ Research Manager records that task-9/COUNTED_MANIFEST.md, sha256 a93de87d6b44a8a
 | REQ-001, REQ-002 | counted 16/16 QA-001 recorded | `task-9/CLOSEOUT.md`; counted bundle sha above |
 | REQ-003 | hybrid labels and witnesses in the counted rows | `task-6/CLOSEOUT.md`; counted hybrid rows |
 | REQ-004 | one pipeline command; (c) and (g) PASS | `validation_pipeline.py` |
-| REQ-005 | open | Linux CI job not yet run for this head |
+| REQ-005 | rocky-local G-04 PASS at `031996f4` | `/tmp/mf1a-g04-rocky-ci/REPORT.md` (1067 passed, 1 QX2 deselected, exit 0, wall 40m56s) |
 | REQ-006 | no counted disagreement in the 16 | `task-9/CLOSEOUT.md` records `summary.findings` `[]` |
 | REQ-007 | frozen Phase-3.1 archive, 26-case inventory, schema, and classification inputs (`performance_evidence/`, `workloads.py`, `test_phase31_counted_matrix_validation.py`), and the eight historical bundle directories unchanged against `1cb3d20c`; no M-F1a row merged into or relabelled as the 26-case matrix | detailed plan §9 REQ-007 static diff: exit 0 and path-scoped porcelain empty at `0a66f974` (Reviewer milestone review); eight historical bundles byte-identical at task-9 (c) and (g) (`task-9/CLOSEOUT.md`) |
-| REQ-008 | open; doc review later | `docs/specs/ARCHITECTURE_OVERVIEW.md` and `docs/specs/TECH_STACK.md` not updated |
+| REQ-008 | G-05 docs at `11795eed`; RM flip recorded in this closeout | `docs/specs/ARCHITECTURE_OVERVIEW.md` and `docs/specs/TECH_STACK.md` |
 
 The only archive change in `1cb3d20c..HEAD` is `04107d0c`, a Phase-3 erratum made in place under RM decision A (Reviewer `bc-33b7f7f2`). It is outside the REQ-007 `phase-3-1` path set, touches no bundle, and will ride the O-10 push.
 
@@ -81,14 +96,23 @@ PYTHONDONTWRITEBYTECODE=1 conda run -n qgd --no-capture-output python \
   benchmarks/density_matrix/correctness_evidence/validation_pipeline.py
 ```
 
-## 7. Still open
+## 7. Closed gates and remaining handoff
 
-- G-04: the Linux CI job, through the existing `workflow_dispatch` trigger, after Reviewer and the Tech Lead push. No pull request. Do not edit `ci.yml`. The gate definition stays as written.
-- G-05 and milestone goal G7: `ARCHITECTURE_OVERVIEW.md` and `TECH_STACK.md` stay unchanged until after the Research Manager report (ADR-F1A-007). Checklist G-07 stays the closed exit contract.
+**Closed (admin close 2026-10-06).**
+
+- G-04: rocky-local project CI PASS at HEAD `031996f4` (1067 passed, 1 QX2 deselected, exit 0,
+  wall 40m56s; `/tmp/mf1a-g04-rocky-ci/REPORT.md`; RECIPE/pytest.log under
+  `/tmp/mf1a-g04-rocky-ci/`). Not `.github/workflows/ci.yml` `workflow_dispatch`.
+- G-05: ADR-F1A-007 current-state docs at commit `11795eed` (`ARCHITECTURE_OVERVIEW.md`,
+  `TECH_STACK.md`).
+- Research Manager `completeness_claim` admin flip: **true** for handoff (authorized wording in
+  §1 and §3); frozen bundle JSON flag may remain false at generation time.
+
+**Still ahead.**
+
 - Roadmap row for M-F1a stays Draft until `create-product-roadmap` revalidation.
-- O-10: Tech Lead pushes `feature/dm-perf-tuning` only after Reviewer. No pull request.
-- Full Opus milestone review. This file is the draft input.
-- Research Manager report. `completeness_claim` stays false until that report, the CI job, and the current-state docs land.
+- O-10: optional origin sync of `feature/dm-perf-tuning`; no pull request required for this
+  admin-close docs record.
 
 ## 8. Deferred
 
@@ -112,4 +136,6 @@ Checklist §9 stays deferred. This draft does not do that work.
 
 ## 10. Handoff
 
-Do not mark M-F1a Delivered from this draft. Opus reviews it next. Research Manager interprets after that review. Current-state docs and the roadmap revalidation wait on that report.
+Hand off to `create-product-roadmap` for revalidation. Do not mark M-F1a Delivered in
+`ROADMAP.md` from this file alone. M-F5a planning is not started here. Phase 3.1 17/9/0
+decision-study disclosure is unchanged.

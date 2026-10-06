@@ -64,9 +64,9 @@ Even after authorization, implementation may not begin unless:
 |----|-----|-------------------------------------|-----------|-------|
 | G-01 | Step 4b for the remaining M-F1a slices | ADR-F1A-010: per slice, Step 4b and the Developer/Tester handoff take effect when Architect closes Step 4a code-ready under ADR-F1A-008 and the verdict states the oracle, QA-001 and comparators (apart from the ADR-F1A-009 Amendment 1 allowlist entry), counted set, and scope and G-07 exit rule unchanged; otherwise Research Manager. q4 baseline cell authorized 2026-10-05 (history) | Research Manager decision record 2026-10-05 §(b) / Architect | **in force per slice** |
 | G-02 | q4 tracer planning review closed as code-ready on 2026-10-05 under ADR-F1A-008 | closed code-ready verdicts in `task-1/TASK_1_MINI_SPEC.md` and `task-1/ENGINEERING_TASKS.md` | Architect / SDD planning role | **closed — code-ready for q4 baseline cell only** |
-| G-03 | Existing evidence lacks complete route-anchor coverage and M-F1a provenance | C.1 closed at C2 `a006c7e2` with provisional fused evidence; C.2 closed at C2 `42922382` with provisional hybrid evidence; task-7 (C.3) closed at C2 `aaf6fcfe`; C1 `a0ac4cbd`; (c) PASS; (g) PASS (77 s, exit 0, `/tmp/c3-g-proof/REPORT.md`); task-8 (C.4) closed at C2 `85f01985`; C1 `55e37837`; (c) PASS; (e) APPROVE `bc-a3270830`; (g) PASS (82.1 s, exit 0, at `85f01985`, Tester `bc-9820d3c5` run 18, `/tmp/c4-g-proof/REPORT.md`); counted 16-cell coverage recorded at task-9 C2 `0a66f974` (`summary.findings` `[]`; `milestone_counted` true on the counted sibling); milestone remains open | Planner now; counted evidence recorded | **counted 16-cell set recorded; milestone remains open** |
-| G-04 | CI does not trigger automatically on this feature branch | ADR-F1A-006 requires local preflight and the actual Linux CI job through the existing `workflow_dispatch` trigger only at closure; trigger-policy changes remain out of scope | future closeout | closed as gate definition |
-| G-05 | Current-state docs do not yet describe M-F1a | ADR-F1A-007 defers truthful updates until milestone close | future closeout | closed as timing decision |
+| G-03 | Existing evidence lacks complete route-anchor coverage and M-F1a provenance | Counted 16-cell set at task-9 C2 `0a66f974`; RM admin flip 2026-10-06 (`completeness_claim` true for handoff; bundle `a22ee685…` unchanged) | Research Manager 2026-10-06 | **closed — counted denominator + RM admin flip** |
+| G-04 | CI does not trigger automatically on this feature branch | Rocky-local project CI PASS at HEAD `031996f4`: 1067 passed, 1 QX2 deselected, exit 0, wall 40m56s; `/tmp/mf1a-g04-rocky-ci/REPORT.md` | Tester G-04 recipe | **closed — rocky-local PASS at `031996f4`** |
+| G-05 | Current-state docs do not yet describe M-F1a | ADR-F1A-007 docs at commit `11795eed` (`ARCHITECTURE_OVERVIEW.md`, `TECH_STACK.md`) | Tech Lead G-05 commit | **closed — docs at `11795eed`** |
 | G-06 | Normal and strict checks after the real q4 closeout | commands in §6 below | SDD planning role | closed as run: normal 0 errors/0 warnings; strict 0 errors/0 warnings; no `SLICE_MISSING_CLOSEOUT`; traceability clean |
 | G-07 | Process-exit aggregate adds the required sibling, excludes exactly external correctness and the whole output-integrity suite, retains every other registered suite, preserves excluded statuses, and fails on missing/failing sibling or included suite | Architect's 2026-10-04 exit contract written consistently into the mini-spec, pipeline evidence row, DS-3, and ET-3 | Architect | **closed as slice contract; does not make code-ready** |
 | G-08 | Real closeouts exist for q4, Slice A, Slice B, C.0, C.1, and C.2. Task-7 CLOSEOUT committed at C2 `aaf6fcfe`. Task-8 CLOSEOUT committed at C2 `85f01985`. Task-9 CLOSEOUT committed at C2 `0a66f974`. Milestone CLOSEOUT draft uncommitted | `task-1/CLOSEOUT.md` shipped; `task-2/CLOSEOUT.md` at Slice A C2 `2a2f8c137`; `task-3/CLOSEOUT.md` at Slice B C2 `0e8299e9`; `task-4/CLOSEOUT.md` at `91680ec7`; `task-5/CLOSEOUT.md` at C.1 C2 `a006c7e2`; `task-6/CLOSEOUT.md` at C.2 C2 `42922382`; `task-7/CLOSEOUT.md` at C.3 C2 `aaf6fcfe`; `task-8/CLOSEOUT.md` at C.4 C2 `85f01985`; `task-9/CLOSEOUT.md` at C2 `0a66f974` | SDD planning authority | **q4 through C.2 closeouts committed; task-7 CLOSEOUT committed at C2 `aaf6fcfe`; task-8 CLOSEOUT committed at C2 `85f01985`; task-9 CLOSEOUT committed at C2 `0a66f974`; milestone CLOSEOUT draft uncommitted; milestone remains open** |
@@ -200,3 +200,18 @@ Task-9 closed at C2 `0a66f974`. C1 `314fee7c`. (c) PASS. (g) PASS (`/tmp/t9-g-pr
 ```text
 Research Manager records that task-9/COUNTED_MANIFEST.md, sha256 a93de87d6b44a8a14d00d2eef73e116997faa635f35952fe6375e620aa363c16, 87 lines, exactly reflects the pinned delivered M3 and M3A advertised routes and the current-state support boundary (ADR-F1A-001): four routes at anchors 4, 6, 8, and 10, 16 cells, each with the workload, parameter source and count, and seed policy its slice pinned. No cell is dropped, merged, or substituted. The oracle, QA-001 tolerances, G-07, and O-11 are unchanged. ADR-F1A-010 item 3 for task-9: the counted set is this frozen manifest; Step 4b may start after the Architect code-ready close and this record. No counted run precedes this record.
 ```
+
+## 11. RM admin `completeness_claim` flip (2026-10-06)
+
+Research Manager admin stamp: **`completeness_claim` → true** for milestone handoff. Do not regenerate
+the counted suite solely to flip the JSON flag. Frozen bundle
+`a22ee685038170cb0991a9ae2195b20ad4c977b111409b312cc708fa9e6872f9` remains QA-001 evidence and
+may keep `completeness_claim` false at generation time; this section and
+`EXACTNESS_RECONFIRMATION_CLOSEOUT.md` supersede for handoff.
+
+Authorized wording (RM brief): **M-F1a exactness reconfirmed** for the ADR-F1A-001 counted
+denominator (16/16 QA-001), with stated disclosures: baseline shared-kernel agreement with the
+sequential oracle; strict cells are products of disjoint pair states. Admin close at docs HEAD
+`11795eed` (G-04 rocky PASS recorded at `031996f4`). G-05 docs commit `11795eed`. G-04 evidence:
+rocky-local PASS at `031996f4` (1067 passed, 1 QX2 deselected, exit 0, wall 40m56s;
+`/tmp/mf1a-g04-rocky-ci/REPORT.md`).

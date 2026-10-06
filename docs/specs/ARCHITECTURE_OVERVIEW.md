@@ -2,8 +2,9 @@
 
 > **Status:** current-state reference · **Owner skill:** `spec-driven-development` ·
 > **Scope:** the density-matrix / noisy-simulation stack inside SQUANDER as it exists after
-> delivered Phases 1–3.1 and the recorded M-F1a denominator as of `031996f4` (milestone still
-> open; `completeness_claim` false) · **Not:** product intent (`PRODUCT_STATEMENT.md`), sequencing
+> delivered Phases 1–3.1 and the recorded M-F1a denominator (G-05 docs `11795eed`; RM admin
+> `completeness_claim` true for handoff 2026-10-06; frozen bundle JSON may still record false at
+> generation) · **Not:** product intent (`PRODUCT_STATEMENT.md`), sequencing
 > (`ROADMAP.md`), or decision rationale (ADRs, linked below).
 > Update at every milestone close that changes a boundary, flow, integration, or ADR status.
 
@@ -43,8 +44,13 @@ and 10, each with `max_partition_qubits` 2: `partitioned_density_descriptor_base
 `execute_sequential_density_reference` and is not a route under test. The counted bundle is
 `benchmarks/density_matrix/artifacts/correctness_evidence/mf1a/counted/mf1a_counted_bundle.json`
 (sha256 `a22ee685038170cb0991a9ae2195b20ad4c977b111409b312cc708fa9e6872f9`, recorded at task-9
-C2 `0a66f974`). `completeness_claim` is false. This is not a complete M-F1a, state-vector,
-external-protocol, Aer, energy, or frozen-matrix claim.
+C2 `0a66f974`). **M-F1a exactness reconfirmed** for the ADR-F1A-001 counted denominator (16/16
+QA-001), with stated disclosures: baseline shared-kernel agreement with the sequential oracle;
+strict cells are products of disjoint pair states. Admin close at docs HEAD `11795eed` (G-04
+rocky PASS recorded at `031996f4`). Docs record `completeness_claim` true for handoff; the frozen
+counted bundle JSON may still show `completeness_claim` false as recorded at generation time.
+No Aer, energy, or frozen-matrix claim beyond the counted denominator and disclosures in
+`EXACTNESS_RECONFIRMATION_CLOSEOUT.md` §4.
 
 Counted M-F1a rows use the ADR-F1A-002 predicate only: Frobenius norm, max-abs entry, and
 absolute trace deviation at most `1e-10`, and `lambda_min` at least `-1e-12`, with every state
