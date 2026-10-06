@@ -2,7 +2,7 @@
 
 > **Status:** shipped · **Date:** 2026-10-05 · **Work package:** task-4 ·
 > **Scope:** inventory only · **Inventory revision:** `0e8299e9f48361ece2cc1665d81d4b2a35b4f156` ·
-> **Re-close:** `/tmp/c0-step4a/C0_STEP4A_RECLOSE.md` · **Commit:** not created yet ·
+> **Re-close:** `/tmp/c0-step4a/C0_STEP4A_RECLOSE.md` · **Commit:** `91680ec7` ·
 > **No push/PR**
 
 ## Record
@@ -18,7 +18,7 @@ is recorded: an M-F1a-only family at C.3, not left open. O-11 remains
 does not apply. This file is not a C1/C2 closeout. Order stays C.1 fused, C.2
 hybrid, C.3 strict, C.4 baseline. This close does not authorize C.1 Step 4b.
 
-Reviewer and the Tech Lead commit are the next rows. No commit sha exists yet.
+The Tech Lead commit is `91680ec7`.
 
 ## Reproduce
 
