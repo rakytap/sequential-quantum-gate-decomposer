@@ -2055,6 +2055,992 @@ def test_mf1a_hybrid_pipeline_builds_every_sibling_before_writing_any(
     assert all(build_index < first_write_index for build_index in build_indices)
 
 
+
+def _mf1a_strict_module():
+    from benchmarks.density_matrix.correctness_evidence import (
+        mf1a_strict_validation as strict_mod,
+    )
+
+    return strict_mod
+
+
+def _clean_mf1a_strict_provenance() -> dict:
+    strict = _mf1a_strict_module()
+    return {
+        "implementation_revision": "a" * 40,
+        "clean_start": True,
+        "dirty_paths": [],
+        "command": strict.REGENERATION_COMMAND,
+        "environment": {
+            "conda_default_env": "qgd",
+            "conda_prefix": "/tmp/qgd",
+            "python_executable": "/tmp/qgd/bin/python",
+            "python_version": "3.13.0",
+        },
+        "dependencies": {"numpy": "test", "scipy": "test", "squander": "test"},
+        "extension_identities": [
+            {"path": "squander/density_matrix/_density_matrix_cpp.so", "sha256": "b" * 64}
+        ],
+        "input_artifact_identities": [],
+        "provenance_pass": True,
+    }
+
+
+def _mf1a_strict_pair_witness(partition_index: int) -> dict:
+    base = 2 * partition_index
+    return {
+        "partition_index": partition_index,
+        "candidate_kind": "channel_native_motif",
+        "classification": "actually_fused",
+        "reason": "channel_native_motif_kraus_count_4",
+        "operation_names": [
+            "U3",
+            "U3",
+            "CNOT",
+            "amplitude_damping",
+            "phase_damping",
+            "U3",
+        ],
+        "global_target_qbits": [base, base + 1],
+    }
+
+
+def _mf1a_strict_frozen_realization(*, partition_count: int) -> dict:
+    return {
+        "requested_path": "phase31_channel_native",
+        "realized_path": "phase31_channel_native",
+        "partition_count": partition_count,
+        "exact_output_present": True,
+        "channel_native_partition_count": partition_count,
+        "partitions": [{"partition_index": index} for index in range(partition_count)],
+        "fused_regions": [
+            _mf1a_strict_pair_witness(index) for index in range(partition_count)
+        ],
+    }
+
+
+def _mf1a_strict_synthetic_case(
+    strict,
+    *,
+    anchor_qbits: int,
+    workload: str,
+    realization: dict,
+    route: str | None = None,
+    max_partition_qubits: int = 2,
+    seed_policy: str = "deterministic_workload_no_random_seed",
+) -> dict:
+    return {
+        "record_schema_version": strict.RECORD_SCHEMA_VERSION,
+        "manifest_schema_version": strict.MANIFEST_SCHEMA_VERSION,
+        "route": route or strict.ROUTE,
+        "anchor_qbits": anchor_qbits,
+        "workload": workload,
+        "planner_setting": {"max_partition_qubits": max_partition_qubits},
+        "parameters": [0.0],
+        "seed_policy": seed_policy,
+        "realization": realization,
+        "qa001": {
+            "qa001_pass": True,
+            "frobenius_norm_diff": 1e-14,
+            "max_abs_diff": 1e-14,
+            "trace_abs_deviation": 1e-14,
+            "lambda_min": -1e-14,
+        },
+        "milestone_counted": False,
+        "completeness_claim": False,
+        "claim_boundary": strict.CLAIM_BOUNDARY,
+        "provenance": _clean_mf1a_strict_provenance(),
+    }
+
+
+def _assert_strict_regeneration_negative(bundle: dict, expected_mismatch: str) -> None:
+    assert bundle["status"] == "fail"
+    assert bundle["regeneration"]["pass"] is False
+    assert bundle["summary"]["first_failure"] == "regeneration"
+    assert bundle["regeneration"]["first_mismatch"] == expected_mismatch
+
+
+def _assert_strict_manifest_exact_set(bundle: dict) -> None:
+    assert bundle["status"] == "fail"
+    assert bundle["regeneration"]["pass"] is False
+    assert bundle["summary"]["first_failure"] == "manifest_exact_set"
+    assert bundle["regeneration"]["first_mismatch"] == "manifest_exact_set"
+
+
+def test_mf1a_strict_manifest_is_the_four_frozen_ids():
+    strict = _mf1a_strict_module()
+    manifest = strict.build_manifest()
+    assert manifest["schema_version"] == strict.MANIFEST_SCHEMA_VERSION
+    cells = manifest["cells"]
+    assert len(cells) == 4
+    assert [cell["anchor_qbits"] for cell in cells] == [4, 6, 8, 10]
+    assert [cell["workload"] for cell in cells] == [
+        "phase31_local_support_q4_spectator_embedding_smoke",
+        "mf1a_strict_spectator_embed_q6",
+        "mf1a_strict_spectator_embed_q8",
+        "mf1a_strict_spectator_embed_q10",
+    ]
+    assert all(cell["route"] == "phase31_channel_native" for cell in cells)
+    assert strict.ROUTE == "phase31_channel_native"
+    assert all(cell["max_partition_qubits"] == 2 for cell in cells)
+
+
+def test_mf1a_strict_builder_calls_match_frozen_ids(monkeypatch: pytest.MonkeyPatch):
+    from benchmarks.density_matrix.planner_surface import workloads
+
+    strict = _mf1a_strict_module()
+    calls: list[tuple] = []
+
+    original_build = workloads.build_phase31_microcase_descriptor_set
+
+    def _spy(case_name: str, *, max_partition_qubits: int):
+        calls.append((case_name, max_partition_qubits))
+        return original_build(case_name, max_partition_qubits=max_partition_qubits)
+
+    monkeypatch.setattr(workloads, "build_phase31_microcase_descriptor_set", _spy)
+    q4_cell = strict.build_manifest()["cells"][0]
+    descriptor = strict._build_cell_descriptor(q4_cell)
+    assert calls == [
+        ("phase31_local_support_q4_spectator_embedding_smoke", 2),
+    ]
+    assert descriptor.source_type == "microcase_builder"
+
+    smoke_specs = next(
+        case["operation_specs"]
+        for case in workloads.phase31_microcase_definitions()
+        if case["case_name"] == "phase31_local_support_q4_spectator_embedding_smoke"
+    )
+    assert strict.mf1a_strict_spectator_operation_specs(4) == smoke_specs
+
+    def _expected_specs(qbit_num: int) -> list[dict]:
+        specs: list[dict] = []
+        for pair_index in range(qbit_num // 2):
+            control = 2 * pair_index
+            target = control + 1
+            gate_index = 4 * pair_index + 2
+            specs.extend(
+                (
+                    {"kind": "gate", "name": "U3", "target_qbit": control, "param_count": 3},
+                    {"kind": "gate", "name": "U3", "target_qbit": target, "param_count": 3},
+                    {
+                        "kind": "gate",
+                        "name": "CNOT",
+                        "target_qbit": target,
+                        "control_qbit": control,
+                        "param_count": 0,
+                    },
+                    {
+                        "kind": "noise",
+                        "name": "amplitude_damping",
+                        "target_qbit": target,
+                        "source_gate_index": gate_index,
+                        "fixed_value": 0.05,
+                        "param_count": 0,
+                    },
+                    {
+                        "kind": "noise",
+                        "name": "phase_damping",
+                        "target_qbit": control,
+                        "source_gate_index": gate_index,
+                        "fixed_value": 0.07,
+                        "param_count": 0,
+                    },
+                    {"kind": "gate", "name": "U3", "target_qbit": control, "param_count": 3},
+                )
+            )
+        return specs
+
+    for qbit_num in (6, 8, 10):
+        assert strict.mf1a_strict_spectator_operation_specs(qbit_num) == _expected_specs(
+            qbit_num
+        )
+        descriptor_set = strict.build_mf1a_strict_spectator_descriptor_set(qbit_num)
+        assert descriptor_set.workload_id == f"mf1a_strict_spectator_embed_q{qbit_num}"
+        assert descriptor_set.source_type == "structured_family_builder"
+        assert descriptor_set.max_partition_qubits == 2
+        assert descriptor_set.parameter_count == 9 * qbit_num // 2
+        assert len(descriptor_set.partitions) == qbit_num // 2
+        for partition_index, partition in enumerate(descriptor_set.partitions):
+            assert partition.local_to_global_qbits == (
+                2 * partition_index,
+                2 * partition_index + 1,
+            )
+            assert [
+                descriptor_set.canonical_operation_for(member).name
+                for member in partition.members
+            ] == [
+                "U3",
+                "U3",
+                "CNOT",
+                "amplitude_damping",
+                "phase_damping",
+                "U3",
+            ]
+
+    with pytest.raises(ValueError):
+        strict.mf1a_strict_spectator_operation_specs(3)
+    with pytest.raises(ValueError):
+        strict.mf1a_strict_spectator_operation_specs(1)
+
+    from benchmarks.density_matrix.partitioned_runtime.common import (
+        build_initial_parameters as expected_builder,
+    )
+
+    assert strict.build_initial_parameters is expected_builder
+    for cell in strict.build_manifest()["cells"]:
+        assert strict._seed_policy_for_cell(cell) == "deterministic_workload_no_random_seed"
+
+
+def test_mf1a_strict_realization_positive_is_the_q4_smoke_shape():
+    from squander.partitioning.noisy_runtime import execute_partitioned_density_channel_native
+
+    strict = _mf1a_strict_module()
+    manifest_cells = strict.build_manifest()["cells"]
+    q4_expected = _mf1a_strict_frozen_realization(partition_count=2)
+    q6_expected = _mf1a_strict_frozen_realization(partition_count=3)
+
+    for cell, expected in (
+        (manifest_cells[0], q4_expected),
+        (manifest_cells[1], q6_expected),
+    ):
+        descriptor_set = strict._build_cell_descriptor(cell)
+        parameters = strict.build_initial_parameters(descriptor_set.parameter_count)
+        result = execute_partitioned_density_channel_native(descriptor_set, parameters)
+        realization = strict._build_realization(result, descriptor_set)
+        assert realization == expected
+        case = _mf1a_strict_synthetic_case(
+            strict,
+            anchor_qbits=cell["anchor_qbits"],
+            workload=cell["workload"],
+            realization=realization,
+        )
+        assert strict._route_realization_pass(case)
+
+
+def test_mf1a_strict_dropped_row_is_md():
+    strict = _mf1a_strict_module()
+    manifest_cells = strict.build_manifest()["cells"]
+    realization = _mf1a_strict_frozen_realization(partition_count=2)
+    realization["partitions"] = [realization["partitions"][0]]
+    case = _mf1a_strict_synthetic_case(
+        strict,
+        anchor_qbits=4,
+        workload=manifest_cells[0]["workload"],
+        realization=realization,
+    )
+    assert not strict._route_realization_pass(case)
+
+
+def test_mf1a_strict_duplicate_index_is_me():
+    strict = _mf1a_strict_module()
+    manifest_cells = strict.build_manifest()["cells"]
+    realization = _mf1a_strict_frozen_realization(partition_count=2)
+    realization["partitions"][1]["partition_index"] = 0
+    case = _mf1a_strict_synthetic_case(
+        strict,
+        anchor_qbits=4,
+        workload=manifest_cells[0]["workload"],
+        realization=realization,
+    )
+    assert not strict._route_realization_pass(case)
+
+
+def test_mf1a_strict_extra_row_kills_length_and_range_removal():
+    strict = _mf1a_strict_module()
+    manifest_cells = strict.build_manifest()["cells"]
+    base = _mf1a_strict_frozen_realization(partition_count=2)
+
+    extra_row = copy.deepcopy(base)
+    extra_row["partitions"].append({"partition_index": 1})
+    assert not strict._route_realization_pass(
+        _mf1a_strict_synthetic_case(
+            strict,
+            anchor_qbits=4,
+            workload=manifest_cells[0]["workload"],
+            realization=extra_row,
+        )
+    )
+
+    out_of_range = copy.deepcopy(base)
+    out_of_range["partitions"][1]["partition_index"] = 2
+    assert not strict._route_realization_pass(
+        _mf1a_strict_synthetic_case(
+            strict,
+            anchor_qbits=4,
+            workload=manifest_cells[0]["workload"],
+            realization=out_of_range,
+        )
+    )
+
+
+def test_mf1a_strict_motif_removed_fails():
+    strict = _mf1a_strict_module()
+    manifest_cells = strict.build_manifest()["cells"]
+    base = _mf1a_strict_frozen_realization(partition_count=2)
+
+    removed = copy.deepcopy(base)
+    removed["fused_regions"] = [removed["fused_regions"][0]]
+    assert not strict._route_realization_pass(
+        _mf1a_strict_synthetic_case(
+            strict,
+            anchor_qbits=4,
+            workload=manifest_cells[0]["workload"],
+            realization=removed,
+        )
+    )
+
+    duplicate = copy.deepcopy(base)
+    duplicate["fused_regions"].append(copy.deepcopy(duplicate["fused_regions"][0]))
+    assert not strict._route_realization_pass(
+        _mf1a_strict_synthetic_case(
+            strict,
+            anchor_qbits=4,
+            workload=manifest_cells[0]["workload"],
+            realization=duplicate,
+        )
+    )
+
+    orphan = copy.deepcopy(base)
+    orphan["fused_regions"].append(
+        {
+            "partition_index": 99,
+            "candidate_kind": "channel_native_motif",
+            "classification": "actually_fused",
+            "reason": "channel_native_motif_kraus_count_4",
+            "operation_names": ["U3"],
+            "global_target_qbits": [0, 1],
+        }
+    )
+    assert not strict._route_realization_pass(
+        _mf1a_strict_synthetic_case(
+            strict,
+            anchor_qbits=4,
+            workload=manifest_cells[0]["workload"],
+            realization=orphan,
+        )
+    )
+
+
+def test_mf1a_strict_vocabulary_fails():
+    strict = _mf1a_strict_module()
+    manifest_cells = strict.build_manifest()["cells"]
+    base = _mf1a_strict_frozen_realization(partition_count=2)
+
+    label_key = copy.deepcopy(base)
+    label_key["partitions"][0]["partition_runtime_class"] = "phase31_channel_native"
+    assert not strict._route_realization_pass(
+        _mf1a_strict_synthetic_case(
+            strict,
+            anchor_qbits=4,
+            workload=manifest_cells[0]["workload"],
+            realization=label_key,
+        )
+    )
+
+    unfused = copy.deepcopy(base)
+    unfused["fused_regions"][1]["classification"] = "supported_but_unfused"
+    assert not strict._route_realization_pass(
+        _mf1a_strict_synthetic_case(
+            strict,
+            anchor_qbits=4,
+            workload=manifest_cells[0]["workload"],
+            realization=unfused,
+        )
+    )
+
+    island = copy.deepcopy(base)
+    island["fused_regions"][1]["candidate_kind"] = "unitary_island"
+    assert not strict._route_realization_pass(
+        _mf1a_strict_synthetic_case(
+            strict,
+            anchor_qbits=4,
+            workload=manifest_cells[0]["workload"],
+            realization=island,
+        )
+    )
+
+    bad_reason = copy.deepcopy(base)
+    bad_reason["fused_regions"][1]["reason"] = "eligible_channel_native_motif"
+    assert not strict._route_realization_pass(
+        _mf1a_strict_synthetic_case(
+            strict,
+            anchor_qbits=4,
+            workload=manifest_cells[0]["workload"],
+            realization=bad_reason,
+        )
+    )
+
+
+def test_mf1a_strict_pure_unitary_partition_raises(monkeypatch: pytest.MonkeyPatch):
+    from squander.partitioning.noisy_planner import (
+        build_canonical_planner_surface_from_operation_specs,
+        build_partition_descriptor_set,
+    )
+    from squander.partitioning.noisy_runtime import execute_partitioned_density_channel_native
+    from squander.partitioning.noisy_validation_errors import NoisyRuntimeValidationError
+
+    strict = _mf1a_strict_module()
+    noisy_pair = strict.mf1a_strict_spectator_operation_specs(2)
+    pure_pair = [
+        {"kind": "gate", "name": "U3", "target_qbit": 2, "param_count": 3},
+        {"kind": "gate", "name": "U3", "target_qbit": 3, "param_count": 3},
+        {
+            "kind": "gate",
+            "name": "CNOT",
+            "target_qbit": 3,
+            "control_qbit": 2,
+            "param_count": 0,
+        },
+        {"kind": "gate", "name": "U3", "target_qbit": 2, "param_count": 3},
+    ]
+    surface = build_canonical_planner_surface_from_operation_specs(
+        qbit_num=4,
+        source_type="structured_family_builder",
+        workload_id="mf1a_strict_ineligible_pure_pair",
+        operation_specs=noisy_pair + pure_pair,
+    )
+    descriptor_set = build_partition_descriptor_set(surface, max_partition_qubits=2)
+    parameters = strict.build_initial_parameters(descriptor_set.parameter_count)
+    with pytest.raises(NoisyRuntimeValidationError) as excinfo:
+        execute_partitioned_density_channel_native(descriptor_set, parameters)
+    error = excinfo.value
+    assert error.category == "unsupported_runtime_operation"
+    assert error.first_unsupported_condition == "channel_native_noise_presence"
+    assert error.failure_stage == "runtime_preflight"
+
+    clean = _clean_mf1a_strict_provenance()
+
+    def _return_ineligible(_cell):
+        return descriptor_set
+
+    monkeypatch.setattr(strict, "_build_cell_descriptor", _return_ineligible)
+    with pytest.raises(NoisyRuntimeValidationError):
+        strict.build_cases(provenance=clean)
+
+
+def test_mf1a_strict_case_consistency_guards_fail():
+    strict = _mf1a_strict_module()
+    manifest_cells = strict.build_manifest()["cells"]
+    base = _mf1a_strict_frozen_realization(partition_count=2)
+    workload = manifest_cells[0]["workload"]
+
+    f1 = _mf1a_strict_synthetic_case(
+        strict,
+        anchor_qbits=4,
+        workload=workload,
+        realization=copy.deepcopy(base),
+        route="phase31_channel_native_hybrid",
+    )
+    assert not strict._route_realization_pass(f1)
+
+    f2 = _mf1a_strict_synthetic_case(
+        strict,
+        anchor_qbits=4,
+        workload=workload,
+        realization=copy.deepcopy(base),
+        max_partition_qubits=3,
+    )
+    assert not strict._route_realization_pass(f2)
+
+    f3 = copy.deepcopy(base)
+    f3["requested_path"] = "phase31_channel_native_hybrid"
+    assert not strict._route_realization_pass(
+        _mf1a_strict_synthetic_case(
+            strict, anchor_qbits=4, workload=workload, realization=f3
+        )
+    )
+
+    f4 = copy.deepcopy(base)
+    f4["realized_path"] = "partitioned_density_descriptor_baseline"
+    assert not strict._route_realization_pass(
+        _mf1a_strict_synthetic_case(
+            strict, anchor_qbits=4, workload=workload, realization=f4
+        )
+    )
+
+    f5 = copy.deepcopy(base)
+    f5["exact_output_present"] = False
+    assert not strict._route_realization_pass(
+        _mf1a_strict_synthetic_case(
+            strict, anchor_qbits=4, workload=workload, realization=f5
+        )
+    )
+
+    f6 = {
+        "requested_path": "phase31_channel_native",
+        "realized_path": "phase31_channel_native",
+        "partition_count": 0,
+        "exact_output_present": True,
+        "channel_native_partition_count": 0,
+        "partitions": [],
+        "fused_regions": [],
+    }
+    assert not strict._route_realization_pass(
+        _mf1a_strict_synthetic_case(
+            strict, anchor_qbits=4, workload=workload, realization=f6
+        )
+    )
+
+    f11 = copy.deepcopy(base)
+    f11["channel_native_partition_count"] = 3
+    assert not strict._route_realization_pass(
+        _mf1a_strict_synthetic_case(
+            strict, anchor_qbits=4, workload=workload, realization=f11
+        )
+    )
+
+
+def test_mf1a_strict_qa001_tolerances_match_q4():
+    strict = _mf1a_strict_module()
+    assert strict.evaluate_mf1a_qa001 is mf1a.evaluate_mf1a_qa001
+    assert strict.MF1A_QA001_MATRIX_TOL is mf1a.MF1A_QA001_MATRIX_TOL
+    assert strict.MF1A_QA001_LAMBDA_MIN_FLOOR is mf1a.MF1A_QA001_LAMBDA_MIN_FLOOR
+    assert strict._QA001_REGENERATION_TOLERANCES is mf1a._QA001_REGENERATION_TOLERANCES
+    assert strict._QA001_VALUE_KEYS is mf1a._QA001_VALUE_KEYS
+
+
+def test_mf1a_strict_allowlist_is_length_four_and_siblings_stay():
+    strict = _mf1a_strict_module()
+    fused = _mf1a_fused_module()
+    hybrid = _mf1a_hybrid_module()
+    assert strict.STRICT_REGENERATION_ALLOWLIST == (
+        "cases[0].provenance.implementation_revision",
+        "cases[1].provenance.implementation_revision",
+        "cases[2].provenance.implementation_revision",
+        "cases[3].provenance.implementation_revision",
+    )
+    assert len(strict.STRICT_REGENERATION_ALLOWLIST) == 4
+    assert len(mf1a.Q4_REGENERATION_ALLOWLIST) == 1
+    assert len(fused.FUSED_REGENERATION_ALLOWLIST) == 4
+    assert len(hybrid.HYBRID_REGENERATION_ALLOWLIST) == 4
+    assert strict._allowlisted_revision_difference is not mf1a._allowlisted_revision_difference
+    assert strict._allowlisted_revision_difference is not fused._allowlisted_revision_difference
+    assert strict._allowlisted_revision_difference is not hybrid._allowlisted_revision_difference
+
+
+def test_mf1a_strict_rejects_case_count():
+    strict = _mf1a_strict_module()
+    manifest_cells = strict.build_manifest()["cells"]
+    realization = _mf1a_strict_frozen_realization(partition_count=2)
+    prior_cases = [
+        _mf1a_strict_synthetic_case(
+            strict,
+            anchor_qbits=cell["anchor_qbits"],
+            workload=cell["workload"],
+            realization=copy.deepcopy(realization),
+        )
+        for cell in manifest_cells
+    ]
+    prior = strict.build_artifact_bundle(prior_cases, prior_bundle=None)
+    too_many = copy.deepcopy(prior_cases)
+    too_many.append(copy.deepcopy(too_many[0]))
+    _assert_strict_manifest_exact_set(
+        strict.build_artifact_bundle(too_many, prior_bundle=prior)
+    )
+    too_few = copy.deepcopy(prior_cases[:3])
+    _assert_strict_manifest_exact_set(
+        strict.build_artifact_bundle(too_few, prior_bundle=prior)
+    )
+
+
+def test_mf1a_strict_rejects_substituted_or_reordered_id():
+    strict = _mf1a_strict_module()
+    manifest_cells = strict.build_manifest()["cells"]
+    realization = _mf1a_strict_frozen_realization(partition_count=2)
+    prior_cases = [
+        _mf1a_strict_synthetic_case(
+            strict,
+            anchor_qbits=cell["anchor_qbits"],
+            workload=cell["workload"],
+            realization=copy.deepcopy(realization),
+        )
+        for cell in manifest_cells
+    ]
+    prior = strict.build_artifact_bundle(prior_cases, prior_bundle=None)
+    substituted = copy.deepcopy(prior_cases)
+    substituted[2]["workload"] = "mf1a_strict_spectator_embed_q8_wrong"
+    _assert_strict_manifest_exact_set(
+        strict.build_artifact_bundle(substituted, prior_bundle=prior)
+    )
+    reordered = copy.deepcopy(prior_cases)
+    reordered[2], reordered[3] = reordered[3], reordered[2]
+    _assert_strict_manifest_exact_set(
+        strict.build_artifact_bundle(reordered, prior_bundle=prior)
+    )
+
+
+def _mf1a_strict_uniform_prior_cases(strict):
+    manifest_cells = strict.build_manifest()["cells"]
+    realization = _mf1a_strict_frozen_realization(partition_count=2)
+    prior_cases = [
+        _mf1a_strict_synthetic_case(
+            strict,
+            anchor_qbits=cell["anchor_qbits"],
+            workload=cell["workload"],
+            realization=copy.deepcopy(realization),
+        )
+        for cell in manifest_cells
+    ]
+    for case in prior_cases:
+        case["provenance"]["implementation_revision"] = "a" * 40
+    return prior_cases
+
+
+def test_mf1a_strict_one_current_revision_diverges():
+    strict = _mf1a_strict_module()
+    prior_cases = _mf1a_strict_uniform_prior_cases(strict)
+    prior = strict.build_artifact_bundle(prior_cases, prior_bundle=None)
+
+    rc5_current = copy.deepcopy(prior_cases)
+    for case in rc5_current:
+        case["provenance"]["implementation_revision"] = "a" * 40
+    rc5_current[2]["provenance"]["implementation_revision"] = "d" * 40
+    _assert_strict_regeneration_negative(
+        strict.build_artifact_bundle(rc5_current, prior_bundle=prior),
+        "cases[2].provenance.implementation_revision",
+    )
+
+    all_moved_current = copy.deepcopy(prior_cases)
+    revisions = ["c" * 40, "d" * 40, "c" * 40, "c" * 40]
+    for case, revision in zip(all_moved_current, revisions, strict=True):
+        case["provenance"]["implementation_revision"] = revision
+    _assert_strict_regeneration_negative(
+        strict.build_artifact_bundle(all_moved_current, prior_bundle=prior),
+        "cases[0].provenance.implementation_revision",
+    )
+
+
+def test_mf1a_strict_one_prior_revision_diverges():
+    strict = _mf1a_strict_module()
+    prior_cases = _mf1a_strict_uniform_prior_cases(strict)
+    for case in prior_cases:
+        case["provenance"]["implementation_revision"] = "a" * 40
+    prior = strict.build_artifact_bundle(prior_cases, prior_bundle=None)
+
+    rc6_current = copy.deepcopy(prior_cases)
+    prior_mut = copy.deepcopy(prior)
+    prior_mut["cases"][1]["provenance"]["implementation_revision"] = "d" * 40
+    _assert_strict_regeneration_negative(
+        strict.build_artifact_bundle(rc6_current, prior_bundle=prior_mut),
+        "cases[1].provenance.implementation_revision",
+    )
+
+    all_moved_prior = copy.deepcopy(prior)
+    for case in rc6_current:
+        case["provenance"]["implementation_revision"] = "c" * 40
+    prior_mut = copy.deepcopy(prior)
+    for index, revision in enumerate(["a" * 40, "a" * 40, "b" * 40, "a" * 40]):
+        prior_mut["cases"][index]["provenance"]["implementation_revision"] = revision
+    _assert_strict_regeneration_negative(
+        strict.build_artifact_bundle(rc6_current, prior_bundle=prior_mut),
+        "cases[0].provenance.implementation_revision",
+    )
+
+
+def test_mf1a_strict_one_case_non_allowlisted_path():
+    strict = _mf1a_strict_module()
+    prior_cases = _mf1a_strict_uniform_prior_cases(strict)
+    prior = strict.build_artifact_bundle(prior_cases, prior_bundle=None)
+    current = copy.deepcopy(prior_cases)
+    for case in current:
+        case["provenance"]["implementation_revision"] = "c" * 40
+    current[1]["seed_policy"] = "structured_family_seed_20260318"
+    _assert_strict_regeneration_negative(
+        strict.build_artifact_bundle(current, prior_bundle=prior),
+        "cases[1].seed_policy",
+    )
+
+
+def test_mf1a_strict_swapped_two_cases_revisions_only():
+    strict = _mf1a_strict_module()
+    prior_cases = _mf1a_strict_uniform_prior_cases(strict)
+    prior = strict.build_artifact_bundle(prior_cases, prior_bundle=None)
+    current = copy.deepcopy(prior_cases)
+    for case in current:
+        case["provenance"]["implementation_revision"] = "c" * 40
+    prior_before = copy.deepcopy(prior)
+    for index, revision in enumerate(["a" * 40, "b" * 40, "a" * 40, "a" * 40]):
+        prior_before["cases"][index]["provenance"]["implementation_revision"] = revision
+    _assert_strict_regeneration_negative(
+        strict.build_artifact_bundle(current, prior_bundle=prior_before),
+        "cases[0].provenance.implementation_revision",
+    )
+    prior_after = copy.deepcopy(prior_before)
+    prior_after["cases"][0]["provenance"]["implementation_revision"] = "b" * 40
+    prior_after["cases"][1]["provenance"]["implementation_revision"] = "a" * 40
+    _assert_strict_regeneration_negative(
+        strict.build_artifact_bundle(current, prior_bundle=prior_after),
+        "cases[0].provenance.implementation_revision",
+    )
+
+
+def test_mf1a_strict_empty_allowlist_fails(monkeypatch: pytest.MonkeyPatch):
+    strict = _mf1a_strict_module()
+    monkeypatch.setattr(strict, "STRICT_REGENERATION_ALLOWLIST", ())
+    prior_cases = _mf1a_strict_uniform_prior_cases(strict)
+    prior = strict.build_artifact_bundle(prior_cases, prior_bundle=None)
+    current = copy.deepcopy(prior_cases)
+    for case in current:
+        case["provenance"]["implementation_revision"] = "c" * 40
+    _assert_strict_regeneration_negative(
+        strict.build_artifact_bundle(current, prior_bundle=prior),
+        "cases[0].provenance.implementation_revision",
+    )
+
+
+def test_mf1a_strict_length_three_allowlist_fails(monkeypatch: pytest.MonkeyPatch):
+    strict = _mf1a_strict_module()
+    monkeypatch.setattr(
+        strict,
+        "STRICT_REGENERATION_ALLOWLIST",
+        strict.STRICT_REGENERATION_ALLOWLIST[:3],
+    )
+    prior_cases = _mf1a_strict_uniform_prior_cases(strict)
+    prior = strict.build_artifact_bundle(prior_cases, prior_bundle=None)
+    current = copy.deepcopy(prior_cases)
+    for case in current:
+        case["provenance"]["implementation_revision"] = "c" * 40
+    _assert_strict_regeneration_negative(
+        strict.build_artifact_bundle(current, prior_bundle=prior),
+        "cases[3].provenance.implementation_revision",
+    )
+
+
+def test_mf1a_strict_revision_only_passes():
+    strict = _mf1a_strict_module()
+    prior_cases = _mf1a_strict_uniform_prior_cases(strict)
+    prior = strict.build_artifact_bundle(prior_cases, prior_bundle=None)
+    current = copy.deepcopy(prior_cases)
+    for case in current:
+        case["provenance"]["implementation_revision"] = "c" * 40
+    bundle = strict.build_artifact_bundle(current, prior_bundle=prior)
+    assert bundle["status"] == "pass"
+    assert bundle["summary"]["first_failure"] is None
+    assert bundle["regeneration"] == {
+        "prior_present": True,
+        "pass": True,
+        "first_mismatch": None,
+    }
+    for index in (0, 1, 2, 3):
+        failing = copy.deepcopy(current)
+        failing[index]["provenance"]["provenance_pass"] = False
+        failing[index]["provenance"]["implementation_revision"] = "a" * 40
+        bundle = strict.build_artifact_bundle(failing, prior_bundle=None)
+        assert bundle["status"] == "fail"
+        assert bundle["summary"]["first_failure"] == "provenance"
+
+
+def test_mf1a_strict_rejects_non_revision_value():
+    strict = _mf1a_strict_module()
+    prior_cases = _mf1a_strict_uniform_prior_cases(strict)
+    prior = strict.build_artifact_bundle(prior_cases, prior_bundle=None)
+    invalid_values = ("g" * 40, "c" * 39, "", "C" * 40)
+    for value in invalid_values:
+        current_cases = copy.deepcopy(prior_cases)
+        current_cases[0]["provenance"]["implementation_revision"] = value
+        bundle = strict.build_artifact_bundle(current_cases, prior_bundle=prior)
+        _assert_strict_regeneration_negative(
+            bundle, "cases[0].provenance.implementation_revision"
+        )
+        prior_mut = copy.deepcopy(prior)
+        prior_mut["cases"][1]["provenance"]["implementation_revision"] = value
+        current_cases = copy.deepcopy(prior_cases)
+        bundle = strict.build_artifact_bundle(current_cases, prior_bundle=prior_mut)
+        _assert_strict_regeneration_negative(
+            bundle, "cases[1].provenance.implementation_revision"
+        )
+    current_cases = copy.deepcopy(prior_cases)
+    del current_cases[2]["provenance"]["implementation_revision"]
+    bundle = strict.build_artifact_bundle(current_cases, prior_bundle=prior)
+    _assert_strict_regeneration_negative(
+        bundle, "cases[2].provenance.implementation_revision"
+    )
+    prior_mut = copy.deepcopy(prior)
+    del prior_mut["cases"][2]["provenance"]["implementation_revision"]
+    current_cases = copy.deepcopy(prior_cases)
+    bundle = strict.build_artifact_bundle(current_cases, prior_bundle=prior_mut)
+    _assert_strict_regeneration_negative(
+        bundle, "cases[2].provenance.implementation_revision"
+    )
+    for value in invalid_values:
+        current_uniform = copy.deepcopy(prior_cases)
+        for case in current_uniform:
+            case["provenance"]["implementation_revision"] = value
+        bundle = strict.build_artifact_bundle(current_uniform, prior_bundle=prior)
+        _assert_strict_regeneration_negative(
+            bundle, "cases[0].provenance.implementation_revision"
+        )
+        prior_mut = copy.deepcopy(prior)
+        for case in prior_mut["cases"]:
+            case["provenance"]["implementation_revision"] = value
+        current_uniform = copy.deepcopy(prior_cases)
+        bundle = strict.build_artifact_bundle(current_uniform, prior_bundle=prior_mut)
+        _assert_strict_regeneration_negative(
+            bundle, "cases[0].provenance.implementation_revision"
+        )
+    current_uniform = copy.deepcopy(prior_cases)
+    for case in current_uniform:
+        del case["provenance"]["implementation_revision"]
+    bundle = strict.build_artifact_bundle(current_uniform, prior_bundle=prior)
+    _assert_strict_regeneration_negative(
+        bundle, "cases[0].provenance.implementation_revision"
+    )
+    prior_mut = copy.deepcopy(prior)
+    for case in prior_mut["cases"]:
+        del case["provenance"]["implementation_revision"]
+    current_uniform = copy.deepcopy(prior_cases)
+    bundle = strict.build_artifact_bundle(current_uniform, prior_bundle=prior_mut)
+    _assert_strict_regeneration_negative(
+        bundle, "cases[0].provenance.implementation_revision"
+    )
+
+
+def test_mf1a_strict_finding_bands_follow_layer1():
+    import json
+
+    strict = _mf1a_strict_module()
+    manifest_cells = strict.build_manifest()["cells"]
+    realization = _mf1a_strict_frozen_realization(partition_count=2)
+    cases = [
+        _mf1a_strict_synthetic_case(
+            strict,
+            anchor_qbits=cell["anchor_qbits"],
+            workload=cell["workload"],
+            realization=copy.deepcopy(realization),
+        )
+        for cell in manifest_cells
+    ]
+    for measure, value, expected in (
+        ("frobenius_norm_diff", 5e-14, "expected_range"),
+        ("frobenius_norm_diff", 5e-12, "outside_expected"),
+        ("frobenius_norm_diff", 5e-11, "finding"),
+        ("frobenius_norm_diff", 2e-10, "qa001_fail"),
+        ("lambda_min", -5e-14, "no_finding"),
+        ("lambda_min", -5e-13, "finding"),
+        ("lambda_min", -2e-12, "qa001_fail"),
+        ("lambda_min", 3e-6, "no_finding"),
+    ):
+        assert strict.classify_near_threshold_measure(measure, value) == expected
+
+    cases[0]["qa001"]["lambda_min"] = -5e-13
+    bundle = strict.build_artifact_bundle(cases, prior_bundle=None)
+    assert bundle["status"] == "pass"
+    assert bundle["summary"]["first_failure"] is None
+    assert bundle["summary"]["findings"] == [
+        {
+            "route": "phase31_channel_native",
+            "anchor_qbits": 4,
+            "workload": "phase31_local_support_q4_spectator_embedding_smoke",
+            "measure": "lambda_min",
+            "value": -5e-13,
+            "cause_hypothesis": "lambda_min below -1e-13 Layer 1 finding band",
+        }
+    ]
+    assert "oracle_lambda_min" not in json.dumps(bundle)
+    cases_positive = [
+        _mf1a_strict_synthetic_case(
+            strict,
+            anchor_qbits=cell["anchor_qbits"],
+            workload=cell["workload"],
+            realization=copy.deepcopy(realization),
+        )
+        for cell in manifest_cells
+    ]
+    cases_positive[1]["qa001"]["lambda_min"] = 3e-6
+    bundle = strict.build_artifact_bundle(cases_positive, prior_bundle=None)
+    assert bundle["summary"]["findings"] == []
+    assert bundle["summary"]["outside_expected_markers"] == []
+
+
+def test_mf1a_strict_second_field_fails():
+    strict = _mf1a_strict_module()
+    prior_cases = _mf1a_strict_uniform_prior_cases(strict)
+    prior = strict.build_artifact_bundle(prior_cases, prior_bundle=None)
+    current = copy.deepcopy(prior_cases)
+    for case in current:
+        case["provenance"]["implementation_revision"] = "c" * 40
+    current[1]["workload"] = "mf1a_strict_spectator_embed_q6_wrong"
+    bundle = strict.build_artifact_bundle(current, prior_bundle=prior)
+    assert bundle["status"] == "fail"
+    assert bundle["regeneration"]["pass"] is False
+    assert bundle["regeneration"]["first_mismatch"] == "cases[1].workload"
+    assert bundle["summary"]["first_failure"] == "manifest_exact_set"
+
+
+def test_mf1a_strict_pipeline_builds_every_sibling_before_writing_any(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    strict = _mf1a_strict_module()
+    fused = _mf1a_fused_module()
+    hybrid = _mf1a_hybrid_module()
+    from benchmarks.density_matrix.correctness_evidence import (
+        mf1a_q4_baseline_validation as q4_mod,
+    )
+
+    live = validation_pipeline._CASE_SLICE_REGISTRY[0:4]
+    assert len(live) == 4
+    assert live[0].module is q4_mod and live[0].mf1a_sibling is True
+    assert live[1].module is fused and live[1].mf1a_sibling is True
+    assert live[2].module is hybrid and live[2].mf1a_sibling is True
+    assert live[3].module is strict and live[3].mf1a_sibling is True
+
+    events: list[tuple[str, str]] = []
+    fake_root = tmp_path / "mf1a_fake_siblings"
+
+    def make_fake_sibling(name: str) -> SimpleNamespace:
+        module = SimpleNamespace(
+            SUITE_NAME=f"correctness_evidence_mf1a_fake_{name}",
+            ARTIFACT_FILENAME=f"fake_{name}_bundle.json",
+            DEFAULT_OUTPUT_DIR=fake_root / name,
+        )
+
+        def build_cases() -> list:
+            events.append(("build_cases", name))
+            return []
+
+        def build_artifact_bundle(_cases: list | None = None) -> dict:
+            events.append(("build_artifact_bundle", name))
+            return {"status": "pass", "cases": []}
+
+        module.build_cases = build_cases
+        module.build_artifact_bundle = build_artifact_bundle
+        return module
+
+    patched_registry = (
+        validation_pipeline._CaseSuiteEntry(
+            make_fake_sibling("a"), "build_cases", "build_artifact_bundle", mf1a_sibling=True
+        ),
+        validation_pipeline._CaseSuiteEntry(
+            make_fake_sibling("b"), "build_cases", "build_artifact_bundle", mf1a_sibling=True
+        ),
+        validation_pipeline._CaseSuiteEntry(
+            make_fake_sibling("c"), "build_cases", "build_artifact_bundle", mf1a_sibling=True
+        ),
+        validation_pipeline._CaseSuiteEntry(
+            make_fake_sibling("d"), "build_cases", "build_artifact_bundle", mf1a_sibling=True
+        ),
+    )
+    monkeypatch.setattr(validation_pipeline, "_CASE_SLICE_REGISTRY", patched_registry)
+    monkeypatch.setattr(validation_pipeline, "_NULLARY_BUNDLE_REGISTRY", ())
+    original_write = validation_pipeline._write_slice_bundle
+
+    def log_write(module, bundle: dict) -> Path:
+        events.append(("write", module.SUITE_NAME))
+        return original_write(module, bundle)
+
+    monkeypatch.setattr(validation_pipeline, "_write_slice_bundle", log_write)
+    validation_pipeline.run_pipeline()
+    first_write_index = next(
+        index for index, event in enumerate(events) if event[0] == "write"
+    )
+    build_indices = [
+        index for index, event in enumerate(events) if event[0].startswith("build")
+    ]
+    assert build_indices
+    assert all(build_index < first_write_index for build_index in build_indices)
+
+
+
 _MF1A_HISTORICAL_ARTIFACT_DIR_NAMES: tuple[str, ...] = (
     "correctness_package",
     "output_integrity",
@@ -2193,6 +3179,10 @@ def test_mf1a_historical_registered_siblings_still_written(
         fake_root / "mf1a" / "hybrid" / _mf1a_hybrid_module().ARTIFACT_FILENAME
     )
     assert hybrid_sibling_path.is_file()
+    strict_sibling_path = (
+        fake_root / "mf1a" / "strict" / _mf1a_strict_module().ARTIFACT_FILENAME
+    )
+    assert strict_sibling_path.is_file()
 
 
 def test_mf1a_historical_all_statuses_returned_g07_unchanged(
@@ -2293,7 +3283,7 @@ def test_mf1a_historical_nonsibling_paths_match_req007():
         else:
             nonsibling_dirs.add(relative.as_posix())
 
-    assert sibling_dirs == {"mf1a/q4_baseline", "mf1a/fused", "mf1a/hybrid"}
+    assert sibling_dirs == {"mf1a/q4_baseline", "mf1a/fused", "mf1a/hybrid", "mf1a/strict"}
     assert nonsibling_dirs == set(_MF1A_HISTORICAL_ARTIFACT_DIR_NAMES)
 
 
