@@ -14,6 +14,7 @@
 > `0e8299e9` (parent C1 `22071ecb`). Task-4 C.0 is shipped at `91680ec7`. Task-5 (C.1)
 > is closed (C1 `7cf11a49`, C2 `a006c7e2`). Task-6 (C.2) C1 `b95400d5`; (c) PASS; (g) PASS; CLOSEOUT written at (d); closed at C2 `42922382`; task-7 (C.3) closed at C2 `aaf6fcfe`; C1 `a0ac4cbd`; (c) PASS; (g) PASS (77 s, exit 0, `/tmp/c3-g-proof/REPORT.md`); task-8 (C.4) closed at C2 `85f01985`; C1 `55e37837`; (c) PASS; (e) APPROVE `bc-a3270830`; (g) PASS (82.1 s, exit 0, at `85f01985`, Tester `bc-9820d3c5` run 18, `/tmp/c4-g-proof/REPORT.md`).
 > Step 4b for a later slice waits on that slice's ADR-F1A-010 code-ready close.
+> **Task-9:** closed code-ready under ADR-F1A-008 on 2026-10-06; stage `step-4b-authorized`; Research Manager freeze record in §10; Step 4b not started; no `CLOSEOUT.md` yet ·
 
 ## 1. Readiness rule
 
@@ -172,7 +173,8 @@ the claim is q4 baseline regenerated at clean C2. G-10 is closed. G-09 records t
 commits and keeps the per-slice rule in force. Task-4 (C.0) is shipped at `91680ec7`.
 Task-5 (C.1) is closed at C1 `7cf11a49` and C2 `a006c7e2`; (c) and (g) PASS. Claim: fused bundle generated at clean C1. Task-6 (C.2) C1 `b95400d5`; (c) PASS; (g) PASS; CLOSEOUT written at (d); closed at C2 `42922382`; task-7 (C.3) closed at C2 `aaf6fcfe`; C1 `a0ac4cbd`; (c) PASS; (g) PASS (77 s, exit 0, `/tmp/c3-g-proof/REPORT.md`); task-8 (C.4) closed at C2 `85f01985`; C1 `55e37837`; (c) PASS; (e) APPROVE `bc-a3270830`; (g) PASS (82.1 s, exit 0, at `85f01985`, Tester `bc-9820d3c5` run 18, `/tmp/c4-g-proof/REPORT.md`). Claim: hybrid bundle generated at clean C1. G-03 stays open. Order remains C.1, C.2, C.3, C.4.
 Step 4b for a later slice is Tech Lead under ADR-F1A-010 only after that slice's
-code-ready close.
+code-ready close. Task-9 is the counted-manifest slice, closed code-ready, with its freeze recorded in §10. It is not a fifth
+route slice. G-03 stays open.
 
 ## 9. Carry-forward
 
@@ -186,3 +188,15 @@ Accepted deferrals. None of these is bundled with the counted-denominator freeze
 | Mutant-harness lesson: require pytest exit 1 and a collected count above 0 | deferred | its own skill commit |
 | cmake learning | no action | already covered by `.cursor/rules/qgd-python-env.mdc` and `.cursor/skills/clean-rebuild/SKILL.md` |
 | task-8 mini-spec §3.4 and the fitness row | recorded only | historical text; no edit |
+
+## 10. Task-9 counted manifest
+
+Planning-base HEAD `a81be56baba7e97156532524978cc878d347fa87`. Artifacts: `task-9/TASK_9_MINI_SPEC.md`, `task-9/DELIVERY_STORIES.md`, `task-9/ENGINEERING_TASKS.md` (`**SDD stage:** step-4b-authorized`), and `task-9/COUNTED_MANIFEST.md`. No `task-9/CLOSEOUT.md`. The task-9 `step-4a` review's one finding, `SLICE_MISSING_CLOSEOUT`, was a warning kept under `--strict`; after the stage flip `--strict` promotes it to the one error until (d). No waiver and no placeholder closeout.
+
+Closed code-ready under ADR-F1A-008 on 2026-10-06. Research Manager accepted `claim_boundary` and `completeness_claim` (`task-9/COUNTED_MANIFEST.md` §§4–5) and recorded the freeze below, which is not stored in the manifest. Step 4b starts on Tech Lead's ADR-F1A-010 handoff. No counted run before the freeze. Per-cell wording is "`<route>` route verified at q`<n>`". The §9 deferrals stay out of task-9. G-03, G1, and G3 stay open.
+
+**Research Manager freeze record, 2026-10-06, via Tech Lead.**
+
+```text
+Research Manager records that task-9/COUNTED_MANIFEST.md, sha256 a93de87d6b44a8a14d00d2eef73e116997faa635f35952fe6375e620aa363c16, 87 lines, exactly reflects the pinned delivered M3 and M3A advertised routes and the current-state support boundary (ADR-F1A-001): four routes at anchors 4, 6, 8, and 10, 16 cells, each with the workload, parameter source and count, and seed policy its slice pinned. No cell is dropped, merged, or substituted. The oracle, QA-001 tolerances, G-07, and O-11 are unchanged. ADR-F1A-010 item 3 for task-9: the counted set is this frozen manifest; Step 4b may start after the Architect code-ready close and this record. No counted run precedes this record.
+```

@@ -3960,6 +3960,836 @@ def _mf1a_historical_stub_builders(
     return calls
 
 
+def _mf1a_counted_module():
+    from benchmarks.density_matrix.correctness_evidence import (
+        mf1a_counted_validation as counted_mod,
+    )
+
+    return counted_mod
+
+
+def _mf1a_counted_git_head_cases(module) -> list[dict]:
+    import json
+    import subprocess
+
+    rel = module.DEFAULT_OUTPUT_PATH.relative_to(REPO_ROOT).as_posix()
+    payload = subprocess.run(
+        ("git", "show", f"HEAD:{rel}"),
+        cwd=REPO_ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout
+    return json.loads(payload)["cases"]
+
+
+def _mf1a_counted_committed_sixteen_cases() -> list[dict]:
+    from benchmarks.density_matrix.correctness_evidence import (
+        mf1a_baseline_validation as baseline_mod,
+    )
+    from benchmarks.density_matrix.correctness_evidence import (
+        mf1a_fused_validation as fused_mod,
+    )
+    from benchmarks.density_matrix.correctness_evidence import (
+        mf1a_hybrid_validation as hybrid_mod,
+    )
+    from benchmarks.density_matrix.correctness_evidence import (
+        mf1a_q4_baseline_validation as q4_mod,
+    )
+    from benchmarks.density_matrix.correctness_evidence import (
+        mf1a_strict_validation as strict_mod,
+    )
+
+    return (
+        _mf1a_counted_git_head_cases(q4_mod)
+        + _mf1a_counted_git_head_cases(baseline_mod)
+        + _mf1a_counted_git_head_cases(fused_mod)
+        + _mf1a_counted_git_head_cases(strict_mod)
+        + _mf1a_counted_git_head_cases(hybrid_mod)
+    )
+
+
+def _mf1a_counted_clean_provenance() -> dict:
+    counted = _mf1a_counted_module()
+    return {
+        "implementation_revision": "a" * 40,
+        "clean_start": True,
+        "dirty_paths": [],
+        "command": counted.REGENERATION_COMMAND,
+        "environment": {"conda_default_env": "qgd"},
+        "dependencies": {},
+        "extension_identities": [],
+        "input_artifact_identities": [],
+        "provenance_pass": True,
+    }
+
+
+def _mf1a_counted_restamp_cases(
+    cases: list[dict], provenance: dict
+) -> list[dict]:
+    counted = _mf1a_counted_module()
+    stamped: list[dict] = []
+    milestone_counted = bool(provenance["clean_start"] and provenance["provenance_pass"])
+    for case in cases:
+        row = copy.deepcopy(case)
+        row["provenance"] = copy.deepcopy(provenance)
+        row["milestone_counted"] = milestone_counted
+        row["completeness_claim"] = counted.COMPLETENESS_CLAIM
+        row["claim_boundary"] = counted.CLAIM_BOUNDARY
+        stamped.append(row)
+    return stamped
+
+
+def _mf1a_counted_real_cases() -> list[dict]:
+    return _mf1a_counted_restamp_cases(
+        _mf1a_counted_committed_sixteen_cases(), _mf1a_counted_clean_provenance()
+    )
+
+
+def _mf1a_counted_install_sibling_build_spies(
+    monkeypatch: pytest.MonkeyPatch,
+) -> dict[str, list]:
+    from benchmarks.density_matrix.correctness_evidence import (
+        mf1a_baseline_validation as baseline_mod,
+    )
+    from benchmarks.density_matrix.correctness_evidence import (
+        mf1a_fused_validation as fused_mod,
+    )
+    from benchmarks.density_matrix.correctness_evidence import (
+        mf1a_hybrid_validation as hybrid_mod,
+    )
+    from benchmarks.density_matrix.correctness_evidence import (
+        mf1a_q4_baseline_validation as q4_mod,
+    )
+    from benchmarks.density_matrix.correctness_evidence import (
+        mf1a_strict_validation as strict_mod,
+    )
+
+    committed = {
+        q4_mod: _mf1a_counted_git_head_cases(q4_mod),
+        baseline_mod: _mf1a_counted_git_head_cases(baseline_mod),
+        fused_mod: _mf1a_counted_git_head_cases(fused_mod),
+        strict_mod: _mf1a_counted_git_head_cases(strict_mod),
+        hybrid_mod: _mf1a_counted_git_head_cases(hybrid_mod),
+    }
+    calls: dict[str, list] = {"build_seen": []}
+
+    def make(mod, rows: list[dict]):
+        def spy(*, provenance=None):
+            calls["build_seen"].append((mod, provenance))
+            out = copy.deepcopy(rows)
+            for case in out:
+                case["provenance"] = provenance
+            return out
+
+        return spy
+
+    for mod, rows in committed.items():
+        monkeypatch.setattr(mod, "build_cases", make(mod, rows))
+    return calls
+
+
+def test_mf1a_counted_manifest_exact_set_sixteen():
+    counted = _mf1a_counted_module()
+    manifest = counted.build_manifest()
+    assert manifest["schema_version"] == counted.MANIFEST_SCHEMA_VERSION
+    assert len(manifest["cells"]) == 16
+    cases = _mf1a_counted_real_cases()
+    bundle = counted.build_artifact_bundle(cases, prior_bundle=None)
+    assert bundle["summary"]["first_failure"] is None
+    assert bundle["status"] == "pass"
+    assert [counted._manifest_projection(case) for case in cases] == list(
+        counted.build_manifest()["cells"]
+    )
+
+
+def test_mf1a_counted_manifest_wrong_count():
+    counted = _mf1a_counted_module()
+    for cases in (
+        _mf1a_counted_real_cases()[:15],
+        _mf1a_counted_real_cases()
+        + [copy.deepcopy(_mf1a_counted_real_cases()[-1])],
+    ):
+        bundle = counted.build_artifact_bundle(cases, prior_bundle=None)
+        assert bundle["summary"]["first_failure"] == "manifest_exact_set"
+        assert bundle["regeneration"]["first_mismatch"] == "manifest_exact_set"
+
+
+def test_mf1a_counted_manifest_substituted_workload():
+    counted = _mf1a_counted_module()
+    cases = _mf1a_counted_real_cases()
+    cases[6]["workload"] = "phase2_xxz_hea_q8_continuity"
+    bundle = counted.build_artifact_bundle(cases, prior_bundle=None)
+    assert bundle["summary"]["first_failure"] == "manifest_exact_set"
+
+
+def test_mf1a_counted_manifest_reordered():
+    counted = _mf1a_counted_module()
+    cases = _mf1a_counted_real_cases()
+    cases[11], cases[12] = cases[12], cases[11]
+    bundle = counted.build_artifact_bundle(cases, prior_bundle=None)
+    assert bundle["summary"]["first_failure"] == "manifest_exact_set"
+
+
+def test_mf1a_counted_manifest_seed_or_param_count():
+    counted = _mf1a_counted_module()
+    cases = copy.deepcopy(_mf1a_counted_real_cases())
+    cases[7]["seed_policy"] = "deterministic_workload_no_random_seed"
+    bundle = counted.build_artifact_bundle(cases, prior_bundle=None)
+    assert bundle["summary"]["first_failure"] == "manifest_exact_set"
+    cases = copy.deepcopy(_mf1a_counted_real_cases())
+    cases[14]["parameters"] = cases[14]["parameters"][:137]
+    bundle = counted.build_artifact_bundle(cases, prior_bundle=None)
+    assert bundle["summary"]["first_failure"] == "manifest_exact_set"
+
+
+def test_mf1a_counted_dirty_provenance_not_counted(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    _mf1a_counted_install_sibling_build_spies(monkeypatch)
+    counted = _mf1a_counted_module()
+    dirty = dict(_mf1a_counted_clean_provenance())
+    dirty["clean_start"] = False
+    dirty["provenance_pass"] = False
+    dirty["dirty_paths"] = ["x"]
+    cases = counted.build_cases(provenance=dirty)
+    bundle = counted.build_artifact_bundle(cases, prior_bundle=None)
+    assert bundle["summary"]["first_failure"] == "provenance"
+    assert bundle["summary"]["milestone_counted_cases"] == 0
+    assert [case["milestone_counted"] for case in bundle["cases"]] == [False] * 16
+    incomplete = dict(_mf1a_counted_clean_provenance(), provenance_pass=False)
+    cases = counted.build_cases(provenance=incomplete)
+    bundle = counted.build_artifact_bundle(cases, prior_bundle=None)
+    assert bundle["summary"]["first_failure"] == "provenance"
+    assert bundle["summary"]["milestone_counted_cases"] == 0
+    assert [case["milestone_counted"] for case in bundle["cases"]] == [False] * 16
+    cases = _mf1a_counted_real_cases()
+    cases[15]["provenance"] = dict(
+        _mf1a_counted_clean_provenance(), provenance_pass=False
+    )
+    cases[15]["milestone_counted"] = False
+    bundle = counted.build_artifact_bundle(cases, prior_bundle=None)
+    assert bundle["summary"]["first_failure"] == "provenance"
+
+
+def test_mf1a_counted_clean_provenance_counts_sixteen(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    _mf1a_counted_install_sibling_build_spies(monkeypatch)
+    counted = _mf1a_counted_module()
+    clean = _mf1a_counted_clean_provenance()
+    cases = counted.build_cases(provenance=clean)
+    bundle = counted.build_artifact_bundle(cases, prior_bundle=None)
+    assert bundle["summary"]["milestone_counted_cases"] == 16
+    assert bundle["status"] == "pass"
+    assert [case["milestone_counted"] for case in cases] == [True] * 16
+    assert all(case["claim_boundary"] == counted.CLAIM_BOUNDARY for case in cases)
+    assert all(case["completeness_claim"] is False for case in cases)
+    assert all(case["provenance"] is clean for case in cases)
+
+
+def test_mf1a_counted_route_fail_baseline():
+    counted = _mf1a_counted_module()
+    cases = copy.deepcopy(_mf1a_counted_real_cases())
+    cases[3]["realization"]["partition_count"] = 10
+    bundle = counted.build_artifact_bundle(cases, prior_bundle=None)
+    assert bundle["summary"]["first_failure"] == "route_realization"
+
+
+def test_mf1a_counted_route_fail_fused():
+    counted = _mf1a_counted_module()
+    cases = copy.deepcopy(_mf1a_counted_real_cases())
+    cases[7]["realization"]["actual_fused_execution"] = False
+    bundle = counted.build_artifact_bundle(cases, prior_bundle=None)
+    assert bundle["summary"]["first_failure"] == "route_realization"
+
+
+def test_mf1a_counted_route_fail_strict():
+    counted = _mf1a_counted_module()
+    cases = copy.deepcopy(_mf1a_counted_real_cases())
+    cases[11]["realization"]["fused_regions"][0]["candidate_kind"] = "unitary_island"
+    bundle = counted.build_artifact_bundle(cases, prior_bundle=None)
+    assert bundle["summary"]["first_failure"] == "route_realization"
+
+
+def test_mf1a_counted_route_fail_hybrid():
+    counted = _mf1a_counted_module()
+    hybrid = _mf1a_hybrid_module()
+    cases = copy.deepcopy(_mf1a_counted_real_cases())
+    realization = cases[15]["realization"]
+    partition = next(
+        entry
+        for entry in realization["partitions"]
+        if entry["partition_runtime_class"] == "phase31_channel_native"
+    )
+    partition["partition_runtime_class"] = "phase3_unitary_island_fused"
+    partition["partition_route_reason"] = "pure_unitary_partition"
+    summary = hybrid._partition_route_summary(realization["partitions"])
+    realization["runtime_class_counts"] = summary["runtime_class_counts"]
+    realization["route_reason_counts"] = summary["route_reason_counts"]
+    realization["channel_native_partition_count"] = summary["runtime_class_counts"].get(
+        "phase31_channel_native", 0
+    )
+    bundle = counted.build_artifact_bundle(cases, prior_bundle=None)
+    assert bundle["summary"]["first_failure"] == "route_realization"
+
+
+def test_mf1a_counted_union_equals_sibling_manifests():
+    counted = _mf1a_counted_module()
+    from benchmarks.density_matrix.correctness_evidence import (
+        mf1a_baseline_validation as baseline_mod,
+    )
+    from benchmarks.density_matrix.correctness_evidence import (
+        mf1a_fused_validation as fused_mod,
+    )
+    from benchmarks.density_matrix.correctness_evidence import (
+        mf1a_hybrid_validation as hybrid_mod,
+    )
+    from benchmarks.density_matrix.correctness_evidence import (
+        mf1a_q4_baseline_validation as q4_mod,
+    )
+    from benchmarks.density_matrix.correctness_evidence import (
+        mf1a_strict_validation as strict_mod,
+    )
+
+    sibling_cells = (
+        q4_mod.build_manifest()["cells"]
+        + baseline_mod.build_manifest()["cells"]
+        + fused_mod.build_manifest()["cells"]
+        + strict_mod.build_manifest()["cells"]
+        + hybrid_mod.build_manifest()["cells"]
+    )
+    cases = _mf1a_counted_real_cases()
+    multiset = sorted(
+        (
+            case["route"],
+            case["anchor_qbits"],
+            case["workload"],
+            case["planner_setting"]["max_partition_qubits"],
+        )
+        for case in cases
+    )
+    expected = sorted(
+        (
+            cell["route"],
+            cell["anchor_qbits"],
+            cell["workload"],
+            cell["max_partition_qubits"],
+        )
+        for cell in sibling_cells
+    )
+    assert multiset == expected
+    for case, cell in zip(cases, counted.build_manifest()["cells"], strict=True):
+        assert case["seed_policy"] == cell["seed_policy"]
+        assert len(case["parameters"]) == cell["parameter_count"]
+
+
+def test_mf1a_counted_imports_q4_oracle_and_qa001():
+    counted = _mf1a_counted_module()
+    from benchmarks.density_matrix.correctness_evidence import (
+        mf1a_baseline_validation as baseline_mod,
+    )
+    from benchmarks.density_matrix.correctness_evidence import (
+        mf1a_fused_validation as fused_mod,
+    )
+    from benchmarks.density_matrix.correctness_evidence import (
+        mf1a_hybrid_validation as hybrid_mod,
+    )
+    from benchmarks.density_matrix.correctness_evidence import (
+        mf1a_q4_baseline_validation as q4_mod,
+    )
+    from benchmarks.density_matrix.correctness_evidence import (
+        mf1a_strict_validation as strict_mod,
+    )
+    from squander.partitioning.noisy_runtime import execute_sequential_density_reference
+
+    assert counted.capture_provenance is q4_mod.capture_provenance
+    assert counted.REGENERATION_COMMAND is q4_mod.REGENERATION_COMMAND
+    assert counted.MF1A_QA001_MATRIX_TOL is q4_mod.MF1A_QA001_MATRIX_TOL
+    assert counted.MF1A_QA001_LAMBDA_MIN_FLOOR is q4_mod.MF1A_QA001_LAMBDA_MIN_FLOOR
+    assert counted._QA001_REGENERATION_TOLERANCES is q4_mod._QA001_REGENERATION_TOLERANCES
+    assert counted._QA001_VALUE_KEYS is q4_mod._QA001_VALUE_KEYS
+    for mod in (baseline_mod, fused_mod, strict_mod, hybrid_mod):
+        assert mod.evaluate_mf1a_qa001 is q4_mod.evaluate_mf1a_qa001
+        assert mod.execute_sequential_density_reference is execute_sequential_density_reference
+
+
+def test_mf1a_counted_allowlist_lengths():
+    counted = _mf1a_counted_module()
+    from benchmarks.density_matrix.correctness_evidence import (
+        mf1a_baseline_validation as baseline_mod,
+    )
+    from benchmarks.density_matrix.correctness_evidence import (
+        mf1a_fused_validation as fused_mod,
+    )
+    from benchmarks.density_matrix.correctness_evidence import (
+        mf1a_hybrid_validation as hybrid_mod,
+    )
+    from benchmarks.density_matrix.correctness_evidence import (
+        mf1a_q4_baseline_validation as q4_mod,
+    )
+    from benchmarks.density_matrix.correctness_evidence import (
+        mf1a_strict_validation as strict_mod,
+    )
+
+    assert counted.COUNTED_REGENERATION_ALLOWLIST == tuple(
+        f"cases[{index}].provenance.implementation_revision" for index in range(16)
+    )
+    assert len(counted.COUNTED_REGENERATION_ALLOWLIST) == 16
+    assert len(q4_mod.Q4_REGENERATION_ALLOWLIST) == 1
+    assert len(baseline_mod.BASELINE_REGENERATION_ALLOWLIST) == 3
+    assert len(fused_mod.FUSED_REGENERATION_ALLOWLIST) == 4
+    assert len(strict_mod.STRICT_REGENERATION_ALLOWLIST) == 4
+    assert len(hybrid_mod.HYBRID_REGENERATION_ALLOWLIST) == 4
+    sibling_lists = (
+        q4_mod.Q4_REGENERATION_ALLOWLIST,
+        baseline_mod.BASELINE_REGENERATION_ALLOWLIST,
+        fused_mod.FUSED_REGENERATION_ALLOWLIST,
+        strict_mod.STRICT_REGENERATION_ALLOWLIST,
+        hybrid_mod.HYBRID_REGENERATION_ALLOWLIST,
+    )
+    sibling_modules = (q4_mod, baseline_mod, fused_mod, strict_mod, hybrid_mod)
+    for sibling in sibling_lists:
+        assert counted.COUNTED_REGENERATION_ALLOWLIST != sibling
+        assert tuple(counted.COUNTED_REGENERATION_ALLOWLIST) is not sibling
+    for mod in sibling_modules:
+        assert counted._allowlisted_revision_difference is not mod._allowlisted_revision_difference
+
+
+def test_mf1a_counted_does_not_import_workloads():
+    import ast
+
+    source = (
+        REPO_ROOT
+        / "benchmarks/density_matrix/correctness_evidence/mf1a_counted_validation.py"
+    ).read_text(encoding="utf-8")
+    tree = ast.parse(source)
+    import_names: list[str] = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom):
+            if node.module:
+                import_names.extend(f"{node.module}.{alias.name}" for alias in node.names)
+            else:
+                import_names.extend(alias.name for alias in node.names)
+        elif isinstance(node, ast.Import):
+            import_names.extend(alias.name for alias in node.names)
+    assert not [
+        name
+        for name in import_names
+        if name.startswith("benchmarks.density_matrix.planner_surface.workloads")
+    ]
+
+
+def test_mf1a_counted_registered_at_index_5():
+    counted = _mf1a_counted_module()
+    from benchmarks.density_matrix.correctness_evidence import (
+        mf1a_baseline_validation as baseline_mod,
+    )
+    from benchmarks.density_matrix.correctness_evidence import (
+        mf1a_fused_validation as fused_mod,
+    )
+    from benchmarks.density_matrix.correctness_evidence import (
+        mf1a_hybrid_validation as hybrid_mod,
+    )
+    from benchmarks.density_matrix.correctness_evidence import (
+        mf1a_q4_baseline_validation as q4_mod,
+    )
+    from benchmarks.density_matrix.correctness_evidence import (
+        mf1a_strict_validation as strict_mod,
+    )
+
+    live = validation_pipeline._CASE_SLICE_REGISTRY[0:5]
+    assert len(live) == 5
+    assert live[0].module is q4_mod and live[0].mf1a_sibling is True
+    assert live[1].module is fused_mod and live[1].mf1a_sibling is True
+    assert live[2].module is hybrid_mod and live[2].mf1a_sibling is True
+    assert live[3].module is strict_mod and live[3].mf1a_sibling is True
+    assert live[4].module is baseline_mod and live[4].mf1a_sibling is True
+    entry = validation_pipeline._CASE_SLICE_REGISTRY[5]
+    assert entry.module is counted
+    assert entry.mf1a_sibling is True
+
+
+def test_mf1a_counted_claim_fields_match_rm_record():
+    counted = _mf1a_counted_module()
+    manifest_path = (
+        REPO_ROOT
+        / "docs/specs/milestones/exactness-reconfirmation/task-9/COUNTED_MANIFEST.md"
+    )
+    text = manifest_path.read_text(encoding="utf-8")
+    start = text.index("```text\n") + len("```text\n")
+    end = text.index("\n```", start)
+    expected_boundary = text[start:end]
+    assert counted.CLAIM_BOUNDARY == expected_boundary
+    assert counted.COMPLETENESS_CLAIM is False
+
+
+def test_mf1a_counted_route_fail_q4_baseline():
+    counted = _mf1a_counted_module()
+    cases = copy.deepcopy(_mf1a_counted_real_cases())
+    cases[0]["realization"]["fused_region_count"] = 1
+    bundle = counted.build_artifact_bundle(cases, prior_bundle=None)
+    assert bundle["summary"]["first_failure"] == "route_realization"
+
+
+def test_mf1a_counted_real_sibling_records_pass():
+    counted = _mf1a_counted_module()
+    cases = _mf1a_counted_real_cases()
+    bundle = counted.build_artifact_bundle(cases, prior_bundle=None)
+    assert bundle["status"] == "pass"
+    from benchmarks.density_matrix.correctness_evidence import (
+        mf1a_baseline_validation as baseline_mod,
+    )
+    from benchmarks.density_matrix.correctness_evidence import (
+        mf1a_fused_validation as fused_mod,
+    )
+    from benchmarks.density_matrix.correctness_evidence import (
+        mf1a_hybrid_validation as hybrid_mod,
+    )
+    from benchmarks.density_matrix.correctness_evidence import (
+        mf1a_q4_baseline_validation as q4_mod,
+    )
+    from benchmarks.density_matrix.correctness_evidence import (
+        mf1a_strict_validation as strict_mod,
+    )
+
+    expected = (
+        (q4_mod,)
+        + (baseline_mod,) * 3
+        + (fused_mod,) * 4
+        + (strict_mod,) * 4
+        + (hybrid_mod,) * 4
+    )
+    assert counted._ROW_GATE_MODULES == expected
+
+
+def test_mf1a_counted_calls_five_builders_with_one_provenance(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    counted = _mf1a_counted_module()
+    from benchmarks.density_matrix.correctness_evidence import (
+        mf1a_baseline_validation as baseline_mod,
+    )
+    from benchmarks.density_matrix.correctness_evidence import (
+        mf1a_fused_validation as fused_mod,
+    )
+    from benchmarks.density_matrix.correctness_evidence import (
+        mf1a_hybrid_validation as hybrid_mod,
+    )
+    from benchmarks.density_matrix.correctness_evidence import (
+        mf1a_q4_baseline_validation as q4_mod,
+    )
+    from benchmarks.density_matrix.correctness_evidence import (
+        mf1a_strict_validation as strict_mod,
+    )
+
+    provenance = _mf1a_counted_clean_provenance()
+
+    q4_cases = _mf1a_counted_git_head_cases(q4_mod)
+    baseline_cases = _mf1a_counted_git_head_cases(baseline_mod)
+    fused_cases = _mf1a_counted_git_head_cases(fused_mod)
+    strict_cases = _mf1a_counted_git_head_cases(strict_mod)
+    hybrid_cases = _mf1a_counted_git_head_cases(hybrid_mod)
+
+    seen_provenance: list[dict] = []
+
+    def q4_build(*, provenance=None):
+        seen_provenance.append(provenance)
+        out = copy.deepcopy(q4_cases)
+        for case in out:
+            case["provenance"] = provenance
+            case["_sentinel"] = "q4"
+        return out
+
+    def baseline_build(*, provenance=None):
+        seen_provenance.append(provenance)
+        out = copy.deepcopy(baseline_cases)
+        for case in out:
+            case["provenance"] = provenance
+            case["_sentinel"] = "baseline"
+        return out
+
+    def fused_build(*, provenance=None):
+        seen_provenance.append(provenance)
+        out = copy.deepcopy(fused_cases)
+        for case in out:
+            case["provenance"] = provenance
+            case["_sentinel"] = "fused"
+        return out
+
+    def strict_build(*, provenance=None):
+        seen_provenance.append(provenance)
+        out = copy.deepcopy(strict_cases)
+        for case in out:
+            case["provenance"] = provenance
+            case["_sentinel"] = "strict"
+        return out
+
+    def hybrid_build(*, provenance=None):
+        seen_provenance.append(provenance)
+        out = copy.deepcopy(hybrid_cases)
+        for case in out:
+            case["provenance"] = provenance
+            case["_sentinel"] = "hybrid"
+        return out
+
+    monkeypatch.setattr(q4_mod, "build_cases", q4_build)
+    monkeypatch.setattr(baseline_mod, "build_cases", baseline_build)
+    monkeypatch.setattr(fused_mod, "build_cases", fused_build)
+    monkeypatch.setattr(strict_mod, "build_cases", strict_build)
+    monkeypatch.setattr(hybrid_mod, "build_cases", hybrid_build)
+    capture_calls = 0
+
+    def capture_once():
+        nonlocal capture_calls
+        capture_calls += 1
+        return provenance
+
+    monkeypatch.setattr(counted, "capture_provenance", capture_once)
+
+    built = counted.build_cases()
+    assert capture_calls == 1
+    assert len(seen_provenance) == 5
+    assert all(item is provenance for item in seen_provenance)
+    assert [case["_sentinel"] for case in built] == [
+        "q4",
+        "baseline",
+        "baseline",
+        "baseline",
+        "fused",
+        "fused",
+        "fused",
+        "fused",
+        "strict",
+        "strict",
+        "strict",
+        "strict",
+        "hybrid",
+        "hybrid",
+        "hybrid",
+        "hybrid",
+    ]
+
+
+def test_mf1a_counted_qa001_failure_fails_bundle():
+    counted = _mf1a_counted_module()
+    cases = copy.deepcopy(_mf1a_counted_real_cases())
+    cases[9]["qa001"]["qa001_pass"] = False
+    bundle = counted.build_artifact_bundle(cases, prior_bundle=None)
+    assert bundle["summary"]["first_failure"] == "qa001"
+
+
+def test_mf1a_counted_regeneration_revision_only_passes():
+    counted = _mf1a_counted_module()
+    prior_cases = _mf1a_counted_real_cases()
+    prior = counted.build_artifact_bundle(prior_cases, prior_bundle=None)
+    current_cases = copy.deepcopy(prior_cases)
+    for case in current_cases:
+        case["provenance"]["implementation_revision"] = "c" * 40
+    bundle = counted.build_artifact_bundle(current_cases, prior_bundle=prior)
+    assert bundle["regeneration"] == {
+        "prior_present": True,
+        "pass": True,
+        "first_mismatch": None,
+    }
+
+
+def test_mf1a_counted_regeneration_one_case_diverges():
+    counted = _mf1a_counted_module()
+    prior_cases = _mf1a_counted_real_cases()
+    prior = counted.build_artifact_bundle(prior_cases, prior_bundle=None)
+    current_cases = copy.deepcopy(prior_cases)
+    revisions = ["a" * 40] * 9 + ["d" * 40] + ["a" * 40] * 6
+    for index, case in enumerate(current_cases):
+        case["provenance"]["implementation_revision"] = revisions[index]
+    bundle = counted.build_artifact_bundle(current_cases, prior_bundle=prior)
+    assert (
+        bundle["regeneration"]["first_mismatch"]
+        == "cases[9].provenance.implementation_revision"
+    )
+    revision_a = "a" * 40
+    revision_c = "c" * 40
+    revision_d = "d" * 40
+    prior_all_a = counted.build_artifact_bundle(
+        copy.deepcopy(prior_cases), prior_bundle=None
+    )
+    for case in prior_all_a["cases"]:
+        case["provenance"]["implementation_revision"] = revision_a
+    prior_case_14_diverges = copy.deepcopy(prior_all_a)
+    for index, case in enumerate(prior_case_14_diverges["cases"]):
+        if index == 14:
+            case["provenance"]["implementation_revision"] = revision_d
+    current_all_a = copy.deepcopy(prior_cases)
+    for case in current_all_a:
+        case["provenance"]["implementation_revision"] = revision_a
+    bundle = counted.build_artifact_bundle(
+        current_all_a, prior_bundle=prior_case_14_diverges
+    )
+    assert (
+        bundle["regeneration"]["first_mismatch"]
+        == "cases[14].provenance.implementation_revision"
+    )
+    current_nonuniform = copy.deepcopy(prior_cases)
+    moved_revisions = [revision_c] * 3 + [revision_d] + [revision_c] * 12
+    for index, case in enumerate(current_nonuniform):
+        case["provenance"]["implementation_revision"] = moved_revisions[index]
+    bundle = counted.build_artifact_bundle(
+        current_nonuniform, prior_bundle=prior_all_a
+    )
+    assert (
+        bundle["regeneration"]["first_mismatch"]
+        == "cases[0].provenance.implementation_revision"
+    )
+
+
+def test_mf1a_counted_regeneration_non_allowlisted_path():
+    counted = _mf1a_counted_module()
+    prior_cases = _mf1a_counted_real_cases()
+    prior = counted.build_artifact_bundle(prior_cases, prior_bundle=None)
+    prior_mut = copy.deepcopy(prior)
+    prior_mut["cases"][3]["claim_boundary"] = "x"
+    current_cases = copy.deepcopy(prior_cases)
+    for case in current_cases:
+        case["provenance"]["implementation_revision"] = "c" * 40
+    bundle = counted.build_artifact_bundle(current_cases, prior_bundle=prior_mut)
+    assert bundle["regeneration"]["first_mismatch"] == "cases[3].claim_boundary"
+    assert bundle["summary"]["first_failure"] == "regeneration"
+
+
+def test_mf1a_counted_regeneration_allowlist_read_at_call_time(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    counted = _mf1a_counted_module()
+    prior_cases = _mf1a_counted_real_cases()
+    prior = counted.build_artifact_bundle(prior_cases, prior_bundle=None)
+    current_cases = copy.deepcopy(prior_cases)
+    for case in current_cases:
+        case["provenance"]["implementation_revision"] = "c" * 40
+
+    original_allowlist = counted.COUNTED_REGENERATION_ALLOWLIST
+    monkeypatch.setattr(counted, "COUNTED_REGENERATION_ALLOWLIST", ())
+    bundle = counted.build_artifact_bundle(current_cases, prior_bundle=prior)
+    assert (
+        bundle["regeneration"]["first_mismatch"]
+        == "cases[0].provenance.implementation_revision"
+    )
+
+    monkeypatch.setattr(
+        counted, "COUNTED_REGENERATION_ALLOWLIST", original_allowlist[:15]
+    )
+    bundle = counted.build_artifact_bundle(current_cases, prior_bundle=prior)
+    assert (
+        bundle["regeneration"]["first_mismatch"]
+        == "cases[15].provenance.implementation_revision"
+    )
+
+
+def test_mf1a_counted_regeneration_bundle_structure():
+    counted = _mf1a_counted_module()
+    prior_cases = _mf1a_counted_real_cases()
+    prior = counted.build_artifact_bundle(prior_cases, prior_bundle=None)
+    current_cases = copy.deepcopy(prior_cases)
+    for case in current_cases:
+        case["provenance"]["implementation_revision"] = "c" * 40
+    prior15 = copy.deepcopy(prior)
+    prior15["cases"] = prior15["cases"][:15]
+    bundle = counted.build_artifact_bundle(current_cases, prior_bundle=prior15)
+    assert bundle["regeneration"]["first_mismatch"] == "bundle_structure"
+    prior_bad = copy.deepcopy(prior)
+    prior_bad["schema_version"] = "x"
+    bundle = counted.build_artifact_bundle(current_cases, prior_bundle=prior_bad)
+    assert bundle["regeneration"]["first_mismatch"] == "bundle_structure"
+
+
+def test_mf1a_counted_regeneration_second_field():
+    counted = _mf1a_counted_module()
+    prior_cases = _mf1a_counted_real_cases()
+    prior = counted.build_artifact_bundle(prior_cases, prior_bundle=None)
+    current_cases = copy.deepcopy(prior_cases)
+    for case in current_cases:
+        case["provenance"]["implementation_revision"] = "c" * 40
+    current_cases[6]["workload"] = "phase2_xxz_hea_q8_continuity"
+    bundle = counted.build_artifact_bundle(current_cases, prior_bundle=prior)
+    assert bundle["regeneration"]["first_mismatch"] == "cases[6].workload"
+    assert bundle["summary"]["first_failure"] == "manifest_exact_set"
+
+
+def test_mf1a_counted_finding_bands_one_sided():
+    import json
+
+    counted = _mf1a_counted_module()
+    from benchmarks.density_matrix.correctness_evidence import (
+        mf1a_baseline_validation as baseline_mod,
+    )
+
+    assert (
+        counted.classify_near_threshold_measure
+        is baseline_mod.classify_near_threshold_measure
+    )
+    assert counted._derive_summary_findings is baseline_mod._derive_summary_findings
+    cases = _mf1a_counted_real_cases()
+    bundle = counted.build_artifact_bundle(cases, prior_bundle=None)
+    assert bundle["summary"]["findings"] == []
+    assert bundle["summary"]["outside_expected_markers"] == []
+    cases = copy.deepcopy(_mf1a_counted_real_cases())
+    cases[0]["qa001"]["lambda_min"] = -5e-13
+    bundle = counted.build_artifact_bundle(cases, prior_bundle=None)
+    assert bundle["status"] == "pass"
+    assert bundle["summary"]["findings"] == [
+        {
+            "route": "partitioned_density_descriptor_baseline",
+            "anchor_qbits": 4,
+            "workload": "phase2_xxz_hea_q4_continuity",
+            "measure": "lambda_min",
+            "value": -5e-13,
+            "cause_hypothesis": "lambda_min below -1e-13 Layer 1 finding band",
+        }
+    ]
+    assert bundle["summary"]["outside_expected_markers"] == []
+    assert "oracle_lambda_min" not in json.dumps(bundle)
+    for positive in (+3.324e-06, +5.377e-10):
+        positive_cases = copy.deepcopy(_mf1a_counted_real_cases())
+        positive_cases[1]["qa001"]["lambda_min"] = positive
+        positive_bundle = counted.build_artifact_bundle(
+            positive_cases, prior_bundle=None
+        )
+        assert positive_bundle["summary"]["findings"] == []
+        assert positive_bundle["summary"]["outside_expected_markers"] == []
+
+
+def test_mf1a_counted_rejects_non_revision_value():
+    counted = _mf1a_counted_module()
+    prior_cases = _mf1a_counted_real_cases()
+    prior = counted.build_artifact_bundle(prior_cases, prior_bundle=None)
+    invalid_values = ("g" * 40, "c" * 39, "", "C" * 40)
+    for value in invalid_values:
+        current_cases = copy.deepcopy(prior_cases)
+        for case in current_cases:
+            case["provenance"]["implementation_revision"] = value
+        bundle = counted.build_artifact_bundle(current_cases, prior_bundle=prior)
+        assert (
+            bundle["regeneration"]["first_mismatch"]
+            == "cases[0].provenance.implementation_revision"
+        )
+        prior_mut = copy.deepcopy(prior)
+        for case in prior_mut["cases"]:
+            case["provenance"]["implementation_revision"] = value
+        current_cases = copy.deepcopy(prior_cases)
+        bundle = counted.build_artifact_bundle(current_cases, prior_bundle=prior_mut)
+        assert (
+            bundle["regeneration"]["first_mismatch"]
+            == "cases[0].provenance.implementation_revision"
+        )
+    prior_mut = copy.deepcopy(prior)
+    del prior_mut["cases"][15]["provenance"]["implementation_revision"]
+    current_cases = copy.deepcopy(prior_cases)
+    bundle = counted.build_artifact_bundle(current_cases, prior_bundle=prior_mut)
+    assert (
+        bundle["regeneration"]["first_mismatch"]
+        == "cases[15].provenance.implementation_revision"
+    )
+
+
 def test_mf1a_historical_suites_bytes_unchanged_after_run(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ):
@@ -4004,6 +4834,11 @@ def test_mf1a_historical_registered_siblings_still_written(
         fake_root / "mf1a" / "baseline" / _mf1a_baseline_module().ARTIFACT_FILENAME
     )
     assert baseline_sibling_path.is_file()
+    counted = _mf1a_counted_module()
+    counted_sibling_path = (
+        fake_root / "mf1a" / "counted" / counted.ARTIFACT_FILENAME
+    )
+    assert counted_sibling_path.is_file()
 
 
 def test_mf1a_historical_all_statuses_returned_g07_unchanged(
@@ -4110,6 +4945,7 @@ def test_mf1a_historical_nonsibling_paths_match_req007():
         "mf1a/hybrid",
         "mf1a/strict",
         "mf1a/baseline",
+        "mf1a/counted",
     }
     assert nonsibling_dirs == set(_MF1A_HISTORICAL_ARTIFACT_DIR_NAMES)
 
