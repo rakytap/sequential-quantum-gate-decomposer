@@ -1240,6 +1240,821 @@ def test_mf1a_fused_pipeline_builds_every_sibling_before_writing_any(
     assert all(build_index < first_write_index for build_index in build_indices)
 
 
+def _mf1a_hybrid_module():
+    from benchmarks.density_matrix.correctness_evidence import (
+        mf1a_hybrid_validation as hybrid_mod,
+    )
+
+    return hybrid_mod
+
+
+def _clean_mf1a_hybrid_provenance() -> dict:
+    hybrid = _mf1a_hybrid_module()
+    return {
+        "implementation_revision": "a" * 40,
+        "clean_start": True,
+        "dirty_paths": [],
+        "command": hybrid.REGENERATION_COMMAND,
+        "environment": {
+            "conda_default_env": "qgd",
+            "conda_prefix": "/tmp/qgd",
+            "python_executable": "/tmp/qgd/bin/python",
+            "python_version": "3.13.0",
+        },
+        "dependencies": {"numpy": "test", "scipy": "test", "squander": "test"},
+        "extension_identities": [
+            {"path": "squander/density_matrix/_density_matrix_cpp.so", "sha256": "b" * 64}
+        ],
+        "input_artifact_identities": [],
+        "provenance_pass": True,
+    }
+
+
+def _q4_hybrid_positive_realization(hybrid) -> dict:
+    partitions: list[dict] = []
+    fused_regions: list[dict] = []
+    for index in (0, 1):
+        partitions.append(
+            {
+                "partition_index": index,
+                "partition_runtime_class": "phase31_channel_native",
+                "partition_route_reason": "eligible_channel_native_motif",
+            }
+        )
+        fused_regions.append(
+            {
+                "partition_index": index,
+                "candidate_kind": "channel_native_motif",
+                "classification": "actually_fused",
+                "reason": "eligible_channel_native_motif",
+                "operation_names": ["U3"],
+                "global_target_qbits": [0],
+            }
+        )
+    for index in (2, 3, 4):
+        partitions.append(
+            {
+                "partition_index": index,
+                "partition_runtime_class": "phase3_unitary_island_fused",
+                "partition_route_reason": "pure_unitary_partition",
+            }
+        )
+        fused_regions.append(
+            {
+                "partition_index": index,
+                "candidate_kind": "unitary_island",
+                "classification": "actually_fused",
+                "reason": "pure_unitary_partition",
+                "operation_names": ["CNOT"],
+                "global_target_qbits": [0, 1],
+            }
+        )
+    return {
+        "requested_path": hybrid.ROUTE,
+        "realized_path": hybrid.ROUTE,
+        "partition_count": 5,
+        "exact_output_present": True,
+        "channel_native_partition_count": 2,
+        "runtime_class_counts": {
+            "phase31_channel_native": 2,
+            "phase3_unitary_island_fused": 3,
+        },
+        "route_reason_counts": {
+            "eligible_channel_native_motif": 2,
+            "pure_unitary_partition": 3,
+        },
+        "partitions": partitions,
+        "fused_regions": fused_regions,
+    }
+
+
+def _recount_hybrid_realization(realization: dict) -> dict:
+    from collections import Counter
+
+    classes = [row["partition_runtime_class"] for row in realization["partitions"]]
+    reasons = [row["partition_route_reason"] for row in realization["partitions"]]
+    realization["runtime_class_counts"] = dict(sorted(Counter(classes).items()))
+    realization["route_reason_counts"] = dict(sorted(Counter(reasons).items()))
+    realization["channel_native_partition_count"] = classes.count("phase31_channel_native")
+    return realization
+
+
+def _mf1a_hybrid_synthetic_case(
+    hybrid,
+    *,
+    anchor_qbits: int,
+    workload: str,
+    realization: dict,
+    seed_policy: str = "deterministic_workload_no_random_seed",
+) -> dict:
+    return {
+        "record_schema_version": hybrid.RECORD_SCHEMA_VERSION,
+        "manifest_schema_version": hybrid.MANIFEST_SCHEMA_VERSION,
+        "route": hybrid.ROUTE,
+        "anchor_qbits": anchor_qbits,
+        "workload": workload,
+        "planner_setting": {"max_partition_qubits": 2},
+        "parameters": [0.0],
+        "seed_policy": seed_policy,
+        "realization": realization,
+        "qa001": {
+            "qa001_pass": True,
+            "frobenius_norm_diff": 1e-14,
+            "max_abs_diff": 1e-14,
+            "trace_abs_deviation": 1e-14,
+            "lambda_min": -1e-14,
+        },
+        "milestone_counted": False,
+        "completeness_claim": False,
+        "claim_boundary": hybrid.CLAIM_BOUNDARY,
+        "provenance": _clean_mf1a_hybrid_provenance(),
+    }
+
+
+def _assert_hybrid_regeneration_negative(bundle: dict, expected_mismatch: str) -> None:
+    assert bundle["status"] == "fail"
+    assert bundle["regeneration"]["pass"] is False
+    assert bundle["summary"]["first_failure"] == "regeneration"
+    assert bundle["regeneration"]["first_mismatch"] == expected_mismatch
+
+
+def test_mf1a_hybrid_manifest_is_the_four_frozen_ids():
+    hybrid = _mf1a_hybrid_module()
+    manifest = hybrid.build_manifest()
+    assert manifest["schema_version"] == hybrid.MANIFEST_SCHEMA_VERSION
+    cells = manifest["cells"]
+    assert len(cells) == 4
+    assert [cell["anchor_qbits"] for cell in cells] == [4, 6, 8, 10]
+    assert [cell["workload"] for cell in cells] == [
+        "phase2_xxz_hea_q4_continuity",
+        "phase2_xxz_hea_q6_continuity",
+        "phase31_pair_repeat_q8_dense_seed20260318",
+        "phase31_pair_repeat_q10_dense_seed20260318",
+    ]
+    assert all(cell["route"] == "phase31_channel_native_hybrid" for cell in cells)
+    assert hybrid.ROUTE == "phase31_channel_native_hybrid"
+    assert all(cell["max_partition_qubits"] == 2 for cell in cells)
+
+
+def test_mf1a_hybrid_q8_q10_builder_calls_match_frozen_ids():
+    from benchmarks.density_matrix.planner_surface import workloads
+
+    hybrid = _mf1a_hybrid_module()
+    assert hybrid.FROZEN_STRUCTURED_BUILDER_CALLS == (
+        {
+            "family_name": "phase31_pair_repeat",
+            "qbit_num": 8,
+            "noise_pattern": "dense",
+            "seed": 20260318,
+            "max_partition_qubits": 2,
+        },
+        {
+            "family_name": "phase31_pair_repeat",
+            "qbit_num": 10,
+            "noise_pattern": "dense",
+            "seed": 20260318,
+            "max_partition_qubits": 2,
+        },
+    )
+    for kwargs in hybrid.FROZEN_STRUCTURED_BUILDER_CALLS:
+        descriptor_set = workloads.build_phase31_structured_descriptor_set(**kwargs)
+        assert (
+            descriptor_set.workload_id
+            == f"phase31_pair_repeat_q{kwargs['qbit_num']}_dense_seed20260318"
+        )
+
+
+def test_mf1a_hybrid_realization_requires_a_channel_native_partition():
+    hybrid = _mf1a_hybrid_module()
+    manifest_cells = hybrid.build_manifest()["cells"]
+    good_realization = _q4_hybrid_positive_realization(hybrid)
+    good = _mf1a_hybrid_synthetic_case(
+        hybrid,
+        anchor_qbits=4,
+        workload=manifest_cells[0]["workload"],
+        realization=copy.deepcopy(good_realization),
+    )
+    assert hybrid._route_realization_pass(good)
+
+    no_motif = copy.deepcopy(good_realization)
+    no_motif["fused_regions"] = [
+        region
+        for region in no_motif["fused_regions"]
+        if not (
+            region["partition_index"] == 0
+            and region["candidate_kind"] == "channel_native_motif"
+        )
+    ]
+    assert not hybrid._route_realization_pass(
+        _mf1a_hybrid_synthetic_case(
+            hybrid,
+            anchor_qbits=4,
+            workload=manifest_cells[0]["workload"],
+            realization=no_motif,
+        )
+    )
+
+    motif_on_island = copy.deepcopy(good_realization)
+    for partition in motif_on_island["partitions"]:
+        if partition["partition_index"] == 2:
+            partition["partition_runtime_class"] = "phase3_unitary_island_fused"
+    motif_on_island["fused_regions"].append(
+        {
+            "partition_index": 2,
+            "candidate_kind": "channel_native_motif",
+            "classification": "actually_fused",
+            "reason": "eligible_channel_native_motif",
+            "operation_names": ["U3"],
+            "global_target_qbits": [0],
+        }
+    )
+    assert not hybrid._route_realization_pass(
+        _mf1a_hybrid_synthetic_case(
+            hybrid,
+            anchor_qbits=4,
+            workload=manifest_cells[0]["workload"],
+            realization=motif_on_island,
+        )
+    )
+
+    unknown_class = copy.deepcopy(good_realization)
+    unknown_class["partitions"][2]["partition_runtime_class"] = "unknown_class"
+    _recount_hybrid_realization(unknown_class)
+    assert not hybrid._route_realization_pass(
+        _mf1a_hybrid_synthetic_case(
+            hybrid,
+            anchor_qbits=4,
+            workload=manifest_cells[0]["workload"],
+            realization=unknown_class,
+        )
+    )
+
+    bad_reason = copy.deepcopy(good_realization)
+    bad_reason["partitions"][2]["partition_route_reason"] = "channel_native_noise_presence"
+    _recount_hybrid_realization(bad_reason)
+    assert not hybrid._route_realization_pass(
+        _mf1a_hybrid_synthetic_case(
+            hybrid,
+            anchor_qbits=4,
+            workload=manifest_cells[0]["workload"],
+            realization=bad_reason,
+        )
+    )
+
+    dropped_partition = copy.deepcopy(good_realization)
+    dropped_partition["partitions"] = dropped_partition["partitions"][:-1]
+    dropped_partition["fused_regions"] = [
+        region
+        for region in dropped_partition["fused_regions"]
+        if region["partition_index"] != 4
+    ]
+    dropped_partition["partition_count"] = 5
+    _recount_hybrid_realization(dropped_partition)
+    assert not hybrid._route_realization_pass(
+        _mf1a_hybrid_synthetic_case(
+            hybrid,
+            anchor_qbits=4,
+            workload=manifest_cells[0]["workload"],
+            realization=dropped_partition,
+        )
+    )
+
+    duplicated_index = copy.deepcopy(good_realization)
+    duplicated_index["partitions"][4]["partition_index"] = 3
+    _recount_hybrid_realization(duplicated_index)
+    assert not hybrid._route_realization_pass(
+        _mf1a_hybrid_synthetic_case(
+            hybrid,
+            anchor_qbits=4,
+            workload=manifest_cells[0]["workload"],
+            realization=duplicated_index,
+        )
+    )
+
+    zero_channel_native = copy.deepcopy(good_realization)
+    for partition in zero_channel_native["partitions"]:
+        if partition["partition_runtime_class"] == "phase31_channel_native":
+            partition["partition_runtime_class"] = "phase3_unitary_island_fused"
+            partition["partition_route_reason"] = "pure_unitary_partition"
+    for region in zero_channel_native["fused_regions"]:
+        if region["candidate_kind"] == "channel_native_motif":
+            region["candidate_kind"] = "unitary_island"
+            region["classification"] = "actually_fused"
+            region["reason"] = "pure_unitary_partition"
+    _recount_hybrid_realization(zero_channel_native)
+    assert zero_channel_native["channel_native_partition_count"] == 0
+    assert not hybrid._route_realization_pass(
+        _mf1a_hybrid_synthetic_case(
+            hybrid,
+            anchor_qbits=4,
+            workload=manifest_cells[0]["workload"],
+            realization=zero_channel_native,
+        )
+    )
+
+    unfused_with_fused_island = copy.deepcopy(good_realization)
+    unfused_with_fused_island["partitions"][2]["partition_runtime_class"] = (
+        "phase3_supported_unfused"
+    )
+    unfused_with_fused_island["partitions"][2]["partition_route_reason"] = (
+        "channel_native_support_surface"
+    )
+    unfused_with_fused_island["fused_regions"].append(
+        {
+            "partition_index": 2,
+            "candidate_kind": "unitary_island",
+            "classification": "supported_but_unfused",
+            "reason": "channel_native_support_surface",
+            "operation_names": ["U3"],
+            "global_target_qbits": [1],
+        }
+    )
+    _recount_hybrid_realization(unfused_with_fused_island)
+    assert not hybrid._route_realization_pass(
+        _mf1a_hybrid_synthetic_case(
+            hybrid,
+            anchor_qbits=4,
+            workload=manifest_cells[0]["workload"],
+            realization=unfused_with_fused_island,
+        )
+    )
+
+    orphan_region = copy.deepcopy(good_realization)
+    orphan_region["fused_regions"].append(
+        {
+            "partition_index": 99,
+            "candidate_kind": "unitary_island",
+            "classification": "actually_fused",
+            "reason": "pure_unitary_partition",
+            "operation_names": ["CNOT"],
+            "global_target_qbits": [0, 1],
+        }
+    )
+    assert not hybrid._route_realization_pass(
+        _mf1a_hybrid_synthetic_case(
+            hybrid,
+            anchor_qbits=4,
+            workload=manifest_cells[0]["workload"],
+            realization=orphan_region,
+        )
+    )
+
+    wrong_cn_count = copy.deepcopy(good_realization)
+    wrong_cn_count["channel_native_partition_count"] = 99
+    assert not hybrid._route_realization_pass(
+        _mf1a_hybrid_synthetic_case(
+            hybrid,
+            anchor_qbits=4,
+            workload=manifest_cells[0]["workload"],
+            realization=wrong_cn_count,
+        )
+    )
+
+
+def test_mf1a_hybrid_qa001_tolerances_match_q4():
+    hybrid = _mf1a_hybrid_module()
+    assert hybrid.evaluate_mf1a_qa001 is mf1a.evaluate_mf1a_qa001
+    assert hybrid.MF1A_QA001_MATRIX_TOL is mf1a.MF1A_QA001_MATRIX_TOL
+    assert hybrid.MF1A_QA001_LAMBDA_MIN_FLOOR is mf1a.MF1A_QA001_LAMBDA_MIN_FLOOR
+    assert hybrid._QA001_REGENERATION_TOLERANCES is mf1a._QA001_REGENERATION_TOLERANCES
+    assert hybrid._QA001_VALUE_KEYS is mf1a._QA001_VALUE_KEYS
+
+
+def test_mf1a_hybrid_rejects_case_count():
+    hybrid = _mf1a_hybrid_module()
+    manifest_cells = hybrid.build_manifest()["cells"]
+    realization = _q4_hybrid_positive_realization(hybrid)
+    prior_cases = [
+        _mf1a_hybrid_synthetic_case(
+            hybrid,
+            anchor_qbits=cell["anchor_qbits"],
+            workload=cell["workload"],
+            realization=copy.deepcopy(realization),
+        )
+        for cell in manifest_cells
+    ]
+    prior = hybrid.build_artifact_bundle(prior_cases, prior_bundle=None)
+    too_many = copy.deepcopy(prior_cases)
+    too_many.append(copy.deepcopy(too_many[0]))
+    bundle = hybrid.build_artifact_bundle(too_many, prior_bundle=prior)
+    assert bundle["regeneration"]["pass"] is False
+    assert bundle["regeneration"]["first_mismatch"] == "manifest_exact_set"
+
+    too_few = copy.deepcopy(prior_cases[:3])
+    bundle = hybrid.build_artifact_bundle(too_few, prior_bundle=prior)
+    assert bundle["regeneration"]["pass"] is False
+    assert bundle["regeneration"]["first_mismatch"] in {
+        "manifest_exact_set",
+        "bundle_structure",
+    }
+
+
+def test_mf1a_hybrid_rejects_substituted_or_reordered_id():
+    hybrid = _mf1a_hybrid_module()
+    manifest_cells = hybrid.build_manifest()["cells"]
+    realization = _q4_hybrid_positive_realization(hybrid)
+    prior_cases = [
+        _mf1a_hybrid_synthetic_case(
+            hybrid,
+            anchor_qbits=cell["anchor_qbits"],
+            workload=cell["workload"],
+            realization=copy.deepcopy(realization),
+        )
+        for cell in manifest_cells
+    ]
+    prior = hybrid.build_artifact_bundle(prior_cases, prior_bundle=None)
+    substituted = copy.deepcopy(prior_cases)
+    substituted[2]["workload"] = "phase31_pair_repeat_q8_dense_seed99999999"
+    bundle = hybrid.build_artifact_bundle(substituted, prior_bundle=prior)
+    assert bundle["regeneration"]["pass"] is False
+    assert bundle["regeneration"]["first_mismatch"] == "manifest_exact_set"
+
+    reordered = copy.deepcopy(prior_cases)
+    reordered[2], reordered[3] = reordered[3], reordered[2]
+    bundle = hybrid.build_artifact_bundle(reordered, prior_bundle=prior)
+    assert bundle["regeneration"]["pass"] is False
+    assert bundle["regeneration"]["first_mismatch"] == "manifest_exact_set"
+
+
+def _mf1a_hybrid_uniform_prior_cases(hybrid):
+    manifest_cells = hybrid.build_manifest()["cells"]
+    realization = _q4_hybrid_positive_realization(hybrid)
+    prior_cases = [
+        _mf1a_hybrid_synthetic_case(
+            hybrid,
+            anchor_qbits=cell["anchor_qbits"],
+            workload=cell["workload"],
+            realization=copy.deepcopy(realization),
+        )
+        for cell in manifest_cells
+    ]
+    for case in prior_cases:
+        case["provenance"]["implementation_revision"] = "a" * 40
+    return prior_cases
+
+
+def test_mf1a_hybrid_one_current_revision_diverges():
+    hybrid = _mf1a_hybrid_module()
+    prior_cases = _mf1a_hybrid_uniform_prior_cases(hybrid)
+    prior = hybrid.build_artifact_bundle(prior_cases, prior_bundle=None)
+
+    rc5_current = copy.deepcopy(prior_cases)
+    for case in rc5_current:
+        case["provenance"]["implementation_revision"] = "a" * 40
+    rc5_current[2]["provenance"]["implementation_revision"] = "d" * 40
+    bundle = hybrid.build_artifact_bundle(rc5_current, prior_bundle=prior)
+    _assert_hybrid_regeneration_negative(
+        bundle, "cases[2].provenance.implementation_revision"
+    )
+
+    all_moved_current = copy.deepcopy(prior_cases)
+    revisions = ["c" * 40, "d" * 40, "c" * 40, "c" * 40]
+    for case, revision in zip(all_moved_current, revisions, strict=True):
+        case["provenance"]["implementation_revision"] = revision
+    bundle = hybrid.build_artifact_bundle(all_moved_current, prior_bundle=prior)
+    _assert_hybrid_regeneration_negative(
+        bundle, "cases[0].provenance.implementation_revision"
+    )
+
+
+def test_mf1a_hybrid_one_prior_revision_diverges():
+    hybrid = _mf1a_hybrid_module()
+    prior_cases = _mf1a_hybrid_uniform_prior_cases(hybrid)
+    for case in prior_cases:
+        case["provenance"]["implementation_revision"] = "a" * 40
+    prior = hybrid.build_artifact_bundle(prior_cases, prior_bundle=None)
+
+    rc6_current = copy.deepcopy(prior_cases)
+    prior_mut = copy.deepcopy(prior)
+    prior_mut["cases"][1]["provenance"]["implementation_revision"] = "d" * 40
+    bundle = hybrid.build_artifact_bundle(rc6_current, prior_bundle=prior_mut)
+    _assert_hybrid_regeneration_negative(
+        bundle, "cases[1].provenance.implementation_revision"
+    )
+
+    all_moved_prior = copy.deepcopy(prior)
+    for case in rc6_current:
+        case["provenance"]["implementation_revision"] = "c" * 40
+    prior_revisions = ["a" * 40, "a" * 40, "b" * 40, "a" * 40]
+    for case, revision in zip(all_moved_prior["cases"], prior_revisions, strict=True):
+        case["provenance"]["implementation_revision"] = revision
+    bundle = hybrid.build_artifact_bundle(rc6_current, prior_bundle=all_moved_prior)
+    _assert_hybrid_regeneration_negative(
+        bundle, "cases[0].provenance.implementation_revision"
+    )
+
+
+def test_mf1a_hybrid_one_case_non_allowlisted_path():
+    hybrid = _mf1a_hybrid_module()
+    prior_cases = _mf1a_hybrid_uniform_prior_cases(hybrid)
+    prior = hybrid.build_artifact_bundle(prior_cases, prior_bundle=None)
+    current_cases = copy.deepcopy(prior_cases)
+    for case in current_cases:
+        case["provenance"]["implementation_revision"] = "c" * 40
+    current_cases[1]["seed_policy"] = "mutated_seed_policy"
+    bundle = hybrid.build_artifact_bundle(current_cases, prior_bundle=prior)
+    _assert_hybrid_regeneration_negative(bundle, "cases[1].seed_policy")
+
+
+def test_mf1a_hybrid_swapped_two_cases_revisions_only():
+    hybrid = _mf1a_hybrid_module()
+    prior_cases = _mf1a_hybrid_uniform_prior_cases(hybrid)
+    for case in prior_cases:
+        case["provenance"]["implementation_revision"] = "c" * 40
+    prior = hybrid.build_artifact_bundle(prior_cases, prior_bundle=None)
+    prior_mut = copy.deepcopy(prior)
+    prior_mut["cases"][0]["provenance"]["implementation_revision"] = "a" * 40
+    prior_mut["cases"][1]["provenance"]["implementation_revision"] = "b" * 40
+    prior_mut["cases"][2]["provenance"]["implementation_revision"] = "a" * 40
+    prior_mut["cases"][3]["provenance"]["implementation_revision"] = "a" * 40
+    current_cases = copy.deepcopy(prior_cases)
+    bundle = hybrid.build_artifact_bundle(current_cases, prior_bundle=prior_mut)
+    _assert_hybrid_regeneration_negative(
+        bundle, "cases[0].provenance.implementation_revision"
+    )
+    swapped = copy.deepcopy(prior_mut)
+    swapped["cases"][0]["provenance"]["implementation_revision"] = "b" * 40
+    swapped["cases"][1]["provenance"]["implementation_revision"] = "a" * 40
+    bundle = hybrid.build_artifact_bundle(current_cases, prior_bundle=swapped)
+    _assert_hybrid_regeneration_negative(
+        bundle, "cases[0].provenance.implementation_revision"
+    )
+
+
+def test_mf1a_hybrid_empty_allowlist_fails(monkeypatch: pytest.MonkeyPatch):
+    hybrid = _mf1a_hybrid_module()
+    monkeypatch.setattr(hybrid, "HYBRID_REGENERATION_ALLOWLIST", ())
+    prior_cases = _mf1a_hybrid_uniform_prior_cases(hybrid)
+    prior = hybrid.build_artifact_bundle(prior_cases, prior_bundle=None)
+    current_cases = copy.deepcopy(prior_cases)
+    for case in current_cases:
+        case["provenance"]["implementation_revision"] = "c" * 40
+    bundle = hybrid.build_artifact_bundle(current_cases, prior_bundle=prior)
+    _assert_hybrid_regeneration_negative(
+        bundle, "cases[0].provenance.implementation_revision"
+    )
+
+
+def test_mf1a_hybrid_length_three_allowlist_fails(monkeypatch: pytest.MonkeyPatch):
+    hybrid = _mf1a_hybrid_module()
+    monkeypatch.setattr(
+        hybrid,
+        "HYBRID_REGENERATION_ALLOWLIST",
+        hybrid.HYBRID_REGENERATION_ALLOWLIST[:3],
+    )
+    prior_cases = _mf1a_hybrid_uniform_prior_cases(hybrid)
+    prior = hybrid.build_artifact_bundle(prior_cases, prior_bundle=None)
+    current_cases = copy.deepcopy(prior_cases)
+    for case in current_cases:
+        case["provenance"]["implementation_revision"] = "c" * 40
+    bundle = hybrid.build_artifact_bundle(current_cases, prior_bundle=prior)
+    _assert_hybrid_regeneration_negative(
+        bundle, "cases[3].provenance.implementation_revision"
+    )
+
+
+def test_mf1a_hybrid_revision_only_passes():
+    hybrid = _mf1a_hybrid_module()
+    prior_cases = _mf1a_hybrid_uniform_prior_cases(hybrid)
+    prior = hybrid.build_artifact_bundle(prior_cases, prior_bundle=None)
+    current_cases = copy.deepcopy(prior_cases)
+    for case in current_cases:
+        case["provenance"]["implementation_revision"] = "c" * 40
+    bundle = hybrid.build_artifact_bundle(current_cases, prior_bundle=prior)
+    assert bundle["status"] == "pass"
+    assert bundle["regeneration"] == {
+        "prior_present": True,
+        "pass": True,
+        "first_mismatch": None,
+    }
+    for case_index in (1, 2, 3):
+        provenance_fail_cases = copy.deepcopy(prior_cases)
+        provenance_fail_cases[case_index]["provenance"]["provenance_pass"] = False
+        bundle = hybrid.build_artifact_bundle(provenance_fail_cases, prior_bundle=None)
+        assert bundle["status"] == "fail"
+        assert bundle["summary"]["first_failure"] == "provenance"
+
+
+def test_mf1a_hybrid_rejects_non_revision_value():
+    hybrid = _mf1a_hybrid_module()
+    prior_cases = _mf1a_hybrid_uniform_prior_cases(hybrid)
+    prior = hybrid.build_artifact_bundle(prior_cases, prior_bundle=None)
+    invalid_values = ("g" * 40, "c" * 39, "", "C" * 40)
+    for value in invalid_values:
+        current_cases = copy.deepcopy(prior_cases)
+        current_cases[0]["provenance"]["implementation_revision"] = value
+        bundle = hybrid.build_artifact_bundle(current_cases, prior_bundle=prior)
+        _assert_hybrid_regeneration_negative(
+            bundle, "cases[0].provenance.implementation_revision"
+        )
+        prior_mut = copy.deepcopy(prior)
+        prior_mut["cases"][1]["provenance"]["implementation_revision"] = value
+        current_cases = copy.deepcopy(prior_cases)
+        bundle = hybrid.build_artifact_bundle(current_cases, prior_bundle=prior_mut)
+        _assert_hybrid_regeneration_negative(
+            bundle, "cases[1].provenance.implementation_revision"
+        )
+    current_cases = copy.deepcopy(prior_cases)
+    del current_cases[2]["provenance"]["implementation_revision"]
+    bundle = hybrid.build_artifact_bundle(current_cases, prior_bundle=prior)
+    _assert_hybrid_regeneration_negative(
+        bundle, "cases[2].provenance.implementation_revision"
+    )
+    prior_mut = copy.deepcopy(prior)
+    del prior_mut["cases"][2]["provenance"]["implementation_revision"]
+    current_cases = copy.deepcopy(prior_cases)
+    bundle = hybrid.build_artifact_bundle(current_cases, prior_bundle=prior_mut)
+    _assert_hybrid_regeneration_negative(
+        bundle, "cases[2].provenance.implementation_revision"
+    )
+    for value in invalid_values:
+        current_uniform = copy.deepcopy(prior_cases)
+        for case in current_uniform:
+            case["provenance"]["implementation_revision"] = value
+        bundle = hybrid.build_artifact_bundle(current_uniform, prior_bundle=prior)
+        _assert_hybrid_regeneration_negative(
+            bundle, "cases[0].provenance.implementation_revision"
+        )
+        prior_mut = copy.deepcopy(prior)
+        for case in prior_mut["cases"]:
+            case["provenance"]["implementation_revision"] = value
+        current_uniform = copy.deepcopy(prior_cases)
+        bundle = hybrid.build_artifact_bundle(current_uniform, prior_bundle=prior_mut)
+        _assert_hybrid_regeneration_negative(
+            bundle, "cases[0].provenance.implementation_revision"
+        )
+    current_uniform = copy.deepcopy(prior_cases)
+    for case in current_uniform:
+        del case["provenance"]["implementation_revision"]
+    bundle = hybrid.build_artifact_bundle(current_uniform, prior_bundle=prior)
+    _assert_hybrid_regeneration_negative(
+        bundle, "cases[0].provenance.implementation_revision"
+    )
+    prior_mut = copy.deepcopy(prior)
+    for case in prior_mut["cases"]:
+        del case["provenance"]["implementation_revision"]
+    current_uniform = copy.deepcopy(prior_cases)
+    bundle = hybrid.build_artifact_bundle(current_uniform, prior_bundle=prior_mut)
+    _assert_hybrid_regeneration_negative(
+        bundle, "cases[0].provenance.implementation_revision"
+    )
+
+
+def test_mf1a_hybrid_finding_bands_follow_layer1():
+    import json
+
+    hybrid = _mf1a_hybrid_module()
+    assert hybrid.classify_near_threshold_measure("frobenius_norm_diff", 5e-14) == (
+        "expected_range"
+    )
+    assert hybrid.classify_near_threshold_measure("max_abs_diff", 5e-12) == (
+        "outside_expected"
+    )
+    assert hybrid.classify_near_threshold_measure("trace_abs_deviation", 5e-11) == (
+        "finding"
+    )
+    assert hybrid.classify_near_threshold_measure("frobenius_norm_diff", 2e-10) == (
+        "qa001_fail"
+    )
+    assert hybrid.classify_near_threshold_measure("lambda_min", -5e-14) == "no_finding"
+    assert hybrid.classify_near_threshold_measure("lambda_min", -5e-13) == "finding"
+    assert hybrid.classify_near_threshold_measure("lambda_min", -2e-12) == "qa001_fail"
+    manifest_cells = hybrid.build_manifest()["cells"]
+    realization = _q4_hybrid_positive_realization(hybrid)
+    lambda_finding_cases = [
+        _mf1a_hybrid_synthetic_case(
+            hybrid,
+            anchor_qbits=cell["anchor_qbits"],
+            workload=cell["workload"],
+            realization=copy.deepcopy(realization),
+        )
+        for cell in manifest_cells
+    ]
+    lambda_finding_cases[0]["qa001"]["lambda_min"] = -5e-13
+    bundle = hybrid.build_artifact_bundle(lambda_finding_cases, prior_bundle=None)
+    assert bundle["status"] == "pass"
+    assert bundle["summary"]["first_failure"] is None
+    findings = bundle["summary"]["findings"]
+    assert len(findings) == 1
+    assert findings[0] == {
+        "route": hybrid.ROUTE,
+        "anchor_qbits": 4,
+        "workload": "phase2_xxz_hea_q4_continuity",
+        "measure": "lambda_min",
+        "value": -5e-13,
+        "cause_hypothesis": "lambda_min below -1e-13 Layer 1 finding band",
+    }
+    assert "oracle_lambda_min" not in json.dumps(bundle)
+
+
+def test_mf1a_hybrid_second_field_fails():
+    hybrid = _mf1a_hybrid_module()
+    prior_cases = _mf1a_hybrid_uniform_prior_cases(hybrid)
+    prior = hybrid.build_artifact_bundle(prior_cases, prior_bundle=None)
+    current_cases = copy.deepcopy(prior_cases)
+    for case in current_cases:
+        case["provenance"]["implementation_revision"] = "c" * 40
+    current_cases[1]["workload"] = "substituted_workload"
+    bundle = hybrid.build_artifact_bundle(current_cases, prior_bundle=prior)
+    assert bundle["regeneration"]["pass"] is False
+    assert bundle["regeneration"]["first_mismatch"] == "cases[1].workload"
+
+
+def test_mf1a_hybrid_allowlist_is_length_four_and_siblings_stay():
+    hybrid = _mf1a_hybrid_module()
+    fused = _mf1a_fused_module()
+    assert hybrid.HYBRID_REGENERATION_ALLOWLIST == (
+        "cases[0].provenance.implementation_revision",
+        "cases[1].provenance.implementation_revision",
+        "cases[2].provenance.implementation_revision",
+        "cases[3].provenance.implementation_revision",
+    )
+    assert len(hybrid.HYBRID_REGENERATION_ALLOWLIST) == 4
+    assert len(mf1a.Q4_REGENERATION_ALLOWLIST) == 1
+    assert len(fused.FUSED_REGENERATION_ALLOWLIST) == 4
+    assert hybrid._allowlisted_revision_difference is not mf1a._allowlisted_revision_difference
+    assert hybrid._allowlisted_revision_difference is not fused._allowlisted_revision_difference
+
+
+def test_mf1a_hybrid_pipeline_builds_every_sibling_before_writing_any(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    hybrid = _mf1a_hybrid_module()
+    fused = _mf1a_fused_module()
+    from benchmarks.density_matrix.correctness_evidence import (
+        mf1a_q4_baseline_validation as q4_mod,
+    )
+
+    live = validation_pipeline._CASE_SLICE_REGISTRY[0:3]
+    assert len(live) == 3
+    assert live[0].module is q4_mod
+    assert live[0].mf1a_sibling is True
+    assert live[1].module is fused
+    assert live[1].mf1a_sibling is True
+    assert live[2].module is hybrid
+    assert live[2].mf1a_sibling is True
+
+    events: list[tuple[str, str]] = []
+    fake_root = tmp_path / "mf1a_fake_siblings"
+
+    def make_fake_sibling(name: str) -> SimpleNamespace:
+        module = SimpleNamespace(
+            SUITE_NAME=f"correctness_evidence_mf1a_fake_{name}",
+            ARTIFACT_FILENAME=f"fake_{name}_bundle.json",
+            DEFAULT_OUTPUT_DIR=fake_root / name,
+        )
+
+        def build_cases() -> list:
+            events.append(("build_cases", name))
+            return []
+
+        def build_artifact_bundle(_cases: list | None = None) -> dict:
+            events.append(("build_artifact_bundle", name))
+            return {"status": "pass", "cases": []}
+
+        module.build_cases = build_cases
+        module.build_artifact_bundle = build_artifact_bundle
+        return module
+
+    fake_a = make_fake_sibling("a")
+    fake_b = make_fake_sibling("b")
+    fake_c = make_fake_sibling("c")
+    patched_registry = (
+        validation_pipeline._CaseSuiteEntry(
+            fake_a, "build_cases", "build_artifact_bundle", mf1a_sibling=True
+        ),
+        validation_pipeline._CaseSuiteEntry(
+            fake_b, "build_cases", "build_artifact_bundle", mf1a_sibling=True
+        ),
+        validation_pipeline._CaseSuiteEntry(
+            fake_c, "build_cases", "build_artifact_bundle", mf1a_sibling=True
+        ),
+    )
+    monkeypatch.setattr(validation_pipeline, "_CASE_SLICE_REGISTRY", patched_registry)
+    monkeypatch.setattr(validation_pipeline, "_NULLARY_BUNDLE_REGISTRY", ())
+
+    original_write = validation_pipeline._write_slice_bundle
+
+    def log_write(module, bundle: dict) -> Path:
+        events.append(("write", module.SUITE_NAME))
+        return original_write(module, bundle)
+
+    monkeypatch.setattr(validation_pipeline, "_write_slice_bundle", log_write)
+    validation_pipeline.run_pipeline()
+
+    first_write_index = next(
+        (index for index, event in enumerate(events) if event[0] == "write"), None
+    )
+    build_indices = [
+        index
+        for index, event in enumerate(events)
+        if event[0].startswith("build")
+    ]
+    assert first_write_index is not None
+    assert build_indices
+    assert all(build_index < first_write_index for build_index in build_indices)
+
+
 _MF1A_HISTORICAL_ARTIFACT_DIR_NAMES: tuple[str, ...] = (
     "correctness_package",
     "output_integrity",
@@ -1374,6 +2189,10 @@ def test_mf1a_historical_registered_siblings_still_written(
     assert sibling_path.is_file()
     fused_sibling_path = fake_root / "mf1a" / "fused" / _mf1a_fused_module().ARTIFACT_FILENAME
     assert fused_sibling_path.is_file()
+    hybrid_sibling_path = (
+        fake_root / "mf1a" / "hybrid" / _mf1a_hybrid_module().ARTIFACT_FILENAME
+    )
+    assert hybrid_sibling_path.is_file()
 
 
 def test_mf1a_historical_all_statuses_returned_g07_unchanged(
@@ -1474,7 +2293,7 @@ def test_mf1a_historical_nonsibling_paths_match_req007():
         else:
             nonsibling_dirs.add(relative.as_posix())
 
-    assert sibling_dirs == {"mf1a/q4_baseline", "mf1a/fused"}
+    assert sibling_dirs == {"mf1a/q4_baseline", "mf1a/fused", "mf1a/hybrid"}
     assert nonsibling_dirs == set(_MF1A_HISTORICAL_ARTIFACT_DIR_NAMES)
 
 
