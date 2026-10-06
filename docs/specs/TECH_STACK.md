@@ -40,15 +40,21 @@ ignores `tests/partitioning/evidence`, and defines the `slow` marker.
 | **Fast pytest** | `pytest -m "density_matrix and not slow"` | Default gate for a slice; minutes |
 | **Slow pytest** | `pytest -m "density_matrix and slow"` | Long-running cases; run before a closeout |
 | **Benchmark tests** | `pytest benchmarks/density_matrix -v` | Validators for the evidence bundles |
-| **Correctness evidence pipeline** | `python benchmarks/density_matrix/correctness_evidence/validation_pipeline.py` | Regenerates counted correctness bundles vs the sequential reference (and Aer where required) |
+| **Correctness evidence pipeline** | `PYTHONDONTWRITEBYTECODE=1 conda run -n qgd --no-capture-output python benchmarks/density_matrix/correctness_evidence/validation_pipeline.py` | Regenerates the M-F1a correctness bundles against `execute_sequential_density_reference`. Aer and energy are not in the counted set. The optional Aer lane is the row below. |
+| **M-F1a exactness fitness lane** | `pytest tests/partitioning/evidence/test_correctness_evidence.py -o addopts=""` | Together with the correctness evidence pipeline row; not the fast `pytest -m "density_matrix and not slow"` lane |
 | **Performance evidence pipeline** | `python benchmarks/density_matrix/performance_evidence/validation_pipeline.py` | Regenerates performance/diagnosis bundles; run correctness first |
 | **Phase 3.1 pipeline** | `python benchmarks/density_matrix/correctness_evidence/phase31_validation_pipeline.py` | Frozen channel-native decision-study slice |
 | **Qiskit Aer external reference** | `python benchmarks/density_matrix/validate_squander_vs_qiskit.py` | Optional; needs `qiskit`, `qiskit-aer` |
 | **C++ unit tests** | `QGD_CTEST=1` at configure time, then run the discovered `_skbuild/*/cmake-build/squander/src-cpp/density_matrix/test_density_matrix_cpp` | Optional; procedure in the `test-density-matrix` skill |
 | **CI** | `.github/workflows/ci.yml` — Linux (pip) and Windows (conda) build + `pytest tests/` | Upstream SQUANDER gate; does not run the evidence pipelines |
+| **M-F1a state-vector gate (G-04)** | rocky-local project CI (G-04; Tester recipe; GitHub Actions out of semester path per Zoltán 2026-10-06) at HEAD `031996f4` | The M-F1a state-vector gate is rocky-local project CI (G-04; Tester recipe; GitHub Actions out of semester path per Zoltán 2026-10-06) at HEAD `031996f4`. It is not `.github/workflows/ci.yml` `workflow_dispatch`. G-05 does not run that job. O-10 push at `031996f4` is sync-only. Recorded outcome at write time: pass, `/tmp/mf1a-g04-rocky-ci/REPORT.md` (1067 passed, 1 deselected QX2, exit 0, wall 40m56s; pytest.log `/tmp/mf1a-g04-rocky-ci/pytest.log`). A missing or failed job is not described as green. |
 
-Evidence artifacts are written under `benchmarks/density_matrix/artifacts/<tree>/`; a
-closeout cites the pipeline command and the artifact path it produced.
+Evidence artifacts are written under `benchmarks/density_matrix/artifacts/<tree>/`. M-F1a
+artifacts live under `benchmarks/density_matrix/artifacts/correctness_evidence/mf1a/`. The
+counted file is `mf1a/counted/mf1a_counted_bundle.json`. The other five directories are the
+provisional siblings (`milestone_counted` false): `q4_baseline`, `fused`, `hybrid`, `strict`,
+and `baseline`. The eight pre-M-F1a bundles are verified and not written. A closeout cites the
+pipeline command and the artifact path it produced.
 
 ## Conventions an agent must know
 

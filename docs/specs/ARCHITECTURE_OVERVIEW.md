@@ -2,7 +2,8 @@
 
 > **Status:** current-state reference · **Owner skill:** `spec-driven-development` ·
 > **Scope:** the density-matrix / noisy-simulation stack inside SQUANDER as it exists after
-> delivered Phases 1–3.1 · **Not:** product intent (`PRODUCT_STATEMENT.md`), sequencing
+> delivered Phases 1–3.1 and the recorded M-F1a denominator as of `031996f4` (milestone still
+> open; `completeness_claim` false) · **Not:** product intent (`PRODUCT_STATEMENT.md`), sequencing
 > (`ROADMAP.md`), or decision rationale (ADRs, linked below).
 > Update at every milestone close that changes a boundary, flow, integration, or ADR status.
 
@@ -32,6 +33,53 @@ studied without disturbing the default state-vector path.
 | **State-vector partitioners** | `squander/partitioning/{kahn,tdag,ilp,partition,split,tools}.py` | Mature ideal-circuit planners; a **parallel** contract, not replaced by the noisy planner |
 | **Evidence pipelines** | `benchmarks/density_matrix/<tree>/` | Workflow, bridge-scope, noise-support, planner-surface, partitioned-runtime, planner-calibration, correctness, performance and publication bundles with validators and `validation_pipeline.py` entry points |
 | **Tests** | `tests/density_matrix/`, `tests/partitioning/`, `tests/VQE/`, `squander/src-cpp/density_matrix/tests/test_basic.cpp` | Python and optional C++ suites aligned with the containers above |
+
+As of `031996f4`, the recorded M-F1a advertised-route boundary is four routes at anchors 4, 6, 8,
+and 10, each with `max_partition_qubits` 2: `partitioned_density_descriptor_baseline`
+(`execute_partitioned_density`), `partitioned_density_descriptor_fused_unitary_islands`
+(`execute_partitioned_density_fused`), `phase31_channel_native`
+(`execute_partitioned_density_channel_native`), and `phase31_channel_native_hybrid`
+(`execute_partitioned_density_channel_native_hybrid`). The oracle is
+`execute_sequential_density_reference` and is not a route under test. The counted bundle is
+`benchmarks/density_matrix/artifacts/correctness_evidence/mf1a/counted/mf1a_counted_bundle.json`
+(sha256 `a22ee685038170cb0991a9ae2195b20ad4c977b111409b312cc708fa9e6872f9`, recorded at task-9
+C2 `0a66f974`). `completeness_claim` is false. This is not a complete M-F1a, state-vector,
+external-protocol, Aer, energy, or frozen-matrix claim.
+
+Counted M-F1a rows use the ADR-F1A-002 predicate only: Frobenius norm, max-abs entry, and
+absolute trace deviation at most `1e-10`, and `lambda_min` at least `-1e-12`, with every state
+entry and residual finite. `lambda_min` is one-sided: a finding is reported only below
+`-1e-13`, and a positive value is neither a finding nor a marker.
+
+Evaluation mode is `phase31_channel_native_hybrid` only. Every hybrid partition carries one
+runtime-class label and one route-reason label from the frozen vocabulary, and each label agrees
+with a fused-region witness. Baseline, fused, and strict keep requested and realized paths and do
+not gain per-partition labels.
+
+Baseline cells and the oracle share `_build_runtime_circuit` and the C++ `NoisyCircuit` kernels,
+so agreement there is bitwise and a kernel-level bug appears on both sides. The strict cells at 4,
+6, 8, and 10 are products of disjoint pair states and do not test inputs correlated across a
+partition boundary. Both limits are recorded in `EXACTNESS_RECONFIRMATION_CLOSEOUT.md` §4.
+
+The M-F1a exactness fitness lane is
+`benchmarks/density_matrix/correctness_evidence/validation_pipeline.py` together with
+`pytest tests/partitioning/evidence/test_correctness_evidence.py -o addopts=""`. The fast
+`pytest -m "density_matrix and not slow"` lane is not that fitness lane.
+
+Regeneration command:
+`PYTHONDONTWRITEBYTECODE=1 conda run -n qgd --no-capture-output python benchmarks/density_matrix/correctness_evidence/validation_pipeline.py`
+
+M-F1a artifacts live under `benchmarks/density_matrix/artifacts/correctness_evidence/mf1a/`.
+The counted file is `mf1a/counted/mf1a_counted_bundle.json`. The other five directories are the
+provisional siblings (`milestone_counted` false): `q4_baseline`, `fused`, `hybrid`, `strict`,
+and `baseline`. The eight pre-M-F1a bundles are verified and not written.
+
+The M-F1a state-vector gate is rocky-local project CI (G-04; Tester recipe; GitHub Actions out
+of semester path per Zoltán 2026-10-06) at HEAD `031996f4`. It is not `.github/workflows/ci.yml`
+`workflow_dispatch`. G-05 does not run that job. O-10 push at `031996f4` is sync-only. Recorded
+outcome at write time: pass, `/tmp/mf1a-g04-rocky-ci/REPORT.md` (1067 passed, 1 deselected QX2,
+exit 0, wall 40m56s; pytest.log `/tmp/mf1a-g04-rocky-ci/pytest.log`). A missing or failed job is
+not described as green.
 
 ## 3. Bounded contexts and ownership
 
@@ -70,9 +118,9 @@ sets to the runtime; the runtime emits execution records the evidence context co
    executes per partition on one global `DensityMatrix`, optionally fusing eligible
    unitary islands or running the bounded channel-native modes → execution record.
 3. **Evidence generation** — a pipeline under `benchmarks/density_matrix/<tree>/` builds
-   counted cases, runs runtime and reference paths (and Aer where required), validates
-   bundles against schemas and claim rules, and writes artifacts under
-   `benchmarks/density_matrix/artifacts/<tree>/`.
+   counted cases, runs each advertised route and the sequential oracle (Aer is an optional
+   external reference and is not in the M-F1a count), validates bundles against schemas and
+   claim rules, and writes artifacts under `benchmarks/density_matrix/artifacts/<tree>/`.
 
 ## 6. Runtime and deployment
 
