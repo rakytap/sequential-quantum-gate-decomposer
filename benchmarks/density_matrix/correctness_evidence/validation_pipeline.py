@@ -26,6 +26,9 @@ from benchmarks.density_matrix.correctness_evidence import (
     external_correctness_validation as external_correctness,
 )
 from benchmarks.density_matrix.correctness_evidence import (
+    mf1a_baseline_validation as mf1a_baseline,
+)
+from benchmarks.density_matrix.correctness_evidence import (
     mf1a_fused_validation as mf1a_fused,
 )
 from benchmarks.density_matrix.correctness_evidence import (
@@ -122,6 +125,9 @@ _CASE_SLICE_REGISTRY: tuple[_CaseSuiteEntry, ...] = (
     ),
     _CaseSuiteEntry(
         mf1a_strict, "build_cases", "build_artifact_bundle", mf1a_sibling=True
+    ),
+    _CaseSuiteEntry(
+        mf1a_baseline, "build_cases", "build_artifact_bundle", mf1a_sibling=True
     ),
     _CaseSuiteEntry(correctness_matrix, "build_cases", "build_artifact_bundle"),
     _CaseSuiteEntry(sequential_correctness, "build_cases", "build_artifact_bundle"),
