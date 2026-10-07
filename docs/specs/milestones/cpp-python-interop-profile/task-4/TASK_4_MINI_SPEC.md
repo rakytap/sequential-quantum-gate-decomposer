@@ -1,10 +1,10 @@
 # Task 4: four attribution routes, no overhead ratio
-> **Status:** Step 4a · **Verdict:** not-ready · **Slice:** M-F5a task-4 ·
+> **Status:** stamp draft · **Verdict:** awaiting APPROVE FOR STEP-4B · **Slice:** M-F5a task-4 ·
 > **Traces:** REQ-001, REQ-004, REQ-005, REQ-006, REQ-007, REQ-008 · CAP-004, CAP-007 · QA-008, QA-009 · ADR-F5A-001, ADR-F5A-004, ADR-F5A-005, ADR-F5A-006 ·
 > **Scope:** R-base, R-fused, R-strict, R-hybrid on the width-4 E-VQE anchor. No \(O\). No reduction ·
-> **Gate:** SDD stage `step-4a`. Width-4 rows do not close REQ-004. Milestone not complete ·
-> **RM:** ACCEPT 2026-10-07, upload `2026-10-07-mf5a-task4-align-accept_d0d6.md` (`c5ea0847…`). It does not flip the stage ·
-> **Tip:** `6654ede46727eae1adc33e00da5c19eb20753925` · three counted bundles stay ·
+> **Gate:** uncommitted stage line `step-4b-authorized`. Developer not started. Width-4 rows do not close REQ-004 ·
+> **RM:** ACCEPT 2026-10-07, upload `2026-10-07-mf5a-task4-align-accept_d0d6.md` (`c5ea0847…`). It does not authorize Step 4b ·
+> **Tip:** `95d51da210955b0b3d8c9f26db725632caaf5b26` · binder `86eab037…` · three counted bundles stay ·
 > **Pair, inventory, no-O rule, kernel/fusion/AVX boundary:** unchanged
 
 ## 1. Why this slice is the thinnest next row
@@ -45,10 +45,11 @@ The descriptor is the existing
 `build_phase3_continuity_partition_descriptor_set` in
 `squander/partitioning/noisy_descriptor.py`, which calls
 `build_phase3_continuity_planner_surface` in
-`squander/partitioning/noisy_planner_surface_builders.py`. The instance is
-`build_task_evaluator(4)` from `benchmarks/density_matrix/interop_profile/interop_lane.py`.
-The surface is that instance's `describe_density_bridge()` (`source_type`
-`generated_hea`), not a hand-built operation list. A structural probe at this tip
+`squander/partitioning/noisy_planner_surface_builders.py`. Unpack
+`vqe, _hamiltonian = build_task_evaluator(4)` from
+`benchmarks/density_matrix/interop_profile/interop_lane.py` and pass `vqe`, not
+the tuple. The surface is `vqe.describe_density_bridge()` (`source_type`
+`generated_hea`), not a hand-built operation list. A structural probe at `6654ede4`
 accepted it: parameters 18, operations 12, gates 9, noise 3, gate sequence U3, U3,
 CNOT, U3, U3, CNOT, U3, U3, CNOT, and noise `local_depolarizing`,
 `amplitude_damping`, `phase_damping`. `max_partition_qubits` stays the default 2.
@@ -56,8 +57,10 @@ The builder's default label `phase2_xxz_hea_q4_continuity` is not a second circu
 If that call raises, or the counts disagree with the bridge, the slice hands back
 and does not invent specs.
 
-Throughput is nanoseconds per complex \(\rho\) entry per operation. The divisor is
-\(4^4\times 12 = 3072\) for this anchor. The one-sided 95 % bound, mean plus
+Throughput is nanoseconds per density-matrix entry. The numerator is the route
+apply component, as task-1 §7. The divisor is `operation_count * 4^4` =
+\(12\times 256 = 3072\). Orchestration time, \(T_\mathrm{public}\), and
+\(T_\mathrm{lower}\) are not the numerator. The one-sided 95 % bound, mean plus
 `1.644854 * s / sqrt(n)` with `ddof=1`, applies to orchestration time and to the
 apply component only. S-g Measure stays the E-VQE \(O\) estimator and is not
 retuned and not applied here. The row publishes no \(O\), no \(T_\mathrm{lower}\)
@@ -84,18 +87,19 @@ This planning pass does not time the routes and does not write a bundle.
 | Trace id | Evidence type | Command or gate | Expected result | Owner |
 |----------|---------------|-----------------|-----------------|-------|
 | REQ-001, REQ-004 | fast pytest | `conda run -n qgd --no-capture-output pytest tests/VQE/test_vqe_interop_bundle_validation.py -q` | a separate route fixture with \(O\), a QA-007 ratio, a reduction claim, or an R-oracle row without the E1 sentence fails. Four ids and no \(O\) pass. The three counted bundles are not the fixtures | DS-1 |
-| REQ-004, REQ-008 | doc review | this mini-spec §2 | the four entries are the ADR-F5A-001 names. The descriptor is `build_phase3_continuity_partition_descriptor_set` on `build_task_evaluator(4)`. Width-4 rows do not close REQ-004 | DS-1 |
+| REQ-004, REQ-008 | doc review | this mini-spec §2 | the four entries are the ADR-F5A-001 names. Unpack `vqe` from `build_task_evaluator(4)` before `build_phase3_continuity_partition_descriptor_set`. Width-4 rows do not close REQ-004 | DS-1 |
 | REQ-005 | repo review | `git diff --exit-code 1eb54ddbcf6f7bfdf82c2b7fc75a86687002b721 -- benchmarks/density_matrix/artifacts/interop_profile/interop_profile_bundle.json benchmarks/density_matrix/artifacts/interop_profile/interop_profile_bundle_w6.json benchmarks/density_matrix/artifacts/interop_profile/interop_profile_bundle_w8.json` | empty. No reduction diff | DS-2 |
 | REQ-006 | repo review | `git diff --exit-code 1eb54ddbcf6f7bfdf82c2b7fc75a86687002b721 -- benchmarks/density_matrix/performance_evidence benchmarks/density_matrix/benchmark_perf.py` | empty | DS-2 |
 | REQ-007, QA-009 | fast pytest | `conda run -n qgd --no-capture-output pytest tests/VQE/test_VQE.py::Test_VQE::test_explicit_state_vector_matches_legacy_default -q` | state-vector default still matches | DS-3 |
-| REQ-009 | spec lint | `bash .cursor/skills/spec-driven-development/scripts/specs_check.sh docs/specs/milestones/cpp-python-interop-profile` and the same command with `--strict` | at `step-4a` with no `task-4/CLOSEOUT.md`: normal mode 0 errors, 1 warning `SLICE_MISSING_CLOSEOUT`, exit 0; `--strict` keeps that warning, 0 errors, exit 0. No waiver. No placeholder | DS-3 |
+| REQ-009 | spec lint | `bash .cursor/skills/spec-driven-development/scripts/specs_check.sh docs/specs/milestones/cpp-python-interop-profile` and the same command with `--strict` | after this uncommitted stamp, no `task-4/CLOSEOUT.md`: normal mode 0 errors, 1 warning `SLICE_MISSING_CLOSEOUT`, exit 0; `--strict` makes that finding the only error, exit 1. No waiver. No placeholder | DS-3 |
 
 ## 5. Verdict
 
-**not-ready.** READY-FOR-CODE-READY-REVIEW. SDD stage stays `step-4a`. RM ACCEPT
-`c5ea0847…` is recorded and does not flip the stage. This fold does not authorize
-Step 4b, a Developer, a Tester counted run, or a stamp. Width-4 rows do not close
-REQ-004.
+**Stamp draft.** The stage line is `step-4b-authorized` in this uncommitted pack.
+Reviewer APPROVE FOR STEP-4B has not been given. The Developer is not started.
+C0 waits on that gate. RM ACCEPT `c5ea0847…` did not authorize Step 4b. Binder
+`/tmp/rev-mf5a-t4-codeready/REVIEW.md` (`86eab037…`) at `95d51da2`. Width-4 rows
+do not close REQ-004. No counted route run.
 
 | Finding | Disposition |
 |---------|-------------|

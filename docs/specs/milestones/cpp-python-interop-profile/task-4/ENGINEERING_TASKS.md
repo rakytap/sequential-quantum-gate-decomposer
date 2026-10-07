@@ -1,15 +1,12 @@
 # Engineering tasks — M-F5a task-4
-> **Status:** Step 4a · not-ready · **Slice:** M-F5a task-4 · four attribution routes ·
+> **Status:** stamp draft · binder `86eab037…` · `95d51da2` · **Slice:** M-F5a task-4 · four attribution routes ·
 > **Traces:** REQ-001, REQ-004, REQ-005, REQ-006, REQ-007, REQ-008 ·
 > CAP-004, CAP-007 · QA-008, QA-009 ·
-> **SDD stage:** step-4a
-> **Boundary:** not-ready. Width-4 rows do not close REQ-004. No Step 4b
+> **SDD stage:** step-4b-authorized
+> **Boundary:** uncommitted stamp. Developer not started. Width-4 rows do not close REQ-004
 
-**Verdict: not-ready.** READY-FOR-CODE-READY-REVIEW. RM ACCEPT `c5ea0847…` is
-recorded and does not flip the stage. No Developer. No counted route run. No
-`task-4/CLOSEOUT.md`. At `step-4a`, normal mode has 0 errors and 1 warning,
-`SLICE_MISSING_CLOSEOUT` for task-4, and exits 0. `--strict` keeps that warning,
-has 0 errors, and exits 0. No waiver. No placeholder.
+**Verdict: stamp draft.** The stage line is `step-4b-authorized` only in this uncommitted pack. Reviewer APPROVE FOR STEP-4B has not been given. The Developer is not started. C0 waits on that gate. Binder `/tmp/rev-mf5a-t4-codeready/REVIEW.md` (`86eab037…`) at `95d51da2`. RM ACCEPT `c5ea0847…` did not flip the stage.
+Lint after this stamp: normal exits 0 with one `SLICE_MISSING_CLOSEOUT` warning for task-4. `--strict` exits 1 with that finding as its only error. No waiver. No placeholder closeout. No counted route run. Width-4 rows do not close REQ-004.
 
 These tasks are the draft contract. None may publish \(O\) on a route, add a public
 energy API, change the S-g estimator, take the binding or dispatch reduction, or
@@ -58,13 +55,16 @@ C++ edit is a handback.
 - tests
 
 **Definition of done**
-- The four calls use `build_phase3_continuity_partition_descriptor_set` on
-  `build_task_evaluator(4)`. The surface matches `describe_density_bridge()`:
-  parameters 18, operations 12, gates 9, noise 3.
+- Unpack `vqe, _hamiltonian = build_task_evaluator(4)` and pass `vqe`, not the
+  tuple, to `build_phase3_continuity_partition_descriptor_set`. The surface
+  matches `vqe.describe_density_bridge()`: parameters 18, operations 12, gates 9,
+  noise 3. The label `phase2_xxz_hea_q4_continuity` is the builder string.
 - If that call raises or the counts disagree, the implementation stops and
   records the handback. It does not invent operation specs, a divisor, or a
   lower-boundary twin.
-- Throughput uses divisor \(4^4\times 12 = 3072\). The one-sided bound is on
+- Throughput numerator is the apply component, as task-1 §7, divided by
+  `operation_count * 4^4` = 3072. Orchestration time, \(T_\mathrm{public}\), and
+  \(T_\mathrm{lower}\) are not the numerator. The one-sided bound is on
   orchestration time and the apply component only. S-g is not retuned.
 
 **Execution checklist (TDD: red → green → refactor)**

@@ -1,9 +1,9 @@
 # Delivery stories — M-F5a task-4
-> **Status:** Step 4a · **Verdict:** not-ready · **Slice:** M-F5a task-4 ·
+> **Status:** stamp draft · **Verdict:** awaiting APPROVE FOR STEP-4B · **Slice:** M-F5a task-4 ·
 > **Scope:** four attribution routes on the width-4 anchor. No \(O\). No reduction ·
 > **Traces:** REQ-001, REQ-004, REQ-005, REQ-006, REQ-007, REQ-008 · CAP-004, CAP-007 · QA-008, QA-009 ·
-> **Gate:** SDD stage `step-4a`. Width-4 rows do not close REQ-004. Milestone not complete ·
-> **RM:** ACCEPT 2026-10-07 (`c5ea0847…`). Stage stays `step-4a`. No Step 4b
+> **Gate:** uncommitted stage line `step-4b-authorized`. Developer not started. Width-4 rows do not close REQ-004 ·
+> **RM:** ACCEPT 2026-10-07 (`c5ea0847…`). It does not authorize Step 4b. Binder `86eab037…` at `95d51da2`
 
 ### Delivery story: DS-1 — Four attribution rows and no overhead ratio
 
@@ -13,7 +13,7 @@
 **Given / When / Then**
 - Given the task-1 width-4 HEA anchor and an existing planner descriptor of that anchor
 - When a later authorized run calls each of the four `execute_partitioned_density*` entries
-- Then each row reports orchestration time, the apply component, throughput in ns per complex entry per operation on divisor 3072, and a one-sided 95 % bound on orchestration time and on the apply component only
+- Then each row reports orchestration time, the apply component, and throughput whose numerator is that apply component divided by 3072, plus a one-sided 95 % bound on orchestration time and on the apply component only
 - And the row has no \(O\), no QA-007 ratio, and `milestone_counted=false`
 - And the width-4 rows do not close REQ-004
 

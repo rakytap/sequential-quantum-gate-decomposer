@@ -1,24 +1,24 @@
 # Pre-implementation completion checklist — M-F5a `cpp-python-interop-profile`
-> **Status:** Layer 1 v0.1 · **Verdict:** task-3 closed through (g); task-4 Step 4a draft, stage `step-4a`, not-ready ·
+> **Status:** Layer 1 v0.1 · **Verdict:** task-4 uncommitted stamp drafts `step-4b-authorized`; Developer not started ·
 > **Milestone:** M-F5a `cpp-python-interop-profile` ·
 > **Owner skill:** `spec-driven-development` Steps 2–4a ·
 > **Inputs:** `INITIAL_REQUIREMENTS.md` v0.1,
 > `DETAILED_PLANNING_CPP_PYTHON_INTEROP_PROFILE.md`,
 > `ADRS_CPP_PYTHON_INTEROP_PROFILE.md`, `ADR_AMENDMENTS_CPP_PYTHON_INTEROP_PROFILE.md` · **Traces:** REQ-001…009 ·
 > **Authorization:** task-1 C2 `ddde49ac`; task-2 C2 `6707892a`; task-3 C2 `939d4908`; (e) APPROVE; (g) PASS; RM ALIGN 2026-10-07; QA-007 frozen and met on the E-VQE cells ·
-> **Boundary:** task-4 Step 4a draft; not-ready; no Step 4b; milestone not complete; no push; no pull request ·
+> **Boundary:** task-4 stamp draft; C0 waits on APPROVE FOR STEP-4B; milestone not complete; no push; no pull request ·
 > **Baseline:** `1b123a9a31235dd68d6c0a6ff9ba457c0112cd59`
 
 ## 1. Readiness rule
 
-**Verdict: task-1, task-2, and task-3 stay closed. Task-4 is a Step 4a draft at `step-4a` and is not-ready. QA-007 is frozen and met on the E-VQE 4/6/8 cells. M-F5a is not complete.**
+**Verdict: task-1, task-2, and task-3 stay closed. Task-4's stage line is an uncommitted stamp at `step-4b-authorized`. The Developer is not started. QA-007 is frozen and met on the E-VQE 4/6/8 cells. M-F5a is not complete.**
 
 The Tech Lead opened the tracer. `task-1/` holds the planning pack and `CLOSEOUT.md`.
 ADR-F5A-009 is filed. C1 tip is `ca5589e2`. C2 is
 `ddde49ac1e248e3ea2b4516f420ca1cbbd14e9df`. Reviewer (e) approved it and step (g)
 passed. Section 11 is that record. The counted run recorded `clean_start` true.
 RM ALIGN froze the 10 % bar for the E-VQE cells. This checklist does not mark the milestone
-delivered. Section 12 records task-2 through (g). Section 13 records task-3 through (g) and the RM ALIGN. Task-4 stays `step-4a` and not-ready. Width-4 rows do not close REQ-004. That draft does not authorize Step 4b.
+delivered. Section 12 records task-2 through (g). Section 13 records task-3 through (g) and the RM ALIGN. Width-4 rows do not close REQ-004. The task-4 stage line is an uncommitted stamp. C0 waits on APPROVE FOR STEP-4B.
 The Developer does not edit `docs/specs/**`.
 
 The code-ready gate, already met before C1, required all of the following:
@@ -76,7 +76,7 @@ The code-ready gate, already met before C1, required all of the following:
 | G-10 | Step 4b authorization for task-1 | code-ready verdict on task-1 | Architect | **closed — task-1 stage `step-4b-authorized`; task-1 closed at C2** |
 | G-11 | Step 4b authorization for task-2 | planning-role stamp after the Reviewer writer gate | Planning role | **closed — C2 `6707892a`; (e) APPROVE; (g) PASS; stage `step-4b-authorized`** |
 | G-12 | Step 4b authorization for task-3 | planning-role stamp after the Reviewer code-ready writer gate | Planning role | **closed — C2 `939d4908`; (e) APPROVE; (g) PASS; stage `step-4b-authorized`** |
-| G-13 | Step 4b authorization for task-4 | planning-role stamp after the Reviewer code-ready writer gate | Planning role | **open — stage stays `step-4a`; RM ACCEPT `c5ea0847…` does not flip it; not-ready; width-4 rows do not close REQ-004** |
+| G-13 | Step 4b authorization for task-4 | planning-role stamp after the Reviewer code-ready writer gate | Planning role | **open — uncommitted stamp drafts `step-4b-authorized` at `95d51da2`; binder `86eab037…`; Developer not started; C0 waits on APPROVE FOR STEP-4B; width-4 rows do not close REQ-004** |
 
 No open item changes the equal-work pair, adds an advertised energy entry, publishes \(O\)
 on an attribution-only route, or proposes a kernel, fusion, or AVX edit. RM ALIGN 2026-10-07: A4 is false, CAP-004 is hold-the-line, and the reduction is not made (ADR-F5A-003/005).
@@ -167,8 +167,8 @@ kept the same finding as a warning and exited 0. ADR-F1A-008 forbids a planning-
 closeout, so that finding stayed until this real close.
 
 After `task-1/CLOSEOUT.md`, `task-2/CLOSEOUT.md`, and `task-3/CLOSEOUT.md`, those slices are clean.
-Task-4 at `step-4a` has no closeout: normal and `--strict` keep one `SLICE_MISSING_CLOSEOUT` warning and exit 0. No waiver. No placeholder.
-C1 is `97d726e3`. C2 is `939d4908`. (e) is APPROVE. (g) is PASS. Task-4 stays not-ready. RM ACCEPT is upload `c5ea0847…`. Width-4 rows do not close REQ-004. The 10 % bar is frozen for the E-VQE cells.
+This stamp leaves `task-4/CLOSEOUT.md` absent. Normal: 0 errors, 1 warning `SLICE_MISSING_CLOSEOUT`, exit 0. `--strict`: that finding is the only error, exit 1. No waiver. No placeholder.
+C1 is `97d726e3`. C2 is `939d4908`. (e) is APPROVE. (g) is PASS. RM ACCEPT is upload `c5ea0847…`. Width-4 rows do not close REQ-004. The 10 % bar is frozen for the E-VQE cells. Developer not started.
 
 ## 9. Task-1 Step 4a opened
 
@@ -244,4 +244,4 @@ C2 `6707892a`. (e) APPROVE (`bc-aaf8e41f`). (g) PASS: regen `mean_O` 0.00075526,
 
 ## 13. Task-3 Step 4b closed
 
-(c) PASS at C1 `97d726e3`. Bundle `1712dce9…`. mean_O −0.000106. UB95 0.000744. Spikes 857. `milestone_counted` false, lawful. Independence gate done: Tester `/tmp/mf5a-t3-counted/INDEPENDENCE_NOTE.md` (`992c9c0e…`); width-8 Aer node PASSED from `/tmp`, not skipped. C2 `939d4908`. (e) APPROVE. (g) PASS: regen mean_O −0.000615593972625157, `|Δ|` 0.000510 ≤ 0.02, window [−0.020106, 0.019894]; restore byte-identical `1712dce9…`. Measure carries. A width-8 mean near zero of either sign is lawful; the 20 µs count may saturate; throughput is host-sensitive and is not a (g) gate. RM ALIGN 2026-10-07: E-VQE equal-work interop overhead measured at 4/6/8 qubits under S-g Measure; one-sided 95 % UB on O is below 5 % at every width (A4 false → CAP-004 hold-the-line); QA-007 10 % bar frozen and met on those cells. `milestone_counted` stays false. Task-4 is a Step 4a draft at `step-4a`, not-ready. No Step 4b. No push. No pull request.
+(c) PASS at C1 `97d726e3`. Bundle `1712dce9…`. mean_O −0.000106. UB95 0.000744. Spikes 857. `milestone_counted` false, lawful. Independence gate done: Tester `/tmp/mf5a-t3-counted/INDEPENDENCE_NOTE.md` (`992c9c0e…`); width-8 Aer node PASSED from `/tmp`, not skipped. C2 `939d4908`. (e) APPROVE. (g) PASS: regen mean_O −0.000615593972625157, `|Δ|` 0.000510 ≤ 0.02, window [−0.020106, 0.019894]; restore byte-identical `1712dce9…`. Measure carries. A width-8 mean near zero of either sign is lawful; the 20 µs count may saturate; throughput is host-sensitive and is not a (g) gate. RM ALIGN 2026-10-07: E-VQE equal-work interop overhead measured at 4/6/8 qubits under S-g Measure; one-sided 95 % UB on O is below 5 % at every width (A4 false → CAP-004 hold-the-line); QA-007 10 % bar frozen and met on those cells. `milestone_counted` stays false. Task-4 stamp drafts `step-4b-authorized` uncommitted. Developer not started. C0 waits on APPROVE FOR STEP-4B. Width-4 rows do not close REQ-004. No push. No pull request.
