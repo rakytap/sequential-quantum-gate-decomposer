@@ -21,6 +21,9 @@ import squander.VQA.qgd_Variational_Quantum_Eigensolver_Base_Wrapper as vqe_wrap
 from squander.VQA.qgd_Variational_Quantum_Eigensolver_Base import (
     qgd_Variational_Quantum_Eigensolver_Base as VariationalQuantumEigensolver,
 )
+from benchmarks.density_matrix.interop_profile.interop_bundle_validation import (
+    spike_count_abs_wrapper_ns_above_20000,
+)
 from tests.VQE.test_VQE import generate_hamiltonian
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -36,6 +39,17 @@ REGENERATION_COMMAND = (
     "conda run -n qgd --no-capture-output python "
     "benchmarks/density_matrix/interop_profile/validation_pipeline.py"
 )
+
+COUNTED_REGENERATION_COMMAND_W6 = (
+    "taskset -c 0 env PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 "
+    "OPENBLAS_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1 conda run -n qgd --no-capture-output "
+    "python benchmarks/density_matrix/interop_profile/validation_pipeline.py --width 6"
+)
+
+SUITE_ID_W4 = "interop_profile_task1_evqe_4q_v1"
+SUITE_ID_W6 = "interop_profile_task2_evqe_6q_v1"
+QBIT_NUM_W6 = 6
+THROUGHPUT_DIVISOR_W6 = 73728
 
 DENSITY_NOISE = [
     {
@@ -128,8 +142,9 @@ def _hamiltonian_csr_sha256(hamiltonian: Any) -> str:
     return digest.hexdigest()
 
 
-def capture_provenance() -> dict[str, Any]:
+def capture_provenance(command: str | None = None) -> dict[str, Any]:
     """Capture checkout and runtime identity before the counted bundle is written."""
+    recorded_command = command if command is not None else REGENERATION_COMMAND
     revision = _git_output("rev-parse", "HEAD")
     status_lines = subprocess.run(
         ("git", "status", "--porcelain", "--untracked-files=all"),
@@ -176,7 +191,7 @@ def capture_provenance() -> dict[str, Any]:
         "implementation_revision": revision,
         "clean_start": clean_start,
         "dirty_paths": dirty_paths,
-        "command": REGENERATION_COMMAND,
+        "command": recorded_command,
         "host": environment["host"],
         "cpu_model": _read_cpu_model(),
         "compiler": _compiler_record(),
@@ -218,12 +233,14 @@ def _assert_perf_counter_clock() -> str:
     return implementation
 
 
-def build_task1_evaluator() -> tuple[VariationalQuantumEigensolver, Any]:
-    topology = [(idx, idx + 1) for idx in range(QBIT_NUM - 1)]
-    hamiltonian = generate_hamiltonian(topology, QBIT_NUM)
+def build_task_evaluator(qbit_num: int) -> tuple[VariationalQuantumEigensolver, Any]:
+    if qbit_num not in (QBIT_NUM, QBIT_NUM_W6):
+        raise ValueError(f"unsupported interop width {qbit_num}")
+    topology = [(idx, idx + 1) for idx in range(qbit_num - 1)]
+    hamiltonian = generate_hamiltonian(topology, qbit_num)
     vqe = VariationalQuantumEigensolver(
         hamiltonian,
-        QBIT_NUM,
+        qbit_num,
         CONFIG,
         backend="density_matrix",
         density_noise=DENSITY_NOISE,
@@ -231,6 +248,10 @@ def build_task1_evaluator() -> tuple[VariationalQuantumEigensolver, Any]:
     vqe.set_Ansatz("HEA")
     vqe.Generate_Circuit(1, 1)
     return vqe, hamiltonian
+
+
+def build_task1_evaluator() -> tuple[VariationalQuantumEigensolver, Any]:
+    return build_task_evaluator(QBIT_NUM)
 
 
 def _one_sided_upper_bound(values: list[float]) -> tuple[float, float]:
@@ -297,12 +318,39 @@ def _run_pair(
     return sample
 
 
+def _width_profile(qbit_num: int) -> dict[str, Any]:
+    if qbit_num == QBIT_NUM:
+        return {
+            "suite": SUITE_ID_W4,
+            "divisor": THROUGHPUT_DIVISOR,
+            "command": REGENERATION_COMMAND,
+            "claim_boundary": "task-1 tracer row; milestone_counted=false",
+            "labels": "E-VQE density_matrix harness tracer",
+            "include_w6_overhead_fields": False,
+        }
+    if qbit_num == QBIT_NUM_W6:
+        return {
+            "suite": SUITE_ID_W6,
+            "divisor": THROUGHPUT_DIVISOR_W6,
+            "command": COUNTED_REGENERATION_COMMAND_W6,
+            "claim_boundary": "task-2 tracer row; milestone_counted=false",
+            "labels": (
+                "E-VQE density_matrix harness tracer width 6; "
+                "no reduction taken on widths 4 and 6"
+            ),
+            "include_w6_overhead_fields": True,
+        }
+    raise ValueError(f"unsupported interop width {qbit_num}")
+
+
 def run_interop_row(
     *,
+    qbit_num: int = QBIT_NUM,
     counted_pairs: int = COUNTED_PAIRS,
     warmup_pairs: int = WARMUP_PAIRS,
 ) -> dict[str, Any]:
-    provenance = capture_provenance()
+    width = _width_profile(qbit_num)
+    provenance = capture_provenance(width["command"])
 
     clock_impl = _assert_perf_counter_clock()
     cpu_id = _pin_lowest_allowed_cpu()
@@ -316,7 +364,7 @@ def run_interop_row(
         if thread_env.get(key, "") != "1":
             raise RuntimeError(f"{key} must be 1 for the interop lane")
 
-    vqe, hamiltonian = build_task1_evaluator()
+    vqe, hamiltonian = build_task_evaluator(qbit_num)
     param_num = vqe.get_Parameter_Num()
     parameters = np.linspace(0.05, 0.05 * param_num, param_num, dtype=np.float64)
     bridge = vqe.describe_density_bridge()
@@ -350,26 +398,38 @@ def run_interop_row(
         allocate_values.append(components["allocate_build_ns"])
         apply_values.append(components["apply_to_ns"])
         contraction_values.append(components["contraction_ns"])
-        throughput_values.append(components["apply_to_ns"] / THROUGHPUT_DIVISOR)
+        throughput_values.append(components["apply_to_ns"] / width["divisor"])
         samples.append(sample)
 
     mean_o, bound_o = _one_sided_upper_bound(o_values)
     median_o = float(np.median(np.asarray(o_values, dtype=np.float64)))
     mean_tp, bound_tp = _one_sided_upper_bound(throughput_values)
 
+    overhead_block: dict[str, Any] = {
+        "mean_O": mean_o,
+        "median_O": median_o,
+        "upper_bound_95_O": bound_o,
+    }
+    if width["include_w6_overhead_fields"]:
+        overhead_block["min_O"] = float(np.min(np.asarray(o_values, dtype=np.float64)))
+        overhead_block["max_O"] = float(np.max(np.asarray(o_values, dtype=np.float64)))
+        overhead_block["spike_count_abs_wrapper_ns_above_20000"] = (
+            spike_count_abs_wrapper_ns_above_20000(samples)
+        )
+
     return {
-        "suite": "interop_profile_task1_evqe_4q_v1",
-        "qbit_num": QBIT_NUM,
+        "suite": width["suite"],
+        "qbit_num": qbit_num,
         "warmup_pairs": warmup_pairs,
         "counted_pairs": counted_pairs,
         "milestone_counted": False,
         "clean_start": provenance["clean_start"],
         "provenance": provenance,
-        "claim_boundary": "task-1 tracer row; milestone_counted=false",
-        "labels": "E-VQE density_matrix harness tracer",
+        "claim_boundary": width["claim_boundary"],
+        "labels": width["labels"],
         "harness_timer_flag": True,
         "operation_count": operation_count,
-        "throughput_divisor": THROUGHPUT_DIVISOR,
+        "throughput_divisor": width["divisor"],
         "perf_counter_implementation": clock_impl,
         "affinity_cpu": cpu_id,
         "thread_env": thread_env,
@@ -389,11 +449,11 @@ def run_interop_row(
         },
         "workload": {
             "entry": "Optimization_Problem density_matrix",
-            "qbit_num": QBIT_NUM,
+            "qbit_num": qbit_num,
             "ansatz": "HEA",
             "layers": 1,
             "inner_blocks": 1,
-            "topology": [(idx, idx + 1) for idx in range(QBIT_NUM - 1)],
+            "topology": [(idx, idx + 1) for idx in range(qbit_num - 1)],
             "hamiltonian_nnz": int(hamiltonian.nnz),
             "hamiltonian_csr_sha256": _hamiltonian_csr_sha256(hamiltonian),
             "density_noise": DENSITY_NOISE,
@@ -409,13 +469,9 @@ def run_interop_row(
             "mean_apply_to_ns": float(np.mean(apply_values)),
             "mean_contraction_ns": float(np.mean(contraction_values)),
         },
-        "overhead": {
-            "mean_O": mean_o,
-            "median_O": median_o,
-            "upper_bound_95_O": bound_o,
-        },
+        "overhead": overhead_block,
         "throughput": {
-            "divisor": THROUGHPUT_DIVISOR,
+            "divisor": width["divisor"],
             "mean_ns_per_op": mean_tp,
             "upper_bound_95_ns_per_op": bound_tp,
         },

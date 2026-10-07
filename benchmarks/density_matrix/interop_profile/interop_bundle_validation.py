@@ -1,21 +1,26 @@
 #!/usr/bin/env python3
-"""Validate M-F5a interop profile bundles (task-1 tracer row)."""
+"""Validate M-F5a interop profile bundles (task-1 and task-2 tracer rows)."""
 
 from __future__ import annotations
 
 import json
 import math
+from dataclasses import dataclass
 from typing import Any, Mapping, Sequence
 
 COUNTED_PAIRS_REQUIRED = 1000
 WARMUP_PAIRS_REQUIRED = 50
 QBIT_WIDTH_REQUIRED = 4
+QBIT_WIDTH_W6_REQUIRED = 6
 THROUGHPUT_DIVISOR_REQUIRED = 3072
+THROUGHPUT_DIVISOR_W6_REQUIRED = 73728
+OPERATION_COUNT_W6_REQUIRED = 18
 PARTITION_REL_TOL = 0.01
 PARTITION_ABS_TOL_NS = 1000
 Z_95 = 1.644854
 QA008_MEAN_O_ABSOLUTE_MARGIN = 0.02
 MEAN_COMPONENT_ABS_TOL_NS = 0.5
+SPIKE_ABS_WRAPPER_THRESHOLD_NS = 20000
 
 # Optimization_Problem_Batch is excluded from the counted inventory because
 # Optimization_Interface::optimization_problem_batched dispatches through the
@@ -40,6 +45,12 @@ FORBIDDEN_PUBLIC_ENERGY_SYMBOLS = (
 )
 FORBIDDEN_ROW_LABELS = ("R-oracle", "R-base", "R-fused", "R-strict", "R-hybrid")
 
+FORBIDDEN_W6_CLAIM_PHRASES = (
+    "A4 kill",
+    "hold-the-line",
+    "reduction taken",
+)
+
 PROVENANCE_REQUIRED_KEYS = (
     "implementation_revision",
     "clean_start",
@@ -52,6 +63,36 @@ PROVENANCE_REQUIRED_KEYS = (
     "dependencies",
     "extension_identities",
     "provenance_pass",
+)
+
+
+@dataclass(frozen=True)
+class InteropBundleProfile:
+    qbit_width: int
+    throughput_divisor: int
+    suite_id: str
+    row_label: str
+    provenance_command: str | None = None
+    operation_count: int | None = None
+    require_w6_overhead_fields: bool = False
+    check_w6_forbidden_claims: bool = False
+
+
+PROFILE_WIDTH_4 = InteropBundleProfile(
+    qbit_width=QBIT_WIDTH_REQUIRED,
+    throughput_divisor=THROUGHPUT_DIVISOR_REQUIRED,
+    suite_id="interop_profile_task1_evqe_4q_v1",
+    row_label="task-1",
+)
+
+PROFILE_WIDTH_6 = InteropBundleProfile(
+    qbit_width=QBIT_WIDTH_W6_REQUIRED,
+    throughput_divisor=THROUGHPUT_DIVISOR_W6_REQUIRED,
+    suite_id="interop_profile_task2_evqe_6q_v1",
+    row_label="task-2",
+    operation_count=OPERATION_COUNT_W6_REQUIRED,
+    require_w6_overhead_fields=True,
+    check_w6_forbidden_claims=True,
 )
 
 
@@ -69,6 +110,33 @@ def _one_sided_upper_bound(values: Sequence[float]) -> tuple[float, float]:
     std = math.sqrt(variance)
     bound = mean + Z_95 * std / math.sqrt(len(arr))
     return mean, bound
+
+
+def np_mean(values: Sequence[float]) -> float:
+    return float(sum(values) / len(values)) if values else 0.0
+
+
+def spike_count_abs_wrapper_ns_above_20000(
+    samples: Sequence[Mapping[str, Any]],
+) -> int:
+    count = 0
+    for sample in samples:
+        delta = abs(int(sample["t_public_ns"]) - int(sample["t_lower_ns"]))
+        if delta > SPIKE_ABS_WRAPPER_THRESHOLD_NS:
+            count += 1
+    return count
+
+
+def assert_mean_o_within_margin(
+    recorded_mean: float,
+    reference_mean: float,
+    *,
+    margin: float = QA008_MEAN_O_ABSOLUTE_MARGIN,
+) -> None:
+    if abs(recorded_mean - reference_mean) > margin:
+        raise ValueError(
+            f"mean O margin exceeded: |{recorded_mean} - {reference_mean}| > {margin}"
+        )
 
 
 def _sample_components(sample: Mapping[str, Any]) -> dict[str, int]:
@@ -93,7 +161,7 @@ def _sample_components(sample: Mapping[str, Any]) -> dict[str, int]:
 
 
 def validate_interop_implementation_paths(changed_paths: Sequence[str]) -> None:
-    """Reject C1 fix bundles that touch forbidden trees (ET-5)."""
+    """Reject implementation diffs that touch forbidden trees (ET-5)."""
     for path in changed_paths:
         normalized = path.replace("\\", "/")
         for prefix in FORBIDDEN_IMPLEMENTATION_PREFIXES:
@@ -103,7 +171,7 @@ def validate_interop_implementation_paths(changed_paths: Sequence[str]) -> None:
                 )
 
 
-def _validate_provenance(provenance: Mapping[str, Any]) -> None:
+def _validate_provenance(provenance: Mapping[str, Any], profile: InteropBundleProfile) -> None:
     if not isinstance(provenance, Mapping):
         raise ValueError("provenance block is required")
 
@@ -116,6 +184,13 @@ def _validate_provenance(provenance: Mapping[str, Any]) -> None:
 
     if provenance.get("provenance_pass") is not True:
         raise ValueError("provenance.provenance_pass must be true")
+
+    if profile.provenance_command is not None:
+        command = provenance.get("command")
+        if command != profile.provenance_command:
+            raise ValueError("provenance.command must match the width-6 counted command")
+        if "--width 6" not in str(command):
+            raise ValueError("provenance.command must include --width 6")
 
     identities = provenance.get("extension_identities") or []
     if len(identities) < 2:
@@ -131,15 +206,54 @@ def _validate_provenance(provenance: Mapping[str, Any]) -> None:
         raise ValueError("provenance.compiler executable and version_line are required")
 
 
-def validate_interop_bundle(bundle: Mapping[str, Any]) -> None:
-    """Raise ValueError when the bundle violates the task-1 interop contract."""
+def _validate_forbidden_labels(label_blob: str) -> None:
+    for forbidden in FORBIDDEN_ROW_LABELS:
+        if forbidden in label_blob:
+            raise ValueError(f"attribution route label {forbidden!r} is forbidden")
 
+    for forbidden in FORBIDDEN_PUBLIC_ENERGY_SYMBOLS:
+        if forbidden in label_blob:
+            raise ValueError(f"forbidden timed entry {forbidden!r} in bundle metadata")
+
+
+def _label_contains_forbidden_w6_phrase(label_blob: str, phrase: str) -> bool:
+    if phrase != "reduction taken":
+        return phrase in label_blob
+    start = 0
+    while True:
+        pos = label_blob.find(phrase, start)
+        if pos == -1:
+            return False
+        if pos >= 3 and label_blob[pos - 3 : pos] == "no ":
+            start = pos + 1
+            continue
+        return True
+
+
+def _validate_w6_forbidden_claims(bundle: Mapping[str, Any]) -> None:
     serialized = json.dumps(bundle, sort_keys=True)
     if "QA-007 met" in serialized:
         raise ValueError('interop bundle must not contain "QA-007 met"')
 
-    if bundle.get("qbit_num") != QBIT_WIDTH_REQUIRED:
-        raise ValueError("interop row width must be 4 qubits for task-1")
+    label_blob = str(bundle.get("claim_boundary", "")) + str(bundle.get("labels", ""))
+    for phrase in FORBIDDEN_W6_CLAIM_PHRASES:
+        if _label_contains_forbidden_w6_phrase(label_blob, phrase):
+            raise ValueError(f"forbidden claim phrase {phrase!r} in bundle metadata")
+
+
+def _validate_interop_bundle(bundle: Mapping[str, Any], profile: InteropBundleProfile) -> None:
+    if not profile.check_w6_forbidden_claims:
+        serialized = json.dumps(bundle, sort_keys=True)
+        if "QA-007 met" in serialized:
+            raise ValueError('interop bundle must not contain "QA-007 met"')
+    else:
+        _validate_w6_forbidden_claims(bundle)
+
+    if bundle.get("suite") != profile.suite_id:
+        raise ValueError(f"suite id must be {profile.suite_id}")
+
+    if bundle.get("qbit_num") != profile.qbit_width:
+        raise ValueError(f"interop row width must be {profile.qbit_width} qubits")
 
     if bundle.get("warmup_pairs") != WARMUP_PAIRS_REQUIRED:
         raise ValueError(f"warmup_pairs must be {WARMUP_PAIRS_REQUIRED}")
@@ -151,10 +265,14 @@ def validate_interop_bundle(bundle: Mapping[str, Any]) -> None:
     if bundle.get("clean_start") is not True:
         raise ValueError("clean_start must be true for a counted bundle")
 
-    _validate_provenance(bundle.get("provenance") or {})
+    _validate_provenance(bundle.get("provenance") or {}, profile)
 
     if bundle.get("harness_timer_flag") is not True:
         raise ValueError("harness_timer_flag must be true for counted pairs")
+
+    if profile.operation_count is not None:
+        if bundle.get("operation_count") != profile.operation_count:
+            raise ValueError(f"operation_count must be {profile.operation_count}")
 
     protocol = bundle.get("protocol") or {}
     if protocol.get("pairing") != "paired_not_interleaved":
@@ -190,23 +308,24 @@ def validate_interop_bundle(bundle: Mapping[str, Any]) -> None:
             raise ValueError(f"components.{key} is required")
 
     label_blob = str(bundle.get("claim_boundary", "")) + str(bundle.get("labels", ""))
-    for forbidden in FORBIDDEN_ROW_LABELS:
-        if forbidden in label_blob:
-            raise ValueError(f"attribution route label {forbidden!r} is forbidden in task-1")
-
-    for forbidden in FORBIDDEN_PUBLIC_ENERGY_SYMBOLS:
-        if forbidden in label_blob:
-            raise ValueError(f"forbidden timed entry {forbidden!r} in bundle metadata")
+    _validate_forbidden_labels(label_blob)
 
     throughput = bundle.get("throughput") or {}
-    if throughput.get("divisor") != THROUGHPUT_DIVISOR_REQUIRED:
-        raise ValueError("throughput divisor must be 3072 for the 4-qubit HEA cell")
+    if throughput.get("divisor") != profile.throughput_divisor:
+        raise ValueError(
+            f"throughput divisor must be {profile.throughput_divisor} for this row"
+        )
     if "mean_ns_per_op" not in throughput or "upper_bound_95_ns_per_op" not in throughput:
         raise ValueError("throughput mean and one-sided 95% bound are required")
 
     overhead = bundle.get("overhead") or {}
     if "mean_O" not in overhead or "upper_bound_95_O" not in overhead:
         raise ValueError("overhead mean_O and upper_bound_95_O are required")
+
+    if profile.require_w6_overhead_fields:
+        for key in ("min_O", "max_O", "median_O", "spike_count_abs_wrapper_ns_above_20000"):
+            if key not in overhead:
+                raise ValueError(f"overhead.{key} is required for width 6")
 
     samples: Sequence[Mapping[str, Any]] = bundle.get("samples") or []
     if len(samples) != COUNTED_PAIRS_REQUIRED:
@@ -240,7 +359,7 @@ def validate_interop_bundle(bundle: Mapping[str, Any]) -> None:
         allocate_values.append(recomputed["allocate_build_ns"])
         apply_values.append(recomputed["apply_to_ns"])
         contraction_values.append(recomputed["contraction_ns"])
-        throughput_values.append(recomputed["apply_to_ns"] / THROUGHPUT_DIVISOR_REQUIRED)
+        throughput_values.append(recomputed["apply_to_ns"] / profile.throughput_divisor)
 
         support_outer, construct, lowering, apply_to, contraction, teardown = (
             int(sub[0]),
@@ -265,24 +384,63 @@ def validate_interop_bundle(bundle: Mapping[str, Any]) -> None:
     if abs(float(overhead["upper_bound_95_O"]) - bound_o) > 1e-9:
         raise ValueError("overhead.upper_bound_95_O does not match samples")
 
+    if profile.require_w6_overhead_fields:
+        if abs(float(overhead["min_O"]) - min(o_values)) > 1e-12:
+            raise ValueError("overhead.min_O does not match samples")
+        if abs(float(overhead["max_O"]) - max(o_values)) > 1e-12:
+            raise ValueError("overhead.max_O does not match samples")
+        if abs(float(overhead["median_O"]) - float(np_median(o_values))) > 1e-12:
+            raise ValueError("overhead.median_O does not match samples")
+        expected_spike = spike_count_abs_wrapper_ns_above_20000(samples)
+        if int(overhead["spike_count_abs_wrapper_ns_above_20000"]) != expected_spike:
+            raise ValueError("overhead.spike_count_abs_wrapper_ns_above_20000 mismatch")
+
     mean_tp, bound_tp = _one_sided_upper_bound(throughput_values)
     if abs(float(throughput["mean_ns_per_op"]) - mean_tp) > 1e-12:
         raise ValueError("throughput.mean_ns_per_op does not match samples")
     if abs(float(throughput["upper_bound_95_ns_per_op"]) - bound_tp) > 1e-9:
         raise ValueError("throughput.upper_bound_95_ns_per_op does not match samples")
 
-    if abs(float(components["mean_wrapper_ns"]) - float(np_mean(wrapper_values))) > MEAN_COMPONENT_ABS_TOL_NS:
+    if abs(float(components["mean_wrapper_ns"]) - np_mean(wrapper_values)) > MEAN_COMPONENT_ABS_TOL_NS:
         raise ValueError("components.mean_wrapper_ns does not match samples")
-    if abs(float(components["mean_allocate_build_ns"]) - float(np_mean(allocate_values))) > MEAN_COMPONENT_ABS_TOL_NS:
+    if abs(float(components["mean_allocate_build_ns"]) - np_mean(allocate_values)) > MEAN_COMPONENT_ABS_TOL_NS:
         raise ValueError("components.mean_allocate_build_ns does not match samples")
-    if abs(float(components["mean_apply_to_ns"]) - float(np_mean(apply_values))) > MEAN_COMPONENT_ABS_TOL_NS:
+    if abs(float(components["mean_apply_to_ns"]) - np_mean(apply_values)) > MEAN_COMPONENT_ABS_TOL_NS:
         raise ValueError("components.mean_apply_to_ns does not match samples")
-    if abs(float(components["mean_contraction_ns"]) - float(np_mean(contraction_values))) > MEAN_COMPONENT_ABS_TOL_NS:
+    if abs(float(components["mean_contraction_ns"]) - np_mean(contraction_values)) > MEAN_COMPONENT_ABS_TOL_NS:
         raise ValueError("components.mean_contraction_ns does not match samples")
 
     if bundle.get("milestone_counted") is not False:
-        raise ValueError("milestone_counted must be false for the task-1 tracer row")
+        raise ValueError(f"milestone_counted must be false for the {profile.row_label} tracer row")
 
 
-def np_mean(values: Sequence[float]) -> float:
-    return float(sum(values) / len(values)) if values else 0.0
+def np_median(values: Sequence[float]) -> float:
+    ordered = sorted(float(value) for value in values)
+    mid = len(ordered) // 2
+    if len(ordered) % 2:
+        return ordered[mid]
+    return (ordered[mid - 1] + ordered[mid]) / 2.0
+
+
+def validate_interop_bundle(bundle: Mapping[str, Any]) -> None:
+    """Raise ValueError when the bundle violates the task-1 interop contract."""
+    _validate_interop_bundle(bundle, PROFILE_WIDTH_4)
+
+
+def validate_interop_bundle_w6(bundle: Mapping[str, Any]) -> None:
+    """Raise ValueError when the bundle violates the task-2 width-6 contract."""
+    from benchmarks.density_matrix.interop_profile.interop_lane import (
+        COUNTED_REGENERATION_COMMAND_W6,
+    )
+
+    profile = InteropBundleProfile(
+        qbit_width=QBIT_WIDTH_W6_REQUIRED,
+        throughput_divisor=THROUGHPUT_DIVISOR_W6_REQUIRED,
+        suite_id=PROFILE_WIDTH_6.suite_id,
+        row_label=PROFILE_WIDTH_6.row_label,
+        provenance_command=COUNTED_REGENERATION_COMMAND_W6,
+        operation_count=OPERATION_COUNT_W6_REQUIRED,
+        require_w6_overhead_fields=True,
+        check_w6_forbidden_claims=True,
+    )
+    _validate_interop_bundle(bundle, profile)

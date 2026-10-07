@@ -14,27 +14,70 @@ if str(REPO_ROOT) not in sys.path:
 
 from benchmarks.density_matrix.interop_profile.interop_bundle_validation import (
     validate_interop_bundle,
+    validate_interop_bundle_w6,
 )
 from benchmarks.density_matrix.interop_profile.interop_lane import run_interop_row
 
 DEFAULT_OUTPUT_DIR = (
     REPO_ROOT / "benchmarks" / "density_matrix" / "artifacts" / "interop_profile"
 )
-DEFAULT_OUTPUT_PATH = DEFAULT_OUTPUT_DIR / "interop_profile_bundle.json"
+DEFAULT_OUTPUT_PATH_W4 = DEFAULT_OUTPUT_DIR / "interop_profile_bundle.json"
+DEFAULT_OUTPUT_PATH_W6 = DEFAULT_OUTPUT_DIR / "interop_profile_bundle_w6.json"
+ARTIFACT_NAME_W4 = "interop_profile_bundle.json"
+ARTIFACT_NAME_W6 = "interop_profile_bundle_w6.json"
+
+
+def resolve_interop_output_path(width: int | None, output: Path | None) -> Path:
+    """Resolve the bundle path and refuse width/filename mismatches before any pair."""
+    if width in (None, 4):
+        qbit_num = 4
+        default_path = DEFAULT_OUTPUT_PATH_W4
+        expected_name = ARTIFACT_NAME_W4
+        forbidden_name = ARTIFACT_NAME_W6
+    elif width == 6:
+        qbit_num = 6
+        default_path = DEFAULT_OUTPUT_PATH_W6
+        expected_name = ARTIFACT_NAME_W6
+        forbidden_name = ARTIFACT_NAME_W4
+    else:
+        raise ValueError(f"unsupported --width {width}; expected 4 or 6")
+
+    resolved = output if output is not None else default_path
+    if qbit_num == 6 and resolved.name != expected_name:
+        raise ValueError(
+            f"width 6 must write {expected_name!r}; got {resolved.name!r}"
+        )
+    if resolved.name == forbidden_name:
+        raise ValueError(
+            f"width {qbit_num} must not write {forbidden_name!r}; use {expected_name!r}"
+        )
+    return resolved
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
+        "--width",
+        type=int,
+        default=None,
+        help="Tracer width (default 4). Use 6 for the task-2 row.",
+    )
+    parser.add_argument(
         "--output",
         type=Path,
-        default=DEFAULT_OUTPUT_PATH,
+        default=None,
         help="Path for the interop bundle JSON artifact",
     )
     args = parser.parse_args(argv)
 
-    bundle = run_interop_row()
-    validate_interop_bundle(bundle)
+    qbit_num = 6 if args.width == 6 else 4
+    output_path = resolve_interop_output_path(args.width, args.output)
+
+    bundle = run_interop_row(qbit_num=qbit_num)
+    if qbit_num == 6:
+        validate_interop_bundle_w6(bundle)
+    else:
+        validate_interop_bundle(bundle)
 
     if bundle.get("clean_start") is not True:
         print(
@@ -43,8 +86,8 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 1
 
-    args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(json.dumps(bundle, indent=2, sort_keys=True) + "\n")
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(json.dumps(bundle, indent=2, sort_keys=True) + "\n")
     return 0
 
 

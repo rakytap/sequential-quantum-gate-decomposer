@@ -68,3 +68,38 @@ def test_harness_neither_path_returns_energy(density_vqe_4q):
     subtimes = vqe_wrapper_ext.harness_density_subtimes_ns(density_vqe_4q)
     assert not isinstance(lower_ns, float)
     assert not any(isinstance(value, float) for value in subtimes)
+
+
+def test_task2_evqe_6q_cell_pins_timer_identity_and_aer_oracle():
+    pytest.importorskip("qiskit_aer")
+    from benchmarks.density_matrix.interop_profile.interop_lane import build_task_evaluator
+
+    vqe, hamiltonian = build_task_evaluator(6)
+    parameters = np.linspace(0.05, 0.05 * 30, 30, dtype=np.float64)
+
+    bridge = vqe.describe_density_bridge()
+    assert vqe.get_Parameter_Num() == 30
+    assert bridge["operation_count"] == 18
+    assert bridge["gate_count"] == 15
+    assert bridge["noise_count"] == 3
+    assert int(hamiltonian.nnz) == 224
+
+    vqe_wrapper_ext.harness_density_set_timer_flag(vqe, False)
+    energy_flag_off = float(vqe.Optimization_Problem(parameters))
+    vqe_wrapper_ext.harness_density_set_timer_flag(vqe, True)
+    energy_flag_on = float(vqe.Optimization_Problem(parameters))
+    assert energy_flag_off == energy_flag_on
+
+    for name in (
+        "harness_density_lower_ns",
+        "harness_density_set_timer_flag",
+        "harness_density_subtimes_ns",
+    ):
+        assert not hasattr(vqe, name)
+
+    vqe.set_Optimized_Parameters(parameters)
+    tester = vqe_test_module.Test_VQE()
+    aer_real, aer_imag = tester._get_density_backend_aer_reference(vqe, hamiltonian)
+    bound = 1e-12 + 1e-5 * abs(aer_real)
+    assert abs(energy_flag_off - aer_real) <= bound
+    assert abs(aer_imag) <= 1e-12
