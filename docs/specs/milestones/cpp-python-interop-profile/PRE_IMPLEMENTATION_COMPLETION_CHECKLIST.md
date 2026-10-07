@@ -1,24 +1,24 @@
 # Pre-implementation completion checklist — M-F5a `cpp-python-interop-profile`
-> **Status:** Layer 1 v0.1 · **Verdict:** task-1 closed; task-2 Step 4b closed at C2 `6707892a`, (g) PASS ·
+> **Status:** Layer 1 v0.1 · **Verdict:** task-2 closed; task-3 Step 4a draft, stage `step-4a`, not-ready ·
 > **Milestone:** M-F5a `cpp-python-interop-profile` ·
 > **Owner skill:** `spec-driven-development` Steps 2–4a ·
 > **Inputs:** `INITIAL_REQUIREMENTS.md` v0.1,
 > `DETAILED_PLANNING_CPP_PYTHON_INTEROP_PROFILE.md`,
 > `ADRS_CPP_PYTHON_INTEROP_PROFILE.md`, `ADR_AMENDMENTS_CPP_PYTHON_INTEROP_PROFILE.md` · **Traces:** REQ-001…009 ·
 > **Authorization:** task-1 closed at C2 `ddde49ac`; task-2 closed at C2 `6707892a`; (e) APPROVE; (g) PASS; QA-007 `[confirm]` ·
-> **Boundary:** slice close only; milestone not complete; no next slice; no push; no pull request ·
+> **Boundary:** task-3 Step 4a draft; not-ready; no Step 4b; milestone not complete; no push; no pull request ·
 > **Baseline:** `1b123a9a31235dd68d6c0a6ff9ba457c0112cd59`
 
 ## 1. Readiness rule
 
-**Verdict: task-1 Step 4b stays closed. Task-2 Step 4b is closed at C2 `6707892a`. (e) APPROVE. (g) PASS. Stage stays `step-4b-authorized`. QA-007 stays `[confirm]`. M-F5a is not complete.**
+**Verdict: task-1 and task-2 stay closed. Task-3 Step 4a is a draft at `step-4a` and is not-ready. QA-007 stays `[confirm]`. M-F5a is not complete.**
 
 The Tech Lead opened the tracer. `task-1/` holds the planning pack and `CLOSEOUT.md`.
 ADR-F5A-009 is filed. C1 tip is `ca5589e2`. C2 is
 `ddde49ac1e248e3ea2b4516f420ca1cbbd14e9df`. Reviewer (e) approved it and step (g)
 passed. Section 11 is that record. The counted run recorded `clean_start` true.
 This checklist does not freeze the 10 % bar and does not mark the milestone
-delivered. Section 12 records task-2 through (g). The next slice is not opened.
+delivered. Section 12 records task-2 through (g). Section 13 opens task-3 as a draft. That draft does not authorize Step 4b.
 The Developer does not edit `docs/specs/**`.
 
 The code-ready gate, already met before C1, required all of the following:
@@ -67,7 +67,7 @@ The code-ready gate, already met before C1, required all of the following:
 | G-01 | Tech Lead has not opened the Step 4a tracer | `task-1/` planning pack | Tech Lead | **closed — task-1 code-ready; stage `step-4b-authorized`** |
 | G-02 | Harness mechanism that calls C++ `optimization_problem` without a new public Python energy symbol | `task-1/TASK_1_MINI_SPEC.md` §4 and §6; ADR-F5A-009 | Architect, Step 4a | **closed — timer on `Variational_Quantum_Eigensolver_Base`; ADR-F5A-009 filed** |
 | G-03 | Whether one R-oracle row is required to label C++ `apply_to` | `task-1/TASK_1_MINI_SPEC.md` §5 | Architect, Step 4a | **closed — excluded; inner `apply_to` timer labels the component** |
-| G-04 | Depth and noise schedule per width, and the parameter vector | `task-1/TASK_1_MINI_SPEC.md` §2; `task-2/TASK_2_MINI_SPEC.md` §2 | Architect, Step 4a | **closed for 4 qubits; width 6 pinned, RM ACCEPT 2026-10-07; width 8 stays later** |
+| G-04 | Depth and noise schedule per width, and the parameter vector | `task-1/TASK_1_MINI_SPEC.md` §2; `task-2/TASK_2_MINI_SPEC.md` §2; `task-3/TASK_3_MINI_SPEC.md` §2 | Architect, Step 4a | **closed for 4 and 6; width 8 pinned in the task-3 draft pending RM** |
 | G-05 | Paired versus interleaved, warm-up count, affinity, thread count, uncertainty estimator, and any divisor other than \(4^n\) | `task-1/TASK_1_MINI_SPEC.md` §7 | Architect, Step 4a | **closed for the 4-qubit tracer; task-2 §4 carries these pins unchanged at width 6** |
 | G-06 | Product-owner freeze of the QA-007 numeric bar | an edit of `INITIAL_REQUIREMENTS.md` | Product owner | **open — blocks a "QA-007 met" label and any counted trial that applies the bar; does not block Step 4a** |
 | G-07 | Sibling interop lane is not on disk | the slice that creates it, after code-ready | Step 4b | **closed — lane and counted bundle are on disk; see `task-1/CLOSEOUT.md`** |
@@ -75,6 +75,7 @@ The code-ready gate, already met before C1, required all of the following:
 | G-09 | Rocky-local Tester CI record for a code close | that later close | Tester | **open — expected; N8 stays deferred** |
 | G-10 | Step 4b authorization for task-1 | code-ready verdict on task-1 | Architect | **closed — task-1 stage `step-4b-authorized`; task-1 closed at C2** |
 | G-11 | Step 4b authorization for task-2 | planning-role stamp after the Reviewer writer gate | Planning role | **closed — C2 `6707892a`; (e) APPROVE; (g) PASS; stage `step-4b-authorized`** |
+| G-12 | Step 4b authorization for task-3 | Research Manager ALIGN, then a later stamp | Research Manager | **open — task-3 Step 4a draft; not-ready** |
 
 No open item changes the equal-work pair, adds an advertised energy entry, publishes \(O\)
 on an attribution-only route, or proposes a kernel, fusion, or AVX edit. No A4 kill and
@@ -240,7 +241,8 @@ Regeneration outputs are not committed.
 
 ## 12. Task-2 Step 4b closed
 
-C2 `6707892a`. (e) APPROVE FOR C2 COMMIT (`bc-aaf8e41f`). (g) PASS: regen
-`mean_O` 0.00075526, `|Δ|` 0.001878 ≤ 0.02, window [−0.021123, 0.018877].
-w6 restored `5257bad2…`. Porcelain empty. Evidence `/tmp/mf5a-t2-g/`.
-QA-007 `[confirm]`. Milestone not complete. `milestone_counted` false. N-78–N-80 open. No next slice.
+C2 `6707892a`. (e) APPROVE (`bc-aaf8e41f`). (g) PASS: regen `mean_O` 0.00075526, `|Δ|` 0.001878 ≤ 0.02. w6 `5257bad2…`. QA-007 `[confirm]`. `milestone_counted` false. N-78–N-80 open.
+
+## 13. Task-3 Step 4a draft
+
+Opened on tip `5d93ca07`. Slice: E-VQE at 8 qubits, same harness (`task-3/`). Stage `step-4a`. Verdict **not-ready**. QA-007 stays `[confirm]`. M-F5a is not complete. S-g stays Measure. Routes, G-06, G-08, G-09, and N-78–N-80 stay deferred. Awaits Research Manager alignment. No Step 4b. No push. No pull request.
