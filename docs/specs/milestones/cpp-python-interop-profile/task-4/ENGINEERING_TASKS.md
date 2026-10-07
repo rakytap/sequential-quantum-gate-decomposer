@@ -1,12 +1,12 @@
 # Engineering tasks — M-F5a task-4
-> **Status:** Step 4a draft · not-ready · **Slice:** M-F5a task-4 · four attribution routes ·
+> **Status:** Step 4a · not-ready · **Slice:** M-F5a task-4 · four attribution routes ·
 > **Traces:** REQ-001, REQ-004, REQ-005, REQ-006, REQ-007, REQ-008 ·
 > CAP-004, CAP-007 · QA-008, QA-009 ·
 > **SDD stage:** step-4a
-> **Boundary:** draft only. The milestone is not complete. No Step 4b
+> **Boundary:** not-ready. Width-4 rows do not close REQ-004. No Step 4b
 
-**Verdict: not-ready.** READY-FOR-TL-RM-CONSULT. RM ALIGN 2026-10-07 is recorded
-and does not authorize Step 4b. No Developer. No counted route run. No
+**Verdict: not-ready.** READY-FOR-CODE-READY-REVIEW. RM ACCEPT `c5ea0847…` is
+recorded and does not flip the stage. No Developer. No counted route run. No
 `task-4/CLOSEOUT.md`. At `step-4a`, normal mode has 0 errors and 1 warning,
 `SLICE_MISSING_CLOSEOUT` for task-4, and exits 0. `--strict` keeps that warning,
 has 0 errors, and exits 0. No waiver. No placeholder.
@@ -25,11 +25,16 @@ C++ edit is a handback.
 - tests
 
 **Definition of done**
-- A test accepts a fixture that names R-base, R-fused, R-strict, and R-hybrid and
-  carries orchestration time, an apply label, throughput, and a one-sided bound.
+- A test accepts a separate fixture that names R-base, R-fused, R-strict, and
+  R-hybrid and carries orchestration time, an apply label, throughput in ns per
+  complex entry per operation, and a one-sided bound on orchestration time and
+  on the apply component only.
 - The same test rejects \(O\), a QA-007 ratio, "QA-007 met", a reduction claim,
   and an R-oracle row that lacks the E1 sentence.
-- `milestone_counted` is false. The three counted bundle names are not written.
+- Those fixtures are not `interop_profile_bundle.json`,
+  `interop_profile_bundle_w6.json`, or `interop_profile_bundle_w8.json`. The
+  width-4, width-6, and width-8 validators stay unchanged.
+- `milestone_counted` is false. Width-4 rows do not close REQ-004.
 
 **Execution checklist (TDD: red → green → refactor)**
 - [ ] Write the failing route-schema tests first
@@ -53,11 +58,14 @@ C++ edit is a handback.
 - tests
 
 **Definition of done**
-- The four calls use the task-1 width-4 depth, noise schedule, and parameter vector
-  when an existing planner descriptor can represent that anchor.
-- If it cannot, the implementation stops and records the handback. It does not
-  invent a circuit, a divisor, or a lower-boundary twin.
-- Throughput uses \(4^n\) times the operations that route's apply executes.
+- The four calls use `build_phase3_continuity_partition_descriptor_set` on
+  `build_task_evaluator(4)`. The surface matches `describe_density_bridge()`:
+  parameters 18, operations 12, gates 9, noise 3.
+- If that call raises or the counts disagree, the implementation stops and
+  records the handback. It does not invent operation specs, a divisor, or a
+  lower-boundary twin.
+- Throughput uses divisor \(4^4\times 12 = 3072\). The one-sided bound is on
+  orchestration time and the apply component only. S-g is not retuned.
 
 **Execution checklist (TDD: red → green → refactor)**
 - [ ] Add the descriptor check before any timed route call

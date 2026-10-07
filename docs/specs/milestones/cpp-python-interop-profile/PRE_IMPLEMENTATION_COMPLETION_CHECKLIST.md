@@ -17,8 +17,8 @@ The Tech Lead opened the tracer. `task-1/` holds the planning pack and `CLOSEOUT
 ADR-F5A-009 is filed. C1 tip is `ca5589e2`. C2 is
 `ddde49ac1e248e3ea2b4516f420ca1cbbd14e9df`. Reviewer (e) approved it and step (g)
 passed. Section 11 is that record. The counted run recorded `clean_start` true.
-This checklist does not freeze the 10 % bar and does not mark the milestone
-delivered. Section 12 records task-2 through (g). Section 13 records task-3 through (g) and the RM ALIGN. Task-4 is a Step 4a draft. That draft does not authorize Step 4b.
+RM ALIGN froze the 10 % bar for the E-VQE cells. This checklist does not mark the milestone
+delivered. Section 12 records task-2 through (g). Section 13 records task-3 through (g) and the RM ALIGN. Task-4 stays `step-4a` and not-ready. Width-4 rows do not close REQ-004. That draft does not authorize Step 4b.
 The Developer does not edit `docs/specs/**`.
 
 The code-ready gate, already met before C1, required all of the following:
@@ -76,6 +76,7 @@ The code-ready gate, already met before C1, required all of the following:
 | G-10 | Step 4b authorization for task-1 | code-ready verdict on task-1 | Architect | **closed — task-1 stage `step-4b-authorized`; task-1 closed at C2** |
 | G-11 | Step 4b authorization for task-2 | planning-role stamp after the Reviewer writer gate | Planning role | **closed — C2 `6707892a`; (e) APPROVE; (g) PASS; stage `step-4b-authorized`** |
 | G-12 | Step 4b authorization for task-3 | planning-role stamp after the Reviewer code-ready writer gate | Planning role | **closed — C2 `939d4908`; (e) APPROVE; (g) PASS; stage `step-4b-authorized`** |
+| G-13 | Step 4b authorization for task-4 | planning-role stamp after the Reviewer code-ready writer gate | Planning role | **open — stage stays `step-4a`; RM ACCEPT `c5ea0847…` does not flip it; not-ready; width-4 rows do not close REQ-004** |
 
 No open item changes the equal-work pair, adds an advertised energy entry, publishes \(O\)
 on an attribution-only route, or proposes a kernel, fusion, or AVX edit. RM ALIGN 2026-10-07: A4 is false, CAP-004 is hold-the-line, and the reduction is not made (ADR-F5A-003/005).
@@ -165,10 +166,9 @@ no findings. No waiver. No placeholder closeout. The step-4a lint, before this s
 kept the same finding as a warning and exited 0. ADR-F1A-008 forbids a planning-status
 closeout, so that finding stayed until this real close.
 
-After `task-1/CLOSEOUT.md` and `task-2/CLOSEOUT.md`, those slices are clean.
-`task-3/CLOSEOUT.md` records the counted row. Normal and `--strict` exit 0
-and are clean of `SLICE_MISSING_CLOSEOUT`. No waiver. No placeholder.
-C1 is `97d726e3`. C2 is `939d4908`. (e) is APPROVE. (g) is PASS. The next slice is not opened.
+After `task-1/CLOSEOUT.md`, `task-2/CLOSEOUT.md`, and `task-3/CLOSEOUT.md`, those slices are clean.
+Task-4 at `step-4a` has no closeout: normal and `--strict` keep one `SLICE_MISSING_CLOSEOUT` warning and exit 0. No waiver. No placeholder.
+C1 is `97d726e3`. C2 is `939d4908`. (e) is APPROVE. (g) is PASS. Task-4 stays not-ready. RM ACCEPT is upload `c5ea0847…`. Width-4 rows do not close REQ-004. The 10 % bar is frozen for the E-VQE cells.
 
 ## 9. Task-1 Step 4a opened
 

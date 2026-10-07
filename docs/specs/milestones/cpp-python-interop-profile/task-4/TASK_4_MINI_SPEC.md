@@ -1,10 +1,10 @@
 # Task 4: four attribution routes, no overhead ratio
-> **Status:** Step 4a draft · **Verdict:** not-ready · **Slice:** M-F5a task-4 ·
+> **Status:** Step 4a · **Verdict:** not-ready · **Slice:** M-F5a task-4 ·
 > **Traces:** REQ-001, REQ-004, REQ-005, REQ-006, REQ-007, REQ-008 · CAP-004, CAP-007 · QA-008, QA-009 · ADR-F5A-001, ADR-F5A-004, ADR-F5A-005, ADR-F5A-006 ·
 > **Scope:** R-base, R-fused, R-strict, R-hybrid on the width-4 E-VQE anchor. No \(O\). No reduction ·
-> **Gate:** SDD stage `step-4a`. QA-007 stays met only on the counted E-VQE cells. Milestone not complete ·
-> **RM:** ALIGN 2026-10-07. A4 is false. CAP-004 is hold-the-line. The reduction is not made ·
-> **Tip:** `1eb54ddbcf6f7bfdf82c2b7fc75a86687002b721` · three counted bundles stay ·
+> **Gate:** SDD stage `step-4a`. Width-4 rows do not close REQ-004. Milestone not complete ·
+> **RM:** ACCEPT 2026-10-07, upload `2026-10-07-mf5a-task4-align-accept_d0d6.md` (`c5ea0847…`). It does not flip the stage ·
+> **Tip:** `6654ede46727eae1adc33e00da5c19eb20753925` · three counted bundles stay ·
 > **Pair, inventory, no-O rule, kernel/fusion/AVX boundary:** unchanged
 
 ## 1. Why this slice is the thinnest next row
@@ -23,7 +23,7 @@ It is not a route-row label, not a bundle phrase, and not "M-F5a complete".
 
 | Candidate | Why it waits |
 |-----------|----------------|
-| Route rows at 6 and 8 | The width-4 anchor is enough to land the four ids. Repeating widths is a later slice |
+| Route rows at 6 and 8 | REQ-004 still needs those widths before milestone close. This slice does not close REQ-004 |
 | R-oracle | E1 default-exclude. Task-1 already labels C++ `apply_to` from the E-VQE pair. This slice adds no diagnosis row |
 | Binding or dispatch reduction | A4 has fired. CAP-004 is hold-the-line. The reduction is not made |
 | G-08, G-09, Demo, full-milestone review | Close-time work. Demo stays No GO. No Opus review in this draft |
@@ -31,8 +31,8 @@ It is not a route-row label, not a bundle phrase, and not "M-F5a complete".
 
 ## 2. What a route row is
 
-Each row calls one existing public entry on a descriptor of the task-1 width-4 HEA
-anchor, if that descriptor already exists:
+Width-4 rows do not close REQ-004. Widths 6 and 8 remain for a later slice.
+Each row calls one existing public entry on the descriptor built below:
 
 | Id | Entry | Apply label |
 |----|-------|-------------|
@@ -41,19 +41,34 @@ anchor, if that descriptor already exists:
 | R-strict | `execute_partitioned_density_channel_native` | numpy Kraus |
 | R-hybrid | `execute_partitioned_density_channel_native_hybrid` | the executed class |
 
-The row publishes orchestration time, the apply component, throughput on \(4^n\) times
-the operations that apply executes, and the same one-sided 95 % bound used for those
-times. It publishes no \(O\), no \(T_\mathrm{lower}\) twin, and no QA-007 ratio.
-`milestone_counted` stays false. Warm-up, affinity, and the single-thread launch stay
-the N-34 rule when a later counted run is separately authorized. This draft runs no
-counted route trial.
+The descriptor is the existing
+`build_phase3_continuity_partition_descriptor_set` in
+`squander/partitioning/noisy_descriptor.py`, which calls
+`build_phase3_continuity_planner_surface` in
+`squander/partitioning/noisy_planner_surface_builders.py`. The instance is
+`build_task_evaluator(4)` from `benchmarks/density_matrix/interop_profile/interop_lane.py`.
+The surface is that instance's `describe_density_bridge()` (`source_type`
+`generated_hea`), not a hand-built operation list. A structural probe at this tip
+accepted it: parameters 18, operations 12, gates 9, noise 3, gate sequence U3, U3,
+CNOT, U3, U3, CNOT, U3, U3, CNOT, and noise `local_depolarizing`,
+`amplitude_damping`, `phase_damping`. `max_partition_qubits` stays the default 2.
+The builder's default label `phase2_xxz_hea_q4_continuity` is not a second circuit.
+If that call raises, or the counts disagree with the bridge, the slice hands back
+and does not invent specs.
 
-If the existing planner cannot represent that anchor, the slice hands back. It does
-not invent a second workload, a new public energy API, or an \(O\) for these entries.
+Throughput is nanoseconds per complex \(\rho\) entry per operation. The divisor is
+\(4^4\times 12 = 3072\) for this anchor. The one-sided 95 % bound, mean plus
+`1.644854 * s / sqrt(n)` with `ddof=1`, applies to orchestration time and to the
+apply component only. S-g Measure stays the E-VQE \(O\) estimator and is not
+retuned and not applied here. The row publishes no \(O\), no \(T_\mathrm{lower}\)
+twin, and no QA-007 ratio. `milestone_counted` stays false. Warm-up, affinity, and
+the single-thread launch stay the N-34 rule when a later counted run is separately
+authorized. This draft runs no counted route trial.
 
 ## 3. Unsupported
 
 - \(O\) on any attribution route. A lower-boundary twin. A QA-007 label on a route row.
+- Closing REQ-004 from width-4 rows alone. Widths 6 and 8 remain.
 - The binding or dispatch reduction. Kernel, fusion, AVX, or GPU edits. A C++ edit.
 - R-oracle, unless a later diagnosis row carries the E1 sentence. This slice does not.
 - Estimator change. Dropping samples. A new CPU mask. VQA. The 26-case matrix.
@@ -68,8 +83,8 @@ This planning pass does not time the routes and does not write a bundle.
 
 | Trace id | Evidence type | Command or gate | Expected result | Owner |
 |----------|---------------|-----------------|-----------------|-------|
-| REQ-001, REQ-004 | fast pytest | `conda run -n qgd --no-capture-output pytest tests/VQE/test_vqe_interop_bundle_validation.py -q` | a route fixture with \(O\), a QA-007 ratio, a reduction claim, or an R-oracle row without the E1 sentence fails. Four ids and no \(O\) pass | DS-1 |
-| REQ-004, REQ-008 | doc review | this mini-spec §2 | the four entries are the ADR-F5A-001 names. A missing descriptor is a handback, not a new circuit | DS-1 |
+| REQ-001, REQ-004 | fast pytest | `conda run -n qgd --no-capture-output pytest tests/VQE/test_vqe_interop_bundle_validation.py -q` | a separate route fixture with \(O\), a QA-007 ratio, a reduction claim, or an R-oracle row without the E1 sentence fails. Four ids and no \(O\) pass. The three counted bundles are not the fixtures | DS-1 |
+| REQ-004, REQ-008 | doc review | this mini-spec §2 | the four entries are the ADR-F5A-001 names. The descriptor is `build_phase3_continuity_partition_descriptor_set` on `build_task_evaluator(4)`. Width-4 rows do not close REQ-004 | DS-1 |
 | REQ-005 | repo review | `git diff --exit-code 1eb54ddbcf6f7bfdf82c2b7fc75a86687002b721 -- benchmarks/density_matrix/artifacts/interop_profile/interop_profile_bundle.json benchmarks/density_matrix/artifacts/interop_profile/interop_profile_bundle_w6.json benchmarks/density_matrix/artifacts/interop_profile/interop_profile_bundle_w8.json` | empty. No reduction diff | DS-2 |
 | REQ-006 | repo review | `git diff --exit-code 1eb54ddbcf6f7bfdf82c2b7fc75a86687002b721 -- benchmarks/density_matrix/performance_evidence benchmarks/density_matrix/benchmark_perf.py` | empty | DS-2 |
 | REQ-007, QA-009 | fast pytest | `conda run -n qgd --no-capture-output pytest tests/VQE/test_VQE.py::Test_VQE::test_explicit_state_vector_matches_legacy_default -q` | state-vector default still matches | DS-3 |
@@ -77,17 +92,15 @@ This planning pass does not time the routes and does not write a bundle.
 
 ## 5. Verdict
 
-**not-ready.** READY-FOR-TL-RM-CONSULT. SDD stage stays `step-4a`. This draft does
-not authorize Step 4b, a Developer, a Tester counted run, or a stamp.
-
-The descriptor mapping is still the detailed-plan §11 handback. This pack does not
-prove an existing planner descriptor for the width-4 anchor. That proof, or an
-explicit handback, is required before a code-ready verdict.
+**not-ready.** READY-FOR-CODE-READY-REVIEW. SDD stage stays `step-4a`. RM ACCEPT
+`c5ea0847…` is recorded and does not flip the stage. This fold does not authorize
+Step 4b, a Developer, a Tester counted run, or a stamp. Width-4 rows do not close
+REQ-004.
 
 | Finding | Disposition |
 |---------|-------------|
 | A route row might be given an \(O\) | §3. No lower twin |
-| The anchor might have no descriptor | §2 handback. No second workload |
+| The anchor might have no descriptor | §2. Existing builder; bridge counts 18 / 12 / 9 / 3. A raise is a handback |
 | A4 might be read as permission to reduce | RM ALIGN. CAP-004 is hold-the-line |
 | The authorized sentence might be copied into a bundle | §1. Planning text only |
 | R-oracle might be added to fill the apply label | E1. Task-1 already labels `apply_to` |

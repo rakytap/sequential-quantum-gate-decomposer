@@ -1,9 +1,9 @@
 # Delivery stories — M-F5a task-4
-> **Status:** Step 4a draft · **Verdict:** not-ready · **Slice:** M-F5a task-4 ·
+> **Status:** Step 4a · **Verdict:** not-ready · **Slice:** M-F5a task-4 ·
 > **Scope:** four attribution routes on the width-4 anchor. No \(O\). No reduction ·
 > **Traces:** REQ-001, REQ-004, REQ-005, REQ-006, REQ-007, REQ-008 · CAP-004, CAP-007 · QA-008, QA-009 ·
-> **Gate:** SDD stage `step-4a`. Milestone not complete ·
-> **RM:** ALIGN 2026-10-07. A4 false. CAP-004 hold-the-line. No Step 4b
+> **Gate:** SDD stage `step-4a`. Width-4 rows do not close REQ-004. Milestone not complete ·
+> **RM:** ACCEPT 2026-10-07 (`c5ea0847…`). Stage stays `step-4a`. No Step 4b
 
 ### Delivery story: DS-1 — Four attribution rows and no overhead ratio
 
@@ -13,16 +13,17 @@
 **Given / When / Then**
 - Given the task-1 width-4 HEA anchor and an existing planner descriptor of that anchor
 - When a later authorized run calls each of the four `execute_partitioned_density*` entries
-- Then each row reports orchestration time, the apply component, throughput, and a one-sided 95 % bound on those times
+- Then each row reports orchestration time, the apply component, throughput in ns per complex entry per operation on divisor 3072, and a one-sided 95 % bound on orchestration time and on the apply component only
 - And the row has no \(O\), no QA-007 ratio, and `milestone_counted=false`
+- And the width-4 rows do not close REQ-004
 
 **Scope**
 - In: the four ADR-F5A-001 entries. The N-34 launch, carried, not retuned
 - Out: widths 6 and 8; R-oracle; a counted run in this draft
 
 **Acceptance signals**
-- A fixture that contains \(O\) on a route row fails
-- A missing descriptor stops the slice as a handback
+- A separate route fixture that contains \(O\) fails. The three counted bundles are not that fixture
+- The descriptor call matches the bridge counts 18 / 12 / 9 / 3
 
 **Traceability**
 - Initial requirement(s): REQ-001, REQ-004
