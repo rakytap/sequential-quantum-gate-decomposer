@@ -848,3 +848,250 @@ def test_pipeline_width8_dispatches_qbit_num_8(monkeypatch, tmp_path):
 def test_resolve_output_path_rejects_unsupported_width():
     with pytest.raises(ValueError, match="unsupported"):
         resolve_interop_output_path(10, None)
+
+
+def _minimal_attribution_route_bundle() -> dict:
+    from benchmarks.density_matrix.interop_profile.attribution_route_validation import (
+        ROUTE_IDS_REQUIRED,
+        SUITE_ID_TASK4_ROUTES,
+        WORKLOAD_LABEL_TASK4,
+        one_sided_upper_bound_route,
+    )
+
+    samples = [
+        {"orchestration_ns": 1_000, "apply_component_ns": 5_000},
+        {"orchestration_ns": 1_100, "apply_component_ns": 5_100},
+    ]
+    rows = []
+    for route_id in ROUTE_IDS_REQUIRED:
+        orch_values = [float(sample["orchestration_ns"]) for sample in samples]
+        apply_values = [float(sample["apply_component_ns"]) for sample in samples]
+        tp_values = [value / 3072 for value in apply_values]
+        mean_orch, bound_orch = one_sided_upper_bound_route(orch_values)
+        mean_apply, bound_apply = one_sided_upper_bound_route(apply_values)
+        mean_tp, bound_tp = one_sided_upper_bound_route(tp_values)
+        hybrid_partition_classes = [
+            "phase31_channel_native",
+            "phase3_unitary_island_fused",
+            "phase31_channel_native",
+            "phase3_unitary_island_fused",
+            "phase3_unitary_island_fused",
+        ]
+        apply_label = (
+            "2× phase31_channel_native; 3× phase3_unitary_island_fused"
+            if route_id == "R-hybrid"
+            else "synthetic apply label"
+        )
+        row_payload = {
+                "route_id": route_id,
+                "entry_symbol": f"execute_{route_id}",
+                "apply_label": apply_label,
+                "samples": copy.deepcopy(samples),
+                "orchestration": {
+                    "mean_ns": mean_orch,
+                    "upper_bound_95_ns": bound_orch,
+                },
+                "apply_component": {
+                    "mean_ns": mean_apply,
+                    "upper_bound_95_ns": bound_apply,
+                },
+                "throughput": {
+                    "divisor": 3072,
+                    "mean_ns_per_op": mean_tp,
+                    "upper_bound_95_ns_per_op": bound_tp,
+                },
+            }
+        if route_id == "R-hybrid":
+            row_payload["partition_runtime_classes"] = hybrid_partition_classes
+        rows.append(row_payload)
+    return {
+        "suite": SUITE_ID_TASK4_ROUTES,
+        "qbit_num": 4,
+        "milestone_counted": False,
+        "workload_label": WORKLOAD_LABEL_TASK4,
+        "claim_boundary": "task-4 synthetic fixture",
+        "labels": "attribution-only; QA-007 withheld on routes",
+        "bridge": {
+            "parameter_count": 18,
+            "operation_count": 12,
+            "gate_count": 9,
+            "noise_count": 3,
+            "source_type": "generated_hea",
+        },
+        "rows": rows,
+    }
+
+
+def test_validate_attribution_route_bundle_accepts_four_routes():
+    from benchmarks.density_matrix.interop_profile.attribution_route_validation import (
+        validate_attribution_route_bundle,
+    )
+
+    validate_attribution_route_bundle(_minimal_attribution_route_bundle())
+
+
+def test_validate_attribution_route_bundle_rejects_mean_o():
+    from benchmarks.density_matrix.interop_profile.attribution_route_validation import (
+        validate_attribution_route_bundle,
+    )
+
+    bundle = _minimal_attribution_route_bundle()
+    bundle["rows"][0]["mean_O"] = 0.1
+    with pytest.raises(ValueError, match="overhead ratio"):
+        validate_attribution_route_bundle(bundle)
+
+
+def test_validate_attribution_route_bundle_rejects_qa007_met():
+    from benchmarks.density_matrix.interop_profile.attribution_route_validation import (
+        validate_attribution_route_bundle,
+    )
+
+    bundle = _minimal_attribution_route_bundle()
+    bundle["labels"] = "QA-007 met on routes"
+    with pytest.raises(ValueError, match="QA-007 met"):
+        validate_attribution_route_bundle(bundle)
+
+
+def test_validate_attribution_route_bundle_rejects_reduction_claim():
+    from benchmarks.density_matrix.interop_profile.attribution_route_validation import (
+        validate_attribution_route_bundle,
+    )
+
+    bundle = _minimal_attribution_route_bundle()
+    bundle["claim_boundary"] = "reduction shipped on routes"
+    with pytest.raises(ValueError, match="reduction shipped"):
+        validate_attribution_route_bundle(bundle)
+
+
+def test_validate_r_oracle_claim_boundary_requires_e1_sentence():
+    from benchmarks.density_matrix.interop_profile.attribution_route_validation import (
+        validate_r_oracle_claim_boundary,
+    )
+
+    with pytest.raises(ValueError, match="E1"):
+        validate_r_oracle_claim_boundary("R-oracle row without the required sentence")
+    validate_r_oracle_claim_boundary(
+        "R-oracle row exists only to label C++ apply_to for the E-VQE diagnosis"
+    )
+
+
+def test_resolve_attribution_output_refuses_counted_evqe_bundle(tmp_path):
+    from benchmarks.density_matrix.interop_profile.attribution_route_validation import (
+        resolve_attribution_output_path,
+    )
+
+    bad = tmp_path / "interop_profile_bundle.json"
+    with pytest.raises(ValueError, match="counted E-VQE"):
+        resolve_attribution_output_path(bad)
+
+
+def test_validate_attribution_route_bundle_rejects_r_oracle_row():
+    from benchmarks.density_matrix.interop_profile.attribution_route_validation import (
+        validate_attribution_route_bundle,
+    )
+
+    bundle = _minimal_attribution_route_bundle()
+    bundle["rows"].append(
+        {
+            "route_id": "R-oracle",
+            "entry_symbol": "execute_sequential_density_reference",
+            "apply_label": "oracle",
+            "samples": bundle["rows"][0]["samples"],
+            "orchestration": bundle["rows"][0]["orchestration"],
+            "apply_component": bundle["rows"][0]["apply_component"],
+            "throughput": bundle["rows"][0]["throughput"],
+        }
+    )
+    with pytest.raises(ValueError, match="R-oracle"):
+        validate_attribution_route_bundle(bundle)
+
+
+def test_validate_attribution_route_bundle_rejects_r_oracle_label_without_e1():
+    from benchmarks.density_matrix.interop_profile.attribution_route_validation import (
+        validate_attribution_route_bundle,
+    )
+
+    bundle = _minimal_attribution_route_bundle()
+    bundle["labels"] = "R-oracle overhead row"
+    with pytest.raises(ValueError, match="R-oracle"):
+        validate_attribution_route_bundle(bundle)
+
+
+def test_validate_attribution_route_bundle_rejects_r_oracle_label_even_with_e1():
+    from benchmarks.density_matrix.interop_profile.attribution_route_validation import (
+        E1_ORACLE_REQUIRED_PHRASE,
+        validate_attribution_route_bundle,
+    )
+
+    bundle = _minimal_attribution_route_bundle()
+    bundle["claim_boundary"] = f"R-oracle row {E1_ORACLE_REQUIRED_PHRASE}"
+    with pytest.raises(ValueError, match="R-oracle"):
+        validate_attribution_route_bundle(bundle)
+
+
+def test_validate_attribution_route_bundle_rejects_t_lower_ns():
+    from benchmarks.density_matrix.interop_profile.attribution_route_validation import (
+        validate_attribution_route_bundle,
+    )
+
+    bundle = _minimal_attribution_route_bundle()
+    bundle["rows"][0]["t_lower_ns"] = 1
+    with pytest.raises(ValueError, match="t_lower_ns"):
+        validate_attribution_route_bundle(bundle)
+
+
+def test_validate_attribution_route_bundle_rejects_upper_bound_95_o():
+    from benchmarks.density_matrix.interop_profile.attribution_route_validation import (
+        validate_attribution_route_bundle,
+    )
+
+    bundle = _minimal_attribution_route_bundle()
+    bundle["rows"][0]["upper_bound_95_O"] = 0.5
+    with pytest.raises(ValueError, match="upper_bound_95_O"):
+        validate_attribution_route_bundle(bundle)
+
+
+def test_validate_attribution_route_bundle_rejects_wrong_throughput_divisor():
+    from benchmarks.density_matrix.interop_profile.attribution_route_validation import (
+        validate_attribution_route_bundle,
+    )
+
+    bundle = _minimal_attribution_route_bundle()
+    bundle["rows"][0]["throughput"]["divisor"] = 4096
+    with pytest.raises(ValueError, match="divisor"):
+        validate_attribution_route_bundle(bundle)
+
+
+def test_validate_attribution_route_bundle_rejects_milestone_counted_true():
+    from benchmarks.density_matrix.interop_profile.attribution_route_validation import (
+        validate_attribution_route_bundle,
+    )
+
+    bundle = _minimal_attribution_route_bundle()
+    bundle["milestone_counted"] = True
+    with pytest.raises(ValueError, match="milestone_counted"):
+        validate_attribution_route_bundle(bundle)
+
+
+def test_validate_attribution_route_bundle_rejects_three_row_bundle_without_r_strict():
+    from benchmarks.density_matrix.interop_profile.attribution_route_validation import (
+        validate_attribution_route_bundle,
+    )
+
+    bundle = _minimal_attribution_route_bundle()
+    bundle["rows"] = [row for row in bundle["rows"] if row["route_id"] != "R-strict"]
+    with pytest.raises(ValueError, match="four attribution routes"):
+        validate_attribution_route_bundle(bundle)
+
+
+def test_validate_attribution_route_bundle_rejects_hybrid_constant_apply_label():
+    from benchmarks.density_matrix.interop_profile.attribution_route_validation import (
+        validate_attribution_route_bundle,
+    )
+
+    bundle = _minimal_attribution_route_bundle()
+    for row in bundle["rows"]:
+        if row["route_id"] == "R-hybrid":
+            row["apply_label"] = "the executed class"
+    with pytest.raises(ValueError, match="partition_runtime_classes"):
+        validate_attribution_route_bundle(bundle)

@@ -138,3 +138,81 @@ def test_task3_evqe_8q_cell_pins_timer_identity_and_aer_oracle():
     bound = 1e-12 + 1e-5 * abs(aer_real)
     assert abs(energy_flag_off - aer_real) <= bound
     assert abs(aer_imag) <= 1e-12
+
+
+def test_task4_width4_attribution_descriptor_pins():
+    from benchmarks.density_matrix.interop_profile.attribution_route_lane import (
+        build_width4_attribution_anchor,
+    )
+
+    vqe, descriptor_set, bridge = build_width4_attribution_anchor()
+    assert vqe.get_Parameter_Num() == 18
+    assert bridge["operation_count"] == 12
+    assert bridge["gate_count"] == 9
+    assert bridge["noise_count"] == 3
+    assert descriptor_set.workload_id == "phase2_xxz_hea_q4_continuity"
+
+
+@pytest.mark.parametrize(
+    "route_id",
+    ("R-base", "R-fused", "R-hybrid"),
+)
+def test_task4_attribution_route_sample_has_orchestration_and_apply(route_id: str):
+    from benchmarks.density_matrix.interop_profile import attribution_route_lane as lane
+    from benchmarks.density_matrix.interop_profile.attribution_route_lane import (
+        build_route_row,
+        build_width4_attribution_anchor,
+    )
+    from benchmarks.density_matrix.partitioned_runtime.common import build_initial_parameters
+
+    expected_primitive_calls = {"R-base": 8, "R-fused": 8, "R-hybrid": 5}
+
+    vqe, descriptor_set, _bridge = build_width4_attribution_anchor()
+    parameters = build_initial_parameters(vqe.get_Parameter_Num())
+    row = build_route_row(route_id, descriptor_set, parameters, sample_count=2)
+    assert row["orchestration"]["mean_ns"] >= 0
+    assert row["apply_component"]["mean_ns"] > 0
+    assert row["throughput"]["divisor"] == 3072
+    assert row["throughput"]["mean_ns_per_op"] == pytest.approx(
+        row["apply_component"]["mean_ns"] / 3072, rel=1e-12
+    )
+    assert row["throughput"]["upper_bound_95_ns_per_op"] == pytest.approx(
+        row["apply_component"]["upper_bound_95_ns"] / 3072, rel=1e-12
+    )
+    assert "mean_O" not in row
+    assert "overhead" not in row
+    for sample in row["samples"]:
+        wall_ns = int(sample["orchestration_ns"]) + int(sample["apply_component_ns"])
+        assert int(sample["apply_component_ns"]) < wall_ns
+        assert int(sample["apply_primitive_calls"]) > 0
+    assert {sample["apply_primitive_calls"] for sample in row["samples"]} == {
+        expected_primitive_calls[route_id]
+    }
+    executor = lane.ROUTE_TABLE[route_id]["executor"]
+    for _ in range(2):
+        sample, result = lane._time_route_sample(
+            route_id, executor, descriptor_set, parameters
+        )
+        assert sample["apply_component_ns"] < int(result.runtime_ms * 1_000_000)
+    if route_id == "R-hybrid":
+        assert row["partition_runtime_classes"] == [
+            "phase31_channel_native",
+            "phase3_unitary_island_fused",
+            "phase31_channel_native",
+            "phase3_unitary_island_fused",
+            "phase3_unitary_island_fused",
+        ]
+        assert "the executed class" not in row["apply_label"]
+
+
+def test_task4_r_strict_handback_on_continuity_anchor():
+    from benchmarks.density_matrix.interop_profile.attribution_route_lane import (
+        build_route_row,
+        build_width4_attribution_anchor,
+    )
+    from benchmarks.density_matrix.partitioned_runtime.common import build_initial_parameters
+
+    vqe, descriptor_set, _bridge = build_width4_attribution_anchor()
+    parameters = build_initial_parameters(vqe.get_Parameter_Num())
+    with pytest.raises(ValueError, match="attribution route handback for R-strict"):
+        build_route_row("R-strict", descriptor_set, parameters, sample_count=1)
