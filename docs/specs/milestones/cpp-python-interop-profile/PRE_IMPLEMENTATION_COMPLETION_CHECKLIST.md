@@ -5,7 +5,7 @@
 > **Inputs:** `INITIAL_REQUIREMENTS.md` v0.1,
 > `DETAILED_PLANNING_CPP_PYTHON_INTEROP_PROFILE.md`,
 > `ADRS_CPP_PYTHON_INTEROP_PROFILE.md`, `ADR_AMENDMENTS_CPP_PYTHON_INTEROP_PROFILE.md` · **Traces:** REQ-001…009 ·
-> **Authorization:** task-1 Step 4b closed at C2; C1 tip `ca5589e2`; N-12 signed off; QA-007 `[confirm]` ·
+> **Authorization:** task-1 Step 4b closed at C2 `ddde49ac`; (e) APPROVE; (g) PASS; C1 tip `ca5589e2`; N-12 signed off; QA-007 `[confirm]` ·
 > **Boundary:** slice close only; milestone not complete; no push; no pull request ·
 > **Baseline:** `1b123a9a31235dd68d6c0a6ff9ba457c0112cd59`
 
@@ -14,9 +14,11 @@
 **Verdict: task-1 Step 4b is closed. SDD stage stays `step-4b-authorized`. QA-007 stays `[confirm]`. M-F5a is not complete.**
 
 The Tech Lead opened the tracer. `task-1/` holds the planning pack and `CLOSEOUT.md`.
-ADR-F5A-009 is filed. C1 tip is `ca5589e2`. The counted run recorded `clean_start`
-true. This checklist does not freeze the 10 % bar and does not mark the milestone
-delivered. The Developer does not edit `docs/specs/**`.
+ADR-F5A-009 is filed. C1 tip is `ca5589e2`. C2 is
+`ddde49ac1e248e3ea2b4516f420ca1cbbd14e9df`. Reviewer (e) approved it and step (g)
+passed. Section 11 is that record. The counted run recorded `clean_start` true.
+This checklist does not freeze the 10 % bar, does not open the next slice, and
+does not mark the milestone delivered. The Developer does not edit `docs/specs/**`.
 
 The code-ready gate, already met before C1, required all of the following:
 
@@ -131,7 +133,8 @@ blocks a "QA-007 met" label. The task-1 slice close does not close G-06.
 ## 7. Go / no-go
 
 **Task-1 Step 4b slice closed.** SDD stage stays `step-4b-authorized`. ADR-F5A-009 stays
-filed. C1 tip is `ca5589e25036531d599ff963e7d349c6e55b5951`. The counted bundle and
+filed. C1 tip is `ca5589e25036531d599ff963e7d349c6e55b5951`. C2 is
+`ddde49ac1e248e3ea2b4516f420ca1cbbd14e9df` (section 11). The counted bundle and
 `task-1/CLOSEOUT.md` are the C2 record. At C1, this section said no-go for a counted
 run and for `CLOSEOUT.md` (N-39). That wording was true of C1 and is reconciled here.
 
@@ -181,3 +184,55 @@ The Tech Lead accepted N-12 for the timer flag, the six sub-times, and the acces
 That is the ask-first harness path in ADR-F5A-009 and `task-1/TASK_1_MINI_SPEC.md` §4
 and §6. The sign-off was recorded here before the Reviewer (a) re-gate. N-12 itself does
 not record the counted run. The slice close is `task-1/CLOSEOUT.md`.
+
+## 11. C2 record, (g), and carries for the next Step 4a
+
+Task-1 Step 4b is closed at C2 `ddde49ac1e248e3ea2b4516f420ca1cbbd14e9df`.
+Reviewer (e) verdict: **APPROVE FOR C2** (bc-b25fac97). Binder
+`/tmp/rev-mf5a-c2/REVIEW.md`, sha256
+`8749d515be86a3f067e9426062bc768275ebc1ec7e6022cbca0062a050f59e8b`.
+Parent is C1 tip `ca5589e25036531d599ff963e7d349c6e55b5951`. This section does
+not mark M-F5a complete and does not freeze QA-007. The next slice is not
+opened here. N-41: C2 was committed before (e). This docs pass went to
+Reviewer before its commit.
+
+### (g) PASS
+
+Clean-C2 regeneration used the N-34 launch. Exit 0. Wall `real` 2.130 s.
+Evidence is `/tmp/mf5a-t1-counted-g/`.
+
+| Check | Result |
+|-------|--------|
+| Categorical pins | exact match |
+| Revision-only change | `ca5589e25036531d599ff963e7d349c6e55b5951` → `ddde49ac1e248e3ea2b4516f420ca1cbbd14e9df` |
+| Regenerated `mean_O` | 0.008321 |
+| Regenerated `upper_bound_95_O` | 0.010361 |
+| Window | [−0.01289, 0.02711]; inside |
+| `\|Δ mean O\|` | 0.001209 ≤ 0.02 |
+| Restore | sha256 `212f70386bf2a44711d29956c41bd3f0eea9ee2e284ace9c5403bc3d94ef934e`; porcelain empty |
+
+The committed bundle is still the (c) row: `mean_O` 0.00711, bound 0.01059.
+Regeneration outputs are not committed.
+
+### Carries
+
+| Id | State | Note |
+|----|-------|------|
+| N-41 | open | C2 was committed before (e). This docs pass went to Reviewer before its commit. Later commits keep that order. |
+| N-42 | folded | Test snapshots and the REQ/ET row are in `task-1/CLOSEOUT.md`. ET checkboxes stay unchecked. |
+| N-43 | folded | The lane-reusing carries below are listed so the next slice does not drop them. |
+| N-44 | folded | QA-007 wording is withheld, not unmet. The bar stays `[confirm]`. |
+| N-45 | folded | Independence sentences are in the closeout. The heading no longer uses gap G-10. |
+| N-46 | open | The flag line is exact for `libqgd.so`. The wrapper `.so` adds `-DCPYTHON`. The bundle does not pin flags. That pin is a lane change, or an accepted deviation at the milestone review. |
+| N-47 | folded | This section names C2 `ddde49ac1e248e3ea2b4516f420ca1cbbd14e9df`. |
+| S-g | open | Single-call spikes of about 20–25 µs on CPU 0 bias the arithmetic mean of `O_i` low. No stall (none below −0.5). The counted mean 0.00711 sits below the median 0.0101 and the core mean 0.00978. Before a QA-007 verdict and before any width-6 or width-8 counted run, decide whether that bound is adequate: a quieter mask, or an ask-first estimator amendment. |
+| N-16 | open | No MSVC branch for `clock_gettime`. Carry under ADR-F5A-007 until the first pull request into `master`. |
+| N-17 | open | The ET-2 golden energy is host-pinned. Same deadline as N-16. |
+| N-23 | open | Batched `optimization_problem` can race the six timer fields if the flag is on. The note "harness-only, single-threaded" is still owed where the flag is documented. |
+| N-32 | open | No code applies the 0.02 margin. (g) checked labels and `\|Δ mean O\|` by hand and passed. The missing comparator stays for the next lane. |
+| N-35 | open | Validator depth is still thin for a hand-edited bundle. Discharged for this bundle at (e). Carry for later bundles. |
+| N-36 | open | The forbidden-path list omits `performance_evidence/` and `benchmark_perf.py` and includes `docs/specs/`. The `git diff` rows stay the gate. |
+| N-37 | open | Some validator tests are weak: both clean-start flags flip together, most B2 rejections have no isolated test, and no test feeds a real lane bundle. |
+| N-24 | open | The new interop tests sit outside the `density_matrix` marker (861 deselected at the C2 review). |
+| N-3, N-6, N-10, N-14, N-19, N-21, N-25, N-27, N-28, N-29, N-31, N-40 | open | Unchanged from the C1 and C2 binders. N-3: ET-5 cites a forbidden-tree matrix row that §10 does not have. N-6: virtual-call overhead in the wrapper bucket cancels across the pair. N-10: ADR-F5A-009 did not extend the REQ-005 diff to the VQE C++ tree. N-14: the independence attestation is the closeout section. N-19: at the next planning touch, say sub-time clock reads. N-21: the mini-spec has three lines of headroom. N-25, N-27, N-28, and N-29 are the test, lane-copy, wrapper, and code-shape nits. N-31: C1 was committed before (a). N-40: `06b91d6c` does not name the test file. |
+| S-a, S-b, S-c, S-e | open | S-a: the QA-008 margin. S-b: the partition-tolerance size. S-c: lag-1 or batch means. S-e: affinity and threads before import. S-d (the `perf_counter_ns` read cost) stays closed at width 4. S-f was disposed: the Tech Lead proceeded, and (c) had no stall. |

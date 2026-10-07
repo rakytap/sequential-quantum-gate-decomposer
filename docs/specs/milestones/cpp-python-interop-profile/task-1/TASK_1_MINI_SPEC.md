@@ -3,7 +3,7 @@
 > **Traces:** REQ-001, REQ-002, REQ-003, REQ-004, REQ-005, REQ-006, REQ-007, REQ-008, REQ-009 ·
 > CAP-004, CAP-007 · QA-007, QA-008, QA-009 · ADR-F5A-001…009 ·
 > **Scope:** E-VQE at 4 qubits only. No reduction. No attribution routes. No widths 6 or 8 ·
-> **Gate:** task-1 Step 4b slice closed. SDD stage `step-4b-authorized`. C1 `ca5589e2`; QA-007 stays `[confirm]` ·
+> **Gate:** task-1 Step 4b closed at C2 `ddde49ac`; (e) APPROVE; (g) PASS. Stage `step-4b-authorized`. C1 `ca5589e2`. QA-007 stays `[confirm]` ·
 > **Pair, inventory, no-O rule, and kernel/fusion/AVX boundary:** unchanged
 
 ## 1. What this slice is

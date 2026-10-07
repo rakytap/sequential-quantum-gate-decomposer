@@ -2,7 +2,7 @@
 > **Status:** task-1 Step 4b slice closed · **Slice:** M-F5a task-1 ·
 > **Scope:** E-VQE at 4 qubits. No reduction. No attribution routes. No widths 6 or 8 ·
 > **Traces:** REQ-001…009 · CAP-004, CAP-007 · QA-007, QA-008, QA-009 ·
-> **Gate:** task-1 Step 4b slice closed. SDD stage `step-4b-authorized`. C1 tip `ca5589e2`. QA-007 stays `[confirm]`
+> **Gate:** task-1 Step 4b closed at C2 `ddde49ac`; (e) APPROVE; (g) PASS. SDD stage `step-4b-authorized`. C1 tip `ca5589e2`. QA-007 stays `[confirm]`
 
 ### Delivery story: DS-1 — A 4-qubit E-VQE row with an equal-work ratio
 

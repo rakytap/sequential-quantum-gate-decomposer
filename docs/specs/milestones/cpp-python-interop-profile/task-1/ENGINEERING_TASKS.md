@@ -3,10 +3,11 @@
 > **Traces:** REQ-001, REQ-002, REQ-003, REQ-004, REQ-005, REQ-006, REQ-007, REQ-008, REQ-009 ·
 > CAP-004, CAP-007 · QA-007, QA-008, QA-009 ·
 > **SDD stage:** step-4b-authorized
-> **Boundary:** task-1 Step 4b slice closed at C2. C1 tip `ca5589e2`. QA-007 stays `[confirm]`
+> **Boundary:** task-1 Step 4b closed at C2 `ddde49ac`; (e) APPROVE; (g) PASS. C1 tip `ca5589e2`. QA-007 stays `[confirm]`
 
-Stage is `step-4b-authorized`. Task-1 Step 4b is closed by `CLOSEOUT.md` at C2.
-C1 tip is `ca5589e2`. With that closeout, normal and `--strict` are clean of
+Stage is `step-4b-authorized`. Task-1 Step 4b is closed by `CLOSEOUT.md` at C2
+`ddde49ac1e248e3ea2b4516f420ca1cbbd14e9df`. Reviewer (e) approved that commit.
+Step (g) passed. C1 tip is `ca5589e2`. With that closeout, normal and `--strict` are clean of
 `SLICE_MISSING_CLOSEOUT`. No placeholder. No waiver. QA-007 stays `[confirm]`.
 The milestone is not complete. The Developer does not edit `docs/specs/**`.
 
