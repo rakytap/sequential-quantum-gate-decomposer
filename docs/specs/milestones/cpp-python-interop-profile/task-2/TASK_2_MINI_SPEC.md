@@ -1,11 +1,11 @@
 # Task 2: E-VQE at 6 qubits, equal-work extension
-> **Status:** code-ready · **Verdict:** Step 4b authorized · **Slice:** M-F5a task-2 ·
+> **Status:** counted (c) PASS · C2-ready · **Slice:** M-F5a task-2 ·
 > **Traces:** REQ-001…009 · CAP-004, CAP-007 · QA-007, QA-008, QA-009 · ADR-F5A-001…009 ·
 > **Scope:** one E-VQE width-6 row on the task-1 harness. No width 8. No routes. No reduction ·
 > **Gate:** SDD stage `step-4b-authorized`. QA-007 stays `[confirm]`. Milestone not complete ·
-> **RM:** ACCEPT 2026-10-07. Developer not started. Binder `5bd81f9b…` at `c32b365e` ·
-> **Stamp:** code-ready. Step 4b authorized. Developer waits on the TL handoff ·
-> **Tip:** `c32b365e4e55283f8af86345719c83b3d34bd8d8` · task-1 bundle `212f7038…` stays ·
+> **RM:** ACCEPT 2026-10-07 (upload `5c810dac…`). Counted (c) at C1 `d336472f` ·
+> **Stamp:** C2 is this commit. (e) pending after this write ·
+> **Tip:** C1 `d336472fa59c514c9eb3a5e6001daf343a4bbb66` · task-1 bundle `212f7038…` stays ·
 > **Pair, inventory, no-O rule, kernel/fusion/AVX boundary:** unchanged
 
 ## 1. Why this slice is the thinnest next counted row
@@ -121,8 +121,7 @@ name is `interop_profile_bundle.json`, and width 4 whose resolved name is
 a `tmp_path` copy. No test writes the committed task-1 bundle. Its bytes are proved
 by the §9 `git diff` row, not by a permanent sha assertion inside pytest.
 
-Counted close, when a later pass reaches it, follows ADR-F1A-009. This pack writes
-no `CLOSEOUT.md`.
+The counted close follows ADR-F1A-009. `task-2/CLOSEOUT.md` records that close.
 
 ## 5. Harness boundary
 
@@ -150,7 +149,7 @@ is the existing `harness_density_lower_ns` clock.
 | Id | This pack |
 |----|-----------|
 | N-41 | **Closed** by docs commit `f524c200` |
-| S-g | Measure, RM ACCEPT 2026-10-07. Wording corrected in §3. Stage stays `step-4a` |
+| S-g | Measure, RM ACCEPT 2026-10-07. The C0 stamp set `step-4b-authorized`. RM ACCEPT did not flip it |
 | N-46 | Deferred. Flags stay unpinned in the bundle |
 | N-16 | Deferred. No MSVC `clock_gettime` branch until the first pull request into `master` |
 | N-17 | Deferred. No 6-qubit host golden |
@@ -173,6 +172,9 @@ is the existing `harness_density_lower_ns` clock.
 | S-c, S-e | Deferred |
 | S-d, S-f | Stay as task-1 left them. S-f disposed: samples below −0.5 are kept |
 | G-06, G-08, G-09 | Open |
+| N-78 | Open. No test isolates the `provenance.command` equality clause |
+| N-79 | Open. No Developer red-first log. Substitute: `/tmp/rev-mf5a-t2-step4b/logs/regate-probe-mutation.txt` |
+| N-80 | Open. Fix-pass pytest from the repo root rewrote ignored files. Clean-start porcelain ignores them |
 
 ## 8. Adversarial critique
 
@@ -182,10 +184,10 @@ is the existing `harness_density_lower_ns` clock.
 | The width-6 writer could replace the task-1 bundle | blocking if ignored | §4 refusal before any pair. §9 diff proves the committed bytes |
 | A negative mean could be clipped or re-run during Step 4b | blocking if ignored | §3 pre-registration. No sign check |
 | The 10 % bar or an A4 kill could be applied to widths 4 and 6 | blocking if ignored | §6. A fixture that claims either fails `validate_interop_bundle_w6` |
-| RM ACCEPT could be read as a stage flip | blocking if ignored | §11. The stage line stays `step-4a` |
+| RM ACCEPT could be read as a stage flip | blocking if ignored | The C0 stamp set the stage line to `step-4b-authorized`. RM ACCEPT did not |
 | Width 8 could be dropped | blocking if ignored | §1 |
 
-Nothing above authorizes Step 4b.
+The C0 stamp authorized Step 4b. This critique did not. Width 8 stays in the outcome.
 
 ## 9. Evidence matrix
 
@@ -203,7 +205,7 @@ The smoke node is parametrized over widths 4, 6, 8, and 10.
 | REQ-003 | doc review | this mini-spec §§4–6 | same harness; no new energy symbol; refusal before pairs; `provenance.command` carries `--width 6` | DS-1 |
 | REQ-007, QA-009 | fast pytest | `conda run -n qgd --no-capture-output pytest tests/VQE/test_VQE.py::Test_VQE::test_explicit_state_vector_matches_legacy_default -q` | state-vector default still matches | DS-3 |
 | REQ-008 | repo review | `git diff --exit-code cffe2cab7da1f1533584f3972faacd6be3b89392 -- docs/density_matrix_project/archive` | empty | DS-2 |
-| REQ-009, QA-008 | spec lint | `bash .cursor/skills/spec-driven-development/scripts/specs_check.sh docs/specs/milestones/cpp-python-interop-profile` and the same command with `--strict` | normal: 0 errors, one `SLICE_MISSING_CLOSEOUT` warning for task-2, exit 0; `--strict`: that finding is the only error, exit 1; no waiver; no placeholder closeout | DS-3 |
+| REQ-009, QA-008 | spec lint | `bash .cursor/skills/spec-driven-development/scripts/specs_check.sh docs/specs/milestones/cpp-python-interop-profile` and the same command with `--strict` | with `task-2/CLOSEOUT.md`: both modes exit 0 and are clean of `SLICE_MISSING_CLOSEOUT`; no waiver; QA-007 stays `[confirm]` | DS-3 |
 
 ## 10. Affected interfaces
 
@@ -217,8 +219,7 @@ validator entry points, and the width-6 artifact.
 
 ## 11. Verdict
 
-**Code-ready.** Step 4b is authorized. SDD stage is `step-4b-authorized`. The
-Developer is not started until the TL handoff. Binder
-`/tmp/rev-mf5a-t2-codeready/REVIEW.md` (`5bd81f9b…`) at docs commit `c32b365e`.
-QA-007 stays `[confirm]`. No A4 kill, hold-the-line label, or reduction. No
-counted width-6 run in this stamp.
+**C2-ready.** Counted (c) passed at C1 `d336472f`. SDD stage stays
+`step-4b-authorized`. `task-2/CLOSEOUT.md` records the row. C2 is this commit.
+(e) is pending after this write. (g) is pending after C2. QA-007 stays `[confirm]`. No A4 kill,
+hold-the-line label, or reduction. The milestone is not complete.

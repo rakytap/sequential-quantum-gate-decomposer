@@ -1,19 +1,19 @@
 # Engineering tasks — M-F5a task-2
-> **Status:** code-ready · Step 4b authorized · binder `5bd81f9b…` · `c32b365e` · **Slice:** M-F5a task-2 · E-VQE at 6 qubits ·
+> **Status:** counted (c) PASS · C2-ready · **Slice:** M-F5a task-2 · E-VQE at 6 qubits ·
 > **Traces:** REQ-001, REQ-002, REQ-003, REQ-004, REQ-005, REQ-006, REQ-007, REQ-008, REQ-009 ·
 > CAP-004, CAP-007 · QA-007, QA-008, QA-009 ·
 > **SDD stage:** step-4b-authorized
-> **Boundary:** Developer not started. QA-007 stays `[confirm]`. The milestone is not complete
+> **Boundary:** C1 `d336472f`. C2 is this commit. (e) pending after this write. QA-007 stays `[confirm]`. The milestone is not complete
 
-**Verdict: code-ready.** Step 4b is authorized. The Developer is not started until the TL handoff. Binder `/tmp/rev-mf5a-t2-codeready/REVIEW.md` (`5bd81f9b…`) at `c32b365e`.
-Lint after this stamp: normal exits 0 with one `SLICE_MISSING_CLOSEOUT` warning for task-2. `--strict` exits 1 with that finding as its only error. No waiver. No placeholder closeout.
+**Verdict: counted (c) PASS.** C2-ready for Reviewer (e). `task-2/CLOSEOUT.md` records the row. C1 is `d336472f`.
+Lint with this closeout: normal and `--strict` exit 0 and are clean of `SLICE_MISSING_CLOSEOUT`. No waiver.
 The harness is the shipped ADR-F5A-009 timer and `harness_density_lower_ns`, unchanged, with no C++ edit. E1: R-oracle stays excluded.
 Width-6 depth, noise schedule, and the parameter vector are mini-spec §2. The protocol pins are §4.
 The equal-work pair, the inventory, the no-O rule, and the kernel/fusion/AVX boundary are unchanged.
 QA-007 stays `[confirm]`. No A4 kill, no hold-the-line label, and no reduction on widths 4 and 6 alone.
-The ET-4 allowlist stands. No counted width-6 run starts in this stamp.
+The ET-4 allowlist stands. The counted width-6 row is the (c) bundle. It was not re-run here.
 
-These tasks are the contract for a later authorized pass. None may add a public
+These tasks are the C1 contract. None may add a public
 energy API, time an attribution route, include width 8, apply the 10 % bar, claim
 an A4 kill or a reduction on widths 4 and 6, drop a sample, or clip a negative mean.
 The planned diff is Python only. A required C++ edit is a handback.
@@ -177,9 +177,9 @@ git diff --exit-code cffe2cab7da1f1533584f3972faacd6be3b89392 -- \
 
 - `test_explicit_state_vector_matches_legacy_default` passes.
 - The width-6 schema does not claim QA-007 met.
-- This slice's later close does not claim QA-007 met and does not mark M-F5a
-  complete. `task-2/CLOSEOUT.md` is absent while the stage is `step-4a`.
-- No counted width-6 bundle is produced in this writer pass.
+- This slice's close does not claim QA-007 met and does not mark M-F5a
+  complete. `task-2/CLOSEOUT.md` records the counted row. C2 is this commit.
+- The counted width-6 bundle is the Tester file from (c). This pass does not re-run it.
 
 **Execution checklist (TDD: red → green → refactor)**
 - [ ] Add the refusal test on `tmp_path` before any lane edit
