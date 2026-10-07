@@ -46,10 +46,19 @@ COUNTED_REGENERATION_COMMAND_W6 = (
     "python benchmarks/density_matrix/interop_profile/validation_pipeline.py --width 6"
 )
 
+COUNTED_REGENERATION_COMMAND_W8 = (
+    "taskset -c 0 env PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 "
+    "OPENBLAS_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1 conda run -n qgd --no-capture-output "
+    "python benchmarks/density_matrix/interop_profile/validation_pipeline.py --width 8"
+)
+
 SUITE_ID_W4 = "interop_profile_task1_evqe_4q_v1"
 SUITE_ID_W6 = "interop_profile_task2_evqe_6q_v1"
+SUITE_ID_W8 = "interop_profile_task3_evqe_8q_v1"
 QBIT_NUM_W6 = 6
+QBIT_NUM_W8 = 8
 THROUGHPUT_DIVISOR_W6 = 73728
+THROUGHPUT_DIVISOR_W8 = 1572864
 
 DENSITY_NOISE = [
     {
@@ -234,7 +243,7 @@ def _assert_perf_counter_clock() -> str:
 
 
 def build_task_evaluator(qbit_num: int) -> tuple[VariationalQuantumEigensolver, Any]:
-    if qbit_num not in (QBIT_NUM, QBIT_NUM_W6):
+    if qbit_num not in (QBIT_NUM, QBIT_NUM_W6, QBIT_NUM_W8):
         raise ValueError(f"unsupported interop width {qbit_num}")
     topology = [(idx, idx + 1) for idx in range(qbit_num - 1)]
     hamiltonian = generate_hamiltonian(topology, qbit_num)
@@ -337,6 +346,18 @@ def _width_profile(qbit_num: int) -> dict[str, Any]:
             "labels": (
                 "E-VQE density_matrix harness tracer width 6; "
                 "no reduction taken on widths 4 and 6"
+            ),
+            "include_w6_overhead_fields": True,
+        }
+    if qbit_num == QBIT_NUM_W8:
+        return {
+            "suite": SUITE_ID_W8,
+            "divisor": THROUGHPUT_DIVISOR_W8,
+            "command": COUNTED_REGENERATION_COMMAND_W8,
+            "claim_boundary": "task-3 tracer row; milestone_counted=false",
+            "labels": (
+                "E-VQE density_matrix harness tracer width 8; QA-007 withheld; "
+                "no reduction taken; milestone not complete"
             ),
             "include_w6_overhead_fields": True,
         }

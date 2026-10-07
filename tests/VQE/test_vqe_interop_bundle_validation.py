@@ -11,15 +11,19 @@ from benchmarks.density_matrix.interop_profile.interop_bundle_validation import 
     COUNTED_PAIRS_REQUIRED,
     INTEROP_BATCH_EXCLUSION_NOTE,
     THROUGHPUT_DIVISOR_W6_REQUIRED,
+    THROUGHPUT_DIVISOR_W8_REQUIRED,
     Z_95,
     assert_mean_o_within_margin,
     spike_count_abs_wrapper_ns_above_20000,
     validate_interop_bundle,
     validate_interop_bundle_w6,
+    validate_interop_bundle_w8,
     validate_interop_implementation_paths,
 )
 from benchmarks.density_matrix.interop_profile.interop_lane import (
     COUNTED_REGENERATION_COMMAND_W6,
+    COUNTED_REGENERATION_COMMAND_W8,
+    DENSITY_NOISE,
     REGENERATION_COMMAND,
 )
 from benchmarks.density_matrix.interop_profile.validation_pipeline import (
@@ -506,3 +510,341 @@ def test_resolve_output_path_refuses_width4_to_w6_name(tmp_path):
 def test_resolve_output_path_accepts_width6_tmp_output(tmp_path):
     good = tmp_path / "interop_profile_bundle_w6.json"
     assert resolve_interop_output_path(6, good) == good
+
+
+def _minimal_valid_bundle_w8() -> dict:
+    bundle = copy.deepcopy(_minimal_valid_bundle_w6())
+    bundle["suite"] = "interop_profile_task3_evqe_8q_v1"
+    bundle["qbit_num"] = 8
+    bundle["operation_count"] = 24
+    bundle["claim_boundary"] = "task-3 tracer row; milestone_counted=false"
+    bundle["labels"] = (
+        "E-VQE density_matrix harness tracer width 8; QA-007 withheld; "
+        "no reduction taken; milestone not complete"
+    )
+    bundle["provenance"]["command"] = COUNTED_REGENERATION_COMMAND_W8
+    bundle["protocol"]["parameter_count"] = 42
+    bundle["workload"]["qbit_num"] = 8
+    bundle["workload"]["hamiltonian_nnz"] = 1152
+    bundle["workload"]["density_noise"] = copy.deepcopy(DENSITY_NOISE)
+    bundle["throughput"]["divisor"] = THROUGHPUT_DIVISOR_W8_REQUIRED
+    samples = bundle["samples"]
+    throughput_values = [
+        row["subtimes_ns"][3] / THROUGHPUT_DIVISOR_W8_REQUIRED for row in samples
+    ]
+    o_values = [
+        (row["t_public_ns"] - row["t_lower_ns"]) / row["t_public_ns"] for row in samples
+    ]
+    mean_o, bound_o = _one_sided_upper_bound(o_values)
+    mean_tp, bound_tp = _one_sided_upper_bound(throughput_values)
+    bundle["overhead"] = {
+        "mean_O": mean_o,
+        "median_O": sorted(o_values)[len(o_values) // 2],
+        "upper_bound_95_O": bound_o,
+        "min_O": min(o_values),
+        "max_O": max(o_values),
+        "spike_count_abs_wrapper_ns_above_20000": spike_count_abs_wrapper_ns_above_20000(
+            samples
+        ),
+    }
+    bundle["throughput"]["mean_ns_per_op"] = mean_tp
+    bundle["throughput"]["upper_bound_95_ns_per_op"] = bound_tp
+    return bundle
+
+
+def test_validate_w8_accepts_minimal_fixture():
+    validate_interop_bundle_w8(_minimal_valid_bundle_w8())
+
+
+def test_validate_w8_rejects_width6_parameter_count():
+    bundle = _minimal_valid_bundle_w8()
+    bundle["protocol"]["parameter_count"] = 30
+    with pytest.raises(ValueError, match="parameter_count"):
+        validate_interop_bundle_w8(bundle)
+
+
+def test_validate_w8_rejects_width6_hamiltonian_nnz():
+    bundle = _minimal_valid_bundle_w8()
+    bundle["workload"]["hamiltonian_nnz"] = 224
+    with pytest.raises(ValueError, match="hamiltonian_nnz"):
+        validate_interop_bundle_w8(bundle)
+
+
+def test_validate_w8_rejects_width4_regeneration_command_in_provenance():
+    bundle = _minimal_valid_bundle_w8()
+    bundle["provenance"]["command"] = REGENERATION_COMMAND
+    with pytest.raises(ValueError, match="provenance.command"):
+        validate_interop_bundle_w8(bundle)
+
+
+def test_validate_w8_rejects_width6_command_in_provenance():
+    bundle = _minimal_valid_bundle_w8()
+    bundle["provenance"]["command"] = COUNTED_REGENERATION_COMMAND_W6
+    with pytest.raises(ValueError, match="provenance.command"):
+        validate_interop_bundle_w8(bundle)
+
+
+def test_validate_w8_rejects_provenance_command_missing_width_flag():
+    bundle = _minimal_valid_bundle_w8()
+    bundle["provenance"]["command"] = COUNTED_REGENERATION_COMMAND_W8.removesuffix(" --width 8")
+    with pytest.raises(ValueError, match="provenance.command"):
+        validate_interop_bundle_w8(bundle)
+
+
+def test_validate_w8_rejects_attribution_route_label():
+    bundle = _minimal_valid_bundle_w8()
+    bundle["labels"] = "R-base overhead row"
+    with pytest.raises(ValueError, match="attribution route label"):
+        validate_interop_bundle_w8(bundle)
+
+
+def test_validate_w8_rejects_wrong_divisors():
+    for divisor in (3072, 73728, 65536):
+        bundle = _minimal_valid_bundle_w8()
+        bundle["throughput"]["divisor"] = divisor
+        with pytest.raises(ValueError, match="divisor"):
+            validate_interop_bundle_w8(bundle)
+
+
+def test_validate_w8_rejects_qbit_num_6():
+    bundle = _minimal_valid_bundle_w8()
+    bundle["qbit_num"] = 6
+    with pytest.raises(ValueError, match="width"):
+        validate_interop_bundle_w8(bundle)
+
+
+def test_validate_w8_rejects_a4_false_claim():
+    bundle = _minimal_valid_bundle_w8()
+    bundle["labels"] = "A4 FALSE on this row"
+    with pytest.raises(ValueError, match="a4 false"):
+        validate_interop_bundle_w8(bundle)
+
+
+def test_validate_w8_rejects_reduction_justified_claim():
+    bundle = _minimal_valid_bundle_w8()
+    bundle["claim_boundary"] = "reduction justified here"
+    with pytest.raises(ValueError, match="reduction justified"):
+        validate_interop_bundle_w8(bundle)
+
+
+def test_validate_w8_rejects_mf5a_complete_claim():
+    bundle = _minimal_valid_bundle_w8()
+    bundle["labels"] = "M-F5a complete"
+    with pytest.raises(ValueError, match="m-f5a complete"):
+        validate_interop_bundle_w8(bundle)
+
+
+def test_validate_w8_rejects_a4_kill_claim():
+    bundle = _minimal_valid_bundle_w8()
+    bundle["labels"] = "A4 kill on this row"
+    with pytest.raises(ValueError, match="a4 kill"):
+        validate_interop_bundle_w8(bundle)
+
+
+def test_validate_w8_rejects_hold_the_line_claim():
+    bundle = _minimal_valid_bundle_w8()
+    bundle["claim_boundary"] = "CAP-004 hold-the-line label"
+    with pytest.raises(ValueError, match="hold-the-line"):
+        validate_interop_bundle_w8(bundle)
+
+
+def test_validate_w8_rejects_reduction_taken_claim():
+    bundle = _minimal_valid_bundle_w8()
+    bundle["labels"] = "reduction taken on width 8"
+    with pytest.raises(ValueError, match="reduction taken"):
+        validate_interop_bundle_w8(bundle)
+
+
+def test_validate_w8_rejects_reduction_shipped_claim():
+    bundle = _minimal_valid_bundle_w8()
+    bundle["labels"] = "reduction shipped on this row"
+    with pytest.raises(ValueError, match="reduction shipped"):
+        validate_interop_bundle_w8(bundle)
+
+
+@pytest.mark.parametrize("field", ["claim_boundary", "labels"])
+def test_validate_w8_rejects_qa007_met_in_metadata(field: str):
+    bundle = _minimal_valid_bundle_w8()
+    bundle[field] = "QA-007 met on this row"
+    with pytest.raises(ValueError, match="QA-007 met"):
+        validate_interop_bundle_w8(bundle)
+
+
+def test_validate_w8_rejects_qa007_met_in_suite_field():
+    bundle = _minimal_valid_bundle_w8()
+    bundle["suite"] = "interop QA-007 met row"
+    with pytest.raises(ValueError, match="QA-007 met"):
+        validate_interop_bundle_w8(bundle)
+
+
+def test_validate_w8_rejects_operation_count_18():
+    bundle = _minimal_valid_bundle_w8()
+    bundle["operation_count"] = 18
+    with pytest.raises(ValueError, match="operation_count"):
+        validate_interop_bundle_w8(bundle)
+
+
+def test_validate_w8_rejects_density_noise_not_three_entries():
+    bundle = _minimal_valid_bundle_w8()
+    bundle["workload"]["density_noise"] = copy.deepcopy(DENSITY_NOISE)[:2]
+    with pytest.raises(ValueError, match="density_noise"):
+        validate_interop_bundle_w8(bundle)
+
+
+def test_validate_w8_rejects_missing_throughput_mean():
+    bundle = _minimal_valid_bundle_w8()
+    del bundle["throughput"]["mean_ns_per_op"]
+    with pytest.raises(ValueError, match="throughput mean"):
+        validate_interop_bundle_w8(bundle)
+
+
+def test_validate_w8_rejects_missing_throughput_bound():
+    bundle = _minimal_valid_bundle_w8()
+    del bundle["throughput"]["upper_bound_95_ns_per_op"]
+    with pytest.raises(ValueError, match="throughput mean"):
+        validate_interop_bundle_w8(bundle)
+
+
+def test_validate_w8_rejects_spike_count_mismatch():
+    bundle = _minimal_valid_bundle_w8()
+    bundle["overhead"]["spike_count_abs_wrapper_ns_above_20000"] = 999
+    with pytest.raises(ValueError, match="spike_count"):
+        validate_interop_bundle_w8(bundle)
+
+
+def test_validate_w8_accepts_lawful_negation_phrases():
+    bundle = _minimal_valid_bundle_w8()
+    bundle["labels"] = (
+        "no reduction taken; milestone not complete; QA-007 withheld; no M-F5a complete"
+    )
+    validate_interop_bundle_w8(bundle)
+
+
+def _w8_sample_partition_consistent(t_public: int, t_lower: int) -> dict:
+    base = _minimal_valid_sample()
+    factor = t_lower / base["t_lower_ns"]
+    sub = [int(round(x * factor)) for x in base["subtimes_ns"]]
+    inner = sub[0] + sub[1] + sub[2] + sub[5] + sub[3] + sub[4]
+    sub[3] += t_lower - inner
+    return {"t_public_ns": t_public, "t_lower_ns": t_lower, "subtimes_ns": sub}
+
+
+def _apply_w8_samples_to_bundle(bundle: dict, samples: list[dict]) -> None:
+    bundle["samples"] = samples
+    throughput_values = [
+        row["subtimes_ns"][3] / THROUGHPUT_DIVISOR_W8_REQUIRED for row in samples
+    ]
+    o_values = [
+        (row["t_public_ns"] - row["t_lower_ns"]) / row["t_public_ns"] for row in samples
+    ]
+    mean_o, bound_o = _one_sided_upper_bound(o_values)
+    mean_tp, bound_tp = _one_sided_upper_bound(throughput_values)
+    wrapper = [row["t_public_ns"] - row["t_lower_ns"] for row in samples]
+    allocate = [
+        row["subtimes_ns"][0]
+        + row["subtimes_ns"][1]
+        + row["subtimes_ns"][2]
+        + row["subtimes_ns"][5]
+        for row in samples
+    ]
+    apply_to = [row["subtimes_ns"][3] for row in samples]
+    contraction = [row["subtimes_ns"][4] for row in samples]
+    bundle["overhead"] = {
+        "mean_O": mean_o,
+        "median_O": float(np_median_helper(o_values)),
+        "upper_bound_95_O": bound_o,
+        "min_O": min(o_values),
+        "max_O": max(o_values),
+        "spike_count_abs_wrapper_ns_above_20000": spike_count_abs_wrapper_ns_above_20000(
+            samples
+        ),
+    }
+    bundle["throughput"]["mean_ns_per_op"] = mean_tp
+    bundle["throughput"]["upper_bound_95_ns_per_op"] = bound_tp
+    bundle["components"] = {
+        "mean_wrapper_ns": sum(wrapper) / len(wrapper),
+        "mean_allocate_build_ns": sum(allocate) / len(allocate),
+        "mean_apply_to_ns": sum(apply_to) / len(apply_to),
+        "mean_contraction_ns": sum(contraction) / len(contraction),
+    }
+
+
+def test_validate_w8_accepts_negative_mean_o():
+    bundle = _minimal_valid_bundle_w8()
+    sample = _w8_sample_partition_consistent(10_000, 20_000)
+    samples = [copy.deepcopy(sample) for _ in range(COUNTED_PAIRS_REQUIRED)]
+    _apply_w8_samples_to_bundle(bundle, samples)
+    assert bundle["overhead"]["mean_O"] < 0
+    assert bundle["components"]["mean_wrapper_ns"] < 0
+    validate_interop_bundle_w8(bundle)
+
+
+def test_validate_w8_accepts_heterogeneous_overhead_fixture():
+    bundle = _minimal_valid_bundle_w8()
+    specs = [(30_000, 10_000), (11_000, 18_000)]
+    specs += [(20_000, 20_100)] * 499
+    specs += [(20_000, 20_060)] * 499
+    assert len(specs) == COUNTED_PAIRS_REQUIRED
+    samples = [_w8_sample_partition_consistent(t_public, t_lower) for t_public, t_lower in specs]
+    _apply_w8_samples_to_bundle(bundle, samples)
+    o_values = [
+        (row["t_public_ns"] - row["t_lower_ns"]) / row["t_public_ns"] for row in samples
+    ]
+    assert min(o_values) < -0.5
+    assert bundle["overhead"]["mean_O"] < 0
+    assert bundle["components"]["mean_wrapper_ns"] < 0
+    assert bundle["overhead"]["min_O"] != bundle["overhead"]["max_O"]
+    assert bundle["overhead"]["median_O"] not in (
+        bundle["overhead"]["min_O"],
+        bundle["overhead"]["max_O"],
+    )
+    validate_interop_bundle_w8(bundle)
+
+
+def np_median_helper(values: list[float]) -> float:
+    ordered = sorted(values)
+    mid = len(ordered) // 2
+    if len(ordered) % 2:
+        return ordered[mid]
+    return (ordered[mid - 1] + ordered[mid]) / 2.0
+
+
+def test_resolve_output_path_refuses_width8_to_committed_names(tmp_path):
+    for name in ("interop_profile_bundle.json", "interop_profile_bundle_w6.json"):
+        bad = tmp_path / name
+        with pytest.raises(ValueError, match="interop_profile_bundle_w8"):
+            resolve_interop_output_path(8, bad)
+
+
+def test_resolve_output_path_refuses_width4_and_6_to_w8_name(tmp_path):
+    bad = tmp_path / "interop_profile_bundle_w8.json"
+    with pytest.raises(ValueError, match="interop_profile_bundle.json"):
+        resolve_interop_output_path(4, bad)
+    with pytest.raises(ValueError, match="interop_profile_bundle_w6"):
+        resolve_interop_output_path(6, bad)
+
+
+def test_resolve_output_path_accepts_width8_tmp_output(tmp_path):
+    good = tmp_path / "interop_profile_bundle_w8.json"
+    assert resolve_interop_output_path(8, good) == good
+
+
+def test_pipeline_width8_dispatches_qbit_num_8(monkeypatch, tmp_path):
+    from benchmarks.density_matrix.interop_profile import validation_pipeline as vp
+
+    captured: dict[str, int] = {}
+
+    def fake_run(*, qbit_num: int = 4, **kwargs):
+        captured["qbit_num"] = qbit_num
+        return _minimal_valid_bundle_w8()
+
+    monkeypatch.setattr(vp, "run_interop_row", fake_run)
+    out = tmp_path / "interop_profile_bundle_w8.json"
+    assert vp.main(["--width", "8", "--output", str(out)]) == 0
+    assert captured["qbit_num"] == 8
+    assert out.is_file()
+
+
+def test_resolve_output_path_rejects_unsupported_width():
+    with pytest.raises(ValueError, match="unsupported"):
+        resolve_interop_output_path(10, None)

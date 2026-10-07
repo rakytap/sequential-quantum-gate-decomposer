@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate M-F5a interop profile bundles (task-1 and task-2 tracer rows)."""
+"""Validate M-F5a interop profile bundles (task-1, task-2, and task-3 tracer rows)."""
 
 from __future__ import annotations
 
@@ -12,9 +12,15 @@ COUNTED_PAIRS_REQUIRED = 1000
 WARMUP_PAIRS_REQUIRED = 50
 QBIT_WIDTH_REQUIRED = 4
 QBIT_WIDTH_W6_REQUIRED = 6
+QBIT_WIDTH_W8_REQUIRED = 8
 THROUGHPUT_DIVISOR_REQUIRED = 3072
 THROUGHPUT_DIVISOR_W6_REQUIRED = 73728
+THROUGHPUT_DIVISOR_W8_REQUIRED = 1572864
 OPERATION_COUNT_W6_REQUIRED = 18
+OPERATION_COUNT_W8_REQUIRED = 24
+PARAMETER_COUNT_W8_REQUIRED = 42
+HAMILTONIAN_NNZ_W8_REQUIRED = 1152
+DENSITY_NOISE_ENTRIES_REQUIRED = 3
 PARTITION_REL_TOL = 0.01
 PARTITION_ABS_TOL_NS = 1000
 Z_95 = 1.644854
@@ -51,6 +57,16 @@ FORBIDDEN_W6_CLAIM_PHRASES = (
     "reduction taken",
 )
 
+FORBIDDEN_W8_CLAIM_PHRASES = (
+    "a4 kill",
+    "a4 false",
+    "hold-the-line",
+    "reduction taken",
+    "reduction justified",
+    "reduction shipped",
+    "m-f5a complete",
+)
+
 PROVENANCE_REQUIRED_KEYS = (
     "implementation_revision",
     "clean_start",
@@ -74,8 +90,13 @@ class InteropBundleProfile:
     row_label: str
     provenance_command: str | None = None
     operation_count: int | None = None
+    parameter_count: int | None = None
+    hamiltonian_nnz: int | None = None
+    density_noise_entries: int | None = None
+    provenance_required_width_arg: str | None = None
     require_w6_overhead_fields: bool = False
     check_w6_forbidden_claims: bool = False
+    check_w8_forbidden_claims: bool = False
 
 
 PROFILE_WIDTH_4 = InteropBundleProfile(
@@ -188,9 +209,16 @@ def _validate_provenance(provenance: Mapping[str, Any], profile: InteropBundlePr
     if profile.provenance_command is not None:
         command = provenance.get("command")
         if command != profile.provenance_command:
-            raise ValueError("provenance.command must match the width-6 counted command")
-        if "--width 6" not in str(command):
-            raise ValueError("provenance.command must include --width 6")
+            if profile.qbit_width == QBIT_WIDTH_W6_REQUIRED:
+                raise ValueError("provenance.command must match the width-6 counted command")
+            if profile.qbit_width == QBIT_WIDTH_W8_REQUIRED:
+                raise ValueError("provenance.command must match the width-8 counted command")
+            raise ValueError("provenance.command must match the counted command")
+        width_arg = profile.provenance_required_width_arg
+        if width_arg and width_arg not in str(command):
+            if profile.qbit_width == QBIT_WIDTH_W6_REQUIRED:
+                raise ValueError("provenance.command must include --width 6")
+            raise ValueError(f"provenance.command must include {width_arg}")
 
     identities = provenance.get("extension_identities") or []
     if len(identities) < 2:
@@ -230,6 +258,30 @@ def _label_contains_forbidden_w6_phrase(label_blob: str, phrase: str) -> bool:
         return True
 
 
+def _label_contains_forbidden_w8_phrase(label_blob: str, phrase_lower: str) -> bool:
+    blob_lower = label_blob.lower()
+    start = 0
+    while True:
+        pos = blob_lower.find(phrase_lower, start)
+        if pos == -1:
+            return False
+        if pos >= 3 and blob_lower[pos - 3 : pos] == "no ":
+            start = pos + 1
+            continue
+        return True
+
+
+def _validate_w8_forbidden_claims(bundle: Mapping[str, Any]) -> None:
+    serialized = json.dumps(bundle, sort_keys=True)
+    if "QA-007 met" in serialized:
+        raise ValueError('interop bundle must not contain "QA-007 met"')
+
+    label_blob = str(bundle.get("claim_boundary", "")) + str(bundle.get("labels", ""))
+    for phrase in FORBIDDEN_W8_CLAIM_PHRASES:
+        if _label_contains_forbidden_w8_phrase(label_blob, phrase):
+            raise ValueError(f"forbidden claim phrase {phrase!r} in bundle metadata")
+
+
 def _validate_w6_forbidden_claims(bundle: Mapping[str, Any]) -> None:
     serialized = json.dumps(bundle, sort_keys=True)
     if "QA-007 met" in serialized:
@@ -242,12 +294,14 @@ def _validate_w6_forbidden_claims(bundle: Mapping[str, Any]) -> None:
 
 
 def _validate_interop_bundle(bundle: Mapping[str, Any], profile: InteropBundleProfile) -> None:
-    if not profile.check_w6_forbidden_claims:
+    if profile.check_w8_forbidden_claims:
+        _validate_w8_forbidden_claims(bundle)
+    elif profile.check_w6_forbidden_claims:
+        _validate_w6_forbidden_claims(bundle)
+    else:
         serialized = json.dumps(bundle, sort_keys=True)
         if "QA-007 met" in serialized:
             raise ValueError('interop bundle must not contain "QA-007 met"')
-    else:
-        _validate_w6_forbidden_claims(bundle)
 
     if bundle.get("suite") != profile.suite_id:
         raise ValueError(f"suite id must be {profile.suite_id}")
@@ -275,6 +329,9 @@ def _validate_interop_bundle(bundle: Mapping[str, Any], profile: InteropBundlePr
             raise ValueError(f"operation_count must be {profile.operation_count}")
 
     protocol = bundle.get("protocol") or {}
+    if profile.parameter_count is not None:
+        if protocol.get("parameter_count") != profile.parameter_count:
+            raise ValueError(f"protocol.parameter_count must be {profile.parameter_count}")
     if protocol.get("pairing") != "paired_not_interleaved":
         raise ValueError("protocol.pairing must be paired_not_interleaved")
     if protocol.get("counted_pairs") != COUNTED_PAIRS_REQUIRED:
@@ -290,6 +347,17 @@ def _validate_interop_bundle(bundle: Mapping[str, Any], profile: InteropBundlePr
     for key in ("hamiltonian_nnz", "hamiltonian_csr_sha256", "entry", "ansatz"):
         if key not in workload:
             raise ValueError(f"workload.{key} is required")
+
+    if profile.hamiltonian_nnz is not None:
+        if workload.get("hamiltonian_nnz") != profile.hamiltonian_nnz:
+            raise ValueError(f"workload.hamiltonian_nnz must be {profile.hamiltonian_nnz}")
+
+    if profile.density_noise_entries is not None:
+        density_noise = workload.get("density_noise")
+        if not isinstance(density_noise, list) or len(density_noise) != profile.density_noise_entries:
+            raise ValueError(
+                f"workload.density_noise must have {profile.density_noise_entries} entries"
+            )
 
     qa008 = bundle.get("qa008") or {}
     if qa008.get("categorical_labels_exact") is not True:
@@ -439,8 +507,32 @@ def validate_interop_bundle_w6(bundle: Mapping[str, Any]) -> None:
         suite_id=PROFILE_WIDTH_6.suite_id,
         row_label=PROFILE_WIDTH_6.row_label,
         provenance_command=COUNTED_REGENERATION_COMMAND_W6,
+        provenance_required_width_arg="--width 6",
         operation_count=OPERATION_COUNT_W6_REQUIRED,
         require_w6_overhead_fields=True,
         check_w6_forbidden_claims=True,
+    )
+    _validate_interop_bundle(bundle, profile)
+
+
+def validate_interop_bundle_w8(bundle: Mapping[str, Any]) -> None:
+    """Raise ValueError when the bundle violates the task-3 width-8 contract."""
+    from benchmarks.density_matrix.interop_profile.interop_lane import (
+        COUNTED_REGENERATION_COMMAND_W8,
+    )
+
+    profile = InteropBundleProfile(
+        qbit_width=QBIT_WIDTH_W8_REQUIRED,
+        throughput_divisor=THROUGHPUT_DIVISOR_W8_REQUIRED,
+        suite_id="interop_profile_task3_evqe_8q_v1",
+        row_label="task-3",
+        provenance_command=COUNTED_REGENERATION_COMMAND_W8,
+        provenance_required_width_arg="--width 8",
+        operation_count=OPERATION_COUNT_W8_REQUIRED,
+        parameter_count=PARAMETER_COUNT_W8_REQUIRED,
+        hamiltonian_nnz=HAMILTONIAN_NNZ_W8_REQUIRED,
+        density_noise_entries=DENSITY_NOISE_ENTRIES_REQUIRED,
+        require_w6_overhead_fields=True,
+        check_w8_forbidden_claims=True,
     )
     _validate_interop_bundle(bundle, profile)
