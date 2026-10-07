@@ -1,19 +1,17 @@
 # Engineering tasks — M-F5a task-2
-> **Status:** Step 4a · not-ready · **Slice:** M-F5a task-2 · E-VQE at 6 qubits ·
+> **Status:** code-ready · Step 4b authorized · binder `5bd81f9b…` · `c32b365e` · **Slice:** M-F5a task-2 · E-VQE at 6 qubits ·
 > **Traces:** REQ-001, REQ-002, REQ-003, REQ-004, REQ-005, REQ-006, REQ-007, REQ-008, REQ-009 ·
 > CAP-004, CAP-007 · QA-007, QA-008, QA-009 ·
-> **SDD stage:** step-4a
-> **Boundary:** W-1…W-5 folded. QA-007 stays `[confirm]`. The milestone is not complete
+> **SDD stage:** step-4b-authorized
+> **Boundary:** Developer not started. QA-007 stays `[confirm]`. The milestone is not complete
 
-**Verdict: not-ready.** READY-FOR-RE-REVIEW. Developer does not start. No counted
-width-6 run is started here. No `CLOSEOUT.md` is written. The expected lint finding
-is `SLICE_MISSING_CLOSEOUT` for task-2, a warning in both modes. No waiver.
-
-A later stamp of `step-4b-authorized` requires all three: RM ACCEPT 2026-10-07,
-which is recorded and does not by itself flip the stage; this W-1…W-5 fold, with
-pins, Measure, the deferred set, the pair, the inventory, the no-O rule, and the
-kernel/fusion/AVX boundary unchanged; and the follow-on Reviewer writer gate.
-Until that gate, the stage line stays `step-4a`.
+**Verdict: code-ready.** Step 4b is authorized. The Developer is not started until the TL handoff. Binder `/tmp/rev-mf5a-t2-codeready/REVIEW.md` (`5bd81f9b…`) at `c32b365e`.
+Lint after this stamp: normal exits 0 with one `SLICE_MISSING_CLOSEOUT` warning for task-2. `--strict` exits 1 with that finding as its only error. No waiver. No placeholder closeout.
+The harness is the shipped ADR-F5A-009 timer and `harness_density_lower_ns`, unchanged, with no C++ edit. E1: R-oracle stays excluded.
+Width-6 depth, noise schedule, and the parameter vector are mini-spec §2. The protocol pins are §4.
+The equal-work pair, the inventory, the no-O rule, and the kernel/fusion/AVX boundary are unchanged.
+QA-007 stays `[confirm]`. No A4 kill, no hold-the-line label, and no reduction on widths 4 and 6 alone.
+The ET-4 allowlist stands. No counted width-6 run starts in this stamp.
 
 These tasks are the contract for a later authorized pass. None may add a public
 energy API, time an attribution route, include width 8, apply the 10 % bar, claim
@@ -38,7 +36,11 @@ The planned diff is Python only. A required C++ edit is a handback.
   shares the kernel. It is not the independence oracle.
 - The width-6 Aer oracle lives in that same file. It calls
   `Test_VQE._get_density_backend_aer_reference` on this cell and the line Hamiltonian.
-  The assertion is `|ΔE| ≤ 1e-12 + 1e-5·|E_Aer|`, about 2.8e-7 here. The Tester shows
+  The assertion is `|ΔE| ≤ 1e-12 + 1e-5·|E_Aer|`, about 2.8e-7 here. Before calling
+  the helper, the test calls `set_Optimized_Parameters` with the §2 vector, as the
+  4-qubit node does (`tests/VQE/test_VQE.py:1843`); the helper exports the circuit
+  from the optimized parameters, and without them the process crashes (return −11).
+  With the call, `|ΔE|` = 7.5e-16 against that bound. The Tester shows
   the check passed rather than skipped. The frozen 4-qubit Aer node and
   `tests/VQE/test_VQE.py` stay unchanged. No 6-qubit host golden is added.
 - The test does not run 1000 pairs and does not write a bundle.

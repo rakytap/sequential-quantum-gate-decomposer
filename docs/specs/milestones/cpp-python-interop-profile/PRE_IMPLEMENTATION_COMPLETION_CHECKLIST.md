@@ -1,25 +1,25 @@
 # Pre-implementation completion checklist — M-F5a `cpp-python-interop-profile`
-> **Status:** Layer 1 v0.1 · **Verdict:** task-1 closed; task-2 Step 4a draft, stage `step-4a`, not-ready ·
+> **Status:** Layer 1 v0.1 · **Verdict:** task-1 closed; task-2 code-ready, stage `step-4b-authorized`; binder `5bd81f9b…` at `c32b365e` ·
 > **Milestone:** M-F5a `cpp-python-interop-profile` ·
 > **Owner skill:** `spec-driven-development` Steps 2–4a ·
 > **Inputs:** `INITIAL_REQUIREMENTS.md` v0.1,
 > `DETAILED_PLANNING_CPP_PYTHON_INTEROP_PROFILE.md`,
 > `ADRS_CPP_PYTHON_INTEROP_PROFILE.md`, `ADR_AMENDMENTS_CPP_PYTHON_INTEROP_PROFILE.md` · **Traces:** REQ-001…009 ·
-> **Authorization:** task-1 closed at C2 `ddde49ac`; task-2 stage `step-4a`; RM ACCEPT 2026-10-07 does not flip it; QA-007 `[confirm]` ·
-> **Boundary:** no Step 4b; milestone not complete; no push; no pull request ·
+> **Authorization:** task-1 closed at C2 `ddde49ac`; task-2 stage `step-4b-authorized`; Developer not started; QA-007 `[confirm]` ·
+> **Boundary:** Step 4b authorized, Developer not started; milestone not complete; no push; no pull request ·
 > **Baseline:** `1b123a9a31235dd68d6c0a6ff9ba457c0112cd59`
 
 ## 1. Readiness rule
 
-**Verdict: task-1 Step 4b stays closed at `step-4b-authorized`. Task-2 stays `step-4a` and not-ready. RM ACCEPT does not flip the stage. QA-007 stays `[confirm]`. M-F5a is not complete.**
+**Verdict: task-1 Step 4b stays closed. Task-2 is code-ready at `step-4b-authorized`. Developer is not started. QA-007 stays `[confirm]`. M-F5a is not complete. Binder `5bd81f9b…` at `c32b365e`.**
 
 The Tech Lead opened the tracer. `task-1/` holds the planning pack and `CLOSEOUT.md`.
 ADR-F5A-009 is filed. C1 tip is `ca5589e2`. C2 is
 `ddde49ac1e248e3ea2b4516f420ca1cbbd14e9df`. Reviewer (e) approved it and step (g)
 passed. Section 11 is that record. The counted run recorded `clean_start` true.
 This checklist does not freeze the 10 % bar and does not mark the milestone
-delivered. Section 12 opens task-2 as a Step 4a draft. That opening does not
-authorize Step 4b. The Developer does not edit `docs/specs/**`.
+delivered. Section 12 stamps task-2 code-ready. The Developer is not started.
+The Developer does not edit `docs/specs/**`.
 
 The code-ready gate, already met before C1, required all of the following:
 
@@ -68,18 +68,18 @@ The code-ready gate, already met before C1, required all of the following:
 | G-02 | Harness mechanism that calls C++ `optimization_problem` without a new public Python energy symbol | `task-1/TASK_1_MINI_SPEC.md` §4 and §6; ADR-F5A-009 | Architect, Step 4a | **closed — timer on `Variational_Quantum_Eigensolver_Base`; ADR-F5A-009 filed** |
 | G-03 | Whether one R-oracle row is required to label C++ `apply_to` | `task-1/TASK_1_MINI_SPEC.md` §5 | Architect, Step 4a | **closed — excluded; inner `apply_to` timer labels the component** |
 | G-04 | Depth and noise schedule per width, and the parameter vector | `task-1/TASK_1_MINI_SPEC.md` §2; `task-2/TASK_2_MINI_SPEC.md` §2 | Architect, Step 4a | **closed for 4 qubits; width 6 pinned, RM ACCEPT 2026-10-07; width 8 stays later** |
-| G-05 | Paired versus interleaved, warm-up count, affinity, thread count, uncertainty estimator, and any divisor other than \(4^n\) | `task-1/TASK_1_MINI_SPEC.md` §7 | Architect, Step 4a | **closed for the 4-qubit tracer** |
+| G-05 | Paired versus interleaved, warm-up count, affinity, thread count, uncertainty estimator, and any divisor other than \(4^n\) | `task-1/TASK_1_MINI_SPEC.md` §7 | Architect, Step 4a | **closed for the 4-qubit tracer; task-2 §4 carries these pins unchanged at width 6** |
 | G-06 | Product-owner freeze of the QA-007 numeric bar | an edit of `INITIAL_REQUIREMENTS.md` | Product owner | **open — blocks a "QA-007 met" label and any counted trial that applies the bar; does not block Step 4a** |
 | G-07 | Sibling interop lane is not on disk | the slice that creates it, after code-ready | Step 4b | **closed — lane and counted bundle are on disk; see `task-1/CLOSEOUT.md`** |
 | G-08 | Current-state docs do not yet name the lane | milestone close, ADR-F5A-007 | SDD at close | **open — expected** |
 | G-09 | Rocky-local Tester CI record for a code close | that later close | Tester | **open — expected; N8 stays deferred** |
 | G-10 | Step 4b authorization for task-1 | code-ready verdict on task-1 | Architect | **closed — task-1 stage `step-4b-authorized`; task-1 closed at C2** |
-| G-11 | Step 4b authorization for task-2 | Reviewer writer gate after W-1…W-5; RM ACCEPT is already recorded | Reviewer | **open — stage stays `step-4a`; RM ACCEPT alone does not flip it; not-ready** |
+| G-11 | Step 4b authorization for task-2 | planning-role stamp after the Reviewer writer gate | Planning role | **closed — stage `step-4b-authorized` at `c32b365e`; binder `5bd81f9b…`; Developer not started** |
 
 No open item changes the equal-work pair, adds an advertised energy entry, publishes \(O\)
 on an attribution-only route, or proposes a kernel, fusion, or AVX edit. No A4 kill and
 no reduction on widths 4 and 6 alone (ADR-F5A-003/005). RM ACCEPT 2026-10-07 is recorded.
-It does not flip task-2 off `step-4a` (G-11).
+G-11 is closed by this stamp at `c32b365e` (binder `5bd81f9b…`). Developer is not started.
 
 ## 4. Decision closures and trade-offs
 
@@ -143,7 +143,7 @@ run and for `CLOSEOUT.md` (N-39). That wording was true of C1 and is reconciled 
 
 **No-go** for a "QA-007 met" label, for an A4 kill or a reduction on widths 4 and 6
 alone, for freezing the QA-007 bar, for marking M-F5a complete, for a push or a pull
-request, and for authorizing task-2 Step 4b. RM ACCEPT does not flip `step-4a`.
+request. RM ACCEPT does not flip `step-4a`.
 
 A draft that changes the equal-work pair, adds an advertised energy entry, publishes
 \(O\) on an attribution-only route, or proposes a kernel, fusion, or AVX change stops
@@ -165,11 +165,11 @@ no findings. No waiver. No placeholder closeout. The step-4a lint, before this s
 kept the same finding as a warning and exited 0. ADR-F1A-008 forbids a planning-status
 closeout, so that finding stayed until this real close.
 
-After `task-1/CLOSEOUT.md`, and before task-2 existed, both modes were clean of
-`SLICE_MISSING_CLOSEOUT` and exited 0. This Step 4a leaves `task-2/CLOSEOUT.md`
-absent on purpose. The expected finding is one `SLICE_MISSING_CLOSEOUT` warning
-for task-2, kept under `--strict`, exit 0. A placeholder closeout is not used.
-QA-007 stays `[confirm]`. The milestone is not complete.
+After `task-1/CLOSEOUT.md`, both modes were clean. This stamp leaves
+`task-2/CLOSEOUT.md` absent. Normal mode: 0 errors, one `SLICE_MISSING_CLOSEOUT`
+warning for task-2, exit 0. `--strict`: that finding is the only error, exit 1.
+No waiver. No placeholder. QA-007 stays `[confirm]`. The milestone is not complete.
+Stamp binder `/tmp/rev-mf5a-t2-codeready/REVIEW.md` (`5bd81f9b…`) at `c32b365e`.
 
 ## 9. Task-1 Step 4a opened
 
@@ -236,14 +236,14 @@ Regeneration outputs are not committed.
 | N-37 | open | Some validator tests are weak: both clean-start flags flip together, most B2 rejections have no isolated test, and no test feeds a real lane bundle. |
 | N-24 | open | The new interop tests sit outside the `density_matrix` marker (861 deselected at the C2 review). |
 | N-19 | folded | Task-2 §3 names sub-time clock reads (`clock_gettime`). |
-| N-3, N-6, N-10, N-14, N-21, N-25, N-27, N-28, N-29, N-31, N-40 | open | Task-1 notes stand. For task-2, N-3 and N-10 are the §9 containment diff, and N-14 is the width-6 Aer oracle (W-5). N-6, N-21, N-25, N-27, N-28, N-29, N-31, and N-40 are unchanged. |
+| N-3, N-6, N-10, N-14, N-21, N-25, N-27, N-28, N-29, N-31, N-40 | open | Task-1 descriptions are in `cffe2cab` checklist §11. For task-2, N-3 and N-10 are the §9 containment diff, and N-14 is the width-6 Aer oracle. |
 | S-a, S-b, S-c, S-e | open | S-a: margin 0.02; N-52, about 16 SE at width 6, record at the G-06 freeze. S-b: partition tolerance. S-c: lag-1 or batch means, still deferred at width 6 (N-56). S-e: affinity before import. S-d closed at width 4. S-f disposed: no refusal below −0.5. |
 
-## 12. Task-2 Step 4a writer fold (W-1…W-5)
+## 12. Task-2 code-ready stamp
 
-Writer fold on tip `cffe2cab7da1f1533584f3972faacd6be3b89392`. RM ACCEPT 2026-10-07
-is recorded and does not flip the stage. SDD stage stays `step-4a`. Verdict
-**not-ready**. QA-007 stays `[confirm]`. M-F5a is not complete. N-41 is closed in
-the §11 carry table. S-g is Measure. A negative width-6 mean and `O_i` < −0.5 are
-lawful. No A4 kill on widths 4 and 6 alone. W-1…W-5 are in `task-2/`. A stage flip
-waits on the Reviewer writer gate. No `CLOSEOUT.md`. No Step 4b. No push. No pull request.
+Stamp on docs commit `c32b365e4e55283f8af86345719c83b3d34bd8d8`. Binder
+`/tmp/rev-mf5a-t2-codeready/REVIEW.md` (`5bd81f9b…`). SDD stage
+`step-4b-authorized`. Verdict **code-ready**. Step 4b is authorized. The
+Developer is not started until the TL handoff. QA-007 stays `[confirm]`.
+M-F5a is not complete. No A4 kill on widths 4 and 6 alone. No `CLOSEOUT.md`.
+No counted width-6 run. No push. No pull request.

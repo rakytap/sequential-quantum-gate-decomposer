@@ -1,11 +1,11 @@
 # Task 2: E-VQE at 6 qubits, equal-work extension
-> **Status:** Step 4a · **Verdict:** not-ready · **Slice:** M-F5a task-2 ·
+> **Status:** code-ready · **Verdict:** Step 4b authorized · **Slice:** M-F5a task-2 ·
 > **Traces:** REQ-001…009 · CAP-004, CAP-007 · QA-007, QA-008, QA-009 · ADR-F5A-001…009 ·
 > **Scope:** one E-VQE width-6 row on the task-1 harness. No width 8. No routes. No reduction ·
-> **Gate:** SDD stage `step-4a`. QA-007 stays `[confirm]`. Milestone not complete ·
-> **RM:** ACCEPT 2026-10-07 (upload `5c810dac…`). Acceptance alone does not flip the stage ·
-> **Stamp:** `step-4b-authorized` waits on this W-1…W-5 fold plus the Reviewer writer gate ·
-> **Tip:** `cffe2cab7da1f1533584f3972faacd6be3b89392` · task-1 bundle `212f7038…` stays ·
+> **Gate:** SDD stage `step-4b-authorized`. QA-007 stays `[confirm]`. Milestone not complete ·
+> **RM:** ACCEPT 2026-10-07. Developer not started. Binder `5bd81f9b…` at `c32b365e` ·
+> **Stamp:** code-ready. Step 4b authorized. Developer waits on the TL handoff ·
+> **Tip:** `c32b365e4e55283f8af86345719c83b3d34bd8d8` · task-1 bundle `212f7038…` stays ·
 > **Pair, inventory, no-O rule, kernel/fusion/AVX boundary:** unchanged
 
 ## 1. Why this slice is the thinnest next counted row
@@ -203,7 +203,7 @@ The smoke node is parametrized over widths 4, 6, 8, and 10.
 | REQ-003 | doc review | this mini-spec §§4–6 | same harness; no new energy symbol; refusal before pairs; `provenance.command` carries `--width 6` | DS-1 |
 | REQ-007, QA-009 | fast pytest | `conda run -n qgd --no-capture-output pytest tests/VQE/test_VQE.py::Test_VQE::test_explicit_state_vector_matches_legacy_default -q` | state-vector default still matches | DS-3 |
 | REQ-008 | repo review | `git diff --exit-code cffe2cab7da1f1533584f3972faacd6be3b89392 -- docs/density_matrix_project/archive` | empty | DS-2 |
-| REQ-009, QA-008 | spec lint | `bash .cursor/skills/spec-driven-development/scripts/specs_check.sh docs/specs/milestones/cpp-python-interop-profile` and the same command with `--strict` | at `step-4a`, the only finding is `SLICE_MISSING_CLOSEOUT` for task-2, a warning in both modes; no waiver; no placeholder closeout | DS-3 |
+| REQ-009, QA-008 | spec lint | `bash .cursor/skills/spec-driven-development/scripts/specs_check.sh docs/specs/milestones/cpp-python-interop-profile` and the same command with `--strict` | normal: 0 errors, one `SLICE_MISSING_CLOSEOUT` warning for task-2, exit 0; `--strict`: that finding is the only error, exit 1; no waiver; no placeholder closeout | DS-3 |
 
 ## 10. Affected interfaces
 
@@ -217,11 +217,8 @@ validator entry points, and the width-6 artifact.
 
 ## 11. Verdict
 
-**not-ready.** READY-FOR-RE-REVIEW. SDD stage stays `step-4a`.
-
-A later stamp of `step-4b-authorized` requires all three of the following. RM
-ACCEPT 2026-10-07 is the first, and it is recorded. W-1…W-5 folded here, with the
-pins, Measure, the deferred set, the pair, the inventory, the no-O rule, and the
-kernel/fusion/AVX boundary unchanged, is the second. The follow-on Reviewer writer
-gate is the third. RM acceptance alone cannot flip the stage. This pass does not
-authorize Step 4b, the Developer, or a counted width-6 run.
+**Code-ready.** Step 4b is authorized. SDD stage is `step-4b-authorized`. The
+Developer is not started until the TL handoff. Binder
+`/tmp/rev-mf5a-t2-codeready/REVIEW.md` (`5bd81f9b…`) at docs commit `c32b365e`.
+QA-007 stays `[confirm]`. No A4 kill, hold-the-line label, or reduction. No
+counted width-6 run in this stamp.
