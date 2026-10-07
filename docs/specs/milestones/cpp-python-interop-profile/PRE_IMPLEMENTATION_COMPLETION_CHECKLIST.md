@@ -1,24 +1,25 @@
 # Pre-implementation completion checklist — M-F5a `cpp-python-interop-profile`
-> **Status:** Layer 1 v0.1 · **Verdict:** ready for the Step 4a gate; not implementation-ready ·
+> **Status:** Layer 1 v0.1 · **Verdict:** task-1 code-ready; SDD stage `step-4b-authorized` ·
 > **Milestone:** M-F5a `cpp-python-interop-profile` ·
-> **Owner skill:** `spec-driven-development` Steps 2–3 ·
+> **Owner skill:** `spec-driven-development` Steps 2–4a ·
 > **Inputs:** `INITIAL_REQUIREMENTS.md` v0.1,
 > `DETAILED_PLANNING_CPP_PYTHON_INTEROP_PROFILE.md`,
-> `ADRS_CPP_PYTHON_INTEROP_PROFILE.md` · **Traces:** REQ-001…009 ·
-> **Authorization:** Research Manager 2026-10-06, Steps 1–3 only ·
-> **Boundary:** no `task-1/`, no Step 4b, no push, no pull request ·
+> `ADRS_CPP_PYTHON_INTEROP_PROFILE.md`, `ADR_AMENDMENTS_CPP_PYTHON_INTEROP_PROFILE.md` · **Traces:** REQ-001…009 ·
+> **Authorization:** task-1 writer stamp only; Step 4b is not started; no Developer handoff ·
+> **Boundary:** planning pack only; no Step 4b; no push; no pull request ·
 > **Baseline:** `1b123a9a31235dd68d6c0a6ff9ba457c0112cd59`
 
 ## 1. Readiness rule
 
-**Verdict: ready for the Step 4a gate. Not implementation-ready.**
+**Verdict: task-1 is code-ready. SDD stage is `step-4b-authorized`. Step 4b is not started.**
 
-Layer 1 is sufficient for the Tech Lead to open the tracer. Implementation stays closed.
-Step 4a has not been opened. Step 4b stays closed until a code-ready verdict on that slice.
+The Tech Lead opened the tracer. `task-1/` holds the planning pack. ADR-F5A-009 is
+filed. The stage line is `step-4b-authorized`. Implementation has not started. This
+checklist is not a Developer handoff.
 
 Implementation may begin only when all of the following are true:
 
-- the v0.1 requirements, this plan, and ADR-F5A-001…008 are still consistent;
+- the v0.1 requirements, this plan, and ADR-F5A-001…009 are still consistent;
 - the Tech Lead has opened Step 4a, and that slice's mini-spec, stories, and engineering
   tasks exist with a code-ready verdict;
 - the verdict records the harness mechanism, the E1 label decision, the per-width depth
@@ -26,7 +27,7 @@ Implementation may begin only when all of the following are true:
   inventory, the no-\(O\) rule, and the kernel/fusion/AVX boundary are unchanged;
 - the product owner has frozen the QA-007 bar in `INITIAL_REQUIREMENTS.md` before any
   counted trial that applies the bar and before any "QA-007 met" label;
-- both spec checks are clean on this milestone tree;
+- normal `specs_check.sh` has 0 errors, and the only finding is absent-closeout `SLICE_MISSING_CLOSEOUT` (a warning at `step-4a`; the one strict error after `step-4b-authorized`, until a real closeout);
 - any proposal to change a frozen contract returns to planning and, where required, to
   `CHANGE_CONTROL.md`.
 
@@ -59,16 +60,16 @@ Implementation may begin only when all of the following are true:
 
 | Id | Gap | Closes in | Authority | State |
 |----|-----|-----------|-----------|-------|
-| G-01 | Tech Lead has not opened the Step 4a tracer | a Tech Lead instruction naming `task-1` | Tech Lead | **open — blocks Step 4a; does not block this gate** |
-| G-02 | Harness mechanism that calls C++ `optimization_problem` without a new public Python energy symbol | `task-1` mini-spec | Architect, Step 4a | **open — blocks code-ready; if no lawful mechanism exists, return to Research Manager** |
-| G-03 | Whether one R-oracle row is required to label C++ `apply_to` | `task-1` mini-spec; default remains exclude | Architect, Step 4a | **open — blocks code-ready** |
-| G-04 | Depth and noise schedule per width, and the parameter vector | the first counting slice, before trials | Architect, Step 4a | **open — blocks code-ready** |
-| G-05 | Paired versus interleaved, warm-up count, affinity, thread count, uncertainty estimator, and any divisor other than \(4^n\) | the first counting slice, before trials | Architect, Step 4a | **open — blocks code-ready** |
+| G-01 | Tech Lead has not opened the Step 4a tracer | `task-1/` planning pack | Tech Lead | **closed — task-1 code-ready; stage `step-4b-authorized`** |
+| G-02 | Harness mechanism that calls C++ `optimization_problem` without a new public Python energy symbol | `task-1/TASK_1_MINI_SPEC.md` §4 and §6; ADR-F5A-009 | Architect, Step 4a | **closed — timer on `Variational_Quantum_Eigensolver_Base`; ADR-F5A-009 filed** |
+| G-03 | Whether one R-oracle row is required to label C++ `apply_to` | `task-1/TASK_1_MINI_SPEC.md` §5 | Architect, Step 4a | **closed — excluded; inner `apply_to` timer labels the component** |
+| G-04 | Depth and noise schedule per width, and the parameter vector | `task-1/TASK_1_MINI_SPEC.md` §2 | Architect, Step 4a | **closed for 4 qubits only; widths 6 and 8 stay later slices** |
+| G-05 | Paired versus interleaved, warm-up count, affinity, thread count, uncertainty estimator, and any divisor other than \(4^n\) | `task-1/TASK_1_MINI_SPEC.md` §7 | Architect, Step 4a | **closed for the 4-qubit tracer** |
 | G-06 | Product-owner freeze of the QA-007 numeric bar | an edit of `INITIAL_REQUIREMENTS.md` | Product owner | **open — blocks a "QA-007 met" label and any counted trial that applies the bar; does not block Step 4a** |
 | G-07 | Sibling interop lane is not on disk | the slice that creates it, after code-ready | Step 4b | **open — expected** |
 | G-08 | Current-state docs do not yet name the lane | milestone close, ADR-F5A-007 | SDD at close | **open — expected** |
 | G-09 | Rocky-local Tester CI record for a code close | that later close | Tester | **open — expected; N8 stays deferred** |
-| G-10 | Step 4b authorization | code-ready verdict on the open slice | Architect | **closed — not authorized** |
+| G-10 | Step 4b authorization | code-ready verdict on the open slice | Architect | **stage stamped `step-4b-authorized`; Developer handoff not issued** |
 
 No open item changes the equal-work pair, adds an advertised energy entry, publishes \(O\)
 on an attribution-only route, or proposes a kernel, fusion, or AVX edit. Research Manager
@@ -110,15 +111,15 @@ Passed before this verdict. Dispositions:
 | Nested component times would make the material-term ranking ambiguous | blocking if ignored | ADR-F5A-004: the four components partition \(T_\mathrm{public}\); the wrapper is \(T_\mathrm{public}-T_\mathrm{lower}\) |
 | Requirements header still says Layer 1 stays closed | non-blocking | That sentence is the requirements slice's own scope. The handoff section authorizes Steps 1–3. Detailed plan §1 records the reading. The requirements file is unchanged |
 
-Nothing in that pass remained blocking for the Step 4a gate. The same pass leaves the
-milestone not implementation-ready, because G-01 through G-06 are still open.
+Nothing in that pass remained blocking for the Step 4a gate. G-06 stays open and still
+blocks a "QA-007 met" label. The task-1 code-ready stamp stands with that gap open.
 
 ## 6. First-slice gate
 
 | Readiness concern | Layer 1 disposition |
 |-------------------|---------------------|
-| Slice tracer | not opened; ADR-F5A-008 defines it as E-VQE at 4 qubits with no reduction |
-| Boundary decisions | ADR-F5A-001…008 accepted |
+| Slice tracer | task-1 code-ready; E-VQE at 4 qubits with no reduction; stage `step-4b-authorized` |
+| Boundary decisions | ADR-F5A-001…008 accepted; ADR-F5A-009 filed in the companion |
 | Evidence lanes | detailed plan §9 |
 | Current-state doc impact | both existing docs update at milestone close |
 | Build impact | this step edits no C++ or CMake; a later harness driver or wrapper reduction may, and then requires a rebuild before tests |
@@ -128,10 +129,11 @@ milestone not implementation-ready, because G-01 through G-06 are still open.
 
 ## 7. Go / no-go
 
-**Go** for a later Step 4a, spec-only, when the Tech Lead opens the tracer.
+**Code-ready** for `task-1`. SDD stage is `step-4b-authorized`. ADR-F5A-009 is filed.
 
-**No-go** for Step 4b, for product code, for `task-1/` artifacts in this step, for a
-commit of these files unless separately authorized, and for a push or pull request.
+**No-go** for starting Step 4b, for a Developer handoff, for product code, for freezing
+the QA-007 bar in this pack, for a commit unless separately authorized, and for a push
+or pull request.
 
 A draft that changes the equal-work pair, adds an advertised energy entry, publishes
 \(O\) on an attribution-only route, or proposes a kernel, fusion, or AVX change stops
@@ -146,7 +148,21 @@ bash .cursor/skills/spec-driven-development/scripts/specs_check.sh docs/specs/mi
 bash .cursor/skills/spec-driven-development/scripts/specs_check.sh --strict docs/specs/milestones/cpp-python-interop-profile
 ```
 
-Result on this tree, both commands, exit 0. Artifact structure: 0 errors, 0 warnings,
-1 info `NO_SLICES` because no `task-<n>` directory exists yet. Traceability: no findings.
-`--strict` matches. No waiver is added for this milestone. A later non-zero error or
-warning count withdraws the ready-for-Step-4a verdict until the finding is fixed.
+Result after the code-ready stamp, stage `step-4b-authorized`, with no
+`task-1/CLOSEOUT.md`. Normal mode: 0 errors and 1 warning, `SLICE_MISSING_CLOSEOUT`.
+`--strict`: that finding is the only error and the exit status is 1. Traceability:
+no findings. No waiver. No placeholder closeout. The step-4a lint, before this stamp,
+kept the same finding as a warning and exited 0. ADR-F1A-008 forbids a planning-status
+closeout, so the finding stays until a real close after delivery.
+
+## 9. Task-1 Step 4a opened
+
+Opened at HEAD `cdcfe6b151e371add2881d7acca45ef47697cdba`. Reviewer blockers B1 through
+B5 are folded into `task-1/TASK_1_MINI_SPEC.md` and the engineering tasks. The current
+gate is code-ready. G-02 through G-05 stay closed there. G-06 stays open: the
+10 % bar is still `[confirm]`, and `INITIAL_REQUIREMENTS.md` is not edited. ADR-F5A-009
+is filed in this pass, copying §6 after W-1, W-2, and W-3. The stage line is
+`step-4b-authorized`. Step 4b has not started. No Developer handoff.
+
+B5 deletes `task-1/CLOSEOUT.md`. This planning pack has no counted run. The later task-1
+bundle records `clean_start` true, and only that counted run is closed under ADR-F1A-009.

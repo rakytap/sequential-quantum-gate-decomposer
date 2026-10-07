@@ -336,3 +336,7 @@ attribution routes; they are not dropped by starting at 4.
 - Drop width 8 from the milestone because the tracer is width 4.
 
 **Upstream alignment:** REQ-002, REQ-005 · CAP-004 · QA-007 · goals G2, G5.
+
+## Continuation
+
+ADR-F5A-009 is in `ADR_AMENDMENTS_CPP_PYTHON_INTEROP_PROFILE.md`.
