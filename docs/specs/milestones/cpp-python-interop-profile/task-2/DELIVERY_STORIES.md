@@ -1,9 +1,9 @@
 # Delivery stories — M-F5a task-2
-> **Status:** Step 4a draft · **Verdict:** not-ready · **Slice:** M-F5a task-2 ·
+> **Status:** Step 4a · **Verdict:** not-ready · **Slice:** M-F5a task-2 ·
 > **Scope:** E-VQE at 6 qubits on the task-1 harness. No width 8. No attribution routes. No reduction ·
 > **Traces:** REQ-001…009 · CAP-004, CAP-007 · QA-007, QA-008, QA-009 ·
 > **Gate:** SDD stage `step-4a`. QA-007 stays `[confirm]`. Milestone not complete ·
-> **RM:** draft returns to the Tech Lead for Research Manager alignment before Step 4b
+> **RM:** ACCEPT 2026-10-07. Acceptance alone does not flip the stage. Writer gate still required
 
 ### Delivery story: DS-1 — A 6-qubit E-VQE row on the same equal-work pair
 
@@ -14,9 +14,10 @@
 **Given / When / Then**
 - Given the frozen 6-qubit HEA evaluator in `TASK_2_MINI_SPEC.md` §2, built once
 - When an authorized harness run executes 50 discarded warm-up pairs and 1000 counted alternating pairs
-- Then the row reports mean `O`, the one-sided 95 % upper bound, the median, min, and max,
-  the spike count above 20 µs of absolute wrapper time, the four components, and the
-  mean per-operation `apply_to` throughput on divisor 73728
+- Then the row reports mean `O`, including when that mean is negative, the one-sided
+  95 % upper bound, the median, min, and max, the observational 20 µs tail count, the
+  four components, and the mean per-operation `apply_to` throughput on divisor 73728
+  with its one-sided 95 % upper bound
 - And the label "QA-007 met" is absent while the 10 % bar stays `[confirm]`
 
 **Scope**
@@ -27,8 +28,8 @@
 - `parameter_count` 30, `operation_count` 18, `gate_count` 15, divisor 73728
 - `T_lower` still comes from `harness_density_lower_ns` on the same instance
 - The timer flag stays on for both sides of every warm-up pair and every counted pair
-- No sample is dropped. The spike count does not fail the row
-- Flag-off versus flag-on energy on this cell is bit-identical. The 4-qubit Aer node stays unchanged
+- No sample is dropped. A negative mean and `O_i` below −0.5 stay in the row. The tail count does not fail it
+- Flag-off versus flag-on energy on this cell is bit-identical. The width-6 Aer oracle is `Test_VQE._get_density_backend_aer_reference` in the interop harness tests, with `|ΔE| ≤ 1e-12 + 1e-5·|E_Aer|`. The 4-qubit Aer node stays unchanged
 - `milestone_counted=false`. The artifact is `interop_profile_bundle_w6.json`
 
 **Traceability**
@@ -47,7 +48,7 @@
 - Given this slice's change set and both bundle files
 - When the row and the diff are reviewed
 - Then the task-1 bundle still hashes to `212f70386bf2a44711d29956c41bd3f0eea9ee2e284ace9c5403bc3d94ef934e`
-- And no attribution route is timed, no overhead ratio is published for one, and no kernel or reduction diff is present
+- And no attribution route is timed, no overhead ratio is published for one, and no kernel, A4-kill, or reduction diff is present
 
 **Scope**
 - In: the exclusions in `TASK_2_MINI_SPEC.md` §6, the write-refusal rule, and the N-32 margin function
@@ -55,7 +56,7 @@
 
 **Acceptance signals**
 - `validate_interop_bundle` still rejects a width other than 4
-- A width-6 write aimed at `interop_profile_bundle.json` writes nothing
+- A width-6 write aimed at `interop_profile_bundle.json` is refused before any pair, and the refusal test uses a `tmp_path` copy
 - `assert_mean_o_within_margin` enforces the 0.02 absolute margin on fixtures
 - `performance_evidence/` and `benchmark_perf.py` are unchanged
 

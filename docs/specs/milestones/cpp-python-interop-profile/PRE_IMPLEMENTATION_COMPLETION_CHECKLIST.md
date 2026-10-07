@@ -5,13 +5,13 @@
 > **Inputs:** `INITIAL_REQUIREMENTS.md` v0.1,
 > `DETAILED_PLANNING_CPP_PYTHON_INTEROP_PROFILE.md`,
 > `ADRS_CPP_PYTHON_INTEROP_PROFILE.md`, `ADR_AMENDMENTS_CPP_PYTHON_INTEROP_PROFILE.md` · **Traces:** REQ-001…009 ·
-> **Authorization:** task-1 Step 4b closed at C2 `ddde49ac`; task-2 is a Step 4a draft; QA-007 `[confirm]` ·
+> **Authorization:** task-1 closed at C2 `ddde49ac`; task-2 stage `step-4a`; RM ACCEPT 2026-10-07 does not flip it; QA-007 `[confirm]` ·
 > **Boundary:** no Step 4b; milestone not complete; no push; no pull request ·
 > **Baseline:** `1b123a9a31235dd68d6c0a6ff9ba457c0112cd59`
 
 ## 1. Readiness rule
 
-**Verdict: task-1 Step 4b stays closed at `step-4b-authorized`. Task-2 Step 4a is a draft at `step-4a` and is not-ready. QA-007 stays `[confirm]`. M-F5a is not complete.**
+**Verdict: task-1 Step 4b stays closed at `step-4b-authorized`. Task-2 stays `step-4a` and not-ready. RM ACCEPT does not flip the stage. QA-007 stays `[confirm]`. M-F5a is not complete.**
 
 The Tech Lead opened the tracer. `task-1/` holds the planning pack and `CLOSEOUT.md`.
 ADR-F5A-009 is filed. C1 tip is `ca5589e2`. C2 is
@@ -67,19 +67,19 @@ The code-ready gate, already met before C1, required all of the following:
 | G-01 | Tech Lead has not opened the Step 4a tracer | `task-1/` planning pack | Tech Lead | **closed — task-1 code-ready; stage `step-4b-authorized`** |
 | G-02 | Harness mechanism that calls C++ `optimization_problem` without a new public Python energy symbol | `task-1/TASK_1_MINI_SPEC.md` §4 and §6; ADR-F5A-009 | Architect, Step 4a | **closed — timer on `Variational_Quantum_Eigensolver_Base`; ADR-F5A-009 filed** |
 | G-03 | Whether one R-oracle row is required to label C++ `apply_to` | `task-1/TASK_1_MINI_SPEC.md` §5 | Architect, Step 4a | **closed — excluded; inner `apply_to` timer labels the component** |
-| G-04 | Depth and noise schedule per width, and the parameter vector | `task-1/TASK_1_MINI_SPEC.md` §2; `task-2/TASK_2_MINI_SPEC.md` §2 | Architect, Step 4a | **closed for 4 qubits; width 6 pinned in the task-2 draft pending RM; width 8 stays later** |
+| G-04 | Depth and noise schedule per width, and the parameter vector | `task-1/TASK_1_MINI_SPEC.md` §2; `task-2/TASK_2_MINI_SPEC.md` §2 | Architect, Step 4a | **closed for 4 qubits; width 6 pinned, RM ACCEPT 2026-10-07; width 8 stays later** |
 | G-05 | Paired versus interleaved, warm-up count, affinity, thread count, uncertainty estimator, and any divisor other than \(4^n\) | `task-1/TASK_1_MINI_SPEC.md` §7 | Architect, Step 4a | **closed for the 4-qubit tracer** |
 | G-06 | Product-owner freeze of the QA-007 numeric bar | an edit of `INITIAL_REQUIREMENTS.md` | Product owner | **open — blocks a "QA-007 met" label and any counted trial that applies the bar; does not block Step 4a** |
 | G-07 | Sibling interop lane is not on disk | the slice that creates it, after code-ready | Step 4b | **closed — lane and counted bundle are on disk; see `task-1/CLOSEOUT.md`** |
 | G-08 | Current-state docs do not yet name the lane | milestone close, ADR-F5A-007 | SDD at close | **open — expected** |
 | G-09 | Rocky-local Tester CI record for a code close | that later close | Tester | **open — expected; N8 stays deferred** |
 | G-10 | Step 4b authorization for task-1 | code-ready verdict on task-1 | Architect | **closed — task-1 stage `step-4b-authorized`; task-1 closed at C2** |
-| G-11 | Step 4b authorization for task-2 | Research Manager alignment, then a code-ready stamp | Research Manager, then Architect | **open — task-2 is a Step 4a draft; verdict not-ready** |
+| G-11 | Step 4b authorization for task-2 | Reviewer writer gate after W-1…W-5; RM ACCEPT is already recorded | Reviewer | **open — stage stays `step-4a`; RM ACCEPT alone does not flip it; not-ready** |
 
 No open item changes the equal-work pair, adds an advertised energy entry, publishes \(O\)
-on an attribution-only route, or proposes a kernel, fusion, or AVX edit. Task-2 Step 4a
-may be drafted with G-06, G-08, and G-09 open. Research Manager alignment is required
-before task-2 Step 4b (G-11).
+on an attribution-only route, or proposes a kernel, fusion, or AVX edit. No A4 kill and
+no reduction on widths 4 and 6 alone (ADR-F5A-003/005). RM ACCEPT 2026-10-07 is recorded.
+It does not flip task-2 off `step-4a` (G-11).
 
 ## 4. Decision closures and trade-offs
 
@@ -141,9 +141,9 @@ filed. C1 tip is `ca5589e25036531d599ff963e7d349c6e55b5951`. C2 is
 `task-1/CLOSEOUT.md` are the C2 record. At C1, this section said no-go for a counted
 run and for `CLOSEOUT.md` (N-39). That wording was true of C1 and is reconciled here.
 
-**No-go** for a "QA-007 met" label, for freezing the QA-007 bar, for marking M-F5a
-complete, for a push or a pull request, and for authorizing task-2 Step 4b from
-this draft. Section 12 opens that draft. The task-1 close itself did not open it.
+**No-go** for a "QA-007 met" label, for an A4 kill or a reduction on widths 4 and 6
+alone, for freezing the QA-007 bar, for marking M-F5a complete, for a push or a pull
+request, and for authorizing task-2 Step 4b. RM ACCEPT does not flip `step-4a`.
 
 A draft that changes the equal-work pair, adds an advertised energy entry, publishes
 \(O\) on an attribution-only route, or proposes a kernel, fusion, or AVX change stops
@@ -194,8 +194,8 @@ Reviewer (e) verdict: **APPROVE FOR C2** (bc-b25fac97). Binder
 `8749d515be86a3f067e9426062bc768275ebc1ec7e6022cbca0062a050f59e8b`.
 Parent is C1 tip `ca5589e25036531d599ff963e7d349c6e55b5951`. This section does
 not mark M-F5a complete and does not freeze QA-007. The next slice is not
-opened in this section. Section 12 opens it later. N-41 was open at this
-record and is closed in section 12.
+opened in this section. Section 12 records the later task-2 fold. N-41 is
+closed in the carry table in this section.
 
 ### (g) PASS
 
@@ -226,7 +226,7 @@ Regeneration outputs are not committed.
 | N-45 | folded | Independence sentences are in the closeout. The heading no longer uses gap G-10. |
 | N-46 | open | The flag line is exact for `libqgd.so`. The wrapper `.so` adds `-DCPYTHON`. The bundle does not pin flags. That pin is a lane change, or an accepted deviation at the milestone review. |
 | N-47 | folded | This section names C2 `ddde49ac1e248e3ea2b4516f420ca1cbbd14e9df`. |
-| S-g | open | Draft default is Measure in `task-2/TASK_2_MINI_SPEC.md` §3 (record spikes; drop nothing; keep the N-34 launch). Research Manager alignment is required before Step 4b. Dispose and a quieter mask are the other options, not this draft's default. |
+| S-g | accepted | RM ACCEPT 2026-10-07: Measure. Width-4: 2/1000 samples exceed 20 µs; excluding them moves 0.00711 to 0.00722. Width-6 uncounted means −0.0011, −0.0012, −0.0001 are lawful, as is `O_i` < −0.5. The 20 µs count is observational. Stage stays `step-4a`. |
 | N-16 | open | No MSVC branch for `clock_gettime`. Carry under ADR-F5A-007 until the first pull request into `master`. |
 | N-17 | open | The ET-2 golden energy is host-pinned. Same deadline as N-16. |
 | N-23 | open | Batched `optimization_problem` can race the six timer fields if the flag is on. Task-2 §3 restates harness-only, single-threaded. The race stays open. |
@@ -236,14 +236,14 @@ Regeneration outputs are not committed.
 | N-37 | open | Some validator tests are weak: both clean-start flags flip together, most B2 rejections have no isolated test, and no test feeds a real lane bundle. |
 | N-24 | open | The new interop tests sit outside the `density_matrix` marker (861 deselected at the C2 review). |
 | N-19 | folded | Task-2 §3 names sub-time clock reads (`clock_gettime`). |
-| N-3, N-6, N-10, N-14, N-21, N-25, N-27, N-28, N-29, N-31, N-40 | open | Unchanged from the C1 and C2 binders. N-3: ET-5 cites a forbidden-tree matrix row that §10 does not have. N-6: virtual-call overhead in the wrapper bucket cancels across the pair. N-10: ADR-F5A-009 did not extend the REQ-005 diff to the VQE C++ tree. N-14: the independence attestation is the closeout section. N-21: the task-1 mini-spec headroom note. N-25, N-27, N-28, and N-29 are the test, lane-copy, wrapper, and code-shape nits. N-31: C1 was committed before (a). N-40: `06b91d6c` does not name the test file. |
-| S-a, S-b, S-c, S-e | open | S-a: the QA-008 margin. S-b: the partition-tolerance size. S-c: lag-1 or batch means. S-e: affinity and threads before import. S-d (the `perf_counter_ns` read cost) stays closed at width 4. S-f was disposed: the Tech Lead proceeded, and (c) had no stall. |
+| N-3, N-6, N-10, N-14, N-21, N-25, N-27, N-28, N-29, N-31, N-40 | open | Task-1 notes stand. For task-2, N-3 and N-10 are the §9 containment diff, and N-14 is the width-6 Aer oracle (W-5). N-6, N-21, N-25, N-27, N-28, N-29, N-31, and N-40 are unchanged. |
+| S-a, S-b, S-c, S-e | open | S-a: margin 0.02; N-52, about 16 SE at width 6, record at the G-06 freeze. S-b: partition tolerance. S-c: lag-1 or batch means, still deferred at width 6 (N-56). S-e: affinity before import. S-d closed at width 4. S-f disposed: no refusal below −0.5. |
 
-## 12. Task-2 Step 4a draft
+## 12. Task-2 Step 4a writer fold (W-1…W-5)
 
-Opened on tip `f524c2001410c6398f628c5030f95e08a6d9ece9`. Slice: E-VQE at 6 qubits
-on the task-1 harness (`task-2/` pack). SDD stage `step-4a`. Verdict **not-ready**
-(READY-FOR-REVIEW). QA-007 stays `[confirm]`. M-F5a is not complete. N-41 is closed
-above. S-g's draft default is Measure. Width 8, attribution routes, G-06, G-08, and
-G-09 stay open. Returns to the Tech Lead for Research Manager alignment before a
-code-ready stamp and before Step 4b. No `task-2/CLOSEOUT.md`. No push. No pull request.
+Writer fold on tip `cffe2cab7da1f1533584f3972faacd6be3b89392`. RM ACCEPT 2026-10-07
+is recorded and does not flip the stage. SDD stage stays `step-4a`. Verdict
+**not-ready**. QA-007 stays `[confirm]`. M-F5a is not complete. N-41 is closed in
+the §11 carry table. S-g is Measure. A negative width-6 mean and `O_i` < −0.5 are
+lawful. No A4 kill on widths 4 and 6 alone. W-1…W-5 are in `task-2/`. A stage flip
+waits on the Reviewer writer gate. No `CLOSEOUT.md`. No Step 4b. No push. No pull request.

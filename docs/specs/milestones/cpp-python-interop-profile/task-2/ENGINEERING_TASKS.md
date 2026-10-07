@@ -1,21 +1,26 @@
 # Engineering tasks — M-F5a task-2
-> **Status:** Step 4a draft · not-ready · **Slice:** M-F5a task-2 · E-VQE at 6 qubits ·
+> **Status:** Step 4a · not-ready · **Slice:** M-F5a task-2 · E-VQE at 6 qubits ·
 > **Traces:** REQ-001, REQ-002, REQ-003, REQ-004, REQ-005, REQ-006, REQ-007, REQ-008, REQ-009 ·
 > CAP-004, CAP-007 · QA-007, QA-008, QA-009 ·
 > **SDD stage:** step-4a
-> **Boundary:** draft only. QA-007 stays `[confirm]`. The milestone is not complete
+> **Boundary:** W-1…W-5 folded. QA-007 stays `[confirm]`. The milestone is not complete
 
-**Verdict: not-ready.** READY-FOR-REVIEW. Developer does not start. A code-ready
-writer may set `step-4b-authorized` only after the Research Manager accepts this
-contract, including the Measure default in `TASK_2_MINI_SPEC.md` §3. This pass does
-not authorize Step 4b. No `CLOSEOUT.md` is written. The expected lint finding is
-`SLICE_MISSING_CLOSEOUT` for task-2, a warning in both modes. No waiver.
+**Verdict: not-ready.** READY-FOR-RE-REVIEW. Developer does not start. No counted
+width-6 run is started here. No `CLOSEOUT.md` is written. The expected lint finding
+is `SLICE_MISSING_CLOSEOUT` for task-2, a warning in both modes. No waiver.
 
-These tasks are the draft contract. None may add a public energy API, time an
-attribution route, include width 8, apply the 10 % bar, drop a sample, or take a
-reduction. The planned diff is Python only. A required C++ edit is a handback.
+A later stamp of `step-4b-authorized` requires all three: RM ACCEPT 2026-10-07,
+which is recorded and does not by itself flip the stage; this W-1…W-5 fold, with
+pins, Measure, the deferred set, the pair, the inventory, the no-O rule, and the
+kernel/fusion/AVX boundary unchanged; and the follow-on Reviewer writer gate.
+Until that gate, the stage line stays `step-4a`.
 
-## ET-1 — Pin the 6-qubit cell without a counted run
+These tasks are the contract for a later authorized pass. None may add a public
+energy API, time an attribution route, include width 8, apply the 10 % bar, claim
+an A4 kill or a reduction on widths 4 and 6, drop a sample, or clip a negative mean.
+The planned diff is Python only. A required C++ edit is a handback.
+
+## ET-1 — Pin the 6-qubit cell and its Aer oracle
 
 **Implements delivery story**
 - DS-1
@@ -26,22 +31,27 @@ reduction. The planned diff is Python only. A required C++ edit is a handback.
 **Definition of done**
 - A test in `tests/VQE/test_vqe_interop_harness.py` builds the §2 evaluator and
   asserts `parameter_count` 30, `operation_count` 18, `gate_count` 15, `noise_count` 3,
-  and Hamiltonian `nnz` 224.
+  and Hamiltonian `nnz` 224. The existing bridge-metadata node already runs at width 6
+  (N-54). This test still owns those integers.
 - The same test shows flag-off and flag-on energies on that parameter vector are
-  bit-identical, and that the Python class has no new energy method.
+  bit-identical, and that the Python class has no new energy method. Bit identity
+  shares the kernel. It is not the independence oracle.
+- The width-6 Aer oracle lives in that same file. It calls
+  `Test_VQE._get_density_backend_aer_reference` on this cell and the line Hamiltonian.
+  The assertion is `|ΔE| ≤ 1e-12 + 1e-5·|E_Aer|`, about 2.8e-7 here. The Tester shows
+  the check passed rather than skipped. The frozen 4-qubit Aer node and
+  `tests/VQE/test_VQE.py` stay unchanged. No 6-qubit host golden is added.
 - The test does not run 1000 pairs and does not write a bundle.
-- The existing 4-qubit golden `-0.7583303034656004` and the Aer node stay in their
-  current tests. This task adds no 6-qubit host golden.
 
 **Execution checklist (TDD: red → green → refactor)**
-- [ ] Write the failing structural test first
-- [ ] Run it and confirm the red failure
+- [ ] Write the failing structural test and the failing Aer check first
+- [ ] Run them and confirm the red failure
 - [ ] Expose the width-6 builder on the existing lane module without changing the width-4 default
-- [ ] Re-run the unchanged Aer node from the mini-spec evidence matrix
+- [ ] Re-run the unchanged 4-qubit Aer node from the mini-spec evidence matrix
 
 **Evidence produced**
 - `conda run -n qgd --no-capture-output pytest tests/VQE/test_vqe_interop_harness.py -q`
-- QA-007 (label still withheld; this task does not apply the bar) and QA-009 (Aer node unchanged)
+- QA-007 (label still withheld; this task does not apply the bar) and QA-009 (4-qubit Aer node unchanged; width-6 oracle named)
 
 **Risks / rollback**
 - Risk: the builder silently retunes depth or noise when `qbit_num` is 6
@@ -49,7 +59,7 @@ reduction. The planned diff is Python only. A required C++ edit is a handback.
 
 REQ-002 and REQ-003 are the requirements this task serves.
 
-## ET-2 — Accept a width-6 bundle and refuse to replace the width-4 file
+## ET-2 — Width-6 validator is the full width-4 check set
 
 **Implements delivery story**
 - DS-1 and DS-2
@@ -59,38 +69,50 @@ REQ-002 and REQ-003 are the requirements this task serves.
 
 **Definition of done**
 - `validate_interop_bundle` still requires width 4 and divisor 3072.
-- `validate_interop_bundle_w6` requires `qbit_num` 6, `operation_count` 18, divisor
-  73728, 1000 counted pairs, 50 warm-up pairs, `milestone_counted=false`,
-  `estimator.name` `arithmetic_mean_O_i`, `no_sample_dropped` true, the four
-  components, and the §3 spike fields.
-- A fixture with "QA-007 met", width 8, an attribution-route label, or `O` on such a
-  route fails both validators.
-- `validation_pipeline.py` with no `--width` still targets `interop_profile_bundle.json`.
-  `--width 6` targets `interop_profile_bundle_w6.json`. If width 6 resolves to the
-  filename `interop_profile_bundle.json`, the process exits nonzero and writes nothing.
-  If width 4 resolves to `interop_profile_bundle_w6.json`, it does the same.
-- A test asserts the on-disk task-1 bundle sha256 is
-  `212f70386bf2a44711d29956c41bd3f0eea9ee2e284ace9c5403bc3d94ef934e` and that a refused
-  write leaves that file unchanged.
-- `assert_mean_o_within_margin(recorded, regenerated, margin=0.02)` returns without
-  error when the absolute delta is 0.02 and raises when the delta is greater.
-  Fixture tests cover both sides (N-32). The margin is not a 10 % bar check.
+- `validate_interop_bundle_w6` enforces every check in `validate_interop_bundle`
+  (`interop_bundle_validation.py` from the serialized label scan through
+  `milestone_counted`), with width-6 constants: `qbit_num` 6, `operation_count` 18,
+  divisor 73728. That set is: the "QA-007 met" scan; provenance keys, `clean_start`,
+  and `provenance_pass`; `harness_timer_flag`; pairing and protocol counts; estimator
+  name `arithmetic_mean_O_i` and `no_sample_dropped`; workload keys and qa008 pins;
+  per-sample finiteness, positive `T_public`, six sub-times, and the partition
+  tolerance; recomputed `mean_O`, its upper bound, throughput mean, throughput upper
+  bound, and the four component means; forbidden labels and symbols; and
+  `milestone_counted=false`.
+- It also requires, recomputed from the samples and stored under `overhead`:
+  `min_O`, `max_O`, `median_O`, and `spike_count_abs_wrapper_ns_above_20000`.
+- `provenance.command` must contain `--width 6` and must be the §4 counted command.
+  A no-arg width-4 command fails the width-6 row.
+- Negative fixtures fail: missing throughput mean, missing throughput upper bound,
+  divisor 3072 or 4096 or 65536, a spike count that disagrees with the samples,
+  "QA-007 met", a claim of an A4 kill, of CAP-004 hold-the-line, or of a reduction,
+  width 8, and an attribution-route label. No check rejects a negative mean `O` or a
+  negative wrapper mean.
+- `validation_pipeline.py` decides the filename from the arguments before any pair
+  runs. No `--width` still targets `interop_profile_bundle.json`. `--width 6` targets
+  `interop_profile_bundle_w6.json`. Width 6 resolving to `interop_profile_bundle.json`,
+  or width 4 resolving to `interop_profile_bundle_w6.json`, exits nonzero and writes
+  nothing, and it does so before `run_interop_row`.
+- Refusal tests use a `tmp_path` copy. No test writes the committed task-1 bundle.
+- `assert_mean_o_within_margin(0.0, 0.02, margin=0.02)` returns, and a delta above
+  0.02 raises. The comparison is `<=` on the absolute difference (N-51). The margin
+  is not a 10 % bar check and not an A4 check.
 
 **Execution checklist (TDD: red → green → refactor)**
-- [ ] Write the failing validator and refusal tests first, in `tests/VQE/test_vqe_interop_bundle_validation.py`
+- [ ] Write the failing validator, provenance, A4, and refusal tests first, in `tests/VQE/test_vqe_interop_bundle_validation.py`
 - [ ] Confirm they fail because the width-6 entry points are absent
 - [ ] Implement the entry points. Do not loosen the width-4 checks
 - [ ] Do not run the 1000-pair width-6 command in this task
 
 **Evidence produced**
 - `conda run -n qgd --no-capture-output pytest tests/VQE/test_vqe_interop_bundle_validation.py -q`
-- REQ-001, REQ-002, REQ-004, REQ-006, QA-007, and QA-008
+- REQ-001, REQ-002, REQ-004, REQ-005, REQ-006, QA-007, and QA-008
 
 **Risks / rollback**
 - Risk: the default pipeline starts writing the width-6 row onto the task-1 path
 - Rollback: delete `--width` handling and `validate_interop_bundle_w6`
 
-## ET-3 — Record spikes without changing the estimator
+## ET-3 — Record the tail count without changing the estimator
 
 **Implements delivery story**
 - DS-1
@@ -99,32 +121,33 @@ REQ-002 and REQ-003 are the requirements this task serves.
 - tests | tooling
 
 **Definition of done**
-- The width-6 sample record stores `min_O`, `max_O`, `median_O`, and
-  `spike_count_abs_wrapper_ns_above_20000`.
+- The width-6 `overhead` object stores `min_O`, `max_O`, `median_O`, `mean_O`,
+  `upper_bound_95_O`, and `spike_count_abs_wrapper_ns_above_20000`.
 - The spike count equals the number of counted samples with
   `abs(t_public_ns - t_lower_ns) > 20000`. A pure function computes that count and
-  has a fixture test that does not need 1000 live pairs.
-- The reported `O` remains the arithmetic mean. The median is not substituted.
+  has a short fixture. The count is an observation. It is not a filter, not a
+  failure, and not comparable to the width-4 count of 2 per 1000.
+- The reported `O` remains the arithmetic mean, including when that mean is negative.
+  The median is not substituted. Samples with `O_i < −0.5` stay in the mean.
 - The row fails on a non-finite sample or a non-positive `T_public`. It does not
-  fail because the spike count is nonzero. It does not drop samples.
-- The launch text in the lane module for width 6 is the N-34 environment:
-  `taskset -c 0`, `PYTHONDONTWRITEBYTECODE=1`, and the four thread variables set to `1`.
-  Affinity stays the lowest allowed CPU inside the process. Nothing in this task sets
-  affinity before import.
+  fail because the mean is negative, because a sample is below −0.5, or because the
+  spike count is nonzero.
+- The launch text for width 6 is the §4 command. Affinity stays the lowest allowed
+  CPU inside the process. Nothing sets affinity before import.
 
 **Execution checklist (TDD: red → green → refactor)**
-- [ ] Write the failing spike-count fixture first
-- [ ] Confirm it fails for the missing function
-- [ ] Add the fields to the width-6 bundle schema and validator
-- [ ] Leave the width-4 estimator fields' required set intact
+- [ ] Write the failing spike-count fixture and a fixture whose mean `O` is negative and must still validate
+- [ ] Confirm they fail for the missing behavior
+- [ ] Add the fields to the width-6 schema
+- [ ] Leave the width-4 estimator's required set intact
 
 **Evidence produced**
-- The fixture test in `tests/VQE/test_vqe_interop_bundle_validation.py`
-- QA-008 (categorical protocol pins, margin function from ET-2) and QA-007 (bound present, label absent)
+- The fixture tests in `tests/VQE/test_vqe_interop_bundle_validation.py`
+- QA-008 (protocol pins and the margin function from ET-2) and QA-007 (bound present, label absent, bar not applied)
 
 **Risks / rollback**
-- Risk: the spike threshold is coded as a sample filter
-- Rollback: stop writing the count. Do not add a drop rule in its place
+- Risk: the threshold is coded as a sample filter or a sign check
+- Rollback: stop writing the count. Do not add a drop rule or a refusal in its place
 
 REQ-002 and REQ-006 are the requirements this task serves.
 
@@ -137,26 +160,32 @@ REQ-002 and REQ-006 are the requirements this task serves.
 - tests | docs
 
 **Definition of done**
-- The implementation diff, once Step 4b is separately authorized, touches only
-  `benchmarks/density_matrix/interop_profile/`, the two test modules named above, and
-  at counted close `interop_profile_bundle_w6.json`.
-- It does not touch `squander/src-cpp/`, `squander/VQA/`, `squander/partitioning/`,
-  `docs/density_matrix_project/archive/`, `benchmarks/density_matrix/performance_evidence/`,
-  `benchmarks/density_matrix/benchmark_perf.py`, `INITIAL_REQUIREMENTS.md`,
-  `ARCHITECTURE_OVERVIEW.md`, or `TECH_STACK.md`.
+- Once a later pass is separately authorized, its diff touches only
+  `benchmarks/density_matrix/interop_profile/`, `tests/VQE/test_vqe_interop_harness.py`,
+  `tests/VQE/test_vqe_interop_bundle_validation.py`, and at counted close
+  `interop_profile_bundle_w6.json`.
+- This command stays empty. It is the containment row:
+
+```bash
+git diff --exit-code cffe2cab7da1f1533584f3972faacd6be3b89392 -- \
+  squander/src-cpp squander/VQA squander/partitioning \
+  tests/VQE/test_VQE.py \
+  benchmarks/density_matrix/artifacts/interop_profile/interop_profile_bundle.json
+```
+
 - `test_explicit_state_vector_matches_legacy_default` passes.
-- The text "QA-007 met" does not appear in the width-6 schema.
-- This slice's close, when it later exists, does not claim QA-007 met and does not
-  mark M-F5a complete. `task-2/CLOSEOUT.md` is absent during Step 4a.
-- No counted width-6 bundle is produced in the planning commit.
+- The width-6 schema does not claim QA-007 met.
+- This slice's later close does not claim QA-007 met and does not mark M-F5a
+  complete. `task-2/CLOSEOUT.md` is absent while the stage is `step-4a`.
+- No counted width-6 bundle is produced in this writer pass.
 
 **Execution checklist (TDD: red → green → refactor)**
-- [ ] Add a review check that the width-6 writer refuses the task-1 filename
+- [ ] Add the refusal test on `tmp_path` before any lane edit
 - [ ] Confirm a fixture diff under `squander/partitioning` still fails the existing path check
-- [ ] Keep the implementation inside the allowed Python files
+- [ ] Keep the later implementation inside the allowed Python files
 
 **Evidence produced**
-- `git diff --exit-code` on the forbidden trees named in the mini-spec matrix, from the commit that records this pack
+- The `git diff --exit-code` command above
 - `conda run -n qgd --no-capture-output pytest tests/VQE/test_VQE.py::Test_VQE::test_explicit_state_vector_matches_legacy_default -q`
 - REQ-005, REQ-007, REQ-008, REQ-009, and QA-009
 
