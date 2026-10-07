@@ -25,6 +25,8 @@ limitations under the License.
 
 #include "Optimization_Interface.h"
 
+#include <cstdint>
+
 namespace squander {
 namespace density {
 class DensityMatrix;
@@ -158,6 +160,10 @@ private:
 
   /// Ordered fixed local-noise insertions for the density backend.
   std::vector<DensityNoiseSpec> density_noise_specs;
+
+  /// Harness-only density interop timer (M-F5a task-1); not used in production paths.
+  bool harness_density_timer_flag_;
+  int64_t harness_density_subtimes_ns_[6];
 
   void validate_density_anchor_support(bool require_optimizer_support = false,
                                        bool require_gradient_support = false);
@@ -418,6 +424,17 @@ public:
   */
   void set_density_noise_specs(
       const std::vector<DensityNoiseSpec> &density_noise_specs_in);
+
+  /**
+  @brief Enable or disable harness-only density interop sub-timing (no energy API).
+  */
+  void set_harness_density_timer_flag(bool enabled);
+
+  /**
+  @brief Copy the six harness sub-times in nanoseconds from the last density
+  optimization_problem call (support_outer through teardown).
+  */
+  void get_harness_density_subtimes_ns(int64_t out_ns[6]) const;
 };
 
 #endif

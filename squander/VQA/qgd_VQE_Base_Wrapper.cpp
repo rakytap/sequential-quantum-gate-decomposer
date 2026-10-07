@@ -27,6 +27,7 @@ limitations under the License.
 #include <numpy/arrayobject.h>
 #include "structmember.h"
 #include <stdio.h>
+#include <time.h>
 #include "Variational_Quantum_Eigensolver_Base.h"
 
 #include "numpy_interface.h"
@@ -1719,6 +1720,131 @@ static PyTypeObject qgd_Variational_Quantum_Eigensolver_Base_Wrapper_Type = {
   #endif
 };
 
+static int64_t harness_wrapper_monotonic_ns() {
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return (int64_t)ts.tv_sec * 1000000000LL + (int64_t)ts.tv_nsec;
+}
+
+static qgd_Variational_Quantum_Eigensolver_Base_Wrapper *
+harness_parse_vqe_wrapper(PyObject *wrapper_obj, const char *routine_name) {
+
+    if (!PyObject_TypeCheck(wrapper_obj,
+                            &qgd_Variational_Quantum_Eigensolver_Base_Wrapper_Type)) {
+        PyErr_Format(PyExc_TypeError,
+                     "%s: first argument must be a VQE wrapper instance",
+                     routine_name);
+        return NULL;
+    }
+
+    return (qgd_Variational_Quantum_Eigensolver_Base_Wrapper *)wrapper_obj;
+}
+
+static PyObject *
+harness_density_set_timer_flag(PyObject *self, PyObject *args) {
+
+    PyObject *wrapper_obj = NULL;
+    int flag_value = 0;
+
+    if (!PyArg_ParseTuple(args, "Oi", &wrapper_obj, &flag_value)) {
+        return NULL;
+    }
+
+    qgd_Variational_Quantum_Eigensolver_Base_Wrapper *wrapper =
+        harness_parse_vqe_wrapper(wrapper_obj, "harness_density_set_timer_flag");
+    if (wrapper == NULL) {
+        return NULL;
+    }
+
+    wrapper->vqe->set_harness_density_timer_flag(flag_value != 0);
+    Py_RETURN_NONE;
+}
+
+static PyObject *
+harness_density_subtimes_ns(PyObject *self, PyObject *args) {
+
+    PyObject *wrapper_obj = NULL;
+
+    if (!PyArg_ParseTuple(args, "O", &wrapper_obj)) {
+        return NULL;
+    }
+
+    qgd_Variational_Quantum_Eigensolver_Base_Wrapper *wrapper =
+        harness_parse_vqe_wrapper(wrapper_obj, "harness_density_subtimes_ns");
+    if (wrapper == NULL) {
+        return NULL;
+    }
+
+    int64_t subtimes_ns[6];
+    wrapper->vqe->get_harness_density_subtimes_ns(subtimes_ns);
+
+    return Py_BuildValue("LLLLLL", subtimes_ns[0], subtimes_ns[1], subtimes_ns[2],
+                         subtimes_ns[3], subtimes_ns[4], subtimes_ns[5]);
+}
+
+static PyObject *
+harness_density_lower_ns(PyObject *self, PyObject *args) {
+
+    PyObject *wrapper_obj = NULL;
+    PyArrayObject *parameters_arg = NULL;
+
+    if (!PyArg_ParseTuple(args, "OO", &wrapper_obj, &parameters_arg)) {
+        std::string err("Unsuccessful argument parsing not ");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+    qgd_Variational_Quantum_Eigensolver_Base_Wrapper *wrapper =
+        harness_parse_vqe_wrapper(wrapper_obj, "harness_density_lower_ns");
+    if (wrapper == NULL) {
+        return NULL;
+    }
+
+    if (PyArray_IS_C_CONTIGUOUS(parameters_arg) &&
+        PyArray_TYPE(parameters_arg) == NPY_FLOAT64) {
+        Py_INCREF(parameters_arg);
+    } else if (PyArray_TYPE(parameters_arg) == NPY_FLOAT64) {
+        parameters_arg = (PyArrayObject *)PyArray_FROM_OTF(
+            (PyObject *)parameters_arg, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
+    } else {
+        std::string err(
+            "Parameters should be should be real (given in float64 format)");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+    Matrix_real parameters_mtx = numpy2matrix_real(parameters_arg);
+
+    const int64_t start_ns = harness_wrapper_monotonic_ns();
+    try {
+        wrapper->vqe->optimization_problem(parameters_mtx);
+    } catch (std::string err) {
+        Py_DECREF(parameters_arg);
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    } catch (...) {
+        Py_DECREF(parameters_arg);
+        std::string err("Invalid pointer to decomposition class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+    const int64_t elapsed_ns = harness_wrapper_monotonic_ns() - start_ns;
+
+    Py_DECREF(parameters_arg);
+
+    return PyLong_FromLongLong(elapsed_ns);
+}
+
+static PyMethodDef qgd_VQE_harness_module_methods[] = {
+    {"harness_density_lower_ns", harness_density_lower_ns, METH_VARARGS,
+     "Harness-only nanosecond timing of optimization_problem; returns no energy."},
+    {"harness_density_set_timer_flag", harness_density_set_timer_flag, METH_VARARGS,
+     "Harness-only toggle for density interop sub-timing on a VQE instance."},
+    {"harness_density_subtimes_ns", harness_density_subtimes_ns, METH_VARARGS,
+     "Harness-only readout of six density sub-times in nanoseconds; returns no energy."},
+    {NULL}
+};
+
 /**
 @brief Structure containing metadata about the module.
 */
@@ -1727,6 +1853,7 @@ static PyModuleDef qgd_Variational_Quantum_Eigensolver_Base_Wrapper_Module = {
     "qgd_N_Qubit_Decomposition_Wrapper",
     "Python binding for QGD N_Qubit_Decomposition class",
     -1,
+    qgd_VQE_harness_module_methods,
 };
 
 

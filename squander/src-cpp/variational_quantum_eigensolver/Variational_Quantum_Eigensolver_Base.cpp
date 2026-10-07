@@ -27,6 +27,7 @@ limitations under the License.
 #include "../../gates/include/H.h"
 #include "../../gates/include/SDG.h"
 #include <cmath>
+#include <ctime>
 #include <nlohmann/json.hpp>
 #include <random>
 #include <string>
@@ -92,6 +93,13 @@ parse_vqe_backend_mode(std::map<std::string, Config_Element> &config) {
   }
 }
 
+int64_t harness_monotonic_ns() {
+  struct timespec ts;
+  clock_gettime(CLOCK_MONOTONIC, &ts);
+  return static_cast<int64_t>(ts.tv_sec) * 1000000000LL +
+         static_cast<int64_t>(ts.tv_nsec);
+}
+
 } // namespace
 
 /**
@@ -133,6 +141,24 @@ Variational_Quantum_Eigensolver_Base::Variational_Quantum_Eigensolver_Base() {
   backend_mode = STATE_VECTOR_BACKEND;
   circuit_source = VQE_CIRCUIT_SOURCE_UNSET;
   density_noise_specs.clear();
+  harness_density_timer_flag_ = false;
+  for (int idx = 0; idx < 6; ++idx) {
+    harness_density_subtimes_ns_[idx] = 0;
+  }
+}
+
+void Variational_Quantum_Eigensolver_Base::set_harness_density_timer_flag(
+    bool enabled) {
+
+  harness_density_timer_flag_ = enabled;
+}
+
+void Variational_Quantum_Eigensolver_Base::get_harness_density_subtimes_ns(
+    int64_t out_ns[6]) const {
+
+  for (int idx = 0; idx < 6; ++idx) {
+    out_ns[idx] = harness_density_subtimes_ns_[idx];
+  }
 }
 
 void Variational_Quantum_Eigensolver_Base::set_density_noise_specs(
@@ -397,16 +423,41 @@ Variational_Quantum_Eigensolver_Base::expectation_value_of_density_energy_real(
 double Variational_Quantum_Eigensolver_Base::evaluate_density_matrix_backend(
     Matrix_real &parameters) {
 
+  const bool harness_timing = harness_density_timer_flag_;
+  int64_t interval_start = 0;
+
+  if (harness_timing) {
+    interval_start = harness_monotonic_ns();
+  }
   squander::density::DensityMatrix rho =
       (initial_state.size() == 0)
           ? squander::density::DensityMatrix(qbit_num)
           : squander::density::DensityMatrix(initial_state);
-
   squander::density::NoisyCircuit circuit(qbit_num);
-  lower_anchor_circuit_to_noisy_circuit(circuit);
-  circuit.apply_to(parameters, rho);
+  if (harness_timing) {
+    harness_density_subtimes_ns_[1] = harness_monotonic_ns() - interval_start;
+    interval_start = harness_monotonic_ns();
+  }
 
-  return expectation_value_of_density_energy_real(rho);
+  lower_anchor_circuit_to_noisy_circuit(circuit);
+  if (harness_timing) {
+    harness_density_subtimes_ns_[2] = harness_monotonic_ns() - interval_start;
+    interval_start = harness_monotonic_ns();
+  }
+
+  circuit.apply_to(parameters, rho);
+  if (harness_timing) {
+    harness_density_subtimes_ns_[3] = harness_monotonic_ns() - interval_start;
+    interval_start = harness_monotonic_ns();
+  }
+
+  const double energy = expectation_value_of_density_energy_real(rho);
+  if (harness_timing) {
+    harness_density_subtimes_ns_[4] = harness_monotonic_ns() - interval_start;
+    harness_density_subtimes_ns_[5] = harness_monotonic_ns();
+  }
+
+  return energy;
 }
 
 /**
@@ -462,6 +513,10 @@ Variational_Quantum_Eigensolver_Base::Variational_Quantum_Eigensolver_Base(
   ansatz = HEA;
   circuit_source = VQE_CIRCUIT_SOURCE_UNSET;
   density_noise_specs.clear();
+  harness_density_timer_flag_ = false;
+  for (int idx = 0; idx < 6; ++idx) {
+    harness_density_subtimes_ns_[idx] = 0;
+  }
 }
 
 /**
@@ -1088,10 +1143,27 @@ double Variational_Quantum_Eigensolver_Base::optimization_problem_Groq(
 double Variational_Quantum_Eigensolver_Base::optimization_problem(
     Matrix_real &parameters) {
 
-  validate_density_anchor_support(false, false);
+  const bool harness_timing =
+      harness_density_timer_flag_ &&
+      backend_mode == DENSITY_MATRIX_BACKEND;
+  if (harness_timing) {
+    for (int idx = 0; idx < 6; ++idx) {
+      harness_density_subtimes_ns_[idx] = 0;
+    }
+    const int64_t support_start = harness_monotonic_ns();
+    validate_density_anchor_support(false, false);
+    harness_density_subtimes_ns_[0] = harness_monotonic_ns() - support_start;
+  } else {
+    validate_density_anchor_support(false, false);
+  }
 
   if (backend_mode == DENSITY_MATRIX_BACKEND) {
-    return evaluate_density_matrix_backend(parameters);
+    const double energy = evaluate_density_matrix_backend(parameters);
+    if (harness_timing) {
+      const int64_t teardown_start = harness_density_subtimes_ns_[5];
+      harness_density_subtimes_ns_[5] = harness_monotonic_ns() - teardown_start;
+    }
+    return energy;
   }
 
   Matrix State;
