@@ -28,10 +28,37 @@ DEFAULT_OUTPUT_PATH_W8 = DEFAULT_OUTPUT_DIR / "interop_profile_bundle_w8.json"
 ARTIFACT_NAME_W4 = "interop_profile_bundle.json"
 ARTIFACT_NAME_W6 = "interop_profile_bundle_w6.json"
 ARTIFACT_NAME_W8 = "interop_profile_bundle_w8.json"
+DEFAULT_ATTRIBUTION_ROUTES_OUTPUT = (
+    DEFAULT_OUTPUT_DIR / "interop_profile_bundle_routes_w4.json"
+)
 
 
-def resolve_interop_output_path(width: int | None, output: Path | None) -> Path:
+def resolve_interop_output_path(
+    width: int | None,
+    output: Path | None,
+    *,
+    attribution_routes: bool = False,
+) -> Path:
     """Resolve the bundle path and refuse width/filename mismatches before any pair."""
+    if attribution_routes:
+        from benchmarks.density_matrix.interop_profile.attribution_route_validation import (
+            QBIT_WIDTH_TASK4,
+            resolve_attribution_output_path,
+        )
+
+        qbit_num = width if width is not None else QBIT_WIDTH_TASK4
+        resolved = resolve_attribution_output_path(
+            output if output is not None else DEFAULT_ATTRIBUTION_ROUTES_OUTPUT,
+            width=qbit_num,
+        )
+        return Path(resolved)
+
+    from benchmarks.density_matrix.interop_profile.attribution_route_validation import (
+        refuse_evqe_output_with_routes_name,
+    )
+
+    refuse_evqe_output_with_routes_name(output)
+
     if width in (None, 4):
         qbit_num = 4
         default_path = DEFAULT_OUTPUT_PATH_W4
@@ -76,7 +103,31 @@ def main(argv: list[str] | None = None) -> int:
         default=None,
         help="Path for the interop bundle JSON artifact",
     )
+    parser.add_argument(
+        "--attribution-routes",
+        action="store_true",
+        help="Emit the width-4 attribution route counted bundle (R-strict refusal row).",
+    )
     args = parser.parse_args(argv)
+
+    if args.attribution_routes:
+        from benchmarks.density_matrix.interop_profile.attribution_route_lane import (
+            run_counted_attribution_bundle,
+        )
+
+        output_path = resolve_interop_output_path(
+            args.width, args.output, attribution_routes=True
+        )
+        bundle = run_counted_attribution_bundle()
+        if bundle.get("clean_start") is not True:
+            print(
+                "refusing to write attribution route bundle: worktree is not clean at capture",
+                file=sys.stderr,
+            )
+            return 1
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(json.dumps(bundle, indent=2, sort_keys=True) + "\n")
+        return 0
 
     if args.width == 8:
         qbit_num = 8

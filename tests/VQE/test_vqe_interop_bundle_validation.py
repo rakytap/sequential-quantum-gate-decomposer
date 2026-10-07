@@ -864,6 +864,20 @@ def _minimal_attribution_route_bundle() -> dict:
     ]
     rows = []
     for route_id in ROUTE_IDS_REQUIRED:
+        if route_id == "R-strict":
+            rows.append(
+                {
+                    "route_id": "R-strict",
+                    "entry_symbol": "execute_partitioned_density_channel_native",
+                    "apply_label": "numpy Kraus",
+                    "status": "handback_refused",
+                    "reason": (
+                        "STEP_4A_HANDBACK 98eec857; channel_native_noise_presence; "
+                        "synthetic refusal fixture"
+                    ),
+                }
+            )
+            continue
         orch_values = [float(sample["orchestration_ns"]) for sample in samples]
         apply_values = [float(sample["apply_component_ns"]) for sample in samples]
         tp_values = [value / 3072 for value in apply_values]
@@ -1095,3 +1109,456 @@ def test_validate_attribution_route_bundle_rejects_hybrid_constant_apply_label()
             row["apply_label"] = "the executed class"
     with pytest.raises(ValueError, match="partition_runtime_classes"):
         validate_attribution_route_bundle(bundle)
+
+
+def test_validate_attribution_route_bundle_rejects_timed_r_strict_row():
+    from benchmarks.density_matrix.interop_profile.attribution_route_validation import (
+        validate_attribution_route_bundle,
+    )
+
+    bundle = _minimal_attribution_route_bundle()
+    for row in bundle["rows"]:
+        if row["route_id"] == "R-strict":
+            row.clear()
+            row.update(
+                {
+                    "route_id": "R-strict",
+                    "entry_symbol": "execute_partitioned_density_channel_native",
+                    "apply_label": "numpy Kraus",
+                    "samples": bundle["rows"][0]["samples"],
+                    "orchestration": bundle["rows"][0]["orchestration"],
+                    "apply_component": bundle["rows"][0]["apply_component"],
+                    "throughput": bundle["rows"][0]["throughput"],
+                }
+            )
+    with pytest.raises(ValueError, match="refusal row"):
+        validate_attribution_route_bundle(bundle)
+
+
+@pytest.mark.parametrize(
+    "key,value",
+    [
+        ("apply_label", 61195.0),
+        ("entry_symbol", 3072),
+        ("apply_label", {"mean_ns": 61195.0, "upper_bound_95_ns": 62000.0}),
+        ("reason", {"text": "98eec857 channel_native_noise_presence", "apply_ns": 61195}),
+        ("reason", ["98eec857 channel_native_noise_presence", 20.29]),
+    ],
+)
+def test_validate_attribution_route_bundle_rejects_r_strict_non_string_values(key, value):
+    from benchmarks.density_matrix.interop_profile.attribution_route_validation import (
+        validate_attribution_route_bundle,
+    )
+
+    bundle = _minimal_attribution_route_bundle()
+    for row in bundle["rows"]:
+        if row["route_id"] == "R-strict":
+            row[key] = value
+    with pytest.raises(ValueError):
+        validate_attribution_route_bundle(bundle)
+
+
+@pytest.mark.parametrize("key", ["orchestration", "apply_component", "throughput"])
+def test_validate_attribution_route_bundle_rejects_r_strict_timing_blocks(key):
+    from benchmarks.density_matrix.interop_profile.attribution_route_validation import (
+        validate_attribution_route_bundle,
+    )
+
+    bundle = _minimal_attribution_route_bundle()
+    base_row = next(row for row in bundle["rows"] if row["route_id"] == "R-base")
+    for row in bundle["rows"]:
+        if row["route_id"] == "R-strict":
+            row[key] = copy.deepcopy(base_row[key])
+    with pytest.raises(ValueError, match="R-strict"):
+        validate_attribution_route_bundle(bundle)
+
+
+@pytest.mark.parametrize(
+    "reason",
+    ["channel_native_noise_presence only", "STEP_4A_HANDBACK 98eec857 only"],
+)
+def test_validate_attribution_route_bundle_rejects_r_strict_reason_missing_tokens(reason):
+    from benchmarks.density_matrix.interop_profile.attribution_route_validation import (
+        validate_attribution_route_bundle,
+    )
+
+    bundle = _minimal_attribution_route_bundle()
+    for row in bundle["rows"]:
+        if row["route_id"] == "R-strict":
+            row["reason"] = reason
+    with pytest.raises(ValueError, match="R-strict refusal reason"):
+        validate_attribution_route_bundle(bundle)
+
+
+@pytest.mark.parametrize(
+    "key,value",
+    [
+        ("samples", [{"orchestration_ns": 1, "apply_component_ns": 2}]),
+        ("ns_per_op", "20.29"),
+        ("apply_ns", "61195"),
+        ("note", "no timings"),
+    ],
+)
+def test_validate_attribution_route_bundle_rejects_r_strict_refusal_extra_keys(key, value):
+    from benchmarks.density_matrix.interop_profile.attribution_route_validation import (
+        validate_attribution_route_bundle,
+    )
+
+    bundle = _minimal_attribution_route_bundle()
+    for row in bundle["rows"]:
+        if row["route_id"] == "R-strict":
+            row[key] = value
+    with pytest.raises(ValueError, match="must not carry keys"):
+        validate_attribution_route_bundle(bundle)
+
+
+def test_validate_attribution_route_bundle_rejects_refusal_shaped_r_base_row():
+    from benchmarks.density_matrix.interop_profile.attribution_route_validation import (
+        validate_attribution_route_bundle,
+    )
+
+    bundle = _minimal_attribution_route_bundle()
+    row = next(row for row in bundle["rows"] if row["route_id"] == "R-base")
+    row.clear()
+    row.update(
+        {
+            "route_id": "R-base",
+            "entry_symbol": "execute_partitioned_density_channel_native",
+            "apply_label": "numpy Kraus",
+            "status": "handback_refused",
+            "reason": "STEP_4A_HANDBACK 98eec857; channel_native_noise_presence; synthetic",
+        }
+    )
+    with pytest.raises(ValueError, match="sufficient timing samples"):
+        validate_attribution_route_bundle(bundle)
+
+
+@pytest.mark.parametrize("route_id", ["R-fused", "R-hybrid"])
+def test_validate_attribution_route_bundle_rejects_refusal_shaped_fused_and_hybrid_rows(route_id):
+    from benchmarks.density_matrix.interop_profile.attribution_route_validation import (
+        validate_attribution_route_bundle,
+    )
+
+    bundle = _minimal_attribution_route_bundle()
+    row = next(row for row in bundle["rows"] if row["route_id"] == route_id)
+    row.clear()
+    row.update(
+        {
+            "route_id": route_id,
+            "entry_symbol": "execute_partitioned_density_channel_native",
+            "apply_label": "numpy Kraus",
+            "status": "handback_refused",
+            "reason": "STEP_4A_HANDBACK 98eec857; channel_native_noise_presence; synthetic",
+        }
+    )
+    with pytest.raises(ValueError, match="sufficient timing samples"):
+        validate_attribution_route_bundle(bundle)
+
+
+def test_validate_attribution_route_bundle_rejects_one_sample_timed_r_base_row():
+    from benchmarks.density_matrix.interop_profile.attribution_route_validation import (
+        validate_attribution_route_bundle,
+    )
+
+    bundle = _minimal_attribution_route_bundle()
+    row = next(row for row in bundle["rows"] if row["route_id"] == "R-base")
+    row["samples"] = row["samples"][:1]
+    orch_ns = float(row["samples"][0]["orchestration_ns"])
+    apply_ns = float(row["samples"][0]["apply_component_ns"])
+    row["orchestration"] = {"mean_ns": orch_ns, "upper_bound_95_ns": orch_ns}
+    row["apply_component"] = {"mean_ns": apply_ns, "upper_bound_95_ns": apply_ns}
+    row["throughput"] = {
+        "divisor": 3072,
+        "mean_ns_per_op": apply_ns / 3072,
+        "upper_bound_95_ns_per_op": apply_ns / 3072,
+    }
+    with pytest.raises(ValueError, match="sufficient timing samples"):
+        validate_attribution_route_bundle(bundle)
+
+
+def test_validate_attribution_route_bundle_rejects_forbidden_shipped_phrase():
+    from benchmarks.density_matrix.interop_profile.attribution_route_validation import (
+        validate_attribution_route_bundle,
+    )
+
+    bundle = _minimal_attribution_route_bundle()
+    bundle["claim_boundary"] = "four-route shipped on width 4"
+    with pytest.raises(ValueError, match="four-route shipped"):
+        validate_attribution_route_bundle(bundle)
+
+
+def test_validate_attribution_route_bundle_accepts_live_r_strict_refusal_row():
+    from benchmarks.density_matrix.interop_profile.attribution_route_lane import (
+        build_r_strict_refusal_row,
+        build_route_row,
+        build_width4_attribution_anchor,
+    )
+    from benchmarks.density_matrix.interop_profile.attribution_route_validation import (
+        validate_attribution_route_bundle,
+    )
+    from benchmarks.density_matrix.partitioned_runtime.common import build_initial_parameters
+
+    bundle = _minimal_attribution_route_bundle()
+    vqe, descriptor_set, _bridge = build_width4_attribution_anchor()
+    parameters = build_initial_parameters(vqe.get_Parameter_Num())
+    refusal = build_r_strict_refusal_row(descriptor_set, parameters)
+    timed_rows = [
+        build_route_row(route_id, descriptor_set, parameters, sample_count=2)
+        for route_id in ("R-base", "R-fused", "R-hybrid")
+    ]
+    bundle["rows"] = timed_rows + [refusal]
+    bundle["rows"].sort(key=lambda row: row["route_id"])
+    validate_attribution_route_bundle(bundle)
+    assert "Channel-native counted motif requires at least one noise operation" in refusal["reason"]
+
+
+def test_build_r_strict_refusal_row_rejects_other_raise_code(monkeypatch):
+    from benchmarks.density_matrix.interop_profile import attribution_route_lane as lane
+    from benchmarks.density_matrix.partitioned_runtime.common import build_initial_parameters
+    from squander.partitioning.noisy_runtime_errors import runtime_validation_error
+
+    _vqe, descriptor_set, _bridge = lane.build_width4_attribution_anchor()
+    parameters = build_initial_parameters(_vqe.get_Parameter_Num())
+
+    def other_code(descriptor_set, params):
+        raise runtime_validation_error(
+            descriptor_set,
+            category="unsupported_runtime_operation",
+            first_unsupported_condition="pure_unitary_partition",
+            failure_stage="runtime_preflight",
+            runtime_path="candidate_test",
+            reason="synthetic other-code raise",
+        )
+
+    monkeypatch.setitem(lane.ROUTE_TABLE["R-strict"], "executor", other_code)
+    with pytest.raises(ValueError, match="handback"):
+        lane.build_r_strict_refusal_row(descriptor_set, parameters)
+
+
+def test_build_r_strict_refusal_row_rejects_returning_executor(monkeypatch):
+    from benchmarks.density_matrix.interop_profile import attribution_route_lane as lane
+    from benchmarks.density_matrix.partitioned_runtime.common import build_initial_parameters
+
+    _vqe, descriptor_set, _bridge = lane.build_width4_attribution_anchor()
+    parameters = build_initial_parameters(_vqe.get_Parameter_Num())
+    monkeypatch.setitem(
+        lane.ROUTE_TABLE["R-strict"],
+        "executor",
+        lane.ROUTE_TABLE["R-hybrid"]["executor"],
+    )
+    with pytest.raises(ValueError, match="returned"):
+        lane.build_r_strict_refusal_row(descriptor_set, parameters)
+
+
+MINI_SPEC_COUNTED_ATTRIBUTION_COMMAND = (
+    "taskset -c 0 env PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 "
+    "OPENBLAS_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1 conda run -n qgd --no-capture-output "
+    "python benchmarks/density_matrix/interop_profile/validation_pipeline.py "
+    "--attribution-routes --width 4 --output "
+    "benchmarks/density_matrix/artifacts/interop_profile/interop_profile_bundle_routes_w4.json"
+)
+ATTRIBUTION_THREAD_ENV_KEYS = (
+    "OMP_NUM_THREADS",
+    "MKL_NUM_THREADS",
+    "OPENBLAS_NUM_THREADS",
+    "NUMEXPR_NUM_THREADS",
+)
+ATTRIBUTION_EXPECTED_PRIMITIVE_CALLS = {"R-base": 8, "R-fused": 8, "R-hybrid": 5}
+
+
+def test_counted_attribution_constants_match_mini_spec():
+    from benchmarks.density_matrix.interop_profile import attribution_route_validation as V
+
+    assert V.COUNTED_ATTRIBUTION_WARMUP_CALLS == 50
+    assert V.COUNTED_ATTRIBUTION_SAMPLES_PER_ROUTE == 1000
+    assert V.COUNTED_ATTRIBUTION_PROVENANCE_COMMAND == MINI_SPEC_COUNTED_ATTRIBUTION_COMMAND
+
+
+def _attribution_row(bundle, route_id):
+    return next(row for row in bundle["rows"] if row["route_id"] == route_id)
+
+
+def _set_counted_route_samples(row, samples):
+    from benchmarks.density_matrix.interop_profile.attribution_route_validation import (
+        one_sided_upper_bound_route,
+    )
+
+    row["samples"] = samples
+    orch_values = [float(sample["orchestration_ns"]) for sample in samples]
+    apply_values = [float(sample["apply_component_ns"]) for sample in samples]
+    mean_orch, bound_orch = one_sided_upper_bound_route(orch_values)
+    mean_apply, bound_apply = one_sided_upper_bound_route(apply_values)
+    mean_tp, bound_tp = one_sided_upper_bound_route([value / 3072 for value in apply_values])
+    row["orchestration"] = {"mean_ns": mean_orch, "upper_bound_95_ns": bound_orch}
+    row["apply_component"] = {"mean_ns": mean_apply, "upper_bound_95_ns": bound_apply}
+    row["throughput"] = {
+        "divisor": 3072,
+        "mean_ns_per_op": mean_tp,
+        "upper_bound_95_ns_per_op": bound_tp,
+    }
+
+
+def _counted_attribution_fixture_with_provenance():
+    bundle = _minimal_attribution_route_bundle()
+    for route_id in ("R-base", "R-fused", "R-hybrid"):
+        _set_counted_route_samples(
+            _attribution_row(bundle, route_id),
+            [
+                {"orchestration_ns": 1000 + index % 7, "apply_component_ns": 5000 + index % 11}
+                for index in range(1000)
+            ],
+        )
+    bundle["provenance"] = {
+        "command": MINI_SPEC_COUNTED_ATTRIBUTION_COMMAND,
+        "warmup_calls": 50,
+        "thread_env": {key: "1" for key in ATTRIBUTION_THREAD_ENV_KEYS},
+    }
+    return bundle
+
+
+def test_validate_counted_attribution_fixture_with_provenance():
+    from benchmarks.density_matrix.interop_profile.attribution_route_validation import (
+        validate_attribution_route_bundle,
+    )
+
+    validate_attribution_route_bundle(_counted_attribution_fixture_with_provenance())
+
+
+@pytest.mark.parametrize(
+    "mutate,match",
+    [
+        (
+            lambda bundle: bundle["provenance"].__setitem__(
+                "command",
+                MINI_SPEC_COUNTED_ATTRIBUTION_COMMAND.replace("taskset -c 0 ", ""),
+            ),
+            "provenance.command",
+        ),
+        (lambda bundle: bundle["provenance"].__setitem__("warmup_calls", 49), "warmup_calls"),
+        (
+            lambda bundle: bundle["provenance"]["thread_env"].__setitem__(
+                "MKL_NUM_THREADS", "2"
+            ),
+            "thread_env",
+        ),
+        (
+            lambda bundle: _set_counted_route_samples(
+                _attribution_row(bundle, "R-hybrid"),
+                _attribution_row(bundle, "R-hybrid")["samples"][:999],
+            ),
+            "sufficient timing samples",
+        ),
+    ],
+)
+def test_validate_counted_attribution_provenance_negatives(mutate, match):
+    from benchmarks.density_matrix.interop_profile.attribution_route_validation import (
+        validate_attribution_route_bundle,
+    )
+
+    bundle = _counted_attribution_fixture_with_provenance()
+    mutate(bundle)
+    with pytest.raises(ValueError, match=match):
+        validate_attribution_route_bundle(bundle)
+
+
+def _small_counted_attribution_run(monkeypatch, warmup=3, counted=4):
+    from benchmarks.density_matrix.interop_profile import attribution_route_lane as lane
+    from benchmarks.density_matrix.interop_profile import attribution_route_validation as V
+    from benchmarks.density_matrix.interop_profile import interop_lane as IL
+
+    for key in ATTRIBUTION_THREAD_ENV_KEYS:
+        monkeypatch.setenv(key, "1")
+    for module in (lane, V):
+        monkeypatch.setattr(module, "COUNTED_ATTRIBUTION_WARMUP_CALLS", warmup)
+        monkeypatch.setattr(module, "COUNTED_ATTRIBUTION_SAMPLES_PER_ROUTE", counted)
+    seen = {"pin": 0, "command": None}
+
+    def fake_pin():
+        seen["pin"] += 1
+        return 0
+
+    def fake_capture(command=None):
+        seen["command"] = command
+        return {
+            "implementation_revision": "0" * 40,
+            "clean_start": True,
+            "dirty_paths": [],
+            "command": command,
+            "host": "h",
+            "cpu_model": "c",
+            "compiler": {"executable": "c++", "version_line": "v"},
+            "environment": {},
+            "dependencies": {},
+            "extension_identities": [{}, {}],
+            "provenance_pass": True,
+        }
+
+    monkeypatch.setattr(IL, "_pin_lowest_allowed_cpu", fake_pin)
+    monkeypatch.setattr(IL, "capture_provenance", fake_capture)
+    records = []
+    inner = lane._time_route_sample
+
+    def recorder(route_id, executor, descriptor_set, parameters):
+        sample, result = inner(route_id, executor, descriptor_set, parameters)
+        records.append((route_id, sample, int(result.runtime_ms * 1_000_000)))
+        return sample, result
+
+    monkeypatch.setattr(lane, "_time_route_sample", recorder)
+    bundle = lane.run_counted_attribution_bundle()
+    return bundle, records, seen, warmup, counted
+
+
+def test_run_counted_attribution_bundle_protocol_and_b1_guards(monkeypatch):
+    from benchmarks.density_matrix.interop_profile.attribution_route_validation import (
+        one_sided_upper_bound_route,
+    )
+
+    bundle, records, seen, warmup, counted = _small_counted_attribution_run(monkeypatch)
+    assert seen["pin"] == 1
+    assert seen["command"] == MINI_SPEC_COUNTED_ATTRIBUTION_COMMAND
+    provenance = bundle["provenance"]
+    assert provenance["command"] == MINI_SPEC_COUNTED_ATTRIBUTION_COMMAND
+    assert provenance["warmup_calls"] == warmup
+    assert provenance["thread_env"] == {key: "1" for key in ATTRIBUTION_THREAD_ENV_KEYS}
+    assert [row["route_id"] for row in bundle["rows"]] == [
+        "R-base",
+        "R-fused",
+        "R-strict",
+        "R-hybrid",
+    ]
+    assert _attribution_row(bundle, "R-strict")["status"] == "handback_refused"
+    for route_id in ("R-base", "R-fused", "R-hybrid"):
+        route_records = [record for record in records if record[0] == route_id]
+        row = _attribution_row(bundle, route_id)
+        assert len(route_records) == warmup + counted
+        assert row["samples"] == [sample for _rid, sample, _runtime in route_records[warmup:]]
+        assert {sample["apply_primitive_calls"] for sample in row["samples"]} == {
+            ATTRIBUTION_EXPECTED_PRIMITIVE_CALLS[route_id]
+        }
+        for _rid, sample, runtime_ns in route_records[warmup:]:
+            assert sample["apply_component_ns"] < runtime_ns
+        mean_apply, bound_apply = one_sided_upper_bound_route(
+            [float(sample["apply_component_ns"]) for sample in row["samples"]]
+        )
+        assert row["throughput"]["divisor"] == 3072
+        assert row["throughput"]["mean_ns_per_op"] == pytest.approx(mean_apply / 3072, rel=1e-12)
+        assert row["throughput"]["upper_bound_95_ns_per_op"] == pytest.approx(
+            bound_apply / 3072, rel=1e-12
+        )
+
+
+def test_run_counted_attribution_bundle_refuses_multithread_before_work(monkeypatch):
+    from benchmarks.density_matrix.interop_profile import attribution_route_lane as lane
+    from benchmarks.density_matrix.interop_profile import interop_lane as IL
+
+    for key in ATTRIBUTION_THREAD_ENV_KEYS:
+        monkeypatch.setenv(key, "1")
+    monkeypatch.setenv("OMP_NUM_THREADS", "2")
+
+    def must_not_run(*_args, **_kwargs):
+        raise AssertionError("counted attribution work started before thread check")
+
+    monkeypatch.setattr(IL, "_pin_lowest_allowed_cpu", must_not_run)
+    monkeypatch.setattr(IL, "capture_provenance", must_not_run)
+    with pytest.raises(RuntimeError, match="OMP_NUM_THREADS"):
+        lane.run_counted_attribution_bundle()

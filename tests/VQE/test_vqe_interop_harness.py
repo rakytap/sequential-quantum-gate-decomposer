@@ -207,6 +207,7 @@ def test_task4_attribution_route_sample_has_orchestration_and_apply(route_id: st
 
 def test_task4_r_strict_handback_on_continuity_anchor():
     from benchmarks.density_matrix.interop_profile.attribution_route_lane import (
+        build_r_strict_refusal_row,
         build_route_row,
         build_width4_attribution_anchor,
     )
@@ -214,5 +215,127 @@ def test_task4_r_strict_handback_on_continuity_anchor():
 
     vqe, descriptor_set, _bridge = build_width4_attribution_anchor()
     parameters = build_initial_parameters(vqe.get_Parameter_Num())
-    with pytest.raises(ValueError, match="attribution route handback for R-strict"):
+    with pytest.raises(ValueError, match="refusal row"):
         build_route_row("R-strict", descriptor_set, parameters, sample_count=1)
+    refusal = build_r_strict_refusal_row(descriptor_set, parameters)
+    assert refusal["status"] == "handback_refused"
+    assert "98eec857" in refusal["reason"]
+    assert "channel_native_noise_presence" in refusal["reason"]
+    assert "samples" not in refusal
+
+
+def test_attribution_routes_flag_refuses_counted_evqe_output_names(tmp_path, monkeypatch):
+    from benchmarks.density_matrix.interop_profile import attribution_route_lane as lane
+    from benchmarks.density_matrix.interop_profile import validation_pipeline as vp
+
+    def must_not_run():
+        raise AssertionError("counted attribution run started before output guard")
+
+    monkeypatch.setattr(lane, "run_counted_attribution_bundle", must_not_run)
+    for name in (
+        "interop_profile_bundle.json",
+        "interop_profile_bundle_w6.json",
+        "interop_profile_bundle_w8.json",
+    ):
+        out = tmp_path / name
+        with pytest.raises(ValueError, match="counted E-VQE"):
+            vp.resolve_interop_output_path(4, out, attribution_routes=True)
+        with pytest.raises(ValueError, match="counted E-VQE"):
+            vp.main(["--attribution-routes", "--width", "4", "--output", str(out)])
+
+
+def test_evqe_path_refuses_routes_output_name(tmp_path):
+    from benchmarks.density_matrix.interop_profile.validation_pipeline import (
+        resolve_interop_output_path,
+    )
+
+    out = tmp_path / "interop_profile_bundle_routes_w4.json"
+    with pytest.raises(ValueError, match="attribution route bundle"):
+        resolve_interop_output_path(4, out, attribution_routes=False)
+
+
+def test_attribution_routes_refuses_non_width_four(tmp_path):
+    from benchmarks.density_matrix.interop_profile.validation_pipeline import (
+        resolve_interop_output_path,
+    )
+
+    out = tmp_path / "interop_profile_bundle_routes_w6.json"
+    with pytest.raises(ValueError, match="width 4 only"):
+        resolve_interop_output_path(6, out, attribution_routes=True)
+
+
+def test_attribution_apply_timer_wrap_set_and_clock_reads_inside_with(monkeypatch):
+    import sys
+    import types
+
+    from benchmarks.density_matrix.interop_profile import attribution_route_lane as lane
+    from benchmarks.density_matrix.partitioned_runtime.common import build_initial_parameters
+    import squander.partitioning.noisy_runtime_channel_native as channel_native_mod
+    from squander.density_matrix import DensityMatrix, NoisyCircuit
+
+    _vqe, descriptor_set, _bridge = lane.build_width4_attribution_anchor()
+    parameters = build_initial_parameters(_vqe.get_Parameter_Num())
+
+    def active_wraps() -> set[str]:
+        active: set[str] = set()
+        for owner, name in (
+            (NoisyCircuit, "apply_to"),
+            (DensityMatrix, "apply_local_unitary"),
+            (channel_native_mod, "_apply_kraus_bundle"),
+        ):
+            fn = owner.__dict__[name]
+            if getattr(fn, "__name__", "") == "wrapped":
+                active.add(name)
+        return active
+
+    reads: list[set[str]] = []
+    real_time = lane.time
+
+    def perf_counter_ns():
+        frame = sys._getframe(1)
+        if frame.f_code.co_name == "_time_route_sample":
+            reads.append(active_wraps())
+        return real_time.perf_counter_ns()
+
+    monkeypatch.setattr(lane, "time", types.SimpleNamespace(perf_counter_ns=perf_counter_ns))
+    expected = {
+        "R-base": {"apply_to"},
+        "R-fused": {"apply_to", "apply_local_unitary"},
+        "R-hybrid": {"apply_local_unitary", "_apply_kraus_bundle"},
+    }
+    for route_id, wrap_set in expected.items():
+        reads.clear()
+        lane._time_route_sample(
+            route_id, lane.ROUTE_TABLE[route_id]["executor"], descriptor_set, parameters
+        )
+        assert reads == [wrap_set, wrap_set]
+
+
+def test_task4_timed_route_raise_hands_back_without_stub_timings(monkeypatch):
+    from benchmarks.density_matrix.interop_profile import attribution_route_lane as lane
+    from benchmarks.density_matrix.partitioned_runtime.common import build_initial_parameters
+
+    _vqe, descriptor_set, _bridge = lane.build_width4_attribution_anchor()
+    parameters = build_initial_parameters(_vqe.get_Parameter_Num())
+    monkeypatch.setitem(
+        lane.ROUTE_TABLE["R-hybrid"],
+        "executor",
+        lane.ROUTE_TABLE["R-strict"]["executor"],
+    )
+    with pytest.raises(ValueError, match="attribution route handback for R-hybrid"):
+        lane.build_route_row("R-hybrid", descriptor_set, parameters, sample_count=2)
+
+
+def test_attribution_routes_pipeline_clean_start_false_writes_nothing(tmp_path, monkeypatch):
+    from benchmarks.density_matrix.interop_profile import attribution_route_lane as lane
+    from benchmarks.density_matrix.interop_profile import validation_pipeline as vp
+
+    def fake_bundle():
+        return {"clean_start": False, "rows": [], "provenance": {}}
+
+    monkeypatch.setattr(lane, "run_counted_attribution_bundle", fake_bundle)
+    out = tmp_path / "routes_out.json"
+    assert (
+        vp.main(["--attribution-routes", "--width", "4", "--output", str(out)]) == 1
+    )
+    assert not out.exists()

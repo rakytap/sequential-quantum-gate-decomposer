@@ -29,6 +29,45 @@ HYBRID_PARTITION_RUNTIME_CLASSES_ANCHOR: tuple[str, ...] = (
 )
 
 ROUTE_IDS_REQUIRED = ("R-base", "R-fused", "R-strict", "R-hybrid")
+TIMED_ROUTE_IDS = ("R-base", "R-fused", "R-hybrid")
+R_STRICT_STATUS_REFUSED = "handback_refused"
+R_STRICT_HANDABACK_SHA256_PREFIX = "98eec857"
+R_STRICT_RAISE_CODE_W4 = "channel_native_noise_presence"
+
+R_STRICT_REFUSAL_ALLOWED_KEYS = frozenset(
+    {"route_id", "entry_symbol", "apply_label", "status", "reason"}
+)
+
+R_STRICT_FORBIDDEN_TIMING_KEYS = frozenset(
+    {
+        "samples",
+        "orchestration",
+        "apply_component",
+        "throughput",
+        "mean_O",
+        "upper_bound_95_O",
+        "overhead",
+        "t_lower_ns",
+        "t_public_ns",
+    }
+)
+
+COUNTED_ATTRIBUTION_WARMUP_CALLS = 50
+COUNTED_ATTRIBUTION_SAMPLES_PER_ROUTE = 1000
+
+COUNTED_ATTRIBUTION_PROVENANCE_COMMAND = (
+    "taskset -c 0 env PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 "
+    "OPENBLAS_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1 conda run -n qgd --no-capture-output "
+    "python benchmarks/density_matrix/interop_profile/validation_pipeline.py "
+    "--attribution-routes --width 4 --output "
+    "benchmarks/density_matrix/artifacts/interop_profile/interop_profile_bundle_routes_w4.json"
+)
+
+FORBIDDEN_SHIPPED_CLAIM_PHRASES = (
+    "four-route shipped",
+    "req-004 met",
+    "speedup",
+)
 
 FORBIDDEN_OVERHEAD_KEYS = frozenset(
     {
@@ -107,6 +146,9 @@ def _reject_forbidden_claims(label_blob: str) -> None:
     for phrase in FORBIDDEN_CLAIM_PHRASES:
         if phrase in blob_lower:
             raise ValueError(f"forbidden claim phrase {phrase!r} in attribution metadata")
+    for phrase in FORBIDDEN_SHIPPED_CLAIM_PHRASES:
+        if phrase in blob_lower:
+            raise ValueError(f"forbidden claim phrase {phrase!r} in attribution metadata")
 
 
 def _reject_r_oracle_in_attribution_bundle(bundle: Mapping[str, Any], label_blob: str) -> None:
@@ -115,6 +157,63 @@ def _reject_r_oracle_in_attribution_bundle(bundle: Mapping[str, Any], label_blob
     for row in bundle.get("rows") or []:
         if row.get("route_id") == "R-oracle":
             raise ValueError("R-oracle row is forbidden in attribution route bundles")
+
+
+def _reject_numeric_values_in_r_strict_row(node: Any, path: str) -> None:
+    if isinstance(node, bool):
+        raise ValueError(f"R-strict refusal row must not contain numbers at {path}")
+    if isinstance(node, (int, float)):
+        raise ValueError(f"R-strict refusal row must not contain numbers at {path}")
+    if isinstance(node, str):
+        return
+    if isinstance(node, dict):
+        for key, value in node.items():
+            if isinstance(key, bool) or isinstance(key, (int, float)):
+                raise ValueError(f"R-strict refusal row must not contain numbers at {path}.key")
+            _reject_numeric_values_in_r_strict_row(value, f"{path}.{key}")
+        return
+    if isinstance(node, list):
+        for index, item in enumerate(node):
+            _reject_numeric_values_in_r_strict_row(item, f"{path}[{index}]")
+        return
+    if node is None:
+        return
+    raise ValueError(f"R-strict refusal row field {path} must be a string")
+
+
+def _validate_r_strict_refusal_row(row: Mapping[str, Any]) -> None:
+    if row.get("status") != R_STRICT_STATUS_REFUSED:
+        raise ValueError("R-strict row must have status handback_refused")
+    extra_keys = set(row.keys()) - R_STRICT_REFUSAL_ALLOWED_KEYS
+    if extra_keys:
+        raise ValueError(f"R-strict refusal row must not carry keys {sorted(extra_keys)!r}")
+    forbidden_present = R_STRICT_FORBIDDEN_TIMING_KEYS.intersection(row.keys())
+    if forbidden_present:
+        raise ValueError(
+            f"R-strict refusal row must not carry timing fields {sorted(forbidden_present)!r}"
+        )
+    for key in sorted(R_STRICT_REFUSAL_ALLOWED_KEYS):
+        value = row.get(key)
+        if type(value) is not str:
+            raise ValueError(f"R-strict refusal row field {key!r} must be a string")
+    if row.get("entry_symbol") != "execute_partitioned_density_channel_native":
+        raise ValueError("R-strict refusal row entry_symbol must be the strict entry")
+    if row.get("apply_label") != "numpy Kraus":
+        raise ValueError("R-strict refusal row apply_label must be numpy Kraus")
+    _reject_numeric_values_in_r_strict_row(dict(row), "R-strict")
+    reason = row.get("reason", "")
+    if R_STRICT_RAISE_CODE_W4 not in reason:
+        raise ValueError("R-strict refusal reason must cite channel_native_noise_presence")
+    if R_STRICT_HANDABACK_SHA256_PREFIX not in reason:
+        raise ValueError("R-strict refusal reason must cite STEP_4A_HANDBACK 98eec857")
+
+
+def _reject_timed_r_strict_row(row: Mapping[str, Any]) -> None:
+    if row.get("route_id") != "R-strict":
+        return
+    if row.get("status") == R_STRICT_STATUS_REFUSED:
+        return
+    raise ValueError("R-strict row must be a refusal row with no timings")
 
 
 def _validate_hybrid_partition_record(row: Mapping[str, Any]) -> None:
@@ -176,6 +275,30 @@ def _validate_row_samples(
         raise ValueError("throughput.upper_bound_95_ns_per_op does not match samples")
 
 
+def _validate_counted_attribution_provenance(bundle: Mapping[str, Any]) -> None:
+    provenance = bundle.get("provenance")
+    if provenance is None:
+        return
+    if not isinstance(provenance, Mapping):
+        raise ValueError("provenance block must be a mapping when present")
+    command = provenance.get("command")
+    if command != COUNTED_ATTRIBUTION_PROVENANCE_COMMAND:
+        raise ValueError("provenance.command must match the task-4 counted attribution command")
+    if provenance.get("warmup_calls") != COUNTED_ATTRIBUTION_WARMUP_CALLS:
+        raise ValueError(
+            f"provenance.warmup_calls must be {COUNTED_ATTRIBUTION_WARMUP_CALLS}"
+        )
+    thread_env = provenance.get("thread_env") or {}
+    for key in (
+        "OMP_NUM_THREADS",
+        "MKL_NUM_THREADS",
+        "OPENBLAS_NUM_THREADS",
+        "NUMEXPR_NUM_THREADS",
+    ):
+        if thread_env.get(key) != "1":
+            raise ValueError(f"provenance.thread_env.{key} must be '1'")
+
+
 def validate_attribution_route_bundle(bundle: Mapping[str, Any]) -> None:
     """Raise ValueError when a task-4 attribution bundle violates the contract."""
     _reject_overhead_ratio_fields(bundle)
@@ -202,6 +325,7 @@ def validate_attribution_route_bundle(bundle: Mapping[str, Any]) -> None:
     label_blob = str(bundle.get("claim_boundary", "")) + str(bundle.get("labels", ""))
     _reject_forbidden_claims(label_blob)
     _reject_r_oracle_in_attribution_bundle(bundle, label_blob)
+    _validate_counted_attribution_provenance(bundle)
 
     rows = bundle.get("rows")
     if not isinstance(rows, list) or len(rows) != len(ROUTE_IDS_REQUIRED):
@@ -221,9 +345,19 @@ def validate_attribution_route_bundle(bundle: Mapping[str, Any]) -> None:
         if not row.get("entry_symbol"):
             raise ValueError("entry_symbol is required on each route row")
 
+        _reject_timed_r_strict_row(row)
+        if route_id == "R-strict":
+            _validate_r_strict_refusal_row(row)
+            continue
+
         samples = row.get("samples") or []
+        min_samples = 2
+        if bundle.get("provenance") is not None:
+            min_samples = COUNTED_ATTRIBUTION_SAMPLES_PER_ROUTE
+        if len(samples) < min_samples:
+            raise ValueError("each timed route row needs sufficient timing samples")
         if len(samples) < 2:
-            raise ValueError("each route row needs at least two timing samples")
+            raise ValueError("each timed route row needs at least two timing samples")
 
         orch_values: list[float] = []
         apply_values: list[float] = []
@@ -262,7 +396,7 @@ def validate_r_oracle_claim_boundary(claim_boundary: str) -> None:
         raise ValueError("R-oracle row requires the E1 claim-boundary sentence")
 
 
-def resolve_attribution_output_path(output: Any) -> Any:
+def resolve_attribution_output_path(output: Any, *, width: int = QBIT_WIDTH_TASK4) -> Any:
     """Refuse committed E-VQE bundle filenames before any route timing."""
     from pathlib import Path
 
@@ -271,4 +405,19 @@ def resolve_attribution_output_path(output: Any) -> Any:
         raise ValueError(
             f"attribution routes must not write counted E-VQE bundle {resolved.name!r}"
         )
+    if width != QBIT_WIDTH_TASK4:
+        raise ValueError(
+            f"--attribution-routes supports width {QBIT_WIDTH_TASK4} only; got {width}"
+        )
     return resolved
+
+
+def refuse_evqe_output_with_routes_name(output: Any) -> None:
+    """Refuse route artifact names on the E-VQE path (no --attribution-routes)."""
+    from pathlib import Path
+
+    resolved = Path(output) if output is not None else None
+    if resolved is not None and "_routes_" in resolved.name:
+        raise ValueError(
+            f"E-VQE interop path must not write attribution route bundle {resolved.name!r}"
+        )

@@ -11,9 +11,16 @@ from typing import Any, Callable, Iterator, Mapping
 import numpy as np
 
 from benchmarks.density_matrix.interop_profile.attribution_route_validation import (
+    COUNTED_ATTRIBUTION_PROVENANCE_COMMAND,
+    COUNTED_ATTRIBUTION_SAMPLES_PER_ROUTE,
+    COUNTED_ATTRIBUTION_WARMUP_CALLS,
     OPERATION_COUNT_TASK4,
     PARAMETER_COUNT_TASK4,
+    R_STRICT_HANDABACK_SHA256_PREFIX,
+    R_STRICT_RAISE_CODE_W4,
+    R_STRICT_STATUS_REFUSED,
     SUITE_ID_TASK4_ROUTES,
+    TIMED_ROUTE_IDS,
     WORKLOAD_LABEL_TASK4,
 )
 from benchmarks.density_matrix.interop_profile.interop_lane import (
@@ -33,6 +40,8 @@ from squander.partitioning.noisy_runtime import (
 from squander.partitioning.noisy_runtime_errors import NoisyRuntimeValidationError
 
 RouteExecutor = Callable[..., NoisyRuntimeExecutionResult]
+
+ROUTE_IDS_ORDER = ["R-base", "R-fused", "R-strict", "R-hybrid"]
 
 ROUTE_TABLE: dict[str, dict[str, Any]] = {
     "R-base": {
@@ -117,7 +126,7 @@ def _apply_primitive_timer(route_id: str) -> Iterator[dict[str, int]]:
         restored.append((target, attribute, original))
 
     try:
-        if route_id in ("R-base", "R-fused", "R-hybrid"):
+        if route_id in ("R-base", "R-fused"):
             _patch(NoisyCircuit, "apply_to")
         if route_id in ("R-fused", "R-hybrid"):
             _patch(DensityMatrix, "apply_local_unitary")
@@ -135,16 +144,16 @@ def _time_route_sample(
     descriptor_set: Any,
     parameters: np.ndarray,
 ) -> tuple[dict[str, int], NoisyRuntimeExecutionResult | None]:
-    start_ns = time.perf_counter_ns()
     result: NoisyRuntimeExecutionResult | None = None
     with _apply_primitive_timer(route_id) as accumulator:
+        start_ns = time.perf_counter_ns()
         try:
             result = executor(descriptor_set, parameters)
         except NoisyRuntimeValidationError as exc:
             raise ValueError(
                 f"attribution route handback for {route_id}: {exc}"
             ) from exc
-    total_ns = time.perf_counter_ns() - start_ns
+        total_ns = time.perf_counter_ns() - start_ns
     if route_id == "R-strict":
         apply_ns = 0
         apply_primitive_calls = 0
@@ -172,6 +181,37 @@ def _time_route_sample(
     )
 
 
+def build_r_strict_refusal_row(
+    descriptor_set: Any,
+    parameters: np.ndarray,
+) -> dict[str, Any]:
+    """Record the live R-strict raise as an ADR-F5A-010 refusal row (no numbers)."""
+    spec = ROUTE_TABLE["R-strict"]
+    try:
+        spec["executor"](descriptor_set, parameters)
+    except NoisyRuntimeValidationError as exc:
+        code = exc.first_unsupported_condition
+        if code != R_STRICT_RAISE_CODE_W4:
+            raise ValueError(
+                f"attribution route handback for R-strict: unexpected raise code {code!r}"
+            ) from exc
+        reason = (
+            f"STEP_4A_HANDBACK {R_STRICT_HANDABACK_SHA256_PREFIX}; "
+            f"{code}; live raise from "
+            f"{spec['entry_symbol']}: {exc}"
+        )
+        return {
+            "route_id": "R-strict",
+            "entry_symbol": spec["entry_symbol"],
+            "apply_label": spec["apply_label"],
+            "status": R_STRICT_STATUS_REFUSED,
+            "reason": reason,
+        }
+    raise ValueError(
+        "attribution route handback for R-strict: execute_partitioned_density_channel_native returned"
+    )
+
+
 def build_route_row(
     route_id: str,
     descriptor_set: Any,
@@ -181,6 +221,8 @@ def build_route_row(
 ) -> dict[str, Any]:
     if route_id not in ROUTE_TABLE:
         raise ValueError(f"unsupported route_id {route_id!r}")
+    if route_id == "R-strict":
+        raise ValueError("R-strict must be recorded as a refusal row, not a timed row")
     spec = ROUTE_TABLE[route_id]
     samples: list[dict[str, int]] = []
     last_result: NoisyRuntimeExecutionResult | None = None
@@ -236,6 +278,88 @@ def build_route_row(
     return row
 
 
+def _assert_single_thread_env() -> dict[str, str]:
+    from benchmarks.density_matrix.interop_profile.interop_lane import _required_thread_env
+
+    thread_env = _required_thread_env()
+    for key in (
+        "OMP_NUM_THREADS",
+        "MKL_NUM_THREADS",
+        "OPENBLAS_NUM_THREADS",
+        "NUMEXPR_NUM_THREADS",
+    ):
+        if thread_env.get(key, "") != "1":
+            raise RuntimeError(f"{key} must be 1 for counted attribution routes")
+    return thread_env
+
+
+def run_counted_attribution_bundle() -> dict[str, Any]:
+    """Build the width-4 counted attribution bundle (50 warm-up + 1000 per timed route)."""
+    from benchmarks.density_matrix.interop_profile.interop_lane import (
+        _pin_lowest_allowed_cpu,
+        capture_provenance,
+    )
+
+    thread_env = _assert_single_thread_env()
+    cpu_id = _pin_lowest_allowed_cpu()
+    provenance = capture_provenance(COUNTED_ATTRIBUTION_PROVENANCE_COMMAND)
+    provenance = {
+        **provenance,
+        "warmup_calls": COUNTED_ATTRIBUTION_WARMUP_CALLS,
+        "thread_env": thread_env,
+        "affinity_cpu": cpu_id,
+        "estimator": "arithmetic_mean",
+        "bound": "one_sided_95_orchestration_and_apply",
+    }
+
+    _vqe, descriptor_set, bridge = build_width4_attribution_anchor()
+    param_count = _vqe.get_Parameter_Num()
+    parameters = build_initial_parameters(param_count)
+
+    rows: list[dict[str, Any]] = []
+    for route_id in TIMED_ROUTE_IDS:
+        spec = ROUTE_TABLE[route_id]
+        for _ in range(COUNTED_ATTRIBUTION_WARMUP_CALLS):
+            _time_route_sample(route_id, spec["executor"], descriptor_set, parameters)
+        row = build_route_row(
+            route_id,
+            descriptor_set,
+            parameters,
+            sample_count=COUNTED_ATTRIBUTION_SAMPLES_PER_ROUTE,
+        )
+        rows.append(row)
+    rows.append(build_r_strict_refusal_row(descriptor_set, parameters))
+
+    claim_boundary = (
+        "task-4 counted attribution routes; milestone_counted=false; "
+        "R-hybrid does not wrap NoisyCircuit.apply_to (N-1)"
+    )
+    bundle = {
+        "suite": SUITE_ID_TASK4_ROUTES,
+        "qbit_num": 4,
+        "milestone_counted": False,
+        "workload_label": WORKLOAD_LABEL_TASK4,
+        "claim_boundary": claim_boundary,
+        "labels": "width-4 attribution routes; QA-007 withheld on routes",
+        "clean_start": provenance["clean_start"],
+        "provenance": provenance,
+        "bridge": {
+            "parameter_count": param_count,
+            "operation_count": int(bridge["operation_count"]),
+            "gate_count": int(bridge["gate_count"]),
+            "noise_count": int(bridge["noise_count"]),
+            "source_type": bridge.get("source_type"),
+        },
+        "rows": sorted(rows, key=lambda row: ROUTE_IDS_ORDER.index(row["route_id"])),
+    }
+    from benchmarks.density_matrix.interop_profile.attribution_route_validation import (
+        validate_attribution_route_bundle,
+    )
+
+    validate_attribution_route_bundle(bundle)
+    return bundle
+
+
 def run_attribution_route_tracer_bundle(
     *,
     sample_count: int = 3,
@@ -246,10 +370,13 @@ def run_attribution_route_tracer_bundle(
     _vqe, descriptor_set, bridge = build_width4_attribution_anchor()
     param_count = _vqe.get_Parameter_Num()
     parameters = build_initial_parameters(param_count)
-    rows = [
-        build_route_row(route_id, descriptor_set, parameters, sample_count=sample_count)
-        for route_id in ROUTE_TABLE
-    ]
+    rows: list[dict[str, Any]] = []
+    for route_id in TIMED_ROUTE_IDS:
+        rows.append(
+            build_route_row(route_id, descriptor_set, parameters, sample_count=sample_count)
+        )
+    rows.append(build_r_strict_refusal_row(descriptor_set, parameters))
+    rows.sort(key=lambda row: ROUTE_IDS_ORDER.index(row["route_id"]))
     return {
         "suite": SUITE_ID_TASK4_ROUTES,
         "qbit_num": 4,
