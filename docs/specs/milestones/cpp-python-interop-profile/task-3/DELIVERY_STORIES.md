@@ -1,9 +1,9 @@
 # Delivery stories — M-F5a task-3
-> **Status:** Step 4a draft · **Verdict:** not-ready · **Slice:** M-F5a task-3 ·
+> **Status:** code-ready · **Verdict:** Step 4b authorized · **Slice:** M-F5a task-3 ·
 > **Scope:** E-VQE at 8 qubits on the existing harness. No routes. No reduction ·
 > **Traces:** REQ-001…009 · CAP-004, CAP-007 · QA-007, QA-008, QA-009 ·
-> **Gate:** SDD stage `step-4a`. QA-007 stays `[confirm]`. Milestone not complete ·
-> **RM:** ACCEPT 2026-10-07 (`39808966…`). Stage stays `step-4a`. No Step 4b
+> **Gate:** SDD stage `step-4b-authorized`. QA-007 stays `[confirm]`. Milestone not complete ·
+> **RM:** ACCEPT 2026-10-07 (`39808966…`). Developer not started. Binder `2ca76334…` at `ced81815`
 
 ### Delivery story: DS-1 — An 8-qubit E-VQE row on the same equal-work pair
 
@@ -19,11 +19,11 @@
 
 **Scope**
 - In: E-VQE at 8 qubits; the existing harness-only lower call; Measure carried from S-g
-- Out: attribution routes; a new CPU mask; a counted run in this draft
+- Out: attribution routes; a new CPU mask; a counted run in this stamp
 
 **Acceptance signals**
 - `parameter_count` 42, `operation_count` 24, `gate_count` 21, divisor 1572864
-- No sample is dropped. A mean near zero of either sign is lawful. A saturated 20 µs count is not an anomaly. Throughput may move between hosts and is not a failure. `nnz` is 1152
+- No sample is dropped. A mean near zero of either sign is lawful. A saturated 20 µs count is not an anomaly. Throughput may move between runs and is not a failure. `nnz` is 1152
 - Aer oracle runs after `set_Optimized_Parameters`. Flag-off versus flag-on bit identity is not that oracle
 - `milestone_counted=false`. The artifact is `interop_profile_bundle_w8.json`
 
@@ -73,7 +73,7 @@
 
 **Acceptance signals**
 - `test_explicit_state_vector_matches_legacy_default` still passes
-- This draft does not claim QA-007 met and does not mark M-F5a complete
+- This slice does not claim QA-007 met and does not mark M-F5a complete. Stamp is code-ready at `ced81815` (binder `2ca76334…`). The Developer is not started
 
 **Traceability**
 - Initial requirement(s): REQ-007, REQ-009

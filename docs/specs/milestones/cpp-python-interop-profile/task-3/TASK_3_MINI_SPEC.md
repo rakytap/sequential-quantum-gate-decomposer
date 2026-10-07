@@ -1,10 +1,11 @@
 # Task 3: E-VQE at 8 qubits, equal-work extension
-> **Status:** Step 4a draft · **Verdict:** not-ready · **Slice:** M-F5a task-3 ·
+> **Status:** code-ready · **Verdict:** Step 4b authorized · **Slice:** M-F5a task-3 ·
 > **Traces:** REQ-001…009 · CAP-004, CAP-007 · QA-007, QA-008, QA-009 · ADR-F5A-001…009 ·
 > **Scope:** one E-VQE width-8 row on the task-1/2 harness. No routes. No reduction ·
-> **Gate:** SDD stage `step-4a`. QA-007 stays `[confirm]`. Milestone not complete ·
-> **RM:** ACCEPT 2026-10-07, upload `2026-10-07-mf5a-task3-align-accept_a41b.md` (`39808966…`). It does not flip the stage ·
-> **Tip:** `1058d7029e314e09896151319e697df12dc92534` · pins read at parent `5d93ca07` · bundles stay ·
+> **Gate:** SDD stage `step-4b-authorized`. QA-007 stays `[confirm]`. Milestone not complete ·
+> **RM:** ACCEPT 2026-10-07, upload `2026-10-07-mf5a-task3-align-accept_a41b.md` (`39808966…`). Developer not started. Binder `2ca76334…` at `ced81815` ·
+> **Stamp:** code-ready. This uncommitted stamp awaits the narrow Reviewer stamp check. C0 is not committed ·
+> **Tip:** `ced818155479008a659f7bf768f6629c2a0032b3` · pins read at parent `5d93ca07` · Step-4a pack `1058d702` · bundles stay ·
 > **Pair, inventory, no-O rule, kernel/fusion/AVX boundary:** unchanged
 
 ## 1. Why this slice is the thinnest next counted row
@@ -100,8 +101,8 @@ does not apply the 10 % bar and does not apply the 5 % A4 test.
 The counted close follows ADR-F1A-009 in the `two-commit-close.md` order:
 (a) Reviewer implementation review; C1; (c) once from a clean C1; the Tester
 independence note, naming the width-8 Aer oracle against the cell; (d)
-`task-3/CLOSEOUT.md`; (e) Reviewer evidence review; C2; (g). An optional
-planning C0 may come first. At (g), regenerate with `--width 8`, restore the
+`task-3/CLOSEOUT.md`; (e) Reviewer evidence review; C2; (g). This uncommitted
+stamp is that planning C0 draft and is not committed until APPROVE FOR STEP-4B. At (g), regenerate with `--width 8`, restore the
 committed width-8 bundle, and check `|Δ mean O|` ≤ 0.02 with
 `assert_mean_o_within_margin`. Throughput is not a (g) gate.
 
@@ -126,7 +127,7 @@ taskset -c 0 env PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 O
 `validate_interop_bundle_w8` fails when `provenance.command` is not this line.
 The `--width` check is parameterized by profile. It is not a hard-coded
 `"--width 6"` test. Width-6 behavior stays as it is. Refusal tests use
-`tmp_path`. No test writes a committed bundle. This draft writes no
+`tmp_path`. No test writes a committed bundle. This stamp writes no
 `CLOSEOUT.md`.
 
 ## 5. Unsupported
@@ -134,20 +135,20 @@ The `--width` check is parameterized by profile. It is not a hard-coded
 - Direction stays NARROW. 17/9/0 and the 26-case matrix stay untouched. No optimizer loop and no VQA campaign. No push and no pull request. N8 stays deferred.
 - Attribution routes and R-oracle.
 - Until the Research Manager interprets the counted 4/6/8 set, these sentences are refused: "QA-007 met"; "A4 false / CAP-004 hold-the-line"; "interop reduction justified or shipped"; "M-F5a complete."
-- Tokens that fail a width-8 bundle, matched without case and without rejecting a leading "no ": "A4 kill", "A4 false", "hold-the-line", "reduction taken", "reduction justified", "reduction shipped", and "M-F5a complete", plus a full-bundle scan for "QA-007 met". A lawful claim may say "no reduction taken", "milestone not complete", and "QA-007 withheld".
+- Tokens that fail a width-8 bundle, read in `claim_boundary` or `labels`, matched without case and without rejecting a leading "no ": "A4 kill", "A4 false", "hold-the-line", "reduction taken", "reduction justified", "reduction shipped", and "M-F5a complete", plus a full-bundle scan for "QA-007 met". A lawful claim may say "no reduction taken", "milestone not complete", and "QA-007 withheld".
 - A kernel, fusion, AVX, or GPU change. A C++ edit. A new public energy symbol.
 - Dispose, a trimmed mean, a median swap, a clip, or a quieter CPU mask.
 - `milestone_counted=true` on this row.
 - Overwriting either committed bundle.
 - N-78, N-79, and N-80 as work inside this slice.
-- The next RM gate. After the counted width-8 row lands and (g) passes, the 4/6/8 bundles return to the Research Manager for the A4 evaluation (upper bound below 5 % at every width) and for whether to freeze the 10 % bar. That gate is outside this slice.
+- The next RM gate. After the counted width-8 row lands and (g) passes, the 4/6/8 bundles return to the Research Manager for the A4 evaluation (upper bound below 5 % at every width) and for whether to freeze the 10 % bar, before any met/unmet claim. That gate is outside this slice and is not a re-consult trigger.
 
 The allowed sentence, only in `task-3/CLOSEOUT.md` and checklist §13, and only
 at C2 or later if the counted row lands clean, is: "E-VQE equal-work interop
 cells measured at 4, 6, and 8 qubits under S-g Measure; QA-007 bar still
 `[confirm]`/withheld; milestone not complete (attribution routes and close
 gates remain)." It does not appear in the bundle, as a demo flag, or in the
-current-state docs.
+current-state docs. No validator token covers that sentence. Reviewer (a) and (e) check `claim_boundary` and `labels`.
 
 ## 6. Evidence matrix
 
@@ -159,20 +160,25 @@ This planning pass does not run the counted command and does not write the artif
 | REQ-001, REQ-004, REQ-005 | fast pytest | `conda run -n qgd --no-capture-output pytest tests/VQE/test_vqe_interop_bundle_validation.py -q` | `validate_interop_bundle_w8` is the full width-6 check set with width-8 constants, including throughput mean and upper bound, `parameter_count` 42, `nnz` 1152, and three noise entries. Missing throughput mean or bound, a spike-count mismatch, `qbit_num` 6, a width-6 integer set, a bad divisor, an attribution label, a width-4 or width-6 provenance command, and the §5 refuse tokens fail. "no reduction taken", "milestone not complete", and "QA-007 withheld" pass. A negative mean still validates | DS-2 |
 | REQ-006, QA-008 | repo review | `git diff --exit-code 5d93ca07a75154e1e909edcc66d432aea9460889 -- benchmarks/density_matrix/artifacts/interop_profile/interop_profile_bundle.json benchmarks/density_matrix/artifacts/interop_profile/interop_profile_bundle_w6.json benchmarks/density_matrix/performance_evidence benchmarks/density_matrix/benchmark_perf.py` | empty | DS-2 |
 | REQ-007, QA-009 | fast pytest | `conda run -n qgd --no-capture-output pytest tests/VQE/test_VQE.py::Test_VQE::test_explicit_state_vector_matches_legacy_default -q` | state-vector default still matches | DS-3 |
-| REQ-003, REQ-008 | repo review | `git diff --exit-code 5d93ca07a75154e1e909edcc66d432aea9460889 -- docs/density_matrix_project/archive squander/src-cpp squander/VQA squander/partitioning tests/VQE/test_VQE.py` | empty at this draft. `tests/VQE/test_VQE.py` holds the Aer helper and the frozen 4-qubit node | DS-2 |
-| REQ-009, QA-008 | spec lint | `bash .cursor/skills/spec-driven-development/scripts/specs_check.sh docs/specs/milestones/cpp-python-interop-profile` and the same command with `--strict` | at `step-4a` with no closeout: normal mode 0 errors, 1 warning `SLICE_MISSING_CLOSEOUT` for task-3, exit 0; `--strict` keeps that warning, 0 errors, exit 0. After a later stage flip, `--strict` exits 1 on that finding until a real closeout. After a real closeout, both modes are clean. No waiver. No placeholder | DS-3 |
+| REQ-003, REQ-008 | repo review | `git diff --exit-code 5d93ca07a75154e1e909edcc66d432aea9460889 -- docs/density_matrix_project/archive squander/src-cpp squander/VQA squander/partitioning tests/VQE/test_VQE.py` | empty. `tests/VQE/test_VQE.py` holds the Aer helper and the frozen 4-qubit node | DS-2 |
+| REQ-009, QA-008 | spec lint | `bash .cursor/skills/spec-driven-development/scripts/specs_check.sh docs/specs/milestones/cpp-python-interop-profile` and the same command with `--strict` | after this stamp, stage `step-4b-authorized`, no closeout: normal mode 0 errors, 1 warning `SLICE_MISSING_CLOSEOUT` for task-3, exit 0; `--strict` makes that finding the only error, exit 1. After a real closeout, both modes are clean. No waiver. No placeholder | DS-3 |
 
 ## 7. Verdict
 
-**not-ready.** READY-FOR-CODE-READY-REVIEW. SDD stage stays `step-4a`. RM ACCEPT
-`39808966…` is recorded and does not flip the stage. This fold does not
-authorize Step 4b, a Developer, a counted width-8 run, or a C0 stamp.
+**Code-ready.** SDD stage is `step-4b-authorized` in this uncommitted stamp. The
+Developer is not started until the TL handoff after Reviewer APPROVE FOR STEP-4B.
+Binder `/tmp/rev-mf5a-t3-codeready/REVIEW.md` (`2ca76334…`) at docs commit `ced81815`.
+QA-007 stays `[confirm]`. No A4 kill, no "A4 false", no hold-the-line label, and no
+reduction until the Research Manager interprets the counted 4/6/8 set. S-g Measure
+carries. `milestone_counted=false`. No counted width-8 run in this stamp.
 
-A later move of the stage line to `step-4b-authorized` requires all four of
-these: this RM ACCEPT; W-1…W-7 folded with pins, Measure, the deferred set, the
-pair, the inventory, the no-O rule, and the kernel/fusion/AVX boundary
-unchanged; a Reviewer code-ready writer re-gate APPROVE; and a separate
-planning-role stamp-only pass, then the narrow Reviewer stamp check.
+The stage line moved under S-1…S-7 after the four preconditions were met in draft:
+RM ACCEPT `39808966…` (cites tip `5d93ca07`); W-1…W-7 folded with pins, Measure, the
+deferred set, the pair, the inventory, the no-O rule, and the kernel/fusion/AVX
+boundary unchanged; Reviewer code-ready writer re-gate APPROVE (binder `2ca76334…`);
+and this planning-role stamp-only pass. The narrow Reviewer stamp check still follows.
+C0 is not committed. RM ACCEPT did not flip the stage. The counted close stays
+ADR-F1A-009 / `two-commit-close.md` (§4).
 
 | Finding | Disposition |
 |---------|-------------|
