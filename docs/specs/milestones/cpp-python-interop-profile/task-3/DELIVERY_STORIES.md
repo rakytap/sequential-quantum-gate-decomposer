@@ -1,9 +1,9 @@
 # Delivery stories — M-F5a task-3
-> **Status:** counted (c) PASS · C2-ready · **Slice:** M-F5a task-3 ·
+> **Status:** task-3 Step 4b closed at C2 `939d4908` · **Slice:** M-F5a task-3 ·
 > **Scope:** E-VQE at 8 qubits on the existing harness. No routes. No reduction ·
 > **Traces:** REQ-001…009 · CAP-004, CAP-007 · QA-007, QA-008, QA-009 ·
 > **Gate:** SDD stage `step-4b-authorized`. QA-007 stays `[confirm]`. Milestone not complete ·
-> **RM:** ACCEPT 2026-10-07 (`39808966…`). Counted at C1 `97d726e3`. C2 is this commit. (e) pending after this write
+> **RM:** ACCEPT 2026-10-07 (`39808966…`). C2 `939d4908`. (e) APPROVE. (g) PASS. No next slice
 
 ### Delivery story: DS-1 — An 8-qubit E-VQE row on the same equal-work pair
 
@@ -73,7 +73,7 @@
 
 **Acceptance signals**
 - `test_explicit_state_vector_matches_legacy_default` still passes
-- This slice does not claim QA-007 met and does not mark M-F5a complete. Counted (c) passed at C1 `97d726e3`. C2 is this commit. (e) is pending after this write
+- This slice does not claim QA-007 met and does not mark M-F5a complete. C2 is `939d4908`. (g) is PASS. The next slice is not opened
 
 **Traceability**
 - Initial requirement(s): REQ-007, REQ-009

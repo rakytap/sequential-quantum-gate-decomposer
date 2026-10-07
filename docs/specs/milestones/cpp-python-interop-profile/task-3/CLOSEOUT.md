@@ -1,8 +1,8 @@
 # M-F5a slice 3 closeout — E-VQE 8-qubit interop row
-> **Status:** C2-ready · **Date:** 2026-10-07 · **Work package:** task-3 ·
-> **Scope:** counted (c) record. M-F5a is not complete ·
+> **Status:** shipped · **Date:** 2026-10-07 · **Work package:** task-3 ·
+> **Scope:** task-3 Step 4b slice close only. M-F5a is not complete ·
 > **C0:** `c4f5df9be22ebd36e0eedd31b9329d57153d6d7f` on base `ced81815` · **C1:** `97d726e383e6846f7cefdccdb8783b45c2884208` ·
-> **C2:** this commit · **(e):** pending after this write · **(g):** pending after C2 ·
+> **C2:** `939d49087f0cf6517a9b724adfd9e54f56a3bc77` · (e) APPROVE · (g) PASS ·
 > **Claim:** width-8 counted row. `milestone_counted=false` is lawful. QA-007 stays `[confirm]` ·
 > **No push/PR**
 
@@ -11,16 +11,16 @@
 This closeout records the counted clean-start width-8 row. Tester (c) passed once
 at C1 `97d726e383e6846f7cefdccdb8783b45c2884208`. Evidence is
 `/tmp/mf5a-t3-counted/REPORT.md`. The bundle on disk is the Tester file. This
-pass did not re-run it. C2 is this commit. (e) is pending after this write.
-(g) is pending after C2. The file does not complete the milestone, freeze the
-QA-007 bar, or claim "QA-007 met".
+pass did not re-run it. C2 is `939d4908`. (e) is APPROVE. (g) is PASS from
+`/tmp/mf5a-t3-g2/`. This docs pass does not re-run (g), does not complete the
+milestone, freeze the QA-007 bar, or claim "QA-007 met".
 
 ## Verdict
 
 Counted row **PASS**. `validate_interop_bundle_w8` **OK**. `milestone_counted=false`
 is **lawful** (below). QA-007 stays **withheld** (`[confirm]`, G-06 open). No A4
 kill, no "A4 false", no CAP-004 hold-the-line label, and no reduction. The
-milestone is **not** complete. C2 is this commit. (e) is pending after this write.
+milestone is **not** complete. C2 is `939d4908`. (e) is APPROVE. (g) is PASS. The next slice is not opened here.
 
 E-VQE equal-work interop cells measured at 4, 6, and 8 qubits under S-g Measure;
 QA-007 bar still `[confirm]`/withheld; milestone not complete (attribution routes
@@ -47,7 +47,7 @@ needs. The flag is the claim boundary, not the clean-start bit.
 |------|-----|
 | C0 stamp | `c4f5df9be22ebd36e0eedd31b9329d57153d6d7f` |
 | C1 implementation | `97d726e383e6846f7cefdccdb8783b45c2884208` |
-| C2 | this commit |
+| C2 | `939d49087f0cf6517a9b724adfd9e54f56a3bc77` |
 
 `provenance.implementation_revision` is the C1 tip.
 
@@ -179,12 +179,12 @@ rewrote the ignored cache (N-80, N-110). Clean-start porcelain ignores that
 file. The (c) launch was from a clean C1. Citing the re-gate mutation run does
 not close the note.
 
-N-104 through N-110 stay open as the C1 re-gate left them. N-78, N-79, and N-80
-stay open. Direction stays NARROW. 17/9/0 and the 26-case matrix stay untouched.
-No VQA.
+N-104 through N-110 stay open. N-111 and N-112 stay open. N-98 stays held. N-118 is closed: C2 tracks this file. N-119 stays open: §4 does not spell capture-before-restore. N-120: this re-run logs `PIPELINE_EXIT=0`. N-78, N-79, and N-80 stay open. Direction stays NARROW. 17/9/0 and the 26-case matrix stay untouched. No VQA.
+
+## (g) clean-C2 regeneration
+
+**PASS.** Evidence `/tmp/mf5a-t3-g2/`. `PIPELINE_EXIT=0`. Wall `real` 37.11 s. This docs pass did not re-run it. Revision-only change `97d726e3` → `939d4908`. Regen sha256 `e7933347e5c8403bf1537ca1d982611f77dda3a55fa0bf4e8a88b3ae318bc521`. Regenerated `mean_O` is −0.000615593972625157. `|Δ mean O|` is 0.000509692539673531 (0.000510) ≤ 0.02, inside [−0.020106, 0.019894]. 1000/1000 timing pairs changed. The restored bundle is byte-identical to sha256 `1712dce97ae567460c9058c288c3a01879524dd3fb9cba71603a5f5785e1b21d`. Porcelain was empty. Those outputs are not committed. The counted row above stays the (c) figures.
 
 ## Remaining
 
-M-F5a stays open. G-06, G-08, and G-09 stay open. The four attribution routes
-and any reduction stay later. This file does not open the next slice. (g) is
-pending after C2. No push and no pull request. QA-007 stays `[confirm]`.
+M-F5a stays open. G-06, G-08, and G-09 stay open. Routes and any reduction stay later. This file does not open the next slice and does not hand the 4/6/8 set to the Research Manager. No push and no pull request. QA-007 stays `[confirm]`.

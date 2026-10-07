@@ -1,11 +1,11 @@
 # Task 3: E-VQE at 8 qubits, equal-work extension
-> **Status:** counted (c) PASS · C2-ready · **Slice:** M-F5a task-3 ·
+> **Status:** task-3 Step 4b closed · **Slice:** M-F5a task-3 ·
 > **Traces:** REQ-001…009 · CAP-004, CAP-007 · QA-007, QA-008, QA-009 · ADR-F5A-001…009 ·
 > **Scope:** one E-VQE width-8 row on the task-1/2 harness. No routes. No reduction ·
 > **Gate:** SDD stage `step-4b-authorized`. QA-007 stays `[confirm]`. Milestone not complete ·
 > **RM:** ACCEPT 2026-10-07, upload `2026-10-07-mf5a-task3-align-accept_a41b.md` (`39808966…`). Counted (c) at C1 `97d726e3` ·
-> **Stamp:** C0 `c4f5df9b`. C2 is this commit. (e) pending after this write ·
-> **Tip:** C1 `97d726e383e6846f7cefdccdb8783b45c2884208` · task-1 `212f7038…` · w6 `5257bad2…` stay ·
+> **Stamp:** C2 `939d4908`. (e) APPROVE. (g) PASS. No next slice ·
+> **Tip:** C2 `939d49087f0cf6517a9b724adfd9e54f56a3bc77` · task-1 `212f7038…` · w6 `5257bad2…` stay ·
 > **Pair, inventory, no-O rule, kernel/fusion/AVX boundary:** unchanged
 
 ## 1. Why this slice is the thinnest next counted row
@@ -102,8 +102,8 @@ The counted close follows ADR-F1A-009 in the `two-commit-close.md` order:
 (a) Reviewer implementation review; C1; (c) once from a clean C1; the Tester
 independence note, naming the width-8 Aer oracle against the cell; (d)
 `task-3/CLOSEOUT.md`; (e) Reviewer evidence review; C2; (g). C0 is `c4f5df9b`.
-(c) passed once. C2 is this commit. (e) is pending after this write. (g) is pending
-after C2. At (g), regenerate with `--width 8`, restore the committed width-8 bundle,
+C2 is `939d4908`. (e) is APPROVE. (g) is PASS from `/tmp/mf5a-t3-g2/` and was not
+re-run here. At (g), regenerate with `--width 8`, restore the committed width-8 bundle,
 and check `|Δ mean O|` ≤ 0.02 with `assert_mean_o_within_margin`. Throughput is not a (g) gate.
 
 Canonical artifact:
@@ -140,7 +140,7 @@ The `--width` check is parameterized by profile. It is not a hard-coded
 - `milestone_counted=true` on this row.
 - Overwriting either committed bundle.
 - N-78, N-79, and N-80 as work inside this slice.
-- The next RM gate. After the counted width-8 row lands and (g) passes, the 4/6/8 bundles return to the Research Manager for the A4 evaluation (upper bound below 5 % at every width) and for whether to freeze the 10 % bar, before any met/unmet claim. That gate is outside this slice and is not a re-consult trigger.
+- The next RM gate. (g) has passed. This write does not hand the 4/6/8 bundles to the Research Manager. That return, for the A4 evaluation (upper bound below 5 % at every width) and for whether to freeze the 10 % bar, stays before any met/unmet claim. It is outside this slice and is not a re-consult trigger.
 
 The allowed sentence, only in `task-3/CLOSEOUT.md` and checklist §13, and only
 at C2 or later if the counted row lands clean, is: "E-VQE equal-work interop
@@ -164,12 +164,12 @@ The counted command ran once at (c). This closeout does not re-run it. The artif
 
 ## 7. Verdict
 
-**Counted (c) PASS.** C2-ready for Reviewer (e). SDD stage stays `step-4b-authorized`.
-C0 is `c4f5df9b`. C1 is `97d726e3`. C2 is this commit. (e) is pending after this write.
-(g) is pending after C2. `task-3/CLOSEOUT.md` records the row. QA-007 stays `[confirm]`.
-No A4 kill, no "A4 false", no hold-the-line label, and no reduction until the Research
-Manager interprets the counted 4/6/8 set. S-g Measure carries. `milestone_counted=false`
-is lawful. RM ACCEPT did not flip the stage. The C0 stamp did. The counted close stays
+**Closed through (g).** C2 is `939d4908`. SDD stage stays `step-4b-authorized`.
+(e) is APPROVE. (g) is PASS from `/tmp/mf5a-t3-g2/`. `task-3/CLOSEOUT.md` records the
+row. QA-007 stays `[confirm]`. No A4 kill, no "A4 false", no hold-the-line label, and
+no reduction until the Research Manager interprets the counted 4/6/8 set. S-g Measure
+carries. `milestone_counted=false` is lawful. This file does not open the next slice
+and does not hand the set to the Research Manager. The counted close stays
 ADR-F1A-009 / `two-commit-close.md` (§4).
 
 | Finding | Disposition |

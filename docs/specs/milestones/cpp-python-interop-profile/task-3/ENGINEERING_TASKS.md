@@ -1,11 +1,11 @@
 # Engineering tasks — M-F5a task-3
-> **Status:** counted (c) PASS · C2-ready · **Slice:** M-F5a task-3 · E-VQE at 8 qubits ·
+> **Status:** task-3 Step 4b closed · C2 `939d4908` · (g) PASS · **Slice:** M-F5a task-3 · E-VQE at 8 qubits ·
 > **Traces:** REQ-001, REQ-002, REQ-003, REQ-004, REQ-005, REQ-006, REQ-007, REQ-008, REQ-009 ·
 > CAP-004, CAP-007 · QA-007, QA-008, QA-009 ·
 > **SDD stage:** step-4b-authorized
-> **Boundary:** C1 `97d726e3`. C2 is this commit. (e) pending after this write. QA-007 stays `[confirm]`. The milestone is not complete
+> **Boundary:** C2 `939d4908`. (e) APPROVE. (g) PASS. QA-007 stays `[confirm]`. The milestone is not complete
 
-**Verdict: counted (c) PASS.** C2-ready for Reviewer (e). `task-3/CLOSEOUT.md` records the row. C1 is `97d726e3`.
+**Verdict: task-3 Step 4b is closed.** (g) PASS. `task-3/CLOSEOUT.md` records the row. C1 is `97d726e3`. The next slice is not opened.
 Lint with this closeout: normal and `--strict` exit 0 and are clean of `SLICE_MISSING_CLOSEOUT`. No waiver.
 The harness is the shipped ADR-F5A-009 timer and `harness_density_lower_ns`, unchanged, with no C++ edit. E1: R-oracle stays excluded.
 Width-8 pins are mini-spec §2 and §4: 42 parameters, 21 gates, 24 operations, `nnz` 1152, divisor 1572864. S-g Measure carries. `milestone_counted=false`.
@@ -132,7 +132,7 @@ REQ-002 and REQ-003 are the requirements this task serves.
   `tests/VQE/test_VQE.py`, the archive, `performance_evidence/`,
   `benchmark_perf.py`, `INITIAL_REQUIREMENTS.md`, or the current-state docs.
 - `task-3/CLOSEOUT.md` records the counted row.
-- The counted width-8 bundle is the (c) file. This closeout does not re-run it.
+- The counted width-8 bundle is the (c) file. (g) restored it. This docs pass does not re-run it.
 
 **Execution checklist (TDD: red → green → refactor)**
 - [ ] Add the refusal test on `tmp_path` before any lane edit
