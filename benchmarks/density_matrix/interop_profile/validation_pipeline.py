@@ -36,6 +36,13 @@ def main(argv: list[str] | None = None) -> int:
     bundle = run_interop_row()
     validate_interop_bundle(bundle)
 
+    if bundle.get("clean_start") is not True:
+        print(
+            "refusing to write interop bundle: worktree is not clean at capture",
+            file=sys.stderr,
+        )
+        return 1
+
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(bundle, indent=2, sort_keys=True) + "\n")
     return 0
