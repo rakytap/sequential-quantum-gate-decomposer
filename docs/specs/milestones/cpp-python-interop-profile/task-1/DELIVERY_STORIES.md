@@ -2,7 +2,7 @@
 > **Status:** code-ready · **Slice:** M-F5a task-1 ·
 > **Scope:** E-VQE at 4 qubits. No reduction. No attribution routes. No widths 6 or 8 ·
 > **Traces:** REQ-001…009 · CAP-004, CAP-007 · QA-007, QA-008, QA-009 ·
-> **Gate:** code-ready. SDD stage `step-4b-authorized`. Step 4b is not started
+> **Gate:** code-ready. SDD stage `step-4b-authorized`. Step 4b has started; C1 is in flight (post-C1 fix revision)
 
 ### Delivery story: DS-1 — A 4-qubit E-VQE row with an equal-work ratio
 

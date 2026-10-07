@@ -5,17 +5,18 @@
 > **Inputs:** `INITIAL_REQUIREMENTS.md` v0.1,
 > `DETAILED_PLANNING_CPP_PYTHON_INTEROP_PROFILE.md`,
 > `ADRS_CPP_PYTHON_INTEROP_PROFILE.md`, `ADR_AMENDMENTS_CPP_PYTHON_INTEROP_PROFILE.md` · **Traces:** REQ-001…009 ·
-> **Authorization:** task-1 writer stamp only; Step 4b is not started; no Developer handoff ·
-> **Boundary:** planning pack only; no Step 4b; no push; no pull request ·
+> **Authorization:** task-1 code-ready; Step 4b has started; C1 in flight (post-C1 fix); N-12 signed off ·
+> **Boundary:** planning sync for the in-flight C1; no counted run; no push; no pull request ·
 > **Baseline:** `1b123a9a31235dd68d6c0a6ff9ba457c0112cd59`
 
 ## 1. Readiness rule
 
-**Verdict: task-1 is code-ready. SDD stage is `step-4b-authorized`. Step 4b is not started.**
+**Verdict: task-1 is code-ready. SDD stage is `step-4b-authorized`. Step 4b has started. C1 is in flight (post-C1 fix revision).**
 
 The Tech Lead opened the tracer. `task-1/` holds the planning pack. ADR-F5A-009 is
-filed. The stage line is `step-4b-authorized`. Implementation has not started. This
-checklist is not a Developer handoff.
+filed. The stage line is `step-4b-authorized`. Step 4b has started. C1 is in flight
+as a post-C1 fix revision ahead of the Reviewer (a) re-gate. This pack has no counted
+run and no `CLOSEOUT.md`. The Developer does not edit `docs/specs/**`.
 
 Implementation may begin only when all of the following are true:
 
@@ -69,7 +70,7 @@ Implementation may begin only when all of the following are true:
 | G-07 | Sibling interop lane is not on disk | the slice that creates it, after code-ready | Step 4b | **open — expected** |
 | G-08 | Current-state docs do not yet name the lane | milestone close, ADR-F5A-007 | SDD at close | **open — expected** |
 | G-09 | Rocky-local Tester CI record for a code close | that later close | Tester | **open — expected; N8 stays deferred** |
-| G-10 | Step 4b authorization | code-ready verdict on the open slice | Architect | **stage stamped `step-4b-authorized`; Developer handoff not issued** |
+| G-10 | Step 4b authorization | code-ready verdict on the open slice | Architect | **closed — stage `step-4b-authorized`; Step 4b has started; C1 in flight (post-C1 fix)** |
 
 No open item changes the equal-work pair, adds an advertised energy entry, publishes \(O\)
 on an attribution-only route, or proposes a kernel, fusion, or AVX edit. Research Manager
@@ -130,10 +131,10 @@ blocks a "QA-007 met" label. The task-1 code-ready stamp stands with that gap op
 ## 7. Go / no-go
 
 **Code-ready** for `task-1`. SDD stage is `step-4b-authorized`. ADR-F5A-009 is filed.
+Step 4b has started. C1 is in flight as a post-C1 fix revision ahead of the Reviewer (a) re-gate.
 
-**No-go** for starting Step 4b, for a Developer handoff, for product code, for freezing
-the QA-007 bar in this pack, for a commit unless separately authorized, and for a push
-or pull request.
+**No-go** for a counted run, for `CLOSEOUT.md`, for freezing the QA-007 bar in this pack,
+for a push or a pull request, and for marking the slice closed.
 
 A draft that changes the equal-work pair, adds an advertised energy entry, publishes
 \(O\) on an attribution-only route, or proposes a kernel, fusion, or AVX change stops
@@ -161,8 +162,16 @@ Opened at HEAD `cdcfe6b151e371add2881d7acca45ef47697cdba`. Reviewer blockers B1 
 B5 are folded into `task-1/TASK_1_MINI_SPEC.md` and the engineering tasks. The current
 gate is code-ready. G-02 through G-05 stay closed there. G-06 stays open: the
 10 % bar is still `[confirm]`, and `INITIAL_REQUIREMENTS.md` is not edited. ADR-F5A-009
-is filed in this pass, copying §6 after W-1, W-2, and W-3. The stage line is
-`step-4b-authorized`. Step 4b has not started. No Developer handoff.
+is filed in this pass, copying §6 after W-1, W-2, and W-3. The stage line stays
+`step-4b-authorized`. Step 4b has started. C1 is in flight as a post-C1 fix revision
+ahead of the Reviewer (a) re-gate.
 
 B5 deletes `task-1/CLOSEOUT.md`. This planning pack has no counted run. The later task-1
 bundle records `clean_start` true, and only that counted run is closed under ADR-F1A-009.
+
+## 10. Ask-first harness sign-off (N-12)
+
+The Tech Lead accepted N-12 for the timer flag, the six sub-times, and the accessors.
+That is the ask-first harness path in ADR-F5A-009 and `task-1/TASK_1_MINI_SPEC.md` §4
+and §6. The sign-off is recorded here before the Reviewer (a) re-gate. It does not
+record a counted run and it does not close the slice.

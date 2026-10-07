@@ -3,7 +3,7 @@
 > **Traces:** REQ-001, REQ-002, REQ-003, REQ-004, REQ-005, REQ-006, REQ-007, REQ-008, REQ-009 ·
 > CAP-004, CAP-007 · QA-007, QA-008, QA-009 · ADR-F5A-001…009 ·
 > **Scope:** E-VQE at 4 qubits only. No reduction. No attribution routes. No widths 6 or 8 ·
-> **Gate:** code-ready. SDD stage `step-4b-authorized`. Step 4b is not started ·
+> **Gate:** code-ready. SDD stage `step-4b-authorized`. Step 4b has started; C1 is in flight (post-C1 fix revision) ·
 > **Pair, inventory, no-O rule, and kernel/fusion/AVX boundary:** unchanged
 
 ## 1. What this slice is
@@ -149,7 +149,8 @@ for the partition check.
 
 ADR-F5A-009 in `ADR_AMENDMENTS_CPP_PYTHON_INTEROP_PROFILE.md` records this section.
 The index line is the only edit to `ADRS_CPP_PYTHON_INTEROP_PROFILE.md`. The stage
-line is `step-4b-authorized`. This pass does not start Step 4b. The amendment
+line is `step-4b-authorized`. Step 4b has started. C1 is in flight as a post-C1 fix
+revision ahead of the Reviewer (a) re-gate. The amendment
 authorizes the private members, the setter and
 getter, the three module functions, and these gated clock reads. It leaves the
 `support_outer` call in place, puts no clock inside lowering, and adds no reduction,

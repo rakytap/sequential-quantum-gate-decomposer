@@ -3,11 +3,12 @@
 > **Traces:** REQ-001, REQ-002, REQ-003, REQ-004, REQ-005, REQ-006, REQ-007, REQ-008, REQ-009 ·
 > CAP-004, CAP-007 · QA-007, QA-008, QA-009 ·
 > **SDD stage:** step-4b-authorized
-> **Boundary:** writer stamp only. Step 4b is not started. No Developer handoff
+> **Boundary:** Step 4b has started. C1 is in flight (post-C1 fix revision, ahead of the Reviewer (a) re-gate)
 
-Stage is `step-4b-authorized`. With no `CLOSEOUT.md`, normal mode warns
-`SLICE_MISSING_CLOSEOUT`, and `--strict` promotes that one finding to an error.
-No placeholder. No waiver.
+Stage is `step-4b-authorized`. Step 4b has started. C1 is in flight as a post-C1
+fix revision ahead of the Reviewer (a) re-gate. With no `CLOSEOUT.md`, normal mode
+warns `SLICE_MISSING_CLOSEOUT`, and `--strict` promotes that one finding to an error.
+No placeholder. No waiver. The Developer does not edit `docs/specs/**`.
 
 These tasks are the code-ready contract. ADR-F5A-009 is filed. No task below may add
 a public energy API, time an attribution route, include width 6 or 8, or take a
