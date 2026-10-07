@@ -1,11 +1,11 @@
 # Task 2: E-VQE at 6 qubits, equal-work extension
-> **Status:** counted (c) PASS · C2-ready · **Slice:** M-F5a task-2 ·
+> **Status:** task-2 Step 4b closed · **Slice:** M-F5a task-2 ·
 > **Traces:** REQ-001…009 · CAP-004, CAP-007 · QA-007, QA-008, QA-009 · ADR-F5A-001…009 ·
 > **Scope:** one E-VQE width-6 row on the task-1 harness. No width 8. No routes. No reduction ·
 > **Gate:** SDD stage `step-4b-authorized`. QA-007 stays `[confirm]`. Milestone not complete ·
 > **RM:** ACCEPT 2026-10-07 (upload `5c810dac…`). Counted (c) at C1 `d336472f` ·
-> **Stamp:** C2 is this commit. (e) pending after this write ·
-> **Tip:** C1 `d336472fa59c514c9eb3a5e6001daf343a4bbb66` · task-1 bundle `212f7038…` stays ·
+> **Stamp:** C2 `6707892a`. (e) APPROVE. (g) PASS. No next slice ·
+> **Tip:** C2 `6707892ae7aac912a7c9f30f91577f9191b74bff` · task-1 bundle `212f7038…` stays ·
 > **Pair, inventory, no-O rule, kernel/fusion/AVX boundary:** unchanged
 
 ## 1. Why this slice is the thinnest next counted row
@@ -219,7 +219,7 @@ validator entry points, and the width-6 artifact.
 
 ## 11. Verdict
 
-**C2-ready.** Counted (c) passed at C1 `d336472f`. SDD stage stays
-`step-4b-authorized`. `task-2/CLOSEOUT.md` records the row. C2 is this commit.
-(e) is pending after this write. (g) is pending after C2. QA-007 stays `[confirm]`. No A4 kill,
-hold-the-line label, or reduction. The milestone is not complete.
+**Closed through (g).** C2 is `6707892a`. SDD stage stays `step-4b-authorized`.
+(e) is APPROVE. (g) is PASS. QA-007 stays `[confirm]`. No A4 kill, hold-the-line
+label, or reduction. `milestone_counted` stays false. The milestone is not
+complete. This file does not open the next slice.

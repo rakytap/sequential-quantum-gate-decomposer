@@ -1,24 +1,24 @@
 # Pre-implementation completion checklist — M-F5a `cpp-python-interop-profile`
-> **Status:** Layer 1 v0.1 · **Verdict:** task-1 closed; task-2 counted (c) PASS, C2-ready, stage `step-4b-authorized` ·
+> **Status:** Layer 1 v0.1 · **Verdict:** task-1 closed; task-2 Step 4b closed at C2 `6707892a`, (g) PASS ·
 > **Milestone:** M-F5a `cpp-python-interop-profile` ·
 > **Owner skill:** `spec-driven-development` Steps 2–4a ·
 > **Inputs:** `INITIAL_REQUIREMENTS.md` v0.1,
 > `DETAILED_PLANNING_CPP_PYTHON_INTEROP_PROFILE.md`,
 > `ADRS_CPP_PYTHON_INTEROP_PROFILE.md`, `ADR_AMENDMENTS_CPP_PYTHON_INTEROP_PROFILE.md` · **Traces:** REQ-001…009 ·
-> **Authorization:** task-1 closed at C2 `ddde49ac`; task-2 (c) PASS at C1 `d336472f`; C2 is this commit; (e) pending after this write; QA-007 `[confirm]` ·
-> **Boundary:** C2-ready for Reviewer (e); milestone not complete; no push; no pull request ·
+> **Authorization:** task-1 closed at C2 `ddde49ac`; task-2 closed at C2 `6707892a`; (e) APPROVE; (g) PASS; QA-007 `[confirm]` ·
+> **Boundary:** slice close only; milestone not complete; no next slice; no push; no pull request ·
 > **Baseline:** `1b123a9a31235dd68d6c0a6ff9ba457c0112cd59`
 
 ## 1. Readiness rule
 
-**Verdict: task-1 Step 4b stays closed. Task-2 (c) passed at C1 `d336472f`. Stage stays `step-4b-authorized`. C2 is this commit. (e) is pending after this write. QA-007 stays `[confirm]`. M-F5a is not complete.**
+**Verdict: task-1 Step 4b stays closed. Task-2 Step 4b is closed at C2 `6707892a`. (e) APPROVE. (g) PASS. Stage stays `step-4b-authorized`. QA-007 stays `[confirm]`. M-F5a is not complete.**
 
 The Tech Lead opened the tracer. `task-1/` holds the planning pack and `CLOSEOUT.md`.
 ADR-F5A-009 is filed. C1 tip is `ca5589e2`. C2 is
 `ddde49ac1e248e3ea2b4516f420ca1cbbd14e9df`. Reviewer (e) approved it and step (g)
 passed. Section 11 is that record. The counted run recorded `clean_start` true.
 This checklist does not freeze the 10 % bar and does not mark the milestone
-delivered. Section 12 records the task-2 counted row. C2 is this commit.
+delivered. Section 12 records task-2 through (g). The next slice is not opened.
 The Developer does not edit `docs/specs/**`.
 
 The code-ready gate, already met before C1, required all of the following:
@@ -74,12 +74,12 @@ The code-ready gate, already met before C1, required all of the following:
 | G-08 | Current-state docs do not yet name the lane | milestone close, ADR-F5A-007 | SDD at close | **open — expected** |
 | G-09 | Rocky-local Tester CI record for a code close | that later close | Tester | **open — expected; N8 stays deferred** |
 | G-10 | Step 4b authorization for task-1 | code-ready verdict on task-1 | Architect | **closed — task-1 stage `step-4b-authorized`; task-1 closed at C2** |
-| G-11 | Step 4b authorization for task-2 | planning-role stamp after the Reviewer writer gate | Planning role | **closed — stage `step-4b-authorized`; (c) PASS at `d336472f`; C2 is this commit** |
+| G-11 | Step 4b authorization for task-2 | planning-role stamp after the Reviewer writer gate | Planning role | **closed — C2 `6707892a`; (e) APPROVE; (g) PASS; stage `step-4b-authorized`** |
 
 No open item changes the equal-work pair, adds an advertised energy entry, publishes \(O\)
 on an attribution-only route, or proposes a kernel, fusion, or AVX edit. No A4 kill and
 no reduction on widths 4 and 6 alone (ADR-F5A-003/005). RM ACCEPT 2026-10-07 is recorded.
-G-11 is closed by the C0 stamp `388a5e5f`, on base `c32b365e`. C1 is `d336472f`. C2 is this commit.
+G-11 is closed by the C0 stamp `388a5e5f`, on base `c32b365e`. C1 is `d336472f`. C2 is `6707892a`. (g) PASS.
 
 ## 4. Decision closures and trade-offs
 
@@ -168,7 +168,7 @@ closeout, so that finding stayed until this real close.
 After `task-1/CLOSEOUT.md`, both modes were clean. `task-2/CLOSEOUT.md` now
 records the counted row. Normal and `--strict` are clean of `SLICE_MISSING_CLOSEOUT`
 and exit 0. No waiver. No placeholder. QA-007 stays `[confirm]`. The milestone
-is not complete. C2 is this commit. (e) is pending after this write. (g) is pending after C2.
+is not complete. Task-2 C2 is `6707892a`. (e) is APPROVE. (g) is PASS. The next slice is not opened.
 
 ## 9. Task-1 Step 4a opened
 
@@ -193,7 +193,7 @@ Reviewer (e) verdict: **APPROVE FOR C2** (bc-b25fac97). Binder
 `8749d515be86a3f067e9426062bc768275ebc1ec7e6022cbca0062a050f59e8b`.
 Parent is C1 tip `ca5589e25036531d599ff963e7d349c6e55b5951`. This section does
 not mark M-F5a complete and does not freeze QA-007. The next slice is not
-opened in this section. Section 12 records the task-2 counted row. N-41 is
+opened in this section. Section 12 records task-2 through (g). N-41 is
 closed in the carry table in this section.
 
 ### (g) PASS
@@ -238,9 +238,9 @@ Regeneration outputs are not committed.
 | N-3, N-6, N-10, N-14, N-21, N-25, N-27, N-28, N-29, N-31, N-40 | open | Task-1 descriptions are in `cffe2cab` checklist §11. For task-2, N-3 and N-10 are the §9 containment diff, and N-14 is the width-6 Aer oracle. |
 | S-a, S-b, S-c, S-e | open | S-a: margin 0.02; N-52, about 16 SE at width 6, record at the G-06 freeze. S-b: partition tolerance. S-c: lag-1 or batch means, still deferred at width 6 (N-56). S-e: affinity before import. S-d closed at width 4. S-f disposed: no refusal below −0.5. |
 
-## 12. Task-2 counted row
+## 12. Task-2 Step 4b closed
 
-(c) PASS at C1 `d336472f`. Stage `step-4b-authorized`. Independence gate done:
-Tester `/tmp/mf5a-t2-counted/INDEPENDENCE_NOTE.md` (`ab2f6612…`). C2 is this
-commit. (e) pending after this write. QA-007 `[confirm]`. Milestone not complete.
-`milestone_counted` false. N-78, N-79, N-80 open. No A4. No push. No pull request.
+C2 `6707892a`. (e) APPROVE FOR C2 COMMIT (`bc-aaf8e41f`). (g) PASS: regen
+`mean_O` 0.00075526, `|Δ|` 0.001878 ≤ 0.02, window [−0.021123, 0.018877].
+w6 restored `5257bad2…`. Porcelain empty. Evidence `/tmp/mf5a-t2-g/`.
+QA-007 `[confirm]`. Milestone not complete. `milestone_counted` false. N-78–N-80 open. No next slice.

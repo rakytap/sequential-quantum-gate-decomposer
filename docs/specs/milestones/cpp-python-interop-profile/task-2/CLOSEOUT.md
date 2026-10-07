@@ -1,8 +1,8 @@
 # M-F5a slice 2 closeout — E-VQE 6-qubit interop row
-> **Status:** C2-ready · **Date:** 2026-10-07 · **Work package:** task-2 ·
-> **Scope:** counted (c) record. M-F5a is not complete ·
+> **Status:** shipped · **Date:** 2026-10-07 · **Work package:** task-2 ·
+> **Scope:** task-2 Step 4b slice close only. M-F5a is not complete ·
 > **C0:** `388a5e5ff7775c496e144edee5b76be85f7caf54` on base `c32b365e` · **C1:** `d336472fa59c514c9eb3a5e6001daf343a4bbb66` ·
-> **C2:** this commit · **(e):** pending after this write · **(g):** pending after C2 ·
+> **C2:** `6707892ae7aac912a7c9f30f91577f9191b74bff` · (e) APPROVE · (g) PASS ·
 > **Claim:** width-6 counted row. `milestone_counted=false` is lawful. QA-007 stays `[confirm]` ·
 > **No push/PR**
 
@@ -11,16 +11,16 @@
 This closeout records the counted clean-start width-6 row. Tester (c) passed once
 at C1 `d336472fa59c514c9eb3a5e6001daf343a4bbb66`. Evidence is
 `/tmp/mf5a-t2-counted/REPORT.md`. The bundle on disk is the Tester file. This
-pass did not re-run it. C2 is this commit. (e) is pending after this write.
-(g) is pending after C2. The file does not complete the milestone, freeze the
-QA-007 bar, or claim "QA-007 met".
+pass did not re-run it. C2 is `6707892a`. (e) is APPROVE FOR C2 COMMIT
+(`bc-aaf8e41f`). (g) is PASS. This docs pass does not re-run (g), does not
+complete the milestone, freeze the QA-007 bar, or claim "QA-007 met".
 
 ## Verdict
 
 Counted row **PASS**. `validate_interop_bundle_w6` **OK**. `milestone_counted=false`
 is **lawful** (below). QA-007 stays **withheld** (`[confirm]`, G-06 open). No A4
-kill and no reduction. The milestone is **not** complete. C2 is this commit.
-(e) is pending after this write.
+kill and no reduction. The milestone is **not** complete. C2 is `6707892a`.
+(e) is APPROVE. (g) is PASS. The next slice is not opened here.
 
 ## `milestone_counted=false`
 
@@ -41,7 +41,7 @@ boundary, not the clean-start bit.
 |------|-----|
 | C0 stamp | `388a5e5ff7775c496e144edee5b76be85f7caf54` |
 | C1 implementation | `d336472fa59c514c9eb3a5e6001daf343a4bbb66` |
-| C2 | this commit |
+| C2 | `6707892ae7aac912a7c9f30f91577f9191b74bff` |
 
 `provenance.implementation_revision` is the C1 tip.
 
@@ -163,8 +163,20 @@ N-80 stays open. The fix-pass pytest ran from the repo root and rewrote ignored
 `costfuncs_and_entropy.txt` and `.pytest_cache`. Ignored files are outside
 clean-start porcelain. A `/tmp` cwd with `-p no:cacheprovider` avoids a repeat.
 
+## (g) clean-C2 regeneration
+
+**PASS.** Evidence `/tmp/mf5a-t2-g/`. Exit 0. Wall `real` 3.75 s. This docs pass
+did not re-run it. Categorical pins matched. The only revision change was
+`d336472f` → `6707892a`. Regenerated `mean_O` is 0.00075526, inside
+[−0.021123, 0.018877]. `|Δ mean O|` is 0.001878, within 0.02. The committed
+bundle was restored to sha256
+`5257bad23e9fef4afad3f7b8b61f84c7cebd2ef8f85d95a94a02cb794d139d7d`, and
+porcelain was empty. Those outputs are not committed. The counted row above
+stays the (c) figures.
+
 ## Remaining
 
 M-F5a stays open. G-06, G-08, and G-09 stay open. Width 8, the four attribution
-routes, and any reduction stay later. (e) is pending after this write. (g) is
-pending after C2. No push and no pull request. QA-007 stays `[confirm]`.
+routes, and any reduction stay later. This file does not open the next slice.
+N-78, N-79, and N-80 stay open. No push and no pull request.
+QA-007 stays `[confirm]`.

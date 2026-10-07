@@ -1,11 +1,11 @@
 # Engineering tasks — M-F5a task-2
-> **Status:** counted (c) PASS · C2-ready · **Slice:** M-F5a task-2 · E-VQE at 6 qubits ·
+> **Status:** task-2 Step 4b closed · C2 `6707892a` · (g) PASS · **Slice:** M-F5a task-2 · E-VQE at 6 qubits ·
 > **Traces:** REQ-001, REQ-002, REQ-003, REQ-004, REQ-005, REQ-006, REQ-007, REQ-008, REQ-009 ·
 > CAP-004, CAP-007 · QA-007, QA-008, QA-009 ·
 > **SDD stage:** step-4b-authorized
-> **Boundary:** C1 `d336472f`. C2 is this commit. (e) pending after this write. QA-007 stays `[confirm]`. The milestone is not complete
+> **Boundary:** C2 `6707892a`. (e) APPROVE. (g) PASS. QA-007 stays `[confirm]`. The milestone is not complete
 
-**Verdict: counted (c) PASS.** C2-ready for Reviewer (e). `task-2/CLOSEOUT.md` records the row. C1 is `d336472f`.
+**Verdict: task-2 Step 4b is closed.** (g) PASS. `task-2/CLOSEOUT.md` records the row. C1 is `d336472f`. The next slice is not opened.
 Lint with this closeout: normal and `--strict` exit 0 and are clean of `SLICE_MISSING_CLOSEOUT`. No waiver.
 The harness is the shipped ADR-F5A-009 timer and `harness_density_lower_ns`, unchanged, with no C++ edit. E1: R-oracle stays excluded.
 Width-6 depth, noise schedule, and the parameter vector are mini-spec §2. The protocol pins are §4.
@@ -178,7 +178,7 @@ git diff --exit-code cffe2cab7da1f1533584f3972faacd6be3b89392 -- \
 - `test_explicit_state_vector_matches_legacy_default` passes.
 - The width-6 schema does not claim QA-007 met.
 - This slice's close does not claim QA-007 met and does not mark M-F5a
-  complete. `task-2/CLOSEOUT.md` records the counted row. C2 is this commit.
+  complete. `task-2/CLOSEOUT.md` records the counted row. C2 is `6707892a`. (g) is PASS.
 - The counted width-6 bundle is the Tester file from (c). This pass does not re-run it.
 
 **Execution checklist (TDD: red → green → refactor)**
