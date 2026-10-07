@@ -1,8 +1,8 @@
 # ADR amendments — M-F5a `cpp-python-interop-profile`
 > **Status:** accepted · **Milestone:** M-F5a `cpp-python-interop-profile` ·
 > **Continues:** `ADRS_CPP_PYTHON_INTEROP_PROFILE.md` (ADR-F5A-001…008) ·
-> **Scope:** ADR-F5A-009, the task-1 harness timer ·
-> **Traces:** REQ-001, REQ-002, REQ-003, REQ-007 · CAP-004, CAP-007 · QA-007, QA-009 ·
+> **Scope:** ADR-F5A-009, the task-1 harness timer; ADR-F5A-010, the R-strict refusal row ·
+> **Traces:** REQ-001, REQ-002, REQ-003, REQ-004, REQ-005, REQ-007 · CAP-004, CAP-007 · QA-007, QA-009 ·
 > **Baseline:** `cdcfe6b151e371add2881d7acca45ef47697cdba`
 
 ## ADR-F5A-009 — Home the harness timer on the C++ base and gate its clocks
@@ -87,3 +87,15 @@ edit. QA-007 stays `[confirm]`. `INITIAL_REQUIREMENTS.md` is unchanged.
 - Add a new energy symbol so the harness can return the scalar it timed.
 
 **Upstream alignment:** REQ-001, REQ-002, REQ-003, REQ-007 · CAP-004, CAP-007 · QA-007, QA-009 · goals G1, G2, G3, G7.
+
+## ADR-F5A-010 — R-strict stays a required refusal row
+
+**Status:** planning amendment, 2026-10-07. RM Option A (`b0edc658…`) and Q1a (`5e3c8222…`). Not implemented in code. Does not close REQ-004. Does not loosen ADR-F5A-006, REQ-005, or CAP-004.
+
+**Context.** `execute_partitioned_density_channel_native` raises on the frozen counted noise (qubits 0 and 1) at widths 4, 6, and 8. STEP_4A_HANDBACK `98eec857…` records that raise. A bundle that omits R-strict, or that invents timings for it, is not an honest inventory.
+
+**Decision.** An attribution bundle names exactly four route ids. R-base, R-fused, and R-hybrid carry orchestration time, the apply component, throughput, and one-sided bounds on those two times. R-strict is required with `status` `handback_refused` and a reason that cites the empty-partition raise under that frozen noise and the handback sha256 above. At width 4 the raise code is `channel_native_noise_presence`. At widths 6 and 8 the recorded code is `pure_unitary_partition` when that is the raise. The R-strict row has no timings, no ns/op, no upper bound, and no \(O\). Any number on that row fails. A missing R-strict row fails. No row carries \(O\) or a lower twin. The bundle field `milestone_counted` is false. The three counted E-VQE bundles stay untouched. After the width-4 counted close, widths 6 and 8 for the three lawful routes are next, each with an R-strict refusal row if it refuses there too. Do not wait on a live R-strict path.
+
+**Not taken.** A three-id bundle. A stub timing row. Option B's route-only noise schedule is refused. Option C, loosening ADR-F5A-006, REQ-004, REQ-005, or CAP-004, is not taken here. It is escalate-only, after the 4/6/8 three-route rows, through the Research Manager, the PhD Manager, and Zoltán.
+
+**Upstream alignment:** REQ-001, REQ-004, REQ-005 · CAP-004 · ADR-F5A-001, ADR-F5A-006.
