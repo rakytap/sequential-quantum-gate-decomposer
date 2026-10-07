@@ -1,14 +1,14 @@
 # Engineering tasks — M-F5a task-1
-> **Status:** code-ready · **Slice:** M-F5a task-1 · E-VQE at 4 qubits only ·
+> **Status:** task-1 Step 4b slice closed · **Slice:** M-F5a task-1 · E-VQE at 4 qubits only ·
 > **Traces:** REQ-001, REQ-002, REQ-003, REQ-004, REQ-005, REQ-006, REQ-007, REQ-008, REQ-009 ·
 > CAP-004, CAP-007 · QA-007, QA-008, QA-009 ·
 > **SDD stage:** step-4b-authorized
-> **Boundary:** Step 4b has started. C1 is in flight (post-C1 fix revision, ahead of the Reviewer (a) re-gate)
+> **Boundary:** task-1 Step 4b slice closed at C2. C1 tip `ca5589e2`. QA-007 stays `[confirm]`
 
-Stage is `step-4b-authorized`. Step 4b has started. C1 is in flight as a post-C1
-fix revision ahead of the Reviewer (a) re-gate. With no `CLOSEOUT.md`, normal mode
-warns `SLICE_MISSING_CLOSEOUT`, and `--strict` promotes that one finding to an error.
-No placeholder. No waiver. The Developer does not edit `docs/specs/**`.
+Stage is `step-4b-authorized`. Task-1 Step 4b is closed by `CLOSEOUT.md` at C2.
+C1 tip is `ca5589e2`. With that closeout, normal and `--strict` are clean of
+`SLICE_MISSING_CLOSEOUT`. No placeholder. No waiver. QA-007 stays `[confirm]`.
+The milestone is not complete. The Developer does not edit `docs/specs/**`.
 
 These tasks are the code-ready contract. ADR-F5A-009 is filed. No task below may add
 a public energy API, time an attribution route, include width 6 or 8, or take a
@@ -203,8 +203,8 @@ REQ-001, REQ-003, and REQ-007 are the requirements this task serves.
   `qgd_VQE_Base_Wrapper.cpp:1725` has no `m_methods` today. The wrapper struct does
   not gain the flag or the six fields.
 - `ARCHITECTURE_OVERVIEW.md` and `TECH_STACK.md` are not edited in the tracer implementation.
-- This planning pack has no `CLOSEOUT.md`. The later counted run records `clean_start`
-  true and is closed under ADR-F1A-009 only after that run.
+- `CLOSEOUT.md` records the counted run: `clean_start` true, closed under ADR-F1A-009.
+  That close is task-1 Step 4b only. It does not meet QA-007 or finish the milestone.
 - Exactness evidence is the unchanged Aer node (`atol=1e-12` with NumPy's default
   `rtol=1e-5`, about 7.6e-6 at this cell) and the flag-off versus flag-on bit-identical
   energy test. The bit-identical test is the tight check. Both are named before the

@@ -1,9 +1,9 @@
 # Task 1: E-VQE at 4 qubits, interop tracer
-> **Status:** code-ready · **Slice:** M-F5a task-1 ·
+> **Status:** task-1 Step 4b slice closed · **Slice:** M-F5a task-1 ·
 > **Traces:** REQ-001, REQ-002, REQ-003, REQ-004, REQ-005, REQ-006, REQ-007, REQ-008, REQ-009 ·
 > CAP-004, CAP-007 · QA-007, QA-008, QA-009 · ADR-F5A-001…009 ·
 > **Scope:** E-VQE at 4 qubits only. No reduction. No attribution routes. No widths 6 or 8 ·
-> **Gate:** code-ready. SDD stage `step-4b-authorized`. Step 4b has started; C1 is in flight (post-C1 fix revision) ·
+> **Gate:** task-1 Step 4b slice closed. SDD stage `step-4b-authorized`. C1 `ca5589e2`; QA-007 stays `[confirm]` ·
 > **Pair, inventory, no-O rule, and kernel/fusion/AVX boundary:** unchanged
 
 ## 1. What this slice is
@@ -149,8 +149,8 @@ for the partition check.
 
 ADR-F5A-009 in `ADR_AMENDMENTS_CPP_PYTHON_INTEROP_PROFILE.md` records this section.
 The index line is the only edit to `ADRS_CPP_PYTHON_INTEROP_PROFILE.md`. The stage
-line is `step-4b-authorized`. Step 4b has started. C1 is in flight as a post-C1 fix
-revision ahead of the Reviewer (a) re-gate. The amendment
+line is `step-4b-authorized`. C1 tip is `ca5589e2`. The counted close is
+`task-1/CLOSEOUT.md`. QA-007 stays `[confirm]`. The amendment
 authorizes the private members, the setter and
 getter, the three module functions, and these gated clock reads. It leaves the
 `support_outer` call in place, puts no clock inside lowering, and adds no reduction,
@@ -183,12 +183,11 @@ G-04 for this slice is section 2. Widths 6 and 8 are not pinned here.
   lies within 0.02 absolute of the recorded mean. That margin is not the QA-007 bar.
 - While G-06 is open, the row reports `O` and the bound and does not print "QA-007 met".
 
-This planning pack has no counted run and no bundle, so it does not write `CLOSEOUT.md`.
+The counted bundle is `benchmarks/density_matrix/artifacts/interop_profile/interop_profile_bundle.json`, and `task-1/CLOSEOUT.md` records it.
 "Counted pairs" means the 1000 timing pairs. "Counted inventory" is the milestone
-denominator. `milestone_counted=false` means this cell is not the 4/6/8 verdict. Only a
-counted run selects the close order. When the later implementation writes the task-1
-bundle, that bundle records `clean_start` true, and its close follows ADR-F1A-009.
-`CLOSEOUT.md` is written only after that counted run.
+denominator. `milestone_counted=false` means this cell is not the 4/6/8 verdict. The
+bundle records `clean_start` true. Its close follows ADR-F1A-009. QA-007 stays
+`[confirm]`. This slice close does not complete the milestone.
 
 ## 8. Notes that do not change contracts
 
@@ -218,8 +217,8 @@ Authorized timer edits, once ADR-F5A-009 exists, are the only permitted diff in 
 
 ## 10. Evidence matrix
 
-Paths that do not exist yet are omitted from this table. The implementation names them
-in the engineering tasks, outside an evidence row, and adds the rows when the files exist.
+The counted bundle and its reproduce command are in `task-1/CLOSEOUT.md`. Rows below
+keep the code-ready checks. The lint row is the post-close expectation.
 
 | Trace id | Evidence type | Command or gate | Expected result | Owner |
 |----------|---------------|-----------------|-----------------|-------|
@@ -230,7 +229,7 @@ in the engineering tasks, outside an evidence row, and adds the rows when the fi
 | REQ-006, QA-008 | repo review | `git diff --exit-code cdcfe6b151e371add2881d7acca45ef47697cdba -- benchmarks/density_matrix/performance_evidence benchmarks/density_matrix/benchmark_perf.py` | empty; M-F1b records untouched by this pack | DS-1 |
 | REQ-007, QA-009 | fast pytest | `conda run -n qgd --no-capture-output pytest tests/VQE/test_VQE.py::Test_VQE::test_explicit_state_vector_matches_legacy_default -q` | state-vector default still matches | DS-3 |
 | REQ-008 | repo review | `git diff --exit-code cdcfe6b151e371add2881d7acca45ef47697cdba -- docs/density_matrix_project/archive` | empty | DS-2 |
-| REQ-009 | spec lint | `bash .cursor/skills/spec-driven-development/scripts/specs_check.sh --strict docs/specs/milestones/cpp-python-interop-profile` | after this stamp: `--strict` has exactly one `SLICE_MISSING_CLOSEOUT` error and exit 1; normal mode has that finding as its only warning and exit 0; no `CLOSEOUT.md`; no waiver | DS-3 |
+| REQ-009 | spec lint | `bash .cursor/skills/spec-driven-development/scripts/specs_check.sh --strict docs/specs/milestones/cpp-python-interop-profile` | after `task-1/CLOSEOUT.md`: normal and `--strict` are clean of `SLICE_MISSING_CLOSEOUT` and exit 0; no waiver; QA-007 stays `[confirm]` | DS-3 |
 
 ## 11. Affected interfaces
 

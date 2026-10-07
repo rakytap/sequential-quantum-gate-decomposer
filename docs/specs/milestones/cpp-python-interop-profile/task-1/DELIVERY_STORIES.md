@@ -1,8 +1,8 @@
 # Delivery stories — M-F5a task-1
-> **Status:** code-ready · **Slice:** M-F5a task-1 ·
+> **Status:** task-1 Step 4b slice closed · **Slice:** M-F5a task-1 ·
 > **Scope:** E-VQE at 4 qubits. No reduction. No attribution routes. No widths 6 or 8 ·
 > **Traces:** REQ-001…009 · CAP-004, CAP-007 · QA-007, QA-008, QA-009 ·
-> **Gate:** code-ready. SDD stage `step-4b-authorized`. Step 4b has started; C1 is in flight (post-C1 fix revision)
+> **Gate:** task-1 Step 4b slice closed. SDD stage `step-4b-authorized`. C1 tip `ca5589e2`. QA-007 stays `[confirm]`
 
 ### Delivery story: DS-1 — A 4-qubit E-VQE row with an equal-work ratio
 
@@ -29,7 +29,7 @@
 - The four components partition `T_public` within the stated tolerance, after ADR-F5A-009
 - The inner-timer flag is on for both sides of every warm-up pair and every counted pair
 - The existing Aer node stays unchanged (`atol=1e-12` with NumPy's default `rtol=1e-5`, about 7.6e-6 at this cell). Flag-off versus flag-on bit-identity is the tight timer check
-- The later counted run records `clean_start` true; this planning pack has no such run
+- The counted run records `clean_start` true; `task-1/CLOSEOUT.md` is that record. QA-007 stays `[confirm]`
 
 **Traceability**
 - Initial requirement(s): REQ-001, REQ-002, REQ-003, REQ-006
