@@ -1,22 +1,22 @@
 # Engineering tasks — M-F5a task-3
-> **Status:** code-ready · Step 4b authorized · binder `2ca76334…` · `ced81815` · **Slice:** M-F5a task-3 · E-VQE at 8 qubits ·
+> **Status:** counted (c) PASS · C2-ready · **Slice:** M-F5a task-3 · E-VQE at 8 qubits ·
 > **Traces:** REQ-001, REQ-002, REQ-003, REQ-004, REQ-005, REQ-006, REQ-007, REQ-008, REQ-009 ·
 > CAP-004, CAP-007 · QA-007, QA-008, QA-009 ·
 > **SDD stage:** step-4b-authorized
-> **Boundary:** Developer not started. QA-007 stays `[confirm]`. The milestone is not complete
+> **Boundary:** C1 `97d726e3`. C2 is this commit. (e) pending after this write. QA-007 stays `[confirm]`. The milestone is not complete
 
-**Verdict: code-ready.** SDD stage is `step-4b-authorized` in this uncommitted stamp. The Developer is not started until the TL handoff after Reviewer APPROVE FOR STEP-4B. Binder `/tmp/rev-mf5a-t3-codeready/REVIEW.md` (`2ca76334…`) at `ced81815`.
-Lint after this stamp: normal exits 0 with one `SLICE_MISSING_CLOSEOUT` warning for task-3. `--strict` exits 1 with that finding as its only error. No waiver. No placeholder closeout.
+**Verdict: counted (c) PASS.** C2-ready for Reviewer (e). `task-3/CLOSEOUT.md` records the row. C1 is `97d726e3`.
+Lint with this closeout: normal and `--strict` exit 0 and are clean of `SLICE_MISSING_CLOSEOUT`. No waiver.
 The harness is the shipped ADR-F5A-009 timer and `harness_density_lower_ns`, unchanged, with no C++ edit. E1: R-oracle stays excluded.
 Width-8 pins are mini-spec §2 and §4: 42 parameters, 21 gates, 24 operations, `nnz` 1152, divisor 1572864. S-g Measure carries. `milestone_counted=false`.
 The equal-work pair, the inventory, the no-O rule, and the kernel/fusion/AVX boundary are unchanged.
 QA-007 stays `[confirm]`. No "QA-007 met", no A4 kill, no "A4 false", no hold-the-line label, and no reduction justified, taken, or shipped until the Research Manager interprets the counted 4/6/8 set.
-This stamp is S-1…S-7. The narrow Reviewer stamp check still follows. RM ACCEPT `39808966…` did not flip the stage. C0 is not committed. The ET-3 allowlist stands for that later handoff. No counted width-8 run starts here.
+The ET-3 allowlist stands. The counted width-8 row is the (c) bundle. It was not re-run here. C0 is `c4f5df9b`. RM ACCEPT did not flip the stage.
 
-These tasks are the contract for a later authorized pass. None may add a public
+These tasks are the C1 contract. None may add a public
 energy API, time an attribution route, apply the 10 % bar, claim an A4 kill or a
 reduction, drop a sample, or clip a negative mean. The planned diff is Python only.
-A required C++ edit is a handback. The Developer is not started. The two interop
+A required C++ edit is a handback. The Developer pass is C1 `97d726e3`. The two interop
 test modules take additions only. No existing test is deleted, skipped, or
 weakened. The N-17 golden stays. The counted close stays ADR-F1A-009.
 
@@ -125,14 +125,14 @@ REQ-002 and REQ-003 are the requirements this task serves.
 - tests | docs
 
 **Definition of done**
-- After Reviewer APPROVE FOR STEP-4B and the TL handoff, the Developer diff touches only
+- The authorized diff touched only
   `benchmarks/density_matrix/interop_profile/`, the two interop test modules,
-  and at counted close `interop_profile_bundle_w8.json`. This stamp does not start that pass.
+  and at this counted close `interop_profile_bundle_w8.json`.
 - It does not touch `squander/src-cpp/`, `squander/VQA/`, `squander/partitioning/`,
   `tests/VQE/test_VQE.py`, the archive, `performance_evidence/`,
   `benchmark_perf.py`, `INITIAL_REQUIREMENTS.md`, or the current-state docs.
-- `task-3/CLOSEOUT.md` stays absent until a real close after the counted run. This stamp does not write it.
-- No counted width-8 bundle is produced in this stamp.
+- `task-3/CLOSEOUT.md` records the counted row.
+- The counted width-8 bundle is the (c) file. This closeout does not re-run it.
 
 **Execution checklist (TDD: red → green → refactor)**
 - [ ] Add the refusal test on `tmp_path` before any lane edit

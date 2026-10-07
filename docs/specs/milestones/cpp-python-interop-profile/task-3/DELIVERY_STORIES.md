@@ -1,9 +1,9 @@
 # Delivery stories — M-F5a task-3
-> **Status:** code-ready · **Verdict:** Step 4b authorized · **Slice:** M-F5a task-3 ·
+> **Status:** counted (c) PASS · C2-ready · **Slice:** M-F5a task-3 ·
 > **Scope:** E-VQE at 8 qubits on the existing harness. No routes. No reduction ·
 > **Traces:** REQ-001…009 · CAP-004, CAP-007 · QA-007, QA-008, QA-009 ·
 > **Gate:** SDD stage `step-4b-authorized`. QA-007 stays `[confirm]`. Milestone not complete ·
-> **RM:** ACCEPT 2026-10-07 (`39808966…`). Developer not started. Binder `2ca76334…` at `ced81815`
+> **RM:** ACCEPT 2026-10-07 (`39808966…`). Counted at C1 `97d726e3`. C2 is this commit. (e) pending after this write
 
 ### Delivery story: DS-1 — An 8-qubit E-VQE row on the same equal-work pair
 
@@ -19,7 +19,7 @@
 
 **Scope**
 - In: E-VQE at 8 qubits; the existing harness-only lower call; Measure carried from S-g
-- Out: attribution routes; a new CPU mask; a counted run in this stamp
+- Out: attribution routes; a new CPU mask; a re-run of the counted command
 
 **Acceptance signals**
 - `parameter_count` 42, `operation_count` 24, `gate_count` 21, divisor 1572864
@@ -73,7 +73,7 @@
 
 **Acceptance signals**
 - `test_explicit_state_vector_matches_legacy_default` still passes
-- This slice does not claim QA-007 met and does not mark M-F5a complete. Stamp is code-ready at `ced81815` (binder `2ca76334…`). The Developer is not started
+- This slice does not claim QA-007 met and does not mark M-F5a complete. Counted (c) passed at C1 `97d726e3`. C2 is this commit. (e) is pending after this write
 
 **Traceability**
 - Initial requirement(s): REQ-007, REQ-009

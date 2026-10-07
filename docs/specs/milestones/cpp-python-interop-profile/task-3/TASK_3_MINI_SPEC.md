@@ -1,11 +1,11 @@
 # Task 3: E-VQE at 8 qubits, equal-work extension
-> **Status:** code-ready · **Verdict:** Step 4b authorized · **Slice:** M-F5a task-3 ·
+> **Status:** counted (c) PASS · C2-ready · **Slice:** M-F5a task-3 ·
 > **Traces:** REQ-001…009 · CAP-004, CAP-007 · QA-007, QA-008, QA-009 · ADR-F5A-001…009 ·
 > **Scope:** one E-VQE width-8 row on the task-1/2 harness. No routes. No reduction ·
 > **Gate:** SDD stage `step-4b-authorized`. QA-007 stays `[confirm]`. Milestone not complete ·
-> **RM:** ACCEPT 2026-10-07, upload `2026-10-07-mf5a-task3-align-accept_a41b.md` (`39808966…`). Developer not started. Binder `2ca76334…` at `ced81815` ·
-> **Stamp:** code-ready. This uncommitted stamp awaits the narrow Reviewer stamp check. C0 is not committed ·
-> **Tip:** `ced818155479008a659f7bf768f6629c2a0032b3` · pins read at parent `5d93ca07` · Step-4a pack `1058d702` · bundles stay ·
+> **RM:** ACCEPT 2026-10-07, upload `2026-10-07-mf5a-task3-align-accept_a41b.md` (`39808966…`). Counted (c) at C1 `97d726e3` ·
+> **Stamp:** C0 `c4f5df9b`. C2 is this commit. (e) pending after this write ·
+> **Tip:** C1 `97d726e383e6846f7cefdccdb8783b45c2884208` · task-1 `212f7038…` · w6 `5257bad2…` stay ·
 > **Pair, inventory, no-O rule, kernel/fusion/AVX boundary:** unchanged
 
 ## 1. Why this slice is the thinnest next counted row
@@ -101,10 +101,10 @@ does not apply the 10 % bar and does not apply the 5 % A4 test.
 The counted close follows ADR-F1A-009 in the `two-commit-close.md` order:
 (a) Reviewer implementation review; C1; (c) once from a clean C1; the Tester
 independence note, naming the width-8 Aer oracle against the cell; (d)
-`task-3/CLOSEOUT.md`; (e) Reviewer evidence review; C2; (g). This uncommitted
-stamp is that planning C0 draft and is not committed until APPROVE FOR STEP-4B. At (g), regenerate with `--width 8`, restore the
-committed width-8 bundle, and check `|Δ mean O|` ≤ 0.02 with
-`assert_mean_o_within_margin`. Throughput is not a (g) gate.
+`task-3/CLOSEOUT.md`; (e) Reviewer evidence review; C2; (g). C0 is `c4f5df9b`.
+(c) passed once. C2 is this commit. (e) is pending after this write. (g) is pending
+after C2. At (g), regenerate with `--width 8`, restore the committed width-8 bundle,
+and check `|Δ mean O|` ≤ 0.02 with `assert_mean_o_within_margin`. Throughput is not a (g) gate.
 
 Canonical artifact:
 `benchmarks/density_matrix/artifacts/interop_profile/interop_profile_bundle_w8.json`.
@@ -127,8 +127,7 @@ taskset -c 0 env PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 O
 `validate_interop_bundle_w8` fails when `provenance.command` is not this line.
 The `--width` check is parameterized by profile. It is not a hard-coded
 `"--width 6"` test. Width-6 behavior stays as it is. Refusal tests use
-`tmp_path`. No test writes a committed bundle. This stamp writes no
-`CLOSEOUT.md`.
+`tmp_path`. No test writes a committed bundle. `task-3/CLOSEOUT.md` records the counted close.
 
 ## 5. Unsupported
 
@@ -152,7 +151,7 @@ current-state docs. No validator token covers that sentence. Reviewer (a) and (e
 
 ## 6. Evidence matrix
 
-This planning pass does not run the counted command and does not write the artifact.
+The counted command ran once at (c). This closeout does not re-run it. The artifact is the (c) bundle.
 
 | Trace id | Evidence type | Command or gate | Expected result | Owner |
 |----------|---------------|-----------------|-----------------|-------|
@@ -161,23 +160,16 @@ This planning pass does not run the counted command and does not write the artif
 | REQ-006, QA-008 | repo review | `git diff --exit-code 5d93ca07a75154e1e909edcc66d432aea9460889 -- benchmarks/density_matrix/artifacts/interop_profile/interop_profile_bundle.json benchmarks/density_matrix/artifacts/interop_profile/interop_profile_bundle_w6.json benchmarks/density_matrix/performance_evidence benchmarks/density_matrix/benchmark_perf.py` | empty | DS-2 |
 | REQ-007, QA-009 | fast pytest | `conda run -n qgd --no-capture-output pytest tests/VQE/test_VQE.py::Test_VQE::test_explicit_state_vector_matches_legacy_default -q` | state-vector default still matches | DS-3 |
 | REQ-003, REQ-008 | repo review | `git diff --exit-code 5d93ca07a75154e1e909edcc66d432aea9460889 -- docs/density_matrix_project/archive squander/src-cpp squander/VQA squander/partitioning tests/VQE/test_VQE.py` | empty. `tests/VQE/test_VQE.py` holds the Aer helper and the frozen 4-qubit node | DS-2 |
-| REQ-009, QA-008 | spec lint | `bash .cursor/skills/spec-driven-development/scripts/specs_check.sh docs/specs/milestones/cpp-python-interop-profile` and the same command with `--strict` | after this stamp, stage `step-4b-authorized`, no closeout: normal mode 0 errors, 1 warning `SLICE_MISSING_CLOSEOUT` for task-3, exit 0; `--strict` makes that finding the only error, exit 1. After a real closeout, both modes are clean. No waiver. No placeholder | DS-3 |
+| REQ-009, QA-008 | spec lint | `bash .cursor/skills/spec-driven-development/scripts/specs_check.sh docs/specs/milestones/cpp-python-interop-profile` and the same command with `--strict` | with `task-3/CLOSEOUT.md`: both modes exit 0 and are clean of `SLICE_MISSING_CLOSEOUT`; no waiver; QA-007 stays `[confirm]` | DS-3 |
 
 ## 7. Verdict
 
-**Code-ready.** SDD stage is `step-4b-authorized` in this uncommitted stamp. The
-Developer is not started until the TL handoff after Reviewer APPROVE FOR STEP-4B.
-Binder `/tmp/rev-mf5a-t3-codeready/REVIEW.md` (`2ca76334…`) at docs commit `ced81815`.
-QA-007 stays `[confirm]`. No A4 kill, no "A4 false", no hold-the-line label, and no
-reduction until the Research Manager interprets the counted 4/6/8 set. S-g Measure
-carries. `milestone_counted=false`. No counted width-8 run in this stamp.
-
-The stage line moved under S-1…S-7 after the four preconditions were met in draft:
-RM ACCEPT `39808966…` (cites tip `5d93ca07`); W-1…W-7 folded with pins, Measure, the
-deferred set, the pair, the inventory, the no-O rule, and the kernel/fusion/AVX
-boundary unchanged; Reviewer code-ready writer re-gate APPROVE (binder `2ca76334…`);
-and this planning-role stamp-only pass. The narrow Reviewer stamp check still follows.
-C0 is not committed. RM ACCEPT did not flip the stage. The counted close stays
+**Counted (c) PASS.** C2-ready for Reviewer (e). SDD stage stays `step-4b-authorized`.
+C0 is `c4f5df9b`. C1 is `97d726e3`. C2 is this commit. (e) is pending after this write.
+(g) is pending after C2. `task-3/CLOSEOUT.md` records the row. QA-007 stays `[confirm]`.
+No A4 kill, no "A4 false", no hold-the-line label, and no reduction until the Research
+Manager interprets the counted 4/6/8 set. S-g Measure carries. `milestone_counted=false`
+is lawful. RM ACCEPT did not flip the stage. The C0 stamp did. The counted close stays
 ADR-F1A-009 / `two-commit-close.md` (§4).
 
 | Finding | Disposition |

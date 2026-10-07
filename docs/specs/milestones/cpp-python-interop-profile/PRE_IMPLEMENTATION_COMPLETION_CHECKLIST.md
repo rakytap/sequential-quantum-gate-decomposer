@@ -1,24 +1,24 @@
 # Pre-implementation completion checklist — M-F5a `cpp-python-interop-profile`
-> **Status:** Layer 1 v0.1 · **Verdict:** task-3 code-ready, stage `step-4b-authorized`; binder `2ca76334…` at `ced81815` ·
+> **Status:** Layer 1 v0.1 · **Verdict:** task-3 counted (c) PASS, C2-ready, stage `step-4b-authorized` ·
 > **Milestone:** M-F5a `cpp-python-interop-profile` ·
 > **Owner skill:** `spec-driven-development` Steps 2–4a ·
 > **Inputs:** `INITIAL_REQUIREMENTS.md` v0.1,
 > `DETAILED_PLANNING_CPP_PYTHON_INTEROP_PROFILE.md`,
 > `ADRS_CPP_PYTHON_INTEROP_PROFILE.md`, `ADR_AMENDMENTS_CPP_PYTHON_INTEROP_PROFILE.md` · **Traces:** REQ-001…009 ·
-> **Authorization:** task-1 C2 `ddde49ac`; task-2 C2 `6707892a`; (e) APPROVE; (g) PASS; task-3 `step-4b-authorized`; Developer not started; QA-007 `[confirm]` ·
-> **Boundary:** task-3 stamp, Developer not started; milestone not complete; no push; no pull request ·
+> **Authorization:** task-1 C2 `ddde49ac`; task-2 C2 `6707892a`; (e) APPROVE; (g) PASS; task-3 (c) PASS at C1 `97d726e3`; C2 is this commit; (e) pending; QA-007 `[confirm]` ·
+> **Boundary:** C2-ready for Reviewer (e); milestone not complete; no push; no pull request ·
 > **Baseline:** `1b123a9a31235dd68d6c0a6ff9ba457c0112cd59`
 
 ## 1. Readiness rule
 
-**Verdict: task-1 and task-2 stay closed. Task-3 is code-ready at `step-4b-authorized`. Developer is not started. QA-007 stays `[confirm]`. M-F5a is not complete.**
+**Verdict: task-1 and task-2 stay closed. Task-3 (c) passed at C1 `97d726e3`. Stage stays `step-4b-authorized`. C2 is this commit. (e) is pending after this write. QA-007 stays `[confirm]`. M-F5a is not complete.**
 
 The Tech Lead opened the tracer. `task-1/` holds the planning pack and `CLOSEOUT.md`.
 ADR-F5A-009 is filed. C1 tip is `ca5589e2`. C2 is
 `ddde49ac1e248e3ea2b4516f420ca1cbbd14e9df`. Reviewer (e) approved it and step (g)
 passed. Section 11 is that record. The counted run recorded `clean_start` true.
 This checklist does not freeze the 10 % bar and does not mark the milestone
-delivered. Section 12 records task-2 through (g). Section 13 stamps task-3 code-ready. The Developer is not started.
+delivered. Section 12 records task-2 through (g). Section 13 records task-3 through (c). C2 is this commit. (e) is pending.
 The Developer does not edit `docs/specs/**`.
 
 The code-ready gate, already met before C1, required all of the following:
@@ -75,12 +75,12 @@ The code-ready gate, already met before C1, required all of the following:
 | G-09 | Rocky-local Tester CI record for a code close | that later close | Tester | **open — expected; N8 stays deferred** |
 | G-10 | Step 4b authorization for task-1 | code-ready verdict on task-1 | Architect | **closed — task-1 stage `step-4b-authorized`; task-1 closed at C2** |
 | G-11 | Step 4b authorization for task-2 | planning-role stamp after the Reviewer writer gate | Planning role | **closed — C2 `6707892a`; (e) APPROVE; (g) PASS; stage `step-4b-authorized`** |
-| G-12 | Step 4b authorization for task-3 | planning-role stamp after the Reviewer code-ready writer gate | Planning role | **closed — stage `step-4b-authorized` at `ced81815`; binder `2ca76334…`; Developer not started** |
+| G-12 | Step 4b authorization for task-3 | planning-role stamp after the Reviewer code-ready writer gate | Planning role | **closed — C0 `c4f5df9b`; C1 `97d726e3`; (c) PASS; C2 is this commit; (e) pending** |
 
 No open item changes the equal-work pair, adds an advertised energy entry, publishes \(O\)
 on an attribution-only route, or proposes a kernel, fusion, or AVX edit. No A4 kill and
 no reduction before the Research Manager interprets the counted 4/6/8 set (ADR-F5A-003/005).
-Task-2 RM ACCEPT is `5c810dac…`. Task-3 RM ACCEPT 2026-10-07 is upload `39808966…` and did not flip the stage. This stamp does.
+Task-2 RM ACCEPT is `5c810dac…`. Task-3 RM ACCEPT 2026-10-07 is upload `39808966…` and did not flip the stage. The C0 stamp `c4f5df9b` did.
 G-11 is closed by the C0 stamp `388a5e5f`, on base `c32b365e`. C1 is `d336472f`. C2 is `6707892a`. (g) PASS.
 
 ## 4. Decision closures and trade-offs
@@ -168,9 +168,9 @@ kept the same finding as a warning and exited 0. ADR-F1A-008 forbids a planning-
 closeout, so that finding stayed until this real close.
 
 After `task-1/CLOSEOUT.md` and `task-2/CLOSEOUT.md`, those slices are clean.
-This stamp leaves `task-3/CLOSEOUT.md` absent. Normal: 0 errors, 1 warning
-`SLICE_MISSING_CLOSEOUT`, exit 0. `--strict`: that finding is the only error, exit 1.
-No waiver. No placeholder. Binder `2ca76334…` at `ced81815`. Developer not started.
+`task-3/CLOSEOUT.md` records the counted row. Normal and `--strict` exit 0
+and are clean of `SLICE_MISSING_CLOSEOUT`. No waiver. No placeholder.
+C1 is `97d726e3`. C2 is this commit. (e) is pending after this write.
 
 ## 9. Task-1 Step 4a opened
 
@@ -244,6 +244,6 @@ Regeneration outputs are not committed.
 
 C2 `6707892a`. (e) APPROVE (`bc-aaf8e41f`). (g) PASS: regen `mean_O` 0.00075526, `|Δ|` 0.001878 ≤ 0.02. w6 `5257bad2…`. QA-007 `[confirm]`. `milestone_counted` false. N-78–N-80 open.
 
-## 13. Task-3 code-ready stamp
+## 13. Task-3 counted row
 
-RM ACCEPT `39808966…` (cites tip `5d93ca07`); Step-4a pack at `1058d702`; code-ready docs `ced81815`. Stage `step-4b-authorized`, code-ready. Binder `/tmp/rev-mf5a-t3-codeready/REVIEW.md` (`2ca76334…`). Developer not started. C0 waits on APPROVE FOR STEP-4B. Measure carries. A width-8 mean near zero of either sign is lawful; the 20 µs count may saturate; throughput is host-sensitive and is not a (g) gate. The allowed three-width sentence waits for this section and the closeout after a clean counted close. No counted width-8 run.
+(c) PASS at C1 `97d726e3`. Bundle `1712dce9…`. mean_O −0.000106. UB95 0.000744. Spikes 857. `milestone_counted` false, lawful. Independence gate done: Tester `/tmp/mf5a-t3-counted/INDEPENDENCE_NOTE.md` (`992c9c0e…`); width-8 Aer node PASSED from `/tmp`, not skipped. C2 is this commit. (e) pending. (g) pending after C2. QA-007 `[confirm]`. Measure carries. A width-8 mean near zero of either sign is lawful; the 20 µs count may saturate; throughput is host-sensitive and is not a (g) gate. E-VQE equal-work interop cells measured at 4, 6, and 8 qubits under S-g Measure; QA-007 bar still `[confirm]`/withheld; milestone not complete (attribution routes and close gates remain). No A4. No reduction. No push. No pull request.
