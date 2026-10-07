@@ -5,15 +5,24 @@
 > **SDD stage:** step-4a
 > **Boundary:** draft only. QA-007 stays `[confirm]`. The milestone is not complete
 
-**Verdict: not-ready.** READY-FOR-REVIEW. Awaiting Research Manager alignment.
-Developer does not start. No counted width-8 run. No `CLOSEOUT.md`. The expected
-lint finding is `SLICE_MISSING_CLOSEOUT` for task-3: a warning in normal mode
-and the sole error under `--strict`. No waiver.
+**Verdict: not-ready.** READY-FOR-CODE-READY-REVIEW. RM ACCEPT `39808966…` is
+recorded and does not flip the stage. Developer does not start. No counted
+width-8 run. No `CLOSEOUT.md`. No C0 stamp. At `step-4a`, normal mode has 0
+errors and 1 warning, `SLICE_MISSING_CLOSEOUT` for task-3, and exits 0.
+`--strict` keeps that warning, has 0 errors, and exits 0. After a later stage
+flip, `--strict` exits 1 on that finding until a real closeout. After a real
+closeout, both modes are clean. No waiver. No placeholder.
+
+The stage line moves only when RM ACCEPT, this W-1…W-7 fold, a Reviewer
+code-ready re-gate APPROVE, and a separate planning-role stamp-only pass are
+all done. This fold keeps `step-4a`.
 
 These tasks are the draft contract. None may add a public energy API, time an
 attribution route, apply the 10 % bar, claim an A4 kill or a reduction, drop a
 sample, or clip a negative mean. The planned diff is Python only. A required
-C++ edit is a handback. Step 4b is not authorized.
+C++ edit is a handback. Step 4b is not authorized. The two interop test modules
+take additions only. No existing test is deleted, skipped, or weakened. The
+N-17 golden stays.
 
 ## ET-1 — Pin the 8-qubit cell and its Aer oracle
 
@@ -27,8 +36,9 @@ C++ edit is a handback. Step 4b is not authorized.
 - A test in `tests/VQE/test_vqe_interop_harness.py` builds the §2 evaluator and
   asserts `parameter_count` 42, `operation_count` 24, `gate_count` 21,
   `noise_count` 3, and Hamiltonian `nnz` 1152.
+- The width-8 instance has no `harness_*` attribute and no new energy method.
 - Flag-off and flag-on energies on that vector are bit-identical. That check is
-  not the independence oracle.
+  not the independence oracle. The Aer assertion also requires `|imag| ≤ 1e-12`.
 - Before `Test_VQE._get_density_backend_aer_reference`, the test calls
   `set_Optimized_Parameters` with the §2 vector. The assertion is
   `|ΔE| ≤ 1e-12 + 1e-5·|E_Aer|`. The Tester shows the check passed rather than
@@ -67,13 +77,32 @@ REQ-002 and REQ-003 are the requirements this task serves.
   upper bound, the throughput mean, and the throughput upper bound.
 - `provenance.command` is the single-line §4 command. One constant is shared by
   the lane and the validator.
-- Negative fixtures fail for a missing throughput bound, divisor 3072 or 73728
-  or 65536, "QA-007 met", "A4 kill", "hold-the-line", and "reduction taken".
-  A bundle whose claim says "no reduction" still passes. No check rejects a
-  negative mean `O`.
-- Filename refusal is decided before any pair. Width 8 must not resolve to
-  `interop_profile_bundle.json` or `interop_profile_bundle_w6.json`.
-- Refusal tests use `tmp_path`. No test writes a committed bundle.
+- It also requires `protocol.parameter_count` 42, `workload.hamiltonian_nnz`
+  1152, and three `workload.density_noise` entries. A fixture with the width-6
+  integers 30 / 18 / 224 fails. `min_O`, `max_O`, `median_O`, and
+  `spike_count_abs_wrapper_ns_above_20000` sit under `overhead` and are
+  recomputed. The `--width` provenance check is per profile, not a hard-coded
+  `"--width 6"`. Width-6 behavior is unchanged.
+- Negative fixtures fail for a missing throughput mean, a missing throughput
+  bound, a spike count that disagrees with the samples, `qbit_num` 6, divisor
+  3072 or 73728 or 65536, an attribution-route label, the no-arg width-4
+  command, the width-6 command, the width-8 command with `--width 8` removed,
+  "QA-007 met", "A4 kill", "A4 false", "hold-the-line", "reduction taken",
+  "reduction justified", "reduction shipped", and "M-F5a complete". Matching is
+  case-insensitive and negation-safe. N-78 stays deferred.
+- A lawful width-8 fixture passes, including one with "no reduction taken",
+  "milestone not complete", and "QA-007 withheld". A second fixture passes with
+  a negative mean `O`, a negative wrapper mean, one sample below −0.5, and
+  distinct min, max, and median. No check rejects a negative mean.
+- `--width 8` runs `run_interop_row(qbit_num=8)` then
+  `validate_interop_bundle_w8`. A test replaces `run_interop_row` so no pair
+  runs. The live `6 if width == 6 else 4` map is not used for width 8.
+  Unsupported widths still raise before any pair.
+- Width 8 writes only `interop_profile_bundle_w8.json` and refuses both
+  committed names before any pair. Widths 4 and 6 refuse
+  `interop_profile_bundle_w8.json`. Refusal tests use `tmp_path`. Smoke runs
+  use `--output /tmp/<dir>/interop_profile_bundle_w8.json`. No test writes a
+  committed bundle.
 
 **Execution checklist (TDD: red → green → refactor)**
 - [ ] Write the failing validator and refusal tests first, in `tests/VQE/test_vqe_interop_bundle_validation.py`
@@ -102,8 +131,8 @@ REQ-002 and REQ-003 are the requirements this task serves.
   `benchmarks/density_matrix/interop_profile/`, the two interop test modules,
   and at counted close `interop_profile_bundle_w8.json`.
 - It does not touch `squander/src-cpp/`, `squander/VQA/`, `squander/partitioning/`,
-  the archive, `performance_evidence/`, `benchmark_perf.py`,
-  `INITIAL_REQUIREMENTS.md`, or the current-state docs.
+  `tests/VQE/test_VQE.py`, the archive, `performance_evidence/`,
+  `benchmark_perf.py`, `INITIAL_REQUIREMENTS.md`, or the current-state docs.
 - `task-3/CLOSEOUT.md` stays absent during Step 4a.
 - No counted width-8 bundle is produced in this planning pass.
 

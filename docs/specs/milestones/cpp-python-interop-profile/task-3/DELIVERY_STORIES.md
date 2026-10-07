@@ -3,7 +3,7 @@
 > **Scope:** E-VQE at 8 qubits on the existing harness. No routes. No reduction ·
 > **Traces:** REQ-001…009 · CAP-004, CAP-007 · QA-007, QA-008, QA-009 ·
 > **Gate:** SDD stage `step-4a`. QA-007 stays `[confirm]`. Milestone not complete ·
-> **RM:** awaits ALIGN ACCEPT. No Step 4b
+> **RM:** ACCEPT 2026-10-07 (`39808966…`). Stage stays `step-4a`. No Step 4b
 
 ### Delivery story: DS-1 — An 8-qubit E-VQE row on the same equal-work pair
 
@@ -23,7 +23,7 @@
 
 **Acceptance signals**
 - `parameter_count` 42, `operation_count` 24, `gate_count` 21, divisor 1572864
-- No sample is dropped. A negative mean and `O_i` below −0.5 stay in the row
+- No sample is dropped. A mean near zero of either sign is lawful. A saturated 20 µs count is not an anomaly. Throughput may move between hosts and is not a failure. `nnz` is 1152
 - Aer oracle runs after `set_Optimized_Parameters`. Flag-off versus flag-on bit identity is not that oracle
 - `milestone_counted=false`. The artifact is `interop_profile_bundle_w8.json`
 
@@ -48,8 +48,8 @@
 - Out: implementing the four routes or the reduction
 
 **Acceptance signals**
-- A width-8 write aimed at `interop_profile_bundle.json` or `interop_profile_bundle_w6.json` is refused before any pair
-- A claim of "A4 kill", "hold-the-line", or "reduction taken" fails validation. "no reduction" does not
+- Width 8 writes only `interop_profile_bundle_w8.json`. Widths 4 and 6 refuse that name. Refusal is before any pair
+- "A4 kill", "A4 false", "hold-the-line", "reduction taken", "reduction justified", "reduction shipped", and "M-F5a complete" fail. "no reduction taken", "milestone not complete", and "QA-007 withheld" pass
 
 **Traceability**
 - Initial requirement(s): REQ-004, REQ-005, REQ-008

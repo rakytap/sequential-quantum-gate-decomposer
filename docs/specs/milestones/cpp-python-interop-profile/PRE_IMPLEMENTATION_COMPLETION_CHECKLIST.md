@@ -1,5 +1,5 @@
 # Pre-implementation completion checklist — M-F5a `cpp-python-interop-profile`
-> **Status:** Layer 1 v0.1 · **Verdict:** task-2 closed; task-3 Step 4a draft, stage `step-4a`, not-ready ·
+> **Status:** Layer 1 v0.1 · **Verdict:** task-3 Step 4a, stage `step-4a`, not-ready; RM ACCEPT `39808966…` ·
 > **Milestone:** M-F5a `cpp-python-interop-profile` ·
 > **Owner skill:** `spec-driven-development` Steps 2–4a ·
 > **Inputs:** `INITIAL_REQUIREMENTS.md` v0.1,
@@ -67,19 +67,20 @@ The code-ready gate, already met before C1, required all of the following:
 | G-01 | Tech Lead has not opened the Step 4a tracer | `task-1/` planning pack | Tech Lead | **closed — task-1 code-ready; stage `step-4b-authorized`** |
 | G-02 | Harness mechanism that calls C++ `optimization_problem` without a new public Python energy symbol | `task-1/TASK_1_MINI_SPEC.md` §4 and §6; ADR-F5A-009 | Architect, Step 4a | **closed — timer on `Variational_Quantum_Eigensolver_Base`; ADR-F5A-009 filed** |
 | G-03 | Whether one R-oracle row is required to label C++ `apply_to` | `task-1/TASK_1_MINI_SPEC.md` §5 | Architect, Step 4a | **closed — excluded; inner `apply_to` timer labels the component** |
-| G-04 | Depth and noise schedule per width, and the parameter vector | `task-1/TASK_1_MINI_SPEC.md` §2; `task-2/TASK_2_MINI_SPEC.md` §2; `task-3/TASK_3_MINI_SPEC.md` §2 | Architect, Step 4a | **closed for 4 and 6; width 8 pinned in the task-3 draft pending RM** |
-| G-05 | Paired versus interleaved, warm-up count, affinity, thread count, uncertainty estimator, and any divisor other than \(4^n\) | `task-1/TASK_1_MINI_SPEC.md` §7 | Architect, Step 4a | **closed for the 4-qubit tracer; task-2 §4 carries these pins unchanged at width 6** |
+| G-04 | Depth and noise schedule per width, and the parameter vector | `task-1/TASK_1_MINI_SPEC.md` §2; `task-2/TASK_2_MINI_SPEC.md` §2; `task-3/TASK_3_MINI_SPEC.md` §2 | Architect, Step 4a | **closed for 4 and 6; width 8 pinned in `task-3` §2, RM ACCEPT 2026-10-07** |
+| G-05 | Paired versus interleaved, warm-up count, affinity, thread count, uncertainty estimator, and any divisor other than \(4^n\) | `task-1/TASK_1_MINI_SPEC.md` §7; `task-2/TASK_2_MINI_SPEC.md` §4; `task-3/TASK_3_MINI_SPEC.md` §4 | Architect, Step 4a | **closed for the 4-qubit tracer; task-2 §4 carries these pins at width 6; task-3 §4 carries them unchanged at width 8** |
 | G-06 | Product-owner freeze of the QA-007 numeric bar | an edit of `INITIAL_REQUIREMENTS.md` | Product owner | **open — blocks a "QA-007 met" label and any counted trial that applies the bar; does not block Step 4a** |
 | G-07 | Sibling interop lane is not on disk | the slice that creates it, after code-ready | Step 4b | **closed — lane and counted bundle are on disk; see `task-1/CLOSEOUT.md`** |
 | G-08 | Current-state docs do not yet name the lane | milestone close, ADR-F5A-007 | SDD at close | **open — expected** |
 | G-09 | Rocky-local Tester CI record for a code close | that later close | Tester | **open — expected; N8 stays deferred** |
 | G-10 | Step 4b authorization for task-1 | code-ready verdict on task-1 | Architect | **closed — task-1 stage `step-4b-authorized`; task-1 closed at C2** |
 | G-11 | Step 4b authorization for task-2 | planning-role stamp after the Reviewer writer gate | Planning role | **closed — C2 `6707892a`; (e) APPROVE; (g) PASS; stage `step-4b-authorized`** |
-| G-12 | Step 4b authorization for task-3 | Research Manager ALIGN, then a later stamp | Research Manager | **open — task-3 Step 4a draft; not-ready** |
+| G-12 | Step 4b authorization for task-3 | planning-role stamp after the Reviewer code-ready writer gate | Planning role | **open — stage stays `step-4a`; RM ACCEPT `39808966…` does not flip it; not-ready** |
 
 No open item changes the equal-work pair, adds an advertised energy entry, publishes \(O\)
 on an attribution-only route, or proposes a kernel, fusion, or AVX edit. No A4 kill and
-no reduction on widths 4 and 6 alone (ADR-F5A-003/005). RM ACCEPT 2026-10-07 is recorded.
+no reduction before the Research Manager interprets the counted 4/6/8 set (ADR-F5A-003/005).
+Task-2 RM ACCEPT is `5c810dac…`. Task-3 RM ACCEPT 2026-10-07 is upload `39808966…` and does not flip `step-4a`.
 G-11 is closed by the C0 stamp `388a5e5f`, on base `c32b365e`. C1 is `d336472f`. C2 is `6707892a`. (g) PASS.
 
 ## 4. Decision closures and trade-offs
@@ -142,8 +143,8 @@ filed. C1 tip is `ca5589e25036531d599ff963e7d349c6e55b5951`. C2 is
 `task-1/CLOSEOUT.md` are the C2 record. At C1, this section said no-go for a counted
 run and for `CLOSEOUT.md` (N-39). That wording was true of C1 and is reconciled here.
 
-**No-go** for a "QA-007 met" label, for an A4 kill or a reduction on widths 4 and 6
-alone, for freezing the QA-007 bar, for marking M-F5a complete, for a push or a pull
+**No-go** for a "QA-007 met" label, for an A4 kill or a reduction before the Research
+Manager interprets the counted 4/6/8 set, for freezing the QA-007 bar, for marking M-F5a complete, for a push or a pull
 request. RM ACCEPT did not flip the stage; the C0 stamp set `step-4b-authorized`.
 
 A draft that changes the equal-work pair, adds an advertised energy entry, publishes
@@ -166,10 +167,10 @@ no findings. No waiver. No placeholder closeout. The step-4a lint, before this s
 kept the same finding as a warning and exited 0. ADR-F1A-008 forbids a planning-status
 closeout, so that finding stayed until this real close.
 
-After `task-1/CLOSEOUT.md`, both modes were clean. `task-2/CLOSEOUT.md` now
-records the counted row. Normal and `--strict` are clean of `SLICE_MISSING_CLOSEOUT`
-and exit 0. No waiver. No placeholder. QA-007 stays `[confirm]`. The milestone
-is not complete. Task-2 C2 is `6707892a`. (e) is APPROVE. (g) is PASS. The next slice is not opened.
+After `task-1/CLOSEOUT.md` and `task-2/CLOSEOUT.md`, those slices are clean.
+Task-3 at `step-4a` has no closeout: normal mode 0 errors, 1 warning
+`SLICE_MISSING_CLOSEOUT`, exit 0. `--strict` keeps that warning, 0 errors, exit 0.
+After a later stamp flip, `--strict` exits 1 on that finding until a real closeout.
 
 ## 9. Task-1 Step 4a opened
 
@@ -245,4 +246,4 @@ C2 `6707892a`. (e) APPROVE (`bc-aaf8e41f`). (g) PASS: regen `mean_O` 0.00075526,
 
 ## 13. Task-3 Step 4a draft
 
-Opened on tip `5d93ca07`. Slice: E-VQE at 8 qubits, same harness (`task-3/`). Stage `step-4a`. Verdict **not-ready**. QA-007 stays `[confirm]`. M-F5a is not complete. S-g stays Measure. Routes, G-06, G-08, G-09, and N-78–N-80 stay deferred. Awaits Research Manager alignment. No Step 4b. No push. No pull request.
+RM ACCEPT `39808966…` on tip `1058d702`. Stage `step-4a`, not-ready. Measure carries. A width-8 mean near zero of either sign is lawful; the 20 µs count may saturate; throughput is host-sensitive and is not a (g) gate. The allowed three-width sentence waits for this section and the closeout after a clean counted close. No Step 4b.
