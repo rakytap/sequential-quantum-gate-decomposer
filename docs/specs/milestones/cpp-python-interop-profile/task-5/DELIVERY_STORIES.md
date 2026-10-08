@@ -1,8 +1,8 @@
 # Delivery stories — M-F5a task-5
-> **Status:** code-ready · **Slice:** M-F5a task-5 · **Verdict:** code-ready · stage `step-4a` · no stamp ·
+> **Status:** stamp draft · **Verdict:** awaiting APPROVE FOR STEP-4B · **Slice:** M-F5a task-5 ·
 > **Scope:** three timed routes at widths 6 and 8. R-strict is a required refusal row at each width. No overhead ratio. No reduction ·
 > **Traces:** REQ-001, REQ-004, REQ-005, REQ-006, REQ-007, REQ-008 · CAP-004, CAP-007 · QA-008, QA-009 ·
-> **Gate:** SDD stage `step-4a`. REQ-004 stays open. Milestone not complete ·
+> **Gate:** uncommitted stage line `step-4b-authorized`. Developer not started. REQ-004 stays open. Milestone not complete ·
 > **RM:** Q1b. ADR-F5A-010 wording amendment records `channel_native_noise_presence` at widths 6 and 8
 
 ### Delivery story: DS-1 — Width-6 and width-8 route rows
