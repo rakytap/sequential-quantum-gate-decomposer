@@ -1,12 +1,12 @@
 # Engineering tasks — M-F5a task-4
-> **Status:** C1 `6be6282f` · not counted · **Slice:** M-F5a task-4 · attribution routes ·
+> **Status:** C2 `5f63a9d6` · width-4 routes counted · **Slice:** M-F5a task-4 · attribution routes ·
 > **Traces:** REQ-001, REQ-004, REQ-005, REQ-006, REQ-007, REQ-008 ·
 > CAP-004, CAP-007 · QA-008, QA-009 ·
 > **SDD stage:** step-4b-authorized
-> **Boundary:** C1 landed. Option A. ADR-F5A-010 is text only. Width-4 rows do not close REQ-004
+> **Boundary:** C1 `431a5808`. C2 `5f63a9d6`. Bundle `6584be2b…`. Width-4 rows do not close REQ-004
 
-**Verdict: C1 landed. Not counted.** Q2 and B1–B3 are in `6be6282f`. Q1 is Option A (`b0edc658…`). Q1a (`5e3c8222…`) allows a width-4 counted run only after ADR-F5A-010 is implemented. The Developer re-fix of that schema is not this commit.
-Lint stays case C until `task-4/CLOSEOUT.md`: normal exits 0 with one `SLICE_MISSING_CLOSEOUT` warning; `--strict` exits 1 on that finding alone. No waiver. No placeholder. Width-4 rows do not close REQ-004.
+**Verdict: width-4 C2 landed. Not a milestone close.** Q2 and B1–B3 landed in `6be6282f` (Reviewer `a0646acb…`). Q1 is Option A (`b0edc658…`). Q1a (`5e3c8222…`) is the refusal-row schema; C1 `431a5808` (Reviewer `19c16b71…`) implements it with counted mode. The counted bundle is C2 `5f63a9d6`.
+Lint stays case C for task-4 until `task-4/CLOSEOUT.md`: normal exits 0; `--strict` exits 1 on task-4 `SLICE_MISSING_CLOSEOUT` because the stage is `step-4b-authorized`. Task-5 is `step-4a`, so its absent closeout stays a warning in both modes. No waiver. No placeholder. Width-4 rows do not close REQ-004.
 
 These tasks are the draft contract. None may publish \(O\) on a route, add a public
 energy API, change the S-g estimator, take the binding or dispatch reduction, or
@@ -101,7 +101,7 @@ C++ edit is a handback.
 
 **Execution checklist (TDD: red → green → refactor)**
 - [ ] Keep the later implementation out of the forbidden trees
-- [ ] Run no counted route command until ADR-F5A-010 is implemented and Reviewer-gated
+- [ ] The width-4 counted command ran at C2 `5f63a9d6`. This docs pass does not re-run it
 
 **Evidence produced**
 - The `git diff --exit-code` rows in the mini-spec matrix
@@ -136,7 +136,7 @@ C++ edit is a handback.
 - `--attribution-routes` refuses the three counted filenames before any route
   runs. Without the flag, `--width` 4, 6, and 8 are unchanged, and a
   `*_routes_*` output name is refused. This slice's flag refuses widths other
-  than 4.
+  than 4. Widths 6 and 8 are task-5. This width-4 refusal stays the landed contract until that slice changes the flag.
 - Counted mode discards 50 warm-up calls and records 1000 calls per timed
   route. The C1 default of 3 samples is not that mode. The bundle pins
   `provenance.command` to the mini-spec §3a line and refuses any other command.

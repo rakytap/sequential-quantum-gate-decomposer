@@ -1,9 +1,9 @@
 # Delivery stories — M-F5a task-4
-> **Status:** C1 `6be6282f` · **Verdict:** not counted · **Slice:** M-F5a task-4 ·
+> **Status:** C2 `5f63a9d6` · **Verdict:** width-4 routes counted · **Slice:** M-F5a task-4 ·
 > **Scope:** three timed routes at width 4. R-strict is a required refusal row. No \(O\). No reduction ·
 > **Traces:** REQ-001, REQ-004, REQ-005, REQ-006, REQ-007, REQ-008 · CAP-004, CAP-007 · QA-008, QA-009 ·
-> **Gate:** SDD stage `step-4b-authorized`. Width-4 rows do not close REQ-004. Milestone not complete ·
-> **RM:** Option A `b0edc658…`. Q1a `5e3c8222…`. ADR-F5A-010 is text only
+> **Gate:** SDD stage `step-4b-authorized`. C1 `431a5808`. Width-4 rows do not close REQ-004. Milestone not complete ·
+> **RM:** Option A `b0edc658…`. Q1a `5e3c8222…`. ADR-F5A-010 is in the w4 lane
 
 ### Delivery story: DS-1 — Four attribution rows and no overhead ratio
 
@@ -12,14 +12,14 @@
 
 **Given / When / Then**
 - Given the task-1 width-4 HEA anchor and an existing planner descriptor of that anchor
-- When a later authorized run calls each of the four `execute_partitioned_density*` entries
+- When the counted width-4 run calls each of the four `execute_partitioned_density*` entries
 - Then each timed row (R-base, R-fused, R-hybrid) reports orchestration time, the apply component, and throughput whose numerator is that apply component divided by 3072, plus a one-sided 95 % bound on orchestration time and on the apply component only. The R-strict row records the refusal and carries no number
 - And the row has no \(O\), no QA-007 ratio, and `milestone_counted=false`
 - And the width-4 rows do not close REQ-004
 
 **Scope**
 - In: the four ADR-F5A-001 entries. The N-34 launch, carried, not retuned
-- Out: widths 6 and 8; R-oracle; a counted run in this draft
+- Out: widths 6 and 8 (task-5); R-oracle. The width-4 counted run is C2 and is not repeated here
 
 **Acceptance signals**
 - A number on the R-strict row fails. A missing R-strict row fails. \(O\) on any row fails. The three counted bundles are not the fixtures
