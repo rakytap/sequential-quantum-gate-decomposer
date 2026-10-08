@@ -12,6 +12,7 @@ when gating a slice in or out. This is where a spec becomes provable.
 - Definition of Ready
 - Definition of Done
 - Clean-start evidence and slice-close order
+- One attempt and an interrupted launch
 - Verification commands
 
 ## BDD and specification by example
@@ -100,6 +101,22 @@ A slice with counted clean-start evidence is done only after the two-commit clos
 the substantive `CLOSEOUT.md` with normal and `--strict` checks fully clean, Reviewer evidence
 review, C2 with the counted bundle and closeout, then clean-C2 regeneration with the
 outputs restored and not committed.
+
+## One attempt and an interrupted launch
+
+A counted run, a regeneration, and a (g) rerun launch in the mini-spec form
+`conda run -n qgd --no-capture-output`. Never call the environment's `python`
+binary directly. `qa008_route_categorical_exact` catches that deviation at
+`provenance.environment.conda_default_env` (it must be `qgd`).
+
+Exactly one pipeline launch is the authorized attempt. A preflight abort before
+Python starts is recorded and is not an attempt. Each attempt has its own
+directory and log; never truncate or reuse an earlier log. A launch that dies
+after Python starts, or that produces a QA-008 result, counts as the attempt.
+A repeat needs a Tech Lead authorization and a Reviewer ruling, both in writing,
+before it starts. An interrupted counted launch that dies before the pipeline
+write is kept and disclosed, including a log that holds only headers. It is not
+a silent second try.
 
 ## Verification commands
 

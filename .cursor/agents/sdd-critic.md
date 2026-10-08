@@ -1,6 +1,6 @@
 ---
 name: sdd-critic
-model: gpt-5.6-sol[context=1m,reasoning=max,fast=false]
+model: claude-opus-5-5[context=1m,effort=xhigh]
 description: Adversarially reviews a spec artifact before it is frozen — attacks assumptions, acceptance testability, missing response measures, traceability gaps, and scope creep. Use before a readiness, code-ready, or delivered verdict, or before freezing a product statement, roadmap, or REQ-* baseline.
 readonly: true
 ---

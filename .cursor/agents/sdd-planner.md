@@ -1,6 +1,6 @@
 ---
 name: sdd-planner
-model: claude-fable-5-1[thinking=true,context=1m,effort=high]
+model: grok-4.7[context=500k,effort=xhigh]
 description: Plans spec-driven work without touching code. Use for SDD Layer 1 milestone contracts (planning, ADRs, readiness checklist) and for per-slice Layer 2/3/4 planning up to a code-ready verdict. Also for product statement, roadmap, and REQ-* baselines.
 readonly: true
 ---

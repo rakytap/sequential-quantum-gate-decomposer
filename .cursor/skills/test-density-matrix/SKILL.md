@@ -205,7 +205,7 @@ milestone's ADRs (not in this skill body). Shape and restore discipline:
 
 ## Long runs: tmux
 
-Run the pipeline and any pytest lane over a few minutes in a detached tmux session named for the tester and run, for example `tmux new-session -d -s tester-<slice>-<step> -c <checkout>`. Send output to a log under /tmp/<run>/ and record the exit code to a file. Never attach to, kill, or reuse sessions you didn't create. Give a time estimate when starting.
+Run the pipeline and any pytest lane over a few minutes in a detached tmux session named for the tester and run, for example `tmux new-session -d -s tester-<slice>-<step> -c <checkout>`. Send output to a log under /tmp/<run>/ and record the exit code to a file. Kill only sessions this run created. List any other session instead of killing it. Never attach to or reuse a session this run did not create. "This run" is the current Tester invocation, not every session the Tester role has ever opened. Give a time estimate when starting.
 
 ## QA-001 exactness predicate (lambda_min witness)
 

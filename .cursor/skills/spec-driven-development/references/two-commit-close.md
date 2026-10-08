@@ -7,6 +7,7 @@ without dirtying the regeneration run. Precedent: ADR-F1A-009, M-F1a q4 tracer.
 
 - Commit and review order
 - Planning-doc header sync before Reviewer (a)
+- Porcelain check before a local commit
 - Independence gate (G-10)
 
 ## Commit and review order
@@ -43,5 +44,22 @@ Before the Reviewer implementation review (a), sweep `docs/specs/milestones/<slu
 checklist, every `task-<n>/` mini-spec, stories, and engineering tasks. Bring each context
 header and each authorization or status line to the current position. No header may still
 say "C1 awaits Reviewer" or "Step 4b blocked" once authorization has moved. A quick check is
-`rg -n "awaits Reviewer|Step 4b blocked|not committed" docs/specs/milestones/<slug>/`. The
+`rg -n "awaits Reviewer|Step 4b blocked|not committed|uncommitted|until the Reviewer gate|in this .*draft" docs/specs/milestones/<slug>/`. The
 synced docs belong in C1 (or C0), so they do not dirty the counted run.
+
+## Porcelain check before a local commit
+
+Before a C0, C1, C2, or docs commit, from the repo root:
+
+```bash
+unset PYTHONPATH
+git status --porcelain --untracked-files=all
+git diff --cached --name-only
+git diff HEAD -- benchmarks/density_matrix/artifacts
+git diff HEAD -- squander
+```
+
+Porcelain equals the intended add list and nothing else. The index stays empty
+until `git add -- <path> …`. The artifacts directory and `squander/` match HEAD
+unless this commit is the evidence commit that adds the counted bundle. This is
+the procedure for `AGENTS.md` non-negotiable 7.

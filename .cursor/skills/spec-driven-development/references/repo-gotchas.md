@@ -12,7 +12,11 @@ Read when implementing or closing a slice in this repository.
 ## Conda, rebuild, and lanes
 
 Tests, benchmarks, and examples run in the **`qgd` conda environment**
-(`conda run -n qgd --no-capture-output pytest …`). C++ or CMake changes need a rebuild
+(`conda run -n qgd --no-capture-output pytest …`). A counted run, a regeneration,
+and a (g) rerun use that same `conda run -n qgd --no-capture-output` form from the
+mini-spec, never the environment's `python` binary on its own. The categorical
+check and the one-attempt rule are in `practices-testing.md` § One attempt and an
+interrupted launch. C++ or CMake changes need a rebuild
 (`clean-rebuild` skill); `test-density-matrix` runs the suites; `TECH_STACK.md` lists the
 lanes. Evidence rows name their lane: fast pytest (`tests/density_matrix`,
 `tests/partitioning`, `tests/VQE`, `-m "not slow"`), `slow`, a benchmark evidence pipeline

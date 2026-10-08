@@ -4,6 +4,12 @@ Revision history lives here rather than in `SKILL.md`: dated notes and "effectiv
 caveats are time-sensitive content that costs tokens on every activation and goes stale.
 Revisions are **forward-only** — a slice keeps the convention it shipped under.
 
+## rev G — launch form, one attempt, header sync, porcelain procedure
+
+- Counted, regeneration, and (g) launches stay on `conda run -n qgd --no-capture-output`. The categorical check reads `conda_default_env`. One authorized attempt; a preflight abort is not an attempt. `practices-testing.md`, with the conda pointer in `repo-gotchas.md`.
+- Header sync also catches `uncommitted`, `until the Reviewer gate`, and `in this .*draft`. The porcelain check before C0/C1/C2/docs is a documented procedure in `two-commit-close.md`, not a new script.
+- A slice closeout states which comparisons ran at which width. `shipped` is the slice Definition of Done, not a milestone claim. `templates-closeout.md`.
+
 ## rev F — stage-aware `SLICE_MISSING_CLOSEOUT` (ADR-F1A-008 Amendment 1)
 
 - **`parse_sdd_stage()`** reads exactly one own-line `**SDD stage:**` in the first 12 lines

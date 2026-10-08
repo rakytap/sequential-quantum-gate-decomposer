@@ -15,7 +15,9 @@ planning. Keep them tight.
 
 `task-<n>/CLOSEOUT.md`. Status is `shipped` when the slice meets its Definition of Done,
 or `implementation handback` when Step 4b hit a contract/ADR gap — in that case point to
-`STEP_4A_HANDBACK.md` and do not mark the slice shipped. Budget: 200 lines.
+`STEP_4A_HANDBACK.md` and do not mark the slice shipped. `shipped` means that slice met
+its Definition of Done. It does not mean the milestone is complete, and it is not a
+"four-route" claim. Budget: 200 lines.
 
 ````markdown
 # <M#> slice <n> closeout — <one-line slice descriptor>
@@ -41,6 +43,9 @@ or `implementation handback` when Step 4b hit a contract/ADR gap — in that cas
 
 The closeout is also the compaction contract: after a slice, the session's memory is
 gone, so anything the next slice needs must be in this file.
+
+State, from the (g) logs, which comparisons ran at which width, including Aer and
+any sequential gate. A scope sentence must not assert that a check did not run.
 
 ## Milestone closeout
 
