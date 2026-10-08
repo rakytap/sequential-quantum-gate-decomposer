@@ -8,7 +8,7 @@
 
 ## 1. Why this slice
 
-Width-4 attribution is counted. Q1b asks for the same three timed routes at widths 6 and 8, each with an R-strict refusal row, without waiting on a live R-strict path. One slice covers both widths because they share one flag, one schema, and one validator. REQ-004 stays open. `milestone_counted` stays false. CAP-004 stays hold-the-line. This file does not open M-F1b. Landing widths 6 and 8 completes the 4/6/8 three-route set that ADR-F5A-010 names before any option-C pack (Research Manager, then PhD Manager, then Zoltán). This slice proposes none.
+Width-4 attribution is counted. Q1b asks for the same three timed routes at widths 6 and 8, each with an R-strict refusal row, without waiting on a live R-strict path. One slice covers both widths because they share one flag, one schema, and one validator. REQ-004 for R-strict is satisfied by ADR-F5A-011. `milestone_counted` stays false. CAP-004 stays hold-the-line. This file does not open M-F1b. Landing widths 6 and 8 completes the 4/6/8 three-route set that ADR-F5A-010 names before any option-C pack (Research Manager, then PhD Manager, then Zoltán). This slice proposes none.
 
 ## 2. Rows, divisors, and bundles
 
@@ -84,4 +84,4 @@ Width-6 and width-8 route rows will be interpreted by the Research Manager. No c
 
 ## 7. Verdict
 
-**Closed by `task-5/CLOSEOUT.md`.** C1 is `3a8a0d74`. C2-w6 is `78ba7108`. C2-w8 is `3feffb07`. (g) is PASS at both widths. Lint: normal and `--strict` both exit 0 with no findings. REQ-004 stays open. The QA-007 10 % bar is unchanged. ADR-F5A-010's decision is unchanged. The Research Manager has not vetoed N-y; it stays FYI. Interpretation of the width-6 and width-8 rows belongs to the Research Manager.
+**Closed by `task-5/CLOSEOUT.md`.** C1 is `3a8a0d74`. C2-w6 is `78ba7108`. C2-w8 is `3feffb07`. (g) is PASS at both widths. Lint: normal and `--strict` both exit 0 with no findings. REQ-004 for R-strict is satisfied by ADR-F5A-011. The QA-007 10 % bar is unchanged. ADR-F5A-010's decision is unchanged. The Research Manager has not vetoed N-y; it stays FYI. Interpretation of the width-6 and width-8 rows belongs to the Research Manager.

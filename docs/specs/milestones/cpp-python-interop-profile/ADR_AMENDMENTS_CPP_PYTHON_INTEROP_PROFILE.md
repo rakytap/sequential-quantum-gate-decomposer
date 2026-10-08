@@ -1,7 +1,7 @@
 # ADR amendments — M-F5a `cpp-python-interop-profile`
 > **Status:** accepted · **Milestone:** M-F5a `cpp-python-interop-profile` ·
 > **Continues:** `ADRS_CPP_PYTHON_INTEROP_PROFILE.md` (ADR-F5A-001…008) ·
-> **Scope:** ADR-F5A-009, the task-1 harness timer; ADR-F5A-010, the R-strict refusal row ·
+> **Scope:** ADR-F5A-009, the task-1 harness timer; ADR-F5A-010, the R-strict refusal row; ADR-F5A-011, the REQ-004 refusal-row amendment ·
 > **Traces:** REQ-001, REQ-002, REQ-003, REQ-004, REQ-005, REQ-007 · CAP-004, CAP-007 · QA-007, QA-009 ·
 > **Baseline:** `cdcfe6b151e371add2881d7acca45ef47697cdba`
 
@@ -101,3 +101,21 @@ edit. QA-007 stays `[confirm]`. `INITIAL_REQUIREMENTS.md` is unchanged.
 **Not taken.** A three-id bundle. A stub timing row. Option B's route-only noise schedule is refused. Option C, loosening ADR-F5A-006, REQ-004, REQ-005, or CAP-004, is not taken here. It is escalate-only, after the 4/6/8 three-route rows, through the Research Manager, the PhD Manager, and Zoltán.
 
 **Upstream alignment:** REQ-001, REQ-004, REQ-005 · CAP-004 · ADR-F5A-001, ADR-F5A-006.
+
+## ADR-F5A-011 — REQ-004 refusal row
+
+**Status:** signed off 2026-10-08. Zoltán, via PhD Manager, relayed by the Tech Lead, at 10:41 CEST (UTC+2): "C1: accept the documented strict refusal, and I sign off the deferral: no reduction, the Python layer is shown not to be a bottleneck." Record: `/workspace/phd/kb/briefs/2026-10-08-mf5a-option-c-pack.md` (`d038d340b96d00dc0388d078abcb420d9f758dad1bfb6beef2d1bdd7ec474031`). Governance pack: `CHANGE_CONTROL.md`.
+
+Where the strict contract refuses under the frozen workload, a required refusal row with recorded diagnosis satisfies REQ-004 for R-strict. The row carries no timings, ns/op, UB or O. Inventing strict timings or changing the anchor workload's noise remains forbidden.
+
+The live raise is `channel_native_noise_presence`. The handback is `STEP_4A_HANDBACK.md` `98eec8577b291588ccfa654fc9a0b4a6b9dde4428b631de57439a31d1d7b76cb`. The refusal rows are already in the counted bundles: width 4 `interop_profile_bundle_routes_w4.json` `6584be2bc49d55c995c54d1be9a7b7efb2b2dfe4cdd0004fd030b5596f9196aa` at `5f63a9d6`; width 6 `interop_profile_bundle_routes_w6.json` `212758709a06c2805feef1181111ed980172877ad8b11e66f68bfafb9b11d1be` at `78ba7108`; width 8 `interop_profile_bundle_routes_w8.json` `a9e375a1c4c7c39f908ed7136cc461403e315c232ec1a1d4d60fbf4da28fa84f` at `3feffb07`. Each R-strict row is `handback_refused` and has no timings.
+
+**Success-check deferral.** Zoltán signed off the deferral on 2026-10-08: no reduction, because the Python layer is shown not to be a bottleneck (UB (one-sided 95% upper bound on O, E-VQE bundles) ≤1.06% at 4/6/8: 1.0589% / 0.2149% / 0.0744%). Counted `overhead.upper_bound_95_O` is 0.010589466306384618, 0.0021490045376290055, and 0.0007435776878628046 on `ddde49ac:benchmarks/density_matrix/artifacts/interop_profile/interop_profile_bundle.json` (`212f70386bf2a44711d29956c41bd3f0eea9ee2e284ace9c5403bc3d94ef934e`), `6707892a:benchmarks/density_matrix/artifacts/interop_profile/interop_profile_bundle_w6.json` (`5257bad23e9fef4afad3f7b8b61f84c7cebd2ef8f85d95a94a02cb794d139d7d`), and `939d4908:benchmarks/density_matrix/artifacts/interop_profile/interop_profile_bundle_w8.json` (`1712dce97ae567460c9058c288c3a01879524dd3fb9cba71603a5f5785e1b21d`). CAP-004 is hold-the-line, and REQ-005 is satisfied as no reduction. `milestone_counted` stays false. This amendment does not say the milestone is done. M-F1b stays closed.
+
+**Text for `CPP_PYTHON_INTEROP_PROFILE_CLOSEOUT.md`.** That file does not exist at `54ac4e14`. Fold this paragraph into its Deferred section when that closeout is drafted, after this amendment is committed and before the milestone review records its verdict. On 2026-10-08, via PhD Manager and relayed by the Tech Lead, Zoltán signed off: "C1: accept the documented strict refusal, and I sign off the deferral: no reduction, the Python layer is shown not to be a bottleneck." REQ-004 for R-strict is satisfied by this ADR. CAP-004 is hold-the-line. REQ-005 is satisfied as no reduction. The percent figure is UB (one-sided 95% upper bound on O, E-VQE bundles) ≤1.06% at 4/6/8: 1.0589% / 0.2149% / 0.0744%. Counted `overhead.upper_bound_95_O` is 0.010589466306384618, 0.0021490045376290055, and 0.0007435776878628046 on `ddde49ac:benchmarks/density_matrix/artifacts/interop_profile/interop_profile_bundle.json` (`212f70386bf2a44711d29956c41bd3f0eea9ee2e284ace9c5403bc3d94ef934e`), `6707892a:benchmarks/density_matrix/artifacts/interop_profile/interop_profile_bundle_w6.json` (`5257bad23e9fef4afad3f7b8b61f84c7cebd2ef8f85d95a94a02cb794d139d7d`), and `939d4908:benchmarks/density_matrix/artifacts/interop_profile/interop_profile_bundle_w8.json` (`1712dce97ae567460c9058c288c3a01879524dd3fb9cba71603a5f5785e1b21d`). C2 (strict-capable side workload): backlog, possible post-supervisor item, not started; not in M-F5a (Zoltán via PhD Manager and RM, 2026-10-08).
+
+**Backlog.** C2 (strict-capable side workload): backlog, possible post-supervisor item, not started; not in M-F5a (Zoltán via PhD Manager and RM, 2026-10-08).
+
+**Not taken.** Option C2 inside M-F5a: a strict-capable side workload with all four routes timed at 4/6/8, which would delay the close by one slice and would give a strict-route figure only on a workload chosen to make strict work. Option C3: closing M-F5a as complete except REQ-004. Inventing strict timings. Option B, changing the anchor workload's noise, stays refused. Any reduction; CAP-004 holds.
+
+**Upstream alignment:** REQ-004, REQ-005 · CAP-004 · QA-007, QA-008 · ADR-F5A-005, ADR-F5A-010 · goals G4, G5 · roadmap assumption A4.

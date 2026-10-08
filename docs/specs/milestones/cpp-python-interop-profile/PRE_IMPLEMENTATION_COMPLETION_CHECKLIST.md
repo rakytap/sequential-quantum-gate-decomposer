@@ -1,12 +1,12 @@
 # Pre-implementation completion checklist — M-F5a `cpp-python-interop-profile`
-> **Status:** Layer 1 v0.1 · **Verdict:** task-4 closed by `task-4/CLOSEOUT.md` (C2 `5f63a9d6`, w4 routes `6584be2b…`, (g) PASS); task-5 closed by `task-5/CLOSEOUT.md` (C1 `3a8a0d74`, C2-w6 `78ba7108`, C2-w8 `3feffb07`, (g) PASS both widths); REQ-004 open ·
+> **Status:** Layer 1 v0.1 · **Verdict:** task-4 closed by `task-4/CLOSEOUT.md` (C2 `5f63a9d6`, w4 routes `6584be2b…`, (g) PASS); task-5 closed by `task-5/CLOSEOUT.md` (C1 `3a8a0d74`, C2-w6 `78ba7108`, C2-w8 `3feffb07`, (g) PASS both widths); REQ-004 for R-strict is satisfied by ADR-F5A-011; `CHANGE_CONTROL.md` records the sign-off ·
 > **Milestone:** M-F5a `cpp-python-interop-profile` ·
 > **Owner skill:** `spec-driven-development` Steps 2–4a ·
 > **Inputs:** `INITIAL_REQUIREMENTS.md` v0.1,
 > `DETAILED_PLANNING_CPP_PYTHON_INTEROP_PROFILE.md`,
 > `ADRS_CPP_PYTHON_INTEROP_PROFILE.md`, `ADR_AMENDMENTS_CPP_PYTHON_INTEROP_PROFILE.md` · **Traces:** REQ-001…009 ·
 > **Authorization:** task-1 C2 `ddde49ac`; task-2 C2 `6707892a`; task-3 C2 `939d4908`; (e) APPROVE; (g) PASS; RM ALIGN 2026-10-07; QA-007 frozen and met on the E-VQE cells ·
-> **Boundary:** task-4 C1 `6be6282f`, C1-ET4 `431a5808`, C2 `5f63a9d6`; R-strict refusal row is in the w4 lane; task-5 C1 `3a8a0d74`, C2-w6 `78ba7108`, C2-w8 `3feffb07`; REQ-004 open; milestone not complete; no push; no pull request ·
+> **Boundary:** task-4 C1 `6be6282f`, C1-ET4 `431a5808`, C2 `5f63a9d6`; R-strict refusal row is in the w4 lane; task-5 C1 `3a8a0d74`, C2-w6 `78ba7108`, C2-w8 `3feffb07`; REQ-004 for R-strict is satisfied by ADR-F5A-011; milestone not complete; no push; no pull request ·
 > **Baseline:** `1b123a9a31235dd68d6c0a6ff9ba457c0112cd59`
 
 ## 1. Readiness rule

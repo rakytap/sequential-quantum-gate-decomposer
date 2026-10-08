@@ -140,6 +140,7 @@ This milestone inherits the product glossary and uses these narrower terms:
   four routes, numpy Kraus time reported as C++ kernel time, or an R-oracle row without the
   E1 diagnosis sentence, when validation runs, then the bundle fails.
 - **Evidence route:** interop-profile attribution records, in `qgd`.
+- **Amendment ADR-F5A-011 (2026-10-08).** Where the strict contract refuses under the frozen workload, a required refusal row with recorded diagnosis satisfies REQ-004 for R-strict. The row carries no timings, ns/op, UB or O. Inventing strict timings or changing the anchor workload's noise remains forbidden.
 
 ### REQ-005 — At most one binding or dispatch reduction
 - **Upstream:** M-F5a · CAP-004 · QA-007.
@@ -295,3 +296,4 @@ proposes a kernel, fusion, or AVX change.
 - **v0.1 (2026-10-06):** initial baseline from roadmap `1cb3d20c`, product statement
   `ceb469c8`, and RM ACCEPT-WITH-EDITS (E1, E2, E3). QA-007 is cited with the 10 % bar still
   `[confirm]`.
+- **2026-10-08, ADR-F5A-011:** REQ-004 amended for R-strict only. The original acceptance stays; the amendment line follows it. Trigger: Zoltán's option C1 sign-off via PhD Manager, recorded in `CHANGE_CONTROL.md`.

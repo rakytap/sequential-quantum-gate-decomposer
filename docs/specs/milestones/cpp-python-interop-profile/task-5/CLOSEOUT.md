@@ -1,6 +1,6 @@
 # M-F5a slice 5 closeout — attribution routes at widths 6 and 8
 > **Status:** shipped · **Date:** 2026-10-08 · **Work package:** task-5 ·
-> **Scope:** widths 6 and 8 only. REQ-004 stays open. M-F5a is not complete ·
+> **Scope:** widths 6 and 8 only. REQ-004 for R-strict is satisfied by ADR-F5A-011. M-F5a is not complete ·
 > **C1:** `3a8a0d749bf2cb1da6b9cdcdf52382a1469bab8c` ·
 > **C2-w6:** `78ba71081aedf455e91674e7f15db7434b60ed23` (bundle only) ·
 > **C2-w8:** `3feffb070ba9adfb0ed9437e478db188b1902df6` (bundle only) · (g) PASS at both widths ·
@@ -10,11 +10,11 @@
 
 This closeout records the counted width-6 and width-8 attribution bundles. C1 `3a8a0d74` holds the lane, the validator, and the tests. C2-w6 `78ba7108` commits the width-6 bundle and no closeout. C2-w8 `3feffb07` commits the width-8 bundle and no closeout. This file is the closeout. It does not re-run either counted command.
 
-REQ-004 stays open. CAP-004 stays hold-the-line. `milestone_counted` stays false. R-strict is a `handback_refused` row and carries no timings. Interpretation of the width-6 and width-8 rows belongs to the Research Manager. The Research Manager has not vetoed N-y; that check stays FYI.
+REQ-004 for R-strict is satisfied by ADR-F5A-011. CAP-004 stays hold-the-line. `milestone_counted` stays false. R-strict is a `handback_refused` row and carries no timings. Interpretation of the width-6 and width-8 rows belongs to the Research Manager. The Research Manager has not vetoed N-y; that check stays FYI.
 
 ## Verdict
 
-Counted width-6 and width-8 routes **recorded**. `milestone_counted=false` is **lawful**. REQ-004 stays **open**. The milestone is **not** complete. This file does not claim that four routes are delivered.
+Counted width-6 and width-8 routes **recorded**. `milestone_counted=false` is **lawful**. REQ-004 for R-strict is **satisfied** by ADR-F5A-011. The milestone is **not** complete. This file does not claim that four routes are delivered.
 
 ## Aer limitation
 
@@ -154,7 +154,7 @@ ET checkboxes stay unchecked, as in tasks 1–4. Lane results are the Reviewer b
 | Aer, both widths | pass | six values above; each below 1e-10; `qiskit_aer` 0.17.2 |
 | Counted bundles | recorded | evidence pins; `milestone_counted=false` |
 | REQ-009 lint | pass at this write | both `specs_check.sh` lines below exit 0 |
-| REQ-004 | open | these rows do not close it |
+| REQ-004 | satisfied for R-strict | ADR-F5A-011; the refusal rows carry no timings |
 | Milestone | not complete | G-08 and G-09 stay later |
 
 ## (g) clean regeneration
@@ -176,7 +176,7 @@ bash .cursor/skills/spec-driven-development/scripts/specs_check.sh --strict docs
 
 ## What this closeout does not say
 
-No kernel benchmark. The only ratios are the apply-time figures above, and only with that frame. No orchestration ratio. REQ-004 stays open. CAP-004 stays hold-the-line. `milestone_counted` stays false. This file does not say the milestone is done. No VQA. M-F1b stays closed. No push and no pull request.
+No kernel benchmark. The only ratios are the apply-time figures above, and only with that frame. No orchestration ratio. REQ-004 for R-strict is satisfied by ADR-F5A-011. CAP-004 stays hold-the-line. `milestone_counted` stays false. This file does not say the milestone is done. No VQA. M-F1b stays closed. No push and no pull request.
 
 ## Carries
 
@@ -185,6 +185,7 @@ No kernel benchmark. The only ratios are the apply-time figures above, and only 
 - N-y stays FYI to the Research Manager.
 - N-46 (compiler flags not pinned) stays open from task-4.
 - G-08, G-09, and Demo No GO stay later.
+- C2 (strict-capable side workload): backlog, possible post-supervisor item, not started; not in M-F5a (Zoltán via PhD Manager and RM, 2026-10-08). The record is ADR-F5A-011.
 
 ## Next
 

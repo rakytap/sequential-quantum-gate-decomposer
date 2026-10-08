@@ -3,9 +3,9 @@
 > **Traces:** REQ-001, REQ-004, REQ-005, REQ-006, REQ-007, REQ-008, REQ-009 ·
 > CAP-004, CAP-007 · QA-008, QA-009 · ADR-F5A-001, ADR-F5A-004, ADR-F5A-010 ·
 > **SDD stage:** step-4b-authorized
-> **Boundary:** C1 `3a8a0d74`. C2-w6 `78ba7108`. C2-w8 `3feffb07`. (g) PASS both widths. `task-5/CLOSEOUT.md` records the slice. Width-4 C2 stays `5f63a9d6`. REQ-004 stays open
+> **Boundary:** C1 `3a8a0d74`. C2-w6 `78ba7108`. C2-w8 `3feffb07`. (g) PASS both widths. `task-5/CLOSEOUT.md` records the slice. Width-4 C2 stays `5f63a9d6`. REQ-004 for R-strict is satisfied by ADR-F5A-011
 
-**Verdict: closed by `task-5/CLOSEOUT.md`.** C1 is `3a8a0d74`. C2-w6 is `78ba7108`. C2-w8 is `3feffb07`. (g) is PASS at both widths. The Research Manager has not vetoed N-y; the exactness check stays FYI. Lint: normal and `--strict` both exit 0 with no findings. REQ-004 stays open.
+**Verdict: closed by `task-5/CLOSEOUT.md`.** C1 is `3a8a0d74`. C2-w6 is `78ba7108`. C2-w8 is `3feffb07`. (g) is PASS at both widths. The Research Manager has not vetoed N-y; the exactness check stays FYI. Lint: normal and `--strict` both exit 0 with no findings. REQ-004 for R-strict is satisfied by ADR-F5A-011.
 
 These tasks do not publish an overhead ratio, add a public energy API, change the S-g estimator, take the binding or dispatch reduction, edit kernel, fusion, or AVX code, or open M-F1b.
 

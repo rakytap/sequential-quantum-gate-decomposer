@@ -11,11 +11,11 @@
 
 This closeout records the counted width-4 attribution bundle. C1 `6be6282f` holds the apply-primitive wrap, the hybrid label, and the B3 negatives. C1-ET4 `431a5808` adds the R-strict refusal row and `--attribution-routes` counted mode. C2 `5f63a9d6` commits the bundle and no closeout. This file is the closeout. It does not re-run the counted command.
 
-The Research Manager accepts the bundle as attribution evidence at width 4. That acceptance is not a milestone claim. REQ-004 stays open. CAP-004 stays hold-the-line. `milestone_counted` stays false. No row carries an overhead ratio. R-oracle stays the E1 exclude. R-strict is a `handback_refused` row and carries no timings.
+The Research Manager accepts the bundle as attribution evidence at width 4. That acceptance is not a milestone claim. REQ-004 for R-strict is satisfied by ADR-F5A-011. CAP-004 stays hold-the-line. `milestone_counted` stays false. No row carries an overhead ratio. R-oracle stays the E1 exclude. R-strict is a `handback_refused` row and carries no timings.
 
 ## Verdict
 
-Counted width-4 routes **recorded**. The bundle is attribution evidence only. `milestone_counted=false` is **lawful**. REQ-004 stays **open**. The milestone is **not** complete. Task-5 (widths 6 and 8) is planned in `task-5/`; this file does not make it code-ready.
+Counted width-4 routes **recorded**. The bundle is attribution evidence only. `milestone_counted=false` is **lawful**. REQ-004 for R-strict is **satisfied** by ADR-F5A-011. The milestone is **not** complete. Task-5 (widths 6 and 8) is planned in `task-5/`; this file does not make it code-ready.
 
 The Research Manager's quotable sentence, copied verbatim from `2026-10-08-mf5a-task4-w4-routes-interpret.md` (`788f688d…`), is the only route-result wording this file carries:
 
@@ -25,7 +25,7 @@ The Research Manager's quotable sentence, copied verbatim from `2026-10-08-mf5a-
 
 ## `milestone_counted=false`
 
-Lawful. The width-4 contract requires the flag false. The row is not a milestone verdict and it does not close REQ-004.
+Lawful. The width-4 contract requires the flag false. The row is not a milestone verdict. ADR-F5A-011 satisfies REQ-004 for R-strict.
 
 ## Chain
 
@@ -69,7 +69,7 @@ ET checkboxes stay unchecked, as in tasks 1–3. Lane results are the Reviewer b
 | REQ-007, QA-009 | pass | `test_explicit_state_vector_matches_legacy_default` 1 passed (C1-ET4 binder §5; C2 binder §8) |
 | Counted bundle | recorded | evidence pins above; `milestone_counted=false` |
 | REQ-009 lint | pass at this write | both `specs_check.sh` lines below exit 0; the only finding is task-5's step-4a absent closeout |
-| REQ-004 | open | width-4 rows do not close it |
+| REQ-004 | satisfied for R-strict | ADR-F5A-011; the width-4 refusal row carries no timings |
 | Milestone | not complete | widths 6 and 8 (task-5), G-08, and G-09 stay later |
 
 ## Independence
