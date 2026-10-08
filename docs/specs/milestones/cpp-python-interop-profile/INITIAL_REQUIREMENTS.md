@@ -209,7 +209,7 @@ This milestone inherits the product glossary and uses these narrower terms:
   density-matrix entry, with uncertainty. The one-sided 95 % upper bound on \(O\) is at most
   10 % `[confirm]`, owned by the product owner (E2). This draft does not lock that bar. A
   diagnosis may close the research milestone and leaves QA-007 unmet. The A4 kill stays the
-  product-statement 5 % test.
+  product-statement 5 % test. QA-007 bar frozen at 10% (product-statement default), RM ALIGN 2026-10-07, ratified by Zoltán as product owner 2026-10-08.
 - **Reproducibility — QA-008:** 100 % of counted rows regenerate categorical results exactly;
   performance decisions reproduce against the stated margin under REQ-006 provenance. Every
   claim row names the interop lane.
@@ -297,3 +297,4 @@ proposes a kernel, fusion, or AVX change.
   `ceb469c8`, and RM ACCEPT-WITH-EDITS (E1, E2, E3). QA-007 is cited with the 10 % bar still
   `[confirm]`.
 - **2026-10-08, ADR-F5A-011:** REQ-004 amended for R-strict only. The original acceptance stays; the amendment line follows it. Trigger: Zoltán's option C1 sign-off via PhD Manager, recorded in `CHANGE_CONTROL.md`.
+- **2026-10-08, milestone close:** QA-007 bar frozen at 10% (product-statement default), RM ALIGN 2026-10-07, ratified by Zoltán as product owner 2026-10-08. Zoltán, 13:01 CEST (UTC+2), via PhD Manager: "Yes, I ratify the 10% Python-overhead bar as frozen for M-F5a." No `REQ-*` text is removed.

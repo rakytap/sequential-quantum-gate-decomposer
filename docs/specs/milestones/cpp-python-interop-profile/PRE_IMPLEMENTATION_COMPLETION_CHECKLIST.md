@@ -1,23 +1,23 @@
 # Pre-implementation completion checklist — M-F5a `cpp-python-interop-profile`
-> **Status:** Layer 1 v0.1 · **Verdict:** task-4 closed by `task-4/CLOSEOUT.md` (C2 `5f63a9d6`, w4 routes `6584be2b…`, (g) PASS); task-5 closed by `task-5/CLOSEOUT.md` (C1 `3a8a0d74`, C2-w6 `78ba7108`, C2-w8 `3feffb07`, (g) PASS both widths); REQ-004 for R-strict is satisfied by ADR-F5A-011; `CHANGE_CONTROL.md` records the sign-off ·
+> **Status:** Layer 1 v0.1 · **Verdict:** task-4 closed by `task-4/CLOSEOUT.md` (C2 `5f63a9d6`, w4 routes `6584be2b…`, (g) PASS); task-5 closed by `task-5/CLOSEOUT.md` (C1 `3a8a0d74`, C2-w6 `78ba7108`, C2-w8 `3feffb07`, (g) PASS both widths); REQ-004 for R-strict is satisfied by ADR-F5A-011; `CHANGE_CONTROL.md` records the sign-off; milestone closeout `CPP_PYTHON_INTEROP_PROFILE_CLOSEOUT.md` committed at Commit B; G-06 and G-09 closed; G-08 open until the spec refresh ·
 > **Milestone:** M-F5a `cpp-python-interop-profile` ·
 > **Owner skill:** `spec-driven-development` Steps 2–4a ·
 > **Inputs:** `INITIAL_REQUIREMENTS.md` v0.1,
 > `DETAILED_PLANNING_CPP_PYTHON_INTEROP_PROFILE.md`,
 > `ADRS_CPP_PYTHON_INTEROP_PROFILE.md`, `ADR_AMENDMENTS_CPP_PYTHON_INTEROP_PROFILE.md` · **Traces:** REQ-001…009 ·
-> **Authorization:** task-1 C2 `ddde49ac`; task-2 C2 `6707892a`; task-3 C2 `939d4908`; (e) APPROVE; (g) PASS; RM ALIGN 2026-10-07; QA-007 frozen and met on the E-VQE cells ·
-> **Boundary:** task-4 C1 `6be6282f`, C1-ET4 `431a5808`, C2 `5f63a9d6`; R-strict refusal row is in the w4 lane; task-5 C1 `3a8a0d74`, C2-w6 `78ba7108`, C2-w8 `3feffb07`; REQ-004 for R-strict is satisfied by ADR-F5A-011; milestone not complete; no push; no pull request ·
+> **Authorization:** task-1 C2 `ddde49ac`; task-2 C2 `6707892a`; task-3 C2 `939d4908`; (e) APPROVE; (g) PASS; QA-007 bar frozen at 10% (product-statement default), RM ALIGN 2026-10-07, ratified by Zoltán as product owner 2026-10-08. ·
+> **Boundary:** task-4 C1 `6be6282f`, C1-ET4 `431a5808`, C2 `5f63a9d6`; R-strict refusal row is in the w4 lane; task-5 C1 `3a8a0d74`, C2-w6 `78ba7108`, C2-w8 `3feffb07`; REQ-004 for R-strict is satisfied by ADR-F5A-011; milestone closeout committed; not Delivered until G-08 closes; no push; no pull request ·
 > **Baseline:** `1b123a9a31235dd68d6c0a6ff9ba457c0112cd59`
 
 ## 1. Readiness rule
 
-**Verdict: task-1, task-2, and task-3 stay closed. Task-4 is closed by `task-4/CLOSEOUT.md`; (g) is PASS. Task-4 C1 is `6be6282f`. C1-ET4 is `431a5808`. C2 is `5f63a9d6`. Width-4 routes are counted. Task-5 C1 is `3a8a0d74`. C2-w6 is `78ba7108`. C2-w8 is `3feffb07`. (g) is PASS at both widths. Task-5 is closed by `task-5/CLOSEOUT.md`. The Research Manager has not vetoed N-y; it stays FYI. QA-007 is frozen and met on the E-VQE 4/6/8 cells. M-F5a is not complete.**
+**Verdict: task-1, task-2, and task-3 stay closed. Task-4 is closed by `task-4/CLOSEOUT.md`; (g) is PASS. Task-4 C1 is `6be6282f`. C1-ET4 is `431a5808`. C2 is `5f63a9d6`. Width-4 routes are counted. Task-5 C1 is `3a8a0d74`. C2-w6 is `78ba7108`. C2-w8 is `3feffb07`. (g) is PASS at both widths. Task-5 is closed by `task-5/CLOSEOUT.md`. The Research Manager has not vetoed N-y; it stays FYI. QA-007 bar frozen at 10% (product-statement default), RM ALIGN 2026-10-07, ratified by Zoltán as product owner 2026-10-08. The milestone closeout is committed. M-F5a is not Delivered until G-08 closes in the spec refresh.**
 
 The Tech Lead opened the tracer. `task-1/` holds the planning pack and `CLOSEOUT.md`.
 ADR-F5A-009 is filed. C1 tip is `ca5589e2`. C2 is
 `ddde49ac1e248e3ea2b4516f420ca1cbbd14e9df`. Reviewer (e) approved it and step (g)
 passed. Section 11 is that record. The counted run recorded `clean_start` true.
-RM ALIGN froze the 10 % bar for the E-VQE cells. This checklist does not mark the milestone
+QA-007 bar frozen at 10% (product-statement default), RM ALIGN 2026-10-07, ratified by Zoltán as product owner 2026-10-08. This checklist does not mark the milestone
 delivered. Section 12 records task-2 through (g). Section 13 records task-3 through (g), the RM ALIGN, and task-4 C2. Width-4 rows do not close REQ-004. Task-4 C1 is `6be6282f`. C1-ET4 is `431a5808`. Task-4 C2 is `5f63a9d6`. The w4 routes bundle is `6584be2b…`. ADR-F5A-010 is in the w4 lane. Widths 6 and 8 are counted in task-5. `task-5/CLOSEOUT.md` records them.
 The Developer does not edit `docs/specs/**`.
 
@@ -69,10 +69,10 @@ The code-ready gate, already met before C1, required all of the following:
 | G-03 | Whether one R-oracle row is required to label C++ `apply_to` | `task-1/TASK_1_MINI_SPEC.md` §5 | Architect, Step 4a | **closed — excluded; inner `apply_to` timer labels the component** |
 | G-04 | Depth and noise schedule per width, and the parameter vector | `task-1/TASK_1_MINI_SPEC.md` §2; `task-2/TASK_2_MINI_SPEC.md` §2; `task-3/TASK_3_MINI_SPEC.md` §2 | Architect, Step 4a | **closed for 4 and 6; width 8 pinned in `task-3` §2, RM ACCEPT 2026-10-07** |
 | G-05 | Paired versus interleaved, warm-up count, affinity, thread count, uncertainty estimator, and any divisor other than \(4^n\) | `task-1/TASK_1_MINI_SPEC.md` §7; `task-2/TASK_2_MINI_SPEC.md` §4; `task-3/TASK_3_MINI_SPEC.md` §4 | Architect, Step 4a | **closed for the 4-qubit tracer; task-2 §4 carries these pins at width 6; task-3 §4 carries them unchanged at width 8** |
-| G-06 | Product-owner freeze of the QA-007 numeric bar | an edit of `INITIAL_REQUIREMENTS.md` | Product owner | **RM-frozen 2026-10-07 at 10 % for the E-VQE 4/6/8 cells; met there. The IR `[confirm]` sentence waits for milestone close. Does not block task-4** |
+| G-06 | Product-owner QA-007 numeric bar | an edit of `INITIAL_REQUIREMENTS.md` | Product owner | **closed — QA-007 bar frozen at 10% (product-statement default), RM ALIGN 2026-10-07, ratified by Zoltán as product owner 2026-10-08. Met there (UB 1.0589 % / 0.2149 % / 0.0744 %); recorded in `INITIAL_REQUIREMENTS.md` §5 and its change log at milestone close** |
 | G-07 | Sibling interop lane is not on disk | the slice that creates it, after code-ready | Step 4b | **closed — lane and counted bundle are on disk; see `task-1/CLOSEOUT.md`** |
-| G-08 | Current-state docs do not yet name the lane | milestone close, ADR-F5A-007 | SDD at close | **open — expected** |
-| G-09 | Rocky-local Tester CI record for a code close | that later close | Tester | **open — expected; N8 stays deferred** |
+| G-08 | Current-state docs do not yet name the lane | milestone close, ADR-F5A-007 | SDD at close | **open — closes in the spec refresh (REQ-009), after RM interpretation and Demo** |
+| G-09 | Rocky-local Tester CI record for a code close | that later close | Tester | **closed — rocky-local CI PASS at `2a1dc14e`: full `pytest tests/`, 1287 passed, 1 skipped, 1 deselected, exit 0, 588 s (`/tmp/mf5a-close-ci/REPORT.md` `077c56d6…`); N8 stays deferred** |
 | G-10 | Step 4b authorization for task-1 | code-ready verdict on task-1 | Architect | **closed — task-1 stage `step-4b-authorized`; task-1 closed at C2** |
 | G-11 | Step 4b authorization for task-2 | planning-role stamp after the Reviewer writer gate | Planning role | **closed — C2 `6707892a`; (e) APPROVE; (g) PASS; stage `step-4b-authorized`** |
 | G-12 | Step 4b authorization for task-3 | planning-role stamp after the Reviewer code-ready writer gate | Planning role | **closed — C2 `939d4908`; (e) APPROVE; (g) PASS; stage `step-4b-authorized`** |
@@ -120,8 +120,8 @@ Passed before this verdict. Dispositions:
 | Nested component times would make the material-term ranking ambiguous | blocking if ignored | ADR-F5A-004: the four components partition \(T_\mathrm{public}\); the wrapper is \(T_\mathrm{public}-T_\mathrm{lower}\) |
 | Requirements header still says Layer 1 stays closed | non-blocking | That sentence is the requirements slice's own scope. The handoff section authorizes Steps 1–3. Detailed plan §1 records the reading. The requirements file is unchanged |
 
-Nothing in that pass remained blocking for the Step 4a gate. RM ALIGN freezes the 10 % bar
-for the E-VQE cells and records QA-007 met there. The task-1 slice close did not do that.
+Nothing in that pass remained blocking for the Step 4a gate. QA-007 bar frozen at 10% (product-statement default), RM ALIGN 2026-10-07, ratified by Zoltán as product owner 2026-10-08.
+The task-1 slice close did not do that.
 
 ## 6. First-slice gate
 
@@ -144,7 +144,7 @@ filed. C1 tip is `ca5589e25036531d599ff963e7d349c6e55b5951`. C2 is
 `task-1/CLOSEOUT.md` are the C2 record. At C1, this section said no-go for a counted
 run and for `CLOSEOUT.md` (N-39). That wording was true of C1 and is reconciled here.
 
-**No-go** for marking M-F5a complete, for a reduction, for "attribution routes profiled", for a speedup, VQA, or GHA claim, and for a push or a pull
+**No-go** for marking M-F5a Delivered before G-08 closes, for a reduction, for "attribution routes profiled", for a performance-gain claim, VQA, or GHA claim, and for a push or a pull
 request. RM ALIGN 2026-10-07 authorizes the E-VQE 4/6/8 claim in planning text. It does not authorize Step 4b.
 
 A draft that changes the equal-work pair, adds an advertised energy entry, publishes
@@ -168,13 +168,13 @@ kept the same finding as a warning and exited 0. ADR-F1A-008 forbids a planning-
 closeout, so that finding stayed until this real close.
 
 After `task-1/CLOSEOUT.md`, `task-2/CLOSEOUT.md`, and `task-3/CLOSEOUT.md`, those slices are clean.
-`task-5/CLOSEOUT.md` is present, so task-5 `SLICE_MISSING_CLOSEOUT` is gone. Normal and `--strict` both exit 0 with no findings. No waiver. No placeholder.
-Task-3 C1 is `97d726e3`. Task-3 C2 is `939d4908`. (g) is PASS. Width-4 route rows do not close REQ-004. The 10 % bar is frozen for the E-VQE cells. Task-4 C1 is `6be6282f`. C1-ET4 is `431a5808`. Task-4 C2 is `5f63a9d6`. Bundle `6584be2b…`. `task-4/CLOSEOUT.md` records the width-4 slice. Task-5 C1 is `3a8a0d74`. C2-w6 is `78ba7108`. C2-w8 is `3feffb07`. (g) is PASS at both widths. `task-5/CLOSEOUT.md` records the slice. The live strict raise at widths 6 and 8 is `channel_native_noise_presence`. `pure_unitary_partition` is the hybrid classifier reason. Handback `98eec857…` is unchanged.
+`task-5/CLOSEOUT.md` is present, so task-5 `SLICE_MISSING_CLOSEOUT` is gone. Normal and `--strict` both exit 0 with no findings. No waiver. No placeholder. With `CPP_PYTHON_INTEROP_PROFILE_CLOSEOUT.md` committed, both modes still exit 0 with no findings.
+Task-3 C1 is `97d726e3`. Task-3 C2 is `939d4908`. (g) is PASS. Width-4 route rows do not close REQ-004. QA-007 bar frozen at 10% (product-statement default), RM ALIGN 2026-10-07, ratified by Zoltán as product owner 2026-10-08. Task-4 C1 is `6be6282f`. C1-ET4 is `431a5808`. Task-4 C2 is `5f63a9d6`. Bundle `6584be2b…`. `task-4/CLOSEOUT.md` records the width-4 slice. Task-5 C1 is `3a8a0d74`. C2-w6 is `78ba7108`. C2-w8 is `3feffb07`. (g) is PASS at both widths. `task-5/CLOSEOUT.md` records the slice. The live strict raise at widths 6 and 8 is `channel_native_noise_presence`. `pure_unitary_partition` is the hybrid classifier reason. Handback `98eec857…` is unchanged.
 
 ## 9. Task-1 Step 4a opened
 
 Opened at `cdcfe6b151e371add2881d7acca45ef47697cdba`. B1–B5 are in the task-1 pack.
-That gate was code-ready. G-02 through G-05 stay closed. G-06 is RM-frozen for the E-VQE cells.
+That gate was code-ready. G-02 through G-05 stay closed. G-06 is closed. QA-007 bar frozen at 10% (product-statement default), RM ALIGN 2026-10-07, ratified by Zoltán as product owner 2026-10-08.
 ADR-F5A-009 is filed. Stage stays `step-4b-authorized`. The C1 sentence that Step 4b
 was ahead of Reviewer (a) was true of C1 (N-39). B5 removed the planning-status
 closeout. `task-1/CLOSEOUT.md` closes the counted run under ADR-F1A-009. Task-1 only.
@@ -193,7 +193,7 @@ Reviewer (e) verdict: **APPROVE FOR C2** (bc-b25fac97). Binder
 `/tmp/rev-mf5a-c2/REVIEW.md`, sha256
 `8749d515be86a3f067e9426062bc768275ebc1ec7e6022cbca0062a050f59e8b`.
 Parent is C1 tip `ca5589e25036531d599ff963e7d349c6e55b5951`. This section does
-not mark M-F5a complete and does not freeze QA-007. The next slice is not
+not mark M-F5a Delivered and does not set the QA-007 bar. The next slice is not
 opened in this section. Section 12 records task-2 through (g). Section 13 records task-3 through (g). N-41 is
 closed in the carry table in this section.
 
@@ -224,13 +224,13 @@ Regeneration outputs are not committed.
 | N-43 | folded | The lane-reusing carries below are listed so the next slice does not drop them. |
 | N-44 | folded | QA-007 wording is withheld, not unmet. The bar stays `[confirm]`. |
 | N-45 | folded | Independence sentences are in the closeout. The heading no longer uses gap G-10. |
-| N-46 | open | The flag line is exact for `libqgd.so`. The wrapper `.so` adds `-DCPYTHON`. The bundle does not pin flags. That pin is a lane change, or an accepted deviation at the milestone review. |
+| N-46 | accepted deviation | The flag line is exact for `libqgd.so`. The wrapper `.so` adds `-DCPYTHON`. The bundle does not pin flags. Accepted as a disclosed deviation at the milestone review (`CPP_PYTHON_INTEROP_PROFILE_CLOSEOUT.md` §5); a flags pin is a backlog lane-schema change. |
 | N-47 | folded | This section names C2 `ddde49ac1e248e3ea2b4516f420ca1cbbd14e9df`. |
 | S-g | accepted | RM ACCEPT 2026-10-07 (task-2, `5c810dac…`): Measure. Width-4: 2/1000 samples exceed 20 µs; excluding them moves 0.00711 to 0.00722. Width-6 uncounted means −0.0011, −0.0012, −0.0001 are lawful, as is `O_i` < −0.5. The 20 µs count is observational. The C0 stamp set `step-4b-authorized`; RM ACCEPT did not flip it. |
 | N-16 | open | No MSVC branch for `clock_gettime`. Carry under ADR-F5A-007 until the first pull request into `master`. |
 | N-17 | open | The ET-2 golden energy is host-pinned. Same deadline as N-16. |
 | N-23 | open | Batched `optimization_problem` can race the six timer fields if the flag is on. Task-2 §3 restates harness-only, single-threaded. The race stays open. |
-| N-32 | open | Task-2 ET-2 adds `assert_mean_o_within_margin`. Closes when that fixture test is green. Width-4 (g) stays the manual check it was. |
+| N-32 | **closed** | Task-2 ET-2 adds `assert_mean_o_within_margin`. `test_assert_mean_o_within_margin_fixture_pair` passed in G-09 CI at `2a1dc14e`. Width-4 (g) stays the manual check it was. |
 | N-35 | open | Validator depth is still thin for a hand-edited bundle. Discharged for this bundle at (e). Carry for later bundles. |
 | N-36 | open | The forbidden-path list omits `performance_evidence/` and `benchmark_perf.py` and includes `docs/specs/`. The `git diff` rows stay the gate. |
 | N-37 | open | Some validator tests are weak: both clean-start flags flip together, most B2 rejections have no isolated test, and no test feeds a real lane bundle. |
@@ -245,5 +245,5 @@ C2 `6707892a`. (e) APPROVE (`bc-aaf8e41f`). (g) PASS: regen `mean_O` 0.00075526,
 
 ## 13. Task-3 Step 4b closed
 
-(c) PASS at C1 `97d726e3`. Bundle `1712dce9…`. mean_O −0.000106. UB95 0.000744. Spikes 857. `milestone_counted` false, lawful. Independence gate done: Tester `/tmp/mf5a-t3-counted/INDEPENDENCE_NOTE.md` (`992c9c0e…`); width-8 Aer node PASSED from `/tmp`, not skipped. C2 `939d4908`. (e) APPROVE. (g) PASS: regen mean_O −0.000615593972625157, `|Δ|` 0.000510 ≤ 0.02, window [−0.020106, 0.019894]; restore byte-identical `1712dce9…`. Measure carries. A width-8 mean near zero of either sign is lawful; the 20 µs count may saturate; throughput is host-sensitive and is not a (g) gate. RM ALIGN 2026-10-07: E-VQE equal-work interop overhead measured at 4/6/8 qubits under S-g Measure; one-sided 95 % UB on O is below 5 % at every width (A4 false → CAP-004 hold-the-line); QA-007 10 % bar frozen and met on those cells. `milestone_counted` stays false. Task-4 C1 is `6be6282f`. C1-ET4 is `431a5808`. Task-4 C2 is `5f63a9d6` and is bundle-only: no CLOSEOUT in that commit, lawful for that gate. Tester evidence is `/tmp/mf5a-t4-counted-w4/`. C2 binder `/tmp/rev-mf5a-t4-c2-w4/REVIEW.md` (`7b48bbc6…`). w4 routes bundle `6584be2b…`. Option A (`b0edc658…`) keeps the raise and times R-base, R-fused, and R-hybrid only. Q1a (`5e3c8222…`) is the required refusal-row schema. Width-4 rows do not close REQ-004. The live strict raise at widths 6 and 8 is `channel_native_noise_presence`, the same code as width 4. `pure_unitary_partition` is the hybrid classifier reason. STEP_4A_HANDBACK `98eec857…` is not rewritten. Task-5 plans the width-6 and width-8 route rows; its readiness is in §1 and G-14. No four-route shipped claim. No push. No pull request.
+(c) PASS at C1 `97d726e3`. Bundle `1712dce9…`. mean_O −0.000106. UB95 0.000744. Spikes 857. `milestone_counted` false, lawful. Independence gate done: Tester `/tmp/mf5a-t3-counted/INDEPENDENCE_NOTE.md` (`992c9c0e…`); width-8 Aer node PASSED from `/tmp`, not skipped. C2 `939d4908`. (e) APPROVE. (g) PASS: regen mean_O −0.000615593972625157, `|Δ|` 0.000510 ≤ 0.02, window [−0.020106, 0.019894]; restore byte-identical `1712dce9…`. Measure carries. A width-8 mean near zero of either sign is lawful; the 20 µs count may saturate; throughput is host-sensitive and is not a (g) gate. RM ALIGN 2026-10-07: E-VQE equal-work interop overhead measured at 4/6/8 qubits under S-g Measure; one-sided 95 % UB on O is below 5 % at every width (A4 false → CAP-004 hold-the-line); QA-007 bar frozen at 10% (product-statement default), RM ALIGN 2026-10-07, ratified by Zoltán as product owner 2026-10-08. `milestone_counted` stays false. Task-4 C1 is `6be6282f`. C1-ET4 is `431a5808`. Task-4 C2 is `5f63a9d6` and is bundle-only: no CLOSEOUT in that commit, lawful for that gate. Tester evidence is `/tmp/mf5a-t4-counted-w4/`. C2 binder `/tmp/rev-mf5a-t4-c2-w4/REVIEW.md` (`7b48bbc6…`). w4 routes bundle `6584be2b…`. Option A (`b0edc658…`) keeps the raise and times R-base, R-fused, and R-hybrid only. Q1a (`5e3c8222…`) is the required refusal-row schema. Width-4 rows do not close REQ-004. The live strict raise at widths 6 and 8 is `channel_native_noise_presence`, the same code as width 4. `pure_unitary_partition` is the hybrid classifier reason. STEP_4A_HANDBACK `98eec857…` is not rewritten. Task-5 plans the width-6 and width-8 route rows; its readiness is in §1 and G-14. No claim that four routes are shipped. No push. No pull request.
 Task-5 parked first launch and (g) record: P-1 `/tmp/mf5a-t5-counted-w6-first-launch/` (`run.log.RECONSTRUCTED` `cde45875…`, P-2 `NOTE.md` `fb9a0670…`) and the width-6 (g) disclosures are in `task-5/CLOSEOUT.md` (C2-w8 binder `2cd43938…` §5.4).
