@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import copy
 import json
+from pathlib import Path
 
 import pytest
 
@@ -1303,7 +1304,13 @@ def test_validate_attribution_route_bundle_accepts_live_r_strict_refusal_row():
     parameters = build_initial_parameters(vqe.get_Parameter_Num())
     refusal = build_r_strict_refusal_row(descriptor_set, parameters)
     timed_rows = [
-        build_route_row(route_id, descriptor_set, parameters, sample_count=2)
+        build_route_row(
+            route_id,
+            descriptor_set,
+            parameters,
+            sample_count=2,
+            throughput_divisor=3072,
+        )
         for route_id in ("R-base", "R-fused", "R-hybrid")
     ]
     bundle["rows"] = timed_rows + [refusal]
@@ -1357,6 +1364,38 @@ MINI_SPEC_COUNTED_ATTRIBUTION_COMMAND = (
     "--attribution-routes --width 4 --output "
     "benchmarks/density_matrix/artifacts/interop_profile/interop_profile_bundle_routes_w4.json"
 )
+MINI_SPEC_COUNTED_ATTRIBUTION_COMMAND_W6 = (
+    "taskset -c 0 env PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 "
+    "OPENBLAS_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1 conda run -n qgd --no-capture-output "
+    "python benchmarks/density_matrix/interop_profile/validation_pipeline.py "
+    "--attribution-routes --width 6 --output "
+    "benchmarks/density_matrix/artifacts/interop_profile/interop_profile_bundle_routes_w6.json"
+)
+MINI_SPEC_COUNTED_ATTRIBUTION_COMMAND_W8 = (
+    "taskset -c 0 env PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 "
+    "OPENBLAS_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1 conda run -n qgd --no-capture-output "
+    "python benchmarks/density_matrix/interop_profile/validation_pipeline.py "
+    "--attribution-routes --width 8 --output "
+    "benchmarks/density_matrix/artifacts/interop_profile/interop_profile_bundle_routes_w8.json"
+)
+TASK5_ROUTE_FIXTURE = {
+    6: {
+        "suite": "interop_attribution_routes_task5_w6_v1",
+        "workload_label": "phase2_xxz_hea_q6_continuity",
+        "bridge": (30, 18, 15, 3),
+        "divisor": 73728,
+        "command": MINI_SPEC_COUNTED_ATTRIBUTION_COMMAND_W6,
+        "fused_tail": 4,
+    },
+    8: {
+        "suite": "interop_attribution_routes_task5_w8_v1",
+        "workload_label": "phase2_xxz_hea_q8_continuity",
+        "bridge": (42, 24, 21, 3),
+        "divisor": 1572864,
+        "command": MINI_SPEC_COUNTED_ATTRIBUTION_COMMAND_W8,
+        "fused_tail": 6,
+    },
+}
 ATTRIBUTION_THREAD_ENV_KEYS = (
     "OMP_NUM_THREADS",
     "MKL_NUM_THREADS",
@@ -1378,7 +1417,7 @@ def _attribution_row(bundle, route_id):
     return next(row for row in bundle["rows"] if row["route_id"] == route_id)
 
 
-def _set_counted_route_samples(row, samples):
+def _set_counted_route_samples(row, samples, *, divisor: int = 3072):
     from benchmarks.density_matrix.interop_profile.attribution_route_validation import (
         one_sided_upper_bound_route,
     )
@@ -1388,11 +1427,11 @@ def _set_counted_route_samples(row, samples):
     apply_values = [float(sample["apply_component_ns"]) for sample in samples]
     mean_orch, bound_orch = one_sided_upper_bound_route(orch_values)
     mean_apply, bound_apply = one_sided_upper_bound_route(apply_values)
-    mean_tp, bound_tp = one_sided_upper_bound_route([value / 3072 for value in apply_values])
+    mean_tp, bound_tp = one_sided_upper_bound_route([value / divisor for value in apply_values])
     row["orchestration"] = {"mean_ns": mean_orch, "upper_bound_95_ns": bound_orch}
     row["apply_component"] = {"mean_ns": mean_apply, "upper_bound_95_ns": bound_apply}
     row["throughput"] = {
-        "divisor": 3072,
+        "divisor": divisor,
         "mean_ns_per_op": mean_tp,
         "upper_bound_95_ns_per_op": bound_tp,
     }
@@ -1400,18 +1439,31 @@ def _set_counted_route_samples(row, samples):
 
 def _counted_attribution_fixture_with_provenance():
     bundle = _minimal_attribution_route_bundle()
+    primitive_calls = {"R-base": 8, "R-fused": 8, "R-hybrid": 5}
     for route_id in ("R-base", "R-fused", "R-hybrid"):
         _set_counted_route_samples(
             _attribution_row(bundle, route_id),
             [
-                {"orchestration_ns": 1000 + index % 7, "apply_component_ns": 5000 + index % 11}
+                {
+                    "orchestration_ns": 1000 + index % 7,
+                    "apply_component_ns": 5000 + index % 11,
+                    "apply_primitive_calls": primitive_calls[route_id],
+                }
                 for index in range(1000)
             ],
         )
+    bundle["clean_start"] = True
     bundle["provenance"] = {
         "command": MINI_SPEC_COUNTED_ATTRIBUTION_COMMAND,
         "warmup_calls": 50,
         "thread_env": {key: "1" for key in ATTRIBUTION_THREAD_ENV_KEYS},
+        "affinity_cpu": 0,
+        "estimator": "arithmetic_mean",
+        "bound": "one_sided_95_orchestration_and_apply",
+        "clean_start": True,
+        "dirty_paths": [],
+        "implementation_revision": "a" * 40,
+        "extension_identities": [{"path": "squander/libqgd.so", "sha256": "b" * 64}],
     }
     return bundle
 
@@ -1461,7 +1513,7 @@ def test_validate_counted_attribution_provenance_negatives(mutate, match):
         validate_attribution_route_bundle(bundle)
 
 
-def _small_counted_attribution_run(monkeypatch, warmup=3, counted=4):
+def _small_counted_attribution_run(monkeypatch, warmup=3, counted=4, qbit_num=4):
     from benchmarks.density_matrix.interop_profile import attribution_route_lane as lane
     from benchmarks.density_matrix.interop_profile import attribution_route_validation as V
     from benchmarks.density_matrix.interop_profile import interop_lane as IL
@@ -1504,7 +1556,7 @@ def _small_counted_attribution_run(monkeypatch, warmup=3, counted=4):
         return sample, result
 
     monkeypatch.setattr(lane, "_time_route_sample", recorder)
-    bundle = lane.run_counted_attribution_bundle()
+    bundle = lane.run_counted_attribution_bundle(qbit_num)
     return bundle, records, seen, warmup, counted
 
 
@@ -1562,3 +1614,381 @@ def test_run_counted_attribution_bundle_refuses_multithread_before_work(monkeypa
     monkeypatch.setattr(IL, "capture_provenance", must_not_run)
     with pytest.raises(RuntimeError, match="OMP_NUM_THREADS"):
         lane.run_counted_attribution_bundle()
+
+
+COMMITTED_ROUTES_W4_PATH = (
+    Path(__file__).resolve().parents[2]
+    / "benchmarks/density_matrix/artifacts/interop_profile/interop_profile_bundle_routes_w4.json"
+)
+
+
+def test_committed_routes_bundle_requires_provenance():
+    import json
+
+    bundle = json.loads(COMMITTED_ROUTES_W4_PATH.read_text())
+    assert bundle.get("provenance") is not None
+
+
+def test_committed_routes_w4_bundle_passes_validator():
+    import json
+
+    from benchmarks.density_matrix.interop_profile.attribution_route_validation import (
+        validate_attribution_route_bundle,
+    )
+
+    bundle = json.loads(COMMITTED_ROUTES_W4_PATH.read_text())
+    validate_attribution_route_bundle(bundle)
+
+
+@pytest.mark.parametrize("qbit_num", [5, "4", 4.5, True])
+def test_validate_attribution_route_bundle_rejects_disallowed_qbit_num(qbit_num):
+    from benchmarks.density_matrix.interop_profile.attribution_route_validation import (
+        validate_attribution_route_bundle,
+    )
+
+    bundle = _minimal_attribution_route_bundle()
+    bundle["qbit_num"] = qbit_num
+    with pytest.raises(ValueError, match="attribution routes allow widths 4, 6, and 8 only"):
+        validate_attribution_route_bundle(bundle)
+
+
+@pytest.mark.parametrize(
+    "mutate,match",
+    [
+        (
+            lambda bundle: _attribution_row(bundle, "R-base")["samples"][0].pop(
+                "apply_primitive_calls"
+            ),
+            "apply_primitive_calls",
+        ),
+        (
+            lambda bundle: _attribution_row(bundle, "R-base")["samples"][0].__setitem__(
+                "apply_primitive_calls", 0
+            ),
+            "greater than 0",
+        ),
+        (
+            lambda bundle: _attribution_row(bundle, "R-base")["samples"][0].__setitem__(
+                "apply_primitive_calls", -1
+            ),
+            "greater than 0",
+        ),
+        (
+            lambda bundle: _attribution_row(bundle, "R-base")["samples"][0].__setitem__(
+                "apply_primitive_calls", 8.0
+            ),
+            "must be an int",
+        ),
+        (
+            lambda bundle: _attribution_row(bundle, "R-base")["samples"][0].__setitem__(
+                "apply_primitive_calls", "8"
+            ),
+            "must be an int",
+        ),
+        (
+            lambda bundle: _attribution_row(bundle, "R-base")["samples"][0].__setitem__(
+                "apply_primitive_calls", True
+            ),
+            "must be an int",
+        ),
+        (lambda bundle: bundle.__setitem__("clean_start", False), "clean_start"),
+        (
+            lambda bundle: bundle["provenance"].__setitem__("clean_start", False),
+            "provenance.clean_start",
+        ),
+        (
+            lambda bundle: bundle["provenance"].__setitem__("dirty_paths", ["x"]),
+            "dirty_paths",
+        ),
+        (
+            lambda bundle: bundle["provenance"].__setitem__("affinity_cpu", 1),
+            "affinity_cpu",
+        ),
+        (
+            lambda bundle: bundle["provenance"].pop("affinity_cpu"),
+            "affinity_cpu",
+        ),
+        (
+            lambda bundle: bundle["provenance"].__setitem__("estimator", "median"),
+            "estimator",
+        ),
+        (
+            lambda bundle: bundle["provenance"].__setitem__("bound", "wrong"),
+            "provenance.bound",
+        ),
+        (
+            lambda bundle: _set_counted_route_samples(
+                _attribution_row(bundle, "R-base"),
+                _attribution_row(bundle, "R-base")["samples"]
+                + _attribution_row(bundle, "R-base")["samples"][:1],
+            ),
+            "sufficient timing samples",
+        ),
+        (
+            lambda bundle: bundle["provenance"].pop("implementation_revision"),
+            "implementation_revision",
+        ),
+        (
+            lambda bundle: bundle["provenance"].__setitem__("implementation_revision", ""),
+            "implementation_revision",
+        ),
+        (
+            lambda bundle: bundle["provenance"].__setitem__(
+                "implementation_revision", "UPPER" + ("a" * 36)
+            ),
+            "implementation_revision",
+        ),
+        (
+            lambda bundle: bundle["provenance"].__setitem__("implementation_revision", "A" * 40),
+            "implementation_revision",
+        ),
+        (
+            lambda bundle: bundle["provenance"].__setitem__("implementation_revision", "a" * 39),
+            "implementation_revision",
+        ),
+        (
+            lambda bundle: bundle["provenance"].pop("extension_identities"),
+            "extension_identities",
+        ),
+        (
+            lambda bundle: bundle["provenance"].__setitem__("extension_identities", []),
+            "extension_identities",
+        ),
+    ],
+)
+def test_validate_counted_attribution_new_negatives(mutate, match):
+    from benchmarks.density_matrix.interop_profile.attribution_route_validation import (
+        validate_attribution_route_bundle,
+    )
+
+    bundle = _counted_attribution_fixture_with_provenance()
+    mutate(bundle)
+    with pytest.raises(ValueError, match=match):
+        validate_attribution_route_bundle(bundle)
+
+
+def _counted_attribution_fixture_task5_with_provenance(width):
+    spec = TASK5_ROUTE_FIXTURE[width]
+    bundle = _counted_attribution_fixture_with_provenance()
+    bundle["suite"] = spec["suite"]
+    bundle["qbit_num"] = width
+    bundle["workload_label"] = spec["workload_label"]
+    parameter_count, operation_count, gate_count, noise_count = spec["bridge"]
+    bundle["bridge"] = {
+        "parameter_count": parameter_count,
+        "operation_count": operation_count,
+        "gate_count": gate_count,
+        "noise_count": noise_count,
+        "source_type": "generated_hea",
+    }
+    bundle["provenance"]["command"] = spec["command"]
+    bundle["provenance"]["density_matrix_cpp_sha256"] = "c" * 64
+    for route_id in ("R-base", "R-fused", "R-hybrid"):
+        _set_counted_route_samples(
+            _attribution_row(bundle, route_id),
+            _attribution_row(bundle, route_id)["samples"],
+            divisor=spec["divisor"],
+        )
+    hybrid = _attribution_row(bundle, "R-hybrid")
+    hybrid["partition_runtime_classes"] = [
+        "phase31_channel_native",
+        "phase3_unitary_island_fused",
+        "phase31_channel_native",
+    ] + ["phase3_unitary_island_fused"] * spec["fused_tail"]
+    hybrid["apply_label"] = (
+        f"2× phase31_channel_native; {spec['fused_tail'] + 1}× phase3_unitary_island_fused"
+    )
+    return bundle
+
+
+def _counted_attribution_fixture_w6_with_provenance():
+    return _counted_attribution_fixture_task5_with_provenance(6)
+
+
+@pytest.mark.parametrize("width", [6, 8])
+def test_validate_counted_attribution_task5_fixture_passes(width):
+    from benchmarks.density_matrix.interop_profile.attribution_route_validation import (
+        validate_attribution_route_bundle,
+    )
+
+    validate_attribution_route_bundle(_counted_attribution_fixture_task5_with_provenance(width))
+
+
+@pytest.mark.parametrize("width", [6, 8])
+@pytest.mark.parametrize(
+    "mutate,match",
+    [
+        (
+            lambda bundle: bundle["provenance"].pop("density_matrix_cpp_sha256"),
+            "density_matrix_cpp_sha256",
+        ),
+        (
+            lambda bundle: bundle["provenance"].__setitem__("density_matrix_cpp_sha256", ""),
+            "density_matrix_cpp_sha256",
+        ),
+        (
+            lambda bundle: bundle["provenance"].__setitem__(
+                "density_matrix_cpp_sha256", "G" * 64
+            ),
+            "density_matrix_cpp_sha256",
+        ),
+        (
+            lambda bundle: bundle["provenance"].__setitem__(
+                "density_matrix_cpp_sha256", "A" * 64
+            ),
+            "density_matrix_cpp_sha256",
+        ),
+        (
+            lambda bundle: bundle["provenance"].__setitem__(
+                "density_matrix_cpp_sha256", "a" * 63
+            ),
+            "density_matrix_cpp_sha256",
+        ),
+    ],
+)
+def test_validate_counted_attribution_w6_sha256_negatives(mutate, match, width):
+    from benchmarks.density_matrix.interop_profile.attribution_route_validation import (
+        validate_attribution_route_bundle,
+    )
+
+    bundle = _counted_attribution_fixture_task5_with_provenance(width)
+    mutate(bundle)
+    with pytest.raises(ValueError, match=match):
+        validate_attribution_route_bundle(bundle)
+
+
+def test_validate_attribution_route_bundle_accepts_live_w6_r_strict_refusal_row():
+    from benchmarks.density_matrix.interop_profile.attribution_route_lane import (
+        build_attribution_anchor,
+        build_r_strict_refusal_row,
+    )
+    from benchmarks.density_matrix.interop_profile.attribution_route_validation import (
+        validate_attribution_route_bundle,
+    )
+    from benchmarks.density_matrix.partitioned_runtime.common import build_initial_parameters
+
+    bundle = _counted_attribution_fixture_w6_with_provenance()
+    _vqe, descriptor_set, _bridge = build_attribution_anchor(6)
+    parameters = build_initial_parameters(_vqe.get_Parameter_Num())
+    refusal = build_r_strict_refusal_row(descriptor_set, parameters)
+    bundle["rows"] = [row for row in bundle["rows"] if row["route_id"] != "R-strict"] + [
+        refusal
+    ]
+    bundle["rows"].sort(key=lambda row: row["route_id"])
+    validate_attribution_route_bundle(bundle)
+
+
+def test_qa008_route_categorical_exact_accepts_committed_pair():
+    import json
+
+    from benchmarks.density_matrix.interop_profile.attribution_route_validation import (
+        qa008_route_categorical_exact,
+    )
+
+    bundle = json.loads(COMMITTED_ROUTES_W4_PATH.read_text())
+    qa008_route_categorical_exact(bundle, copy.deepcopy(bundle))
+
+
+def test_qa008_route_categorical_exact_ignores_timing_and_run_identity():
+    import json
+
+    from benchmarks.density_matrix.interop_profile.attribution_route_validation import (
+        qa008_route_categorical_exact,
+    )
+
+    committed = json.loads(COMMITTED_ROUTES_W4_PATH.read_text())
+    regenerated = copy.deepcopy(committed)
+    regenerated["provenance"]["implementation_revision"] = "f" * 40
+    for identity in regenerated["provenance"]["extension_identities"]:
+        identity["sha256"] = "d" * 64
+    for row in regenerated["rows"]:
+        for sample in row.get("samples", []):
+            sample["orchestration_ns"] += 1
+            sample["apply_component_ns"] += 1
+        for block in ("orchestration", "apply_component"):
+            if block in row:
+                row[block]["mean_ns"] += 1.0
+                row[block]["upper_bound_95_ns"] += 1.0
+        if "throughput" in row:
+            row["throughput"]["mean_ns_per_op"] += 1.0
+            row["throughput"]["upper_bound_95_ns_per_op"] += 1.0
+    qa008_route_categorical_exact(committed, regenerated)
+
+
+@pytest.mark.parametrize(
+    "mutate",
+    [
+        lambda bundle: bundle["rows"][0]["throughput"].__setitem__("divisor", 4096),
+        lambda bundle: bundle["rows"][0]["samples"][0].__setitem__("apply_primitive_calls", 1),
+        lambda bundle: _attribution_row(bundle, "R-hybrid").__setitem__(
+            "partition_runtime_classes",
+            ["phase3_unitary_island_fused"],
+        ),
+        lambda bundle: bundle.__setitem__("workload_label", "other"),
+        lambda bundle: _attribution_row(bundle, "R-strict").__setitem__(
+            "reason", "STEP_4A_HANDBACK 98eec857; other"
+        ),
+        lambda bundle: bundle.pop("labels"),
+        lambda bundle: bundle.__setitem__("extra_key", 1),
+        lambda bundle: bundle["provenance"].__setitem__("extra_key", 1),
+        lambda bundle: bundle["rows"][0]["throughput"].__setitem__("divisor", 3072.0),
+    ],
+)
+def test_qa008_route_categorical_exact_rejects_categorical_drift(mutate):
+    import json
+
+    from benchmarks.density_matrix.interop_profile.attribution_route_validation import (
+        qa008_route_categorical_exact,
+    )
+
+    committed = json.loads(COMMITTED_ROUTES_W4_PATH.read_text())
+    regenerated = copy.deepcopy(committed)
+    mutate(regenerated)
+    with pytest.raises(ValueError, match="QA-008"):
+        qa008_route_categorical_exact(committed, regenerated)
+
+
+def test_qa008_route_categorical_exact_allows_differing_density_matrix_sha256():
+    from benchmarks.density_matrix.interop_profile.attribution_route_validation import (
+        qa008_route_categorical_exact,
+    )
+
+    left = _counted_attribution_fixture_w6_with_provenance()
+    right = copy.deepcopy(left)
+    left["provenance"]["density_matrix_cpp_sha256"] = "a" * 64
+    right["provenance"]["density_matrix_cpp_sha256"] = "b" * 64
+    qa008_route_categorical_exact(left, right)
+
+
+@pytest.mark.parametrize("width", [6, 8])
+def test_run_counted_attribution_bundle_task5_widths(monkeypatch, width):
+    import hashlib
+
+    import squander.density_matrix._density_matrix_cpp as density_ext
+
+    spec = TASK5_ROUTE_FIXTURE[width]
+    bundle, _records, seen, _warmup, _counted = _small_counted_attribution_run(
+        monkeypatch, warmup=1, counted=2, qbit_num=width
+    )
+    assert seen["command"] == spec["command"]
+    assert bundle["provenance"]["command"] == spec["command"]
+    assert bundle["suite"] == spec["suite"]
+    assert bundle["qbit_num"] == width
+    assert bundle["workload_label"] == spec["workload_label"]
+    assert bundle["provenance"]["density_matrix_cpp_sha256"] == hashlib.sha256(
+        Path(density_ext.__file__).resolve().read_bytes()
+    ).hexdigest()
+    for route_id in ("R-base", "R-fused", "R-hybrid"):
+        assert _attribution_row(bundle, route_id)["throughput"]["divisor"] == spec["divisor"]
+    assert _attribution_row(bundle, "R-hybrid")["partition_runtime_classes"] == [
+        "phase31_channel_native",
+        "phase3_unitary_island_fused",
+        "phase31_channel_native",
+    ] + ["phase3_unitary_island_fused"] * spec["fused_tail"]
+
+
+def test_run_counted_attribution_bundle_w4_omits_density_matrix_cpp_sha256(monkeypatch):
+    bundle, _records, _seen, _warmup, _counted = _small_counted_attribution_run(
+        monkeypatch, warmup=1, counted=2
+    )
+    assert "density_matrix_cpp_sha256" not in bundle["provenance"]

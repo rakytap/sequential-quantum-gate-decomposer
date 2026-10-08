@@ -3,30 +3,26 @@
 
 from __future__ import annotations
 
+import hashlib
 import time
 from collections import Counter
+from pathlib import Path
 from contextlib import contextmanager
 from typing import Any, Callable, Iterator, Mapping
 
 import numpy as np
 
 from benchmarks.density_matrix.interop_profile.attribution_route_validation import (
-    COUNTED_ATTRIBUTION_PROVENANCE_COMMAND,
+    AttributionWidthProfile,
     COUNTED_ATTRIBUTION_SAMPLES_PER_ROUTE,
     COUNTED_ATTRIBUTION_WARMUP_CALLS,
-    OPERATION_COUNT_TASK4,
-    PARAMETER_COUNT_TASK4,
     R_STRICT_HANDABACK_SHA256_PREFIX,
     R_STRICT_RAISE_CODE_W4,
     R_STRICT_STATUS_REFUSED,
-    SUITE_ID_TASK4_ROUTES,
     TIMED_ROUTE_IDS,
-    WORKLOAD_LABEL_TASK4,
+    attribution_width_profile,
 )
-from benchmarks.density_matrix.interop_profile.interop_lane import (
-    THROUGHPUT_DIVISOR,
-    build_task_evaluator,
-)
+from benchmarks.density_matrix.interop_profile.interop_lane import build_task_evaluator
 from benchmarks.density_matrix.partitioned_runtime.common import build_initial_parameters
 from squander.density_matrix import DensityMatrix, NoisyCircuit
 from squander.partitioning.noisy_planner import build_phase3_continuity_partition_descriptor_set
@@ -75,20 +71,42 @@ ROUTE_TABLE: dict[str, dict[str, Any]] = {
 }
 
 
-def build_width4_attribution_anchor() -> tuple[Any, Any, Mapping[str, Any]]:
-    """Build the width-4 continuity descriptor from the task-1 interop evaluator."""
-    vqe, _hamiltonian = build_task_evaluator(4)
+def _density_matrix_cpp_sha256() -> str:
+    import squander.density_matrix._density_matrix_cpp as density_ext
+
+    path = Path(density_ext.__file__).resolve()
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def build_attribution_anchor(qbit_num: int) -> tuple[Any, Any, Mapping[str, Any]]:
+    """Build the continuity descriptor for an attribution-route width."""
+    profile = attribution_width_profile(qbit_num)
+    vqe, _hamiltonian = build_task_evaluator(qbit_num)
     bridge = vqe.describe_density_bridge()
-    if int(bridge["operation_count"]) != OPERATION_COUNT_TASK4:
+    if int(bridge["operation_count"]) != profile.operation_count:
         raise ValueError("anchor operation_count mismatch")
-    if vqe.get_Parameter_Num() != PARAMETER_COUNT_TASK4:
+    if vqe.get_Parameter_Num() != profile.parameter_count:
         raise ValueError("anchor parameter_count mismatch")
+    if int(bridge["gate_count"]) != profile.gate_count:
+        raise ValueError("anchor gate_count mismatch")
+    if int(bridge["noise_count"]) != profile.noise_count:
+        raise ValueError("anchor noise_count mismatch")
     descriptor_set = build_phase3_continuity_partition_descriptor_set(
         vqe, max_partition_qubits=2
     )
-    if descriptor_set.workload_id != WORKLOAD_LABEL_TASK4:
+    if descriptor_set.workload_id != profile.workload_label:
         raise ValueError("unexpected workload_id on continuity descriptor")
+    if len(descriptor_set.partitions) != profile.partition_count:
+        raise ValueError("anchor partition_count mismatch")
+    member_total = sum(len(partition.members) for partition in descriptor_set.partitions)
+    if member_total != int(bridge["operation_count"]):
+        raise ValueError("anchor partition members do not total the bridge operation_count")
     return vqe, descriptor_set, bridge
+
+
+def build_width4_attribution_anchor() -> tuple[Any, Any, Mapping[str, Any]]:
+    """Build the width-4 continuity descriptor from the task-1 interop evaluator."""
+    return build_attribution_anchor(4)
 
 
 def _format_hybrid_apply_label(partition_runtime_classes: list[str]) -> str:
@@ -212,12 +230,25 @@ def build_r_strict_refusal_row(
     )
 
 
+def _require_every_partition_executed(
+    route_id: str,
+    descriptor_set: Any,
+    result: NoisyRuntimeExecutionResult | None,
+) -> None:
+    executed = sorted(int(record.partition_index) for record in getattr(result, "partitions", ()))
+    if executed != list(range(len(descriptor_set.partitions))):
+        raise ValueError(
+            f"attribution route handback for {route_id}: not every partition was executed"
+        )
+
+
 def build_route_row(
     route_id: str,
     descriptor_set: Any,
     parameters: np.ndarray,
     *,
     sample_count: int,
+    throughput_divisor: int,
 ) -> dict[str, Any]:
     if route_id not in ROUTE_TABLE:
         raise ValueError(f"unsupported route_id {route_id!r}")
@@ -230,13 +261,13 @@ def build_route_row(
         sample, result = _time_route_sample(
             route_id, spec["executor"], descriptor_set, parameters
         )
+        _require_every_partition_executed(route_id, descriptor_set, result)
         samples.append(sample)
-        if result is not None:
-            last_result = result
+        last_result = result
 
     orch_values = [float(sample["orchestration_ns"]) for sample in samples]
     apply_values = [float(sample["apply_component_ns"]) for sample in samples]
-    throughput_values = [value / THROUGHPUT_DIVISOR for value in apply_values]
+    throughput_values = [value / throughput_divisor for value in apply_values]
 
     from benchmarks.density_matrix.interop_profile.attribution_route_validation import (
         one_sided_upper_bound_route,
@@ -268,7 +299,7 @@ def build_route_row(
             "upper_bound_95_ns": bound_apply,
         },
         "throughput": {
-            "divisor": THROUGHPUT_DIVISOR,
+            "divisor": throughput_divisor,
             "mean_ns_per_op": mean_tp,
             "upper_bound_95_ns_per_op": bound_tp,
         },
@@ -293,16 +324,17 @@ def _assert_single_thread_env() -> dict[str, str]:
     return thread_env
 
 
-def run_counted_attribution_bundle() -> dict[str, Any]:
-    """Build the width-4 counted attribution bundle (50 warm-up + 1000 per timed route)."""
+def run_counted_attribution_bundle(qbit_num: int = 4) -> dict[str, Any]:
+    """Build a counted attribution bundle (50 warm-up + 1000 per timed route)."""
     from benchmarks.density_matrix.interop_profile.interop_lane import (
         _pin_lowest_allowed_cpu,
         capture_provenance,
     )
 
+    profile: AttributionWidthProfile = attribution_width_profile(qbit_num)
     thread_env = _assert_single_thread_env()
     cpu_id = _pin_lowest_allowed_cpu()
-    provenance = capture_provenance(COUNTED_ATTRIBUTION_PROVENANCE_COMMAND)
+    provenance = capture_provenance(profile.counted_provenance_command)
     provenance = {
         **provenance,
         "warmup_calls": COUNTED_ATTRIBUTION_WARMUP_CALLS,
@@ -311,8 +343,10 @@ def run_counted_attribution_bundle() -> dict[str, Any]:
         "estimator": "arithmetic_mean",
         "bound": "one_sided_95_orchestration_and_apply",
     }
+    if profile.record_density_matrix_cpp_sha256:
+        provenance["density_matrix_cpp_sha256"] = _density_matrix_cpp_sha256()
 
-    _vqe, descriptor_set, bridge = build_width4_attribution_anchor()
+    _vqe, descriptor_set, bridge = build_attribution_anchor(qbit_num)
     param_count = _vqe.get_Parameter_Num()
     parameters = build_initial_parameters(param_count)
 
@@ -326,21 +360,31 @@ def run_counted_attribution_bundle() -> dict[str, Any]:
             descriptor_set,
             parameters,
             sample_count=COUNTED_ATTRIBUTION_SAMPLES_PER_ROUTE,
+            throughput_divisor=profile.throughput_divisor,
         )
         rows.append(row)
     rows.append(build_r_strict_refusal_row(descriptor_set, parameters))
 
-    claim_boundary = (
-        "task-4 counted attribution routes; milestone_counted=false; "
-        "R-hybrid does not wrap NoisyCircuit.apply_to (N-1)"
-    )
+    if profile.qbit_num == 4:
+        claim_boundary = (
+            "task-4 counted attribution routes; milestone_counted=false; "
+            "R-hybrid does not wrap NoisyCircuit.apply_to (N-1)"
+        )
+        labels = "width-4 attribution routes; QA-007 withheld on routes"
+    else:
+        width_label = f"width-{profile.qbit_num}"
+        claim_boundary = (
+            f"task-5 counted attribution routes at {width_label}; milestone_counted=false; "
+            "R-hybrid does not wrap NoisyCircuit.apply_to (N-1)"
+        )
+        labels = f"{width_label} attribution routes; QA-007 withheld on routes"
     bundle = {
-        "suite": SUITE_ID_TASK4_ROUTES,
-        "qbit_num": 4,
+        "suite": profile.suite_id,
+        "qbit_num": profile.qbit_num,
         "milestone_counted": False,
-        "workload_label": WORKLOAD_LABEL_TASK4,
+        "workload_label": profile.workload_label,
         "claim_boundary": claim_boundary,
-        "labels": "width-4 attribution routes; QA-007 withheld on routes",
+        "labels": labels,
         "clean_start": provenance["clean_start"],
         "provenance": provenance,
         "bridge": {
@@ -367,21 +411,28 @@ def run_attribution_route_tracer_bundle(
     labels: str = "width-4 attribution routes; QA-007 withheld on routes",
 ) -> dict[str, Any]:
     """Build a four-route attribution bundle without publishing O."""
+    profile = attribution_width_profile(4)
     _vqe, descriptor_set, bridge = build_width4_attribution_anchor()
     param_count = _vqe.get_Parameter_Num()
     parameters = build_initial_parameters(param_count)
     rows: list[dict[str, Any]] = []
     for route_id in TIMED_ROUTE_IDS:
         rows.append(
-            build_route_row(route_id, descriptor_set, parameters, sample_count=sample_count)
+            build_route_row(
+                route_id,
+                descriptor_set,
+                parameters,
+                sample_count=sample_count,
+                throughput_divisor=profile.throughput_divisor,
+            )
         )
     rows.append(build_r_strict_refusal_row(descriptor_set, parameters))
     rows.sort(key=lambda row: ROUTE_IDS_ORDER.index(row["route_id"]))
     return {
-        "suite": SUITE_ID_TASK4_ROUTES,
+        "suite": profile.suite_id,
         "qbit_num": 4,
         "milestone_counted": False,
-        "workload_label": WORKLOAD_LABEL_TASK4,
+        "workload_label": profile.workload_label,
         "claim_boundary": claim_boundary,
         "labels": labels,
         "bridge": {

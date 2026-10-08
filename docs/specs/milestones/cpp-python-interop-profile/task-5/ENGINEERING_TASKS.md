@@ -1,11 +1,11 @@
 # Engineering tasks — M-F5a task-5
-> **Status:** stamp draft · binder `29b3a1bd…` · `de96e0a3` · **Slice:** M-F5a task-5 · routes at widths 6 and 8 ·
+> **Status:** Step 4b prep · binder `1b415ecb…` · C0 `cbb203ae` · **Slice:** M-F5a task-5 · routes at widths 6 and 8 ·
 > **Traces:** REQ-001, REQ-004, REQ-005, REQ-006, REQ-007, REQ-008, REQ-009 ·
 > CAP-004, CAP-007 · QA-008, QA-009 · ADR-F5A-001, ADR-F5A-004, ADR-F5A-010 ·
 > **SDD stage:** step-4b-authorized
-> **Boundary:** uncommitted stamp. Developer not started. Width-4 C2 stays `5f63a9d6`. REQ-004 stays open
+> **Boundary:** C0 `cbb203ae`. Developer Step 4b prep uncommitted. Width-4 C2 stays `5f63a9d6`. REQ-004 stays open
 
-**Verdict: stamp draft.** The stage line is `step-4b-authorized` only in this uncommitted pack. Reviewer APPROVE FOR STEP-4B has not been given. The Developer is not started. C0 waits on that gate. As of this stamp the Research Manager has not vetoed N-y. The exactness check stays FYI to the Research Manager, and this draft re-confirms it. Lint after this stamp: normal exits 0 with one `SLICE_MISSING_CLOSEOUT` warning for task-5. `--strict` exits 1 with that finding as its only error. No waiver. No placeholder. No counted width-6 or width-8 command runs in the Developer change. REQ-004 stays open.
+**Verdict: Step 4b prep (uncommitted).** C0 `cbb203ae` records `step-4b-authorized` and Reviewer APPROVE FOR STEP-4B. Developer ET-1…ET-4 land on the allowlist only; no counted width-6 or width-8 runs. As of C0 the Research Manager has not vetoed N-y. The exactness check stays FYI. Lint: normal exits 0 with one `SLICE_MISSING_CLOSEOUT` warning for task-5. `--strict` exits 1 with that finding as its only error. REQ-004 stays open.
 
 These tasks do not publish an overhead ratio, add a public energy API, change the S-g estimator, take the binding or dispatch reduction, edit kernel, fusion, or AVX code, or open M-F1b.
 

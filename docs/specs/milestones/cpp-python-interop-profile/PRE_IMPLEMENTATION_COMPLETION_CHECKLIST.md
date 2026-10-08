@@ -1,5 +1,5 @@
 # Pre-implementation completion checklist — M-F5a `cpp-python-interop-profile`
-> **Status:** Layer 1 v0.1 · **Verdict:** task-4 closed by `task-4/CLOSEOUT.md` (C2 `5f63a9d6`, w4 routes `6584be2b…`, (g) PASS); task-5 uncommitted stamp drafts `step-4b-authorized`; Developer not started; REQ-004 open ·
+> **Status:** Layer 1 v0.1 · **Verdict:** task-4 closed by `task-4/CLOSEOUT.md` (C2 `5f63a9d6`, w4 routes `6584be2b…`, (g) PASS); task-5 C0 `cbb203ae` (`step-4b-authorized`); Developer Step 4b prep uncommitted; REQ-004 open ·
 > **Milestone:** M-F5a `cpp-python-interop-profile` ·
 > **Owner skill:** `spec-driven-development` Steps 2–4a ·
 > **Inputs:** `INITIAL_REQUIREMENTS.md` v0.1,
@@ -11,7 +11,7 @@
 
 ## 1. Readiness rule
 
-**Verdict: task-1, task-2, and task-3 stay closed. Task-4 is closed by `task-4/CLOSEOUT.md`; (g) is PASS. Task-4 C1 is `6be6282f`. C1-ET4 is `431a5808`. C2 is `5f63a9d6`. Width-4 routes are counted. Task-5's stage line is an uncommitted stamp at `step-4b-authorized`. The Developer is not started. C0 waits on APPROVE FOR STEP-4B. The Research Manager has not vetoed N-y; it stays FYI, and this stamp re-confirms it. QA-007 is frozen and met on the E-VQE 4/6/8 cells. M-F5a is not complete.**
+**Verdict: task-1, task-2, and task-3 stay closed. Task-4 is closed by `task-4/CLOSEOUT.md`; (g) is PASS. Task-4 C1 is `6be6282f`. C1-ET4 is `431a5808`. C2 is `5f63a9d6`. Width-4 routes are counted. Task-5 C0 is `cbb203ae` with stage `step-4b-authorized`. Developer Step 4b prep is uncommitted on the ET-3 allowlist. The Research Manager has not vetoed N-y; it stays FYI. QA-007 is frozen and met on the E-VQE 4/6/8 cells. M-F5a is not complete.**
 
 The Tech Lead opened the tracer. `task-1/` holds the planning pack and `CLOSEOUT.md`.
 ADR-F5A-009 is filed. C1 tip is `ca5589e2`. C2 is
@@ -77,7 +77,7 @@ The code-ready gate, already met before C1, required all of the following:
 | G-11 | Step 4b authorization for task-2 | planning-role stamp after the Reviewer writer gate | Planning role | **closed — C2 `6707892a`; (e) APPROVE; (g) PASS; stage `step-4b-authorized`** |
 | G-12 | Step 4b authorization for task-3 | planning-role stamp after the Reviewer code-ready writer gate | Planning role | **closed — C2 `939d4908`; (e) APPROVE; (g) PASS; stage `step-4b-authorized`** |
 | G-13 | Step 4b authorization for task-4 | planning-role stamp after the Reviewer code-ready writer gate | Planning role | **closed — C0 stamp `226ffc29`; C1 `6be6282f` (Q2, B1–B3); C1-ET4 `431a5808`; C2 `5f63a9d6`; w4 bundle `6584be2b…`; (g) PASS; stage `step-4b-authorized`; Option A; width-4 rows do not close REQ-004** |
-| G-14 | Step 4b authorization for task-5 (routes at 6 and 8) | planning-role stamp after a code-ready writer gate | Planning role | **open — uncommitted stamp; stage `step-4b-authorized`; Developer not started; C0 waits on APPROVE FOR STEP-4B; no counted w6/w8 run** |
+| G-14 | Step 4b authorization for task-5 (routes at 6 and 8) | planning-role stamp after a code-ready writer gate | Planning role | **closed — C0 `cbb203ae`; stage `step-4b-authorized`; Developer Step 4b prep uncommitted; no counted w6/w8 run** |
 
 No open item changes the equal-work pair, adds an advertised energy entry, publishes \(O\)
 on an attribution-only route, or proposes a kernel, fusion, or AVX edit. RM ALIGN 2026-10-07: A4 is false, CAP-004 is hold-the-line, and the reduction is not made (ADR-F5A-003/005).
@@ -168,8 +168,8 @@ kept the same finding as a warning and exited 0. ADR-F1A-008 forbids a planning-
 closeout, so that finding stayed until this real close.
 
 After `task-1/CLOSEOUT.md`, `task-2/CLOSEOUT.md`, and `task-3/CLOSEOUT.md`, those slices are clean.
-This uncommitted stamp sets task-5 to `step-4b-authorized` with no closeout. Normal exits 0 with one `SLICE_MISSING_CLOSEOUT` warning for task-5. `--strict` exits 1 with that finding as its only error. No waiver. No placeholder.
-Task-3 C1 is `97d726e3`. Task-3 C2 is `939d4908`. (g) is PASS. Width-4 route rows do not close REQ-004. The 10 % bar is frozen for the E-VQE cells. Task-4 C1 is `6be6282f`. C1-ET4 is `431a5808`. Task-4 C2 is `5f63a9d6`. Bundle `6584be2b…`. `task-4/CLOSEOUT.md` records the width-4 slice. Task-5's stage line is an uncommitted stamp at `step-4b-authorized`. The Developer is not started. The live strict raise at widths 6 and 8 is `channel_native_noise_presence`. `pure_unitary_partition` is the hybrid classifier reason. Handback `98eec857…` is unchanged.
+Task-5 C0 `cbb203ae` sets `step-4b-authorized` with no closeout. Normal exits 0 with one `SLICE_MISSING_CLOSEOUT` warning for task-5. `--strict` exits 1 with that finding as its only error. No waiver. No placeholder.
+Task-3 C1 is `97d726e3`. Task-3 C2 is `939d4908`. (g) is PASS. Width-4 route rows do not close REQ-004. The 10 % bar is frozen for the E-VQE cells. Task-4 C1 is `6be6282f`. C1-ET4 is `431a5808`. Task-4 C2 is `5f63a9d6`. Bundle `6584be2b…`. `task-4/CLOSEOUT.md` records the width-4 slice. Task-5 C0 is `cbb203ae`. Developer Step 4b prep is uncommitted. The live strict raise at widths 6 and 8 is `channel_native_noise_presence`. `pure_unitary_partition` is the hybrid classifier reason. Handback `98eec857…` is unchanged.
 
 ## 9. Task-1 Step 4a opened
 

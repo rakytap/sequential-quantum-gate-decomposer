@@ -28,9 +28,21 @@ DEFAULT_OUTPUT_PATH_W8 = DEFAULT_OUTPUT_DIR / "interop_profile_bundle_w8.json"
 ARTIFACT_NAME_W4 = "interop_profile_bundle.json"
 ARTIFACT_NAME_W6 = "interop_profile_bundle_w6.json"
 ARTIFACT_NAME_W8 = "interop_profile_bundle_w8.json"
-DEFAULT_ATTRIBUTION_ROUTES_OUTPUT = (
+DEFAULT_ATTRIBUTION_ROUTES_OUTPUT_W4 = (
     DEFAULT_OUTPUT_DIR / "interop_profile_bundle_routes_w4.json"
 )
+DEFAULT_ATTRIBUTION_ROUTES_OUTPUT_W6 = (
+    DEFAULT_OUTPUT_DIR / "interop_profile_bundle_routes_w6.json"
+)
+DEFAULT_ATTRIBUTION_ROUTES_OUTPUT_W8 = (
+    DEFAULT_OUTPUT_DIR / "interop_profile_bundle_routes_w8.json"
+)
+DEFAULT_ATTRIBUTION_ROUTES_OUTPUT_BY_WIDTH = {
+    4: DEFAULT_ATTRIBUTION_ROUTES_OUTPUT_W4,
+    6: DEFAULT_ATTRIBUTION_ROUTES_OUTPUT_W6,
+    8: DEFAULT_ATTRIBUTION_ROUTES_OUTPUT_W8,
+}
+DEFAULT_ATTRIBUTION_ROUTES_OUTPUT = DEFAULT_ATTRIBUTION_ROUTES_OUTPUT_W4
 
 
 def resolve_interop_output_path(
@@ -47,8 +59,11 @@ def resolve_interop_output_path(
         )
 
         qbit_num = width if width is not None else QBIT_WIDTH_TASK4
+        default_output = DEFAULT_ATTRIBUTION_ROUTES_OUTPUT_BY_WIDTH.get(
+            qbit_num, DEFAULT_ATTRIBUTION_ROUTES_OUTPUT_W4
+        )
         resolved = resolve_attribution_output_path(
-            output if output is not None else DEFAULT_ATTRIBUTION_ROUTES_OUTPUT,
+            output if output is not None else default_output,
             width=qbit_num,
         )
         return Path(resolved)
@@ -106,7 +121,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--attribution-routes",
         action="store_true",
-        help="Emit the width-4 attribution route counted bundle (R-strict refusal row).",
+        help="Emit the attribution route counted bundle (R-strict refusal row) at widths 4, 6, or 8.",
     )
     args = parser.parse_args(argv)
 
@@ -115,10 +130,16 @@ def main(argv: list[str] | None = None) -> int:
             run_counted_attribution_bundle,
         )
 
+        from benchmarks.density_matrix.interop_profile.attribution_route_validation import (
+            attribution_width_profile,
+        )
+
+        qbit_num = args.width if args.width is not None else 4
+        attribution_width_profile(qbit_num)
         output_path = resolve_interop_output_path(
             args.width, args.output, attribution_routes=True
         )
-        bundle = run_counted_attribution_bundle()
+        bundle = run_counted_attribution_bundle(qbit_num)
         if bundle.get("clean_start") is not True:
             print(
                 "refusing to write attribution route bundle: worktree is not clean at capture",

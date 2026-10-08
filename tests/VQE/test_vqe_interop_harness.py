@@ -169,7 +169,9 @@ def test_task4_attribution_route_sample_has_orchestration_and_apply(route_id: st
 
     vqe, descriptor_set, _bridge = build_width4_attribution_anchor()
     parameters = build_initial_parameters(vqe.get_Parameter_Num())
-    row = build_route_row(route_id, descriptor_set, parameters, sample_count=2)
+    row = build_route_row(
+        route_id, descriptor_set, parameters, sample_count=2, throughput_divisor=3072
+    )
     assert row["orchestration"]["mean_ns"] >= 0
     assert row["apply_component"]["mean_ns"] > 0
     assert row["throughput"]["divisor"] == 3072
@@ -205,6 +207,26 @@ def test_task4_attribution_route_sample_has_orchestration_and_apply(route_id: st
         assert "the executed class" not in row["apply_label"]
 
 
+@pytest.mark.parametrize(
+    "width,params,ops,gates,noise,workload",
+    [
+        (6, 30, 18, 15, 3, "phase2_xxz_hea_q6_continuity"),
+        (8, 42, 24, 21, 3, "phase2_xxz_hea_q8_continuity"),
+    ],
+)
+def test_task5_attribution_anchor_counts(width, params, ops, gates, noise, workload):
+    from benchmarks.density_matrix.interop_profile.attribution_route_lane import (
+        build_attribution_anchor,
+    )
+
+    vqe, descriptor_set, bridge = build_attribution_anchor(width)
+    assert vqe.get_Parameter_Num() == params
+    assert int(bridge["operation_count"]) == ops
+    assert int(bridge["gate_count"]) == gates
+    assert int(bridge["noise_count"]) == noise
+    assert descriptor_set.workload_id == workload
+
+
 def test_task4_r_strict_handback_on_continuity_anchor():
     from benchmarks.density_matrix.interop_profile.attribution_route_lane import (
         build_r_strict_refusal_row,
@@ -216,7 +238,9 @@ def test_task4_r_strict_handback_on_continuity_anchor():
     vqe, descriptor_set, _bridge = build_width4_attribution_anchor()
     parameters = build_initial_parameters(vqe.get_Parameter_Num())
     with pytest.raises(ValueError, match="refusal row"):
-        build_route_row("R-strict", descriptor_set, parameters, sample_count=1)
+        build_route_row(
+            "R-strict", descriptor_set, parameters, sample_count=1, throughput_divisor=3072
+        )
     refusal = build_r_strict_refusal_row(descriptor_set, parameters)
     assert refusal["status"] == "handback_refused"
     assert "98eec857" in refusal["reason"]
@@ -254,14 +278,103 @@ def test_evqe_path_refuses_routes_output_name(tmp_path):
         resolve_interop_output_path(4, out, attribution_routes=False)
 
 
-def test_attribution_routes_refuses_non_width_four(tmp_path):
+@pytest.mark.parametrize("width", [5, 10])
+def test_attribution_routes_refuses_unsupported_width(tmp_path, width):
     from benchmarks.density_matrix.interop_profile.validation_pipeline import (
         resolve_interop_output_path,
     )
 
     out = tmp_path / "interop_profile_bundle_routes_w6.json"
-    with pytest.raises(ValueError, match="width 4 only"):
-        resolve_interop_output_path(6, out, attribution_routes=True)
+    with pytest.raises(ValueError, match="attribution routes allow widths 4, 6, and 8 only"):
+        resolve_interop_output_path(width, out, attribution_routes=True)
+
+
+@pytest.mark.parametrize("width,artifact", [(6, "interop_profile_bundle_routes_w6.json"), (8, "interop_profile_bundle_routes_w8.json")])
+def test_attribution_routes_accepts_width_six_and_eight_outside_artifacts(tmp_path, width, artifact):
+    from benchmarks.density_matrix.interop_profile.validation_pipeline import (
+        resolve_interop_output_path,
+    )
+
+    out = tmp_path / artifact
+    resolved = resolve_interop_output_path(width, out, attribution_routes=True)
+    assert resolved == out.resolve()
+
+
+@pytest.mark.parametrize(
+    "width,name",
+    [
+        (4, "interop_profile_bundle_routes_w6.json"),
+        (4, "interop_profile_bundle_routes_w8.json"),
+        (6, "interop_profile_bundle_routes_w4.json"),
+        (6, "interop_profile_bundle_routes_w8.json"),
+        (8, "interop_profile_bundle_routes_w4.json"),
+        (8, "interop_profile_bundle_routes_w6.json"),
+    ],
+)
+def test_attribution_routes_refuses_cross_width_routes_names(tmp_path, width, name):
+    from benchmarks.density_matrix.interop_profile.validation_pipeline import (
+        resolve_interop_output_path,
+    )
+
+    with pytest.raises(ValueError, match="must not write"):
+        resolve_interop_output_path(width, tmp_path / name, attribution_routes=True)
+
+
+@pytest.mark.parametrize("width", [4, 6, 8])
+def test_attribution_routes_default_output_follows_width(width):
+    from benchmarks.density_matrix.interop_profile.attribution_route_validation import (
+        DEFAULT_ATTRIBUTION_ARTIFACT_DIR,
+    )
+    from benchmarks.density_matrix.interop_profile.validation_pipeline import (
+        resolve_interop_output_path,
+    )
+
+    resolved = resolve_interop_output_path(width, None, attribution_routes=True)
+    assert resolved == (
+        DEFAULT_ATTRIBUTION_ARTIFACT_DIR / f"interop_profile_bundle_routes_w{width}.json"
+    ).resolve()
+
+
+def test_attribution_output_width_bound_or_outside_artifacts(tmp_path, monkeypatch):
+    from benchmarks.density_matrix.interop_profile import attribution_route_lane as lane
+    from benchmarks.density_matrix.interop_profile import validation_pipeline as vp
+    from benchmarks.density_matrix.interop_profile.attribution_route_validation import (
+        DEFAULT_ATTRIBUTION_ARTIFACT_DIR,
+    )
+
+    def must_not_run(*_args, **_kwargs):
+        raise AssertionError("counted attribution run started before output guard")
+
+    monkeypatch.setattr(lane, "run_counted_attribution_bundle", must_not_run)
+    artifact_dir = DEFAULT_ATTRIBUTION_ARTIFACT_DIR
+    listing_before = sorted(path.name for path in artifact_dir.iterdir())
+    bad_inside = artifact_dir / "custom_routes.json"
+    for width in (4, 6, 8):
+        with pytest.raises(ValueError, match="must write only"):
+            vp.resolve_interop_output_path(width, bad_inside, attribution_routes=True)
+        with pytest.raises(ValueError, match="must write only"):
+            vp.resolve_interop_output_path(
+                width, artifact_dir / "sub" / "custom_routes.json", attribution_routes=True
+            )
+        with pytest.raises(ValueError, match="must write only"):
+            vp.resolve_interop_output_path(
+                width, artifact_dir / "sub" / ".." / "custom_routes.json", attribution_routes=True
+            )
+        dotdot_from_tmp = type(tmp_path)(
+            str(tmp_path) + "/.." * len(tmp_path.parts) + str(bad_inside)
+        )
+        with pytest.raises(ValueError, match="must write only"):
+            vp.resolve_interop_output_path(width, dotdot_from_tmp, attribution_routes=True)
+        symlink = tmp_path / f"via_symlink_w{width}.json"
+        symlink.symlink_to(bad_inside)
+        with pytest.raises(ValueError, match="must write only"):
+            vp.resolve_interop_output_path(width, symlink, attribution_routes=True)
+        good_outside = tmp_path / f"interop_profile_bundle_routes_w{width}.json"
+        assert (
+            vp.resolve_interop_output_path(width, good_outside, attribution_routes=True)
+            == good_outside.resolve()
+        )
+    assert sorted(path.name for path in artifact_dir.iterdir()) == listing_before
 
 
 def test_attribution_apply_timer_wrap_set_and_clock_reads_inside_with(monkeypatch):
@@ -323,14 +436,16 @@ def test_task4_timed_route_raise_hands_back_without_stub_timings(monkeypatch):
         lane.ROUTE_TABLE["R-strict"]["executor"],
     )
     with pytest.raises(ValueError, match="attribution route handback for R-hybrid"):
-        lane.build_route_row("R-hybrid", descriptor_set, parameters, sample_count=2)
+        lane.build_route_row(
+            "R-hybrid", descriptor_set, parameters, sample_count=2, throughput_divisor=3072
+        )
 
 
 def test_attribution_routes_pipeline_clean_start_false_writes_nothing(tmp_path, monkeypatch):
     from benchmarks.density_matrix.interop_profile import attribution_route_lane as lane
     from benchmarks.density_matrix.interop_profile import validation_pipeline as vp
 
-    def fake_bundle():
+    def fake_bundle(_qbit_num=4):
         return {"clean_start": False, "rows": [], "provenance": {}}
 
     monkeypatch.setattr(lane, "run_counted_attribution_bundle", fake_bundle)
@@ -339,3 +454,100 @@ def test_attribution_routes_pipeline_clean_start_false_writes_nothing(tmp_path, 
         vp.main(["--attribution-routes", "--width", "4", "--output", str(out)]) == 1
     )
     assert not out.exists()
+
+
+@pytest.mark.parametrize("width", [6, 8])
+def test_attribution_routes_pipeline_runs_the_requested_width(tmp_path, monkeypatch, width):
+    from benchmarks.density_matrix.interop_profile import attribution_route_lane as lane
+    from benchmarks.density_matrix.interop_profile import validation_pipeline as vp
+
+    seen = []
+
+    def fake_bundle(qbit_num=4):
+        seen.append(qbit_num)
+        return {"clean_start": False, "rows": [], "provenance": {}}
+
+    monkeypatch.setattr(lane, "run_counted_attribution_bundle", fake_bundle)
+    out = tmp_path / f"interop_profile_bundle_routes_w{width}.json"
+    assert vp.main(["--attribution-routes", "--width", str(width), "--output", str(out)]) == 1
+    assert seen == [width]
+    assert not out.exists()
+
+
+@pytest.mark.parametrize("width,partitions", [(4, 5), (6, 7), (8, 9)])
+def test_attribution_anchor_partition_members_total_operation_count(width, partitions):
+    from benchmarks.density_matrix.interop_profile.attribution_route_lane import (
+        build_attribution_anchor,
+    )
+
+    _vqe, descriptor_set, bridge = build_attribution_anchor(width)
+    assert len(descriptor_set.partitions) == partitions
+    assert sum(len(partition.members) for partition in descriptor_set.partitions) == int(
+        bridge["operation_count"]
+    )
+
+
+@pytest.mark.parametrize(
+    "field,value,match",
+    [
+        ("operation_count", 19, "operation_count mismatch"),
+        ("parameter_count", 31, "parameter_count mismatch"),
+        ("gate_count", 16, "gate_count mismatch"),
+        ("noise_count", 4, "noise_count mismatch"),
+        ("partition_count", 8, "partition_count mismatch"),
+        ("workload_label", "phase2_xxz_hea_q6_other", "unexpected workload_id"),
+    ],
+)
+def test_attribution_anchor_hands_back_when_counts_disagree(monkeypatch, field, value, match):
+    import dataclasses
+
+    from benchmarks.density_matrix.interop_profile import attribution_route_lane as lane
+
+    real_profile = lane.attribution_width_profile(6)
+    monkeypatch.setattr(
+        lane,
+        "attribution_width_profile",
+        lambda _width: dataclasses.replace(real_profile, **{field: value}),
+    )
+    with pytest.raises(ValueError, match=match):
+        lane.build_attribution_anchor(6)
+
+
+def test_attribution_anchor_hands_back_when_members_miss_an_operation(monkeypatch):
+    import types
+
+    from benchmarks.density_matrix.interop_profile import attribution_route_lane as lane
+
+    real_builder = lane.build_phase3_continuity_partition_descriptor_set
+
+    def short_builder(vqe, **kwargs):
+        real = real_builder(vqe, **kwargs)
+        partitions = list(real.partitions)
+        partitions[-1] = types.SimpleNamespace(members=tuple(partitions[-1].members)[:-1])
+        return types.SimpleNamespace(workload_id=real.workload_id, partitions=partitions)
+
+    monkeypatch.setattr(lane, "build_phase3_continuity_partition_descriptor_set", short_builder)
+    with pytest.raises(ValueError, match="partition members do not total"):
+        lane.build_attribution_anchor(6)
+
+
+@pytest.mark.parametrize("route_id", ["R-base", "R-fused", "R-hybrid"])
+def test_timed_route_hands_back_when_a_partition_is_not_executed(monkeypatch, route_id):
+    import types
+
+    from benchmarks.density_matrix.interop_profile import attribution_route_lane as lane
+    from benchmarks.density_matrix.partitioned_runtime.common import build_initial_parameters
+
+    vqe, descriptor_set, _bridge = lane.build_attribution_anchor(6)
+    parameters = build_initial_parameters(vqe.get_Parameter_Num())
+    real_executor = lane.ROUTE_TABLE[route_id]["executor"]
+
+    def drop_last_partition(descriptors, params):
+        result = real_executor(descriptors, params)
+        return types.SimpleNamespace(partitions=result.partitions[:-1])
+
+    monkeypatch.setitem(lane.ROUTE_TABLE[route_id], "executor", drop_last_partition)
+    with pytest.raises(ValueError, match="not every partition was executed"):
+        lane.build_route_row(
+            route_id, descriptor_set, parameters, sample_count=2, throughput_divisor=73728
+        )
