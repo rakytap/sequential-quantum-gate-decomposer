@@ -2,9 +2,9 @@
 
 > **Status:** current-state reference · **Owner skill:** `spec-driven-development` ·
 > **Scope:** the density-matrix / noisy-simulation stack inside SQUANDER as it exists after
-> delivered Phases 1–3.1 and the recorded M-F1a denominator (G-05 docs `11795eed`; RM admin
+> delivered Phases 1–3.1, the recorded M-F1a denominator (G-05 docs `11795eed`; RM admin
 > `completeness_claim` true for handoff 2026-10-06; frozen bundle JSON may still record false at
-> generation) · **Not:** product intent (`PRODUCT_STATEMENT.md`), sequencing
+> generation), and the M-F5a interop profile (closeout status Shipped at `918a73a4`) · **Not:** product intent (`PRODUCT_STATEMENT.md`), sequencing
 > (`ROADMAP.md`), or decision rationale (ADRs, linked below).
 > Update at every milestone close that changes a boundary, flow, integration, or ADR status.
 
@@ -86,6 +86,29 @@ of semester path per Zoltán 2026-10-06) at HEAD `031996f4`. It is not `.github/
 outcome at write time: pass, `/tmp/mf1a-g04-rocky-ci/REPORT.md` (1067 passed, 1 deselected QX2,
 exit 0, wall 40m56s; pytest.log `/tmp/mf1a-g04-rocky-ci/pytest.log`). A missing or failed job is
 not described as green.
+
+### Interop profile (M-F5a, closeout status Shipped)
+
+Recorded in `milestones/cpp-python-interop-profile/CPP_PYTHON_INTEROP_PROFILE_CLOSEOUT.md` at
+`918a73a4`. Status is Shipped, not Delivered. REQ-001…REQ-008 are closed. REQ-009 (checklist G-08) is closed per CLOSEOUT and RM ACCEPT 2026-10-08.
+
+The lane is `benchmarks/density_matrix/interop_profile/`. Measured inventory: E-VQE at widths 4, 6,
+and 8, on an equal-work pair, with a harness-only lower call into the C++ density branch; and
+attribution routes R-base, R-fused, and R-hybrid, timed, with no overhead ratio. R-strict is a
+documented refusal row (`channel_native_noise_presence`, `handback_refused`, handback `98eec857`)
+at 4, 6, and 8 under ADR-F5A-011 (REQ-004). The row carries no timings. R-oracle is excluded.
+
+UB (one-sided 95% upper bound on O, E-VQE bundles) ≤1.06% at 4/6/8: 1.0589% / 0.2149% / 0.0744%. QA-007 bar frozen at 10% (product-statement default), RM ALIGN 2026-10-07, ratified by Zoltán as product owner 2026-10-08. CAP-004 is hold-the-line. There is no reduction. Claim boundary: the timed routes are attribution; the refusal row has no numbers; there is no speed claim.
+
+Exactness (RM N-c): ≤1.2e-16 vs the sequential reference (w4 data only) and ≤5e-16 vs Qiskit Aer 0.17.2.
+
+Apply time versus R-base at widths 6 and 8: fused 3.27× and 3.43×, hybrid 6.57× and 8.82×. Current implementation cost, not intrinsic cost; no speed claim.
+
+C2 (strict-capable side workload): backlog, possible post-supervisor item, not started; not in M-F5a (Zoltán via PhD Manager and RM, 2026-10-08).
+
+Rocky-local CI (G-09) PASS at `2a1dc14e`: full `pytest tests/`, 1287 passed, 1 skipped, 1
+deselected, exit 0, 588 s. Report `/tmp/mf5a-close-ci/REPORT.md`
+`077c56d6d2896e178304c7740fe3498b447b29b00efce1d067dd83448974574b`.
 
 ## 3. Bounded contexts and ownership
 

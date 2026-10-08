@@ -2,7 +2,7 @@
 
 > **Status:** draft v0.8, aligned to product statement v0.5; stakeholder validation remains open ·
 > **Owner skill:** `create-product-roadmap` ·
-> **Last revalidated:** 2026-10-04 — product statement v0.5; no milestone under the new convention has opened or closed ·
+> **Last revalidated:** 2026-10-08 — M-F5a closeout `918a73a4`, status Shipped (CLOSEOUT wording). The step that promotes a later milestone to Now was not run ·
 > **Upstream:** [`PRODUCT_STATEMENT.md`](PRODUCT_STATEMENT.md) v0.5 (`CAP-001…008`, `QA-001…013`) ·
 > **Downstream:** `milestones/<slug>/INITIAL_REQUIREMENTS.md` via `create-initreq-for-sdd`; this revision authorizes no handoff or implementation ·
 > **Not:** requirements, architecture or ADR rationale, dates, publication planning, or a promise of a Fall speedup.
@@ -21,9 +21,9 @@ not make it a start.
 
 | Horizon | Milestones |
 |---------|------------|
-| Delivered (archived, frozen) | M1 `phase-1` · M2 `phase-2` · M3 `phase-3` · M3A `phase-3-1` |
+| Delivered (archived, frozen) | M1 `phase-1` · M2 `phase-2` · M3 `phase-3` · M3A `phase-3-1` · M-F5a `cpp-python-interop-profile` |
 | **Now** (sequence position only; no handoff authorized) | **M-F1a `exactness-reconfirmation` — product walking skeleton for the new convention** |
-| Next (keep-list, strict order) | M-F5a `cpp-python-interop-profile` → M-F1b `committed-timings-record` → M-F2 `hybrid-cost-model` → M-F-CE `workload-driven-channel-expansion` |
+| Next (keep-list, strict order) | M-F1b `committed-timings-record` (held: not started until Zoltán approves via PhD Manager) → M-F2 `hybrid-cost-model` → M-F-CE `workload-driven-channel-expansion` |
 | Later (deferred stretch) | M-F3 `reuse-heavy-layered-evaluation` → M-F4 `strict-s3-paper-operations` |
 | Parked | M4 `canonical-attributed-energy` · Q3 |
 | Dropped | E7 |
@@ -66,9 +66,9 @@ roadmap outcome only; it is not authorization to open requirements or begin deve
 | M2 | `phase-2` | The density backend evaluates exact noisy energy in the frozen XXZ/HEA VQE workflow at 4/6/8/10 qubits with machine-checked support boundaries | Delivered | CAP-005, CAP-007 · QA-002, QA-005, QA-008, QA-009 | M1 | Backend selection, exact energy path, bridge metadata, and workflow evidence — [`archive/phases/phase-2/`](../density_matrix_project/archive/phases/phase-2/) | Delivered |
 | M3 | `phase-3` | Noisy circuits became planner inputs and execute through a partitioned runtime with exact unitary-island fusion; 34 cases were counted, 0/6 representative cases passed the positive threshold, and 6/6 closed through diagnosis | Delivered | CAP-001, CAP-003, CAP-007 · QA-001, QA-005, QA-008 | M2 | Noisy planner, descriptors, runtime, and correctness/performance evidence — [`archive/phases/phase-3/`](../density_matrix_project/archive/phases/phase-3/) | Delivered |
 | M3A | `phase-3-1` | Exact strict/hybrid channel-native fusion closed as a bounded decision study: 17/26 baseline-sufficient, 9/26 genuinely channel-native but not yet justified, and 0/26 justified at hybrid speedup ≥1.2× | Delivered | CAP-001, CAP-003, CAP-007 · QA-001, QA-002, QA-004, QA-005, QA-008 | M3 | Bounded channel-native modes and the frozen 26-row historical decision bundle — [`archive/phases/phase-3-1/`](../density_matrix_project/archive/phases/phase-3-1/) | Delivered |
-| **M-F1a** | **`exactness-reconfirmation`** | **Product walking skeleton.** On the current revision, 100% of counted cases for every shipped advertised route meet QA-001 against the sequential oracle at 4–10 qubits, all evaluation-mode partitions are route-labelled, and the bundle regenerates with zero state-vector regressions | **Now** | CAP-001, CAP-007 · QA-001, QA-005, QA-008, QA-009 | M3A outcome | Revision-pinned correctness bundle and reusable exactness fitness lane; current-state docs updated, not recreated | Draft — not handed off |
-| M-F5a | `cpp-python-interop-profile` | At 4/6/8 qubits, each public energy entry with an equal-work lower-boundary comparator receives ≥1000 warmed paired/interleaved calls, component attribution, uncertainty, and a QA-007 verdict; routes without an equal-work comparator receive attribution only | Next | CAP-004, CAP-007 · QA-007, QA-008, QA-009 | M-F1a outcome | Comparable-tier harness, interop and per-operation kernel profile, and met-or-diagnosis verdict | Draft |
-| M-F1b | `committed-timings-record` | Existing timing evidence is committed with revision, host, method, route, and claim boundary pinned; regenerable current rows are separated from historical rows, and no row retcons or merges the frozen 26-case matrix with the Phase-3 millisecond table | Next | CAP-004, CAP-007 · QA-008 | M-F5a outcome | Validated timing record with provenance and separate historical annotations; no speedup claim | Draft |
+| **M-F1a** | **`exactness-reconfirmation`** | **Product walking skeleton.** On the current revision, 100% of counted cases for every shipped advertised route meet QA-001 against the sequential oracle at 4–10 qubits, all evaluation-mode partitions are route-labelled, and the bundle regenerates with zero state-vector regressions | **Now** | CAP-001, CAP-007 · QA-001, QA-005, QA-008, QA-009 | M3A outcome | Revision-pinned correctness bundle and reusable exactness fitness lane; current-state docs updated, not recreated | Admin close recorded 2026-10-06 (`completeness_claim` true for handoff, `1b123a9a`); horizon unchanged; this revalidation authorizes no handoff |
+| M-F5a | `cpp-python-interop-profile` | Shipped (closeout `918a73a4`). Met at 4, 6, and 8: E-VQE QA-007 verdict and three timed attribution routes with the R-strict refusal row (ADR-F5A-011). REQ-009 (checklist G-08) closed per CLOSEOUT and RM ACCEPT 2026-10-08. UB (one-sided 95% upper bound on O, E-VQE bundles) ≤1.06% at 4/6/8: 1.0589% / 0.2149% / 0.0744% | Delivered | CAP-004, CAP-007 · QA-007, QA-008, QA-009 | M-F1a outcome | Interop harness and six counted bundles; R-strict refusal row; no reduction. Closeout `CPP_PYTHON_INTEROP_PROFILE_CLOSEOUT.md` | Shipped |
+| M-F1b | `committed-timings-record` | Existing timing evidence is committed with revision, host, method, route, and claim boundary pinned; regenerable current rows are separated from historical rows, and no row retcons or merges the frozen 26-case matrix with the Phase-3 millisecond table | Next | CAP-004, CAP-007 · QA-008 | M-F5a outcome | Validated timing record with provenance and separate historical annotations; no speedup claim | Draft (held: not started until Zoltán approves via PhD Manager) |
 | M-F2 | `hybrid-cost-model` | On the hybrid evaluation route only, 100% of partitions record predicted and executed cost/route; held-out prediction meets a threshold frozen in requirements, predicted-cost skips are labelled baseline routes, every executed route remains exact, and zero silent substitutions occur | Next | CAP-003, CAP-007 · QA-001, QA-004, QA-005, QA-008, QA-009 | M-F1a protocol and M-F1b timing record | Execution-cost record, calibrated hybrid-only model, held-out validator, and auditable route/skip policy | Draft |
 | M-F-CE | `workload-driven-channel-expansion` | At least one workload-justified local channel beyond the delivered depolarizing, amplitude-damping, and phase-damping set—beginning with GAD where requirements confirm it—meets QA-001/002/003/010 on every advertised path; all other paths reject it at preflight | Next — keep-list endpoint | CAP-001, CAP-002, CAP-007 · QA-001, QA-002, QA-003, QA-005, QA-008, QA-009, QA-010 | M-F2 route surface | Admitted channel, strict refusals, published parameter convention, analytical and Aer calibration, and module-readiness closeout | Draft |
 | M-F3 | `reuse-heavy-layered-evaluation` | On the new pre-registered `reuse_heavy_layered_v0` primary two-qubit matrix, every cell is classified under QA-006; a justified cell requires genuine channel-native execution, sequential-oracle exactness, and median-of-three hybrid speedup ≥1.2× versus Phase-3 fused; zero justified cells is valid | Later — deferred stretch | CAP-003, CAP-007 · QA-001, QA-004, QA-005, QA-006, QA-008, QA-009, QA-012 | Keep-list closed; M-F2 model; M-F1b baseline provenance | Pre-registration, new matrix, route-attributed classification bundle, and positive or zero-cell diagnosis | Deferred hypothesis |
@@ -89,18 +89,16 @@ The riskiest assumption is A6: the sequential executor remains a trustworthy ora
 shipped paths still agree. Any disagreement freezes downstream claims. Handoff slug:
 `exactness-reconfirmation`; update both current-state docs if authorized and delivered.
 
-### M-F5a — `cpp-python-interop-profile` (Next)
+### M-F5a — `cpp-python-interop-profile` (Delivered)
 
-**Why next and measure.** Bound language-boundary cost only where equivalent work exists; on the
-planner/runtime path, attribute Python orchestration and C++ kernel time without inventing a
-QA-007 ratio. Report per-operation nanoseconds per density-matrix entry and uncertainty.
+**Recorded outcome (closeout status Shipped).** Met at 4, 6, and 8: E-VQE QA-007 verdict and three timed attribution routes with the R-strict refusal row (ADR-F5A-011). REQ-001…REQ-008 are closed. REQ-009 (checklist G-08) is closed per CLOSEOUT and RM ACCEPT 2026-10-08. UB (one-sided 95% upper bound on O, E-VQE bundles) ≤1.06% at 4/6/8: 1.0589% / 0.2149% / 0.0744%. QA-007 bar frozen at 10% (product-statement default), RM ALIGN 2026-10-07, ratified by Zoltán as product owner 2026-10-08. Exactness (RM N-c): ≤1.2e-16 vs the sequential reference (w4 data only) and ≤5e-16 vs Qiskit Aer 0.17.2. Apply time versus R-base at widths 6 and 8: fused 3.27× and 3.43×, hybrid 6.57× and 8.82×. Current implementation cost, not intrinsic cost; no speed claim. C2 (strict-capable side workload): backlog, possible post-supervisor item, not started; not in M-F5a (Zoltán via PhD Manager and RM, 2026-10-08).
 
-**Scope and risk.** In: measurement and, only if justified, one bounded interop reduction. Out:
-kernel rewrites, fusion redesign, AVX, GPU, and optimizer changes. The riskiest assumption is A4,
-which may close as false and leave CAP-004 as a hold-the-line constraint. Handoff slug:
-`cpp-python-interop-profile`; update both current-state docs at close.
+**Scope and risk.** In: the measurement above. Out: a reduction (none was made), kernel rewrites,
+fusion redesign, AVX, GPU, and optimizer changes. A4 closed false; CAP-004 is hold-the-line.
+Handoff slug: `cpp-python-interop-profile`. `ARCHITECTURE_OVERVIEW.md` and `TECH_STACK.md` name the
+lane in this revalidation. Horizon cell is Delivered; the status cell stays Shipped.
 
-### M-F1b — `committed-timings-record` (Next)
+### M-F1b — `committed-timings-record` (Next; held: not started until Zoltán approves via PhD Manager)
 
 **Why next and measure.** Commit the evidence that already exists after interop attribution,
 without changing what historical rows meant. Current claim-bearing rows must regenerate under
@@ -176,7 +174,7 @@ promised speedup.
 |------------|--------------|-------------------------|
 | A2 A genuine channel-native route can lower hybrid time on a reuse-heavy family | M-F3 under QA-006, after the keep-list | Report zero justified cells and reject the hypothesis for that family; module readiness remains intact |
 | A3 Real traces contain enough parameter-independent reuse to amortize construction | M-F3 under QA-012 | Drop the reuse claim; retain only exact, attributable routing |
-| A4 Interop overhead materially limits iterative evaluation | M-F5a where an equal-work comparator exists | Treat CAP-004 as hold-the-line and focus reporting on kernel/planner cost |
+| A4 Interop overhead materially limits iterative evaluation | Closed false by M-F5a on the E-VQE equal-work cells. CAP-004 hold-the-line | Treat CAP-004 as hold-the-line and focus reporting on kernel/planner cost |
 | A5 Expansion through GAD covers the next justified comparison | M-F-CE | Revisit CAP-002 through Ask-first; do not add speculative breadth |
 | A6 The sequential executor is a trustworthy oracle | M-F1a and every new channel/path | Freeze downstream claims until disagreement is resolved |
 | A7 Researchers accept explicit rejection over silent convenience | M-F-CE refusal surface | Improve diagnostics or explicit transforms; never restore silent behavior |
@@ -199,6 +197,12 @@ schedule trainability studies or exact-gradient development to validate them.
 
 ### Revalidation log
 
+- **2026-10-08 — M-F5a closeout `918a73a4`, status Shipped.**
+  *Learned:* A4 closed false, as the product statement expected; CAP-004 is hold-the-line and there is no reduction. UB (one-sided 95% upper bound on O, E-VQE bundles) ≤1.06% at 4/6/8: 1.0589% / 0.2149% / 0.0744%. QA-007 bar frozen at 10% (product-statement default), RM ALIGN 2026-10-07, ratified by Zoltán as product owner 2026-10-08. R-strict is a refusal row with diagnosis `channel_native_noise_presence` (ADR-F5A-011), not a timed route. Exactness (RM N-c): ≤1.2e-16 vs the sequential reference (w4 data only) and ≤5e-16 vs Qiskit Aer 0.17.2. Apply time versus R-base at widths 6 and 8: fused 3.27× and 3.43×, hybrid 6.57× and 8.82×. Current implementation cost, not intrinsic cost; no speed claim. C2 (strict-capable side workload): backlog, possible post-supervisor item, not started; not in M-F5a (Zoltán via PhD Manager and RM, 2026-10-08). No core assumption was invalidated, so `PRODUCT_STATEMENT.md` is not escalated.
+  *Changed:* M-F5a status is Shipped, the CLOSEOUT's own wording. REQ-009 (checklist G-08) is
+  closed per CLOSEOUT and RM ACCEPT 2026-10-08. Current-state docs
+  name the lane. M-F1a status cell records the 2026-10-06 admin close; its horizon stays. The
+  step that promotes a later milestone to Now was not run. No later keep-list row was edited.
 - **2026-10-04 — draft v0.8 aligned to product statement v0.5; no milestone closure.**
   *Learned:* the locked Fall outcome is module readiness and the active sequence ends at channel
   expansion; the ≥1.2× rule is a later falsifiable research plan, not a promised result.
@@ -215,8 +219,9 @@ schedule trainability studies or exact-gradient development to validate them.
 The alignment critique found and corrected the active-order, baseline, speedup-rule,
 channel-inventory, representation, competitor-positioning, and semester-outcome conflicts in
 v0.7. Open validation remains: milestone outcomes and `[confirm]` thresholds must be accepted by
-the product owner before requirements are opened. No milestone is handed off, and this draft
-does not authorize implementation, a Tech Lead start, a push, or a pull request.
+the product owner before requirements are opened. M-F5a is recorded Shipped at closeout
+`918a73a4`. This revalidation does not authorize implementation, a Tech Lead start, a push, or a
+pull request, and it does not promote a later milestone to Now.
 
 > Is the keep-list sequence and each milestone's measurable outcome correct before any milestone
 > is authorized to open?

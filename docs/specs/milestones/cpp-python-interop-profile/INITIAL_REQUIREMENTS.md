@@ -190,7 +190,7 @@ This milestone inherits the product glossary and uses these narrower terms:
   or at-least-1.2× claim, when review runs, then validation fails.
 - **Evidence route:** archive diff, bundle text checks, and closeout review.
 
-### REQ-009 — Current-state documentation matches the delivered lane
+### REQ-009 — Current-state documentation matches the lane (met; checklist G-08 closed)
 - **Upstream:** M-F5a · CAP-007 · QA-008, QA-009.
 - **Acceptance:** Given the executable gates pass, when the milestone closes, then the
   existing `ARCHITECTURE_OVERVIEW.md` and `TECH_STACK.md` name the interop lane, the

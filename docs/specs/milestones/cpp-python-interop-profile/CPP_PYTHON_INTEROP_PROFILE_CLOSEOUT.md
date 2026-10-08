@@ -1,10 +1,10 @@
 # CPP_PYTHON_INTEROP_PROFILE Closeout — `cpp-python-interop-profile` (interop profile)
 
 > **Milestone delivery record.** Traceability: `CAP-*/QA-* → M-F5a → REQ-* → DS-* → evidence`.
-- **Milestone:** M-F5a / `cpp-python-interop-profile` · **Outcome (roadmap):** met at 4, 6, and 8: E-VQE QA-007 verdict and three timed attribution routes with the R-strict refusal row (ADR-F5A-011); REQ-009 open until the spec refresh
-- **Close date:** 2026-10-08 · **Status:** Partial · REQ-001…REQ-008 closed; REQ-009 (checklist G-08) open until the spec refresh
+- **Milestone:** M-F5a / `cpp-python-interop-profile` · **Outcome (roadmap):** met at 4, 6, and 8: E-VQE QA-007 verdict and three timed attribution routes with the R-strict refusal row (ADR-F5A-011); REQ-009 closed with the spec refresh
+- **Close date:** 2026-10-08 · **Status:** Shipped · REQ-001…REQ-008 closed; REQ-009 (checklist G-08) closed with the spec refresh; not Delivered
 
-Status goes to Shipped in Commit C, after RM interpretation and the spec refresh.
+Status is Shipped, not Delivered. RM milestone interpretation ACCEPT 2026-10-08 (2026-10-08-mf5a-rm-milestone-interpretation.md, sha256 ca4786ec…).
 
 Committed at Commit B (parent `2a1dc14e`) with the checklist and `INITIAL_REQUIREMENTS.md` close records. No committed bundle changes: each keeps `milestone_counted` false (section 4). `ROADMAP.md`, `ARCHITECTURE_OVERVIEW.md`, and `TECH_STACK.md` change only in the spec refresh.
 
@@ -30,7 +30,7 @@ Layer 1 success conditions, `DETAILED_PLANNING_CPP_PYTHON_INTEROP_PROFILE.md` §
 | 4 | Zero reductions, or one binding or dispatch reduction (G5) | met: zero | A4 kill fired (UB below 5 % at every width); `git diff --exit-code 1b123a9a -- squander/src-cpp/density_matrix squander/partitioning` empty at `2a1dc14e` |
 | 5 | One sibling lane regenerates the bundles with REQ-006 provenance; Phase 3 records untouched (G6) | met | `benchmarks/density_matrix/interop_profile/validation_pipeline.py`; clean-start counted runs; (g) PASS for all six bundles; `git diff --exit-code 1b123a9a -- benchmarks/density_matrix/performance_evidence benchmarks/density_matrix/benchmark_perf.py` empty |
 | 6 | State-vector default, density opt-in, rocky-local Tester CI; ADR-F1A-006 unedited (G7) | met | G-09 rocky-local CI PASS at `2a1dc14e` (below), which includes `test_explicit_state_vector_matches_legacy_default`; also recorded in the task-1, task-3, task-4, and task-5 closeouts |
-| 7 | 17/9/0 and the archive unchanged (G8); both current-state docs name the lane (G9) | G8 met; G9 open | `git diff --exit-code 1b123a9a -- docs/density_matrix_project/archive` empty; G9 is REQ-009 and checklist G-08 |
+| 7 | 17/9/0 and the archive unchanged (G8); both current-state docs name the lane (G9) | G8 met; G9 closed | `git diff --exit-code 1b123a9a -- docs/density_matrix_project/archive` empty; G9 is REQ-009 and checklist G-08, closed |
 
 Upstream and ADR dispositions:
 
@@ -47,7 +47,7 @@ Upstream and ADR dispositions:
 | ADR-F5A-004 | held | sibling lane; Phase 3 records untouched (row 5) |
 | ADR-F5A-005 | held | zero reductions (row 4) |
 | ADR-F5A-006 | held | one frozen generated-HEA anchor per width; the 26-case matrix is not the workload |
-| ADR-F5A-007 | held; docs part open | rocky-local CI lane (row 6); ADR-F1A-006 unedited; current-state docs in the spec refresh (REQ-009) |
+| ADR-F5A-007 | held | rocky-local CI lane (row 6); ADR-F1A-006 unedited; current-state docs name the lane (REQ-009, checklist G-08) |
 | ADR-F5A-008 | held | the tracer was task-1, E-VQE at width 4 |
 | ADR-F5A-009 | held | harness timer shipped in task-1 (`ca2bf7c4`, `06b91d6c`) |
 | ADR-F5A-010 | held | R-strict `handback_refused` row in all three routes bundles; Q1b wording amendment |
@@ -62,9 +62,9 @@ Close gates:
 | Slice closeouts | passed | section 1 | `task-1/` … `task-5/CLOSEOUT.md` |
 | Rocky-local CI | PASS | tree `2a1dc14eab926f6a052acb9ae08eaff640f752ac`; `/tmp/mf5a-close-ci/REPORT.md` `077c56d6d2896e178304c7740fe3498b447b29b00efce1d067dd83448974574b` | full `pytest tests/`; exit 0; 1287 passed, 1 skipped, 1 deselected; 588 s |
 | Reviewer full milestone review | REQUIRED CHANGES; RC-1…RC-8 applied in this file; APPROVE FOR COMMIT B on the narrow re-gate | `/tmp/rev-mf5a-milestone/REVIEW.md` `3ecb2ff5` (claude-opus-5-5 1m xhigh, 2026-10-08) | re-gate binder named in the Commit B message |
-| RM interpretation | later | not in this closeout | after the milestone review |
+| RM interpretation | ACCEPT 2026-10-08 | `2026-10-08-mf5a-rm-milestone-interpretation.md` sha256 `ca4786ec…` | RM milestone interpretation ACCEPT 2026-10-08 (2026-10-08-mf5a-rm-milestone-interpretation.md, sha256 ca4786ec…). |
 | Demo | later | not in this closeout | after RM interpretation |
-| Spec refresh | later | `ROADMAP.md`, `ARCHITECTURE_OVERVIEW.md`, `TECH_STACK.md` | after Demo |
+| Spec refresh | this flip | `ROADMAP.md`, `ARCHITECTURE_OVERVIEW.md`, `TECH_STACK.md` | REQ-009 and checklist G-08 closed; Shipped, not Delivered |
 
 The CI tree is a clean clone of Commit A at `/tmp/mf5a-close-ci/repo`, docs only on top of `30bb380d`. The command is the full `pytest tests/ -x -v --tb=line` (G-09, REQ-007): the `ci.yml` linux line, which ignores `tests/decomposition/test_wide_circuit_optimization.py`, plus the standing rocky-local deselect of the known-flaky `tests/decomposition/test_QX2.py::Test_Decomposition::test_N_Qubit_Decomposition_QX2` (the same deselect G-04 used at `031996f4`), with no `taskset`. PLAN `/tmp/mf5a-close-ci/PLAN.md` sha256 `4b168f9c519f90b529627b4176b7dc7f5e34e94e4774cde156edaed201ee540e` was checked on this host. Timing addendum `/tmp/mf5a-close-ci.ADDENDUM-timing.md` sha256 `73affff7db23c5a1a394c4d053f08a88fb6a05250edb3e863a25551e18f17e6d` (final). Wall time 588 s, 11:54–12:04 CEST (UTC+2), 2026-10-08. JUnit `tests=1288`. The one skip is `tests/gates/test_float32_performance.py::test_float32_apply_to_hot_path_has_expected_speed[U3]`, which skipped itself with "Machine in degraded state — float32 (0.052s) not faster than float64 (0.037s)" (JUnit); it is a non-density-matrix performance self-check, not a failure, and G-04 had 0 skips. Wall time was about 9.8 min this time against G-04's 40m56s, even with 218 more tests (`tests/VQE` interop); the likely cause is BLAS threading or host load, but it cannot be pinned down from the logs, and it is not a gate issue. The first build launch exited before the build started, because `conda` was not on PATH in the non-interactive shell; after the PATH fix the clean build ran once (exit 0, 21.35 s) before the single pytest launch.
 
@@ -80,7 +80,7 @@ The CI tree is a clean clone of Commit A at `/tmp/mf5a-close-ci/repo`, docs only
 | REQ-006 | CAP-007 · QA-008 | met | `conda run -n qgd --no-capture-output python benchmarks/density_matrix/interop_profile/validation_pipeline.py` (per-width and `--attribution-routes` forms in the slice closeouts); clean-start counted runs; (g) PASS for all six bundles; Phase 3 diff row empty; compiler flags not pinned in the bundles (N-46, section 5) |
 | REQ-007 | QA-009 | met | rocky-local CI lane PASS; tree `2a1dc14eab926f6a052acb9ae08eaff640f752ac`; `/tmp/mf5a-close-ci/REPORT.md` `077c56d6d2896e178304c7740fe3498b447b29b00efce1d067dd83448974574b`; ADR-F1A-006 unedited |
 | REQ-008 | CAP-007 · QA-008 | met | `git diff --exit-code 1b123a9a -- docs/density_matrix_project/archive` empty; 17/9/0 unchanged; no at-least-1.2× sentence in the bundles or closeouts (`task-4/CLOSEOUT.md`, `task-5/CLOSEOUT.md`, this file) |
-| REQ-009 | CAP-007 · QA-008, QA-009 | open | `ARCHITECTURE_OVERVIEW.md` and `TECH_STACK.md` name the lane in the spec refresh (checklist G-08); `bash .cursor/skills/spec-driven-development/scripts/specs_check.sh --strict` |
+| REQ-009 | CAP-007 · QA-008, QA-009 | met | `ARCHITECTURE_OVERVIEW.md` and `TECH_STACK.md` name the lane (checklist G-08 closed). RM milestone interpretation ACCEPT 2026-10-08 (2026-10-08-mf5a-rm-milestone-interpretation.md, sha256 ca4786ec…). `bash .cursor/skills/spec-driven-development/scripts/specs_check.sh --strict` |
 
 ### 3.1 REQ-004 for R-strict
 
@@ -137,9 +137,9 @@ QA-007 bar frozen at 10% (product-statement default), RM ALIGN 2026-10-07, ratif
 | C2 | backlog, not M-F5a | C2 (strict-capable side workload): backlog, possible post-supervisor item, not started; not in M-F5a (Zoltán via PhD Manager and RM, 2026-10-08). |
 | Rocky-local CI | this close | PASS; tree `2a1dc14eab926f6a052acb9ae08eaff640f752ac`; report `077c56d6d2896e178304c7740fe3498b447b29b00efce1d067dd83448974574b` |
 | Reviewer full milestone review | this close | closed: `/tmp/rev-mf5a-milestone/REVIEW.md` `3ecb2ff5` (section 2) |
-| RM interpretation | after the review | not written here |
+| RM interpretation | ACCEPT 2026-10-08 | RM milestone interpretation ACCEPT 2026-10-08 (2026-10-08-mf5a-rm-milestone-interpretation.md, sha256 ca4786ec…). |
 | Demo | after RM interpretation | not written here |
-| Spec refresh | after Demo | REQ-009, checklist G-08; roadmap handoff below |
+| Spec refresh | this flip | REQ-009 and checklist G-08 closed; closeout status Shipped, not Delivered. RM milestone interpretation ACCEPT 2026-10-08 (2026-10-08-mf5a-rm-milestone-interpretation.md, sha256 ca4786ec…). |
 | N-46 | backlog: lane schema revision | Compiler flags are not pinned in the bundles. Accepted as a disclosed deviation at the milestone review: the bundles pin the compiler and both extension sha256, `task-1/CLOSEOUT.md` records the flags from `build.ninja`, and every (g) clone rebuilt its own extensions and matched every categorical pin |
 | N-16, N-17 | before the first pull request into `master` | no MSVC branch for `clock_gettime`; host-pinned ET-2 golden energy (ADR-F5A-007) |
 | N-23 | backlog | the six timer fields can race under batched `optimization_problem` with the flag on; the harness is single-threaded by contract |
@@ -171,9 +171,9 @@ PYTHONDONTWRITEBYTECODE=1 conda run -n qgd --no-capture-output env PYTHONPATH=/t
 
 ## 7. Handoff — create-product-roadmap
 
-These steps belong to the spec refresh, after RM interpretation and Demo. This closeout does not perform them.
+Closeout status is Shipped, not Delivered. REQ-009 (checklist G-08) is closed in this flip.
 
-- Mark M-F5a Delivered in `ROADMAP.md` only in the spec refresh, after REQ-009 (checklist G-08) closes, and append the revalidation log entry there.
+- Closeout status is Shipped, not Delivered. REQ-009 (checklist G-08) is closed. RM milestone interpretation ACCEPT 2026-10-08 (2026-10-08-mf5a-rm-milestone-interpretation.md, sha256 ca4786ec…).
 - This closeout does not promote, plan, or authorize the next roadmap milestone; that milestone is not started and is out of scope here.
 - Record learnings there, and confirm `ARCHITECTURE_OVERVIEW.md` and `TECH_STACK.md` then.
 - A4 closed false, as the product statement expected; its pre-registered consequence is CAP-004 hold-the-line, so no `PRODUCT_STATEMENT.md` escalation is required. No other core assumption was invalidated.
