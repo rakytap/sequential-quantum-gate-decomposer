@@ -3,11 +3,12 @@
 > **Traces:** REQ-001, REQ-004, REQ-005, REQ-006, REQ-007, REQ-008, REQ-009 · CAP-004, CAP-007 · QA-008, QA-009 · ADR-F5A-001, ADR-F5A-004, ADR-F5A-006, ADR-F5A-010 ·
 > **Scope:** three timed routes at widths 6 and 8, plus a required R-strict refusal row at each width. No overhead ratio. No reduction ·
 > **Gate:** SDD stage `step-4a`. No stamp. No counted w6 or w8 run in this draft ·
-> **Parent:** task-4 C1 `431a5808`, C2 `5f63a9d6`, w4 routes bundle `6584be2b…` · handback `98eec857…` unchanged
+> **Parent:** task-4 C1 `6be6282f`, C1-ET4 `431a5808`, C2 `5f63a9d6`, w4 routes bundle `6584be2b…` · handback `98eec857…` unchanged ·
+> **RM:** `2026-10-08-mf5a-task4-w4-routes-interpret.md` (`788f688d…`). Attribution evidence at width 4 only. No claim generalises until widths 6 and 8 are interpreted
 
 ## 1. Why this slice
 
-Width-4 attribution is counted. Q1b asks for the same three timed routes at widths 6 and 8, each with an R-strict refusal row, without waiting on a live R-strict path. One slice covers both widths because they share one flag, one schema, and one validator. REQ-004 stays open. `milestone_counted` stays false. CAP-004 stays hold-the-line. This file does not open M-F1b.
+Width-4 attribution is counted. Q1b asks for the same three timed routes at widths 6 and 8, each with an R-strict refusal row, without waiting on a live R-strict path. One slice covers both widths because they share one flag, one schema, and one validator. REQ-004 stays open. `milestone_counted` stays false. CAP-004 stays hold-the-line. This file does not open M-F1b. Landing widths 6 and 8 completes the 4/6/8 three-route set that ADR-F5A-010 names before any option-C pack (Research Manager, then PhD Manager, then Zoltán). This slice proposes none.
 
 ## 2. Rows, divisors, and bundles
 
@@ -20,31 +21,35 @@ The descriptor is the same builder as task-4: unpack `vqe, _hamiltonian = build_
 | 6 | 30 | 18 | 15 | 3 | `phase2_xxz_hea_q6_continuity` | 7 | 73728 |
 | 8 | 42 | 24 | 21 | 3 | `phase2_xxz_hea_q8_continuity` | 9 | 1572864 |
 
-The divisors are the counted E-VQE bundles, not a new measurement. `interop_profile_bundle_w6.json` (`5257bad2…`) has `operation_count` 18 and throughput divisor 73728 (`18 × 4^6`). `interop_profile_bundle_w8.json` (`1712dce9…`) has `operation_count` 24 and throughput divisor 1572864 (`24 × 4^8`). The route divisor is that product when each timed route executes every operation, as width 4 did (12 operations, divisor 3072). Primitive-call counts are not operation counts. If a counted route executes a different operation count, the run stops and hands back.
+The divisors are the counted E-VQE bundles, not a new measurement. `interop_profile_bundle_w6.json` (`5257bad2…`) has `operation_count` 18 and throughput divisor 73728 (`18 × 4^6`). `interop_profile_bundle_w8.json` (`1712dce9…`) has `operation_count` 24 and throughput divisor 1572864 (`24 × 4^8`). The route divisor is that product when each timed route executes every operation. Width 4 stays 3072 (12 operations). Width 6 is 73728. Width 8 is 1572864. The executed-operation check is: the partition members total the bridge `operation_count`, and every partition is executed. Primitive-call counts are not operation counts. If that check fails, the run stops and hands back. The parameter vector is the E-VQE vector for that width (`build_initial_parameters` on `build_task_evaluator(width)`), the same workload ADR-F5A-006 already froze. It is not a second vector.
 
 The workload labels are the builder's format strings. They are not a second circuit.
 
 Timed rows are R-base, R-fused, and R-hybrid. Throughput numerator is the apply component. The one-sided bound, mean plus `1.644854 * s / sqrt(1000)` with `ddof=1`, applies to orchestration and to apply only. S-g is not retuned and is not applied. No row carries an overhead ratio, a lower twin, or a QA-007 ratio.
 
-R-hybrid's label comes from the executed `partition_runtime_class` list. The probe saw, at width 6, two `phase31_channel_native` and five `phase3_unitary_island_fused`, and at width 8, two `phase31_channel_native` and seven `phase3_unitary_island_fused`. A counted list that disagrees is a handback. The width-4 five-class tuple is not reused.
+R-hybrid's label comes from the executed `partition_runtime_class` list. The ordered pins, which a counted list must match or the run hands back, are: width 6 `phase31_channel_native`, `phase3_unitary_island_fused`, `phase31_channel_native`, then four `phase3_unitary_island_fused`; width 8 the same prefix, then six `phase3_unitary_island_fused`. Width 4 keeps its existing five-class tuple and is not copied onto these widths. The lane and the validator take workload label, bridge counts, divisor, pinned command, and this tuple from the suite id or `qbit_num`. Width 4's constants stay unchanged.
 
 ## 3. Counted protocol
 
 Per timed route, per width: discard 50 warm-up calls, then record 1000 calls. `clean_start` true, or write nothing. Affinity is CPU 0. The four thread values are `"1"`. `unset PYTHONPATH` is a required launch step on its own line. It is not inside the pinned `provenance.command`, matching the width-4 lane. `provenance.command` is that pinned string, not the process argv. The lane also pins itself to the lowest allowed CPU, so `affinity_cpu` 0 is the recorded field. The Tester log is the launch evidence.
 
-Width 6, after `cd` to the repo and `unset PYTHONPATH`:
+Width 6. The pinned `provenance.command` is the `taskset` line only. `cd` and `unset PYTHONPATH` sit in the launch block and are not part of that string:
 
 ```bash
+cd /home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer
+unset PYTHONPATH
 taskset -c 0 env PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1 conda run -n qgd --no-capture-output python benchmarks/density_matrix/interop_profile/validation_pipeline.py --attribution-routes --width 6 --output benchmarks/density_matrix/artifacts/interop_profile/interop_profile_bundle_routes_w6.json
 ```
 
-Width 8, the same way:
+Width 8, the same way. The pinned `provenance.command` is again the `taskset` line only:
 
 ```bash
+cd /home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer
+unset PYTHONPATH
 taskset -c 0 env PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1 conda run -n qgd --no-capture-output python benchmarks/density_matrix/interop_profile/validation_pipeline.py --attribution-routes --width 8 --output benchmarks/density_matrix/artifacts/interop_profile/interop_profile_bundle_routes_w8.json
 ```
 
-The Tester runs width 8 as a background job and does not kill it on a short timeout. This draft runs neither command.
+The Tester runs the widths in order: width 6, then the commit that records that bundle, then width 8 from an empty porcelain at that commit. The runs are sequential, never concurrent. `clean_start` detection is not narrowed. Width 8 is a background job and is not killed on a short timeout. This draft runs neither command. A rename of `R_STRICT_RAISE_CODE_W4` is optional and stays inside the allowlist; the raise code itself is width-independent.
 
 ## 4. Tester time budget
 
@@ -68,12 +73,13 @@ Width-6 and width-8 route rows will be interpreted by the Research Manager. No c
 | Trace id | Evidence type | Command or gate | Expected result | Owner |
 |----------|---------------|-----------------|-----------------|-------|
 | REQ-001, REQ-004 | fast pytest | `conda run -n qgd --no-capture-output pytest tests/VQE/test_vqe_interop_bundle_validation.py -q` | each of widths 6 and 8 passes as three timed rows plus the R-strict refusal row. A number on R-strict, a missing R-strict row, an overhead field, or the phrases "four-route shipped", "REQ-004 met", and "speedup" fails. The committed w4 routes bundle still passes | DS-1 |
-| REQ-004, REQ-006 | fast pytest | `conda run -n qgd --no-capture-output pytest tests/VQE/test_vqe_interop_harness.py -q` | `--attribution-routes` accepts widths 6 and 8 and refuses every other width and the three E-VQE names. Without the flag, widths 4, 6, and 8 stay the E-VQE path and a `*_routes_*` name is refused | DS-2 |
+| REQ-004, REQ-006 | fast pytest | `conda run -n qgd --no-capture-output pytest tests/VQE/test_vqe_interop_harness.py -q` | `--attribution-routes` accepts widths 4, 6, and 8 and refuses every other width and the three E-VQE names. Width 6 writes only `interop_profile_bundle_routes_w6.json`. Width 8 writes only `interop_profile_bundle_routes_w8.json`. Each routes name is bound to its width: at width 6 or 8, `interop_profile_bundle_routes_w4.json` (the committed `6584be2b…` file) or the other width's routes name fails before a route runs, and at width 4, `interop_profile_bundle_routes_w6.json` or `interop_profile_bundle_routes_w8.json` fails before a route runs. Width 4's default and pinned output stay `interop_profile_bundle_routes_w4.json`, so the task-4 reproduce command still runs. Replacing `test_attribution_routes_refuses_non_width_four` is an authorized contract change, not a weakened test. Without the flag, widths 4, 6, and 8 stay the E-VQE path and a `*_routes_*` name is refused | DS-2 |
 | REQ-004 | doc review | this mini-spec §2 and §3 | divisors 73728 and 1572864, the two bundle names, and the two provenance commands | DS-1 |
 | REQ-005, REQ-008 | repo review | `git diff --exit-code 5f63a9d60eba7ab59176addfa0ef071e4865c74a -- benchmarks/density_matrix/artifacts/interop_profile/interop_profile_bundle.json benchmarks/density_matrix/artifacts/interop_profile/interop_profile_bundle_w6.json benchmarks/density_matrix/artifacts/interop_profile/interop_profile_bundle_w8.json benchmarks/density_matrix/artifacts/interop_profile/interop_profile_bundle_routes_w4.json` | empty | DS-2 |
+| REQ-005, REQ-006, REQ-007, QA-009 | repo review | `git diff --exit-code 5f63a9d60eba7ab59176addfa0ef071e4865c74a -- squander benchmarks/density_matrix/performance_evidence benchmarks/density_matrix/benchmark_perf.py tests/VQE/test_VQE.py docs/density_matrix_project/archive docs/specs/milestones/cpp-python-interop-profile/INITIAL_REQUIREMENTS.md` | empty | DS-2 |
 | REQ-007, QA-009 | fast pytest | `conda run -n qgd --no-capture-output pytest tests/VQE/test_VQE.py::Test_VQE::test_explicit_state_vector_matches_legacy_default -q` | state-vector default still matches | DS-3 |
 | REQ-009 | spec lint | `bash .cursor/skills/spec-driven-development/scripts/specs_check.sh docs/specs/milestones/cpp-python-interop-profile` and the same command with `--strict` | task-5 stage `step-4a` keeps its absent closeout a warning in both modes. No waiver. No placeholder closeout | DS-3 |
 
 ## 7. Verdict
 
-**Not-ready.** SDD stage stays `step-4a`. Step 4b is not authorized. Task-5 cannot be stamped code-ready while `task-4/CLOSEOUT.md` is absent: task-4's strict `SLICE_MISSING_CLOSEOUT` error fails the SDD code-ready gate, which allows only task-5's own step-4a absent-closeout warning. The code-ready pass reads that closeout. No counted width-6 or width-8 command runs from this text. REQ-004 stays open. The QA-007 10 % bar is unchanged. ADR-F5A-010's decision is unchanged; the Q1b paragraph in the amendments file is a wording correction of the raise code.
+**Not-ready.** SDD stage stays `step-4a`. Step 4b is not authorized. Task-5 cannot be stamped code-ready while `task-4/CLOSEOUT.md` is absent or uncommitted: task-4's strict `SLICE_MISSING_CLOSEOUT` error fails the SDD code-ready gate, which allows only task-5's own step-4a absent-closeout warning. The code-ready pass reads that closeout. No counted width-6 or width-8 command runs from this text. REQ-004 stays open. The QA-007 10 % bar is unchanged. ADR-F5A-010's decision is unchanged; the Q1b paragraph in the amendments file is a wording correction of the raise code.

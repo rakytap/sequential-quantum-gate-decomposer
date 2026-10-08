@@ -90,7 +90,7 @@ edit. QA-007 stays `[confirm]`. `INITIAL_REQUIREMENTS.md` is unchanged.
 
 ## ADR-F5A-010 — R-strict stays a required refusal row
 
-**Status:** planning amendment, 2026-10-07. RM Option A (`b0edc658…`) and Q1a (`5e3c8222…`). Width 4 is in the lane: C1 `431a5808`, C2 `5f63a9d6`, bundle `6584be2b…`. Widths 6 and 8 are not in the lane. Does not close REQ-004. Does not loosen ADR-F5A-006, REQ-005, or CAP-004.
+**Status:** planning amendment, 2026-10-07. RM Option A (`b0edc658…`) and Q1a (`5e3c8222…`). Width 4 is in the lane: C1 `6be6282f`, C1-ET4 `431a5808`, C2 `5f63a9d6`, bundle `6584be2b…`. Widths 6 and 8 are not in the lane. Does not close REQ-004. Does not loosen ADR-F5A-006, REQ-005, or CAP-004.
 
 **Context.** `execute_partitioned_density_channel_native` raises on the frozen counted noise (qubits 0 and 1) at widths 4, 6, and 8. STEP_4A_HANDBACK `98eec857…` records that raise. A bundle that omits R-strict, or that invents timings for it, is not an honest inventory.
 

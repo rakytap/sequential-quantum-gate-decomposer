@@ -18,7 +18,7 @@
 - And `milestone_counted` is false
 
 **Scope**
-- In: the two bundles named in `TASK_5_MINI_SPEC.md` §2. The N-34 launch, including `unset PYTHONPATH`
+- In: the two bundles named in `TASK_5_MINI_SPEC.md` §2. The N-34 launch, including `unset PYTHONPATH`. The order is width 6, then its commit, then width 8. Each routes filename is bound to its width, and the committed width-4 routes file is not overwritten
 - Out: R-oracle; a counted run in this draft; M-F1b
 
 **Acceptance signals**

@@ -1,12 +1,12 @@
 # Engineering tasks — M-F5a task-4
-> **Status:** C2 `5f63a9d6` · width-4 routes counted · **Slice:** M-F5a task-4 · attribution routes ·
+> **Status:** task-4 Step 4b closed · C2 `5f63a9d6` · (g) owed · **Slice:** M-F5a task-4 · attribution routes ·
 > **Traces:** REQ-001, REQ-004, REQ-005, REQ-006, REQ-007, REQ-008 ·
 > CAP-004, CAP-007 · QA-008, QA-009 ·
 > **SDD stage:** step-4b-authorized
-> **Boundary:** C1 `431a5808`. C2 `5f63a9d6`. Bundle `6584be2b…`. Width-4 rows do not close REQ-004
+> **Boundary:** C1 `6be6282f`. C1-ET4 `431a5808`. C2 `5f63a9d6`. Bundle `6584be2b…`. Width-4 rows do not close REQ-004
 
-**Verdict: width-4 C2 landed. Not a milestone close.** Q2 and B1–B3 landed in `6be6282f` (Reviewer `a0646acb…`). Q1 is Option A (`b0edc658…`). Q1a (`5e3c8222…`) is the refusal-row schema; C1 `431a5808` (Reviewer `19c16b71…`) implements it with counted mode. The counted bundle is C2 `5f63a9d6`.
-Lint stays case C for task-4 until `task-4/CLOSEOUT.md`: normal exits 0; `--strict` exits 1 on task-4 `SLICE_MISSING_CLOSEOUT` because the stage is `step-4b-authorized`. Task-5 is `step-4a`, so its absent closeout stays a warning in both modes. No waiver. No placeholder. Width-4 rows do not close REQ-004.
+**Verdict: task-4 Step 4b is closed by `task-4/CLOSEOUT.md`; (g) owed. Not a milestone close.** Q2 and B1–B3 landed in `6be6282f` (Reviewer `a0646acb…`). Q1 is Option A (`b0edc658…`). Q1a (`5e3c8222…`) is the refusal-row schema; C1-ET4 `431a5808` (Reviewer `19c16b71…`) implements it with counted mode. The counted bundle is C2 `5f63a9d6`.
+`task-4/CLOSEOUT.md` is present, so that slice's `SLICE_MISSING_CLOSEOUT` is gone. Task-5 is `step-4a`, so its absent closeout stays a warning in both modes. No waiver. No placeholder. Width-4 rows do not close REQ-004.
 
 These tasks are the draft contract. None may publish \(O\) on a route, add a public
 energy API, change the S-g estimator, take the binding or dispatch reduction, or
@@ -96,8 +96,8 @@ C++ edit is a handback.
 - It does not touch `squander/src-cpp/`, the three counted bundles,
   `performance_evidence/`, `benchmark_perf.py`, `INITIAL_REQUIREMENTS.md`,
   the archive, or the current-state docs.
-- `task-4/CLOSEOUT.md` stays absent during Step 4a.
-- No counted route bundle is produced in this planning pass.
+- At Step 4a, `task-4/CLOSEOUT.md` stayed absent. This docs pass writes it.
+- At Step 4a, no counted route bundle was produced in the planning pass. C2 later committed the width-4 bundle.
 
 **Execution checklist (TDD: red → green → refactor)**
 - [ ] Keep the later implementation out of the forbidden trees

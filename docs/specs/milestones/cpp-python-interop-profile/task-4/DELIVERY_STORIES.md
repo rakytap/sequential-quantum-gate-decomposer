@@ -1,8 +1,8 @@
 # Delivery stories — M-F5a task-4
-> **Status:** C2 `5f63a9d6` · **Verdict:** width-4 routes counted · **Slice:** M-F5a task-4 ·
+> **Status:** task-4 Step 4b closed · C2 `5f63a9d6` · **Verdict:** width-4 routes counted · **Slice:** M-F5a task-4 ·
 > **Scope:** three timed routes at width 4. R-strict is a required refusal row. No \(O\). No reduction ·
 > **Traces:** REQ-001, REQ-004, REQ-005, REQ-006, REQ-007, REQ-008 · CAP-004, CAP-007 · QA-008, QA-009 ·
-> **Gate:** SDD stage `step-4b-authorized`. C1 `431a5808`. Width-4 rows do not close REQ-004. Milestone not complete ·
+> **Gate:** SDD stage `step-4b-authorized`. C1 `6be6282f`. C1-ET4 `431a5808`. Width-4 rows do not close REQ-004. Milestone not complete ·
 > **RM:** Option A `b0edc658…`. Q1a `5e3c8222…`. ADR-F5A-010 is in the w4 lane
 
 ### Delivery story: DS-1 — Four attribution rows and no overhead ratio
