@@ -1,5 +1,5 @@
 # Delivery stories — M-F5a task-5
-> **Status:** not-ready · **Slice:** M-F5a task-5 · **Verdict:** Step 4a, not Step 4b ·
+> **Status:** code-ready · **Slice:** M-F5a task-5 · **Verdict:** code-ready · stage `step-4a` · no stamp ·
 > **Scope:** three timed routes at widths 6 and 8. R-strict is a required refusal row at each width. No overhead ratio. No reduction ·
 > **Traces:** REQ-001, REQ-004, REQ-005, REQ-006, REQ-007, REQ-008 · CAP-004, CAP-007 · QA-008, QA-009 ·
 > **Gate:** SDD stage `step-4a`. REQ-004 stays open. Milestone not complete ·

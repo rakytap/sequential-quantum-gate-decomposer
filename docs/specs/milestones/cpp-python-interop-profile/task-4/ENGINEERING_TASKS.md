@@ -1,11 +1,11 @@
 # Engineering tasks — M-F5a task-4
-> **Status:** task-4 Step 4b closed · C2 `5f63a9d6` · (g) owed · **Slice:** M-F5a task-4 · attribution routes ·
+> **Status:** task-4 Step 4b closed · C2 `5f63a9d6` · (g) PASS · **Slice:** M-F5a task-4 · attribution routes ·
 > **Traces:** REQ-001, REQ-004, REQ-005, REQ-006, REQ-007, REQ-008 ·
 > CAP-004, CAP-007 · QA-008, QA-009 ·
 > **SDD stage:** step-4b-authorized
 > **Boundary:** C1 `6be6282f`. C1-ET4 `431a5808`. C2 `5f63a9d6`. Bundle `6584be2b…`. Width-4 rows do not close REQ-004
 
-**Verdict: task-4 Step 4b is closed by `task-4/CLOSEOUT.md`; (g) owed. Not a milestone close.** Q2 and B1–B3 landed in `6be6282f` (Reviewer `a0646acb…`). Q1 is Option A (`b0edc658…`). Q1a (`5e3c8222…`) is the refusal-row schema; C1-ET4 `431a5808` (Reviewer `19c16b71…`) implements it with counted mode. The counted bundle is C2 `5f63a9d6`.
+**Verdict: task-4 Step 4b is closed by `task-4/CLOSEOUT.md`; (g) PASS. Not a milestone close.** Q2 and B1–B3 landed in `6be6282f` (Reviewer `a0646acb…`). Q1 is Option A (`b0edc658…`). Q1a (`5e3c8222…`) is the refusal-row schema; C1-ET4 `431a5808` (Reviewer `19c16b71…`) implements it with counted mode. The counted bundle is C2 `5f63a9d6`.
 `task-4/CLOSEOUT.md` is present, so that slice's `SLICE_MISSING_CLOSEOUT` is gone. Task-5 is `step-4a`, so its absent closeout stays a warning in both modes. No waiver. No placeholder. Width-4 rows do not close REQ-004.
 
 These tasks are the draft contract. None may publish \(O\) on a route, add a public

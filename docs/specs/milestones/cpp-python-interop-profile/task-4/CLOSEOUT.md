@@ -3,7 +3,7 @@
 > **Scope:** width-4 three-route slice only. M-F5a is not complete ·
 > **C1:** `6be6282f` (Q2, B1–B3; Reviewer `a0646acb…`) ·
 > **C1-ET4:** `431a5808` (refusal row and counted mode; Reviewer `19c16b71…`) ·
-> **C2:** `5f63a9d6` (bundle only; Reviewer `7b48bbc6…`) · (g) owed ·
+> **C2:** `5f63a9d6` (bundle only; Reviewer `7b48bbc6…`) · (g) PASS ·
 > **RM:** `2026-10-08-mf5a-task4-w4-routes-interpret.md` (`788f688d…`) · attribution evidence only ·
 > **No push/PR**
 
@@ -15,7 +15,7 @@ The Research Manager accepts the bundle as attribution evidence at width 4. That
 
 ## Verdict
 
-Counted width-4 routes **recorded**. The bundle is attribution evidence only. `milestone_counted=false` is **lawful**. REQ-004 stays **open**. The milestone is **not** complete. Task-5 is the Step 4a draft for widths 6 and 8 and is not code-ready from this file.
+Counted width-4 routes **recorded**. The bundle is attribution evidence only. `milestone_counted=false` is **lawful**. REQ-004 stays **open**. The milestone is **not** complete. Task-5 (widths 6 and 8) is planned in `task-5/`; this file does not make it code-ready.
 
 The Research Manager's quotable sentence, copied verbatim from `2026-10-08-mf5a-task4-w4-routes-interpret.md` (`788f688d…`), is the only route-result wording this file carries:
 
@@ -72,11 +72,11 @@ ET checkboxes stay unchecked, as in tasks 1–3. Lane results are the Reviewer b
 
 ## Independence
 
-The task-4 acceptance has no oracle check: the counted bundle carries timings and a refusal row, and no exactness field. No Tester independence note was written, because the counted run had no oracle/cell pair to certify. The exactness clause in the Research Manager's sentence rests on the C2 Reviewer probe (`7b48bbc6…` §6.1), which compared each route's final ρ with a separate `execute_sequential_density_reference` call. R-base and that reference share the `NoisyCircuit` kernels, so their agreement cannot detect a kernel-level bug (G-10).
+The task-4 acceptance has no oracle check: the counted bundle carries timings and a refusal row, and no exactness field. No Tester independence note was written, because the counted run had no oracle/cell pair to certify. The exactness clause in the Research Manager's sentence rests on the C2 Reviewer probe (`7b48bbc6…` §6.1), which compared each route's final ρ with a separate `execute_sequential_density_reference` call. R-base and that reference share the `NoisyCircuit` kernels, so their agreement cannot detect a kernel-level bug (G-10). R-fused also runs its unfused U3 and its three noise operations through `NoisyCircuit.apply_to` (`7b48bbc6…` §6.3), so it shares those kernels with the reference too; only the fused-island `apply_local_unitary` kernel and R-hybrid's numpy Kraus path are separate apply code. A later Tester check, not the counted bundle, compares each timed route with Qiskit Aer 0.17.2 at tolerance 1e-10. Report `/tmp/mf5a-t4-g/REPORT.md` (`6771415c…`) records max |Δρ| versus Aer: R-base 4.72e-16, R-fused 4.44e-16, R-hybrid 4.72e-16. R-strict refused and has no state.
 
 ## (g) clean-C2 regeneration
 
-Not run. The C2 binder's five repeats (`7b48bbc6…` §7) ran in a clean clone at C1-ET4 `431a5808`, not at C2, and matched every categorical pin; they are not (g). Throughput is not a (g) gate and has no numeric margin (mini-spec §3a). (g) is owed: a Tester rerun of the §3a command from a clean checkout of C2 `5f63a9d6` or a later docs-only tip, categorical pins compared with `6584be2b…`, and outputs restored and not committed. The two-commit close completes when (g) passes.
+PASS. Tester report `/tmp/mf5a-t4-g/REPORT.md` (`6771415c3a3953fde69b1dbb4b0bd5fcb8b4f485156812026f308dc94b998a60`) is a clean clone at C2 `5f63a9d6` with empty porcelain. `test_vqe_interop_bundle_validation.py` 118 passed. `test_vqe_interop_harness.py` 18 passed. The reproduced bundle is `ab4d7fe5e9d8a5cd0dd89c0e858a9854d6daa2eb5892419a1614d66fceb13fe4`. `validate_attribution_route_bundle` on that file is OK. Categorical fields match the committed bundle `6584be2b…`. Timings differ, as a regeneration may. The reproduced `implementation_revision` is C2. The clone built its own extensions, so the two `provenance.extension_identities` sha256 values also differ (`libqgd.so` `86a635fa…`, VQE wrapper `.so` `4447be6d…`). Over all 9081 bundle leaves, only timing leaves, `implementation_revision`, and those two sha256 values differ (Reviewer leaf diff `/tmp/rev-mf5a-t5-codeready/logs/g_bundle_leafdiff.log`, `24966fc0…`). Outputs were not committed. The C2 binder's five repeats (`7b48bbc6…` §7) ran at C1-ET4 and are not this (g). Throughput is not a (g) gate and has no numeric margin (mini-spec §3a).
 
 ## Reproduce
 
@@ -98,12 +98,12 @@ No method-level speedup. No per-route nanosecond kernel benchmark. No comparison
 
 - C2 N-5 (clock granularity and instrumentation floor, measured in `7b48bbc6…` §6.2 and not restated here) and N-46 (compiler flags not pinned).
 - C2 N-7 (host noise; observational).
-- ET-4 re-gate 3 N-1 (optional K-c: a `match=` per R-strict guard) and N-4 (run pytest from `/tmp` with `-p no:cacheprovider`); optional K-a, K-b, K-d, K-e, and K-f.
+- ET-4 re-gate 3 N-1 (optional K-c: a `match=` per R-strict guard) and N-4 (run pytest with `-p no:cacheprovider`); optional K-a, K-b, K-d, K-e, and K-f.
 - N-7 re-fix N-5, N-8 through N-11, and N-18.
-- (g) above. G-08, G-09, N8, and Demo No GO. M-F1b stays unopened.
+- (g) is PASS, recorded above. G-08, G-09, N8, and Demo No GO. M-F1b stays unopened.
 - `STEP_4A_HANDBACK.md` :33 keeps its historical figures, uncited.
 - Task-5 W-1…W-5 and N-1…N-7 come from binder `9b8c748f…` §10–§11, and N-a and N-b from `aac125e8…` §10. They are folded into the task-5 docs.
 
 ## Next
 
-Task-5 remains Step 4a and not-ready. A code-ready stamp for task-5 waits until this closeout is committed. Widths 6 and 8 are not counted here.
+Task-5's readiness is recorded in `task-5/ENGINEERING_TASKS.md`. This file does not stamp task-5 or authorize its Step 4b. Widths 6 and 8 are not counted here.
