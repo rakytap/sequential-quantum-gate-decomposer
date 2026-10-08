@@ -1,8 +1,8 @@
 # Delivery stories — M-F5a task-5
-> **Status:** Step 4b prep · **Verdict:** C0 `cbb203ae` · **Slice:** M-F5a task-5 ·
+> **Status:** closed by `task-5/CLOSEOUT.md` · **Verdict:** C1 `3a8a0d74`; C2-w6 `78ba7108`; C2-w8 `3feffb07`; (g) PASS both widths · **Slice:** M-F5a task-5 ·
 > **Scope:** three timed routes at widths 6 and 8. R-strict is a required refusal row at each width. No overhead ratio. No reduction ·
 > **Traces:** REQ-001, REQ-004, REQ-005, REQ-006, REQ-007, REQ-008 · CAP-004, CAP-007 · QA-008, QA-009 ·
-> **Gate:** C0 `cbb203ae` (`step-4b-authorized`). Developer Step 4b prep uncommitted. REQ-004 stays open. Milestone not complete ·
+> **Gate:** C1 `3a8a0d74`, C2-w6 `78ba7108`, C2-w8 `3feffb07`. (g) PASS at both widths. REQ-004 stays open. Milestone not complete ·
 > **RM:** Q1b. ADR-F5A-010 wording amendment records `channel_native_noise_presence` at widths 6 and 8
 
 ### Delivery story: DS-1 — Width-6 and width-8 route rows

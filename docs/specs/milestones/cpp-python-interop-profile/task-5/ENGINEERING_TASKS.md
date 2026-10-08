@@ -1,11 +1,11 @@
 # Engineering tasks — M-F5a task-5
-> **Status:** Step 4b prep · binder `1b415ecb…` · C0 `cbb203ae` · **Slice:** M-F5a task-5 · routes at widths 6 and 8 ·
+> **Status:** closed by `task-5/CLOSEOUT.md` · C1 `3a8a0d74` · C2-w6 `78ba7108` · C2-w8 `3feffb07` · **Slice:** M-F5a task-5 · routes at widths 6 and 8 ·
 > **Traces:** REQ-001, REQ-004, REQ-005, REQ-006, REQ-007, REQ-008, REQ-009 ·
 > CAP-004, CAP-007 · QA-008, QA-009 · ADR-F5A-001, ADR-F5A-004, ADR-F5A-010 ·
 > **SDD stage:** step-4b-authorized
-> **Boundary:** C0 `cbb203ae`. Developer Step 4b prep uncommitted. Width-4 C2 stays `5f63a9d6`. REQ-004 stays open
+> **Boundary:** C1 `3a8a0d74`. C2-w6 `78ba7108`. C2-w8 `3feffb07`. (g) PASS both widths. `task-5/CLOSEOUT.md` records the slice. Width-4 C2 stays `5f63a9d6`. REQ-004 stays open
 
-**Verdict: Step 4b prep (uncommitted).** C0 `cbb203ae` records `step-4b-authorized` and Reviewer APPROVE FOR STEP-4B. Developer ET-1…ET-4 land on the allowlist only; no counted width-6 or width-8 runs. As of C0 the Research Manager has not vetoed N-y. The exactness check stays FYI. Lint: normal exits 0 with one `SLICE_MISSING_CLOSEOUT` warning for task-5. `--strict` exits 1 with that finding as its only error. REQ-004 stays open.
+**Verdict: closed by `task-5/CLOSEOUT.md`.** C1 is `3a8a0d74`. C2-w6 is `78ba7108`. C2-w8 is `3feffb07`. (g) is PASS at both widths. The Research Manager has not vetoed N-y; the exactness check stays FYI. Lint: normal and `--strict` both exit 0 with no findings. REQ-004 stays open.
 
 These tasks do not publish an overhead ratio, add a public energy API, change the S-g estimator, take the binding or dispatch reduction, edit kernel, fusion, or AVX code, or open M-F1b.
 

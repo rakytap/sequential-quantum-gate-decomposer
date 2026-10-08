@@ -1,24 +1,24 @@
 # Pre-implementation completion checklist — M-F5a `cpp-python-interop-profile`
-> **Status:** Layer 1 v0.1 · **Verdict:** task-4 closed by `task-4/CLOSEOUT.md` (C2 `5f63a9d6`, w4 routes `6584be2b…`, (g) PASS); task-5 C0 `cbb203ae` (`step-4b-authorized`); Developer Step 4b prep uncommitted; REQ-004 open ·
+> **Status:** Layer 1 v0.1 · **Verdict:** task-4 closed by `task-4/CLOSEOUT.md` (C2 `5f63a9d6`, w4 routes `6584be2b…`, (g) PASS); task-5 closed by `task-5/CLOSEOUT.md` (C1 `3a8a0d74`, C2-w6 `78ba7108`, C2-w8 `3feffb07`, (g) PASS both widths); REQ-004 open ·
 > **Milestone:** M-F5a `cpp-python-interop-profile` ·
 > **Owner skill:** `spec-driven-development` Steps 2–4a ·
 > **Inputs:** `INITIAL_REQUIREMENTS.md` v0.1,
 > `DETAILED_PLANNING_CPP_PYTHON_INTEROP_PROFILE.md`,
 > `ADRS_CPP_PYTHON_INTEROP_PROFILE.md`, `ADR_AMENDMENTS_CPP_PYTHON_INTEROP_PROFILE.md` · **Traces:** REQ-001…009 ·
 > **Authorization:** task-1 C2 `ddde49ac`; task-2 C2 `6707892a`; task-3 C2 `939d4908`; (e) APPROVE; (g) PASS; RM ALIGN 2026-10-07; QA-007 frozen and met on the E-VQE cells ·
-> **Boundary:** task-4 C1 `6be6282f`, C1-ET4 `431a5808`, C2 `5f63a9d6`; R-strict refusal row is in the w4 lane; w6/w8 not counted; REQ-004 open; milestone not complete; no push; no pull request ·
+> **Boundary:** task-4 C1 `6be6282f`, C1-ET4 `431a5808`, C2 `5f63a9d6`; R-strict refusal row is in the w4 lane; task-5 C1 `3a8a0d74`, C2-w6 `78ba7108`, C2-w8 `3feffb07`; REQ-004 open; milestone not complete; no push; no pull request ·
 > **Baseline:** `1b123a9a31235dd68d6c0a6ff9ba457c0112cd59`
 
 ## 1. Readiness rule
 
-**Verdict: task-1, task-2, and task-3 stay closed. Task-4 is closed by `task-4/CLOSEOUT.md`; (g) is PASS. Task-4 C1 is `6be6282f`. C1-ET4 is `431a5808`. C2 is `5f63a9d6`. Width-4 routes are counted. Task-5 C0 is `cbb203ae` with stage `step-4b-authorized`. Developer Step 4b prep is uncommitted on the ET-3 allowlist. The Research Manager has not vetoed N-y; it stays FYI. QA-007 is frozen and met on the E-VQE 4/6/8 cells. M-F5a is not complete.**
+**Verdict: task-1, task-2, and task-3 stay closed. Task-4 is closed by `task-4/CLOSEOUT.md`; (g) is PASS. Task-4 C1 is `6be6282f`. C1-ET4 is `431a5808`. C2 is `5f63a9d6`. Width-4 routes are counted. Task-5 C1 is `3a8a0d74`. C2-w6 is `78ba7108`. C2-w8 is `3feffb07`. (g) is PASS at both widths. Task-5 is closed by `task-5/CLOSEOUT.md`. The Research Manager has not vetoed N-y; it stays FYI. QA-007 is frozen and met on the E-VQE 4/6/8 cells. M-F5a is not complete.**
 
 The Tech Lead opened the tracer. `task-1/` holds the planning pack and `CLOSEOUT.md`.
 ADR-F5A-009 is filed. C1 tip is `ca5589e2`. C2 is
 `ddde49ac1e248e3ea2b4516f420ca1cbbd14e9df`. Reviewer (e) approved it and step (g)
 passed. Section 11 is that record. The counted run recorded `clean_start` true.
 RM ALIGN froze the 10 % bar for the E-VQE cells. This checklist does not mark the milestone
-delivered. Section 12 records task-2 through (g). Section 13 records task-3 through (g), the RM ALIGN, and task-4 C2. Width-4 rows do not close REQ-004. Task-4 C1 is `6be6282f`. C1-ET4 is `431a5808`. Task-4 C2 is `5f63a9d6`. The w4 routes bundle is `6584be2b…`. ADR-F5A-010 is in the w4 lane. Widths 6 and 8 are task-5 and are not counted.
+delivered. Section 12 records task-2 through (g). Section 13 records task-3 through (g), the RM ALIGN, and task-4 C2. Width-4 rows do not close REQ-004. Task-4 C1 is `6be6282f`. C1-ET4 is `431a5808`. Task-4 C2 is `5f63a9d6`. The w4 routes bundle is `6584be2b…`. ADR-F5A-010 is in the w4 lane. Widths 6 and 8 are counted in task-5. `task-5/CLOSEOUT.md` records them.
 The Developer does not edit `docs/specs/**`.
 
 The code-ready gate, already met before C1, required all of the following:
@@ -77,7 +77,7 @@ The code-ready gate, already met before C1, required all of the following:
 | G-11 | Step 4b authorization for task-2 | planning-role stamp after the Reviewer writer gate | Planning role | **closed — C2 `6707892a`; (e) APPROVE; (g) PASS; stage `step-4b-authorized`** |
 | G-12 | Step 4b authorization for task-3 | planning-role stamp after the Reviewer code-ready writer gate | Planning role | **closed — C2 `939d4908`; (e) APPROVE; (g) PASS; stage `step-4b-authorized`** |
 | G-13 | Step 4b authorization for task-4 | planning-role stamp after the Reviewer code-ready writer gate | Planning role | **closed — C0 stamp `226ffc29`; C1 `6be6282f` (Q2, B1–B3); C1-ET4 `431a5808`; C2 `5f63a9d6`; w4 bundle `6584be2b…`; (g) PASS; stage `step-4b-authorized`; Option A; width-4 rows do not close REQ-004** |
-| G-14 | Step 4b authorization for task-5 (routes at 6 and 8) | planning-role stamp after a code-ready writer gate | Planning role | **closed — C0 `cbb203ae`; stage `step-4b-authorized`; Developer Step 4b prep uncommitted; no counted w6/w8 run** |
+| G-14 | Step 4b authorization for task-5 (routes at 6 and 8) | planning-role stamp after a code-ready writer gate | Planning role | **closed — C0 `cbb203ae`; C1 `3a8a0d74`; C2-w6 `78ba7108`; C2-w8 `3feffb07`; (g) PASS both widths; stage `step-4b-authorized`; closed by `task-5/CLOSEOUT.md`** |
 
 No open item changes the equal-work pair, adds an advertised energy entry, publishes \(O\)
 on an attribution-only route, or proposes a kernel, fusion, or AVX edit. RM ALIGN 2026-10-07: A4 is false, CAP-004 is hold-the-line, and the reduction is not made (ADR-F5A-003/005).
@@ -168,8 +168,8 @@ kept the same finding as a warning and exited 0. ADR-F1A-008 forbids a planning-
 closeout, so that finding stayed until this real close.
 
 After `task-1/CLOSEOUT.md`, `task-2/CLOSEOUT.md`, and `task-3/CLOSEOUT.md`, those slices are clean.
-Task-5 C0 `cbb203ae` sets `step-4b-authorized` with no closeout. Normal exits 0 with one `SLICE_MISSING_CLOSEOUT` warning for task-5. `--strict` exits 1 with that finding as its only error. No waiver. No placeholder.
-Task-3 C1 is `97d726e3`. Task-3 C2 is `939d4908`. (g) is PASS. Width-4 route rows do not close REQ-004. The 10 % bar is frozen for the E-VQE cells. Task-4 C1 is `6be6282f`. C1-ET4 is `431a5808`. Task-4 C2 is `5f63a9d6`. Bundle `6584be2b…`. `task-4/CLOSEOUT.md` records the width-4 slice. Task-5 C0 is `cbb203ae`. Developer Step 4b prep is uncommitted. The live strict raise at widths 6 and 8 is `channel_native_noise_presence`. `pure_unitary_partition` is the hybrid classifier reason. Handback `98eec857…` is unchanged.
+`task-5/CLOSEOUT.md` is present, so task-5 `SLICE_MISSING_CLOSEOUT` is gone. Normal and `--strict` both exit 0 with no findings. No waiver. No placeholder.
+Task-3 C1 is `97d726e3`. Task-3 C2 is `939d4908`. (g) is PASS. Width-4 route rows do not close REQ-004. The 10 % bar is frozen for the E-VQE cells. Task-4 C1 is `6be6282f`. C1-ET4 is `431a5808`. Task-4 C2 is `5f63a9d6`. Bundle `6584be2b…`. `task-4/CLOSEOUT.md` records the width-4 slice. Task-5 C1 is `3a8a0d74`. C2-w6 is `78ba7108`. C2-w8 is `3feffb07`. (g) is PASS at both widths. `task-5/CLOSEOUT.md` records the slice. The live strict raise at widths 6 and 8 is `channel_native_noise_presence`. `pure_unitary_partition` is the hybrid classifier reason. Handback `98eec857…` is unchanged.
 
 ## 9. Task-1 Step 4a opened
 
@@ -246,3 +246,4 @@ C2 `6707892a`. (e) APPROVE (`bc-aaf8e41f`). (g) PASS: regen `mean_O` 0.00075526,
 ## 13. Task-3 Step 4b closed
 
 (c) PASS at C1 `97d726e3`. Bundle `1712dce9…`. mean_O −0.000106. UB95 0.000744. Spikes 857. `milestone_counted` false, lawful. Independence gate done: Tester `/tmp/mf5a-t3-counted/INDEPENDENCE_NOTE.md` (`992c9c0e…`); width-8 Aer node PASSED from `/tmp`, not skipped. C2 `939d4908`. (e) APPROVE. (g) PASS: regen mean_O −0.000615593972625157, `|Δ|` 0.000510 ≤ 0.02, window [−0.020106, 0.019894]; restore byte-identical `1712dce9…`. Measure carries. A width-8 mean near zero of either sign is lawful; the 20 µs count may saturate; throughput is host-sensitive and is not a (g) gate. RM ALIGN 2026-10-07: E-VQE equal-work interop overhead measured at 4/6/8 qubits under S-g Measure; one-sided 95 % UB on O is below 5 % at every width (A4 false → CAP-004 hold-the-line); QA-007 10 % bar frozen and met on those cells. `milestone_counted` stays false. Task-4 C1 is `6be6282f`. C1-ET4 is `431a5808`. Task-4 C2 is `5f63a9d6` and is bundle-only: no CLOSEOUT in that commit, lawful for that gate. Tester evidence is `/tmp/mf5a-t4-counted-w4/`. C2 binder `/tmp/rev-mf5a-t4-c2-w4/REVIEW.md` (`7b48bbc6…`). w4 routes bundle `6584be2b…`. Option A (`b0edc658…`) keeps the raise and times R-base, R-fused, and R-hybrid only. Q1a (`5e3c8222…`) is the required refusal-row schema. Width-4 rows do not close REQ-004. The live strict raise at widths 6 and 8 is `channel_native_noise_presence`, the same code as width 4. `pure_unitary_partition` is the hybrid classifier reason. STEP_4A_HANDBACK `98eec857…` is not rewritten. Task-5 plans the width-6 and width-8 route rows; its readiness is in §1 and G-14. No four-route shipped claim. No push. No pull request.
+Task-5 parked first launch and (g) record: P-1 `/tmp/mf5a-t5-counted-w6-first-launch/` (`run.log.RECONSTRUCTED` `cde45875…`, P-2 `NOTE.md` `fb9a0670…`) and the width-6 (g) disclosures are in `task-5/CLOSEOUT.md` (C2-w8 binder `2cd43938…` §5.4).

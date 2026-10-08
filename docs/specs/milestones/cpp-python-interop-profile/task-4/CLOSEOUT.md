@@ -21,6 +21,8 @@ The Research Manager's quotable sentence, copied verbatim from `2026-10-08-mf5a-
 
 > On the frozen 4-qubit E-VQE anchor workload (single core, AMD EPYC 7542), all timed attribution routes reproduce the sequential reference to ≤1e-16. Per call, today's fused route takes about 2.5× and the hybrid route about 9× the time of the unfused baseline route. These ratios reflect current implementations (a generic C++ local-unitary routine; Kraus-matrix construction in Python), not intrinsic costs of fusion or channel-native semantics. The strict route refuses under the frozen noise placement, as its contract requires, and is reported without timings.
 
+**Correction 2026-10-08 (forward only; RM 2026-10-08).** The quotation above stays as committed. The Research Manager withdraws the exactness bound in that quotation. The replacement, verbatim, is that the timed routes "agree with the step-by-step (sequential) reference to ≤1.2e-16 and with an independent simulator (Qiskit Aer 0.17.2, given the same circuit and noise specification) to ≤5e-16, i.e. at double-precision machine precision." Both bounds rest on width-4 data here: the sequential bound on the C2 binder probe (`7b48bbc6…` §6.1) and the Aer bound on `/tmp/mf5a-t4-g/REPORT.md` (`6771415c…`). Widths 6 and 8 are recorded in `task-5/CLOSEOUT.md`.
+
 ## `milestone_counted=false`
 
 Lawful. The width-4 contract requires the flag false. The row is not a milestone verdict and it does not close REQ-004.

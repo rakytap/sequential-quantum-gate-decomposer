@@ -1,8 +1,8 @@
 # Task 5: attribution routes at widths 6 and 8
-> **Status:** Step 4b prep · **Verdict:** C0 `cbb203ae`; Developer ET-1…ET-4 uncommitted · **Slice:** M-F5a task-5 ·
+> **Status:** closed by `task-5/CLOSEOUT.md` · **Verdict:** C1 `3a8a0d74`; C2-w6 `78ba7108`; C2-w8 `3feffb07`; (g) PASS both widths · **Slice:** M-F5a task-5 ·
 > **Traces:** REQ-001, REQ-004, REQ-005, REQ-006, REQ-007, REQ-008, REQ-009 · CAP-004, CAP-007 · QA-008, QA-009 · ADR-F5A-001, ADR-F5A-004, ADR-F5A-006, ADR-F5A-010 ·
 > **Scope:** three timed routes at widths 6 and 8, plus a required R-strict refusal row at each width. No overhead ratio. No reduction ·
-> **Gate:** C0 `cbb203ae` (`step-4b-authorized`). Developer Step 4b prep uncommitted. No counted w6 or w8 run ·
+> **Gate:** C1 `3a8a0d74`, C2-w6 `78ba7108`, C2-w8 `3feffb07`. (g) PASS at both widths. `task-5/CLOSEOUT.md` records the slice ·
 > **Parent:** task-4 C1 `6be6282f`, C1-ET4 `431a5808`, C2 `5f63a9d6`, w4 routes bundle `6584be2b…` · handback `98eec857…` unchanged ·
 > **RM:** `2026-10-08-mf5a-task4-w4-routes-interpret.md` (`788f688d…`). Attribution evidence at width 4 only. No claim generalises until widths 6 and 8 are interpreted
 
@@ -80,8 +80,8 @@ Width-6 and width-8 route rows will be interpreted by the Research Manager. No c
 | REQ-005 | repo review | `git diff --name-only 064a6f4f62ff0af96febf7a5df3e2915b18db881 -- . ':(exclude)docs/specs'` | a subset of `benchmarks/density_matrix/interop_profile/attribution_route_lane.py`, `benchmarks/density_matrix/interop_profile/attribution_route_validation.py`, `benchmarks/density_matrix/interop_profile/validation_pipeline.py`, `tests/VQE/test_vqe_interop_harness.py`, and `tests/VQE/test_vqe_interop_bundle_validation.py`; from C2-w6 on, also `benchmarks/density_matrix/artifacts/interop_profile/interop_profile_bundle_routes_w6.json`; from C2-w8 on, also `benchmarks/density_matrix/artifacts/interop_profile/interop_profile_bundle_routes_w8.json`. Any other path fails. `docs/specs` is excluded because the code-ready, C0, and closeout commits change it lawfully | DS-2 |
 | QA-008 | benchmark evidence pipeline, (g) per width | the §3 command for width 6 from a clean checkout of C2-w6, and for width 8 from a clean checkout of C2-w8, each with its `--output` under `/tmp` (`benchmarks/density_matrix/interop_profile/validation_pipeline.py`); then `qa008_route_categorical_exact(committed, regenerated)` | returns for both widths (§4); the regenerated files are not committed | DS-1 |
 | REQ-007, QA-009 | fast pytest | `conda run -n qgd --no-capture-output pytest tests/VQE/test_VQE.py::Test_VQE::test_explicit_state_vector_matches_legacy_default -q` | state-vector default still matches | DS-3 |
-| REQ-009 | spec lint | `bash .cursor/skills/spec-driven-development/scripts/specs_check.sh docs/specs/milestones/cpp-python-interop-profile` and the same command with `--strict` | after C0 `cbb203ae`, normal exits 0 with one `SLICE_MISSING_CLOSEOUT` warning for task-5. `--strict` exits 1 with that finding as its only error. No waiver. No placeholder closeout | DS-3 |
+| REQ-009 | spec lint | `bash .cursor/skills/spec-driven-development/scripts/specs_check.sh docs/specs/milestones/cpp-python-interop-profile` and the same command with `--strict` | after `task-5/CLOSEOUT.md`, normal and `--strict` both exit 0 with no findings. No waiver. No placeholder closeout | DS-3 |
 
 ## 7. Verdict
 
-**Step 4b prep (uncommitted).** C0 `cbb203ae` records `step-4b-authorized` and Reviewer APPROVE FOR STEP-4B. Developer ET-1…ET-4 are uncommitted on the allowlist. No counted width-6 or width-8 runs. The Research Manager has not vetoed N-y. Lint: normal exits 0 with one `SLICE_MISSING_CLOSEOUT` warning for task-5. `--strict` exits 1 with that finding as its only error. REQ-004 stays open. The QA-007 10 % bar is unchanged. ADR-F5A-010's decision is unchanged.
+**Closed by `task-5/CLOSEOUT.md`.** C1 is `3a8a0d74`. C2-w6 is `78ba7108`. C2-w8 is `3feffb07`. (g) is PASS at both widths. Lint: normal and `--strict` both exit 0 with no findings. REQ-004 stays open. The QA-007 10 % bar is unchanged. ADR-F5A-010's decision is unchanged. The Research Manager has not vetoed N-y; it stays FYI. Interpretation of the width-6 and width-8 rows belongs to the Research Manager.
