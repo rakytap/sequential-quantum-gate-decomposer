@@ -158,4 +158,26 @@ Matrix_float get_osr_entanglement_test_and_deriv(Matrix_float& matrix, std::vect
 double real_trace_conj_dot(Matrix& A, Matrix& B);
 double real_trace_conj_dot(Matrix_float& A, Matrix_float& B);
 
+// Necessary CNOT-family witnesses, using a process-infidelity threshold.
+// These are cut-local lower bounds, not an exact full-circuit distance.
+std::pair<int, double> operator_schmidt_cnot_bound(
+    const Matrix& U, int n, const std::vector<int>& A_qubits,
+    double Fnorm, double tolerance);
+std::pair<int, double> operator_schmidt_cnot_bound(
+    const Matrix_float& U, int n, const std::vector<int>& A_qubits,
+    double Fnorm, double tolerance);
+
+// Keep the original overloads and their ABI; the final argument opts into
+// stronger CNOT-spectrum/partial-transpose losses for an experiment.
+double get_osr_entanglement_test(Matrix&, std::vector<std::vector<int>>&,
+    const std::vector<std::vector<int>>&, double, double, bool);
+double get_osr_entanglement_test(Matrix_float&, std::vector<std::vector<int>>&,
+    const std::vector<std::vector<int>>&, double, double, bool);
+Matrix get_osr_entanglement_test_and_deriv(Matrix&,
+    std::vector<std::vector<int>>&, const std::vector<std::vector<int>>&,
+    double&, double, double, double*, bool);
+Matrix_float get_osr_entanglement_test_and_deriv(Matrix_float&,
+    std::vector<std::vector<int>>&, const std::vector<std::vector<int>>&,
+    double&, double, double, double*, bool);
+
 #endif

@@ -415,10 +415,14 @@ struct SearchNode {
     GrayCodeCNOT path;
     std::vector<double> optimized_parameters;
     double screening_objective;
+    // Necessary lower-budget cut-profile distance, not a full circuit distance.
+    // Kept separate so legacy surplus/ranking decisions remain unchanged.
+    double lower_budget_profile_distance;
     bool use_optimistic_score;
     SearchNode(GrayCodeCNOT path, bool use_optimistic_score_in = false)
         : path(path),
           screening_objective(std::numeric_limits<double>::infinity()),
+          lower_budget_profile_distance(std::numeric_limits<double>::infinity()),
           use_optimistic_score(use_optimistic_score_in) {}
     int get_min_cnots() const {
         return std::get<0>(*std::min_element(osr_results.begin(), osr_results.end(),
@@ -538,6 +542,9 @@ class N_Qubit_Decomposition_Tree_Search : public Optimization_Interface {
     matrix_base<int> possible_target_qbits;
     /// List of possible control qubits according to the topology -- paired up with possible target qubits
     matrix_base<int> possible_control_qbits;
+
+    // Matrix-derived causal completion. No extra object state or vtable slots.
+    bool complete_logical_factor(int cnot_budget, bool floor_only);
 
   public:
     /**

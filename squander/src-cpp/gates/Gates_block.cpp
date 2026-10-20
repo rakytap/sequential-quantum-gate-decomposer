@@ -21,6 +21,7 @@ limitations under the License.
 */
 
 #include <deque>
+#include <algorithm>
 #include <set>
 #include <tbb/enumerable_thread_specific.h>
 #include "CU.h"
@@ -567,12 +568,70 @@ static void build_suffix_gates(
     }
 }
 
+struct TraceGateOperation {
+    Gate* gate;
+    int parameter_start;
+};
+
+static void append_trace_operation(Gate* gate, int parameter_start,
+                                   std::vector<TraceGateOperation>& operations) {
+    if (gate->get_type() != BLOCK_OPERATION) {
+        operations.push_back({gate, parameter_start});
+        return;
+    }
+    Gates_block* block = static_cast<Gates_block*>(gate);
+    const int count = block->get_gate_num();
+    for (int index = 0; index < count; ++index) {
+        Gate* child = block->get_gate(index);
+        append_trace_operation(child,
+            parameter_start + child->get_parameter_start_idx(), operations);
+    }
+}
+
+struct TraceGateView {
+    const std::vector<Gate*>& gates;
+    const std::vector<TraceGateOperation>* flattened;
+
+    size_t size() const { return flattened ? flattened->size() : gates.size(); }
+    TraceGateOperation operator[](size_t index) const {
+        if (flattened) return (*flattened)[index];
+        Gate* gate = gates[index];
+        return {gate, gate->get_parameter_start_idx()};
+    }
+};
+
+template<typename MatrixType, typename ParametersType>
+static void build_trace_forward_inputs(
+    const TraceGateView& operations, MatrixType& input,
+    ParametersType& parameters, const ParametersType& precomputed_sincos,
+    int parallel, std::vector<MatrixType>& forward_inputs) {
+    forward_inputs.resize(operations.size());
+    if (operations.size() == 0) return;
+    input.copy_to(forward_inputs[0]);
+    for (size_t index = 0; index + 1 < operations.size(); ++index) {
+        forward_inputs[index].copy_to(forward_inputs[index + 1]);
+        const TraceGateOperation entry = operations[index];
+        Gate* gate = entry.gate;
+        const int count = gate->get_parameter_num();
+        if (count == 0) {
+            gate->apply_to(forward_inputs[index + 1], parallel);
+        } else {
+            ParametersType local_parameters(parameters.get_data() + entry.parameter_start, 1, count);
+            ParametersType local_sincos(precomputed_sincos.get_data() + 2 * entry.parameter_start, count, 2);
+            if (gate->get_type() == ADAPTIVE_OPERATION) {
+                gate->apply_to(local_parameters, forward_inputs[index + 1], parallel);
+            } else {
+                gate->apply_to_inner(local_parameters, local_sincos, forward_inputs[index + 1], parallel);
+            }
+        }
+    }
+}
+
 template<typename MatrixType>
 struct TraceDerivativeWorkspace {
     std::vector<MatrixType> forward_inputs;
     std::vector<MatrixType> gate_gradients;
-    std::vector<Gate*> nested_gates;
-    std::vector<QGD_Complex16> nested_traces;
+    std::vector<TraceGateOperation> operations;
     MatrixType local_input;
     MatrixType derivative_kernel;
     MatrixType suffix;
@@ -616,16 +675,35 @@ static void apply_to_trace_derivatives_impl(
         ~DepthGuard() { --depth; }
     } guard(depth);
 
-    build_forward_inputs(gates, input, parameters, precomputed_sincos, parallel, workspace.forward_inputs);
+    // Differentiate a primitive once, rather than rebuilding the same
+    // prefixes/suffixes at every nesting level. Offsets live in this view;
+    // do not mutate the shared gates' relative parameter_start_idx metadata.
+    const bool nested = std::any_of(gates.begin(), gates.end(), [](Gate* gate) {
+        return gate->get_type() == BLOCK_OPERATION;
+    });
+    if (nested) {
+        workspace.operations.clear();
+        for (Gate* gate : gates) {
+            append_trace_operation(gate, gate->get_parameter_start_idx(), workspace.operations);
+        }
+    }
+    const TraceGateView operations{gates, nested ? &workspace.operations : nullptr};
+    if (operations.size() == 0) {
+        if (output != nullptr) input.copy_to(*output);
+        return;
+    }
+    build_trace_forward_inputs(operations, input, parameters, precomputed_sincos,
+                               parallel, workspace.forward_inputs);
     if (output != nullptr) {
         workspace.forward_inputs.back().copy_to(*output);
-        Gate* last = gates.back();
+        const TraceGateOperation last_entry = operations[operations.size() - 1];
+        Gate* last = last_entry.gate;
         const int last_parameter_count = last->get_parameter_num();
         if (last_parameter_count == 0) {
             last->apply_to(*output, parallel);
         }
         else {
-            const int start = last->get_parameter_start_idx();
+            const int start = last_entry.parameter_start;
             ParametersType local_parameters(parameters.get_data() + start, 1, last_parameter_count);
             ParametersType local_sincos(precomputed_sincos.get_data() + 2 * start, last_parameter_count, 2);
             if (last->get_type() == ADAPTIVE_OPERATION) {
@@ -646,10 +724,11 @@ static void apply_to_trace_derivatives_impl(
     else {
         reset_identity(workspace.suffix, matrix_size);
     }
-    for (size_t gate_idx = gates.size(); gate_idx-- > 0;) {
-        Gate* gate = gates[gate_idx];
+    for (size_t gate_idx = operations.size(); gate_idx-- > 0;) {
+        const TraceGateOperation entry = operations[gate_idx];
+        Gate* gate = entry.gate;
         const int gate_parameter_count = gate->get_parameter_num();
-        const int start = gate->get_parameter_start_idx();
+        const int start = entry.parameter_start;
         if (gate_parameter_count > 0) {
             const int target = gate->get_target_qbit();
             if (gate->get_type() == U3_OPERATION && gate_parameter_count == 3 &&
@@ -698,32 +777,6 @@ static void apply_to_trace_derivatives_impl(
                     QGD_Complex16& trace = traces[static_cast<size_t>(start) + parameter_idx];
                     trace.real = real;
                     trace.imag = imag;
-                }
-            }
-            else if (gate->get_type() == BLOCK_OPERATION) {
-                // Chain rule inside the block, seeded by all gates after it.
-                // This avoids constructing one full derivative matrix per
-                // nested parameter just to contract its final trace.
-                Gates_block* block = static_cast<Gates_block*>(gate);
-                workspace.nested_gates.clear();
-                const int nested_gate_count = block->get_gate_num();
-                for (int idx = 0; idx < nested_gate_count; ++idx) {
-                    workspace.nested_gates.push_back(block->get_gate(idx));
-                }
-                ParametersType local_parameters(parameters.get_data() + start,
-                                                1, gate_parameter_count);
-                ParametersType local_sincos(precomputed_sincos.get_data() + 2 * start,
-                                            gate_parameter_count, 2);
-                apply_to_trace_derivatives_impl(
-                    workspace.nested_gates, gate_parameter_count, matrix_size,
-                    local_parameters, local_sincos,
-                    workspace.forward_inputs[gate_idx], parallel,
-                    static_cast<MatrixType*>(nullptr),
-                    workspace.nested_traces, &workspace.suffix
-                );
-                for (int idx = 0; idx < gate_parameter_count; ++idx) {
-                    traces[static_cast<size_t>(start + idx)] =
-                        workspace.nested_traces[static_cast<size_t>(idx)];
                 }
             }
             else {

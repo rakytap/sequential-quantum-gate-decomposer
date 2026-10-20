@@ -21,11 +21,19 @@ limitations under the License.
 */
 
 #include "N_Qubit_Decomposition_Tree_Search.h"
+#include "OSR_Fan_Echo_Motifs.h"
+#include "OSR_Pauli_Spine_Placement.h"
+#include "OSR_Cut_Capacity.h"
+#include "OSR_CNOT_Deflation.h"
+#include "N_Qubit_Decomposition_custom.h"
 
 #include "N_Qubit_Decomposition_Cost_Function.h"
+#include "OSR_Motif_Library.h"
 #include "n_aryGrayCodeCounter.h"
 
 #include <algorithm>
+#include <array>
+#include <complex>
 #include <atomic>
 #include <chrono>
 #include <cmath>
@@ -42,6 +50,178 @@ limitations under the License.
 namespace {
 constexpr double DEFAULT_OSR_OPTIMIZATION_TOLERANCE = 1e-6;
 
+// The Tree model stores theta/2, not Qiskit's full polar angle. Compose two
+// adjacent local gates and recover a U3 representative modulo global phase.
+std::array<double, 3> merge_tree_u3(const double* after, const double* before) {
+    using Complex = std::complex<double>;
+    auto matrix = [](const double* p) {
+        const double c = std::cos(p[0]), s = std::sin(p[0]);
+        return std::array<Complex, 4>{
+            c, -s * std::polar(1.0, p[2]), s * std::polar(1.0, p[1]),
+            c * std::polar(1.0, p[1] + p[2])
+        };
+    };
+    const auto a = matrix(after), b = matrix(before);
+    const Complex m00 = a[0] * b[0] + a[1] * b[2];
+    const Complex m01 = a[0] * b[1] + a[1] * b[3];
+    const Complex m10 = a[2] * b[0] + a[3] * b[2];
+    const Complex m11 = a[2] * b[1] + a[3] * b[3];
+    const double c = std::abs(m00), s = std::abs(m10);
+    if (s < 1e-14) {
+        return {0.0, 0.0, std::arg(m11) - std::arg(m00)};
+    }
+    const double phase = c >= 1e-14 ? std::arg(m00) : 0.0;
+    return {std::atan2(s, c), std::arg(m10) - phase,
+            std::arg(-m01) - phase};
+}
+
+struct TreeCNOTDeletion {
+    bool certified = false;
+    std::vector<double> parameters;
+    double hs = std::numeric_limits<double>::max();
+    double process_infidelity = std::numeric_limits<double>::max();
+};
+
+// Shared by certificate deflation and its direct component test/profiler.
+// This is the existing chart transition, not a new synthesis strategy.
+TreeCNOTDeletion refit_tree_cnot_deletion(
+    Matrix& target_adjoint, int width, const std::vector<int>& targets,
+    const std::vector<int>& controls, const std::vector<double>& parameters,
+    int removed, int sign, std::map<std::string, Config_Element> fit_config,
+    int hops, int evaluations, int seed, double tolerance) {
+    const int length = targets.size();
+    TreeCNOTDeletion result;
+    if (length <= 0 || controls.size() != targets.size() ||
+        parameters.size() != static_cast<size_t>(6 * length + 3 * width) ||
+        removed < 0 || removed >= length || (sign != 1 && sign != -1)) {
+        throw std::invalid_argument("Invalid native CNOT deletion chart");
+    }
+    std::vector<std::array<double, 3>> pending(width);
+    std::vector<double> initial;
+    initial.reserve(6 * (length - 1) + 3 * width);
+    Gates_block structure(width);
+    for (int idx = 0; idx < length; ++idx) {
+        const int target = targets[idx], control = controls[idx];
+        if (target < 0 || control < 0 || target >= width || control >= width || target == control) {
+            throw std::invalid_argument("Invalid native CNOT deletion edge");
+        }
+        pending[target] = merge_tree_u3(parameters.data() + 6 * idx, pending[target].data());
+        pending[control] = merge_tree_u3(parameters.data() + 6 * idx + 3, pending[control].data());
+        if (idx == removed) {
+            const std::array<double, 3> rx{sign * M_PI / 4, -M_PI / 2, M_PI / 2};
+            const std::array<double, 3> rz{0.0, 0.0, sign * M_PI / 2};
+            pending[target] = merge_tree_u3(rx.data(), pending[target].data());
+            pending[control] = merge_tree_u3(rz.data(), pending[control].data());
+            continue;
+        }
+        auto* block = new Gates_block(width);
+        block->add_u3(target);
+        block->add_u3(control);
+        block->add_cnot(target, control);
+        structure.add_gate(block);
+        for (int wire : {target, control}) {
+            initial.insert(initial.end(), pending[wire].begin(), pending[wire].end());
+            pending[wire] = {0.0, 0.0, 0.0};
+        }
+    }
+    auto* final = new Gates_block(width);
+    for (int wire = 0; wire < width; ++wire) {
+        pending[wire] = merge_tree_u3(parameters.data() + 6 * length + 3 * wire,
+                                      pending[wire].data());
+        initial.insert(initial.end(), pending[wire].begin(), pending[wire].end());
+        final->add_u3(wire);
+    }
+    structure.add_gate(final);
+    fit_config["parallel"].set_property("parallel", static_cast<long long>(0));
+    fit_config["use_float"].set_property("use_float", false);
+    fit_config["use_basin_hopping"].set_property("use_basin_hopping", true);
+    fit_config["use_differential_evolution"].set_property("use_differential_evolution", false);
+    fit_config["use_dual_annealing"].set_property("use_dual_annealing", false);
+    fit_config["optimization_tolerance"].set_property("optimization_tolerance", tolerance);
+    fit_config["optimization_tolerance_bfgs2"].set_property("optimization_tolerance_bfgs2", tolerance);
+    fit_config["max_iteration_loops_bfgs2"].set_property("max_iteration_loops_bfgs2", static_cast<long long>(hops));
+    N_Qubit_Decomposition_custom optimizer(target_adjoint.copy(), width, false, fit_config, RANDOM, 0);
+    optimizer.set_verbose(0);
+    optimizer.set_debugfile("");
+    optimizer.set_optimizer(BFGS2);
+    optimizer.set_random_seed(seed);
+    optimizer.set_max_iteration(1);
+    optimizer.set_max_inner_iterations(evaluations);
+    optimizer.set_iteration_loops(width, hops);
+    optimizer.set_optimization_tolerance(tolerance);
+    optimizer.set_cost_function_variant(HILBERT_SCHMIDT_TEST);
+    optimizer.set_custom_gate_structure(&structure);
+    optimizer.set_optimization_blocks(structure.get_gate_num());
+    optimizer.set_optimized_parameters(initial.data(), static_cast<int>(initial.size()));
+    optimizer.start_decomposition();
+    Matrix_real fitted = optimizer.get_optimized_parameters();
+    Matrix residual = target_adjoint.copy();
+    optimizer.apply_to(fitted, residual);
+    result.hs = get_hilbert_schmidt_test(residual);
+    std::complex<double> trace(0.0, 0.0);
+    for (int idx = 0; idx < residual.rows; ++idx) {
+        const auto value = residual.data[idx * residual.stride + idx];
+        trace += std::complex<double>(value.real, value.imag);
+    }
+    result.process_infidelity = std::max(0.0, 1.0 - std::norm(trace) /
+        (double(residual.rows) * residual.rows));
+    if (!std::isfinite(result.hs) || result.hs >= tolerance ||
+        !std::isfinite(std::norm(trace)) || result.process_infidelity > tolerance) return result;
+    for (int idx = 0; idx < fitted.size(); ++idx) {
+        if (!std::isfinite(fitted[idx])) return result;
+    }
+    result.parameters.assign(fitted.get_data(), fitted.get_data() + fitted.size());
+    result.certified = true;
+    return result;
+}
+
+void trace_tree_cnot_deletion(std::ostream& output, int length, int removed,
+                              int sign, const TreeCNOTDeletion& result) {
+    output << "OSR CNOT deflation: from=" << length << ", to=" << length - 1
+           << ", removed=" << removed << ", branch=" << sign << ", hs=" << result.hs
+           << ", process_infidelity=" << result.process_infidelity
+           << ", certified=1" << std::endl;
+}
+
+}
+
+extern "C" int qgd_osr_refit_cnot_deletion(
+    const QGD_Complex16* data, int width, int stride,
+    const int* targets, const int* controls, int length,
+    const double* parameters, int parameter_count,
+    int removed, int sign, int hops, int evaluations, int seed,
+    double tolerance, double* child_parameters, int child_parameter_count,
+    double* hs, double* process_infidelity, int trace) {
+    if (!data || !targets || !controls || !parameters || !child_parameters || !hs || !process_infidelity ||
+        width < 2 || width > 4 || stride < (1 << width) || length <= 0 ||
+        length > (std::numeric_limits<int>::max() - 3 * width) / 6 ||
+        parameter_count != 6 * length + 3 * width ||
+        child_parameter_count != 6 * (length - 1) + 3 * width ||
+        removed < 0 || removed >= length || (sign != 1 && sign != -1) ||
+        hops < 0 || evaluations < 1 || !std::isfinite(tolerance) || tolerance <= 0.0 || tolerance >= 1.0) return -1;
+    for (int idx = 0; idx < parameter_count; ++idx) if (!std::isfinite(parameters[idx])) return -1;
+    try {
+        Matrix target(1 << width, 1 << width);
+        for (int row = 0; row < target.rows; ++row) {
+            for (int col = 0; col < target.cols; ++col) {
+                const auto value = data[row * stride + col];
+                if (!std::isfinite(value.real) || !std::isfinite(value.imag)) return -1;
+                target.data[row * target.stride + col] = value;
+            }
+        }
+        auto result = refit_tree_cnot_deletion(target, width,
+            std::vector<int>(targets, targets + length), std::vector<int>(controls, controls + length),
+            std::vector<double>(parameters, parameters + parameter_count), removed, sign, {},
+            hops, evaluations, seed, tolerance);
+        *hs = result.hs;
+        *process_infidelity = result.process_infidelity;
+        if (!result.certified) return 0;
+        std::copy(result.parameters.begin(), result.parameters.end(), child_parameters);
+        if (trace) trace_tree_cnot_deletion(std::cout, length, removed, sign, result);
+        return 1;
+    } catch (...) {
+        return -1;
+    }
 }
 
 /**
@@ -678,6 +858,9 @@ Gates_block* N_Qubit_Decomposition_Tree_Search::determine_gate_structure(Matrix_
     std::vector<GrayCodeCNOT> all_solutions;
     if (use_graph_search) {
         all_solutions.emplace_back(tree_search_over_gate_structures_best_first());
+        if (complete_logical_factor(level_limit, false)) {
+            all_solutions.back() = best_first_solution_path;
+        }
     } else {
 
         double minimum_best_solution = current_minimum;
@@ -767,6 +950,7 @@ Gates_block* N_Qubit_Decomposition_Tree_Search::determine_gate_structure(Matrix_
         }
         N_Qubit_Decomposition_custom&& cDecomp_custom_random = perform_optimization(nullptr);
         if (use_hilbert_schmidt_guidance) {
+            cDecomp_custom_random.set_cost_function_variant(HILBERT_SCHMIDT_TEST);
             cDecomp_custom_random.set_iteration_loops(qbit_num, 0);
         } else if (config.count("max_iteration_loops") > 0) {
             long long iteration_loop_count;
@@ -847,12 +1031,20 @@ Gates_block* N_Qubit_Decomposition_Tree_Search::determine_gate_structure(Matrix_
                 cDecomp_custom_random.set_optimized_parameters(optimized_parameters.data(),
                                                                static_cast<int>(optimized_parameters.size()));
                 cDecomp_custom_random.start_decomposition();
-                const double attempt_minimum_tmp =
+                Matrix_real fitted = cDecomp_custom_random.get_optimized_parameters();
+                double attempt_minimum_tmp =
                     cDecomp_custom_random.get_current_minimum();
+                if (use_hilbert_schmidt_guidance) {
+                    // Certify the returned circuit, not a cached minimum in
+                    // the inherited parent objective or another parameter fit.
+                    Matrix certified_residual = Umtx.copy();
+                    cDecomp_custom_random.apply_to(fitted, certified_residual);
+                    attempt_minimum_tmp = get_hilbert_schmidt_test(certified_residual);
+                }
                 if (attempt_minimum_tmp < current_minimum_tmp) {
                     current_minimum_tmp = attempt_minimum_tmp;
                     best_attempt_parameters.reset(new Matrix_real(
-                        cDecomp_custom_random.get_optimized_parameters().copy()
+                        fitted.copy()
                     ));
                 }
                 if (attempt_minimum_tmp < fixed_structure_acceptance_tolerance_loc) {
@@ -1030,10 +1222,8 @@ SearchNode N_Qubit_Decomposition_Tree_Search::evaluate_path(
     double profile_temperature = 0.1;
     if (config.count("osr_profile_temperature") > 0)
         config["osr_profile_temperature"].get_property(profile_temperature);
-    // A zero temperature currently selects arithmetic averaging in the OSR
-    // objective rather than the hard-max limit.  For four-qubit profiles this
-    // dilutes the violated-cut gradient and creates the observed rank plateau.
-    // A small positive temperature keeps worst-cut pressure differentiable.
+    // Zero selects the hard maximum over cut losses. A positive temperature
+    // makes worst-cut pressure differentiable during continuous optimization.
     double cut_smoothmax_temperature = 0.1;
     if (config.count("osr_cut_smoothmax_temperature") > 0)
         config["osr_cut_smoothmax_temperature"].get_property(
@@ -1047,9 +1237,7 @@ SearchNode N_Qubit_Decomposition_Tree_Search::evaluate_path(
     // nested optimizer to reseed itself from std::random_device. This makes a
     // path/restart pair reproducible without selecting a circuit-specific
     // lucky seed.
-    if (qbit_num >= 4) {
-        joint_optimizer.set_random_seed(gen());
-    }
+    joint_optimizer.set_random_seed(gen());
     if (iteration_loop_override >= 0) {
         joint_optimizer.set_iteration_loops(
             qbit_num, iteration_loop_override
@@ -1078,6 +1266,13 @@ SearchNode N_Qubit_Decomposition_Tree_Search::evaluate_path(
         optimized_parameters.data(),
         static_cast<int>(optimized_parameters.size())
     );
+    bool use_cnot_witnesses = false;
+    if (config.count("osr_gate_spectral_witnesses") > 0)
+        config["osr_gate_spectral_witnesses"].get_property(use_cnot_witnesses);
+    double witness_tolerance = 1e-6;
+    if (config.count("osr_optimization_tolerance") > 0)
+        config["osr_optimization_tolerance"].get_property(witness_tolerance);
+    witness_tolerance = std::min(witness_tolerance, osr_tol*osr_tol);
     auto evaluate_all_cuts = [&](Matrix_real& params) {
         if (osr_uses_float) {
             params.copy_to(params_float);
@@ -1090,7 +1285,13 @@ SearchNode N_Qubit_Decomposition_Tree_Search::evaluate_path(
         std::vector<std::pair<int, double>> result;
         result.reserve(all_cuts.size());
         for (const std::vector<int>& cut : all_cuts) {
-            if (osr_uses_float)
+            if (use_cnot_witnesses && osr_uses_float)
+                result.emplace_back(operator_schmidt_cnot_bound(
+                    U_float, qbit_num, cut, Fnorm, witness_tolerance));
+            else if (use_cnot_witnesses)
+                result.emplace_back(operator_schmidt_cnot_bound(
+                    U, qbit_num, cut, Fnorm, witness_tolerance));
+            else if (osr_uses_float)
                 result.emplace_back(operator_schmidt_rank(
                     U_float, qbit_num, cut, Fnorm, osr_tol
                 ));
@@ -1100,6 +1301,33 @@ SearchNode N_Qubit_Decomposition_Tree_Search::evaluate_path(
                 ));
         }
         return result;
+    };
+
+    bool profile_plateau_descent = false;
+    if (config.count("osr_profile_plateau_descent") > 0) {
+        config["osr_profile_plateau_descent"].get_property(
+            profile_plateau_descent
+        );
+    }
+    bool deferred_profile_plateau_descent = false;
+    if (qbit_num >= 3 && qbit_num <= 4 &&
+        config.count("osr_deferred_profile_plateau_descent") > 0) {
+        config["osr_deferred_profile_plateau_descent"].get_property(
+            deferred_profile_plateau_descent
+        );
+    }
+    auto lower_budget_profile_loss = [&](int remaining_cnots) {
+        // Every circuit with m-1 CNOTs induces one of these edge-cover
+        // profiles. The discarded normalized Schmidt energy lower-bounds
+        // its process infidelity on each cut. Minimize the worst-cut bound
+        // over all profiles, rather than multiplying a tail above the current
+        // rank by an edge-cover surplus that can be identically zero.
+        const auto profiles = osr_bound_solver.enumerate_cut_coverages(
+            std::max(remaining_cnots - 1, 0)
+        );
+        return osr_uses_float
+            ? get_osr_entanglement_test(U_float, all_cuts, profiles, 0.0, 0.0, use_cnot_witnesses)
+            : get_osr_entanglement_test(U, all_cuts, profiles, 0.0, 0.0, use_cnot_witnesses);
     };
 
     Matrix_real params = joint_optimizer.get_optimized_parameters();
@@ -1125,16 +1353,47 @@ SearchNode N_Qubit_Decomposition_Tree_Search::evaluate_path(
                 0
             );
     if (!run_optimization) {
-        joint_optimizer.set_osr_params(
-            all_cuts,
-            osr_bound_solver.enumerate_cut_coverages(
-                target_bound
-            ),
-            profile_temperature,
-            cut_smoothmax_temperature
-        );
-        ev_results.screening_objective =
-            joint_optimizer.get_decomposition_error();
+        if (profile_plateau_descent || use_cnot_witnesses) {
+            initial_kappa = lower_budget_profile_loss(initial_min_cnots);
+        }
+        // Identity-placement screens do not consume this auxiliary metric.
+        // Rescoring fitted restart/certificate parameters does need it.
+        if (deferred_profile_plateau_descent &&
+            supplied_parameters != nullptr) {
+            ev_results.lower_budget_profile_distance =
+                lower_budget_profile_loss(initial_min_cnots);
+        }
+        // evaluate_all_cuts already reconstructed the exact residual above.
+        // A fresh optimizer's cached decomposition error is still DBL_MAX:
+        // reading it here silently erased the placement-specific objective.
+        // Reuse that residual without another apply_to or optimization.
+        if (use_hilbert_schmidt_guidance) {
+            ev_results.screening_objective = osr_uses_float
+                ? get_hilbert_schmidt_test(U_float)
+                : get_hilbert_schmidt_test(U);
+        } else {
+            const auto screen_profiles =
+                osr_bound_solver.enumerate_cut_coverages(target_bound);
+            ev_results.screening_objective = osr_uses_float
+                ? get_osr_entanglement_test(
+                      U_float, all_cuts, screen_profiles, profile_temperature,
+                      cut_smoothmax_temperature, use_cnot_witnesses)
+                : get_osr_entanglement_test(
+                      U, all_cuts, screen_profiles, profile_temperature,
+                      cut_smoothmax_temperature, use_cnot_witnesses);
+        }
+        bool trace_screen = false;
+        if (config.count("osr_trace_candidate_placements") > 0) {
+            config["osr_trace_candidate_placements"].get_property(trace_screen);
+        }
+        if (trace_screen) {
+            std::stringstream sstream;
+            sstream << "OSR placement screen: cnots=" << path.size()
+                    << ", residual=" << initial_min_cnots
+                    << ", objective=" << ev_results.screening_objective
+                    << std::endl;
+            print(sstream, 2);
+        }
         ev_results.osr_results.emplace_back(
             initial_min_cnots, initial_kappa,
             std::move(initial_edge_counts), std::move(initial_osr_result)
@@ -1180,6 +1439,14 @@ SearchNode N_Qubit_Decomposition_Tree_Search::evaluate_path(
         const int min_cnots = osr_bound_solver.solve_min_cnots(
             osr_result, best_kappa, best_edge_counts
         );
+        if (profile_plateau_descent || use_cnot_witnesses) {
+            best_kappa = lower_budget_profile_loss(min_cnots);
+            minimum_profile_loss = best_kappa;
+        }
+        if (deferred_profile_plateau_descent) {
+            ev_results.lower_budget_profile_distance =
+                lower_budget_profile_loss(min_cnots);
+        }
         {
             std::stringstream sstream;
             sstream << "OSR calibration: path_depth=" << path.size()
@@ -1330,6 +1597,9 @@ GrayCodeCNOT N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures
     best_first_osr_solution_found = false;
     best_first_solution_path = GrayCodeCNOT();
     best_first_solution_parameters.clear();
+    if (complete_logical_factor(level_limit, true)) {
+        return best_first_solution_path;
+    }
     std::vector<std::vector<int>> all_cuts = unique_cuts(qbit_num);
     std::sort(all_cuts.begin(), all_cuts.end(), [](const std::vector<int>& a, const std::vector<int>& b){
         if (a.size() != b.size()) return a.size() < b.size();
@@ -1484,7 +1754,21 @@ GrayCodeCNOT N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures
           trace_candidate_placements
       );
       }
+      // The old unset screening objective was constant across placements.
+      // Keep its ordering until the corrected objective passes full-corpus
+      // quality/completion replay; the measured node cost is always accurate.
+      bool placement_objective_ordering = false;
+      if (config.count("osr_placement_objective_ordering") > 0) {
+          config["osr_placement_objective_ordering"].get_property(
+              placement_objective_ordering
+          );
+      }
       bool rank_degenerate_cover_class = true;
+      bool physical_cover_motifs = false;
+      bool physical_cover_motifs_checked = false;
+      if (config.count("osr_physical_cover_motifs") > 0) {
+          config["osr_physical_cover_motifs"].get_property(physical_cover_motifs);
+      }
       if (config.count("osr_rank_degenerate_cover_class") > 0) {
           config["osr_rank_degenerate_cover_class"].get_property(
               rank_degenerate_cover_class
@@ -1508,6 +1792,712 @@ GrayCodeCNOT N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures
               neutral_pair_projection
           );
       }
+
+      bool certified_terminal_completion = false;
+      if (config.count("osr_certified_terminal_completion") > 0) {
+          config["osr_certified_terminal_completion"].get_property(
+              certified_terminal_completion
+          );
+      }
+      // The former partial-refinement experiment is an alias for the
+      // certified continuation now; necessary spectra never replace a path.
+      bool legacy_profile_refinement = false;
+      if (config.count("osr_bidirectional_profile_refinement") > 0) {
+          config["osr_bidirectional_profile_refinement"].get_property(
+              legacy_profile_refinement
+          );
+      }
+      certified_terminal_completion =
+          (certified_terminal_completion || legacy_profile_refinement) &&
+          use_hilbert_schmidt_guidance && qbit_num >= 3 && qbit_num <= 4;
+      double terminal_tolerance = optimization_tolerance;
+      if (config.count("synthesis_acceptance_tolerance") > 0) {
+          config["synthesis_acceptance_tolerance"].get_property(
+              terminal_tolerance
+          );
+      }
+      bool geometric_completion_motifs = false;
+      if (config.count("osr_geometric_completion_motifs") > 0) {
+          config["osr_geometric_completion_motifs"].get_property(
+              geometric_completion_motifs
+          );
+      }
+      geometric_completion_motifs = geometric_completion_motifs &&
+        use_hilbert_schmidt_guidance && qbit_num >= 3 && qbit_num <= 4;
+      bool certified_cnot_deflation = false;
+      if (config.count("osr_certified_cnot_deflation") > 0) {
+          config["osr_certified_cnot_deflation"].get_property(
+              certified_cnot_deflation
+          );
+      }
+      certified_cnot_deflation = certified_cnot_deflation &&
+          use_hilbert_schmidt_guidance && qbit_num >= 3 && qbit_num <= 4;
+      if ((certified_terminal_completion || geometric_completion_motifs ||
+           certified_cnot_deflation) &&
+          (!std::isfinite(terminal_tolerance) ||
+           terminal_tolerance <= 0.0 || terminal_tolerance >= 1.0)) {
+          throw std::invalid_argument(
+              "Terminal synthesis tolerance must be finite and in (0,1)"
+          );
+      }
+      bool geometric_root_checked = false;
+      int target_physical_floor = -1;
+      int geometric_physical_floor = -1;
+      std::vector<int> target_cut_requirements;
+      std::unique_ptr<SearchNode> certified_terminal;
+      if (certified_terminal_completion || geometric_completion_motifs) {
+          std::vector<std::pair<int, double>> target_cuts;
+          // Use a conservative structural error scale, never a stricter
+          // rank classification than the requested synthesis accuracy.
+          const double witness_tolerance = std::max(
+              osr_guidance_tolerance_loc, 4.0 * terminal_tolerance
+          );
+          for (const auto& cut : all_cuts) {
+              target_cuts.emplace_back(operator_schmidt_cnot_bound(
+                  Umtx, qbit_num, cut, Fnorm, witness_tolerance
+              ));
+          }
+          double surplus = 0.0;
+          std::vector<int> counts;
+          target_physical_floor = osr_bound_solver.solve_min_cnots(
+              target_cuts, surplus, counts
+          );
+      }
+
+    if (geometric_completion_motifs || certified_cnot_deflation) {
+        // Approximate HS guidance and target-family eligibility have different
+        // meanings. A weak interaction can be invisible at the coarse guide
+        // scale but necessary at synthesis precision. Preserve the original
+        // guide and terminal search; classify constructive charts separately.
+        std::vector<int> capacity_minimums(qbit_num, 0);
+        for (int root = 0; root < qbit_num; ++root) {
+            const auto forward = squander_osr::cut_capacity(
+                Umtx.data, qbit_num, Umtx.stride, root, terminal_tolerance, false);
+            const auto inverse = squander_osr::cut_capacity(
+                Umtx.data, qbit_num, Umtx.stride, root, terminal_tolerance, true);
+            capacity_minimums[root] = std::max(forward.minimum_crossing_cnots,
+                                              inverse.minimum_crossing_cnots);
+        }
+        std::vector<std::pair<int, double>> structural_cuts;
+        for (const auto& cut : all_cuts) {
+            structural_cuts.emplace_back(operator_schmidt_cnot_bound(
+                Umtx, qbit_num, cut, Fnorm, 4.0 * terminal_tolerance
+            ));
+            int root = -1;
+            if (cut.size() == 1) {
+                root = cut.front();
+            } else if (cut.size() + 1 == static_cast<size_t>(qbit_num)) {
+                for (int wire = 0; wire < qbit_num; ++wire) {
+                    if (std::find(cut.begin(), cut.end(), wire) == cut.end()) root = wire;
+                }
+            }
+            if (root >= 0) {
+                if (capacity_minimums[root] > structural_cuts.back().first) {
+                    structural_cuts.back().first = capacity_minimums[root];
+                    structural_cuts.back().second = 0.0;
+                }
+            }
+            target_cut_requirements.push_back(structural_cuts.back().first);
+        }
+        if (geometric_completion_motifs) {
+            double surplus = 0.0;
+            std::vector<int> counts;
+            geometric_physical_floor = osr_bound_solver.solve_min_cnots(
+                structural_cuts, surplus, counts
+            );
+        }
+    }
+
+    if (certified_terminal_completion && qbit_num == 4 &&
+        target_physical_floor > 0 && target_physical_floor <= level_limit) {
+        // OSR one across a singleton cut means an exact tensor product.
+        // Extract it by normalized block projection; no synthesis parameters
+        // or circuit structure enter this algebraic factorization.
+        using Complex = std::complex<double>;
+        for (int spectator = 0; spectator < qbit_num; ++spectator) {
+            std::vector<int> active;
+            std::array<int, 4> compact{};
+            compact.fill(-1);
+            for (int qbit = 0; qbit < qbit_num; ++qbit) {
+                if (qbit == spectator) continue;
+                compact[qbit] = static_cast<int>(active.size());
+                active.push_back(qbit);
+            }
+            if (operator_schmidt_cnot_bound(
+                    Umtx, qbit_num, active, Fnorm,
+                    std::max(osr_guidance_tolerance_loc,
+                             4.0 * terminal_tolerance)).first != 0) {
+                continue;
+            }
+            std::vector<matrix_base<int>> reduced_topology;
+            std::vector<int> parent_digits;
+            for (int edge = 0; edge < possible_target_qbits.size(); ++edge) {
+                const int a = possible_target_qbits[edge];
+                const int b = possible_control_qbits[edge];
+                if (a == spectator || b == spectator) continue;
+                matrix_base<int> reduced_edge(1, 2);
+                reduced_edge[0] = compact[a];
+                reduced_edge[1] = compact[b];
+                reduced_topology.push_back(reduced_edge);
+                parent_digits.push_back(edge);
+            }
+            std::array<bool, 3> connected{true, false, false};
+            for (int pass = 0; pass < 3; ++pass) {
+                for (const auto& edge : reduced_topology) {
+                    if (connected[edge[0]] || connected[edge[1]]) {
+                        connected[edge[0]] = connected[edge[1]] = true;
+                    }
+                }
+            }
+            // A spectator can still be a necessary routing bus. Do not
+            // remove it when the active induced graph is disconnected.
+            if (!std::all_of(connected.begin(), connected.end(),
+                             [](bool value) { return value; })) {
+                continue;
+            }
+            std::array<int, 8> indices{};
+            for (int index = 0; index < 8; ++index) {
+                for (int bit = 0; bit < 3; ++bit) {
+                    indices[index] |= ((index >> bit) & 1) << active[bit];
+                }
+            }
+            auto element = [&](int block, int row, int col) {
+                const int full_row = indices[row] |
+                    ((block / 2) << spectator);
+                const int full_col = indices[col] |
+                    ((block % 2) << spectator);
+                const auto value = Umtx.data[
+                    full_row * Umtx.stride + full_col
+                ];
+                return Complex(value.real, value.imag);
+            };
+            int reference = 0;
+            double norm = 0.0;
+            for (int block = 0; block < 4; ++block) {
+                double candidate_norm = 0.0;
+                for (int row = 0; row < 8; ++row) {
+                    for (int col = 0; col < 8; ++col) {
+                        candidate_norm += std::norm(element(block, row, col));
+                    }
+                }
+                if (candidate_norm > norm) {
+                    reference = block;
+                    norm = candidate_norm;
+                }
+            }
+            if (norm <= 0.0) continue;
+            const double scale = std::sqrt(norm / 8.0);
+            Matrix active_inverse(8, 8);
+            for (int row = 0; row < 8; ++row) {
+                for (int col = 0; col < 8; ++col) {
+                    const Complex value = element(reference, row, col) / scale;
+                    active_inverse.data[row * active_inverse.stride + col] =
+                        QGD_Complex16{value.real(), value.imag()};
+                }
+            }
+            std::array<Complex, 4> local_inverse{};
+            for (int block = 0; block < 4; ++block) {
+                for (int row = 0; row < 8; ++row) {
+                    for (int col = 0; col < 8; ++col) {
+                        local_inverse[block] +=
+                            std::conj(element(reference, row, col) / scale) *
+                            element(block, row, col) / 8.0;
+                    }
+                }
+            }
+            double reconstruction_error = 0.0;
+            for (int block = 0; block < 4; ++block) {
+                for (int row = 0; row < 8; ++row) {
+                    for (int col = 0; col < 8; ++col) {
+                        reconstruction_error += std::norm(
+                            local_inverse[block] *
+                                element(reference, row, col) / scale -
+                                element(block, row, col));
+                    }
+                }
+            }
+            if (reconstruction_error / 16.0 >= terminal_tolerance) continue;
+            auto reduced_config = config;
+            reduced_config["use_float"].set_property("use_float", false);
+            reduced_config["optimization_tolerance"].set_property(
+                "optimization_tolerance", terminal_tolerance
+            );
+            reduced_config["osr_certified_terminal_completion"].set_property(
+                "osr_certified_terminal_completion", true
+            );
+            N_Qubit_Decomposition_Tree_Search reduced(
+                active_inverse, 3, reduced_topology, reduced_config, 0
+            );
+            reduced.set_verbose(0);
+            reduced.set_optimizer(alg);
+            reduced.set_random_seed(static_cast<int>(path_rng_seed));
+            reduced.set_optimization_tolerance(terminal_tolerance);
+            // The OSR floor is a lower bound, not a synthesis budget. An
+            // exact spectator must not prevent the established 3q solver
+            // from reaching a valid count above that floor. The spectator
+            // adds no CNOTs, so inherit the parent's actual CNOT budget.
+            reduced.level_limit = level_limit;
+            const GrayCodeCNOT reduced_path =
+                reduced.tree_search_over_gate_structures_best_first();
+            if (!reduced.best_first_osr_solution_found ||
+                reduced_path.size() > static_cast<size_t>(level_limit)) {
+                continue;
+            }
+            const int depth = reduced_path.size();
+            matrix_base<int8_t> limits(1, depth);
+            std::fill_n(limits.data, limits.size(),
+                        static_cast<int8_t>(topology.size()));
+            GrayCodeCNOT embedded(limits);
+            for (int idx = 0; idx < depth; ++idx) {
+                embedded[idx] = static_cast<int8_t>(
+                    parent_digits[reduced_path[idx]]
+                );
+            }
+            const auto& reduced_parameters =
+                reduced.best_first_solution_parameters;
+            if (reduced_parameters.size() !=
+                static_cast<size_t>(6 * depth + 9)) {
+                throw std::logic_error("Product-cut parameter count mismatch");
+            }
+            std::vector<double> parameters(6 * depth + 12);
+            std::copy_n(reduced_parameters.data(), 6 * depth,
+                        parameters.data());
+            for (int bit = 0; bit < 3; ++bit) {
+                std::copy_n(reduced_parameters.data() + 6 * depth + 3 * bit, 3,
+                            parameters.data() + 6 * depth + 3 * active[bit]);
+            }
+            // The spectator's forward factor is the adjoint of its extracted
+            // inverse factor. Euler recovery ignores only a global phase.
+            const Complex m00 = std::conj(local_inverse[0]);
+            const Complex m01 = std::conj(local_inverse[2]);
+            const Complex m10 = std::conj(local_inverse[1]);
+            const Complex m11 = std::conj(local_inverse[3]);
+            const double c = std::abs(m00), s = std::abs(m10);
+            double* local = parameters.data() + 6 * depth + 3 * spectator;
+            if (s < 1e-14) {
+                local[0] = local[1] = 0.0;
+                local[2] = std::arg(m11) - std::arg(m00);
+            } else {
+                const double phase = c >= 1e-14 ? std::arg(m00) : 0.0;
+                local[0] = std::atan2(s, c);
+                local[1] = std::arg(m10) - phase;
+                local[2] = std::arg(-m01) - phase;
+            }
+            Matrix verification = Umtx.copy();
+            Matrix_real view(parameters.data(), 1,
+                             static_cast<int>(parameters.size()));
+            std::unique_ptr<Gates_block> structure(
+                construct_gate_structure_from_Gray_code(embedded, true)
+            );
+            structure->apply_to(view, verification, 0);
+            const double hs = get_hilbert_schmidt_test(verification);
+            if (trace_candidate_placements) {
+                std::stringstream sstream;
+                sstream << "OSR product-cut completion: spectator="
+                        << spectator << ", cnots=" << depth
+                        << ", floor=" << target_physical_floor
+                        << ", hs=" << hs
+                        << ", certified="
+                        << (std::isfinite(hs) && hs < terminal_tolerance)
+                        << std::endl;
+                print(sstream, 2);
+            }
+            if (std::isfinite(hs) && hs < terminal_tolerance) {
+                best_first_osr_solution_found = true;
+                best_first_solution_path = embedded.copy();
+                best_first_solution_parameters = std::move(parameters);
+                return embedded;
+            }
+        }
+    }
+
+    auto complete_terminal_path = [&](
+        const GrayCodeCNOT& path, SearchNode best, bool run_optimization
+    ) -> SearchNode {
+        const bool try_terminal = certified_terminal_completion &&
+            path.size() + 1 == target_physical_floor &&
+            path.size() < level_limit;
+        if (!try_terminal || !run_optimization ||
+            !use_hilbert_schmidt_guidance || path.size() == 0 ||
+            best.get_min_cnots() == 0) {
+            return best;
+        }
+
+        // HS proximity and residual CNOT complexity are different objectives.
+        // Refine a fixed, nearest cut-cover family after the cheap HS fit.
+        // These are necessary spectral conditions, not synthesis certificates.
+        // Keep this experimental continuation off until full-corpus replay.
+        const size_t parameter_count =
+            static_cast<size_t>(6 * path.size() + 3 * qbit_num);
+        if (best.optimized_parameters.size() != parameter_count) {
+            throw std::logic_error(
+                "OSR refinement requires the complete final local layer"
+            );
+        }
+        std::vector<std::vector<int>> profiles;
+        // Keep the exact edge-to-profile correspondence. A necessary
+        // spectrum match is only a proposal for a constructive closer.
+        for (const auto& edge : topology) {
+            std::vector<int> profile;
+            for (const auto& cut : all_cuts) {
+                const bool a = std::find(cut.begin(), cut.end(), edge[0]) !=
+                    cut.end();
+                const bool b = std::find(cut.begin(), cut.end(), edge[1]) !=
+                    cut.end();
+                profile.push_back(a != b ? 1 : 0);
+            }
+            profiles.push_back(std::move(profile));
+        }
+        if (profiles.empty()) {
+            return best;
+        }
+        const std::vector<double> hs_parameters = best.optimized_parameters;
+        double refinement_tolerance = DEFAULT_OSR_OPTIMIZATION_TOLERANCE;
+        if (config.count("osr_optimization_tolerance") > 0) {
+            config["osr_optimization_tolerance"].get_property(
+                refinement_tolerance
+            );
+        }
+        if (!std::isfinite(refinement_tolerance) ||
+            refinement_tolerance <= 0.0) {
+            throw std::invalid_argument(
+                "OSR refinement tolerance must be finite and positive"
+            );
+        }
+        long long refinement_iterations = 1000;
+        if (config.count("max_inner_iterations_bfgs2") > 0) {
+            config["max_inner_iterations_bfgs2"].get_property(
+                refinement_iterations
+            );
+        }
+        refinement_iterations = std::max<long long>(
+            refinement_iterations, 1
+        );
+
+        // Exact parameter map for C -> C-dagger. Each Tree block stores
+        // U3(target), U3(control), CNOT, followed by the final local layer.
+        // U3(theta, phi, lambda)-dagger = U3(-theta, -lambda, -phi).
+        // Move the pending local rotations wire by wire when reversing CNOTs.
+        auto inverse_parameters = [&](
+            const GrayCodeCNOT& word, const std::vector<double>& parameters
+        ) {
+            std::vector<double> pending(3 * qbit_num);
+            std::vector<double> inverse(parameters.size());
+            auto dagger = [](const double* source, double* destination) {
+                destination[0] = -source[0];
+                destination[1] = -source[2];
+                destination[2] = -source[1];
+            };
+            const size_t final_offset = static_cast<size_t>(6 * word.size());
+            for (int qbit = 0; qbit < qbit_num; ++qbit) {
+                dagger(parameters.data() + final_offset + 3 * qbit,
+                       pending.data() + 3 * qbit);
+            }
+            for (int idx = 0; idx < word.size(); ++idx) {
+                const int original_idx = word.size() - 1 - idx;
+                const int first = possible_target_qbits[word[original_idx]];
+                const int second = possible_control_qbits[word[original_idx]];
+                std::copy_n(pending.data() + 3 * first, 3,
+                            inverse.data() + 6 * idx);
+                std::copy_n(pending.data() + 3 * second, 3,
+                            inverse.data() + 6 * idx + 3);
+                dagger(parameters.data() + 6 * original_idx,
+                       pending.data() + 3 * first);
+                dagger(parameters.data() + 6 * original_idx + 3,
+                       pending.data() + 3 * second);
+            }
+            std::copy(pending.begin(), pending.end(),
+                      inverse.begin() + final_offset);
+            return inverse;
+        };
+
+        // Both frames start from the SAME HS fit. Optimizing C-dagger against
+        // U-dagger gives (U-dagger*C)-dagger, whose cut singular spectra equal
+        // those of the input-side residual. This reuses the native OSR gradient.
+        for (int input_frame = 0; input_frame < 2; ++input_frame) {
+            GrayCodeCNOT refinement_path = path.copy();
+            Matrix refinement_target = Umtx.copy();
+            std::vector<double> initial = hs_parameters;
+            if (input_frame != 0) {
+                for (int idx = 0; idx < path.size(); ++idx) {
+                    refinement_path[idx] = path[path.size() - 1 - idx];
+                }
+                initial = inverse_parameters(path, hs_parameters);
+                for (int row = 0; row < Umtx.rows; ++row) {
+                    for (int col = 0; col < Umtx.cols; ++col) {
+                        const QGD_Complex16 element =
+                            Umtx.data[col * Umtx.stride + row];
+                        refinement_target.data[
+                            row * refinement_target.stride + col
+                        ] = QGD_Complex16{element.real, -element.imag};
+                    }
+                }
+            }
+            auto refinement_config = config;
+            refinement_config["use_float"].set_property("use_float", false);
+            refinement_config["parallel"].set_property(
+                "parallel", static_cast<long long>(0)
+            );
+            refinement_config["osr_gate_spectral_witnesses"].set_property(
+                "osr_gate_spectral_witnesses", true
+            );
+            refinement_config["optimization_tolerance"].set_property(
+                "optimization_tolerance", refinement_tolerance
+            );
+            refinement_config["max_inner_iterations_bfgs2"].set_property(
+                "max_inner_iterations_bfgs2", refinement_iterations
+            );
+            N_Qubit_Decomposition_custom refinement(
+                refinement_target.copy(), qbit_num, false,
+                refinement_config, RANDOM, 0
+            );
+            std::unique_ptr<Gates_block> structure(
+                construct_gate_structure_from_Gray_code(refinement_path, true)
+            );
+            refinement.set_custom_gate_structure(structure.get());
+            refinement.set_optimization_blocks(structure->get_gate_num());
+            refinement.set_optimized_parameters(
+                initial.data(), static_cast<int>(initial.size())
+            );
+            refinement.set_verbose(0);
+            refinement.set_debugfile("");
+            refinement.set_random_seed(0);
+            refinement.set_optimizer(BFGS2);
+            refinement.set_max_iteration(1);
+            refinement.set_iteration_loops(qbit_num, 0);
+            refinement.set_max_inner_iterations(
+                static_cast<int>(std::min<long long>(
+                    refinement_iterations, std::numeric_limits<int>::max()
+                ))
+            );
+            refinement.set_optimization_tolerance(refinement_tolerance);
+            Matrix_real parameters = refinement.get_optimized_parameters();
+            Matrix residual = refinement_target.copy();
+            refinement.apply_to(parameters, residual);
+
+            // Cache scalar family losses by (cut, crossing count), rather
+            // than repeating every SVD for every edge-cover composition.
+            std::vector<std::map<int, double>> cut_losses(all_cuts.size());
+            size_t selected_profile = 0;
+            double before_loss = std::numeric_limits<double>::infinity();
+            for (size_t profile_idx = 0; profile_idx < profiles.size();
+                 ++profile_idx) {
+                double loss = 0.0;
+                for (size_t cut_idx = 0; cut_idx < all_cuts.size(); ++cut_idx) {
+                    const int crossings = profiles[profile_idx][cut_idx];
+                    auto& cache = cut_losses[cut_idx];
+                    auto found = cache.find(crossings);
+                    if (found == cache.end()) {
+                        std::vector<std::vector<int>> one_cut{
+                            all_cuts[cut_idx]
+                        };
+                        const double cut_loss = get_osr_entanglement_test(
+                            residual, one_cut,
+                            std::vector<std::vector<int>>{{crossings}},
+                            0.0, 0.0, true
+                        );
+                        found = cache.emplace(crossings, cut_loss).first;
+                    }
+                    loss = std::max(loss, found->second);
+                }
+                if (loss < before_loss) {
+                    before_loss = loss;
+                    selected_profile = profile_idx;
+                }
+            }
+            refinement.set_cost_function_variant(OSR_ENTANGLEMENT);
+            refinement.set_osr_params(
+                all_cuts,
+                std::vector<std::vector<int>>{profiles[selected_profile]},
+                0.0, 0.1
+            );
+            refinement.start_decomposition();
+            parameters = refinement.get_optimized_parameters();
+            refinement_target.copy_to(residual);
+            refinement.apply_to(parameters, residual);
+
+            const double after_loss = get_osr_entanglement_test(
+                residual, all_cuts,
+                std::vector<std::vector<int>>{profiles[selected_profile]},
+                0.0, 0.0, true
+            );
+            if (try_terminal && after_loss < refinement_tolerance) {
+                const int edge = static_cast<int>(selected_profile);
+                matrix_base<int8_t> closing_limits(1, 1);
+                closing_limits[0] = static_cast<int8_t>(topology.size());
+                GrayCodeCNOT closing_path(closing_limits);
+                closing_path[0] = static_cast<int8_t>(edge);
+                auto closing_config = refinement_config;
+                closing_config["optimization_tolerance"].set_property(
+                    "optimization_tolerance", refinement_tolerance
+                );
+                closing_config["optimization_tolerance_bfgs2"].set_property(
+                    "optimization_tolerance_bfgs2", refinement_tolerance
+                );
+                closing_config["max_iteration_loops_bfgs2"].set_property(
+                    "max_iteration_loops_bfgs2", static_cast<long long>(5)
+                );
+                closing_config["use_basin_hopping"].set_property(
+                    "use_basin_hopping", true
+                );
+                closing_config["use_differential_evolution"].set_property(
+                    "use_differential_evolution", false
+                );
+                closing_config["use_dual_annealing"].set_property(
+                    "use_dual_annealing", false
+                );
+                N_Qubit_Decomposition_custom closing(
+                    residual.copy(), qbit_num, false, closing_config, RANDOM, 0
+                );
+                std::unique_ptr<Gates_block> closing_structure(
+                    construct_gate_structure_from_Gray_code(closing_path, true)
+                );
+                closing.set_custom_gate_structure(closing_structure.get());
+                closing.set_optimization_blocks(closing_structure->get_gate_num());
+                closing.set_verbose(0);
+                closing.set_debugfile("");
+                closing.set_optimizer(BFGS2);
+                closing.set_random_seed(static_cast<int>(path_rng_seed));
+                closing.set_max_iteration(1);
+                closing.set_max_inner_iterations(static_cast<int>(
+                    std::min<long long>(refinement_iterations,
+                                        std::numeric_limits<int>::max())
+                ));
+                closing.set_iteration_loops(qbit_num, 5);
+                closing.set_cost_function_variant(HILBERT_SCHMIDT_TEST);
+                closing.set_optimization_tolerance(refinement_tolerance);
+                std::mt19937 closing_gen(static_cast<unsigned>(path_rng_seed));
+                std::uniform_real_distribution<double> angle(0.0, 2 * M_PI);
+                std::vector<double> initial_closing(
+                    closing_structure->get_parameter_num()
+                );
+                for (double& value : initial_closing) value = angle(closing_gen);
+                closing.set_optimized_parameters(
+                    initial_closing.data(), static_cast<int>(initial_closing.size())
+                );
+                closing.start_decomposition();
+                Matrix_real z = closing.get_optimized_parameters();
+
+                const int depth = refinement_path.size();
+                matrix_base<int8_t> child_limits(1, depth + 1);
+                std::fill_n(child_limits.data, child_limits.size(),
+                            static_cast<int8_t>(topology.size()));
+                GrayCodeCNOT child_path(child_limits);
+                for (int idx = 0; idx < depth; ++idx) {
+                    child_path[idx] = refinement_path[idx];
+                }
+                child_path[depth] = static_cast<int8_t>(edge);
+                std::vector<double> merged(6 * (depth + 1) + 3 * qbit_num);
+                std::copy_n(parameters.get_data(), 6 * depth, merged.data());
+                const int first = possible_target_qbits[edge];
+                const int second = possible_control_qbits[edge];
+                auto local = merge_tree_u3(
+                    z.get_data(), parameters.get_data() + 6 * depth + 3 * first
+                );
+                std::copy(local.begin(), local.end(), merged.begin() + 6 * depth);
+                local = merge_tree_u3(
+                    z.get_data() + 3,
+                    parameters.get_data() + 6 * depth + 3 * second
+                );
+                std::copy(local.begin(), local.end(),
+                          merged.begin() + 6 * depth + 3);
+                for (int qbit = 0; qbit < qbit_num; ++qbit) {
+                    const double* final = z.get_data() + 6 + 3 * qbit;
+                    if (qbit == first || qbit == second) {
+                        std::copy_n(final, 3,
+                            merged.begin() + 6 * (depth + 1) + 3 * qbit);
+                    } else {
+                        local = merge_tree_u3(final,
+                            parameters.get_data() + 6 * depth + 3 * qbit);
+                        std::copy(local.begin(), local.end(),
+                            merged.begin() + 6 * (depth + 1) + 3 * qbit);
+                    }
+                }
+                std::unique_ptr<Gates_block> child_structure(
+                    construct_gate_structure_from_Gray_code(child_path, true)
+                );
+                auto polish_config = closing_config;
+                polish_config["optimization_tolerance"].set_property(
+                    "optimization_tolerance", terminal_tolerance
+                );
+                polish_config["max_iteration_loops_bfgs"].set_property(
+                    "max_iteration_loops_bfgs", static_cast<long long>(5)
+                );
+                N_Qubit_Decomposition_custom polish(
+                    refinement_target.copy(), qbit_num, false,
+                    polish_config, RANDOM, 0
+                );
+                polish.set_custom_gate_structure(child_structure.get());
+                polish.set_optimization_blocks(child_structure->get_gate_num());
+                polish.set_optimized_parameters(
+                    merged.data(), static_cast<int>(merged.size())
+                );
+                polish.set_verbose(0);
+                polish.set_debugfile("");
+                polish.set_optimizer(BFGS);
+                polish.set_random_seed(static_cast<int>(path_rng_seed));
+                polish.set_max_iteration(1);
+                polish.set_max_inner_iterations(static_cast<int>(
+                    std::min<long long>(refinement_iterations,
+                                        std::numeric_limits<int>::max())
+                ));
+                polish.set_iteration_loops(qbit_num, 5);
+                polish.set_cost_function_variant(HILBERT_SCHMIDT_TEST);
+                polish.set_optimization_tolerance(terminal_tolerance);
+                // No angles are frozen: the composed fit is only the initial
+                // point of a full joint fixed-structure optimization.
+                polish.start_decomposition();
+                Matrix_real polished = polish.get_optimized_parameters();
+                std::vector<double> fitted(polished.get_data(),
+                    polished.get_data() + polished.size());
+                if (input_frame != 0) {
+                    fitted = inverse_parameters(child_path, fitted);
+                    for (int idx = 0; idx < (depth + 1) / 2; ++idx) {
+                        std::swap(child_path[idx], child_path[depth - idx]);
+                    }
+                }
+                Matrix verification = Umtx.copy();
+                Matrix_real fitted_view(fitted.data(), 1,
+                                        static_cast<int>(fitted.size()));
+                std::unique_ptr<Gates_block> forward_structure(
+                    construct_gate_structure_from_Gray_code(child_path, true)
+                );
+                forward_structure->apply_to(fitted_view, verification, 0);
+                const double hs = get_hilbert_schmidt_test(verification);
+                const bool certified = std::isfinite(hs) &&
+                    hs < terminal_tolerance;
+                if (trace_candidate_placements) {
+                    std::stringstream sstream;
+                    sstream << "OSR terminal completion: parent_depth=" << depth
+                            << ", frame=" << (input_frame ? "input" : "output")
+                            << ", edge=" << edge << ", cnots=" << depth + 1
+                            << ", floor=" << target_physical_floor
+                            << ", hs=" << hs << ", certified=" << certified
+                            << std::endl;
+                    print(sstream, 2);
+                }
+                if (certified) {
+                    SearchNode completed(child_path, best.use_optimistic_score);
+                    completed.optimized_parameters = std::move(fitted);
+                    completed.screening_objective = hs;
+                    completed.lower_budget_profile_distance = 0.0;
+                    completed.osr_results.emplace_back(
+                        0, 0.0, std::vector<int>(topology.size(), 0),
+                        std::vector<std::pair<int, double>>(
+                            all_cuts.size(), std::make_pair(0, 0.0))
+                    );
+                    // Only a complete certificate at the target lower bound
+                    // can replace the current forward search, never a partial
+                    // cut-profile improvement or an unverified incumbent.
+                    certified_terminal.reset(new SearchNode(completed));
+                    return completed;
+                }
+            }
+
+        }
+        return best;
+    };
+
       auto evaluate_candidate_path = [&](
           const GrayCodeCNOT& path, const SearchNode* warm_start,
           bool run_optimization, int iteration_loop_override,
@@ -1515,7 +2505,7 @@ GrayCodeCNOT N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures
           int target_bound_override = -1,
           bool full_projection_restart_budget = false) -> SearchNode {
         const bool defer_postfit_osr =
-            qbit_num >= 4 && run_optimization && eager_projection_restarts &&
+            qbit_num >= 3 && run_optimization && eager_projection_restarts &&
             projection_restarts > 1;
         auto evaluate_once = [&] (
             long long restart_index,
@@ -1571,8 +2561,11 @@ GrayCodeCNOT N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures
         const bool first_projection_improves_parent =
             !defer_postfit_osr && warm_start != nullptr &&
             best.get_min_cnots() < warm_start->get_min_cnots();
+        // Honor the requested projection portfolio on both supported
+        // widths. The 3q default is still one solve; an explicit restart
+        // request must not silently collapse to one because of its width.
         const long long restart_limit =
-            qbit_num >= 4 && run_optimization &&
+            qbit_num >= 3 && run_optimization &&
                     (eager_projection_restarts ||
                      full_projection_restart_budget ||
                      first_projection_improves_parent)
@@ -1580,6 +2573,12 @@ GrayCodeCNOT N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures
                 : 1;
         for (long long restart_index = 1;
              restart_index < restart_limit; ++restart_index) {
+            if (trace_candidate_placements) {
+                std::stringstream sstream;
+                sstream << "OSR projection restart: path_depth=" << path.size()
+                        << ", restart_index=" << restart_index << std::endl;
+                print(sstream, 2);
+            }
             SearchNode retry = evaluate_once(
                 restart_index, nullptr, !defer_postfit_osr, nullptr
             );
@@ -1672,7 +2671,15 @@ GrayCodeCNOT N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures
                 target_bound_override, &best.optimized_parameters, true
             );
             scored.screening_objective = winning_screening_objective;
-            return scored;
+            best = std::move(scored);
+        }
+
+        // The 3q constructive continuation is cheap enough for each fitted
+        // candidate. On 4q it belongs to the committed forward state, not
+        // every sibling that will immediately be discarded.
+        if (qbit_num == 3) {
+            best = complete_terminal_path(path, std::move(best),
+                                          run_optimization);
         }
         return best;
     };
@@ -1704,6 +2711,13 @@ GrayCodeCNOT N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures
         if (!use_hilbert_schmidt_guidance) {
             return true;
         }
+        if (certified_terminal != nullptr &&
+            node.path == certified_terminal->path &&
+            node.optimized_parameters ==
+                certified_terminal->optimized_parameters &&
+            node.screening_objective < terminal_tolerance) {
+            return true;
+        }
         N_Qubit_Decomposition_custom verifier =
             perform_optimization(nullptr, false);
         // Zero-residual certification is a fixed-structure Hilbert-Schmidt
@@ -1713,6 +2727,9 @@ GrayCodeCNOT N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures
         // same starts.  Keep BFGS2 for OSR candidate discovery and use the
         // smooth local solver for this final certificate only.
         verifier.set_optimizer(BFGS);
+        // perform_optimization inherits the parent objective. This verifier
+        // must use the same HS metric as the synthesis acceptance tolerance.
+        verifier.set_cost_function_variant(HILBERT_SCHMIDT_TEST);
         long long warm_loops = qbit_num >= 4 ? 5 : 0;
         if (config.count("osr_zero_hs_warm_loops") > 0) {
             config["osr_zero_hs_warm_loops"].get_property(warm_loops);
@@ -1776,10 +2793,12 @@ GrayCodeCNOT N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures
                 qbit_num, attempt == 0 ? static_cast<int>(warm_loops) : 0
             );
             verifier.start_decomposition();
-            const double hs = verifier.get_current_minimum();
+            Matrix_real fitted = verifier.get_optimized_parameters();
+            Matrix certified_residual = Umtx.copy();
+            verifier.apply_to(fitted, certified_residual);
+            const double hs = get_hilbert_schmidt_test(certified_residual);
             if (hs < best_hs) {
                 best_hs = hs;
-                Matrix_real fitted = verifier.get_optimized_parameters();
                 best_parameters.assign(
                     fitted.get_data(), fitted.get_data() + fitted.size()
                 );
@@ -1793,10 +2812,447 @@ GrayCodeCNOT N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures
             node.optimized_parameters = std::move(best_parameters);
             return true;
         }
-        // A failed HS fit does not certify the cut profile recorded for the
-        // candidate. Keep the original parameters and OSR score together.
+        // Screening rank and synthesis precision have different purposes.
+        // Once the zero-rank screening claim fails its HS certificate,
+        // retaining that coarse claim hides small but necessary entanglers
+        // (for example weak controlled phases). Recompute the residual cuts
+        // at certificate precision, using the best actual fit so that the
+        // parameters, HS value and cut profile describe the same residual.
+        const double certificate_osr_tol = std::min(
+            osr_tol, std::sqrt(synthesis_tolerance_loc)
+        );
+        if (!best_parameters.empty() && certificate_osr_tol < osr_tol) {
+            SearchNode rescored = evaluate_path(
+                cDecomp_custom_random, osr_bound_solver, all_cuts, Fnorm,
+                certificate_osr_tol, distrib_real, gen, node.path, nullptr,
+                false, 0, 0, -1, &best_parameters, true
+            );
+            rescored.screening_objective = best_hs;
+            node = std::move(rescored);
+        }
         return false;
     };
+
+    // Experimental forward-only continuation of a rank plateau. A complete
+    // shallow insertion class is still evaluated before choosing its best
+    // HS projection; integer OSR descents retain priority. This avoids
+    // enumerating longer words from an unchanged root merely because a
+    // full-rank residual has not crossed its next dyadic rank boundary yet.
+    bool projection_plateau_descent = false;
+    if (config.count("osr_projection_plateau_descent") > 0) {
+        config["osr_projection_plateau_descent"].get_property(
+            projection_plateau_descent
+        );
+    }
+    bool profile_plateau_descent = false;
+    if (config.count("osr_profile_plateau_descent") > 0) {
+        config["osr_profile_plateau_descent"].get_property(
+            profile_plateau_descent
+        );
+    }
+
+    bool deferred_profile_plateau_descent = false;
+    if (qbit_num >= 3 && qbit_num <= 4 &&
+        config.count("osr_deferred_profile_plateau_descent") > 0) {
+        config["osr_deferred_profile_plateau_descent"].get_property(
+            deferred_profile_plateau_descent
+        );
+    }
+
+
+    // Geometry-only proposals complement the optimistic OSR frontier. They
+    // are not a complete library or a proof of global coverage. Repeated
+    // overlapping interactions and paired blocks provide small constructive
+    // charts without borrowing any target/source circuit decomposition.
+    std::set<std::vector<int>> geometric_attempted_words;
+    std::unique_ptr<SearchNode> geometric_certificate;
+    std::vector<squander_osr::PauliSpinePlacement> geometric_placement_requirements;
+    auto try_geometric_completion = [&](int cnot_bound)
+        -> std::unique_ptr<SearchNode> {
+        if (!geometric_completion_motifs ||
+            cnot_bound < std::max(geometric_physical_floor, 1)) {
+            return nullptr;
+        }
+        if (geometric_certificate != nullptr &&
+            geometric_certificate->path.size() <= cnot_bound) {
+            return std::unique_ptr<SearchNode>(
+                new SearchNode(*geometric_certificate)
+            );
+        }
+        const int edge_count = static_cast<int>(possible_target_qbits.size());
+        std::vector<unsigned> supports(edge_count, 0);
+        for (int edge = 0; edge < edge_count; ++edge) {
+            supports[edge] = (unsigned(1) << possible_target_qbits[edge]) |
+                            (unsigned(1) << possible_control_qbits[edge]);
+        }
+        const auto fan_echo_words = squander_osr::fan_echo_motifs(
+            qbit_num, supports, cnot_bound
+        );
+        if (geometric_placement_requirements.empty()) {
+            // Umtx stores the target adjoint. Read the desired unitary
+            // through its stride, without copying or transposing a matrix.
+            geometric_placement_requirements = squander_osr::pauli_spine_placements(
+                qbit_num, terminal_tolerance, [&](int row, int col) {
+                    const auto& value = Umtx.get_data()[col * Umtx.stride + row];
+                    return std::complex<double>(value.real, -value.imag);
+                }
+            );
+        }
+        auto motif_config = config;
+        motif_config["parallel"].set_property("parallel",
+                                             static_cast<long long>(0));
+        motif_config["use_float"].set_property("use_float", false);
+        motif_config["use_basin_hopping"].set_property("use_basin_hopping", true);
+        motif_config["use_differential_evolution"].set_property(
+            "use_differential_evolution", false
+        );
+        motif_config["use_dual_annealing"].set_property(
+            "use_dual_annealing", false
+        );
+        motif_config["optimization_tolerance"].set_property(
+            "optimization_tolerance", terminal_tolerance
+        );
+        motif_config["optimization_tolerance_bfgs2"].set_property(
+            "optimization_tolerance_bfgs2", terminal_tolerance
+        );
+        long long hops = 2;
+        if (config.count("osr_geometric_completion_basin_hops") > 0) {
+            config["osr_geometric_completion_basin_hops"].get_property(hops);
+        }
+        if (hops < 0 || hops > std::numeric_limits<int>::max()) {
+            throw std::invalid_argument(
+                "osr_geometric_completion_basin_hops must be a nonnegative int"
+            );
+        }
+        motif_config["max_iteration_loops_bfgs2"].set_property(
+            "max_iteration_loops_bfgs2", hops
+        );
+        // Preserve the established budget for existing charts. Newly added
+        // complete fan-echo charts inherit the configured full local-fit
+        // budget, independently of partition width.
+        long long fan_echo_hops = hops;
+        if (config.count("max_iteration_loops_bfgs2") > 0) {
+            config["max_iteration_loops_bfgs2"].get_property(fan_echo_hops);
+        } else if (config.count("max_iteration_loops") > 0) {
+            config["max_iteration_loops"].get_property(fan_echo_hops);
+        }
+        fan_echo_hops = std::max(fan_echo_hops, hops);
+        if (fan_echo_hops < 0 || fan_echo_hops > std::numeric_limits<int>::max()) {
+            throw std::invalid_argument(
+                "max_iteration_loops must be a nonnegative int"
+            );
+        }
+        long long evaluations = 1000;
+        if (config.count("max_inner_iterations_bfgs2") > 0) {
+            config["max_inner_iterations_bfgs2"].get_property(evaluations);
+        }
+        evaluations = std::max<long long>(1, std::min<long long>(
+            evaluations, std::numeric_limits<int>::max()
+        ));
+        for (int length = std::max(geometric_physical_floor, 1);
+             length <= cnot_bound; ++length) {
+            std::vector<std::vector<int>> words;
+            std::set<std::vector<int>> distinct;
+            std::set<std::vector<int>> full_budget_words;
+            auto add_period = [&](const std::vector<int>& period) {
+                std::vector<int> word(length);
+                for (int idx = 0; idx < length; ++idx) {
+                    word[idx] = period[idx % period.size()];
+                }
+                if (distinct.insert(word).second) {
+                    words.push_back(std::move(word));
+                }
+            };
+            if (qbit_num == 3) {
+                for (int first = 0; first < edge_count; ++first) {
+                    for (int second = 0; second < edge_count; ++second) {
+                        if (first == second ||
+                            (supports[first] | supports[second]) != unsigned(7)) {
+                            continue;
+                        }
+                        add_period({first, second});
+                        add_period({first, first, second, second});
+                    }
+                }
+                if (edge_count == 3) {
+                    std::vector<int> period{0, 1, 2};
+                    do {
+                        add_period(period);
+                    } while (std::next_permutation(period.begin(), period.end()));
+                }
+            }
+            for (const auto& word : fan_echo_words) {
+                if (static_cast<int>(word.size()) == length &&
+                    distinct.insert(word).second) {
+                    full_budget_words.insert(word);
+                    words.push_back(word);
+                }
+            }
+            for (const auto& word : words) {
+                if (!geometric_attempted_words.insert(word).second) continue;
+                bool satisfies_cuts = true;
+                for (size_t cut = 0; cut < all_cuts.size(); ++cut) {
+                    int crossings = 0;
+                    for (int digit : word) {
+                        const auto& subset = all_cuts[cut];
+                        const bool first = std::find(
+                            subset.begin(), subset.end(),
+                            possible_target_qbits[digit]
+                        ) != subset.end();
+                        const bool second = std::find(
+                            subset.begin(), subset.end(),
+                            possible_control_qbits[digit]
+                        ) != subset.end();
+                        crossings += first != second;
+                    }
+                    if (crossings < target_cut_requirements[cut]) {
+                        satisfies_cuts = false;
+                        break;
+                    }
+                }
+                if (!satisfies_cuts) continue;
+                if (!squander_osr::admits_pauli_spine_placement(
+                        word, supports, geometric_placement_requirements)) continue;
+                matrix_base<int8_t> limits(1, length);
+                std::fill_n(limits.data, limits.size(),
+                            static_cast<int8_t>(edge_count));
+                GrayCodeCNOT path(limits);
+                for (int idx = 0; idx < length; ++idx) {
+                    path[idx] = static_cast<int8_t>(word[idx]);
+                }
+                std::unique_ptr<Gates_block> structure(
+                    construct_gate_structure_from_Gray_code(path, true)
+                );
+                const bool fan_echo = full_budget_words.count(word) != 0;
+                const long long word_hops = fan_echo ? fan_echo_hops : hops;
+                auto word_config = motif_config;
+                word_config["max_iteration_loops_bfgs2"].set_property(
+                    "max_iteration_loops_bfgs2", word_hops
+                );
+                N_Qubit_Decomposition_custom optimizer(
+                    Umtx.copy(), qbit_num, false, word_config, RANDOM, 0
+                );
+                optimizer.set_verbose(0);
+                optimizer.set_debugfile("");
+                optimizer.set_optimizer(BFGS2);
+                optimizer.set_random_seed(static_cast<int>(path_rng_seed));
+                optimizer.set_max_iteration(1);
+                optimizer.set_max_inner_iterations(static_cast<int>(evaluations));
+                optimizer.set_iteration_loops(qbit_num, static_cast<int>(word_hops));
+                optimizer.set_optimization_tolerance(terminal_tolerance);
+                optimizer.set_cost_function_variant(HILBERT_SCHMIDT_TEST);
+                optimizer.set_custom_gate_structure(structure.get());
+                optimizer.set_optimization_blocks(structure->get_gate_num());
+                std::mt19937 motif_gen(static_cast<unsigned>(path_rng_seed));
+                std::uniform_real_distribution<double> angle(0.0, 2 * M_PI);
+                std::vector<double> initial(structure->get_parameter_num());
+                for (double& value : initial) value = angle(motif_gen);
+                optimizer.set_optimized_parameters(
+                    initial.data(), static_cast<int>(initial.size())
+                );
+                optimizer.start_decomposition();
+                Matrix_real parameters = optimizer.get_optimized_parameters();
+                Matrix residual = Umtx.copy();
+                optimizer.apply_to(parameters, residual);
+                const double hs = get_hilbert_schmidt_test(residual);
+                if (trace_candidate_placements) {
+                    std::stringstream sstream;
+                    sstream << "OSR geometric chart: cnots=" << length
+                            << ", floor=" << geometric_physical_floor
+                            << ", hs=" << hs << ", hops=" << word_hops
+                            << ", path=";
+                    for (size_t idx = 0; idx < word.size(); ++idx) {
+                        if (idx != 0) sstream << ',';
+                        sstream << word[idx];
+                    }
+                    sstream << '\n';
+                    print(sstream, 1);
+                }
+                if (!std::isfinite(hs) || hs >= terminal_tolerance) continue;
+                std::unique_ptr<SearchNode> completed(new SearchNode(path, true));
+                completed->optimized_parameters.assign(
+                    parameters.get_data(), parameters.get_data() + parameters.size()
+                );
+                completed->screening_objective = hs;
+                completed->lower_budget_profile_distance = 0.0;
+                completed->osr_results.emplace_back(
+                    0, 0.0, std::vector<int>(topology.size(), 0),
+                    std::vector<std::pair<int, double>>(
+                        all_cuts.size(), std::make_pair(0, 0.0)
+                    )
+                );
+                if (trace_candidate_placements) {
+                    std::stringstream sstream;
+                    sstream << "OSR geometric completion: cnots=" << length
+                            << ", floor=" << geometric_physical_floor
+                            << ", bound=" << cnot_bound << ", hs=" << hs
+                            << ", certified=1"
+                            << ", motif=" << (fan_echo ? "fan_echo" : "legacy")
+                            << ", hops=" << word_hops
+                            << std::endl;
+                    print(sstream, 2);
+                }
+                geometric_certificate.reset(new SearchNode(*completed));
+                return completed;
+            }
+        }
+        return nullptr;
+    };
+
+    auto deflate_certificate = [&](SearchNode node) -> SearchNode {
+        if (!certified_cnot_deflation || node.path.size() == 0) return node;
+        auto deflation_config = config;
+        deflation_config["parallel"].set_property(
+            "parallel", static_cast<long long>(0)
+        );
+        deflation_config["use_float"].set_property("use_float", false);
+        deflation_config["use_basin_hopping"].set_property(
+            "use_basin_hopping", true
+        );
+        deflation_config["use_differential_evolution"].set_property(
+            "use_differential_evolution", false
+        );
+        deflation_config["use_dual_annealing"].set_property(
+            "use_dual_annealing", false
+        );
+        deflation_config["optimization_tolerance"].set_property(
+            "optimization_tolerance", terminal_tolerance
+        );
+        deflation_config["optimization_tolerance_bfgs2"].set_property(
+            "optimization_tolerance_bfgs2", terminal_tolerance
+        );
+        long long hops = 2;
+        if (config.count("osr_cnot_deflation_basin_hops") > 0) {
+            config["osr_cnot_deflation_basin_hops"].get_property(hops);
+        }
+        if (hops < 0 || hops > std::numeric_limits<int>::max()) {
+            throw std::invalid_argument(
+                "osr_cnot_deflation_basin_hops must be a nonnegative int"
+            );
+        }
+        deflation_config["max_iteration_loops_bfgs2"].set_property(
+            "max_iteration_loops_bfgs2", hops
+        );
+        long long evaluations = 1000;
+        if (config.count("max_inner_iterations_bfgs2") > 0) {
+            config["max_inner_iterations_bfgs2"].get_property(evaluations);
+        }
+        evaluations = std::max<long long>(1, std::min<long long>(
+            evaluations, std::numeric_limits<int>::max()
+        ));
+        auto crosses = [&](int digit, const std::vector<int>& subset) {
+            const bool target = std::find(
+                subset.begin(), subset.end(), possible_target_qbits[digit]
+            ) != subset.end();
+            const bool control = std::find(
+                subset.begin(), subset.end(), possible_control_qbits[digit]
+            ) != subset.end();
+            return target != control;
+        };
+        while (node.path.size() > 0) {
+            const int parent_length = node.path.size();
+            const int child_length = parent_length - 1;
+            if (node.optimized_parameters.size() !=
+                static_cast<size_t>(6 * parent_length + 3 * qbit_num)) {
+                throw std::logic_error(
+                    "Certified Tree circuit has an inconsistent U3 layout"
+                );
+            }
+            std::vector<int> word_targets(parent_length), word_controls(parent_length);
+            for (int idx = 0; idx < parent_length; ++idx) {
+                word_targets[idx] = possible_target_qbits[node.path[idx]];
+                word_controls[idx] = possible_control_qbits[node.path[idx]];
+            }
+            std::vector<int> crossings(all_cuts.size(), 0);
+            for (size_t cut = 0; cut < all_cuts.size(); ++cut) {
+                for (int idx = 0; idx < parent_length; ++idx) {
+                    crossings[cut] += crosses(node.path[idx], all_cuts[cut]);
+                }
+            }
+            bool reduced = false;
+            for (int removed = 0; removed < parent_length && !reduced;
+                 ++removed) {
+                bool satisfies_cuts = true;
+                for (size_t cut = 0; cut < all_cuts.size(); ++cut) {
+                    if (crossings[cut] -
+                            crosses(node.path[removed], all_cuts[cut]) <
+                        target_cut_requirements[cut]) {
+                        satisfies_cuts = false;
+                        break;
+                    }
+                }
+                if (!satisfies_cuts) continue;
+                // A removed CX replaced by identity is an HS stationary
+                // seed: its normalized trace overlap is 1/2. Both products
+                // Rx_target(+/-pi/2) Rz_control(+/-pi/2) attain the optimal
+                // product-unitary overlap 1/sqrt(2), from CX's two equal
+                // operator-Schmidt coefficients. Jointly refit all angles;
+                // this exact chart transition is not a solution certificate.
+                for (int sign : {1, -1}) {
+                    GrayCodeCNOT child;
+                    if (child_length > 0) {
+                        matrix_base<int8_t> limits(1, child_length);
+                        std::fill_n(limits.data, limits.size(),
+                            static_cast<int8_t>(topology.size()));
+                        child = GrayCodeCNOT(limits);
+                    }
+                    int child_idx = 0;
+                    for (int idx = 0; idx < parent_length; ++idx) {
+                        if (idx != removed) child[child_idx++] = node.path[idx];
+                    }
+                    auto fit = refit_tree_cnot_deletion(Umtx, qbit_num,
+                        word_targets, word_controls, node.optimized_parameters, removed, sign,
+                        deflation_config, static_cast<int>(hops), static_cast<int>(evaluations),
+                        static_cast<int>(path_rng_seed), terminal_tolerance);
+                    if (!fit.certified) continue;
+                    SearchNode completed(child, true);
+                    completed.optimized_parameters = std::move(fit.parameters);
+                    completed.screening_objective = fit.hs;
+                    completed.lower_budget_profile_distance = 0.0;
+                    completed.osr_results.emplace_back(
+                        0, 0.0, std::vector<int>(topology.size(), 0),
+                        std::vector<std::pair<int, double>>(
+                            all_cuts.size(), std::make_pair(0, 0.0))
+                    );
+                    if (trace_candidate_placements) {
+                        std::stringstream sstream;
+                        trace_tree_cnot_deletion(sstream, parent_length, removed, sign, fit);
+                        print(sstream, 2);
+                    }
+                    node = std::move(completed);
+                    reduced = true;
+                    break;
+                }
+            }
+            if (!reduced) break;
+        }
+        return node;
+    };
+
+    auto record_certificate = [&](SearchNode node) {
+        // A proposal can replace an already certified OSR result only with
+        // a strictly smaller, independently certified circuit. Failed fits
+        // are cached by word; they never discard the original certificate.
+        auto shorter = try_geometric_completion(node.path.size() - 1);
+        if (shorter != nullptr) node = std::move(*shorter);
+        node = deflate_certificate(std::move(node));
+        best_first_osr_solution_found = true;
+        best_first_solution_path = node.path.copy();
+        best_first_solution_parameters = std::move(node.optimized_parameters);
+        return best_first_solution_path.copy();
+    };
+
+    // A chart that saturates the existing physical lower bound is already
+    // CNOT-optimal at the requested accuracy. Check this finite proposal
+    // class before waiting for a first graph-search certificate. Failure
+    // leaves the optimistic frontier and its CNOT budget unchanged.
+    if (geometric_completion_motifs && geometric_physical_floor > 0 &&
+        geometric_physical_floor <= level_limit) {
+        auto minimal_chart = try_geometric_completion(geometric_physical_floor);
+        if (minimal_chart != nullptr) {
+            return record_certificate(std::move(*minimal_chart));
+        }
+    }
 
       std::function<bool(const GrayCodeCNOT&, const SearchNode*, bool)>
           add_to_heap = [&](const GrayCodeCNOT& path,
@@ -1805,10 +3261,10 @@ GrayCodeCNOT N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures
         // The path length is the synthesized CNOT count.  Paths beyond the
         // strict-improvement bound cannot be valid answers and must not incur
         // an optimization.  This is an exact bound, not an OSR-residual prune.
-        const int residual_target = warm_start == nullptr
-            ? 0
-            : std::max(0, warm_start->get_min_cnots() - 1);
-        if (path.size() + residual_target > level_limit)
+        // A parent residual describes one parameter point, not every jointly
+        // refitted child. Inserting a gate can change earlier local rotations,
+        // so that residual is not a certified lower bound for this structure.
+        if (path.size() > level_limit)
             return false;
         if (!is_unique_structure(path, topology))
             return false; // not unique structure
@@ -1866,6 +3322,7 @@ GrayCodeCNOT N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures
             std::shared_ptr<SearchNode> lookahead_candidate;
             std::shared_ptr<SearchNode> constructive_plateau_candidate;
             std::shared_ptr<SearchNode> constructive_descent_candidate;
+            std::shared_ptr<SearchNode> fractional_plateau_candidate;
             std::vector<std::shared_ptr<SearchNode>> tied_descent_candidates;
             size_t next_candidate;
             int num_cnot;
@@ -1987,16 +3444,11 @@ GrayCodeCNOT N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures
               expansion.next_candidate = 0;
               expansion.plateau_expanded = false;
               expansion.full_restart_budget = false;
-              // An insertion class of size k can lower an exact CNOT lower
-              // bound by as many as k.  Charging the class for only a
-              // one-CNOT decrease incorrectly prunes feasible big steps at
-              // the level limit (for example 8 + 2 + (4 - 2) == 12).
-              const int residual_target = std::max(
-                  0,
-                  expansion.parent->get_min_cnots() - expansion.num_cnot
-              );
-              if (expansion.parent->path.size() + expansion.num_cnot +
-                      residual_target > level_limit) {
+              // Only the actual word length is an exact budget bound. The
+              // parent residual may improve by more than the insertion count
+              // when all local rotations are jointly refitted.
+              if (expansion.parent->path.size() + expansion.num_cnot >
+                      level_limit) {
                   return;
               }
               std::set<GrayCodeCNOT> unique_candidates;
@@ -2466,7 +3918,8 @@ GrayCodeCNOT N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures
                           screened.get_best_osr_result();
                       screening = std::make_tuple(
                           std::get<0>(screened_osr),
-                          screened.screening_objective,
+                          placement_objective_ordering
+                              ? screened.screening_objective : 0.0,
                           std::get<1>(screened_osr)
                       );
                   }
@@ -2727,6 +4180,9 @@ GrayCodeCNOT N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures
         };
 
         auto make_expansion = [&](const std::shared_ptr<SearchNode>& parent) {
+            if (qbit_num >= 4 && certified_terminal_completion) {
+                *parent = complete_terminal_path(parent->path, *parent, true);
+            }
             DeferredExpansion expansion;
             expansion.parent = parent;
             expansion.next_candidate = 0;
@@ -2750,21 +4206,21 @@ GrayCodeCNOT N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures
             for (size_t rank = 0; rank < expansion.edge_order.size(); ++rank) {
                 expansion.edge_rank[expansion.edge_order[rank]] = rank;
             }
-            fill_candidates(expansion);
+            if (certified_terminal == nullptr) fill_candidates(expansion);
             return expansion;
         };
 
         if (certify_zero_residual(*root)) {
-            best_first_osr_solution_found = true;
-            best_first_solution_path = root->path.copy();
-            best_first_solution_parameters = root->optimized_parameters;
-            return root->path;
+            return record_certificate(*root);
         }
         if (root->path.size() < level_limit) {
             frontier.push_back(make_expansion(root));
         }
 
         while (!frontier.empty()) {
+              if (certified_terminal != nullptr) {
+                  return record_certificate(*certified_terminal);
+              }
               DeferredExpansion& expansion = frontier.back();
               if (expansion.next_candidate >= expansion.candidates.size()) {
                   if (qbit_num >= 4 &&
@@ -2882,6 +4338,39 @@ GrayCodeCNOT N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures
                       }
                       continue;
                   }
+                  if (deferred_profile_plateau_descent &&
+                      expansion.fractional_plateau_candidate != nullptr &&
+                      expansion.num_cnot >= std::min(
+                          3, level_limit - static_cast<int>(
+                              expansion.parent->path.size()))) {
+                      // Three-CNOT blocks can realize a full two-qubit gate
+                      // or a useful sandwich that two-CNOT projections miss.
+                      // Preserve every original 1/2/3-CNOT class (up to the
+                      // exact remaining budget) before using this auxiliary
+                      // fractional bound. It never caps the complete search.
+                      // Make one forward commitment, retaining no siblings or
+                      // ancestor and imposing no synthesis/depth/time cap.
+                      std::shared_ptr<SearchNode> progress =
+                          expansion.fractional_plateau_candidate;
+                      if (trace_candidate_placements) {
+                          std::stringstream sstream;
+                          sstream << "OSR deferred profile descent: parent_depth="
+                                  << expansion.parent->path.size()
+                                  << ", child_depth=" << progress->path.size()
+                                  << ", residual=" << progress->get_min_cnots()
+                                  << ", parent_distance="
+                                  << expansion.parent->lower_budget_profile_distance
+                                  << ", child_distance="
+                                  << progress->lower_budget_profile_distance
+                                  << std::endl;
+                          print(sstream, 2);
+                      }
+                      frontier.clear();
+                      if (progress->path.size() < level_limit) {
+                          frontier.push_back(make_expansion(progress));
+                      }
+                      continue;
+                  }
                 // A lower surplus at the same exact residual is useful for
                 // ordering, but it is not evidence that another CNOT has
                 // reduced the synthesis bound.  Evaluate the complete
@@ -2898,6 +4387,26 @@ GrayCodeCNOT N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures
                     level_limit) {
                     frontier.pop_back();
                     continue;
+                }
+                if (geometric_completion_motifs && !geometric_root_checked &&
+                    expansion.parent->path.size() == 0 &&
+                    expansion.num_cnot > geometric_physical_floor + 1 &&
+                    std::all_of(target_cut_requirements.begin(),
+                                target_cut_requirements.end(),
+                                [](int crossings) { return crossings >= 3; })) {
+                    geometric_root_checked = true;
+                    // Preserve the cover class and its one-edge extension
+                    // before proposing whole-word charts on a spectrally
+                    // saturated root plateau. This lets the established
+                    // constructive descent distinguish degenerate covers.
+                    // Structured lower-rank targets retain their insertion
+                    // sequence; only verified smaller charts refine a fit.
+                    // This is not a plateau/depth cap: failed proposals
+                    // resume the same complete insertion frontier below.
+                    auto completed = try_geometric_completion(level_limit);
+                    if (completed != nullptr) {
+                        return record_certificate(std::move(*completed));
+                    }
                 }
                 fill_candidates(expansion);
                 continue;
@@ -2927,14 +4436,7 @@ GrayCodeCNOT N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures
               top_heap.reset();
               const SearchNode* optimization_warm_start = parent.get();
               int target_bound_override = -1;
-              const int residual_target = target_bound_override >= 0
-                  ? target_bound_override
-                  : std::max(
-                        0,
-                        optimization_warm_start->get_min_cnots() -
-                            expansion.num_cnot
-                    );
-              if (candidate_path.size() + residual_target > level_limit ||
+              if (candidate_path.size() > level_limit ||
                   !is_unique_structure(candidate_path, topology)) {
                   continue;
               }
@@ -2991,6 +4493,110 @@ GrayCodeCNOT N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures
               const bool use_final_three_qubit_basin =
                   final_three_qubit_insertion_class &&
                   final_three_qubit_basin_hops > 0;
+              if (physical_cover_motifs && !physical_cover_motifs_checked &&
+                  qbit_num >= 3 && qbit_num <= 4 &&
+                  parent->path.size() == 0 && use_hilbert_schmidt_guidance) {
+                  physical_cover_motifs_checked = true;
+                  // A tree has exactly one crossing edge per bridge cut.
+                  // Its sum of necessary bridge counts is a global CNOT floor.
+                  // A verified word at that floor cannot worsen the result.
+                  std::vector<std::pair<int, int>> edges;
+                  std::vector<int> edge_digits;
+                  std::vector<unsigned> supports(possible_target_qbits.size());
+                  std::vector<unsigned> neighbors(qbit_num, 0);
+                  for (int digit = 0; digit < possible_target_qbits.size(); ++digit) {
+                      const int first = possible_target_qbits[digit];
+                      const int second = possible_control_qbits[digit];
+                      supports[digit] = (unsigned(1) << first) | (unsigned(1) << second);
+                      const auto edge = std::minmax(first, second);
+                      const std::pair<int, int> key(edge.first, edge.second);
+                      if (std::find(edges.begin(), edges.end(), key) != edges.end()) continue;
+                      edges.push_back(key);
+                      edge_digits.push_back(static_cast<int>(digit));
+                      neighbors[first] |= unsigned(1) << second;
+                      neighbors[second] |= unsigned(1) << first;
+                  }
+                  const unsigned all = (unsigned(1) << qbit_num) - 1;
+                  unsigned connected = 1;
+                  for (int pass = 0; pass < qbit_num; ++pass) {
+                      for (int qubit = 0; qubit < qbit_num; ++qubit) {
+                          if (connected & (unsigned(1) << qubit)) connected |= neighbors[qubit];
+                      }
+                  }
+                  if (edges.size() == static_cast<size_t>(qbit_num - 1) && connected == all) {
+                      double acceptance = 1e-10;
+                      if (config.count("synthesis_acceptance_tolerance") > 0) {
+                          config["synthesis_acceptance_tolerance"].get_property(acceptance);
+                      }
+                      std::vector<osr_motifs::EdgeBlock> blocks;
+                      int minimum = 0;
+                      bool single_blocks_suffice = std::isfinite(acceptance) && acceptance > 0.0;
+                      for (size_t edge = 0; edge < edges.size() && single_blocks_suffice; ++edge) {
+                          const int first = edges[edge].first;
+                          const int second = edges[edge].second;
+                          unsigned component = unsigned(1) << first;
+                          for (int pass = 0; pass < qbit_num; ++pass) {
+                              for (int qubit = 0; qubit < qbit_num; ++qubit) {
+                                  if (!(component & (unsigned(1) << qubit))) continue;
+                                  unsigned adjacent = neighbors[qubit];
+                                  if (qubit == first) adjacent &= ~(unsigned(1) << second);
+                                  if (qubit == second) adjacent &= ~(unsigned(1) << first);
+                                  component |= adjacent;
+                              }
+                          }
+                          // Preserve the existing tall-matrix SVD invariant.
+                          int count = 0;
+                          for (int qubit = 0; qubit < qbit_num; ++qubit) {
+                              if (component & (unsigned(1) << qubit)) ++count;
+                          }
+                          if (count < qbit_num - count) component = all ^ component;
+                          std::vector<int> cut;
+                          for (int qubit = 0; qubit < qbit_num; ++qubit) {
+                              if (component & (unsigned(1) << qubit)) cut.push_back(qubit);
+                          }
+                          const int required = operator_schmidt_cnot_bound(
+                              Umtx, qbit_num, cut, Fnorm, acceptance).first;
+                          // A single contiguous block acts only on two qubits:
+                          // it has at most three irreducible CNOTs. Larger bridge
+                          // requirements need interleaving, left to graph search.
+                          if (required > 3) {
+                              single_blocks_suffice = false;
+                              break;
+                          }
+                          minimum += required;
+                          blocks.push_back({edge_digits[edge], supports[edge_digits[edge]], required});
+                      }
+                      if (single_blocks_suffice && minimum > 0 && minimum <= level_limit) {
+                          const osr_motifs::CausalWitness witness(qbit_num,
+                              [&](size_t row, size_t column) {
+                                  const auto value = Umtx.get_data()[row * Umtx.stride + column];
+                                  return std::complex<double>(value.real, value.imag);
+                              });
+                          const int8_t digit_limit = candidate_path.get_Limits()[0];
+                          for (const auto& word : osr_motifs::block_orders(blocks)) {
+                              const std::vector<int> reverse(word.rbegin(), word.rend());
+                              // Gray words and inverse targets use opposite
+                              // temporal conventions. Requiring both bounds to
+                              // fail is conservative under either convention.
+                              if (std::min(witness.lower_bound(word, supports),
+                                           witness.lower_bound(reverse, supports)) > acceptance) continue;
+                              matrix_base<int8_t> limits(1, word.size());
+                              for (size_t index = 0; index < word.size(); ++index) {
+                                  limits[index] = digit_limit;
+                              }
+                              GrayCodeCNOT motif(limits);
+                              for (size_t index = 0; index < word.size(); ++index) {
+                                  motif[index] = static_cast<int8_t>(word[index]);
+                              }
+                              SearchNode fitted = evaluate_candidate_path(
+                                  motif, nullptr, true, -1, -1, 0, true);
+                              if (fitted.get_min_cnots() == 0 && certify_zero_residual(fitted)) {
+                                  return record_certificate(std::move(fitted));
+                              }
+                          }
+                      }
+                  }
+              }
               SearchNode evaluated = evaluate_candidate_path(
                   candidate_path, optimization_warm_start, true,
                   use_final_three_qubit_basin
@@ -3057,11 +4663,7 @@ GrayCodeCNOT N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures
             const bool claims_zero_residual =
                 candidate->get_min_cnots() == 0;
             if (claims_zero_residual && certify_zero_residual(*candidate)) {
-                best_first_osr_solution_found = true;
-                best_first_solution_path = candidate->path.copy();
-                best_first_solution_parameters =
-                    candidate->optimized_parameters;
-                return candidate->path;
+                return record_certificate(*candidate);
             }
             // A completed paired block is a finite constructive move across
             // Growing the connected support can require an uphill surplus
@@ -3087,6 +4689,49 @@ GrayCodeCNOT N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures
                     parent->path, candidate_path)) < 0;
             const double hs_epsilon = 1e-12 * std::max(
                 1.0, std::abs(parent->screening_objective));
+            const double profile_epsilon =
+                64.0 * std::numeric_limits<double>::epsilon() *
+                std::max(1.0, std::abs(parent_surplus));
+            const bool profile_plateau_progress =
+                profile_plateau_descent &&
+                parent->get_min_cnots() > 0 &&
+                candidate->get_min_cnots() == parent->get_min_cnots() &&
+                candidate_surplus + profile_epsilon < parent_surplus;
+            if (profile_plateau_progress) {
+                // Finish this shallow insertion class before making one
+                // forward-only commitment. Preserve any strict integer OSR
+                // descent, and otherwise choose the strongest lower-budget
+                // cut-profile improvement, not merely a lower HS error.
+                if (expansion.plateau_candidate == nullptr ||
+                    (expansion.plateau_candidate->get_min_cnots() ==
+                         parent->get_min_cnots() &&
+                     candidate_surplus < std::get<1>(
+                         expansion.plateau_candidate->get_best_osr_result()))) {
+                    expansion.plateau_candidate = candidate;
+                }
+                continue;
+            }
+            const bool projection_plateau_progress =
+                projection_plateau_descent &&
+                use_hilbert_schmidt_guidance &&
+                parent->get_min_cnots() > 0 &&
+                candidate->get_min_cnots() == parent->get_min_cnots() &&
+                candidate->screening_objective + hs_epsilon <
+                    parent->screening_objective;
+            if (projection_plateau_progress) {
+                // Do not commit the first lucky local fit, and do not retain
+                // siblings after the class is complete. Compare projections
+                // only within the same integer residual tier; an already
+                // recorded strict OSR descent cannot be replaced by a tie.
+                if (expansion.plateau_candidate == nullptr ||
+                    (expansion.plateau_candidate->get_min_cnots() ==
+                         parent->get_min_cnots() &&
+                     candidate->screening_objective <
+                         expansion.plateau_candidate->screening_objective)) {
+                    expansion.plateau_candidate = candidate;
+                }
+                continue;
+            }
             // OSR zero is a lower-bound statement, not an HS certificate.
             // Once both nodes have zero residual, the exact HS objective is
             // the remaining constructive signal and must be allowed to guide
@@ -3226,6 +4871,30 @@ GrayCodeCNOT N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures
                 }
                 continue;
             }
+            if (deferred_profile_plateau_descent && expansion.num_cnot <= 2 &&
+                parent->get_min_cnots() > 0 &&
+                candidate->get_min_cnots() == parent->get_min_cnots() &&
+                std::isfinite(parent->lower_budget_profile_distance) &&
+                std::isfinite(candidate->lower_budget_profile_distance)) {
+                const double distance_epsilon =
+                    std::max(
+                        64.0 * std::numeric_limits<double>::epsilon(),
+                        use_hilbert_schmidt_guidance
+                            ? osr_guidance_tolerance_loc
+                            : osr_optimization_tolerance_loc) *
+                    std::max(1.0, std::abs(parent->lower_budget_profile_distance));
+                // A sub-resolution tail change is not evidence worth an
+                // irreversible CNOT insertion. This uses the existing rank
+                // guidance scale; final unitary acceptance is unchanged.
+                if (candidate->lower_budget_profile_distance + distance_epsilon <
+                    parent->lower_budget_profile_distance &&
+                    (expansion.fractional_plateau_candidate == nullptr ||
+                     candidate->lower_budget_profile_distance <
+                         expansion.fractional_plateau_candidate
+                             ->lower_budget_profile_distance)) {
+                    expansion.fractional_plateau_candidate = candidate;
+                }
+            }
         }
         best_first_solution_path = best->path.copy();
         best_first_solution_parameters = best->optimized_parameters;
@@ -3236,10 +4905,7 @@ GrayCodeCNOT N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures
         std::unique_ptr<SearchNode> cur(top_heap.release());
         visited.clear(); // clear visited to save memory, relying on the fact that we won't revisit nodes anyway
         if (certify_zero_residual(*cur)) {
-            best_first_osr_solution_found = true;
-            best_first_solution_path = cur->path.copy();
-            best_first_solution_parameters = cur->optimized_parameters;
-            return cur->path;
+            return record_certificate(*cur);
         }
         const std::tuple<int, double, std::vector<int>, std::vector<std::pair<int, double>>>& cur_best_osr_result = cur->get_best_osr_result();
         const std::vector<int>& best_edge_counts = std::get<2>(cur_best_osr_result);

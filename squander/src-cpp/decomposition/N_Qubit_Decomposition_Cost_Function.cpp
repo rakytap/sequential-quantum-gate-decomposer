@@ -1157,6 +1157,147 @@ std::vector<std::vector<double>> cuts_softmax_tail_grad(
     return G;
 }
 
+// A crossing CNOT is locally equivalent to (I + i P tensor Q)/sqrt(2),
+// with balanced Hermitian involutions P,Q. One crossing therefore has
+// Schmidt values (1,1)/sqrt(2). For two crossings the squared values are
+// (1 +/- a)(1 +/- b)/4, where a,b are normalized traces of the products
+// of the two local involutions. Their sorted square roots form a rank-one
+// 2x2 matrix. Optimizing its overlap gives the small singular-value loss
+// below. These necessary signatures are stronger than rank <= 2^k.
+static double cnot_spectrum_loss(const std::vector<double>& S, int crossings,
+                                double Fnorm,
+                                std::vector<double>* gradient = nullptr)
+{
+    if (gradient != nullptr)
+        gradient->assign(S.size(), 0.0);
+    if (crossings == 0 || crossings >= 3) {
+        if (gradient != nullptr)
+            *gradient = loss_for_rank_grad_diag(S, crossings, Fnorm);
+        return loss_for_rank(S, crossings);
+    }
+    if (crossings == 1) {
+        const double product = loss_for_rank(S, 0);
+        const double difference = S[0] - S[1];
+        const double one_cnot = 0.5 * difference * difference +
+                                loss_for_rank(S, 1);
+        // The budget is "at most one", so include the product family.
+        if (product <= one_cnot) {
+            if (gradient != nullptr)
+                *gradient = loss_for_rank_grad_diag(S, 0, Fnorm);
+            return product;
+        }
+        if (gradient != nullptr) {
+            (*gradient)[0] = difference / Fnorm;
+            (*gradient)[1] = -difference / Fnorm;
+            for (size_t j = 2; j < S.size(); ++j)
+                (*gradient)[j] = 2.0 * S[j] / Fnorm;
+        }
+        return one_cnot;
+    }
+    const double gram = S[0]*S[0] + S[1]*S[1] +
+                        S[2]*S[2] + S[3]*S[3];
+    const double determinant = S[0]*S[3] - S[1]*S[2];
+    const double discriminant = std::sqrt(std::max(
+        0.0, gram*gram - 4.0*determinant*determinant));
+    const double denominator = gram + discriminant;
+    const double small = denominator > 0.0
+        ? 2.0*determinant*determinant / denominator : 0.0;
+    if (gradient != nullptr) {
+        if (discriminant > 0.0) {
+            const double determinant_gradient[4] =
+                {S[3], -S[2], -S[1], S[0]};
+            for (size_t j = 0; j < 4; ++j)
+                (*gradient)[j] = (-2.0*S[j]*small +
+                    2.0*determinant*determinant_gradient[j]) /
+                    (discriminant * Fnorm);
+        }
+        for (size_t j = 4; j < S.size(); ++j)
+            (*gradient)[j] = 2.0*S[j] / Fnorm;
+    }
+    return small + loss_for_rank(S, 2);
+}
+
+template<class MatrixT, class RealT>
+static std::vector<std::complex<RealT>> build_partial_transpose(
+    const MatrixT& matrix, const std::vector<int>& cut)
+{
+    int mask = 0;
+    for (int q : cut) mask |= 1 << q;
+    const int N = matrix.rows;
+    std::vector<std::complex<RealT>> result(static_cast<size_t>(N)*N);
+    for (int row = 0; row < N; ++row)
+        for (int col = 0; col < N; ++col) {
+            const int exchange = (row ^ col) & mask;
+            const auto& value = matrix[
+                static_cast<size_t>(row ^ exchange)*matrix.stride +
+                (col ^ exchange)];
+            result[static_cast<size_t>(col)*N + row] =
+                std::complex<RealT>(value.real, value.imag);
+        }
+    return result;
+}
+
+// Partial transpose preserves the Frobenius norm. The first crossing CNOT
+// has partial-transpose operator norm one; each later crossing increases it
+// by at most sqrt(2), by the triangle inequality. Cut-local gates do not
+// change that norm. A norm excess delta therefore gives 1-F >= delta^2/(2N)
+// and the process-infidelity lower bound a(2-a), a=delta^2/(2N).
+static double partial_transpose_cnot_loss(double norm, int crossings, int N,
+                                         double* gradient = nullptr)
+{
+    const double cap = crossings <= 1 ? 1.0 :
+        std::exp2(0.5 * (crossings - 1));
+    const double excess = std::max(0.0, norm - cap);
+    const double a = excess*excess / (2.0*N);
+    if (gradient != nullptr)
+        *gradient = 2.0*excess*(1.0-a) / N;
+    return a*(2.0-a);
+}
+
+template<class MatrixT, class ComplexT, class RealT>
+static std::pair<int, double> operator_schmidt_cnot_bound_impl(
+    const MatrixT& U, int n, const std::vector<int>& cut,
+    double Fnorm, double tolerance)
+{
+    if (!std::isfinite(tolerance) || tolerance < 0.0)
+        throw std::invalid_argument("CNOT witness tolerance must be finite and nonnegative");
+    int rows = 0, cols = 0;
+    const auto reshuffled = build_osr_matrix<MatrixT, RealT>(
+        U, n, cut, rows, cols);
+    const auto S = osr_eigen_singular_values(reshuffled, rows, cols, Fnorm);
+    const auto pt = build_partial_transpose<MatrixT, RealT>(U, cut);
+    const double pt_norm = osr_eigen_singular_values(
+        pt, U.rows, U.cols, 1.0)[0];
+    const int smaller_side = std::min<int>(cut.size(), n-cut.size());
+    const int maximum = std::max<int>(lg_up(S.size()), 1+2*smaller_side);
+    double previous_loss = 0.0;
+    for (int crossings = 0; crossings <= maximum; ++crossings) {
+        const double loss = std::max(
+            cnot_spectrum_loss(S, crossings, Fnorm),
+            partial_transpose_cnot_loss(pt_norm, crossings, U.rows));
+        if (loss <= tolerance)
+            return {crossings, crossings == 0 ? 0.0 : previous_loss};
+        previous_loss = loss;
+    }
+    return {maximum, previous_loss};
+}
+
+std::pair<int, double> operator_schmidt_cnot_bound(
+    const Matrix& U, int n, const std::vector<int>& cut,
+    double Fnorm, double tolerance)
+{
+    return operator_schmidt_cnot_bound_impl<Matrix, QGD_Complex16, double>(
+        U, n, cut, Fnorm, tolerance);
+}
+
+std::pair<int, double> operator_schmidt_cnot_bound(
+    const Matrix_float& U, int n, const std::vector<int>& cut,
+    double Fnorm, double tolerance)
+{
+    return operator_schmidt_cnot_bound_impl<Matrix_float, QGD_Complex8, float>(
+        U, n, cut, Fnorm, tolerance);
+}
+
 // Public: operator-Schmidt rank across cut A|B
 std::pair<int, double> operator_schmidt_rank(const Matrix& U, int n,
                           const std::vector<int>& A_qubits,
@@ -1230,7 +1371,8 @@ static std::vector<std::vector<double>> profile_softmin_coefficients(
     double profile_temperature,
     double cut_smoothmax_temperature,
     double& cost,
-    double* minimum_profile_loss_out = nullptr)
+    double* minimum_profile_loss_out = nullptr,
+    const std::vector<std::vector<double>>* cnot_losses = nullptr)
 {
     if (rank_profiles.empty() || profile_temperature < 0.0 ||
         cut_smoothmax_temperature < 0.0) {
@@ -1255,9 +1397,9 @@ static std::vector<std::vector<double>> profile_softmin_coefficients(
 
         std::vector<double> cut_losses(cuts_S.size(), 0.0);
         for (size_t c = 0; c < cuts_S.size(); ++c)
-            cut_losses[c] = loss_for_rank(
-                cuts_S[c], rank_profiles[p][c]
-            );
+            cut_losses[c] = cnot_losses == nullptr
+                ? loss_for_rank(cuts_S[c], rank_profiles[p][c])
+                : (*cnot_losses)[p][c];
 
         const double maximum = *std::max_element(
             cut_losses.begin(), cut_losses.end()
@@ -1336,7 +1478,7 @@ static std::vector<std::vector<double>> profile_softmin_coefficients(
 }
 
 template<class MatrixT, class ComplexT, class RealT>
-static double get_osr_entanglement_test_impl(MatrixT& matrix, std::vector<std::vector<int>>& use_cuts, const std::vector<std::vector<int>>& rank_profiles, double profile_temperature, double cut_smoothmax_temperature) {
+static double get_osr_entanglement_test_impl(MatrixT& matrix, std::vector<std::vector<int>>& use_cuts, const std::vector<std::vector<int>>& rank_profiles, double profile_temperature, double cut_smoothmax_temperature, bool use_cnot_witnesses = false) {
     //double hscost = get_hilbert_schmidt_test(matrix);
     int qbit_num = lg_down(matrix.rows);
     const auto& cuts = use_cuts.size() == 0 ? unique_cuts(qbit_num) : use_cuts;
@@ -1352,10 +1494,32 @@ static double get_osr_entanglement_test_impl(MatrixT& matrix, std::vector<std::v
         allS.emplace_back(S);
         //printf("%f ", S[0]);
     }
+    std::vector<std::vector<double>> cnot_losses;
+    if (use_cnot_witnesses) {
+        std::vector<double> pt_norms;
+        pt_norms.reserve(cuts.size());
+        for (const auto& cut : cuts) {
+            const auto pt = build_partial_transpose<MatrixT, RealT>(matrix, cut);
+            pt_norms.push_back(osr_eigen_singular_values(
+                pt, matrix.rows, matrix.cols, 1.0)[0]);
+        }
+        cnot_losses.assign(rank_profiles.size(),
+                           std::vector<double>(cuts.size()));
+        for (size_t p = 0; p < rank_profiles.size(); ++p) {
+            if (rank_profiles[p].size() != cuts.size())
+                throw std::invalid_argument("OSR rank profile size must match cut count");
+            for (size_t c = 0; c < cuts.size(); ++c)
+                cnot_losses[p][c] = std::max(
+                    cnot_spectrum_loss(allS[c], rank_profiles[p][c], Fnorm),
+                    partial_transpose_cnot_loss(pt_norms[c],
+                        rank_profiles[p][c], matrix.rows));
+        }
+    }
     double res;
     profile_softmin_coefficients(
         allS, rank_profiles, profile_temperature,
-        cut_smoothmax_temperature, res
+        cut_smoothmax_temperature, res, nullptr,
+        use_cnot_witnesses ? &cnot_losses : nullptr
     );
     //printf("%f\n", res);
     return res;
@@ -1367,6 +1531,20 @@ double get_osr_entanglement_test(Matrix& matrix, std::vector<std::vector<int>>& 
 
 double get_osr_entanglement_test(Matrix_float& matrix, std::vector<std::vector<int>>& use_cuts, const std::vector<std::vector<int>>& rank_profiles, double profile_temperature, double cut_smoothmax_temperature) {
     return get_osr_entanglement_test_impl<Matrix_float, QGD_Complex8, float>(matrix, use_cuts, rank_profiles, profile_temperature, cut_smoothmax_temperature);
+}
+
+double get_osr_entanglement_test(Matrix& matrix,
+    std::vector<std::vector<int>>& cuts, const std::vector<std::vector<int>>& profiles,
+    double profile_temperature, double cut_temperature, bool witnesses) {
+    return get_osr_entanglement_test_impl<Matrix, QGD_Complex16, double>(
+        matrix, cuts, profiles, profile_temperature, cut_temperature, witnesses);
+}
+
+double get_osr_entanglement_test(Matrix_float& matrix,
+    std::vector<std::vector<int>>& cuts, const std::vector<std::vector<int>>& profiles,
+    double profile_temperature, double cut_temperature, bool witnesses) {
+    return get_osr_entanglement_test_impl<Matrix_float, QGD_Complex8, float>(
+        matrix, cuts, profiles, profile_temperature, cut_temperature, witnesses);
 }
 
 // Build M with build_osr_matrix, then SVD (econ) and grab top triplet.
@@ -1387,7 +1565,7 @@ static OSRTriplet<ComplexT> top_k_triplet_for_cut(
 }
 
 template<class MatrixT, class ComplexT, class RealT>
-static MatrixT get_deriv_osr_entanglement_impl(MatrixT& matrix, std::vector<std::vector<int>>& use_cuts, const std::vector<std::vector<int>>& rank_profiles, double profile_temperature, double cut_smoothmax_temperature, double* cost_out=nullptr, double* minimum_profile_loss_out=nullptr) {
+static MatrixT get_deriv_osr_entanglement_impl(MatrixT& matrix, std::vector<std::vector<int>>& use_cuts, const std::vector<std::vector<int>>& rank_profiles, double profile_temperature, double cut_smoothmax_temperature, double* cost_out=nullptr, double* minimum_profile_loss_out=nullptr, bool use_cnot_witnesses=false) {
     int qbit_num = lg_down(matrix.rows);
     const auto& cuts = use_cuts.size() == 0 ? unique_cuts(qbit_num) : use_cuts;
     double Fnorm = std::sqrt(matrix.rows);
@@ -1407,21 +1585,57 @@ static MatrixT get_deriv_osr_entanglement_impl(MatrixT& matrix, std::vector<std:
         stored.right_factors = std::move(triplet.right_factors);
         triplets.emplace_back(std::move(stored));
     }
+    std::vector<OSRTriplet<ComplexT>> pt_triplets;
+    std::vector<std::vector<double>> cnot_losses;
+    if (use_cnot_witnesses) {
+        pt_triplets.reserve(cuts.size());
+        for (const auto& cut : cuts) {
+            const auto pt = build_partial_transpose<MatrixT, RealT>(matrix, cut);
+            pt_triplets.emplace_back(osr_eigen_triplet(
+                pt, matrix.rows, matrix.cols, 1.0));
+        }
+        cnot_losses.assign(rank_profiles.size(),
+                           std::vector<double>(cuts.size()));
+        for (size_t p = 0; p < rank_profiles.size(); ++p) {
+            if (rank_profiles[p].size() != cuts.size())
+                throw std::invalid_argument("OSR rank profile size must match cut count");
+            for (size_t c = 0; c < cuts.size(); ++c)
+                cnot_losses[p][c] = std::max(
+                    cnot_spectrum_loss(allS[c], rank_profiles[p][c], Fnorm),
+                    partial_transpose_cnot_loss(pt_triplets[c].singulars[0],
+                        rank_profiles[p][c], matrix.rows));
+        }
+    }
     double profile_cost = 0.0;
     const std::vector<std::vector<double>> coefficients =
         profile_softmin_coefficients(
         allS, rank_profiles, profile_temperature,
         cut_smoothmax_temperature, profile_cost,
-        minimum_profile_loss_out
+        minimum_profile_loss_out,
+        use_cnot_witnesses ? &cnot_losses : nullptr
     );
     if (cost_out != nullptr) *cost_out = profile_cost;
     std::vector<std::vector<double>> combined(allS.size());
+    std::vector<double> pt_coefficients(allS.size(), 0.0);
     for (size_t c = 0; c < allS.size(); ++c) {
         combined[c].assign(allS[c].size(), 0.0);
         for (size_t p = 0; p < rank_profiles.size(); ++p) {
-            std::vector<double> profile_grad = loss_for_rank_grad_diag(
-                allS[c], rank_profiles[p][c], Fnorm
-            );
+            std::vector<double> profile_grad;
+            if (use_cnot_witnesses) {
+                const double spectrum_loss = cnot_spectrum_loss(
+                    allS[c], rank_profiles[p][c], Fnorm, &profile_grad);
+                double pt_gradient = 0.0;
+                const double pt_loss = partial_transpose_cnot_loss(
+                    pt_triplets[c].singulars[0], rank_profiles[p][c],
+                    matrix.rows, &pt_gradient);
+                if (pt_loss > spectrum_loss) {
+                    pt_coefficients[c] += coefficients[p][c]*pt_gradient;
+                    continue;
+                }
+            } else {
+                profile_grad = loss_for_rank_grad_diag(
+                    allS[c], rank_profiles[p][c], Fnorm);
+            }
             for (size_t j = 0; j < profile_grad.size(); ++j)
                 combined[c][j] += coefficients[p][c] * profile_grad[j];
         }
@@ -1438,6 +1652,38 @@ static MatrixT get_deriv_osr_entanglement_impl(MatrixT& matrix, std::vector<std:
                                 triplet.right_factors,
                                 qbit_num,
                                 cuts[i], 0);
+    }
+    if (use_cnot_witnesses) {
+        const int N = matrix.rows;
+        for (size_t c = 0; c < cuts.size(); ++c) {
+            if (pt_coefficients[c] == 0.0) continue;
+            const auto& triplet = pt_triplets[c];
+            const double norm = triplet.singulars[0];
+            const double gap_tolerance = 64.0*N*
+                std::numeric_limits<RealT>::epsilon()*std::max(1.0, norm);
+            size_t multiplicity = 1;
+            while (multiplicity < triplet.singulars.size() &&
+                   norm-triplet.singulars[multiplicity] <= gap_tolerance)
+                ++multiplicity;
+            const double scale = pt_coefficients[c]/multiplicity;
+            int mask = 0;
+            for (int q : cuts[c]) mask |= 1 << q;
+            for (int row = 0; row < N; ++row)
+                for (int col = 0; col < N; ++col) {
+                    double real = 0.0, imag = 0.0;
+                    for (size_t j = 0; j < multiplicity; ++j) {
+                        const auto& u = triplet.left_factors[row+j*N];
+                        const auto& v = triplet.right_factors[j+col*N];
+                        real += u.real*v.real - u.imag*v.imag;
+                        imag += u.real*v.imag + u.imag*v.real;
+                    }
+                    const int exchange = (row ^ col) & mask;
+                    auto& value = deriv[static_cast<size_t>(row ^ exchange)*
+                        deriv.stride + (col ^ exchange)];
+                    value.real += static_cast<RealT>(scale*real);
+                    value.imag += static_cast<RealT>(scale*imag);
+                }
+        }
     }
     return deriv;
 }
@@ -1456,6 +1702,24 @@ Matrix get_osr_entanglement_test_and_deriv(Matrix& matrix, std::vector<std::vect
 
 Matrix_float get_osr_entanglement_test_and_deriv(Matrix_float& matrix, std::vector<std::vector<int>>& use_cuts, const std::vector<std::vector<int>>& rank_profiles, double& cost, double profile_temperature, double cut_smoothmax_temperature, double* minimum_profile_loss) {
     return get_deriv_osr_entanglement_impl<Matrix_float, QGD_Complex8, float>(matrix, use_cuts, rank_profiles, profile_temperature, cut_smoothmax_temperature, &cost, minimum_profile_loss);
+}
+
+Matrix get_osr_entanglement_test_and_deriv(Matrix& matrix,
+    std::vector<std::vector<int>>& cuts, const std::vector<std::vector<int>>& profiles,
+    double& cost, double profile_temperature, double cut_temperature,
+    double* minimum_loss, bool witnesses) {
+    return get_deriv_osr_entanglement_impl<Matrix, QGD_Complex16, double>(
+        matrix, cuts, profiles, profile_temperature, cut_temperature,
+        &cost, minimum_loss, witnesses);
+}
+
+Matrix_float get_osr_entanglement_test_and_deriv(Matrix_float& matrix,
+    std::vector<std::vector<int>>& cuts, const std::vector<std::vector<int>>& profiles,
+    double& cost, double profile_temperature, double cut_temperature,
+    double* minimum_loss, bool witnesses) {
+    return get_deriv_osr_entanglement_impl<Matrix_float, QGD_Complex8, float>(
+        matrix, cuts, profiles, profile_temperature, cut_temperature,
+        &cost, minimum_loss, witnesses);
 }
 
 // Compute grad component = Re Tr( A^† B ) for A = dL/dU, B = dU/dθ

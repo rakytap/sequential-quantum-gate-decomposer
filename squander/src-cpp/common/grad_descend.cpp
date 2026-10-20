@@ -18,6 +18,7 @@ limitations under the License.
 #include <stdlib.h>
 #define _USE_MATH_DEFINES
 #include <math.h>
+#include <cmath>
 #include <cfloat>
 #include <grad_descend.h>
 
@@ -149,6 +150,9 @@ void  Grad_Descend::line_search(Matrix_real& x, Matrix_real& g, Matrix_real& sea
 
     double step = std::min(1.0, maximal_step);
     
+    // Armijo is anchored at the original point, not the moving lower
+    // interpolation endpoint. Keep the two values separate.
+    const double f_initial = f;
     double f_lowest  = f;
     double f_highest = f;
 
@@ -177,8 +181,10 @@ void  Grad_Descend::line_search(Matrix_real& x, Matrix_real& g, Matrix_real& sea
             d__dot__g_current += search_direction[idx] * g[idx];
         }
 
-        // update best solution
-        if (f < f_best || fabs(d__dot__g_current) < d__dot__g_abs_best) {
+        // A smaller derivative cannot make an uphill point a better
+        // solution. Use derivative magnitude only to break equal-cost ties.
+        if (std::isfinite(f) && std::isfinite(d__dot__g_current) &&
+            (f < f_best || (f == f_best && fabs(d__dot__g_current) < d__dot__g_abs_best))) {
 
             step_best      = step;
             f_best         = f;
@@ -189,13 +195,13 @@ void  Grad_Descend::line_search(Matrix_real& x, Matrix_real& g, Matrix_real& sea
         }
 
         // exit the loop if maximal function calls reached
-        if (function_call_count == maximal_iterations) {
+        if (function_call_count >= maximal_iterations) {
             break;
         }
 
 
         // modify the upper and lower bound of the step inetrval 
-        if (f < f_lowest + step * 0.1 * d__dot__g0) {  // Armijo test (Wolfe 1st condition)
+        if (f < f_initial + step * 0.1 * d__dot__g0) {  // Armijo test (Wolfe 1st condition)
 
             if (d__dot__g_current >= d__dot__g0 * 0.7) { // Wolfe 2nd (curvature) condition to exit the iterations
                 break;
@@ -257,17 +263,14 @@ void  Grad_Descend::line_search(Matrix_real& x, Matrix_real& g, Matrix_real& sea
 
 
 
-    // copy the best solution in place of the current solution
-    if (step != step_best) {
-
-        step = step_best;
-        f = f_best;
-
-        g = g_best;
-
-        for (long idx = 0; idx < variable_num; idx++) {
-            x[idx] = x0_search[idx] + step * search_direction[idx];
-        }
+    // Always restore the best evaluated point, including its cost and
+    // gradient. 'step' may instead be an unevaluated interpolation proposal
+    // when the existing line-search iteration limit ends the loop.
+    step = step_best;
+    f = f_best;
+    g = g_best;
+    for (long idx = 0; idx < variable_num; idx++) {
+        x[idx] = x0_search[idx] + step * search_direction[idx];
     }
 
     if (step == 0.0 ) {
@@ -405,31 +408,17 @@ void Grad_Descend::Optimize(Matrix_real& x, double& f)
 void Grad_Descend::get_Maximal_Line_Search_Step(Matrix_real& search_direction, double& maximal_step, double& search_direction__grad_overlap)
 {
 
-    // Set steps to constraint boundaries and find the least positive one.
-
-
-    maximal_step = 0.0;
-    
-    // the optimization landscape is periodic in 2PI
-    // the maximal step will be the 2PI step in the direction of the smallest component of the search direction
-    for( long kdx = 0; kdx < variable_num; kdx++ ) {
-
-        // skip the current direction if it is too small    
-        if ( fabs(search_direction[kdx]) < 1e-5 ) {
-            continue;
-        } 
-
-        double step_bound_tmp = std::abs(2*M_PI/search_direction[kdx]);
-  
-  
-
-        if (maximal_step == 0.0 || step_bound_tmp < maximal_step) {
-
-            maximal_step = step_bound_tmp;
-
-        }
-        
+    // Bound every parameter displacement by one 2PI period. The tightest
+    // bound comes from the largest direction component. Small nonzero
+    // directions remain valid: discarding them creates a false zero step
+    // near convergence, independently of the requested objective tolerance.
+    double largest_component = 0.0;
+    for (long kdx = 0; kdx < variable_num; ++kdx) {
+        largest_component = std::max(largest_component,
+                                     std::abs(search_direction[kdx]));
     }
+    maximal_step = largest_component == 0.0 ? 0.0 :
+        std::min(DBL_MAX, 2.0 * M_PI / largest_component);
 
     return;
 

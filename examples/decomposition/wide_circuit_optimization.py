@@ -98,15 +98,17 @@ def transpile_to_ibm_eagle(qasm_path_or_circ, parameters=None):
 
 
 def save_qasm2(circuit, parameters, output_path):
-    """Atomically export a Squander circuit as OpenQASM 2 via Qiskit I/O."""
-    from qiskit import qasm2
+    """Atomically export the same lossless parameter stream as the audit."""
+    from squander.decomposition._audit_qasm import dump_native_audit_qasm
 
     qiskit_circuit = Qiskit_IO.get_Qiskit_Circuit(
         circuit, np.asarray(parameters, dtype=np.float64)
     )
     temporary_path = output_path.with_suffix(output_path.suffix + ".tmp")
     try:
-        qasm2.dump(qiskit_circuit, str(temporary_path))
+        temporary_path.write_text(
+            dump_native_audit_qasm(qiskit_circuit), encoding="utf-8"
+        )
         os.replace(temporary_path, output_path)
     finally:
         temporary_path.unlink(missing_ok=True)
@@ -388,13 +390,32 @@ def optimize_circuit_worker(
             )
             result_entry["routing_osr_catalog"] = routing_catalog
             run_metadata["routing_osr_catalog"] = routing_catalog
+        # Preserve measured results before the potentially long final replay.
+        # This checkpoint is not accepted until every audit check succeeds.
+        run_metadata["audit_progress"] = True
+        run_metadata["result_checkpoint"] = {
+            **result_entry, "status": "pending_verification",
+        }
+        audit_started = time.monotonic()
         rewrite_audit, audit_sha256 = optimizer.save_rewrite_audit(
             audit_jsonl_path, audit_gzip_path, run_metadata
         )
-        audit_verification = optimizer.verify_rewrite_audit(
-            rewrite_audit, expected_sha256=audit_sha256,
-            audit_path=audit_gzip_path,
-        )
+        audit_export_elapsed = time.monotonic() - audit_started
+        verification_started = time.monotonic()
+        try:
+            audit_verification = optimizer.verify_rewrite_audit(
+                rewrite_audit, expected_sha256=audit_sha256,
+                audit_path=audit_gzip_path,
+            )
+        finally:
+            from squander.decomposition._rewrite_audit_stream import close_audit
+            close_audit(rewrite_audit)
+        result_entry["timing"].update({
+            "audit_export": round(audit_export_elapsed, 2),
+            "audit_verification": round(time.monotonic() - verification_started, 2),
+            "audit_total": round(time.monotonic() - audit_started, 2),
+            "wall_total": round(time.monotonic() - start_time, 2),
+        })
         result_entry["rewrite_audit"] = {
             "schema_version": rewrite_audit["schema_version"],
             "file": str(audit_gzip_path.relative_to(REPOSITORY_ROOT)),
@@ -481,6 +502,19 @@ def result_configuration(config, qubit_num):
         "osr_rank_degenerate_cover_class",
         "osr_eager_projection_restarts",
         "osr_path_deterministic_rng",
+        "random_seed",
+        "osr_certified_terminal_completion",
+        "osr_geometric_completion_motifs",
+        "osr_physical_cover_motifs",
+        "osr_geometric_completion_basin_hops",
+        "osr_certified_cnot_deflation",
+        "osr_cnot_deflation_basin_hops",
+        "exact_routing_global_search",
+        "exact_routing_mapping_aware_seeds",
+        "exact_routing_post_optimized_portfolio",
+        "exact_routing_master",
+        "exact_routing_timeout_seconds",
+        "exact_routing_flow_seed",
         "exact_routing_fallback_retry_count",
         "exact_routing_catalog_progress",
         "exact_routing_catalog_progress_interval",
@@ -511,6 +545,12 @@ def result_configuration(config, qubit_num):
         "beam",
     )
     snapshot = {key: config.get(key) for key in keys}
+    snapshot["exact_routing_mapping_aware_seeds"] = config.get(
+        "exact_routing_mapping_aware_seeds", False
+    )
+    snapshot["exact_routing_post_optimized_portfolio"] = config.get(
+        "exact_routing_post_optimized_portfolio", False
+    )
     partition_size = int(config["max_partition_size"])
     uses_osr_search = config.get("use_osr", False) or config.get(
         "use_graph_search", False
@@ -557,6 +597,18 @@ if __name__ == "__main__":
             "directory instead of the archived benchmark root."
         ),
     )
+    parser.add_argument(
+        "--partition-size",
+        type=int,
+        choices=(3, 4),
+        help="A2A/final partition size; routing always uses at most 3 qubits.",
+    )
+    parser.add_argument(
+        "--global-routing-search",
+        action="store_true",
+        default=None,
+        help="Opt into the expensive global routing master after constructive routing.",
+    )
     args = parser.parse_args()
     if args.timeout_hours < 0:
         parser.error("--timeout-hours must be nonnegative")
@@ -580,13 +632,13 @@ if __name__ == "__main__":
         "strategy": "TreeSearch",  # possible values: "TreeSearch", "qiskit", "bqskit", "TabuSearch"
         "test_subcircuits": False,
         "test_final_circuit": False,
-        "max_partition_size": 3,
+        "max_partition_size": 4,
         "beam": None,
         "use_osr": True,
         "use_graph_search": True,
         "auto_expand_partition_size": False,
         "pre-opt-strategy": "TreeSearch",  # possible values: "TreeSearch", "qiskit", "bqskit", "TabuSearch"
-        "routing-strategy": "exact-osr",  # all-partition OSR + exact SAT/Gurobi mapping flow; no post-routing synthesis
+        "routing-strategy": "exact-osr",  # OSR catalog + constructive mapping portfolio; global search is opt-in
         # "tolerance": 1e-14,  # Squander Hilbert-Schmidt optimization target
         # "osr_optimization_tolerance": 1e-6,  # squared OSR tail cost; rank cutoff is its square root (1e-3)
         # "synthesis_acceptance_tolerance": 1e-10,  # Common block budget
@@ -605,6 +657,10 @@ if __name__ == "__main__":
         "max_iteration_loops": 8,
         "max_inner_iterations_bfgs2": 1000,
     }
+    if args.partition_size is not None:
+        config["max_partition_size"] = args.partition_size
+    if args.global_routing_search is not None:
+        config["exact_routing_global_search"] = args.global_routing_search
     if config["max_partition_size"] == 4 and config["use_osr"]:
         # Preserve dependency-first ordering within the single 4q pass.
         # Adaptive reversal can commit a wide rewrite before the smaller
@@ -908,6 +964,9 @@ if __name__ == "__main__":
         print(f"  final: {opt_stats['cnot_equiv']} CNOT, {opt_stats['single_qubit']} 1q, "
               f"{opt_stats['total_raw']} total")
         print(f"  time: {elapsed:.2f}s")
+        if result_entry["timing"].get("audit_total") is not None:
+            print(f"  audit: {result_entry['timing']['audit_total']:.2f}s; "
+                  f"worker wall: {result_entry['timing']['wall_total']:.2f}s")
         print(f"--- {completed_count}/{len(files)} circuits processed ---")
 
         print("--- %s seconds elapsed during optimization ---" % elapsed)

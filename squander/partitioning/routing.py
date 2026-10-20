@@ -18,6 +18,7 @@ from __future__ import annotations
 from dataclasses import dataclass, replace
 import collections
 import functools
+from ._routing_distance_cache import bounded_path_mapping_distance_cache
 import gzip
 import hashlib
 import itertools
@@ -25,6 +26,7 @@ import json
 import multiprocessing as mp
 import os
 import re
+import threading
 import time
 from pathlib import Path
 from typing import Any, Iterable, Mapping, Sequence
@@ -37,6 +39,11 @@ Permutation = tuple[int, ...]
 Edge = tuple[int, int]
 _DEFAULT_ROUTING_SYNTHESIS_WORKER_MEMORY_GIB = 16.0
 _DEFAULT_ROUTING_MINIMUM_AVAILABLE_MEMORY_FRACTION = 0.25
+_ROUTING_SYNTHESIS_SPAWN_LOCK = threading.Lock()
+_ROUTING_SYNTHESIS_RUNTIME_KEYS = frozenset((
+    "all_to_all_circuit", "all_to_all_parameters",
+    "routed_circuit", "routed_parameters", "routing_portfolio",
+))
 
 
 class RoutingMemoryPressure(RuntimeError):
@@ -101,8 +108,8 @@ def _check_routing_memory_pressure(config):
         )
 
 
-def _isolated_synthesis_worker(connection, target, config, topology):
-    """Run the shared native callback behind a process-crash boundary."""
+def _synthesis_worker_message(target, config, topology):
+    """Run one unchanged native solve and return its portable response."""
     try:
         _set_process_address_space_limit(
             config,
@@ -111,7 +118,7 @@ def _isolated_synthesis_worker(connection, target, config, topology):
         )
         result = _synthesize_routing_column(target, config, topology)
         if result is None:
-            connection.send(("none",))
+            return ("none",)
         else:
             from qiskit import qasm2
             from squander import Qiskit_IO
@@ -119,17 +126,58 @@ def _isolated_synthesis_worker(connection, target, config, topology):
             portable_circuit = Qiskit_IO.get_Qiskit_Circuit(
                 result.circuit.get_Flat_Circuit(), result.parameters
             )
-            connection.send(
-                (
-                    "result_qasm",
-                    qasm2.dumps(portable_circuit),
-                    result.topology,
-                )
+            return (
+                "result_qasm",
+                qasm2.dumps(portable_circuit),
+                result.topology,
             )
     except BaseException as error:
-        connection.send(("error", repr(error)))
+        return ("error", repr(error))
+
+
+def _isolated_synthesis_worker(connection, target, config, topology):
+    """Run the shared native callback behind a process-crash boundary."""
+    try:
+        connection.send(_synthesis_worker_message(target, config, topology))
     finally:
         connection.close()
+
+
+def _isolated_synthesis_batch_worker(connection, topology, synthesize):
+    """Reuse an isolated interpreter; each request constructs a new solver."""
+    try:
+        while True:
+            request = connection.recv()
+            if request is None:
+                break
+            target, config = request
+            connection.send(synthesize(target, config, topology))
+    except (EOFError, BrokenPipeError):
+        pass
+    finally:
+        connection.close()
+
+
+def _start_routing_synthesis_process(process):
+    """Limit nested numerical pools in children, not in the WCO coordinator."""
+    variables = (
+        "OPENBLAS_NUM_THREADS", "OMP_NUM_THREADS", "MKL_NUM_THREADS",
+        "BLIS_NUM_THREADS", "VECLIB_MAXIMUM_THREADS", "NUMEXPR_NUM_THREADS",
+    )
+    # Spawn imports NumPy before the worker function runs. Set its inherited
+    # environment at process creation, then restore every parent setting.
+    with _ROUTING_SYNTHESIS_SPAWN_LOCK:
+        previous = {name: os.environ.get(name) for name in variables}
+        try:
+            for name in variables:
+                os.environ[name] = "1"
+            process.start()
+        finally:
+            for name, value in previous.items():
+                if value is None:
+                    os.environ.pop(name, None)
+                else:
+                    os.environ[name] = value
 
 
 def _call_shared_synthesis(target, config, topology):
@@ -294,14 +342,17 @@ def _routing_synthesis_worker_count(config, task_count):
 def _call_shared_synthesis_batch(
     targets, config, topology, *, target_configs=None
 ):
-    """Run independent OSR targets concurrently with crash isolation."""
+    """Run independent targets on reusable, single-threaded isolated workers."""
     targets = tuple(targets)
     if not targets:
         return ()
-    configurations = (
-        tuple(dict(config) for _ in targets)
-        if target_configs is None
-        else tuple(dict(value) for value in target_configs)
+    configurations = tuple(
+        {key: value for key, value in task_config.items()
+         if key not in _ROUTING_SYNTHESIS_RUNTIME_KEYS}
+        for task_config in (
+            (config for _ in targets)
+            if target_configs is None else target_configs
+        )
     )
     if len(configurations) != len(targets):
         raise ValueError("One synthesis config is required per target.")
@@ -319,6 +370,7 @@ def _call_shared_synthesis_batch(
     )
     results = [None] * len(targets)
     completed = 0
+    accepted = 0
     report_progress = bool(
         config.get("exact_routing_catalog_progress", False)
     )
@@ -337,108 +389,133 @@ def _call_shared_synthesis_batch(
         )
     pending = iter(enumerate(zip(targets, configurations)))
     active = {}
+    workers = {}
+    # Do not fork a coordinator which has already initialized native threads.
+    context = mp.get_context("spawn")
 
-    def launch(index, task):
+    def close_worker(process, connection):
+        try:
+            if process.is_alive():
+                process.terminate()
+            process.join()
+        finally:
+            connection.close()
+            workers.pop(id(process), None)
+
+    def launch(index, task, worker=None):
         target, target_config = task
-        parent_connection, child_connection = mp.Pipe(duplex=False)
-        process = mp.Process(
-            target=_isolated_synthesis_worker,
-            args=(
-                child_connection,
-                target,
-                target_config,
-                list(topology),
-            ),
-        )
-        process.start()
-        child_connection.close()
+        if worker is None:
+            parent_connection, child_connection = context.Pipe()
+            process = context.Process(
+                target=_isolated_synthesis_batch_worker,
+                args=(child_connection, list(topology), _synthesis_worker_message),
+                name="routing-osr-synthesis",
+            )
+            try:
+                _start_routing_synthesis_process(process)
+            except BaseException:
+                parent_connection.close()
+                raise
+            finally:
+                child_connection.close()
+            workers[id(process)] = (process, parent_connection)
+        else:
+            process, parent_connection = worker
         active[index] = (
             process,
             parent_connection,
             None if timeout is None else time.monotonic() + timeout,
         )
-
-    for _ in range(worker_count):
         try:
-            launch(*next(pending))
-        except StopIteration:
-            break
+            parent_connection.send((target, target_config))
+        except (BrokenPipeError, EOFError, OSError):
+            # A native crash between requests is consumed as this task's
+            # failed attempt, just like a crash during the previous solve.
+            close_worker(process, parent_connection)
 
-    while active:
-        try:
+    try:
+        for _ in range(worker_count):
             _check_routing_memory_pressure(config)
-        except RoutingMemoryPressure:
-            for process, connection, _deadline in active.values():
-                if process.is_alive():
-                    process.terminate()
-                process.join()
-                connection.close()
-            active.clear()
-            raise
-        progressed = False
-        for index, (process, connection, deadline) in list(active.items()):
-            message = None
-            if connection.poll():
-                message = connection.recv()
-            elif process.is_alive() and (
-                deadline is None or time.monotonic() < deadline
-            ):
-                continue
-            if process.is_alive():
-                process.terminate()
-            process.join()
-            connection.close()
-            if message is not None:
-                results[index] = _decode_synthesis_message(message)
-            del active[index]
-            completed += 1
-            last_completion = time.monotonic()
-            if report_progress and (
-                completed % progress_interval == 0
-                or completed == len(targets)
-            ):
-                accepted = sum(
-                    result is not None for result in results
-                )
-                print(
-                    "Routing OSR catalog progress: "
-                    f"{completed}/{len(targets)} targets complete; "
-                    f"{accepted} accepted; "
-                    f"{time.monotonic() - batch_started:.2f} s.",
-                    flush=True,
-                )
-            progressed = True
             try:
                 launch(*next(pending))
             except StopIteration:
-                pass
-        if not progressed:
-            now = time.monotonic()
-            if (
-                report_progress
-                and now - last_completion >= 10.0
-                and now - last_straggler_report >= 10.0
-            ):
-                details = []
-                for index in sorted(active):
-                    target = np.ascontiguousarray(targets[index])
-                    digest = hashlib.sha256(target.view(np.uint8)).hexdigest()
-                    target_config = configurations[index]
-                    details.append(
-                        f"{index}:{digest[:12]}:level="
-                        f"{target_config.get('tree_level_max')}:seed="
-                        f"{target_config.get('random_seed')}"
+                break
+
+        while active:
+            _check_routing_memory_pressure(config)
+            progressed = False
+            for index, (process, connection, deadline) in list(active.items()):
+                message = None
+                if id(process) not in workers:
+                    pass
+                elif connection.poll():
+                    try:
+                        message = connection.recv()
+                    except EOFError:
+                        pass
+                elif process.is_alive() and (
+                    deadline is None or time.monotonic() < deadline
+                ):
+                    continue
+                reusable = message is not None and process.is_alive()
+                if not reusable and id(process) in workers:
+                    close_worker(process, connection)
+                if message is not None:
+                    results[index] = _decode_synthesis_message(message)
+                    accepted += results[index] is not None
+                del active[index]
+                completed += 1
+                last_completion = time.monotonic()
+                if report_progress and (
+                    completed % progress_interval == 0
+                    or completed == len(targets)
+                ):
+                    print(
+                        "Routing OSR catalog progress: "
+                        f"{completed}/{len(targets)} targets complete; "
+                        f"{accepted} accepted; "
+                        f"{time.monotonic() - batch_started:.2f} s.",
+                        flush=True,
                     )
-                    if straggler_directory is not None:
-                        directory = Path(straggler_directory)
-                        directory.mkdir(parents=True, exist_ok=True)
-                        np.save(directory / f"{digest}.npy", target)
-                print(
-                    "Routing OSR catalog stragglers: " + ", ".join(details),
-                    flush=True,
-                )
-                last_straggler_report = now
-            time.sleep(0.01)
+                progressed = True
+                try:
+                    next_index, next_task = next(pending)
+                except StopIteration:
+                    if reusable:
+                        close_worker(process, connection)
+                else:
+                    launch(next_index, next_task,
+                           (process, connection) if reusable else None)
+            if not progressed:
+                now = time.monotonic()
+                if (
+                    report_progress
+                    and now - last_completion >= 10.0
+                    and now - last_straggler_report >= 10.0
+                ):
+                    details = []
+                    for index in sorted(active):
+                        target = np.ascontiguousarray(targets[index])
+                        digest = hashlib.sha256(target.view(np.uint8)).hexdigest()
+                        target_config = configurations[index]
+                        details.append(
+                            f"{index}:{digest[:12]}:level="
+                            f"{target_config.get('tree_level_max')}:seed="
+                            f"{target_config.get('random_seed')}"
+                        )
+                        if straggler_directory is not None:
+                            directory = Path(straggler_directory)
+                            directory.mkdir(parents=True, exist_ok=True)
+                            np.save(directory / f"{digest}.npy", target)
+                    print(
+                        "Routing OSR catalog stragglers: " + ", ".join(details),
+                        flush=True,
+                    )
+                    last_straggler_report = now
+                time.sleep(0.01)
+    finally:
+        for process, connection in list(workers.values()):
+            close_worker(process, connection)
     return tuple(results)
 
 
@@ -2182,6 +2259,7 @@ class ExactCircuitRoutingResult:
     synthesis_cache_hits: int = 0
     timed_out: bool = False
     routing_catalog: Mapping[str, Any] | None = None
+    constructive_candidates: tuple[ExactRoutingResult, ...] = ()
 
 
 class ExactRoutingLimitExceeded(RuntimeError):
@@ -5325,6 +5403,32 @@ def _order_preserving_block_swap_count(
     return swap_count
 
 
+def _minimum_path_block_gather_swaps(positions):
+    """Minimum adjacent swaps to pack distinct tokens into one path window."""
+    count = len(positions)
+    if count <= 1:
+        return 0
+    if count <= 3:
+        return max(positions) - min(positions) - count + 1
+    adjusted = [position - index for index, position in enumerate(sorted(positions))]
+    median = adjusted[(count - 1) // 2]
+    return sum(abs(position - median) for position in adjusted)
+
+
+def _catalog_route_trajectory_key(result):
+    """Fingerprint the complete transport, including intervening SWAPs."""
+    return (
+        tuple(result.initial_mapping),
+        tuple(result.final_mapping),
+        None if result.transition_swaps is None else tuple(
+            tuple(tuple(pair) for pair in swaps)
+            for swaps in result.transition_swaps),
+        tuple((selection.partition,
+               tuple(selection.alternative.logical_qubits),
+               tuple(selection.alternative.input_physical),
+               tuple(selection.alternative.output_physical))
+              for selection in result.selections),
+    )
 def _beam_selected_path_warm_start(
     *,
     gate_predecessors,
@@ -5335,10 +5439,19 @@ def _beam_selected_path_warm_start(
     initial_mapping=None,
     initial_mapping_candidates=None,
     beam_width=64,
+    use_packing_bound=False,
+    priority_cache=None,
+    priority_cache_key=None,
     translation_limit=None,
     deadline=None,
 ):
-    """Route one fixed cover with a bounded beam over complete mappings."""
+    """Route a fixed cover, retaining the legacy ordering unless requested.
+
+    Packing adds the unavoidable cost of gathering the first ready block:
+    each external adjacent SWAP costs three CNOTs. It is an admissible bound
+    for this path-window transition model, not a proof that a bounded frontier
+    is globally optimal. Callers retain separate anchor trajectories.
+    """
     beam_width = int(beam_width)
     if beam_width < 1:
         raise ValueError("The fixed-cover mapping beam width must be positive.")
@@ -5369,6 +5482,9 @@ def _beam_selected_path_warm_start(
                         initial_mapping=initial_mapping,
                         initial_mapping_candidates=(candidate,),
                         beam_width=beam_width,
+                        use_packing_bound=use_packing_bound,
+                        priority_cache=priority_cache,
+                        priority_cache_key=(None if priority_cache_key is None else (priority_cache_key, candidate)),
                         translation_limit=translation_limit,
                         deadline=deadline,
                     )
@@ -5380,9 +5496,16 @@ def _beam_selected_path_warm_start(
                     result.initial_mapping,
                 ),
             )
+    cache_key = None
+    if priority_cache is not None and priority_cache_key is not None:
+        cache_key = (priority_cache_key, bool(use_packing_bound))
+        if cache_key in priority_cache:
+            return priority_cache[cache_key]
     path = tuple(map(int, path))
     path_position = {physical: index for index, physical in enumerate(path)}
     sorted_path = sorted(path)
+    if len(path) != logical_qubit_count or len(set(path)) != logical_qubit_count:
+        raise ValueError("Path mappings must be permutations of the device vertices.")
     selected_gate_partition = {
         gate: partition
         for partition, gate_set in enumerate(partitions)
@@ -5418,6 +5541,14 @@ def _beam_selected_path_warm_start(
             output_positions = tuple(
                 path_position[value] for value in alternative.output_physical
             )
+            logicals = alternative.logical_qubits
+            if (len(logicals) != len(set(logicals))
+                    or any(not 0 <= logical < logical_qubit_count for logical in logicals)
+                    or len(input_positions) != len(logicals)
+                    or len(output_positions) != len(logicals)
+                    or len(set(input_positions)) != len(logicals)
+                    or set(input_positions) != set(output_positions)):
+                raise ValueError("Path mappings must be permutations of the device vertices.")
             base = min(input_positions)
             key = (
                 tuple(value - base for value in input_positions),
@@ -5433,6 +5564,51 @@ def _beam_selected_path_warm_start(
             ):
                 grouped[key] = alternative
         relative[partition] = tuple(sorted(grouped.items()))
+
+
+    # A window's unmoved-token crossings do not depend on its input
+    # permutation: every block token has destination rank start among
+    # unmoved tokens. Its input-dependent transport is only the inversion
+    # distance of the block order. Contract those finite boundary choices
+    # exactly, retaining the original first-on-tie representative.
+    relative_logicals = {
+        partition: (entries[0][1].logical_qubits
+                    if entries and all(
+                        entry[1].logical_qubits == entries[0][1].logical_qubits
+                        for entry in entries) else None)
+        for partition, entries in relative.items()
+    }
+
+    @functools.lru_cache(maxsize=None)
+    def factored_relative_entries(partition, source_order):
+        logicals = relative_logicals[partition]
+        width = len(logicals)
+        window = tuple(range(width))
+        ranks = None
+        if source_order is not None:
+            ranks = [0] * width
+            for rank, index in enumerate(source_order):
+                ranks[index] = rank
+        best_by_output = {}
+        retained = []
+        for index, entry in enumerate(relative[partition]):
+            (incoming, outgoing), alternative = entry
+            if tuple(sorted(incoming)) != window:
+                retained.append((index, entry))
+                continue
+            inversions = 0 if ranks is None else sum(
+                (ranks[left] < ranks[right]) != (incoming[left] < incoming[right])
+                for left in range(width)
+                for right in range(left + 1, width)
+            )
+            score = (alternative.cnot_count + 3 * inversions,
+                     alternative.single_qubit_count)
+            previous = best_by_output.get(outgoing)
+            if previous is None or score < previous[0]:
+                best_by_output[outgoing] = (score, index, entry)
+        retained.extend((index, entry)
+                        for _, index, entry in best_by_output.values())
+        return tuple(entry for _, entry in sorted(retained))
 
     trivial_alternatives = {}
     for partition, values in alternatives.items():
@@ -5490,10 +5666,42 @@ def _beam_selected_path_warm_start(
             order.append(partition)
             completed |= 1 << partition
 
-    def beam_lower_bound(state):
-        return state[0] + minimum_uncompleted_cnot(state[6])
+    @functools.lru_cache(maxsize=None)
+    def ready_logical_blocks(completed):
+        blocks = []
+        for partition in ready_partitions(completed):
+            values = alternatives[partition]
+            width = len(values[0].logical_qubits)
+            # Non-window templates cannot use this packing bound.
+            if any(tuple(sorted(key[0])) != tuple(range(width))
+                   for key, _ in relative[partition]):
+                return ()
+            block = tuple(values[0].logical_qubits)
+            if block not in blocks:
+                blocks.append(block)
+        return tuple(blocks)
+
+    def beam_lower_bound(state, packing_priority=use_packing_bound):
+        blocks = ready_logical_blocks(state[6]) if packing_priority else ()
+        packing = 0
+        if blocks and state[2] is not None:
+            packing = float('inf')
+            for block in blocks:
+                positions = tuple(path_position[state[2][logical]] for logical in block)
+                packing = min(packing, _minimum_path_block_gather_swaps(positions))
+        return state[0] + minimum_uncompleted_cnot(state[6]) + 3 * packing
 
     @functools.lru_cache(maxsize=None)
+    def source_mapping_metadata(source):
+        """Validate each beam mapping once and reuse its path token order."""
+        if sorted(source) != sorted_path:
+            raise ValueError("Path mappings must be permutations of the device vertices.")
+        positions = tuple(path_position[physical] for physical in source)
+        ordered = [-1] * logical_qubit_count
+        for logical, position in enumerate(positions):
+            ordered[position] = logical
+        return positions, tuple(ordered)
+
     def cached_complete_mapping(source, logicals, desired):
         fixed = dict(zip(logicals, desired))
         if source is None:
@@ -5503,13 +5711,9 @@ def _beam_selected_path_warm_start(
                 if logical not in fixed
             ]
         else:
-            physical_to_logical = {
-                physical: logical for logical, physical in enumerate(source)
-            }
+            _, ordered_logicals = source_mapping_metadata(source)
             remaining_logicals = [
-                physical_to_logical[physical]
-                for physical in path
-                if physical_to_logical[physical] not in fixed
+                logical for logical in ordered_logicals if logical not in fixed
             ]
         desired_set = set(desired)
         remaining_physical = [
@@ -5530,25 +5734,42 @@ def _beam_selected_path_warm_start(
         )
 
     @functools.lru_cache(maxsize=None)
-    def complete_mapping_and_swap_count(source, logicals, desired):
-        """Complete one block placement and count its exact path crossings.
+    def block_mapping_swap_count(source, logicals, desired):
+        """Count exact path crossings without allocating a completed mapping.
 
-        ``cached_complete_mapping`` preserves the relative order of every
-        logical qubit outside ``logicals``. Only pairs containing a moved block
-        qubit can change order, so their exact crossing count takes O(k^2)
-        work for block width k after constructing the completed mapping.
+        Unmoved tokens retain their path order. Crossings with a moved token
+        equal its change of rank among unmoved tokens; moved-token pairs
+        contribute separately. This is O(k^2) for block width k.
         """
-        target = cached_complete_mapping(source, logicals, desired)
         if source is None:
-            return target, 0
-        source_sorted = sorted(source)
-        if source_sorted != sorted(target) or source_sorted != sorted_path:
-            raise ValueError(
-                "Path mappings must be permutations of the device vertices."
-            )
+            return 0
+        positions, _ = source_mapping_metadata(source)
         moved = tuple(map(int, logicals))
-        source_moved = tuple(path_position[source[logical]] for logical in moved)
-        target_moved = tuple(path_position[target[logical]] for logical in moved)
+        source_moved = tuple(positions[logical] for logical in moved)
+        target_moved = tuple(path_position[physical] for physical in desired)
+        if len(moved) == 1:
+            return abs(source_moved[0] - target_moved[0])
+        if len(moved) == 2:
+            s0, s1 = source_moved
+            t0, t1 = target_moved
+            source_before = s0 < s1
+            target_before = t0 < t1
+            return (
+                abs(s0 - t0 + source_before - target_before)
+                + abs(s1 - t1 - source_before + target_before)
+                + (source_before != target_before)
+            )
+        if len(moved) == 3:
+            s0, s1, s2 = source_moved
+            t0, t1, t2 = target_moved
+            sa, sb, sc = s0 < s1, s0 < s2, s1 < s2
+            ta, tb, tc = t0 < t1, t0 < t2, t1 < t2
+            return (
+                abs(s0 - t0 + sa + sb - ta - tb)
+                + abs(s1 - t1 - sa + sc + ta - tc)
+                + abs(s2 - t2 - sb - sc + tb + tc)
+                + (sa != ta) + (sb != tb) + (sc != tc)
+            )
         swap_count = 0
         for initial, final in zip(source_moved, target_moved):
             initial_unmoved_rank = initial - sum(
@@ -5564,7 +5785,7 @@ def _beam_selected_path_warm_start(
                     (source_moved[left] > source_moved[right])
                     != (target_moved[left] > target_moved[right])
                 )
-        return target, swap_count
+        return swap_count
 
     # cost, one-qubit tie, mapping, initial mapping, linked selection history,
     # swaps,
@@ -5611,6 +5832,8 @@ def _beam_selected_path_warm_start(
             if candidate_mapping is None
             else tuple(map(int, candidate_mapping))
         )
+        if candidate_mapping is not None:
+            source_mapping_metadata(candidate_mapping)
         beam.append(drain_ready_single_qubit_partitions(
             (
                 0,
@@ -5622,7 +5845,12 @@ def _beam_selected_path_warm_start(
                 0,
             )
         ))
+    packing_equivalent = cache_key is not None and not use_packing_bound
     while beam[0][6] != all_completed:
+        # Reuse placements within an expansion, not across every old layer.
+        # These caches are pure: dropping entries changes no route or score.
+        block_mapping_swap_count.cache_clear()
+        source_mapping_metadata.cache_clear()
         _raise_if_seed_deadline_expired(deadline, "fixed-cover beam")
         next_by_state = {}
         for (
@@ -5644,116 +5872,162 @@ def _beam_selected_path_warm_start(
                 if nontrivial_ready:
                     ready = nontrivial_ready
             for partition in ready:
-                for (input_offsets, output_offsets), alternative in relative[partition]:
-                    width = len(alternative.logical_qubits)
-                    starts = range(logical_qubit_count - width + 1)
-                    if (
-                        translation_limit is not None
-                        and len(starts) > translation_limit
-                    ):
-                        if current is None:
-                            # Keep translations spread across the path when
-                            # the first block is choosing the free layout.
-                            last = len(starts) - 1
-                            sample = {
-                                round(index * last / (translation_limit - 1))
-                                if translation_limit > 1 else last // 2
-                                for index in range(translation_limit)
-                            }
-                            starts = tuple(sorted(sample))
-                        else:
-                            current_positions = tuple(
-                                path_position[current[logical]]
-                                for logical in alternative.logical_qubits
-                            )
-                            # This is the same L1 score as the full sort.
-                            # It is convex in start, so emit its best starts
-                            # from the leftmost median outward, resolving
-                            # equal scores by the smaller start as before.
-                            adjusted = sorted(
-                                current_positions[index] - input_offsets[index]
-                                for index in range(width)
-                            )
-                            last = len(starts) - 1
-                            count = (
-                                translation_limit
-                                if translation_limit >= 0
-                                else max(0, len(starts) + translation_limit)
-                            )
-                            if count == 0:
-                                starts = []
+                placements_by_input = {}
+                output_mappings = {}
+                next_completed, trivial_order = ready_trivial_closure(
+                    completed | (1 << partition)
+                )
+                trivial_cnot = sum(trivial_alternatives[p].cnot_count for p in trivial_order)
+                trivial_single = sum(trivial_alternatives[p].single_qubit_count for p in trivial_order)
+                entries = relative[partition]
+                logicals = relative_logicals[partition]
+                if logicals is not None and (
+                        current is None or translation_limit is None
+                        or logical_qubit_count - len(logicals) + 1 <= translation_limit):
+                    source_order = None
+                    if current is not None:
+                        positions, _ = source_mapping_metadata(current)
+                        source_order = tuple(sorted(
+                            range(len(logicals)),
+                            key=lambda index: positions[logicals[index]],
+                        ))
+                    entries = factored_relative_entries(partition, source_order)
+                for (input_offsets, output_offsets), alternative in entries:
+                    placement_key = (input_offsets, alternative.logical_qubits)
+                    placements = placements_by_input.get(placement_key)
+                    if placements is None:
+                        placements = []
+                        width = len(alternative.logical_qubits)
+                        starts = range(logical_qubit_count - width + 1)
+                        if (
+                            translation_limit is not None
+                            and len(starts) > translation_limit
+                        ):
+                            if current is None:
+                                # Keep translations spread across the path when
+                                # the first block is choosing the free layout.
+                                last = len(starts) - 1
+                                sample = {
+                                    round(index * last / (translation_limit - 1))
+                                    if translation_limit > 1 else last // 2
+                                    for index in range(translation_limit)
+                                }
+                                starts = tuple(sorted(sample))
                             else:
-                                middle = min(
-                                    last, max(0, adjusted[(width - 1) // 2])
+                                current_positions = tuple(
+                                    path_position[current[logical]]
+                                    for logical in alternative.logical_qubits
                                 )
-                                selected = [middle]
-                                left = middle - 1
-                                right = middle + 1
-                                while len(selected) < count:
-                                    if left < 0:
-                                        selected.append(right)
-                                        right += 1
-                                    elif right > last:
-                                        selected.append(left)
-                                        left -= 1
-                                    elif sum(
-                                        abs(value - left) for value in adjusted
-                                    ) <= sum(
-                                        abs(value - right) for value in adjusted
-                                    ):
-                                        selected.append(left)
-                                        left -= 1
-                                    else:
-                                        selected.append(right)
-                                        right += 1
-                                starts = selected
-                    for start in starts:
-                        _raise_if_seed_deadline_expired(
-                            deadline, "fixed-cover beam"
-                        )
-                        desired_input = tuple(
-                            path[start + value] for value in input_offsets
-                        )
-                        mapping_in, swap_count = complete_mapping_and_swap_count(
-                            None if current is None else tuple(current),
-                            tuple(alternative.logical_qubits),
-                            desired_input,
-                        )
+                                # This is the same L1 score as the full sort.
+                                # It is convex in start, so emit its best starts
+                                # from the leftmost median outward, resolving
+                                # equal scores by the smaller start as before.
+                                adjusted = sorted(
+                                    current_positions[index] - input_offsets[index]
+                                    for index in range(width)
+                                )
+                                last = len(starts) - 1
+                                count = (
+                                    translation_limit
+                                    if translation_limit >= 0
+                                    else max(0, len(starts) + translation_limit)
+                                )
+                                if count == 0:
+                                    starts = []
+                                else:
+                                    middle = min(
+                                        last, max(0, adjusted[(width - 1) // 2])
+                                    )
+                                    selected = [middle]
+                                    left = middle - 1
+                                    right = middle + 1
+                                    while len(selected) < count:
+                                        if left < 0:
+                                            selected.append(right)
+                                            right += 1
+                                        elif right > last:
+                                            selected.append(left)
+                                            left -= 1
+                                        elif sum(
+                                            abs(value - left) for value in adjusted
+                                        ) <= sum(
+                                            abs(value - right) for value in adjusted
+                                        ):
+                                            selected.append(left)
+                                            left -= 1
+                                        else:
+                                            selected.append(right)
+                                            right += 1
+                                    starts = selected
+                        for start in starts:
+                            _raise_if_seed_deadline_expired(
+                                deadline, "fixed-cover beam"
+                            )
+                            desired_input = tuple(
+                                path[start + value] for value in input_offsets
+                            )
+                            swap_count = block_mapping_swap_count(
+                                None if current is None else tuple(current),
+                                tuple(alternative.logical_qubits),
+                                desired_input,
+                            )
+                            placements.append(
+                                (start, desired_input, swap_count)
+                            )
+                        placements_by_input[placement_key] = placements
+                    for start, desired_input, swap_count in placements:
+                        _raise_if_seed_deadline_expired(deadline, "fixed-cover beam")
                         desired_output = tuple(
                             path[start + value] for value in output_offsets
                         )
-                        mapping_out = list(mapping_in)
-                        for logical, physical in zip(
-                            alternative.logical_qubits, desired_output
-                        ):
-                            mapping_out[logical] = physical
-                        mapping_out = tuple(mapping_out)
-                        next_completed = completed | (1 << partition)
-                        candidate = drain_ready_single_qubit_partitions((
-                            cost + alternative.cnot_count + 3 * swap_count,
-                            single + alternative.single_qubit_count,
-                            mapping_out,
-                            mapping_in if initial is None else initial,
-                            (
-                                selections,
-                                (
-                                    partition,
-                                    alternative,
-                                    desired_input,
-                                    desired_output,
-                                ),
-                            ),
-                            swap_blocks,
-                            next_completed,
-                        ))
-                        next_completed = candidate[6]
-                        mapping_out = candidate[2]
+                        # Input and output occupy the same physical block.
+                        # Completing directly to the output fixes the same
+                        # block tokens and preserves the same ordered complement,
+                        # independently of the input permutation.
+                        output_key = (alternative.logical_qubits, desired_output)
+                        mapping_out = output_mappings.get(output_key)
+                        if mapping_out is None:
+                            mapping_out = complete_mapping(
+                                current, alternative.logical_qubits, desired_output,
+                            )
+                            output_mappings[output_key] = mapping_out
+                        candidate_cost = cost + alternative.cnot_count + 3 * swap_count + trivial_cnot
+                        candidate_single = single + alternative.single_qubit_count + trivial_single
                         state_key = (next_completed, mapping_out)
                         previous = next_by_state.get(state_key)
-                        if previous is None or candidate[:2] < previous[:2]:
-                            next_by_state[state_key] = candidate
+                        if previous is None or (candidate_cost, candidate_single) < previous[:2]:
+                            candidate_initial = initial
+                            if candidate_initial is None:
+                                candidate_initial = complete_mapping(
+                                    None, alternative.logical_qubits, desired_input,
+                                )
+                            # Mapping-neutral closure costs are known before any
+                            # history is allocated. Losing dominance candidates
+                            # cannot affect the retained beam or first-on-tie word.
+                            history = (
+                                selections,
+                                (partition, alternative, desired_input, desired_output),
+                            )
+                            for trivial_partition in trivial_order:
+                                _raise_if_seed_deadline_expired(deadline, "fixed-cover beam")
+                                trivial = trivial_alternatives[trivial_partition]
+                                physical = mapping_out[trivial.logical_qubits[0]]
+                                history = (
+                                    history,
+                                    (trivial_partition, trivial, (physical,), (physical,)),
+                                )
+                            next_by_state[state_key] = (
+                                candidate_cost,
+                                candidate_single,
+                                mapping_out,
+                                candidate_initial,
+                                history,
+                                swap_blocks,
+                                next_completed,
+                            )
+        values = tuple(next_by_state.values())
         beam = sorted(
-            next_by_state.values(),
+            values,
             key=lambda value: (
                 beam_lower_bound(value),
                 value[0],
@@ -5762,6 +6036,17 @@ def _beam_selected_path_warm_start(
                 value[2],
             ),
         )[:beam_width]
+        if packing_equivalent:
+            # An identical ordered frontier certifies that the alternate
+            # priority would produce this exact raw route, not merely its cost.
+            packed_beam = sorted(
+                values, key=lambda value: (
+                    beam_lower_bound(value, True), value[0], value[1],
+                    value[6], value[2]),
+            )[:beam_width]
+            if len(beam) != len(packed_beam) or any(
+                    left is not right for left, right in zip(beam, packed_beam)):
+                packing_equivalent = False
         if not beam:
             raise ValueError("The fixed-cover mapping beam became empty.")
     best = beam[0]
@@ -5803,7 +6088,7 @@ def _beam_selected_path_warm_start(
         current = tuple(mapping_out)
     if current != best[2]:
         raise AssertionError("Beam route reconstruction changed its final mapping.")
-    return ExactRoutingResult(
+    result = ExactRoutingResult(
         selections=tuple(selections),
         cnot_count=best[0],
         single_qubit_count=best[1],
@@ -5814,6 +6099,11 @@ def _beam_selected_path_warm_start(
         optimal=False,
         transition_swaps=tuple(transition_swaps),
     )
+    if cache_key is not None:
+        priority_cache[cache_key] = result
+        if packing_equivalent:
+            priority_cache[(priority_cache_key, True)] = result
+    return result
 
 
 def _partition_aware_layout_seed(
@@ -6161,6 +6451,9 @@ def _cover_selection_warm_start(
     layout_seed_count=0,
     layout_total_passes=8,
     layout_candidate_limit=2,
+    use_packing_bound=False,
+    refinement_cache=None,
+    priority_cache=None,
 ):
     """Route one selected cover greedily and restore original partition ids."""
     selected_partitions = tuple(map(int, selected_partitions))
@@ -6188,6 +6481,11 @@ def _cover_selection_warm_start(
         "initial_mapping": initial_mapping,
         "deadline": deadline,
     }
+    priority_key = (
+        id(gate_predecessors), id(partitions), id(alternatives),
+        selected_partitions, logical_qubit_count, tuple(path), translation_limit,
+        None if initial_mapping is None else tuple(initial_mapping),
+    )
     try:
         _raise_if_seed_deadline_expired(deadline, "fixed-cover")
         if beam_width is None:
@@ -6249,6 +6547,9 @@ def _cover_selection_warm_start(
                         screened = _beam_selected_path_warm_start(
                             **seed_arguments,
                             beam_width=1,
+                            use_packing_bound=use_packing_bound,
+                            priority_cache=priority_cache,
+                            priority_cache_key=(priority_key, 1, partition_layout),
                             initial_mapping_candidates=(partition_layout,),
                             translation_limit=translation_limit,
                         )
@@ -6283,6 +6584,9 @@ def _cover_selection_warm_start(
                     widened = _beam_selected_path_warm_start(
                         **seed_arguments,
                         beam_width=beam_width,
+                        use_packing_bound=use_packing_bound,
+                        priority_cache=priority_cache,
+                        priority_cache_key=(priority_key, beam_width, candidate_mapping),
                         initial_mapping_candidates=(candidate_mapping,),
                         translation_limit=translation_limit,
                     )
@@ -6332,7 +6636,19 @@ def _cover_selection_warm_start(
                 master_backend=f"{master_backend}-preferred-warm-start",
                 optimal=False,
             )
-    if exact_refine_timeout_seconds is not None:
+    refinement_key = None
+    if refinement_cache is not None and exact_refine_timeout_seconds is not None:
+        refinement_key = (
+            id(gate_predecessors), id(partitions), id(alternatives),
+            selected_partitions, tuple(path), logical_qubit_count,
+            None if initial_mapping is None else tuple(initial_mapping),
+            refine_backend, float(exact_refine_timeout_seconds),
+            reduced.cnot_count, reduced.single_qubit_count,
+            _catalog_route_trajectory_key(reduced),
+        )
+    if refinement_key is not None and refinement_key in refinement_cache:
+        reduced = refinement_cache[refinement_key]
+    elif exact_refine_timeout_seconds is not None:
         refine_seconds = float(exact_refine_timeout_seconds)
         if deadline is not None:
             refine_seconds = min(
@@ -6391,6 +6707,8 @@ def _cover_selection_warm_start(
             # The greedy/beam route above is already a complete feasible
             # incumbent. Preserve it when the optional exact refinement hits
             # its process memory ceiling.
+    if refinement_key is not None:
+        refinement_cache[refinement_key] = reduced
     return replace(
         reduced,
         selections=tuple(
@@ -6838,6 +7156,7 @@ def _light_sabre_partition_weights(trace, partitions):
     return weights
 
 
+@bounded_path_mapping_distance_cache
 def _path_mapping_inversion_distance(left_mapping, right_mapping, path):
     """Return the exact adjacent-SWAP distance between two path mappings."""
     path_position = {int(physical): index for index, physical in enumerate(path)}
@@ -7018,131 +7337,102 @@ def mapping_aware_partition_weights(
 
 
 def mapping_aware_catalog_seeds(
-    catalog,
-    *,
-    reference_seed_count=8,
-    refinement_rounds=3,
-    layout_passes=3,
-    swap_cnot_cost=3.0,
-    weight_swap_cnot_cost=None,
-    fixed_cover_refine_seconds=10.0,
-    fixed_cover_beam_width=64,
+    catalog, *, reference_seed_count=8, refinement_rounds=3, layout_passes=3,
+    swap_cnot_cost=3.0, weight_swap_cnot_cost=None,
+    fixed_cover_refine_seconds=None, fixed_cover_beam_width=64,
+    use_packing_bound=True, initial_mapping=None, recombine_covers=True,
 ):
-    """Generate mapping-aware PAM routes using a persisted OSR catalog only.
+    """Keep local-cost anchor routes and add geometry-guided feasible routes.
 
-    Local synthesis is never called. Multiple LightSABRE trajectories provide
-    inexpensive global mapping references; weighted exact cover and PAM then
-    alternate until the selected cover repeats or the round budget is reached.
+    Both trajectories use the same OSR catalog, reference layouts and limits.
+    Only certified catalog columns are used; local synthesis is never called.
+    A seen cover is reused, not confused with a cycle in another trajectory.
     """
     from squander.partitioning.ilp import get_all_partitions
-
     if isinstance(catalog, (str, os.PathLike, Path)):
         catalog = reconstruct_routing_osr_catalog(catalog)
     if not isinstance(catalog, LoadedRoutingOSRCatalog):
         raise TypeError("Expected a loaded routing OSR catalog or its path.")
-    catalog = augment_catalog_with_recombined_covers(catalog)
+    if recombine_covers:
+        catalog = augment_catalog_with_recombined_covers(catalog)
     if weight_swap_cnot_cost is None:
         weight_swap_cnot_cost = swap_cnot_cost
-    path = _path_topology_order(
-        catalog.topology, catalog.circuit.get_Qbit_Num()
-    )
+    path = _path_topology_order(catalog.topology, catalog.circuit.get_Qbit_Num())
     if path is None:
         raise ValueError("Mapping-aware catalog weights currently require a path.")
     max_partition_size = max(
-        len(alternatives[0].logical_qubits)
-        for alternatives in catalog.alternatives.values()
-        if alternatives
-    )
-    (
-        _allparts,
-        _contracted_graph,
-        _successors,
-        predecessors,
-        _single_qubit_chains,
-        _gate_to_qubit,
-        _gate_to_target,
-    ) = get_all_partitions(catalog.circuit, max_partition_size)
+        len(values[0].logical_qubits) for values in catalog.alternatives.values() if values)
+    (_, _, _, predecessors, _, _, _) = get_all_partitions(catalog.circuit, max_partition_size)
     gate_predecessors = {
         gate: frozenset(map(int, predecessors[gate]))
         for gate in range(len(catalog.circuit.get_Gates()))
     }
-    seen_covers = set()
+
+    def select_cover(before, after):
+        weights = mapping_aware_partition_weights(
+            partitions=catalog.partitions, alternatives=catalog.alternatives,
+            gate_before_mapping=before, gate_after_mapping=after, path=path,
+            swap_cnot_cost=weight_swap_cnot_cost)
+        return _minimum_partition_cover_selection(
+            gate_predecessors=gate_predecessors, partitions=catalog.partitions,
+            weights=weights, weight_partition_tiebreak=1)
+
+    routes_by_cover = {}
+    successors_by_trajectory = {}
+    refinement_cache = {}
+    priority_cache = {}
+    initial_covers = []
     candidates = []
-    for seed in range(max(1, int(reference_seed_count))):
-        (
-            _routed,
-            _routed_parameters,
-            initial_mapping,
-            _final_mapping,
-            trace,
-        ) = _light_sabre_route(
-            catalog.circuit,
-            catalog.parameters,
-            catalog.topology,
-            {
-                "sabre_seed": seed,
-                "sabre_trials": 1,
-                "sabre_swap_trials": 1,
-            },
-        )
-        before, after = _mapping_trajectory_from_light_sabre(
-            trace, initial_mapping, len(catalog.circuit.get_Gates())
-        )
-        for refinement in range(max(1, int(refinement_rounds))):
-            weights = mapping_aware_partition_weights(
-                partitions=catalog.partitions,
-                alternatives=catalog.alternatives,
-                gate_before_mapping=before,
-                gate_after_mapping=after,
-                path=path,
-                swap_cnot_cost=weight_swap_cnot_cost,
-            )
-            cover = _minimum_partition_cover_selection(
-                gate_predecessors=gate_predecessors,
-                partitions=catalog.partitions,
-                weights=weights,
-                # Partition count is only a deterministic secondary
-                # tiebreaker after the mapping-aware CNOT surrogate.  It must
-                # not be embedded as a per-column primary cost (the old
-                # min-partition bias), but choosing 98 singleton columns when
-                # their weighted cost is exactly tied is also unhelpful.
-                weight_partition_tiebreak=1,
-            )
-            if cover in seen_covers:
+    rounds = max(1, int(refinement_rounds))
+
+    def traverse(cover, seed, packing):
+        trajectory_covers = set()
+        for refinement in range(rounds):
+            if cover in trajectory_covers:
                 break
-            seen_covers.add(cover)
-            candidate = _cover_selection_warm_start(
-                selected_partitions=cover,
-                gate_predecessors=gate_predecessors,
-                partitions=catalog.partitions,
-                alternatives=catalog.alternatives,
-                logical_qubit_count=catalog.circuit.get_Qbit_Num(),
-                path=path,
-                initial_mapping=None,
-                master_backend=(
-                    f"mapping-aware-catalog-seed-{seed}-round-{refinement}"
-                ),
-                lookahead=True,
-                exact_refine_timeout_seconds=fixed_cover_refine_seconds,
-                beam_width=fixed_cover_beam_width,
-                refine_backend="ilp",
-            )
+            trajectory_covers.add(cover)
+            key = (cover, packing)
+            candidate = routes_by_cover.get(key)
             if candidate is None:
+                suffix = "-packing" if packing else ""
+                candidate = _cover_selection_warm_start(
+                    selected_partitions=cover, gate_predecessors=gate_predecessors,
+                    partitions=catalog.partitions, alternatives=catalog.alternatives,
+                    logical_qubit_count=catalog.circuit.get_Qbit_Num(), path=path,
+                    initial_mapping=initial_mapping,
+                    master_backend=f"mapping-aware-catalog-seed-{seed}-round-{refinement}{suffix}",
+                    lookahead=True, exact_refine_timeout_seconds=fixed_cover_refine_seconds,
+                    beam_width=fixed_cover_beam_width, refine_backend="ilp",
+                    use_packing_bound=packing, refinement_cache=refinement_cache,
+                    priority_cache=priority_cache)
+                if candidate is None:
+                    break
+                routes_by_cover[key] = candidate
+                candidates.append(candidate)
+            if refinement + 1 == rounds:
                 break
-            candidates.append(candidate)
-            before, after = _mapping_trajectory_from_solution(
-                candidate, catalog.partitions
-            )
-    return tuple(
-        sorted(
-            candidates,
-            key=lambda result: (
-                result.cnot_count,
-                result.single_qubit_count,
-                result.master_backend,
-            ),
-        )
-    )
+            trajectory = _catalog_route_trajectory_key(candidate)
+            if trajectory not in successors_by_trajectory:
+                before, after = _mapping_trajectory_from_solution(candidate, catalog.partitions)
+                successors_by_trajectory[trajectory] = select_cover(before, after)
+            cover = successors_by_trajectory[trajectory]
+
+    # Finish every original priority trajectory before adding alternatives.
+    # Packing cannot evict an anchor route or alter its reference cover.
+    for seed in range(max(1, int(reference_seed_count))):
+        (_, _, reference_initial_mapping, _, trace) = _light_sabre_route(
+            catalog.circuit, catalog.parameters, catalog.topology,
+            {"sabre_seed": seed, "sabre_trials": 1, "sabre_swap_trials": 1})
+        before, after = _mapping_trajectory_from_light_sabre(
+            trace, reference_initial_mapping, len(catalog.circuit.get_Gates()))
+        cover = select_cover(before, after)
+        initial_covers.append((seed, cover))
+        traverse(cover, seed, False)
+    if use_packing_bound:
+        for seed, cover in initial_covers:
+            traverse(cover, seed, True)
+    return tuple(sorted(candidates, key=lambda result: (
+        result.cnot_count, result.single_qubit_count, result.master_backend)))
 
 
 def _dependency_ordered_cover(
@@ -7186,6 +7476,13 @@ def _dependency_ordered_cover(
 
 def _squander_to_bqskit(circuit, parameters, *, compensate_endianness):
     """Convert a resolved Squander circuit without invoking synthesis."""
+    from squander.partitioning._pam_circuit_cache import native_pam_circuit
+
+    resolved = native_pam_circuit(
+        circuit, parameters, compensate_endianness=compensate_endianness)
+    if resolved is not None:
+        return resolved
+
     from bqskit.ir.lang.qasm2 import OPENQASM2Language
     from qiskit import qasm2
     from squander import Qiskit_IO
@@ -7203,7 +7500,9 @@ def _squander_to_bqskit(circuit, parameters, *, compensate_endianness):
     qiskit_circuit = Qiskit_IO.get_Qiskit_Circuit(
         flat, parameters
     )
-    converted = OPENQASM2Language().decode(qasm2.dumps(qiskit_circuit))
+    from squander.partitioning._pam_circuit_cache import decode_pam_qasm
+
+    converted = decode_pam_qasm(qasm2.dumps(qiskit_circuit))
     width = flat.get_Qbit_Num()
     if compensate_endianness and width > 1:
         converted.renumber_qudits([width - 1 - index for index in range(width)])
@@ -7222,6 +7521,7 @@ def _precomputed_osr_pam_warm_start(
     layout_passes=3,
     swap_cnot_cost=3.0,
     master_backend="precomputed-osr-pam-mip-start",
+    initial_mapping=None,
     deadline=None,
 ):
     """Route one Squander cover with PAM over resolved OSR columns only.
@@ -7235,6 +7535,7 @@ def _precomputed_osr_pam_warm_start(
     from bqskit.ir.point import CircuitPoint
     from bqskit.passes import PAMLayoutPass, PAMRoutingPass
     from bqskit.qis.graph import CouplingGraph
+    from squander.partitioning._pam_circuit_cache import copy_resolved_pam_circuit
 
     _raise_if_seed_deadline_expired(deadline, "precomputed PAM")
     ordered = _dependency_ordered_cover(
@@ -7244,6 +7545,7 @@ def _precomputed_osr_pam_warm_start(
     permutation_data = {}
     table_partition = {}
     transition_lookup = {}
+    table_origins = {}
 
     for partition in ordered:
         _raise_if_seed_deadline_expired(deadline, "precomputed PAM")
@@ -7264,6 +7566,7 @@ def _precomputed_osr_pam_warm_start(
         point = CircuitPoint(cycle, location[0])
         width = len(location)
         table = {}
+        table_winners = {}
         # Physical embeddings duplicate the same local OSR result. Convert
         # each canonical payload once and expand only the tiny local relabeling
         # orbit required by PAM (at most 3! for publication runs).
@@ -7277,31 +7580,38 @@ def _precomputed_osr_pam_warm_start(
                 tuple(map(int, alt_payload.output_assignment)),
                 tuple(tuple(map(int, edge)) for edge in alt_payload.topology),
                 id(alt_payload.circuit),
+                id(alt_payload.parameters),
             )
             canonical_payloads.setdefault(canonical_key, alt_payload)
             transition_lookup[
                 (int(partition), alternative.input_physical,
-                 alternative.output_physical)
+                 alternative.output_physical, canonical_key)
             ] = alternative
-        for alt_payload in canonical_payloads.values():
+        for canonical_key, alt_payload in canonical_payloads.items():
             _raise_if_seed_deadline_expired(deadline, "precomputed PAM")
             base = _squander_to_bqskit(
                 alt_payload.circuit,
                 alt_payload.parameters,
                 compensate_endianness=True,
             )
+            score = (
+                sum(count for gate, count in base.gate_counts.items()
+                    if gate.num_qudits >= 2),
+                sum(count for gate, count in base.gate_counts.items()
+                    if gate.num_qudits == 1),
+            )
             input_perm = tuple(
-                width - 1 - int(value) for value in alt_payload.input_assignment
+                width - 1 - int(value)
+                for value in _inverse_permutation(alt_payload.input_assignment)
             )
             output_perm = tuple(
-                width - 1 - int(value) for value in alt_payload.output_assignment
+                width - 1 - int(value)
+                for value in _inverse_permutation(alt_payload.output_assignment)
             )
             for relabeling in itertools.permutations(range(width)):
                 _raise_if_seed_deadline_expired(
                     deadline, "precomputed PAM"
                 )
-                renamed = base.copy()
-                renamed.renumber_qudits(relabeling)
                 # PAM queries this table with the complete induced hardware
                 # subgraph, not merely the subset of edges used by a chosen
                 # circuit.  A topology-valid circuit may use only one edge of
@@ -7311,8 +7621,8 @@ def _precomputed_osr_pam_warm_start(
                 graph = CouplingGraph(
                     [
                         (
-                            relabeling[int(left)],
-                            relabeling[int(right)],
+                            relabeling[width - 1 - int(left)],
+                            relabeling[width - 1 - int(right)],
                         )
                         for left, right in alt_payload.topology
                     ],
@@ -7322,27 +7632,24 @@ def _precomputed_osr_pam_warm_start(
                     tuple(relabeling[index] for index in input_perm),
                     tuple(relabeling[index] for index in output_perm),
                 )
-                previous = table.setdefault(graph, {}).get(perms)
-                if previous is None or (
-                    sum(
-                        count for gate, count in renamed.gate_counts.items()
-                        if gate.num_qudits >= 2
-                    ),
-                    sum(
-                        count for gate, count in renamed.gate_counts.items()
-                        if gate.num_qudits == 1
-                    ),
-                ) < (
-                    sum(
-                        count for gate, count in previous.gate_counts.items()
-                        if gate.num_qudits >= 2
-                    ),
-                    sum(
-                        count for gate, count in previous.gate_counts.items()
-                        if gate.num_qudits == 1
-                    ),
-                ):
-                    table[graph][perms] = renamed
+                previous = table_winners.setdefault(graph, {}).get(perms)
+                if previous is None or score < previous[0]:
+                    table_winners[graph][perms] = (
+                        score, base, relabeling, canonical_key
+                    )
+        # Relabeling cannot change either objective count. Select the same
+        # strict lexicographic winners (and first-on-tie entries) before
+        # copying circuits. Dict insertion order matches the original table.
+        for graph, winners in table_winners.items():
+            table[graph] = {}
+            for perms, (_, base, relabeling, canonical_key) in winners.items():
+                _raise_if_seed_deadline_expired(deadline, "precomputed PAM")
+                renamed = copy_resolved_pam_circuit(base)
+                renamed.renumber_qudits(relabeling)
+                table[graph][perms] = renamed
+                # Replay the exact native program priced by PAM. Boundary
+                # permutations alone do not identify a catalog circuit.
+                table_origins[id(renamed)] = canonical_key
         permutation_data[point] = table
         table_partition[id(table)] = int(partition)
 
@@ -7363,7 +7670,12 @@ def _precomputed_osr_pam_warm_start(
             super().__init__(total_passes=total_passes)
 
     layout = _CNOTAwarePAMLayout(max(1, int(layout_passes)))
-    initial_mapping = list(range(int(logical_qubit_count)))
+    initial_mapping = (
+        list(range(int(logical_qubit_count)))
+        if initial_mapping is None else list(initial_mapping)
+    )
+    if sorted(initial_mapping) != list(range(int(logical_qubit_count))):
+        raise ValueError("PAM initial mappings must permute the device vertices.")
     try:
         for _ in range(layout.total_passes):
             _raise_if_seed_deadline_expired(deadline, "precomputed PAM")
@@ -7386,13 +7698,18 @@ def _precomputed_osr_pam_warm_start(
             )
             partition = table_partition[id(block_data)]
             before = list(pi)
-            self._apply_perm(result[0], before)
             input_physical = tuple(before[int(logical)] for logical in qudits)
             full_input_mapping = tuple(map(int, before))
+            # The pre-permutation orders compiled operands; it does not
+            # move logical input states between physical vertices.
+            self._apply_perm(result[0], before)
             self._apply_perm(result[2], before)
             output_physical = tuple(before[int(logical)] for logical in qudits)
             full_output_mapping = tuple(map(int, before))
-            key = (partition, input_physical, output_physical)
+            key = (
+                partition, input_physical, output_physical,
+                table_origins[id(result[1])],
+            )
             if key not in transition_lookup:
                 raise RuntimeError("PAM selected a transition absent from OSR catalog.")
             self.selected.append((
@@ -10172,11 +10489,26 @@ def route_circuit_exact(
     synthesized blocks.  It is exact over the generated OSR alternatives;
     OSR remains a numerical pricing oracle.  The worst-case state space is
     exponential, so the ILP solve should have a time limit on larger circuits.
+    With ``exact_routing_global_search=False``, return the best complete
+    constructive route after catalog/layout screening instead. Such a route
+    is replayable but is not reported as globally optimal or as a timeout.
     """
     from squander.gates.qgd_Circuit import qgd_Circuit as Circuit
     from squander.partitioning.ilp import get_all_partitions, _get_topo_order
 
     config = dict(config)
+    global_search = config.get("exact_routing_global_search", True)
+    if not isinstance(global_search, bool):
+        raise ValueError("exact_routing_global_search must be a bool.")
+    retain_candidates = config.get("exact_routing_post_optimized_portfolio", False)
+    if not isinstance(retain_candidates, bool):
+        raise ValueError("exact_routing_post_optimized_portfolio must be a bool.")
+    constructive_candidates = []
+    # Opt in until WCO compares certified post-optimized route candidates:
+    # a lower raw routing count alone need not improve the final circuit.
+    mapping_aware_seed_enabled = config.get("exact_routing_mapping_aware_seeds", False)
+    if not isinstance(mapping_aware_seed_enabled, bool):
+        raise ValueError("exact_routing_mapping_aware_seeds must be a bool.")
     catalog_output_path = config.pop("exact_routing_catalog_output_path", None)
     routing_catalog_metadata = None
     cached_routing_catalog = None
@@ -11644,6 +11976,8 @@ def route_circuit_exact(
                 *precomputed_pam_seeds,
                 *minimum_partition_seeds,
             ]
+            if retain_candidates:
+                constructive_candidates.extend(seed_portfolio)
             master_warm_start = min(
                 seed_portfolio,
                 key=lambda candidate: (
@@ -11718,6 +12052,8 @@ def route_circuit_exact(
             if candidate is not None:
                 reranked_pam_seeds.append(candidate)
         if reranked_pam_seeds:
+            if retain_candidates:
+                constructive_candidates.extend(reranked_pam_seeds)
             master_warm_start = min(
                 (master_warm_start, *reranked_pam_seeds),
                 key=lambda candidate: (
@@ -11791,6 +12127,8 @@ def route_circuit_exact(
                 "exact_routing_layout_candidate_limit", 2
             )),
         )
+        if retain_candidates and portfolio_candidate is not None:
+            constructive_candidates.append(portfolio_candidate)
         if portfolio_candidate is not None and (
             portfolio_candidate.cnot_count,
             portfolio_candidate.single_qubit_count,
@@ -11799,6 +12137,104 @@ def route_circuit_exact(
             master_warm_start.single_qubit_count,
         ):
             master_warm_start = portfolio_candidate
+
+    if retain_candidates:
+        # Keep the exact legacy anchor before adding geometry-guided routes.
+        constructive_candidates.insert(0, master_warm_start)
+
+    if (
+        mapping_aware_seed_enabled
+        and not lazy_osr
+        and path is not None
+        and circuit.get_Qbit_Num() > 2
+        and local_candidate_sets
+        and master_warm_start.cnot_count > 0
+    ):
+        # The standalone catalog router must participate in the production
+        # incumbent pool, not just replay experiments. Reuse the complete
+        # canonical catalog without the whole-circuit fallback or new indices:
+        # audit replay and the optional global master use this exact universe.
+        guidance_catalog = LoadedRoutingOSRCatalog(
+            circuit=circuit,
+            parameters=parameters,
+            topology=tuple(tuple(edge) for edge in topology),
+            partitions=tuple(local_candidate_sets),
+            gate_orders=tuple(candidate_gate_orders[:-1]),
+            alternatives={
+                index: tuple(feasible_alternatives[index])
+                for index in range(len(local_candidate_sets))
+                if feasible_alternatives.get(index)
+            },
+            configuration=config,
+        )
+        try:
+            guidance_candidates = mapping_aware_catalog_seeds(
+                guidance_catalog,
+                reference_seed_count=int(config.get(
+                    "exact_routing_light_guided_cover_count", 8)),
+                layout_passes=int(config.get("exact_routing_pam_layout_passes", 3)),
+                # A heuristic geometry seed must not secretly refine every
+                # trajectory with a mapping ILP when global search is off.
+                fixed_cover_refine_seconds=(10.0 if global_search else None),
+                swap_cnot_cost=float(config.get("pam_swap_cnot_cost", 3.0)),
+                fixed_cover_beam_width=min(
+                    int(config.get("exact_routing_cover_seed_beam_width", 64)),
+                    max(1, 1024 // circuit.get_Qbit_Num()),
+                ),
+                initial_mapping=config.get("exact_routing_initial_mapping"),
+                recombine_covers=False,
+            )
+        except ExactRoutingLimitExceeded:
+            guidance_candidates = ()
+        if retain_candidates:
+            constructive_candidates.extend(guidance_candidates)
+        # Preserve the existing route on exact cost ties. This adds feasible
+        # routes only; it neither restarts synthesis nor claims optimality.
+        master_warm_start = min(
+            (master_warm_start, *guidance_candidates),
+            key=lambda candidate: (
+                candidate.cnot_count, candidate.single_qubit_count),
+        )
+
+    if not global_search:
+        # Keep the full catalog and every constructive incumbent above. Only
+        # the optional mapping-flow/global master below is bypassed; no OSR
+        # search depth, synthesis tolerance, or candidate bound is relaxed.
+        solution = replace(
+            master_warm_start,
+            master_backend=f"{master_warm_start.master_backend}-constructive",
+            optimal=False,
+            cnot_optimal=False,
+            solver_bound=None,
+        )
+        routed_circuit, routed_parameters = construct_exact_routed_circuit(
+            solution, circuit.get_Qbit_Num()
+        )
+        print(
+            "Routing global search disabled: returning the best constructive "
+            f"route ({solution.cnot_count} CNOTs); no optimality claim.",
+            flush=True,
+        )
+        return ExactCircuitRoutingResult(
+            circuit=routed_circuit,
+            parameters=routed_parameters,
+            solution=solution,
+            candidate_gate_sets=tuple(
+                tuple(sorted(part)) for part in candidate_sets
+            ),
+            candidate_gate_orders=tuple(candidate_gate_orders),
+            synthesized_partitions=len(synthesized_partitions),
+            synthesis_cache_hits=(
+                synthesis_cache_hits + target_synthesis_cache_stats[0]
+            ),
+            timed_out=False,
+            routing_catalog=routing_catalog_metadata,
+            constructive_candidates=tuple(
+                replace(candidate, optimal=False, cnot_optimal=False,
+                        solver_bound=None)
+                for candidate in constructive_candidates
+            ),
+        )
 
     global_transition_cnot_lower_bound = 0
     zero_swap_local_cnot_lower_bound = 0

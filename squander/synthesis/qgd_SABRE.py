@@ -370,6 +370,36 @@ class qgd_SABRE:
 
         return score
 
+    def _route_front_gate(self, F, pi, DAG):
+        """Escape a repeated routing state by shortening a ready gate's path.
+
+        Each SWAP decreases one fixed front gate's physical distance by one.
+        The gate is therefore executable on the next heuristic iteration.
+        """
+        gate = DAG[min(F)][0]
+        target = gate.get_Target_Qbit()
+        control = gate.get_Control_Qbit()
+        swaps = []
+        while True:
+            physical_target = int(pi[target])
+            physical_control = int(pi[control])
+            distance = self.D[physical_target, physical_control]
+            if not np.isfinite(distance):
+                raise ValueError("A front-layer gate spans disconnected topology components.")
+            if distance <= 1:
+                return swaps
+            neighbour = min(
+                self.neighbours[physical_target],
+                key=lambda vertex: (self.D[vertex, physical_control], vertex),
+            )
+            if self.D[neighbour, physical_control] != distance - 1:
+                raise AssertionError("Topology distances do not describe a shortest path.")
+            inverse = self.get_inverse_pi(pi)
+            other = int(inverse[neighbour])
+            swap = (min(target, other), max(target, other))
+            swaps.append(swap)
+            self.update_pi(pi, swap)
+
     def Heuristic_search(self, F, pi, DAG, IDAG):
         """Main heuristic search - with improved scoring."""
         swap_count = 0
@@ -379,6 +409,7 @@ class qgd_SABRE:
         gate_order = []
         E = self.generate_E(F, DAG, IDAG, resolved_gates)
         swap_prev = None
+        stalled_states = set()
 
         while len(F) != 0:
             execute_gate_list = []
@@ -395,6 +426,7 @@ class qgd_SABRE:
                     flags[gate_idx] = flag
 
             if len(execute_gate_list) != 0:
+                stalled_states.clear()
                 # Execute gates
                 for gate_idx in execute_gate_list:
                     F.remove(gate_idx)
@@ -410,6 +442,18 @@ class qgd_SABRE:
                 E = self.generate_E(F, DAG, IDAG, resolved_gates)
                 continue
             else:
+                # With no executed gates, the ready layer and lookahead stay
+                # fixed. Repeating the mapping and previous SWAP repeats the
+                # deterministic heuristic state; a one-SWAP tabu is insufficient.
+                state = (tuple(map(int, pi)), swap_prev)
+                if state in stalled_states:
+                    progress_swaps = self._route_front_gate(F, pi, DAG)
+                    gate_order.extend(progress_swaps)
+                    swap_count += len(progress_swaps)
+                    swap_prev = progress_swaps[-1] if progress_swaps else None
+                    stalled_states.clear()
+                    continue
+                stalled_states.add(state)
                 # Need to find a SWAP
                 scores = []
                 swaps = self.obtain_SWAPS(F, pi, DAG)
@@ -435,8 +479,7 @@ class qgd_SABRE:
                     self.update_pi(pi, min_swap)
                     swap_count += 1
                 else:
-                    print("ERROR: circuit cannot be mapped please check topology")
-                    break
+                    raise ValueError("Circuit cannot be mapped onto the supplied topology.")
 
         return gate_order, flags, swap_count
 

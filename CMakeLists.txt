@@ -1131,3 +1131,14 @@ install(TARGETS qgd
         LIBRARY DESTINATION squander
         RUNTIME DESTINATION squander  # Add this for Windows
         COMPONENT python)
+
+# Matrix-derived logical factors keep Eigen code out of Tree Search rebuilds.
+target_sources(qgd PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/squander/src-cpp/decomposition/OSR_Logical_Factor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/squander/src-cpp/decomposition/OSR_Logical_Factor_Tree.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/squander/src-cpp/decomposition/OSR_Logical_Phase_Factor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/squander/src-cpp/decomposition/OSR_Logical_Phase_Clifford.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/squander/src-cpp/decomposition/OSR_Parity_Network.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/squander/src-cpp/decomposition/OSR_Phase_Parity_Network.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/squander/src-cpp/decomposition/OSR_Phase_Polynomial.cpp
+)

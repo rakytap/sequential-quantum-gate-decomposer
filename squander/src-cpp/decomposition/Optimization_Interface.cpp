@@ -40,6 +40,15 @@ limitations under the License.
 
 extern "C" int LAPACKE_dgesv( 	int  matrix_layout, int n, int nrhs, double *a, int lda, int *ipiv, double *b, int ldb); 	
 
+template<class ConfigMap>
+static bool osr_gate_witnesses_enabled(ConfigMap& config)
+{
+    bool enabled = false;
+    const auto option = config.find("osr_gate_spectral_witnesses");
+    if (option != config.end()) option->second.get_property(enabled);
+    return enabled;
+}
+
 
 /**
 @brief Nullary constructor of the class.
@@ -472,7 +481,7 @@ Optimization_Interface::calc_decomposition_error(Matrix& decomposed_matrix ) {
         decomposition_error = get_infidelity(decomposed_matrix);
         break;
     case OSR_ENTANGLEMENT:
-        decomposition_error = get_osr_entanglement_test(decomposed_matrix, use_cuts, osr_rank_profiles, osr_profile_temperature, osr_cut_smoothmax_temperature);
+        decomposition_error = get_osr_entanglement_test(decomposed_matrix, use_cuts, osr_rank_profiles, osr_profile_temperature, osr_cut_smoothmax_temperature, osr_gate_witnesses_enabled(config));
         break;
     default: {
         std::string err("Optimization_Interface::optimization_problem: Cost function variant not implmented.");
@@ -730,7 +739,7 @@ double Optimization_Interface::calculate_cost_function( Matrix& matrix_new, Matr
         }
         return get_infidelity(matrix_new);
     case OSR_ENTANGLEMENT:
-        return get_osr_entanglement_test(matrix_new, use_cuts, osr_rank_profiles, osr_profile_temperature, osr_cut_smoothmax_temperature);
+        return get_osr_entanglement_test(matrix_new, use_cuts, osr_rank_profiles, osr_profile_temperature, osr_cut_smoothmax_temperature, osr_gate_witnesses_enabled(config));
     default: {
         std::string err("Optimization_Interface::optimization_problem: Cost function variant not implmented.");
         throw err;
@@ -773,7 +782,7 @@ double Optimization_Interface::calculate_cost_function( Matrix_float& matrix_new
     case SUM_OF_SQUARES:
     case OSR_ENTANGLEMENT: {
         if (cost_fnc == OSR_ENTANGLEMENT) {
-            return get_osr_entanglement_test(matrix_new, use_cuts, osr_rank_profiles, osr_profile_temperature, osr_cut_smoothmax_temperature);
+            return get_osr_entanglement_test(matrix_new, use_cuts, osr_rank_profiles, osr_profile_temperature, osr_cut_smoothmax_temperature, osr_gate_witnesses_enabled(config));
         }
         Matrix matrix_new64 = matrix_new.to_float64();
         return calculate_cost_function(matrix_new64, NULL); }
@@ -1199,7 +1208,8 @@ void Optimization_Interface::optimization_problem_combined_non_static( Matrix_re
             Upartial_float = get_osr_entanglement_test_and_deriv(
                 matrix_new, use_cuts, osr_rank_profiles, *f0,
                 osr_profile_temperature, osr_cut_smoothmax_temperature,
-                &instance->osr_min_profile_loss
+                &instance->osr_min_profile_loss,
+                osr_gate_witnesses_enabled(instance->config)
             );
 
             // The smooth profile objective deliberately retains gradients
@@ -1444,8 +1454,20 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();////////////////////////////////
         Upartial = get_osr_entanglement_test_and_deriv(
             matrix_new, use_cuts, osr_rank_profiles, *f0,
             osr_profile_temperature, osr_cut_smoothmax_temperature,
-            &instance->osr_min_profile_loss
+            &instance->osr_min_profile_loss,
+            osr_gate_witnesses_enabled(instance->config)
         );
+        if (osr_gate_witnesses_enabled(instance->config)) {
+            double target_tolerance = 1e-6;
+            const auto option = instance->config.find("osr_optimization_tolerance");
+            if (option != instance->config.end())
+                option->second.get_property(target_tolerance);
+            if (instance->osr_min_profile_loss <= target_tolerance) {
+                *f0 = 0.0;
+                std::fill_n(grad.get_data(), grad.size(), 0.0);
+                return;
+            }
+        }
     }
     else {
         *f0 = instance->calculate_cost_function(matrix_new, &trace_tmp);
