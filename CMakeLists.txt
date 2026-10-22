@@ -950,17 +950,29 @@ if(NOT TARGET Eigen3::Eigen)
       "so it can be fetched automatically.")
   endif()
 
-  message(STATUS "Eigen 5.0.1 not found on system; fetching Eigen 5.0.1")
+  message(STATUS "Eigen 5.0.1 not found on system; fetching pinned Eigen 5.0.1 archive")
   include(FetchContent)
+  if(POLICY CMP0135)
+    cmake_policy(SET CMP0135 NEW)
+  endif()
   FetchContent_Declare(
     eigen
-    GIT_REPOSITORY https://gitlab.com/libeigen/eigen.git
-    GIT_TAG        5.0.1
-    GIT_SHALLOW    TRUE
+    URL
+      https://github.com/eigen-mirror/eigen/archive/refs/tags/5.0.1.tar.gz
+      https://gitlab.com/libeigen/eigen/-/archive/5.0.1/eigen-5.0.1.tar.gz
+    URL_HASH SHA256=e9c326dc8c05cd1e044c71f30f1b2e34a6161a3b6ecf445d56b53ff1669e3dec
+    TLS_VERIFY TRUE
+    # Deliberately absent: consume headers without configuring Eigen's project.
+    SOURCE_SUBDIR squander_headers_only
   )
-  FetchContent_GetProperties(eigen)
-  if(NOT eigen_POPULATED)
-    FetchContent_Populate(eigen)
+  if(CMAKE_VERSION VERSION_LESS 3.18)
+    # Older CMake cannot honor SOURCE_SUBDIR in MakeAvailable yet.
+    FetchContent_GetProperties(eigen)
+    if(NOT eigen_POPULATED)
+      FetchContent_Populate(eigen)
+    endif()
+  else()
+    FetchContent_MakeAvailable(eigen)
   endif()
 
   # Eigen is header-only.  Exposing just its include directory avoids adding
