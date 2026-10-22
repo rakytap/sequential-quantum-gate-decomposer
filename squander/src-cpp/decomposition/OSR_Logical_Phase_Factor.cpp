@@ -167,7 +167,8 @@ void logical_phase_factors(const Complex* data, int width, int stride, int root,
         }
     const Body relative = minus * plus.adjoint();
     std::vector<bool> supported(1 << body_width, false);
-    std::vector<Body> reductions(1 << body_width);
+    // C++14's default allocator need not satisfy Eigen's AVX alignment.
+    std::vector<Body, Eigen::aligned_allocator<Body>> reductions(1 << body_width);
     for (int mask = 0; mask < (1 << body_width); ++mask) {
         std::vector<int> active;
         for (int wire = 0; wire < body_width; ++wire) if (mask & (1 << wire)) active.push_back(wire);
@@ -195,7 +196,8 @@ void logical_phase_factors(const Complex* data, int width, int stride, int root,
         Eigen::JacobiSVD<Body> polar(reductions[mask], Eigen::ComputeFullU | Eigen::ComputeFullV);
         if (polar.info() != Eigen::Success) continue;
         const Body unitary = polar.matrixU() * polar.matrixV().adjoint();
-        std::vector<Local> frames(body_width, Local::Identity());
+        std::vector<Local, Eigen::aligned_allocator<Local>> frames(
+            body_width, Local::Identity());
         bool valid = true;
         for (int wire = 0; wire < count; ++wire) {
             std::array<Matrix, 3> commutators;

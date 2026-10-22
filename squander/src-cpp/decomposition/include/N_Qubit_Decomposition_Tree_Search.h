@@ -28,6 +28,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "GrayCode.h"
 #include "N_Qubit_Decomposition_custom.h"
 
+#include <functional>
 #include <map>
 #include <numeric>
 #include <set>

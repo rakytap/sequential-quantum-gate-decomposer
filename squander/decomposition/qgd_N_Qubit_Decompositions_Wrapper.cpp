@@ -771,18 +771,24 @@ qgd_N_Qubit_Decomposition_Wrapper_set_Debugfile(qgd_N_Qubit_Decomposition_Wrappe
     }
     // determine the debugfile name type
     PyObject* debugfile_string = PyObject_Str(debugfile);
-    PyObject* debugfile_string_unicode = PyUnicode_AsEncodedString(debugfile_string, "utf-8", "~E~");
-    const char* debugfile_C = PyBytes_AS_STRING(debugfile_string_unicode);
-    Py_XDECREF(debugfile_string);
-    Py_XDECREF(debugfile_string_unicode);
-    // determine the length of the filename and initialize C++ variant of the string
-    Py_ssize_t string_length = PyBytes_Size(debugfile_string_unicode);
-    std::string debugfile_Cpp(debugfile_C, string_length);
+    if (!debugfile_string) {
+        return NULL;
+    }
+    Py_ssize_t string_length = 0;
+    const char* debugfile_C = PyUnicode_AsUTF8AndSize(debugfile_string, &string_length);
+    if (!debugfile_C) {
+        Py_DECREF(debugfile_string);
+        return NULL;
+    }
     try {
+        // Keep the Python-owned UTF-8 buffer alive until C++ has copied it.
+        std::string debugfile_Cpp(debugfile_C, static_cast<size_t>(string_length));
         // set the name of the debugfile on the C++ side
         self->decomp->set_debugfile(debugfile_Cpp);
+        Py_DECREF(debugfile_string);
         Py_RETURN_NONE;
     } catch (std::exception& e) {
+        Py_DECREF(debugfile_string);
         PyErr_SetString(PyExc_Exception, e.what());
         return NULL;
     }
