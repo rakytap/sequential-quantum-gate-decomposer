@@ -632,7 +632,7 @@ if __name__ == "__main__":
         "strategy": "TreeSearch",  # possible values: "TreeSearch", "qiskit", "bqskit", "TabuSearch"
         "test_subcircuits": False,
         "test_final_circuit": False,
-        "max_partition_size": 4,
+        "max_partition_size": 3,
         "beam": None,
         "use_osr": True,
         "use_graph_search": True,
