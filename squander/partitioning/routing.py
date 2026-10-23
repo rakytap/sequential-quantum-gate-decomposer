@@ -39,11 +39,21 @@ Permutation = tuple[int, ...]
 Edge = tuple[int, int]
 _DEFAULT_ROUTING_SYNTHESIS_WORKER_MEMORY_GIB = 16.0
 _DEFAULT_ROUTING_MINIMUM_AVAILABLE_MEMORY_FRACTION = 0.25
+_ROUTING_CATALOG_PREPARATION_BATCH_SIZE = 64
+_ROUTING_PROCESS_MEMORY_RESERVE_BYTES = 512 * 1024 ** 2
 _ROUTING_SYNTHESIS_SPAWN_LOCK = threading.Lock()
 _ROUTING_SYNTHESIS_RUNTIME_KEYS = frozenset((
     "all_to_all_circuit", "all_to_all_parameters",
     "routed_circuit", "routed_parameters", "routing_portfolio",
 ))
+
+
+def _routing_synthesis_configuration(config):
+    """Retain exactly the settings passed to native synthesis workers."""
+    return {
+        key: value for key, value in config.items()
+        if key not in _ROUTING_SYNTHESIS_RUNTIME_KEYS
+    }
 
 
 class RoutingMemoryPressure(RuntimeError):
@@ -88,6 +98,21 @@ def _available_memory_fraction():
     return None
 
 
+def _process_address_space_usage():
+    """Return Linux virtual bytes and the active RLIMIT_AS ceiling, if any."""
+    try:
+        import resource
+
+        limit, _hard = resource.getrlimit(resource.RLIMIT_AS)
+        if limit == resource.RLIM_INFINITY:
+            return None
+        with open("/proc/self/statm", encoding="ascii") as stream:
+            pages = int(stream.read().split()[0])
+        return pages * os.sysconf("SC_PAGE_SIZE"), limit
+    except (ImportError, AttributeError, OSError, ValueError, IndexError):
+        return None
+
+
 def _check_routing_memory_pressure(config):
     """Abort routing while the OS still has ample recovery headroom."""
     minimum = float(
@@ -106,6 +131,17 @@ def _check_routing_memory_pressure(config):
             "Routing stopped to protect the host: available memory is "
             f"{available:.1%}, below the configured {minimum:.1%} reserve."
         )
+    usage = _process_address_space_usage()
+    if usage is not None:
+        used, limit = usage
+        reserve = min(_ROUTING_PROCESS_MEMORY_RESERVE_BYTES, max(1, limit // 16))
+        if limit - used <= reserve:
+            raise RoutingMemoryPressure(
+                "Routing stopped before exhausting its process address-space "
+                f"limit: {used / (1024 ** 3):.2f} GiB of "
+                f"{limit / (1024 ** 3):.2f} GiB, with less than "
+                f"{reserve / (1024 ** 2):.0f} MiB recovery headroom."
+            )
 
 
 def _synthesis_worker_message(target, config, topology):
@@ -347,8 +383,7 @@ def _call_shared_synthesis_batch(
     if not targets:
         return ()
     configurations = tuple(
-        {key: value for key, value in task_config.items()
-         if key not in _ROUTING_SYNTHESIS_RUNTIME_KEYS}
+        _routing_synthesis_configuration(task_config)
         for task_config in (
             (config for _ in targets)
             if target_configs is None else target_configs
@@ -572,7 +607,7 @@ def _synthesis_target_cache_key(target, config, topology):
         target.shape,
         target.view(np.uint8).tobytes(),
         tuple(sorted(tuple(sorted((int(u), int(v)))) for u, v in topology)),
-        _freeze_synthesis_cache_value(config),
+        _freeze_synthesis_cache_value(_routing_synthesis_configuration(config)),
     )
 
 
@@ -602,11 +637,12 @@ def _call_shared_synthesis_batch_cached(
     cache_stats=None,
 ):
     """Synthesize each distinct exact target once, caching failures as final."""
+    _check_routing_memory_pressure(config)
     targets = tuple(targets)
     configurations = (
-        tuple(dict(config) for _ in targets)
+        tuple(_routing_synthesis_configuration(config) for _ in targets)
         if target_configs is None
-        else tuple(dict(value) for value in target_configs)
+        else tuple(_routing_synthesis_configuration(value) for value in target_configs)
     )
     if len(configurations) != len(targets):
         raise ValueError("One synthesis config is required per target.")
@@ -743,7 +779,7 @@ class _GlobalRoutingSynthesisBatch:
     """One deduplicated worker queue per canonical local topology."""
 
     def __init__(self, config, cache, cache_stats):
-        self.config = dict(config)
+        self.config = _routing_synthesis_configuration(config)
         self.cache = cache
         self.cache_stats = cache_stats
         self.requests = collections.defaultdict(list)
@@ -751,7 +787,9 @@ class _GlobalRoutingSynthesisBatch:
     def enqueue(self, topology, targets, target_configs, consume):
         topology = tuple(sorted(tuple(map(int, edge)) for edge in topology))
         self.requests[topology].append(
-            (tuple(targets), tuple(target_configs), consume)
+            (tuple(targets), tuple(
+                _routing_synthesis_configuration(value) for value in target_configs
+            ), consume)
         )
 
     def run(self):
@@ -786,6 +824,60 @@ class _GlobalRoutingSynthesisBatch:
                 consume(flat_results[offset : offset + count])
                 offset += count
             requests.clear()
+
+
+def _iter_refined_routing_catalog(
+    partition_indices, synthesis_metadata, config, topology,
+    physical_qubit_count, cache, cache_stats,
+):
+    """Resolve every requested partition without retaining the entire queue.
+
+    Chunking changes storage and dispatch only. The shared cache still keeps
+    successes and failures across chunks, and native seeds remain functions
+    of the exact target, local topology, and configured base seed.
+    """
+    pending = iter(partition_indices)
+    prepared = 0
+    total = len(partition_indices)
+    eager_config = {**dict(config), "exact_routing_eager_synthesis": True}
+    while True:
+        chunk = tuple(itertools.islice(
+            pending, _ROUTING_CATALOG_PREPARATION_BATCH_SIZE
+        ))
+        if not chunk:
+            return
+        if config.get("exact_routing_catalog_progress", False):
+            print(
+                "Routing OSR catalog preparation: "
+                f"partitions {prepared + 1}..{prepared + len(chunk)}/{total}.",
+                flush=True,
+            )
+        synthesis_batch = _GlobalRoutingSynthesisBatch(config, cache, cache_stats)
+        deferred = []
+        for partition_index in chunk:
+            _check_routing_memory_pressure(config)
+            metadata = synthesis_metadata.get(partition_index)
+            if metadata is None:
+                continue
+            unitary, logical_qubits, compact, parameters = metadata
+            alternatives = synthesize_partition_alternatives(
+                partition=partition_index,
+                unitary=unitary,
+                logical_qubits=logical_qubits,
+                topology=topology,
+                physical_qubit_count=physical_qubit_count,
+                config=eager_config,
+                source_circuit=compact,
+                source_parameters=parameters,
+                synthesis_cache=cache,
+                synthesis_cache_stats=cache_stats,
+                synthesis_batch=synthesis_batch,
+            )
+            deferred.append((partition_index, alternatives))
+        synthesis_batch.run()
+        for partition_index, alternatives in deferred:
+            yield partition_index, alternatives.resolve()
+        prepared += len(chunk)
 
 
 def _normalize_edges(edges: Iterable[Sequence[int]]) -> frozenset[frozenset[int]]:
@@ -10720,7 +10812,7 @@ def route_circuit_exact(
                     for u, v in topology
                 )
             ),
-            _freeze_synthesis_cache_value(config),
+            _freeze_synthesis_cache_value(_routing_synthesis_configuration(config)),
             fallback_signature,
             None if requested is None else tuple(sorted(requested)),
         )
@@ -11041,6 +11133,7 @@ def route_circuit_exact(
         )
 
     for partition_index, gate_set in enumerate(local_candidate_sets):
+        _check_routing_memory_pressure(config)
         if partition_index in feasible_alternatives:
             optimistic_alternatives[partition_index] = (
                 feasible_alternatives[partition_index]
@@ -11323,39 +11416,11 @@ def route_circuit_exact(
         )
         if not pending:
             return
-        synthesis_batch = _GlobalRoutingSynthesisBatch(
-            config,
-            target_synthesis_cache,
+        for partition_index, refined in _iter_refined_routing_catalog(
+            pending, synthesis_metadata, config, topology,
+            circuit.get_Qbit_Num(), target_synthesis_cache,
             target_synthesis_cache_stats,
-        )
-        pending_deferred = {}
-        eager_config = {
-            **dict(config),
-            "exact_routing_eager_synthesis": True,
-        }
-        for partition_index in pending:
-            metadata = synthesis_metadata.get(partition_index)
-            if metadata is None:
-                continue
-            unitary, involved_qubits, compact, subparameters = metadata
-            pending_deferred[partition_index] = (
-                synthesize_partition_alternatives(
-                    partition=partition_index,
-                    unitary=unitary,
-                    logical_qubits=involved_qubits,
-                    topology=topology,
-                    physical_qubit_count=circuit.get_Qbit_Num(),
-                    config=eager_config,
-                    source_circuit=compact,
-                    source_parameters=subparameters,
-                    synthesis_cache=target_synthesis_cache,
-                    synthesis_cache_stats=target_synthesis_cache_stats,
-                    synthesis_batch=synthesis_batch,
-                )
-            )
-        synthesis_batch.run()
-        for partition_index, deferred in pending_deferred.items():
-            refined = deferred.resolve()
+        ):
             feasible_alternatives[partition_index] = refined
             optimistic_alternatives[partition_index] = refined
             synthesized_partitions.add(partition_index)
