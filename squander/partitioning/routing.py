@@ -25,6 +25,7 @@ import itertools
 import json
 import multiprocessing as mp
 import os
+import operator
 import re
 import threading
 import time
@@ -1511,36 +1512,48 @@ def _canonical_labeled_topology(
     return best
 
 
+@functools.lru_cache(maxsize=32)
+def _connected_subtopology_embeddings_cached(
+    device_edges: frozenset[frozenset[int]],
+    physical_qubit_count: int,
+    width: int,
+) -> tuple[tuple[tuple[Edge, ...], tuple[tuple[int, ...], ...]], ...]:
+    """Enumerate once per normalized device topology and block width."""
+    grouped: dict[tuple[Edge, ...], set[tuple[int, ...]]] = {}
+    for vertices in itertools.combinations(range(physical_qubit_count), width):
+        canonical = _canonical_labeled_topology(vertices, device_edges)
+        if canonical is not None:
+            edges, embedding = canonical
+            grouped.setdefault(edges, set()).add(embedding)
+    return tuple(
+        (edges, tuple(sorted(embeddings)))
+        for edges, embeddings in sorted(grouped.items())
+    )
+
+
 def connected_subtopology_embeddings(
     topology: Iterable[Sequence[int]],
     physical_qubit_count: int,
     width: int,
 ) -> dict[tuple[Edge, ...], tuple[tuple[int, ...], ...]]:
-    """Group connected induced physical embeddings by canonical local graph."""
-    device_edges = _normalize_edges(topology)
-    grouped: dict[tuple[Edge, ...], set[tuple[int, ...]]] = {}
-    for vertices in itertools.combinations(range(int(physical_qubit_count)), width):
-        canonical = _canonical_labeled_topology(vertices, device_edges)
-        if canonical is not None:
-            edges, embedding = canonical
-            grouped.setdefault(edges, set()).add(embedding)
-    return {
-        edges: tuple(sorted(embeddings))
-        for edges, embeddings in sorted(grouped.items())
-    }
+    """Return all connected embeddings without sharing a mutable result."""
+    return dict(_connected_subtopology_embeddings_cached(
+        _normalize_edges(topology), int(physical_qubit_count), operator.index(width)
+    ))
 
 
-def _expected_boundary_transition_keys(
-    topology: Iterable[Sequence[int]],
+@functools.lru_cache(maxsize=32)
+def _expected_boundary_transition_keys_cached(
+    device_edges: frozenset[frozenset[int]],
     physical_qubit_count: int,
     width: int,
-) -> set[tuple[Permutation, Permutation]]:
-    """Enumerate every topology-valid local input/output boundary mapping."""
-    assignments = tuple(itertools.permutations(range(int(width))))
+) -> frozenset[tuple[Permutation, Permutation]]:
+    """Reuse immutable boundary mappings for the same physical device."""
+    assignments = tuple(itertools.permutations(range(width)))
     expected = set()
-    for embeddings in connected_subtopology_embeddings(
-        topology, physical_qubit_count, width
-    ).values():
+    for _edges, embeddings in _connected_subtopology_embeddings_cached(
+        device_edges, physical_qubit_count, width
+    ):
         for embedding in embeddings:
             for input_assignment, output_assignment in itertools.product(
                 assignments, repeat=2
@@ -1552,7 +1565,18 @@ def _expected_boundary_transition_keys(
                 for physical_wire, logical_wire in enumerate(output_assignment):
                     output_physical[logical_wire] = embedding[physical_wire]
                 expected.add((tuple(input_physical), tuple(output_physical)))
-    return expected
+    return frozenset(expected)
+
+
+def _expected_boundary_transition_keys(
+    topology: Iterable[Sequence[int]],
+    physical_qubit_count: int,
+    width: int,
+) -> set[tuple[Permutation, Permutation]]:
+    """Return every boundary mapping without sharing a mutable result."""
+    return set(_expected_boundary_transition_keys_cached(
+        _normalize_edges(topology), int(physical_qubit_count), operator.index(width)
+    ))
 
 
 @dataclass(frozen=True)
