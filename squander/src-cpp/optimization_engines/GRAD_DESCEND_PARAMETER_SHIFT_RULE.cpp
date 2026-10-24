@@ -135,7 +135,7 @@ void Optimization_Interface::solve_layer_optimization_problem_GRAD_DESCEND_PARAM
         }
         
         
-        long long export_circuit_2_binary_loc;
+        bool export_circuit_2_binary_loc = false;
         if ( config.count("export_circuit_2_binary_grad_descend_shift_rule") > 0 ) {
              config["export_circuit_2_binary_grad_descend_shift_rule"].get_property( export_circuit_2_binary_loc );  
         }
@@ -143,7 +143,7 @@ void Optimization_Interface::solve_layer_optimization_problem_GRAD_DESCEND_PARAM
              config["export_circuit_2_binary"].get_property( export_circuit_2_binary_loc );  
         }
         else {
-            export_circuit_2_binary_loc = 0;
+            export_circuit_2_binary_loc = false;
         }        
 
 
@@ -174,19 +174,12 @@ void Optimization_Interface::solve_layer_optimization_problem_GRAD_DESCEND_PARAM
 
 
         // whether to use line search or just gradient update with a learning rate
-        int use_line_search;
+        bool use_line_search = true;
         if ( config.count("use_line_search_grad_descend_shift_rule") > 0 ) {
-             long long value = 1;
-             config["use_line_search_grad_descend_shift_rule"].get_property( value ); 
-             use_line_search = (int) value;
+             config["use_line_search_grad_descend_shift_rule"].get_property( use_line_search );
         }
-        if ( config.count("use_line_search") > 0 ) {
-             long long value = 1;
-             config["use_line_search"].get_property( value ); 
-             use_line_search = (int) value;
-        }
-        else {
-            use_line_search = 1;
+        else if ( config.count("use_line_search") > 0 ) {
+             config["use_line_search"].get_property( use_line_search );
         }
         
         // The number if iterations after which the current results are displed/exported
@@ -289,7 +282,7 @@ void Optimization_Interface::solve_layer_optimization_problem_GRAD_DESCEND_PARAM
             }
 
 
-            if ( use_line_search == 1 ) {
+            if ( use_line_search ) {
                 // parameters for line search
                 int line_points = 128;  
 
@@ -355,7 +348,7 @@ void Optimization_Interface::solve_layer_optimization_problem_GRAD_DESCEND_PARAM
                 sstream << " circuit simulation time: " << circuit_simulation_time  << std::endl;
                 print(sstream, 1); 
         
-                if ( export_circuit_2_binary_loc > 0 ) {
+                if ( export_circuit_2_binary_loc ) {
                     std::string filename("initial_circuit_iteration.binary");
                     if (project_name != "") { 
                         filename=project_name+ "_"  +filename;
@@ -394,7 +387,7 @@ void Optimization_Interface::solve_layer_optimization_problem_GRAD_DESCEND_PARAM
                 sstream << "GRAD_DESCEND_SHIFT_RULE: converged to minimum at iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "%, current minimum:" << current_minimum;
                 sstream << " circuit simulation time: " << circuit_simulation_time  << std::endl;
                 print(sstream, 1);   
-                if ( export_circuit_2_binary_loc > 0 ) {
+                if ( export_circuit_2_binary_loc ) {
                     std::string filename("initial_circuit_iteration.binary");
                     if (project_name != "") { 
                         filename=project_name+ "_"  +filename;
@@ -426,5 +419,3 @@ void Optimization_Interface::solve_layer_optimization_problem_GRAD_DESCEND_PARAM
         print(sstream, 1); 
 
 }
-
-

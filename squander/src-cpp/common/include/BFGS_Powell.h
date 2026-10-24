@@ -36,7 +36,6 @@ protected:
     // Z.T @ g to determine the search direction 
     Matrix_real Z_T__dot__g;  
 
-
 protected:
 
 /**
