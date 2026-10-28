@@ -42,9 +42,34 @@ jobs:
       run: |
         python setup.py build_ext -q
 
-    - name: Test
+    - name: Configure Aer OpenMP loading
       run: |
-        pytest tests/ -x -v --tb=line --ignore=tests/decomposition/test_wide_circuit_optimization.py
+        # Aer wheels bundle libgomp with static TLS. Load that exact runtime at
+        # process startup, before Python imports the other native extensions.
+        # Resolve the wheel's hashed filename without importing qiskit_aer.
+        aer_openmp="$(python - <<'PY'
+        from importlib.metadata import distribution
+
+        aer = distribution("qiskit-aer")
+        libraries = sorted({
+            str(aer.locate_file(path).resolve())
+            for path in aer.files or ()
+            if path.name.startswith("libgomp") and ".so" in path.name
+        })
+        print(":".join(libraries))
+        PY
+        )"
+        if [[ -n "$aer_openmp" ]]; then
+          echo "LD_PRELOAD=${aer_openmp}${LD_PRELOAD:+:$LD_PRELOAD}" >> "$GITHUB_ENV"
+        fi
+
+    - name: Test
+      env:
+        OPENBLAS_NUM_THREADS: '1'
+        OMP_NUM_THREADS: '1'
+        MKL_NUM_THREADS: '1'
+      run: |
+        pytest tests/ -x -v --tb=line --durations=25 --durations-min=0.1
 
   build-and-test-windows:
     runs-on: windows-latest

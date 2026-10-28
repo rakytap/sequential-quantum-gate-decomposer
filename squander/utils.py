@@ -170,6 +170,7 @@ def CompareCircuits(
     initial_mapping=None,
     final_mapping=None,
     is_f32: bool = False,
+    report_overlap: bool = True,
 ):
     """
     Call to test if the two circuits give the same state transformation upon a random input state
@@ -190,6 +191,9 @@ def CompareCircuits(
         tolerance ( float, optional) The tolerance of the comparision when the inner product of the resulting states is matched to unity.
 
         is_f32 ( bool, optional) Use float32/complex64 state evolution.
+
+        report_overlap ( bool, optional) Print the measured overlap. Validation
+        still raises on failure when this is false.
 
 
     Return:
@@ -258,7 +262,8 @@ def CompareCircuits(
         )
 
     overlap = np.sum(transformed_state_1.conj() * transformed_state_2)
-    print("Circuit overlap: ", np.abs(overlap))
+    if report_overlap:
+        print("Circuit overlap: ", np.abs(overlap))
 
     assert (1 - np.abs(overlap)) < tolerance, 1 - np.abs(overlap)
 
@@ -500,7 +505,7 @@ def circuit_to_CNOT_basis(circ: Circuit, parameters: np.ndarray):
                     + gate.get_Parameter_Num()
                 ],
             )
-            circuit.add_Gate(subcircuit)
+            circuit.add_Circuit(subcircuit)
             params.append(subparams)
         elif isinstance(gate, CH):
             circuit.add_RY(gate.get_Target_Qbit())
@@ -721,7 +726,7 @@ def circuit_to_CNOT_basis(circ: Circuit, parameters: np.ndarray):
                 ]
             )
 
-    return circuit, np.concatenate(params)
+    return circuit.get_Flat_Circuit(), np.concatenate(params)
 
 
 def test_circuit_to_CNOT_basis():

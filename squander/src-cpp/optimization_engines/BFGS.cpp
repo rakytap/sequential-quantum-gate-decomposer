@@ -26,6 +26,7 @@ limitations under the License.
 #include "BFGS_Powell.h"
 
 #include <fstream>
+#include <cstring>
 
 
 #ifdef __DFE__
@@ -117,12 +118,56 @@ void Optimization_Interface::solve_layer_optimization_problem_BFGS( int num_of_p
 
 
 
+        // A local CPU HS minimization is deterministic for a fixed target
+        // and an identical initial parameter vector. The legacy restart
+        // driver only perturbs after improving the incumbent, so a stalled
+        // solve can otherwise be repeated verbatim. Reuse that result, not
+        // merely a nearby point or a similar objective. Correction objectives,
+        // float32 and parallel/accelerator paths retain their original calls.
+        bool reuse_identical_local_solves =
+            cost_fnc == HILBERT_SCHMIDT_TEST && !use_float &&
+            get_parallel_configuration() == 0 && iteration_loops_max > 1;
+        if (config.count("bfgs_reuse_identical_local_solves") > 0) {
+            bool enabled = true;
+            config["bfgs_reuse_identical_local_solves"].get_property(enabled);
+            reuse_identical_local_solves = reuse_identical_local_solves && enabled;
+        }
+#ifdef __DFE__
+        reuse_identical_local_solves = reuse_identical_local_solves &&
+            get_accelerator_num() == 0;
+#endif
+        Matrix_real previous_input;
+        Matrix_real previous_output;
+        double previous_result = 0.0;
+        bool previous_result_valid = false;
+        long long reused_local_solves = 0;
+        const std::size_t guess_bytes =
+            static_cast<std::size_t>(solution_guess.size()) * sizeof(double);
+
         // do the optimization loops
         for (long long idx=0; idx<iteration_loops_max; idx++) {
 	    
-
-            BFGS_Powell cBFGS_Powell(optimization_problem_combined, this);
-            double f = cBFGS_Powell.Start_Optimization(solution_guess, static_cast<long>(max_inner_iterations_loc));
+            double f;
+            if (previous_result_valid &&
+                previous_input.size() == solution_guess.size() &&
+                (guess_bytes == 0 || std::memcmp(previous_input.get_data(),
+                    solution_guess.get_data(), guess_bytes) == 0)) {
+                previous_output.copy_to(solution_guess);
+                f = previous_result;
+                ++reused_local_solves;
+            } else {
+                if (reuse_identical_local_solves) {
+                    solution_guess.copy_to(previous_input);
+                }
+                BFGS_Powell cBFGS_Powell(optimization_problem_combined, this);
+                f = cBFGS_Powell.Start_Optimization(solution_guess,
+                    static_cast<long>(max_inner_iterations_loc));
+                if (reuse_identical_local_solves) {
+                    solution_guess.copy_to(previous_output);
+                    previous_result = f;
+                    previous_result_valid = std::isfinite(f);
+                }
+            }
 
             if (current_minimum > f) {
                 current_minimum = f;
@@ -149,5 +194,11 @@ void Optimization_Interface::solve_layer_optimization_problem_BFGS( int num_of_p
 
         }
 
-}
+        if (reused_local_solves > 0) {
+            std::stringstream message;
+            message << "BFGS: reused identical local solve "
+                    << reused_local_solves << " times" << std::endl;
+            print(message, 2);
+        }
 
+}

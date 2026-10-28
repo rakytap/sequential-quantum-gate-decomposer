@@ -195,6 +195,10 @@ virtual std::vector<Matrix_float> apply_to_combined_inner( Matrix_real_float& pa
 
 virtual void apply_to_combined_inner( Matrix_real_float& parameters_mtx, const Matrix_real_float& precomputed_sincos, Matrix_float& input, int parallel, std::vector<Matrix_float>& output ) override;
 
+/** Apply the block and return only the traces of its parameter derivatives. */
+void apply_to_trace_derivatives( Matrix_real& parameters_mtx, Matrix& input, int parallel, Matrix& output, std::vector<QGD_Complex16>& traces );
+void apply_to_trace_derivatives( Matrix_real_float& parameters_mtx, Matrix_float& input, int parallel, Matrix_float& output, std::vector<QGD_Complex16>& traces );
+
 /**
 @brief Append a U1 gate to the list of gates
 @param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)

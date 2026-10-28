@@ -393,7 +393,12 @@ qgd_N_Qubit_Decomposition_custom_Wrapper_init(qgd_N_Qubit_Decomposition_Wrapper*
 }
 
 template<typename DecompT>
-static int search_wrapper_init(qgd_N_Qubit_Decomposition_Wrapper* self, PyObject* args, PyObject* kwds)
+static int search_wrapper_init(
+    qgd_N_Qubit_Decomposition_Wrapper* self,
+    PyObject* args,
+    PyObject* kwds,
+    bool preserve_float64_target = false
+)
 {
     static char* kwlist[] = {
         (char*)"Umtx", (char*)"qbit_num", (char*)"topology", 
@@ -422,7 +427,9 @@ static int search_wrapper_init(qgd_N_Qubit_Decomposition_Wrapper* self, PyObject
         
         auto topology_cpp = extract_topology(topology);
         auto config = extract_config(config_arg);
-        const bool use_float_constructor = Umtx_is_float32 || config_requests_float(config);
+        const bool use_float_constructor = Umtx_is_float32 || (
+            config_requests_float(config) && !preserve_float64_target
+        );
         if (use_float_constructor && !Umtx_is_float32) {
             Umtx_mtx_float = Umtx_mtx.to_float32();
         }
@@ -443,7 +450,12 @@ static int search_wrapper_init(qgd_N_Qubit_Decomposition_Wrapper* self, PyObject
 
 static int 
 qgd_N_Qubit_Decomposition_Tree_Search_Wrapper_init(qgd_N_Qubit_Decomposition_Wrapper* self, PyObject* args, PyObject* kwds) {
-    return search_wrapper_init<N_Qubit_Decomposition_Tree_Search>(self, args, kwds);
+    // Preserve the original float64 target for final Hilbert-Schmidt
+    // refinement. The double constructor still creates Umtx_float when
+    // config["use_float"] is true, so OSR retains its float32 hot path.
+    return search_wrapper_init<N_Qubit_Decomposition_Tree_Search>(
+        self, args, kwds, true
+    );
 }
 
 static int
@@ -571,6 +583,17 @@ qgd_N_Qubit_Decomposition_Wrapper_get_Optimized_Parameters(qgd_N_Qubit_Decomposi
     PyObject* parameter_arr = matrix_real_to_numpy( parameters_mtx );
 
     return parameter_arr;
+}
+
+/**
+@brief Return the float64 optimized parameters even when float32 search is enabled.
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_Wrapper_get_Optimized_Parameters_Double(qgd_N_Qubit_Decomposition_Wrapper *self)
+{
+    Matrix_real parameters_mtx = self->decomp->get_optimized_parameters();
+    parameters_mtx.set_owner(false);
+    return matrix_real_to_numpy(parameters_mtx);
 }
 
 /**
@@ -748,18 +771,24 @@ qgd_N_Qubit_Decomposition_Wrapper_set_Debugfile(qgd_N_Qubit_Decomposition_Wrappe
     }
     // determine the debugfile name type
     PyObject* debugfile_string = PyObject_Str(debugfile);
-    PyObject* debugfile_string_unicode = PyUnicode_AsEncodedString(debugfile_string, "utf-8", "~E~");
-    const char* debugfile_C = PyBytes_AS_STRING(debugfile_string_unicode);
-    Py_XDECREF(debugfile_string);
-    Py_XDECREF(debugfile_string_unicode);
-    // determine the length of the filename and initialize C++ variant of the string
-    Py_ssize_t string_length = PyBytes_Size(debugfile_string_unicode);
-    std::string debugfile_Cpp(debugfile_C, string_length);
+    if (!debugfile_string) {
+        return NULL;
+    }
+    Py_ssize_t string_length = 0;
+    const char* debugfile_C = PyUnicode_AsUTF8AndSize(debugfile_string, &string_length);
+    if (!debugfile_C) {
+        Py_DECREF(debugfile_string);
+        return NULL;
+    }
     try {
+        // Keep the Python-owned UTF-8 buffer alive until C++ has copied it.
+        std::string debugfile_Cpp(debugfile_C, static_cast<size_t>(string_length));
         // set the name of the debugfile on the C++ side
         self->decomp->set_debugfile(debugfile_Cpp);
+        Py_DECREF(debugfile_string);
         Py_RETURN_NONE;
     } catch (std::exception& e) {
+        Py_DECREF(debugfile_string);
         PyErr_SetString(PyExc_Exception, e.what());
         return NULL;
     }
@@ -3195,6 +3224,8 @@ These methods are available for all decomposition classes
      "Method to get the number of decomposing gates"}, \
     {"get_Optimized_Parameters", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_get_Optimized_Parameters, METH_NOARGS, \
      "Method to get the array of optimized parameters"}, \
+    {"get_Optimized_Parameters_Double", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_get_Optimized_Parameters_Double, METH_NOARGS, \
+     "Method to get the float64 array of optimized parameters"}, \
     {"get_Circuit", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_get_Circuit, METH_NOARGS, \
      "Method to get the incorporated circuit"}, \
     {"List_Gates", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_List_Gates, METH_NOARGS, \

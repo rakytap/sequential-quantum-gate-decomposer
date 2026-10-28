@@ -18,6 +18,7 @@ from squander.partitioning.tools import (
 PartitionStrategy = Literal[
     "kahn",
     "ilp",
+    "ilp-routing",
     "ilp-fusion",
     "ilp-fusion-ca",
     "tdag",
@@ -32,6 +33,7 @@ PartitionStrategy = Literal[
 PARTITION_FUNCTIONS = {
     "kahn": kahn_partition,
     "ilp": max_partitions,
+    "ilp-routing": functools.partial(max_partitions, routing_cost=True),
     "ilp-fusion": functools.partial(max_partitions, fusion_cost=True),
     "ilp-fusion-ca": functools.partial(
         max_partitions, fusion_cost=True, control_aware=True
@@ -65,7 +67,8 @@ def PartitionCircuit(
 
         max_partition_size (int) : The maximal number of qubits in the partitions
 
-        strategy (PartitionStrategy, optional) Set to ILP (slow, but giving optimal result), TDAG, or KAHN (default)
+        strategy (PartitionStrategy, optional) Set to ILP (slow, but giving optimal result),
+            ``ilp-routing`` for routing-oriented ILP weights, TDAG, or KAHN (default)
 
     Return:
 

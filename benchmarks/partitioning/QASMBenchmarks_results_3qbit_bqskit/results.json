@@ -1,0 +1,3464 @@
+{
+  "adder_n4.qasm": {
+    "file": "adder_n4.qasm",
+    "dataset": "QASMBenchmarks",
+    "output_file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_bqskit/adder_n4.qasm",
+    "status": "completed",
+    "strategy": "bqskit",
+    "pre_opt_strategy": "bqskit",
+    "routing_strategy": "seqpam-quick",
+    "source_fingerprint": "40819a0482b353b60a190164504d2132b7cecd2a365243df464ac344b6ab7ef0",
+    "configuration": {
+      "max_partition_size": 3,
+      "tolerance": 1e-14,
+      "osr_optimization_tolerance": 1e-06,
+      "synthesis_acceptance_tolerance": 1e-10,
+      "circuit_validation_tolerance": 1e-08,
+      "bqskit_synthesis_epsilon": 5.000000000125e-11,
+      "use_float": true,
+      "use_osr": true,
+      "use_graph_search": true,
+      "auto_expand_partition_size": false,
+      "partition_strategy": "ilp",
+      "routing_partition_strategy": "ilp",
+      "pam_swap_cnot_cost": 3.0,
+      "partition_workers": null,
+      "routing_synthesis_workers": 4,
+      "routing_column_max_iteration_loops": 8,
+      "routing_column_synthesis_mode": "topology-osr",
+      "exact_routing_catalog_progress": true,
+      "exact_routing_catalog_progress_interval": 25,
+      "exact_routing_light_sabre_seed_count": 32,
+      "exact_routing_light_sabre_trials_per_seed": 1,
+      "exact_routing_light_guided_cover_count": 8,
+      "exact_routing_minimum_cover_seed_count": 8,
+      "exact_routing_post_catalog_pam_seed_count": 12,
+      "exact_routing_pam_layout_passes": 3,
+      "exact_routing_pam_swap_cnot_costs": [
+        3.0
+      ],
+      "exact_routing_pam_cover_strategies": [
+        "kahn",
+        "ilp",
+        "ilp-routing"
+      ],
+      "exact_routing_lazy_osr": false,
+      "exact_routing_cover_pool_timeout_seconds": 10.0,
+      "exact_routing_token_seed_timeout_seconds": 0.0,
+      "exact_routing_token_seed_cover_strategies": [
+        "light-structural"
+      ],
+      "routing_synthesis_worker_memory_limit_gib": 16.0,
+      "routing_minimum_available_memory_fraction": 0.25,
+      "circuit_worker_memory_limit_gib": null,
+      "exact_routing_flow_seed_max_terms": 500000,
+      "exact_routing_fixed_cover_max_triangle_constraints": 500000,
+      "exact_routing_fixed_cover_backend": "sat",
+      "exact_routing_sat_solver": "glucose42",
+      "exact_routing_sat_max_estimated_clauses": 5000000,
+      "beam": null,
+      "partition_size_schedule": [
+        3
+      ]
+    },
+    "init": {
+      "cnot_equiv": 10,
+      "single_qubit": 13,
+      "total_raw": 23,
+      "qubits": 4,
+      "gate_breakdown": {
+        "CNOT": 10,
+        "H": 2,
+        "S": 1,
+        "T": 4,
+        "Tdg": 4,
+        "X": 2
+      }
+    },
+    "final": {
+      "cnot_equiv": 16,
+      "single_qubit": 29,
+      "total_raw": 45,
+      "qubits": 4,
+      "gate_breakdown": {
+        "CNOT": 16,
+        "U3": 29
+      }
+    },
+    "timing": {
+      "a2a": 8.39,
+      "routing": 8.35,
+      "optimization": 23.15,
+      "total": 39.88
+    },
+    "all_to_all": {
+      "cnot_equiv": 10,
+      "single_qubit": 11,
+      "total_raw": 21,
+      "qubits": 4,
+      "gate_breakdown": {
+        "CNOT": 10,
+        "U3": 11
+      }
+    },
+    "routed": {
+      "cnot_equiv": 16,
+      "single_qubit": 76,
+      "total_raw": 92,
+      "qubits": 4,
+      "gate_breakdown": {
+        "CNOT": 16,
+        "RX": 16,
+        "RY": 32,
+        "RZ": 16,
+        "U3": 12
+      }
+    },
+    "rewrite_audit": {
+      "schema_version": 2,
+      "file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_bqskit/adder_n4.audit.json.gz",
+      "sha256": "2146a2ee870a424abc922bb816bd10a9bd6d1efb76f28b8c174c561de8721ca1",
+      "summary": {
+        "events": 117,
+        "rewrites": 97,
+        "accepted_rewrites": 66,
+        "failed_synthesis_attempts": 0,
+        "fallbacks": 0,
+        "candidate_tolerance_misses": 0
+      },
+      "verified_rewrites": 97,
+      "accepted_rewrites": 66,
+      "worst_process_infidelity": 6.661338147750939e-16,
+      "worst_accepted_process_infidelity": 4.440892098500626e-16,
+      "candidate_tolerance_misses": 0,
+      "accepted_spectral_error_bound": 2.0362428360024966e-08,
+      "replayed_native_rounds": 0,
+      "replayed_bqskit_invocations": 11,
+      "replayed_pam_routing_passes": 1,
+      "replayed_placement_passes": 2,
+      "replayed_qiskit_sabre_passes": 0,
+      "replayed_exact_osr_routing_passes": 0,
+      "replayed_squander_sabre_passes": 0,
+      "replayed_bqskit_stages": 3,
+      "chained_bqskit_events": 14,
+      "replayed_whole_circuit_transitions": 6,
+      "final_circuit_sha256": "cf721f622dcd489ceeb2eeb4dc1a04c3b36abf92311a1585b3c35bf3558e2964"
+    }
+  },
+  "bv_n14.qasm": {
+    "file": "bv_n14.qasm",
+    "dataset": "QASMBenchmarks",
+    "output_file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_bqskit/bv_n14.qasm",
+    "status": "completed",
+    "strategy": "bqskit",
+    "pre_opt_strategy": "bqskit",
+    "routing_strategy": "seqpam-quick",
+    "source_fingerprint": "40819a0482b353b60a190164504d2132b7cecd2a365243df464ac344b6ab7ef0",
+    "configuration": {
+      "max_partition_size": 3,
+      "tolerance": 1e-14,
+      "osr_optimization_tolerance": 1e-06,
+      "synthesis_acceptance_tolerance": 1e-10,
+      "circuit_validation_tolerance": 1e-08,
+      "bqskit_synthesis_epsilon": 5.000000000125e-11,
+      "use_float": true,
+      "use_osr": true,
+      "use_graph_search": true,
+      "auto_expand_partition_size": false,
+      "partition_strategy": "ilp",
+      "routing_partition_strategy": "ilp",
+      "pam_swap_cnot_cost": 3.0,
+      "partition_workers": null,
+      "routing_synthesis_workers": 4,
+      "routing_column_max_iteration_loops": 8,
+      "routing_column_synthesis_mode": "topology-osr",
+      "exact_routing_catalog_progress": true,
+      "exact_routing_catalog_progress_interval": 25,
+      "exact_routing_light_sabre_seed_count": 32,
+      "exact_routing_light_sabre_trials_per_seed": 1,
+      "exact_routing_light_guided_cover_count": 8,
+      "exact_routing_minimum_cover_seed_count": 8,
+      "exact_routing_post_catalog_pam_seed_count": 12,
+      "exact_routing_pam_layout_passes": 3,
+      "exact_routing_pam_swap_cnot_costs": [
+        3.0
+      ],
+      "exact_routing_pam_cover_strategies": [
+        "kahn",
+        "ilp",
+        "ilp-routing"
+      ],
+      "exact_routing_lazy_osr": false,
+      "exact_routing_cover_pool_timeout_seconds": 10.0,
+      "exact_routing_token_seed_timeout_seconds": 0.0,
+      "exact_routing_token_seed_cover_strategies": [
+        "light-structural"
+      ],
+      "routing_synthesis_worker_memory_limit_gib": 16.0,
+      "routing_minimum_available_memory_fraction": 0.25,
+      "circuit_worker_memory_limit_gib": null,
+      "exact_routing_flow_seed_max_terms": 500000,
+      "exact_routing_fixed_cover_max_triangle_constraints": 500000,
+      "exact_routing_fixed_cover_backend": "sat",
+      "exact_routing_sat_solver": "glucose42",
+      "exact_routing_sat_max_estimated_clauses": 5000000,
+      "beam": null,
+      "partition_size_schedule": [
+        3
+      ]
+    },
+    "init": {
+      "cnot_equiv": 13,
+      "single_qubit": 28,
+      "total_raw": 41,
+      "qubits": 14,
+      "gate_breakdown": {
+        "CNOT": 13,
+        "H": 27,
+        "X": 1
+      }
+    },
+    "final": {
+      "cnot_equiv": 24,
+      "single_qubit": 43,
+      "total_raw": 67,
+      "qubits": 14,
+      "gate_breakdown": {
+        "CNOT": 24,
+        "U3": 43
+      }
+    },
+    "timing": {
+      "a2a": 7.35,
+      "routing": 13.31,
+      "optimization": 12.84,
+      "total": 33.5
+    },
+    "all_to_all": {
+      "cnot_equiv": 13,
+      "single_qubit": 27,
+      "total_raw": 40,
+      "qubits": 14,
+      "gate_breakdown": {
+        "CNOT": 13,
+        "U3": 27
+      }
+    },
+    "routed": {
+      "cnot_equiv": 27,
+      "single_qubit": 128,
+      "total_raw": 155,
+      "qubits": 14,
+      "gate_breakdown": {
+        "CNOT": 27,
+        "RX": 27,
+        "RY": 54,
+        "RZ": 27,
+        "U3": 20
+      }
+    },
+    "rewrite_audit": {
+      "schema_version": 2,
+      "file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_bqskit/bv_n14.audit.json.gz",
+      "sha256": "891223e9436c85547b4bb296dd28bf78131d2eb8ff40f877e1a0a09959dde21b",
+      "summary": {
+        "events": 116,
+        "rewrites": 97,
+        "accepted_rewrites": 55,
+        "failed_synthesis_attempts": 0,
+        "fallbacks": 0,
+        "candidate_tolerance_misses": 0
+      },
+      "verified_rewrites": 97,
+      "accepted_rewrites": 55,
+      "worst_process_infidelity": 6.661338147750939e-16,
+      "worst_accepted_process_infidelity": 6.661338147750939e-16,
+      "candidate_tolerance_misses": 0,
+      "accepted_spectral_error_bound": 4.336821819559816e-08,
+      "replayed_native_rounds": 0,
+      "replayed_bqskit_invocations": 10,
+      "replayed_pam_routing_passes": 1,
+      "replayed_placement_passes": 2,
+      "replayed_qiskit_sabre_passes": 0,
+      "replayed_exact_osr_routing_passes": 0,
+      "replayed_squander_sabre_passes": 0,
+      "replayed_bqskit_stages": 3,
+      "chained_bqskit_events": 13,
+      "replayed_whole_circuit_transitions": 6,
+      "final_circuit_sha256": "94d6bbff4a2c6ed40f26d78943ee2cf5d9709462f62a1330e7f5f35ccdca82f2"
+    }
+  },
+  "cat_state_n22.qasm": {
+    "file": "cat_state_n22.qasm",
+    "dataset": "QASMBenchmarks",
+    "output_file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_bqskit/cat_state_n22.qasm",
+    "status": "completed",
+    "strategy": "bqskit",
+    "pre_opt_strategy": "bqskit",
+    "routing_strategy": "seqpam-quick",
+    "source_fingerprint": "40819a0482b353b60a190164504d2132b7cecd2a365243df464ac344b6ab7ef0",
+    "configuration": {
+      "max_partition_size": 3,
+      "tolerance": 1e-14,
+      "osr_optimization_tolerance": 1e-06,
+      "synthesis_acceptance_tolerance": 1e-10,
+      "circuit_validation_tolerance": 1e-08,
+      "bqskit_synthesis_epsilon": 5.000000000125e-11,
+      "use_float": true,
+      "use_osr": true,
+      "use_graph_search": true,
+      "auto_expand_partition_size": false,
+      "partition_strategy": "ilp",
+      "routing_partition_strategy": "ilp",
+      "pam_swap_cnot_cost": 3.0,
+      "partition_workers": null,
+      "routing_synthesis_workers": 4,
+      "routing_column_max_iteration_loops": 8,
+      "routing_column_synthesis_mode": "topology-osr",
+      "exact_routing_catalog_progress": true,
+      "exact_routing_catalog_progress_interval": 25,
+      "exact_routing_light_sabre_seed_count": 32,
+      "exact_routing_light_sabre_trials_per_seed": 1,
+      "exact_routing_light_guided_cover_count": 8,
+      "exact_routing_minimum_cover_seed_count": 8,
+      "exact_routing_post_catalog_pam_seed_count": 12,
+      "exact_routing_pam_layout_passes": 3,
+      "exact_routing_pam_swap_cnot_costs": [
+        3.0
+      ],
+      "exact_routing_pam_cover_strategies": [
+        "kahn",
+        "ilp",
+        "ilp-routing"
+      ],
+      "exact_routing_lazy_osr": false,
+      "exact_routing_cover_pool_timeout_seconds": 10.0,
+      "exact_routing_token_seed_timeout_seconds": 0.0,
+      "exact_routing_token_seed_cover_strategies": [
+        "light-structural"
+      ],
+      "routing_synthesis_worker_memory_limit_gib": 16.0,
+      "routing_minimum_available_memory_fraction": 0.25,
+      "circuit_worker_memory_limit_gib": null,
+      "exact_routing_flow_seed_max_terms": 500000,
+      "exact_routing_fixed_cover_max_triangle_constraints": 500000,
+      "exact_routing_fixed_cover_backend": "sat",
+      "exact_routing_sat_solver": "glucose42",
+      "exact_routing_sat_max_estimated_clauses": 5000000,
+      "beam": null,
+      "partition_size_schedule": [
+        3
+      ]
+    },
+    "init": {
+      "cnot_equiv": 21,
+      "single_qubit": 1,
+      "total_raw": 22,
+      "qubits": 22,
+      "gate_breakdown": {
+        "CNOT": 21,
+        "H": 1
+      }
+    },
+    "final": {
+      "cnot_equiv": 21,
+      "single_qubit": 1,
+      "total_raw": 22,
+      "qubits": 22,
+      "gate_breakdown": {
+        "CNOT": 21,
+        "U3": 1
+      }
+    },
+    "timing": {
+      "a2a": null,
+      "routing": null,
+      "optimization": 6.63,
+      "total": 6.63
+    },
+    "rewrite_audit": {
+      "schema_version": 2,
+      "file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_bqskit/cat_state_n22.audit.json.gz",
+      "sha256": "790c8d88e22308ede39f5dafd3027d82d90e3c10a3e14e1f3ffe803a0418d306",
+      "summary": {
+        "events": 40,
+        "rewrites": 34,
+        "accepted_rewrites": 1,
+        "failed_synthesis_attempts": 0,
+        "fallbacks": 0,
+        "candidate_tolerance_misses": 0
+      },
+      "verified_rewrites": 34,
+      "accepted_rewrites": 1,
+      "worst_process_infidelity": 0.0,
+      "worst_accepted_process_infidelity": 0.0,
+      "candidate_tolerance_misses": 0,
+      "accepted_spectral_error_bound": 1.685268606033212e-16,
+      "replayed_native_rounds": 0,
+      "replayed_bqskit_invocations": 4,
+      "replayed_pam_routing_passes": 0,
+      "replayed_placement_passes": 0,
+      "replayed_qiskit_sabre_passes": 0,
+      "replayed_exact_osr_routing_passes": 0,
+      "replayed_squander_sabre_passes": 0,
+      "replayed_bqskit_stages": 1,
+      "chained_bqskit_events": 4,
+      "replayed_whole_circuit_transitions": 2,
+      "final_circuit_sha256": "f1922db42a9ee80684980f9f6b2bd2035c028303381202c57fcf4d370da4b217"
+    }
+  },
+  "ghz_state_n23.qasm": {
+    "file": "ghz_state_n23.qasm",
+    "dataset": "QASMBenchmarks",
+    "output_file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_bqskit/ghz_state_n23.qasm",
+    "status": "completed",
+    "strategy": "bqskit",
+    "pre_opt_strategy": "bqskit",
+    "routing_strategy": "seqpam-quick",
+    "source_fingerprint": "40819a0482b353b60a190164504d2132b7cecd2a365243df464ac344b6ab7ef0",
+    "configuration": {
+      "max_partition_size": 3,
+      "tolerance": 1e-14,
+      "osr_optimization_tolerance": 1e-06,
+      "synthesis_acceptance_tolerance": 1e-10,
+      "circuit_validation_tolerance": 1e-08,
+      "bqskit_synthesis_epsilon": 5.000000000125e-11,
+      "use_float": true,
+      "use_osr": true,
+      "use_graph_search": true,
+      "auto_expand_partition_size": false,
+      "partition_strategy": "ilp",
+      "routing_partition_strategy": "ilp",
+      "pam_swap_cnot_cost": 3.0,
+      "partition_workers": null,
+      "routing_synthesis_workers": 4,
+      "routing_column_max_iteration_loops": 8,
+      "routing_column_synthesis_mode": "topology-osr",
+      "exact_routing_catalog_progress": true,
+      "exact_routing_catalog_progress_interval": 25,
+      "exact_routing_light_sabre_seed_count": 32,
+      "exact_routing_light_sabre_trials_per_seed": 1,
+      "exact_routing_light_guided_cover_count": 8,
+      "exact_routing_minimum_cover_seed_count": 8,
+      "exact_routing_post_catalog_pam_seed_count": 12,
+      "exact_routing_pam_layout_passes": 3,
+      "exact_routing_pam_swap_cnot_costs": [
+        3.0
+      ],
+      "exact_routing_pam_cover_strategies": [
+        "kahn",
+        "ilp",
+        "ilp-routing"
+      ],
+      "exact_routing_lazy_osr": false,
+      "exact_routing_cover_pool_timeout_seconds": 10.0,
+      "exact_routing_token_seed_timeout_seconds": 0.0,
+      "exact_routing_token_seed_cover_strategies": [
+        "light-structural"
+      ],
+      "routing_synthesis_worker_memory_limit_gib": 16.0,
+      "routing_minimum_available_memory_fraction": 0.25,
+      "circuit_worker_memory_limit_gib": null,
+      "exact_routing_flow_seed_max_terms": 500000,
+      "exact_routing_fixed_cover_max_triangle_constraints": 500000,
+      "exact_routing_fixed_cover_backend": "sat",
+      "exact_routing_sat_solver": "glucose42",
+      "exact_routing_sat_max_estimated_clauses": 5000000,
+      "beam": null,
+      "partition_size_schedule": [
+        3
+      ]
+    },
+    "init": {
+      "cnot_equiv": 22,
+      "single_qubit": 1,
+      "total_raw": 23,
+      "qubits": 23,
+      "gate_breakdown": {
+        "CNOT": 22,
+        "H": 1
+      }
+    },
+    "final": {
+      "cnot_equiv": 22,
+      "single_qubit": 1,
+      "total_raw": 23,
+      "qubits": 23,
+      "gate_breakdown": {
+        "CNOT": 22,
+        "U3": 1
+      }
+    },
+    "timing": {
+      "a2a": null,
+      "routing": null,
+      "optimization": 7.2,
+      "total": 7.2
+    },
+    "rewrite_audit": {
+      "schema_version": 2,
+      "file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_bqskit/ghz_state_n23.audit.json.gz",
+      "sha256": "c9862ba890bbfebe3bf0714a125655abcfeb169bf5267fd5382dfc45217aa53e",
+      "summary": {
+        "events": 40,
+        "rewrites": 34,
+        "accepted_rewrites": 1,
+        "failed_synthesis_attempts": 0,
+        "fallbacks": 0,
+        "candidate_tolerance_misses": 0
+      },
+      "verified_rewrites": 34,
+      "accepted_rewrites": 1,
+      "worst_process_infidelity": 2.220446049250313e-16,
+      "worst_accepted_process_infidelity": 0.0,
+      "candidate_tolerance_misses": 0,
+      "accepted_spectral_error_bound": 1.685268606033212e-16,
+      "replayed_native_rounds": 0,
+      "replayed_bqskit_invocations": 4,
+      "replayed_pam_routing_passes": 0,
+      "replayed_placement_passes": 0,
+      "replayed_qiskit_sabre_passes": 0,
+      "replayed_exact_osr_routing_passes": 0,
+      "replayed_squander_sabre_passes": 0,
+      "replayed_bqskit_stages": 1,
+      "chained_bqskit_events": 4,
+      "replayed_whole_circuit_transitions": 2,
+      "final_circuit_sha256": "a4905d56d4e20feee2b9fb84992f8d5fd2440198509dd5f9406af0a56d9ee5bf"
+    }
+  },
+  "multiply_n13.qasm": {
+    "file": "multiply_n13.qasm",
+    "dataset": "QASMBenchmarks",
+    "output_file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_bqskit/multiply_n13.qasm",
+    "status": "completed",
+    "strategy": "bqskit",
+    "pre_opt_strategy": "bqskit",
+    "routing_strategy": "seqpam-quick",
+    "source_fingerprint": "40819a0482b353b60a190164504d2132b7cecd2a365243df464ac344b6ab7ef0",
+    "configuration": {
+      "max_partition_size": 3,
+      "tolerance": 1e-14,
+      "osr_optimization_tolerance": 1e-06,
+      "synthesis_acceptance_tolerance": 1e-10,
+      "circuit_validation_tolerance": 1e-08,
+      "bqskit_synthesis_epsilon": 5.000000000125e-11,
+      "use_float": true,
+      "use_osr": true,
+      "use_graph_search": true,
+      "auto_expand_partition_size": false,
+      "partition_strategy": "ilp",
+      "routing_partition_strategy": "ilp",
+      "pam_swap_cnot_cost": 3.0,
+      "partition_workers": null,
+      "routing_synthesis_workers": 4,
+      "routing_column_max_iteration_loops": 8,
+      "routing_column_synthesis_mode": "topology-osr",
+      "exact_routing_catalog_progress": true,
+      "exact_routing_catalog_progress_interval": 25,
+      "exact_routing_light_sabre_seed_count": 32,
+      "exact_routing_light_sabre_trials_per_seed": 1,
+      "exact_routing_light_guided_cover_count": 8,
+      "exact_routing_minimum_cover_seed_count": 8,
+      "exact_routing_post_catalog_pam_seed_count": 12,
+      "exact_routing_pam_layout_passes": 3,
+      "exact_routing_pam_swap_cnot_costs": [
+        3.0
+      ],
+      "exact_routing_pam_cover_strategies": [
+        "kahn",
+        "ilp",
+        "ilp-routing"
+      ],
+      "exact_routing_lazy_osr": false,
+      "exact_routing_cover_pool_timeout_seconds": 10.0,
+      "exact_routing_token_seed_timeout_seconds": 0.0,
+      "exact_routing_token_seed_cover_strategies": [
+        "light-structural"
+      ],
+      "routing_synthesis_worker_memory_limit_gib": 16.0,
+      "routing_minimum_available_memory_fraction": 0.25,
+      "circuit_worker_memory_limit_gib": null,
+      "exact_routing_flow_seed_max_terms": 500000,
+      "exact_routing_fixed_cover_max_triangle_constraints": 500000,
+      "exact_routing_fixed_cover_backend": "sat",
+      "exact_routing_sat_solver": "glucose42",
+      "exact_routing_sat_max_estimated_clauses": 5000000,
+      "beam": null,
+      "partition_size_schedule": [
+        3
+      ]
+    },
+    "init": {
+      "cnot_equiv": 40,
+      "single_qubit": 58,
+      "total_raw": 14,
+      "qubits": 13,
+      "gate_breakdown": {
+        "CCX": 6,
+        "CNOT": 4,
+        "X": 4
+      }
+    },
+    "final": {
+      "cnot_equiv": 78,
+      "single_qubit": 121,
+      "total_raw": 199,
+      "qubits": 13,
+      "gate_breakdown": {
+        "CNOT": 78,
+        "U3": 121
+      }
+    },
+    "timing": {
+      "a2a": 48.75,
+      "routing": 41.77,
+      "optimization": 65.95,
+      "total": 156.47
+    },
+    "all_to_all": {
+      "cnot_equiv": 40,
+      "single_qubit": 49,
+      "total_raw": 89,
+      "qubits": 13,
+      "gate_breakdown": {
+        "CNOT": 40,
+        "U3": 49
+      }
+    },
+    "routed": {
+      "cnot_equiv": 80,
+      "single_qubit": 224,
+      "total_raw": 284,
+      "qubits": 13,
+      "gate_breakdown": {
+        "CNOT": 50,
+        "RX": 50,
+        "RY": 100,
+        "RZ": 50,
+        "SWAP": 10,
+        "U3": 24
+      }
+    },
+    "rewrite_audit": {
+      "schema_version": 2,
+      "file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_bqskit/multiply_n13.audit.json.gz",
+      "sha256": "32166a714fb7e73d8646829cae0edcefb46f47ff210fced957c4b67f16797fff",
+      "summary": {
+        "events": 410,
+        "rewrites": 388,
+        "accepted_rewrites": 311,
+        "failed_synthesis_attempts": 0,
+        "fallbacks": 0,
+        "candidate_tolerance_misses": 0
+      },
+      "verified_rewrites": 388,
+      "accepted_rewrites": 311,
+      "worst_process_infidelity": 3.352873534367973e-14,
+      "worst_accepted_process_infidelity": 3.352873534367973e-14,
+      "candidate_tolerance_misses": 0,
+      "accepted_spectral_error_bound": 6.701732263601283e-07,
+      "replayed_native_rounds": 0,
+      "replayed_bqskit_invocations": 13,
+      "replayed_pam_routing_passes": 1,
+      "replayed_placement_passes": 2,
+      "replayed_qiskit_sabre_passes": 0,
+      "replayed_exact_osr_routing_passes": 0,
+      "replayed_squander_sabre_passes": 0,
+      "replayed_bqskit_stages": 3,
+      "chained_bqskit_events": 16,
+      "replayed_whole_circuit_transitions": 6,
+      "final_circuit_sha256": "1269d0d7ff26779432c6703f162b47c67e4d69614e247801bfd7192c5576a844"
+    }
+  },
+  "tfim.qasm": {
+    "file": "tfim.qasm",
+    "dataset": "QASMBenchmarks",
+    "output_file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_bqskit/tfim.qasm",
+    "status": "completed",
+    "strategy": "bqskit",
+    "pre_opt_strategy": "bqskit",
+    "routing_strategy": "seqpam-quick",
+    "source_fingerprint": "40819a0482b353b60a190164504d2132b7cecd2a365243df464ac344b6ab7ef0",
+    "configuration": {
+      "max_partition_size": 3,
+      "tolerance": 1e-14,
+      "osr_optimization_tolerance": 1e-06,
+      "synthesis_acceptance_tolerance": 1e-10,
+      "circuit_validation_tolerance": 1e-08,
+      "bqskit_synthesis_epsilon": 5.000000000125e-11,
+      "use_float": true,
+      "use_osr": true,
+      "use_graph_search": true,
+      "auto_expand_partition_size": false,
+      "partition_strategy": "ilp",
+      "routing_partition_strategy": "ilp",
+      "pam_swap_cnot_cost": 3.0,
+      "partition_workers": null,
+      "routing_synthesis_workers": 4,
+      "routing_column_max_iteration_loops": 8,
+      "routing_column_synthesis_mode": "topology-osr",
+      "exact_routing_catalog_progress": true,
+      "exact_routing_catalog_progress_interval": 25,
+      "exact_routing_light_sabre_seed_count": 32,
+      "exact_routing_light_sabre_trials_per_seed": 1,
+      "exact_routing_light_guided_cover_count": 8,
+      "exact_routing_minimum_cover_seed_count": 8,
+      "exact_routing_post_catalog_pam_seed_count": 12,
+      "exact_routing_pam_layout_passes": 3,
+      "exact_routing_pam_swap_cnot_costs": [
+        3.0
+      ],
+      "exact_routing_pam_cover_strategies": [
+        "kahn",
+        "ilp",
+        "ilp-routing"
+      ],
+      "exact_routing_lazy_osr": false,
+      "exact_routing_cover_pool_timeout_seconds": 10.0,
+      "exact_routing_token_seed_timeout_seconds": 0.0,
+      "exact_routing_token_seed_cover_strategies": [
+        "light-structural"
+      ],
+      "routing_synthesis_worker_memory_limit_gib": 16.0,
+      "routing_minimum_available_memory_fraction": 0.25,
+      "circuit_worker_memory_limit_gib": null,
+      "exact_routing_flow_seed_max_terms": 500000,
+      "exact_routing_fixed_cover_max_triangle_constraints": 500000,
+      "exact_routing_fixed_cover_backend": "sat",
+      "exact_routing_sat_solver": "glucose42",
+      "exact_routing_sat_max_estimated_clauses": 5000000,
+      "beam": null,
+      "partition_size_schedule": [
+        3
+      ]
+    },
+    "init": {
+      "cnot_equiv": 60,
+      "single_qubit": 70,
+      "total_raw": 130,
+      "qubits": 4,
+      "gate_breakdown": {
+        "CNOT": 60,
+        "RX": 40,
+        "RZ": 30
+      }
+    },
+    "final": {
+      "cnot_equiv": 56,
+      "single_qubit": 58,
+      "total_raw": 114,
+      "qubits": 4,
+      "gate_breakdown": {
+        "CNOT": 56,
+        "U3": 58
+      }
+    },
+    "timing": {
+      "a2a": null,
+      "routing": null,
+      "optimization": 34.14,
+      "total": 34.15
+    },
+    "rewrite_audit": {
+      "schema_version": 2,
+      "file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_bqskit/tfim.audit.json.gz",
+      "sha256": "9630b7254d01549eb12219fea3e9f075f5baedd0013b3bffed193d91d86c5675",
+      "summary": {
+        "events": 172,
+        "rewrites": 164,
+        "accepted_rewrites": 87,
+        "failed_synthesis_attempts": 0,
+        "fallbacks": 0,
+        "candidate_tolerance_misses": 0
+      },
+      "verified_rewrites": 164,
+      "accepted_rewrites": 87,
+      "worst_process_infidelity": 1.7763568394002505e-14,
+      "worst_accepted_process_infidelity": 4.440892098500626e-16,
+      "candidate_tolerance_misses": 0,
+      "accepted_spectral_error_bound": 1.649090938388758e-08,
+      "replayed_native_rounds": 0,
+      "replayed_bqskit_invocations": 6,
+      "replayed_pam_routing_passes": 0,
+      "replayed_placement_passes": 0,
+      "replayed_qiskit_sabre_passes": 0,
+      "replayed_exact_osr_routing_passes": 0,
+      "replayed_squander_sabre_passes": 0,
+      "replayed_bqskit_stages": 1,
+      "chained_bqskit_events": 6,
+      "replayed_whole_circuit_transitions": 2,
+      "final_circuit_sha256": "dffd93f6710967d6e46cb30de4e4ed46c9424e759872dba35263fc727b4aa219"
+    }
+  },
+  "bv_n140.qasm": {
+    "file": "bv_n140.qasm",
+    "dataset": "QASMBenchmarks",
+    "output_file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_bqskit/bv_n140.qasm",
+    "status": "completed",
+    "strategy": "bqskit",
+    "pre_opt_strategy": "bqskit",
+    "routing_strategy": "seqpam-quick",
+    "source_fingerprint": "40819a0482b353b60a190164504d2132b7cecd2a365243df464ac344b6ab7ef0",
+    "configuration": {
+      "max_partition_size": 3,
+      "tolerance": 1e-14,
+      "osr_optimization_tolerance": 1e-06,
+      "synthesis_acceptance_tolerance": 1e-10,
+      "circuit_validation_tolerance": 1e-08,
+      "bqskit_synthesis_epsilon": 5.000000000125e-11,
+      "use_float": true,
+      "use_osr": true,
+      "use_graph_search": true,
+      "auto_expand_partition_size": false,
+      "partition_strategy": "ilp",
+      "routing_partition_strategy": "ilp",
+      "pam_swap_cnot_cost": 3.0,
+      "partition_workers": null,
+      "routing_synthesis_workers": 4,
+      "routing_column_max_iteration_loops": 8,
+      "routing_column_synthesis_mode": "topology-osr",
+      "exact_routing_catalog_progress": true,
+      "exact_routing_catalog_progress_interval": 25,
+      "exact_routing_light_sabre_seed_count": 32,
+      "exact_routing_light_sabre_trials_per_seed": 1,
+      "exact_routing_light_guided_cover_count": 8,
+      "exact_routing_minimum_cover_seed_count": 8,
+      "exact_routing_post_catalog_pam_seed_count": 12,
+      "exact_routing_pam_layout_passes": 3,
+      "exact_routing_pam_swap_cnot_costs": [
+        3.0
+      ],
+      "exact_routing_pam_cover_strategies": [
+        "kahn",
+        "ilp",
+        "ilp-routing"
+      ],
+      "exact_routing_lazy_osr": false,
+      "exact_routing_cover_pool_timeout_seconds": 10.0,
+      "exact_routing_token_seed_timeout_seconds": 0.0,
+      "exact_routing_token_seed_cover_strategies": [
+        "light-structural"
+      ],
+      "routing_synthesis_worker_memory_limit_gib": 16.0,
+      "routing_minimum_available_memory_fraction": 0.25,
+      "circuit_worker_memory_limit_gib": null,
+      "exact_routing_flow_seed_max_terms": 500000,
+      "exact_routing_fixed_cover_max_triangle_constraints": 500000,
+      "exact_routing_fixed_cover_backend": "sat",
+      "exact_routing_sat_solver": "glucose42",
+      "exact_routing_sat_max_estimated_clauses": 5000000,
+      "beam": null,
+      "partition_size_schedule": [
+        3
+      ]
+    },
+    "init": {
+      "cnot_equiv": 72,
+      "single_qubit": 280,
+      "total_raw": 352,
+      "qubits": 140,
+      "gate_breakdown": {
+        "CNOT": 72,
+        "H": 279,
+        "X": 1
+      }
+    },
+    "final": {
+      "cnot_equiv": 334,
+      "single_qubit": 498,
+      "total_raw": 832,
+      "qubits": 140,
+      "gate_breakdown": {
+        "CNOT": 334,
+        "U3": 498
+      }
+    },
+    "timing": {
+      "a2a": 10.67,
+      "routing": 43.41,
+      "optimization": 42.45,
+      "total": 96.54
+    },
+    "all_to_all": {
+      "cnot_equiv": 72,
+      "single_qubit": 145,
+      "total_raw": 217,
+      "qubits": 140,
+      "gate_breakdown": {
+        "CNOT": 72,
+        "U3": 145
+      }
+    },
+    "routed": {
+      "cnot_equiv": 348,
+      "single_qubit": 732,
+      "total_raw": 952,
+      "qubits": 140,
+      "gate_breakdown": {
+        "CNOT": 156,
+        "RX": 156,
+        "RY": 312,
+        "RZ": 156,
+        "SWAP": 64,
+        "U3": 108
+      }
+    },
+    "rewrite_audit": {
+      "schema_version": 2,
+      "file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_bqskit/bv_n140.audit.json.gz",
+      "sha256": "687852b89a47447d6f5a6f0962040bee55d6d125e3ef15ca14e3e4e749fb6fa3",
+      "summary": {
+        "events": 1262,
+        "rewrites": 1239,
+        "accepted_rewrites": 528,
+        "failed_synthesis_attempts": 0,
+        "fallbacks": 0,
+        "candidate_tolerance_misses": 0
+      },
+      "verified_rewrites": 1239,
+      "accepted_rewrites": 528,
+      "worst_process_infidelity": 2.4868995751603507e-14,
+      "worst_accepted_process_infidelity": 2.4868995751603507e-14,
+      "candidate_tolerance_misses": 0,
+      "accepted_spectral_error_bound": 2.0963234973355366e-06,
+      "replayed_native_rounds": 0,
+      "replayed_bqskit_invocations": 14,
+      "replayed_pam_routing_passes": 1,
+      "replayed_placement_passes": 2,
+      "replayed_qiskit_sabre_passes": 0,
+      "replayed_exact_osr_routing_passes": 0,
+      "replayed_squander_sabre_passes": 0,
+      "replayed_bqskit_stages": 3,
+      "chained_bqskit_events": 17,
+      "replayed_whole_circuit_transitions": 6,
+      "final_circuit_sha256": "f30903f2c85edc5fd61028502fcf7c8b23632a8c07b4348c9f6e084669602246"
+    }
+  },
+  "swap_test_n25.qasm": {
+    "file": "swap_test_n25.qasm",
+    "dataset": "QASMBenchmarks",
+    "output_file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_bqskit/swap_test_n25.qasm",
+    "status": "completed",
+    "strategy": "bqskit",
+    "pre_opt_strategy": "bqskit",
+    "routing_strategy": "seqpam-quick",
+    "source_fingerprint": "40819a0482b353b60a190164504d2132b7cecd2a365243df464ac344b6ab7ef0",
+    "configuration": {
+      "max_partition_size": 3,
+      "tolerance": 1e-14,
+      "osr_optimization_tolerance": 1e-06,
+      "synthesis_acceptance_tolerance": 1e-10,
+      "circuit_validation_tolerance": 1e-08,
+      "bqskit_synthesis_epsilon": 5.000000000125e-11,
+      "use_float": true,
+      "use_osr": true,
+      "use_graph_search": true,
+      "auto_expand_partition_size": false,
+      "partition_strategy": "ilp",
+      "routing_partition_strategy": "ilp",
+      "pam_swap_cnot_cost": 3.0,
+      "partition_workers": null,
+      "routing_synthesis_workers": 4,
+      "routing_column_max_iteration_loops": 8,
+      "routing_column_synthesis_mode": "topology-osr",
+      "exact_routing_catalog_progress": true,
+      "exact_routing_catalog_progress_interval": 25,
+      "exact_routing_light_sabre_seed_count": 32,
+      "exact_routing_light_sabre_trials_per_seed": 1,
+      "exact_routing_light_guided_cover_count": 8,
+      "exact_routing_minimum_cover_seed_count": 8,
+      "exact_routing_post_catalog_pam_seed_count": 12,
+      "exact_routing_pam_layout_passes": 3,
+      "exact_routing_pam_swap_cnot_costs": [
+        3.0
+      ],
+      "exact_routing_pam_cover_strategies": [
+        "kahn",
+        "ilp",
+        "ilp-routing"
+      ],
+      "exact_routing_lazy_osr": false,
+      "exact_routing_cover_pool_timeout_seconds": 10.0,
+      "exact_routing_token_seed_timeout_seconds": 0.0,
+      "exact_routing_token_seed_cover_strategies": [
+        "light-structural"
+      ],
+      "routing_synthesis_worker_memory_limit_gib": 16.0,
+      "routing_minimum_available_memory_fraction": 0.25,
+      "circuit_worker_memory_limit_gib": null,
+      "exact_routing_flow_seed_max_terms": 500000,
+      "exact_routing_fixed_cover_max_triangle_constraints": 500000,
+      "exact_routing_fixed_cover_backend": "sat",
+      "exact_routing_sat_solver": "glucose42",
+      "exact_routing_sat_max_estimated_clauses": 5000000,
+      "beam": null,
+      "partition_size_schedule": [
+        3
+      ]
+    },
+    "init": {
+      "cnot_equiv": 84,
+      "single_qubit": 158,
+      "total_raw": 38,
+      "qubits": 25,
+      "gate_breakdown": {
+        "CSWAP": 12,
+        "H": 2,
+        "RX": 24
+      }
+    },
+    "final": {
+      "cnot_equiv": 106,
+      "single_qubit": 144,
+      "total_raw": 250,
+      "qubits": 25,
+      "gate_breakdown": {
+        "CNOT": 106,
+        "U3": 144
+      }
+    },
+    "timing": {
+      "a2a": 72.82,
+      "routing": 242.95,
+      "optimization": 56.9,
+      "total": 372.69
+    },
+    "all_to_all": {
+      "cnot_equiv": 84,
+      "single_qubit": 110,
+      "total_raw": 194,
+      "qubits": 25,
+      "gate_breakdown": {
+        "CNOT": 84,
+        "U3": 110
+      }
+    },
+    "routed": {
+      "cnot_equiv": 106,
+      "single_qubit": 460,
+      "total_raw": 566,
+      "qubits": 25,
+      "gate_breakdown": {
+        "CNOT": 106,
+        "RX": 106,
+        "RY": 212,
+        "RZ": 106,
+        "U3": 36
+      }
+    },
+    "rewrite_audit": {
+      "schema_version": 2,
+      "file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_bqskit/swap_test_n25.audit.json.gz",
+      "sha256": "5bec67b922bb973ccffa248c9bc777bf45424d6ce0ef16b25a2a20a348de21c0",
+      "summary": {
+        "events": 345,
+        "rewrites": 325,
+        "accepted_rewrites": 267,
+        "failed_synthesis_attempts": 0,
+        "fallbacks": 0,
+        "candidate_tolerance_misses": 0
+      },
+      "verified_rewrites": 325,
+      "accepted_rewrites": 267,
+      "worst_process_infidelity": 8.881784197001252e-16,
+      "worst_accepted_process_infidelity": 8.881784197001252e-16,
+      "candidate_tolerance_misses": 0,
+      "accepted_spectral_error_bound": 4.4427255131573406e-07,
+      "replayed_native_rounds": 0,
+      "replayed_bqskit_invocations": 11,
+      "replayed_pam_routing_passes": 1,
+      "replayed_placement_passes": 2,
+      "replayed_qiskit_sabre_passes": 0,
+      "replayed_exact_osr_routing_passes": 0,
+      "replayed_squander_sabre_passes": 0,
+      "replayed_bqskit_stages": 3,
+      "chained_bqskit_events": 14,
+      "replayed_whole_circuit_transitions": 6,
+      "final_circuit_sha256": "71168c7989a9e6cac9d31bb1d5449404e3bb108c8c2c3697fbdeac4540488de1"
+    }
+  },
+  "ising_n10.qasm": {
+    "file": "ising_n10.qasm",
+    "dataset": "QASMBenchmarks",
+    "output_file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_bqskit/ising_n10.qasm",
+    "status": "completed",
+    "strategy": "bqskit",
+    "pre_opt_strategy": "bqskit",
+    "routing_strategy": "seqpam-quick",
+    "source_fingerprint": "40819a0482b353b60a190164504d2132b7cecd2a365243df464ac344b6ab7ef0",
+    "configuration": {
+      "max_partition_size": 3,
+      "tolerance": 1e-14,
+      "osr_optimization_tolerance": 1e-06,
+      "synthesis_acceptance_tolerance": 1e-10,
+      "circuit_validation_tolerance": 1e-08,
+      "bqskit_synthesis_epsilon": 5.000000000125e-11,
+      "use_float": true,
+      "use_osr": true,
+      "use_graph_search": true,
+      "auto_expand_partition_size": false,
+      "partition_strategy": "ilp",
+      "routing_partition_strategy": "ilp",
+      "pam_swap_cnot_cost": 3.0,
+      "partition_workers": null,
+      "routing_synthesis_workers": 4,
+      "routing_column_max_iteration_loops": 8,
+      "routing_column_synthesis_mode": "topology-osr",
+      "exact_routing_catalog_progress": true,
+      "exact_routing_catalog_progress_interval": 25,
+      "exact_routing_light_sabre_seed_count": 32,
+      "exact_routing_light_sabre_trials_per_seed": 1,
+      "exact_routing_light_guided_cover_count": 8,
+      "exact_routing_minimum_cover_seed_count": 8,
+      "exact_routing_post_catalog_pam_seed_count": 12,
+      "exact_routing_pam_layout_passes": 3,
+      "exact_routing_pam_swap_cnot_costs": [
+        3.0
+      ],
+      "exact_routing_pam_cover_strategies": [
+        "kahn",
+        "ilp",
+        "ilp-routing"
+      ],
+      "exact_routing_lazy_osr": false,
+      "exact_routing_cover_pool_timeout_seconds": 10.0,
+      "exact_routing_token_seed_timeout_seconds": 0.0,
+      "exact_routing_token_seed_cover_strategies": [
+        "light-structural"
+      ],
+      "routing_synthesis_worker_memory_limit_gib": 16.0,
+      "routing_minimum_available_memory_fraction": 0.25,
+      "circuit_worker_memory_limit_gib": null,
+      "exact_routing_flow_seed_max_terms": 500000,
+      "exact_routing_fixed_cover_max_triangle_constraints": 500000,
+      "exact_routing_fixed_cover_backend": "sat",
+      "exact_routing_sat_solver": "glucose42",
+      "exact_routing_sat_max_estimated_clauses": 5000000,
+      "beam": null,
+      "partition_size_schedule": [
+        3
+      ]
+    },
+    "init": {
+      "cnot_equiv": 90,
+      "single_qubit": 390,
+      "total_raw": 480,
+      "qubits": 10,
+      "gate_breakdown": {
+        "CNOT": 90,
+        "H": 110,
+        "RZ": 280
+      }
+    },
+    "final": {
+      "cnot_equiv": 76,
+      "single_qubit": 104,
+      "total_raw": 180,
+      "qubits": 10,
+      "gate_breakdown": {
+        "CNOT": 76,
+        "U3": 104
+      }
+    },
+    "timing": {
+      "a2a": null,
+      "routing": null,
+      "optimization": 23.11,
+      "total": 23.11
+    },
+    "rewrite_audit": {
+      "schema_version": 2,
+      "file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_bqskit/ising_n10.audit.json.gz",
+      "sha256": "bf00f0060127b68a4026bab81bd5b8a719a1fe5ad9fef0ce846c73affb059199",
+      "summary": {
+        "events": 370,
+        "rewrites": 359,
+        "accepted_rewrites": 226,
+        "failed_synthesis_attempts": 0,
+        "fallbacks": 0,
+        "candidate_tolerance_misses": 0
+      },
+      "verified_rewrites": 359,
+      "accepted_rewrites": 226,
+      "worst_process_infidelity": 4.440892098500626e-16,
+      "worst_accepted_process_infidelity": 4.440892098500626e-16,
+      "candidate_tolerance_misses": 0,
+      "accepted_spectral_error_bound": 7.145441418096101e-08,
+      "replayed_native_rounds": 0,
+      "replayed_bqskit_invocations": 9,
+      "replayed_pam_routing_passes": 0,
+      "replayed_placement_passes": 0,
+      "replayed_qiskit_sabre_passes": 0,
+      "replayed_exact_osr_routing_passes": 0,
+      "replayed_squander_sabre_passes": 0,
+      "replayed_bqskit_stages": 1,
+      "chained_bqskit_events": 9,
+      "replayed_whole_circuit_transitions": 2,
+      "final_circuit_sha256": "30797fe2e59a71351e759a6665835f8ccb6e8eea7590cf3a80ea61aec29c279f"
+    }
+  },
+  "dnn_n8.qasm": {
+    "file": "dnn_n8.qasm",
+    "dataset": "QASMBenchmarks",
+    "output_file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_bqskit/dnn_n8.qasm",
+    "status": "completed",
+    "strategy": "bqskit",
+    "pre_opt_strategy": "bqskit",
+    "routing_strategy": "seqpam-quick",
+    "source_fingerprint": "40819a0482b353b60a190164504d2132b7cecd2a365243df464ac344b6ab7ef0",
+    "configuration": {
+      "max_partition_size": 3,
+      "tolerance": 1e-14,
+      "osr_optimization_tolerance": 1e-06,
+      "synthesis_acceptance_tolerance": 1e-10,
+      "circuit_validation_tolerance": 1e-08,
+      "bqskit_synthesis_epsilon": 5.000000000125e-11,
+      "use_float": true,
+      "use_osr": true,
+      "use_graph_search": true,
+      "auto_expand_partition_size": false,
+      "partition_strategy": "ilp",
+      "routing_partition_strategy": "ilp",
+      "pam_swap_cnot_cost": 3.0,
+      "partition_workers": null,
+      "routing_synthesis_workers": 4,
+      "routing_column_max_iteration_loops": 8,
+      "routing_column_synthesis_mode": "topology-osr",
+      "exact_routing_catalog_progress": true,
+      "exact_routing_catalog_progress_interval": 25,
+      "exact_routing_light_sabre_seed_count": 32,
+      "exact_routing_light_sabre_trials_per_seed": 1,
+      "exact_routing_light_guided_cover_count": 8,
+      "exact_routing_minimum_cover_seed_count": 8,
+      "exact_routing_post_catalog_pam_seed_count": 12,
+      "exact_routing_pam_layout_passes": 3,
+      "exact_routing_pam_swap_cnot_costs": [
+        3.0
+      ],
+      "exact_routing_pam_cover_strategies": [
+        "kahn",
+        "ilp",
+        "ilp-routing"
+      ],
+      "exact_routing_lazy_osr": false,
+      "exact_routing_cover_pool_timeout_seconds": 10.0,
+      "exact_routing_token_seed_timeout_seconds": 0.0,
+      "exact_routing_token_seed_cover_strategies": [
+        "light-structural"
+      ],
+      "routing_synthesis_worker_memory_limit_gib": 16.0,
+      "routing_minimum_available_memory_fraction": 0.25,
+      "circuit_worker_memory_limit_gib": null,
+      "exact_routing_flow_seed_max_terms": 500000,
+      "exact_routing_fixed_cover_max_triangle_constraints": 500000,
+      "exact_routing_fixed_cover_backend": "sat",
+      "exact_routing_sat_solver": "glucose42",
+      "exact_routing_sat_max_estimated_clauses": 5000000,
+      "beam": null,
+      "partition_size_schedule": [
+        3
+      ]
+    },
+    "init": {
+      "cnot_equiv": 192,
+      "single_qubit": 816,
+      "total_raw": 1008,
+      "qubits": 8,
+      "gate_breakdown": {
+        "CNOT": 192,
+        "RX": 256,
+        "RY": 144,
+        "RZ": 160,
+        "U3": 256
+      }
+    },
+    "final": {
+      "cnot_equiv": 126,
+      "single_qubit": 219,
+      "total_raw": 345,
+      "qubits": 8,
+      "gate_breakdown": {
+        "CNOT": 126,
+        "U3": 219
+      }
+    },
+    "timing": {
+      "a2a": 52.23,
+      "routing": 204.78,
+      "optimization": 69.3,
+      "total": 326.32
+    },
+    "all_to_all": {
+      "cnot_equiv": 64,
+      "single_qubit": 113,
+      "total_raw": 177,
+      "qubits": 8,
+      "gate_breakdown": {
+        "CNOT": 64,
+        "U3": 113
+      }
+    },
+    "routed": {
+      "cnot_equiv": 134,
+      "single_qubit": 315,
+      "total_raw": 407,
+      "qubits": 8,
+      "gate_breakdown": {
+        "CNOT": 71,
+        "RX": 68,
+        "RY": 136,
+        "RZ": 68,
+        "SWAP": 21,
+        "U3": 43
+      }
+    },
+    "rewrite_audit": {
+      "schema_version": 2,
+      "file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_bqskit/dnn_n8.audit.json.gz",
+      "sha256": "94cce12b67a3788508615e2788eb3193d7f9ca43db3df24355cc8b9e294e137e",
+      "summary": {
+        "events": 693,
+        "rewrites": 670,
+        "accepted_rewrites": 525,
+        "failed_synthesis_attempts": 0,
+        "fallbacks": 0,
+        "candidate_tolerance_misses": 0
+      },
+      "verified_rewrites": 670,
+      "accepted_rewrites": 525,
+      "worst_process_infidelity": 2.6201263381153694e-14,
+      "worst_accepted_process_infidelity": 2.6201263381153694e-14,
+      "candidate_tolerance_misses": 0,
+      "accepted_spectral_error_bound": 8.252174380605897e-07,
+      "replayed_native_rounds": 0,
+      "replayed_bqskit_invocations": 14,
+      "replayed_pam_routing_passes": 1,
+      "replayed_placement_passes": 2,
+      "replayed_qiskit_sabre_passes": 0,
+      "replayed_exact_osr_routing_passes": 0,
+      "replayed_squander_sabre_passes": 0,
+      "replayed_bqskit_stages": 3,
+      "chained_bqskit_events": 17,
+      "replayed_whole_circuit_transitions": 6,
+      "final_circuit_sha256": "68ced4a72366ab7f05c83ceb5651312397dd95f768c0804870b0b0e7a4e4af83"
+    }
+  },
+  "grover_19.qasm": {
+    "file": "grover_19.qasm",
+    "dataset": "QASMBenchmarks",
+    "output_file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_bqskit/grover_19.qasm",
+    "status": "completed",
+    "strategy": "bqskit",
+    "pre_opt_strategy": "bqskit",
+    "routing_strategy": "seqpam-quick",
+    "source_fingerprint": "40819a0482b353b60a190164504d2132b7cecd2a365243df464ac344b6ab7ef0",
+    "configuration": {
+      "max_partition_size": 3,
+      "tolerance": 1e-14,
+      "osr_optimization_tolerance": 1e-06,
+      "synthesis_acceptance_tolerance": 1e-10,
+      "circuit_validation_tolerance": 1e-08,
+      "bqskit_synthesis_epsilon": 5.000000000125e-11,
+      "use_float": true,
+      "use_osr": true,
+      "use_graph_search": true,
+      "auto_expand_partition_size": false,
+      "partition_strategy": "ilp",
+      "routing_partition_strategy": "ilp",
+      "pam_swap_cnot_cost": 3.0,
+      "partition_workers": null,
+      "routing_synthesis_workers": 4,
+      "routing_column_max_iteration_loops": 8,
+      "routing_column_synthesis_mode": "topology-osr",
+      "exact_routing_catalog_progress": true,
+      "exact_routing_catalog_progress_interval": 25,
+      "exact_routing_light_sabre_seed_count": 32,
+      "exact_routing_light_sabre_trials_per_seed": 1,
+      "exact_routing_light_guided_cover_count": 8,
+      "exact_routing_minimum_cover_seed_count": 8,
+      "exact_routing_post_catalog_pam_seed_count": 12,
+      "exact_routing_pam_layout_passes": 3,
+      "exact_routing_pam_swap_cnot_costs": [
+        3.0
+      ],
+      "exact_routing_pam_cover_strategies": [
+        "kahn",
+        "ilp",
+        "ilp-routing"
+      ],
+      "exact_routing_lazy_osr": false,
+      "exact_routing_cover_pool_timeout_seconds": 10.0,
+      "exact_routing_token_seed_timeout_seconds": 0.0,
+      "exact_routing_token_seed_cover_strategies": [
+        "light-structural"
+      ],
+      "routing_synthesis_worker_memory_limit_gib": 16.0,
+      "routing_minimum_available_memory_fraction": 0.25,
+      "circuit_worker_memory_limit_gib": null,
+      "exact_routing_flow_seed_max_terms": 500000,
+      "exact_routing_fixed_cover_max_triangle_constraints": 500000,
+      "exact_routing_fixed_cover_backend": "sat",
+      "exact_routing_sat_solver": "glucose42",
+      "exact_routing_sat_max_estimated_clauses": 5000000,
+      "beam": null,
+      "partition_size_schedule": [
+        3
+      ]
+    },
+    "init": {
+      "cnot_equiv": 192,
+      "single_qubit": 342,
+      "total_raw": 86,
+      "qubits": 19,
+      "gate_breakdown": {
+        "CCX": 32,
+        "H": 34,
+        "X": 20
+      }
+    },
+    "final": {
+      "cnot_equiv": 198,
+      "single_qubit": 299,
+      "total_raw": 497,
+      "qubits": 19,
+      "gate_breakdown": {
+        "CNOT": 198,
+        "U3": 299
+      }
+    },
+    "timing": {
+      "a2a": 120.72,
+      "routing": 134.93,
+      "optimization": 66.42,
+      "total": 322.07
+    },
+    "all_to_all": {
+      "cnot_equiv": 165,
+      "single_qubit": 216,
+      "total_raw": 381,
+      "qubits": 19,
+      "gate_breakdown": {
+        "CNOT": 165,
+        "U3": 216
+      }
+    },
+    "routed": {
+      "cnot_equiv": 204,
+      "single_qubit": 885,
+      "total_raw": 1085,
+      "qubits": 19,
+      "gate_breakdown": {
+        "CNOT": 198,
+        "RX": 198,
+        "RY": 396,
+        "RZ": 198,
+        "SWAP": 2,
+        "U3": 93
+      }
+    },
+    "rewrite_audit": {
+      "schema_version": 2,
+      "file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_bqskit/grover_19.audit.json.gz",
+      "sha256": "affa27f14ac5c96c01cdfb24272a7462273a774d97d1666679e03853cd97d8bf",
+      "summary": {
+        "events": 1260,
+        "rewrites": 1235,
+        "accepted_rewrites": 987,
+        "failed_synthesis_attempts": 0,
+        "fallbacks": 0,
+        "candidate_tolerance_misses": 0
+      },
+      "verified_rewrites": 1235,
+      "accepted_rewrites": 987,
+      "worst_process_infidelity": 5.773159728050814e-15,
+      "worst_accepted_process_infidelity": 5.773159728050814e-15,
+      "candidate_tolerance_misses": 0,
+      "accepted_spectral_error_bound": 1.0245554505229267e-06,
+      "replayed_native_rounds": 0,
+      "replayed_bqskit_invocations": 16,
+      "replayed_pam_routing_passes": 1,
+      "replayed_placement_passes": 2,
+      "replayed_qiskit_sabre_passes": 0,
+      "replayed_exact_osr_routing_passes": 0,
+      "replayed_squander_sabre_passes": 0,
+      "replayed_bqskit_stages": 3,
+      "chained_bqskit_events": 19,
+      "replayed_whole_circuit_transitions": 6,
+      "final_circuit_sha256": "6e7f24e76645a52e86cfa1ba4541bead8ad01042569533ab9d942d3ed2094812"
+    }
+  },
+  "ising_n98.qasm": {
+    "file": "ising_n98.qasm",
+    "dataset": "QASMBenchmarks",
+    "output_file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_bqskit/ising_n98.qasm",
+    "status": "completed",
+    "strategy": "bqskit",
+    "pre_opt_strategy": "bqskit",
+    "routing_strategy": "seqpam-quick",
+    "source_fingerprint": "40819a0482b353b60a190164504d2132b7cecd2a365243df464ac344b6ab7ef0",
+    "configuration": {
+      "max_partition_size": 3,
+      "tolerance": 1e-14,
+      "osr_optimization_tolerance": 1e-06,
+      "synthesis_acceptance_tolerance": 1e-10,
+      "circuit_validation_tolerance": 1e-08,
+      "bqskit_synthesis_epsilon": 5.000000000125e-11,
+      "use_float": true,
+      "use_osr": true,
+      "use_graph_search": true,
+      "auto_expand_partition_size": false,
+      "partition_strategy": "ilp",
+      "routing_partition_strategy": "ilp",
+      "pam_swap_cnot_cost": 3.0,
+      "partition_workers": null,
+      "routing_synthesis_workers": 4,
+      "routing_column_max_iteration_loops": 8,
+      "routing_column_synthesis_mode": "topology-osr",
+      "exact_routing_catalog_progress": true,
+      "exact_routing_catalog_progress_interval": 25,
+      "exact_routing_light_sabre_seed_count": 32,
+      "exact_routing_light_sabre_trials_per_seed": 1,
+      "exact_routing_light_guided_cover_count": 8,
+      "exact_routing_minimum_cover_seed_count": 8,
+      "exact_routing_post_catalog_pam_seed_count": 12,
+      "exact_routing_pam_layout_passes": 3,
+      "exact_routing_pam_swap_cnot_costs": [
+        3.0
+      ],
+      "exact_routing_pam_cover_strategies": [
+        "kahn",
+        "ilp",
+        "ilp-routing"
+      ],
+      "exact_routing_lazy_osr": false,
+      "exact_routing_cover_pool_timeout_seconds": 10.0,
+      "exact_routing_token_seed_timeout_seconds": 0.0,
+      "exact_routing_token_seed_cover_strategies": [
+        "light-structural"
+      ],
+      "routing_synthesis_worker_memory_limit_gib": 16.0,
+      "routing_minimum_available_memory_fraction": 0.25,
+      "circuit_worker_memory_limit_gib": null,
+      "exact_routing_flow_seed_max_terms": 500000,
+      "exact_routing_fixed_cover_max_triangle_constraints": 500000,
+      "exact_routing_fixed_cover_backend": "sat",
+      "exact_routing_sat_solver": "glucose42",
+      "exact_routing_sat_max_estimated_clauses": 5000000,
+      "beam": null,
+      "partition_size_schedule": [
+        3
+      ]
+    },
+    "init": {
+      "cnot_equiv": 194,
+      "single_qubit": 878,
+      "total_raw": 1072,
+      "qubits": 98,
+      "gate_breakdown": {
+        "CNOT": 194,
+        "H": 294,
+        "RZ": 584
+      }
+    },
+    "final": {
+      "cnot_equiv": 194,
+      "single_qubit": 197,
+      "total_raw": 391,
+      "qubits": 98,
+      "gate_breakdown": {
+        "CNOT": 194,
+        "U3": 197
+      }
+    },
+    "timing": {
+      "a2a": null,
+      "routing": null,
+      "optimization": 17.36,
+      "total": 17.37
+    },
+    "rewrite_audit": {
+      "schema_version": 2,
+      "file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_bqskit/ising_n98.audit.json.gz",
+      "sha256": "cbd6781c2b73d550bb5e46c61651e452af1560b25623d21df36c7264228461ec",
+      "summary": {
+        "events": 202,
+        "rewrites": 196,
+        "accepted_rewrites": 98,
+        "failed_synthesis_attempts": 0,
+        "fallbacks": 0,
+        "candidate_tolerance_misses": 0
+      },
+      "verified_rewrites": 196,
+      "accepted_rewrites": 98,
+      "worst_process_infidelity": 8.881784197001252e-16,
+      "worst_accepted_process_infidelity": 4.440892098500626e-16,
+      "candidate_tolerance_misses": 0,
+      "accepted_spectral_error_bound": 9.47003150221798e-08,
+      "replayed_native_rounds": 0,
+      "replayed_bqskit_invocations": 4,
+      "replayed_pam_routing_passes": 0,
+      "replayed_placement_passes": 0,
+      "replayed_qiskit_sabre_passes": 0,
+      "replayed_exact_osr_routing_passes": 0,
+      "replayed_squander_sabre_passes": 0,
+      "replayed_bqskit_stages": 1,
+      "chained_bqskit_events": 4,
+      "replayed_whole_circuit_transitions": 2,
+      "final_circuit_sha256": "6478889813ecdbfb0191fc87aa1bc3b5069f213bf99f233d1defb444f7d5670b"
+    }
+  },
+  "hhl_n7.qasm": {
+    "file": "hhl_n7.qasm",
+    "dataset": "QASMBenchmarks",
+    "output_file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_bqskit/hhl_n7.qasm",
+    "status": "completed",
+    "strategy": "bqskit",
+    "pre_opt_strategy": "bqskit",
+    "routing_strategy": "seqpam-quick",
+    "source_fingerprint": "40819a0482b353b60a190164504d2132b7cecd2a365243df464ac344b6ab7ef0",
+    "configuration": {
+      "max_partition_size": 3,
+      "tolerance": 1e-14,
+      "osr_optimization_tolerance": 1e-06,
+      "synthesis_acceptance_tolerance": 1e-10,
+      "circuit_validation_tolerance": 1e-08,
+      "bqskit_synthesis_epsilon": 5.000000000125e-11,
+      "use_float": true,
+      "use_osr": true,
+      "use_graph_search": true,
+      "auto_expand_partition_size": false,
+      "partition_strategy": "ilp",
+      "routing_partition_strategy": "ilp",
+      "pam_swap_cnot_cost": 3.0,
+      "partition_workers": null,
+      "routing_synthesis_workers": 4,
+      "routing_column_max_iteration_loops": 8,
+      "routing_column_synthesis_mode": "topology-osr",
+      "exact_routing_catalog_progress": true,
+      "exact_routing_catalog_progress_interval": 25,
+      "exact_routing_light_sabre_seed_count": 32,
+      "exact_routing_light_sabre_trials_per_seed": 1,
+      "exact_routing_light_guided_cover_count": 8,
+      "exact_routing_minimum_cover_seed_count": 8,
+      "exact_routing_post_catalog_pam_seed_count": 12,
+      "exact_routing_pam_layout_passes": 3,
+      "exact_routing_pam_swap_cnot_costs": [
+        3.0
+      ],
+      "exact_routing_pam_cover_strategies": [
+        "kahn",
+        "ilp",
+        "ilp-routing"
+      ],
+      "exact_routing_lazy_osr": false,
+      "exact_routing_cover_pool_timeout_seconds": 10.0,
+      "exact_routing_token_seed_timeout_seconds": 0.0,
+      "exact_routing_token_seed_cover_strategies": [
+        "light-structural"
+      ],
+      "routing_synthesis_worker_memory_limit_gib": 16.0,
+      "routing_minimum_available_memory_fraction": 0.25,
+      "circuit_worker_memory_limit_gib": null,
+      "exact_routing_flow_seed_max_terms": 500000,
+      "exact_routing_fixed_cover_max_triangle_constraints": 500000,
+      "exact_routing_fixed_cover_backend": "sat",
+      "exact_routing_sat_solver": "glucose42",
+      "exact_routing_sat_max_estimated_clauses": 5000000,
+      "beam": null,
+      "partition_size_schedule": [
+        3
+      ]
+    },
+    "init": {
+      "cnot_equiv": 196,
+      "single_qubit": 493,
+      "total_raw": 689,
+      "qubits": 7,
+      "gate_breakdown": {
+        "CNOT": 196,
+        "H": 4,
+        "RX": 6,
+        "RY": 173,
+        "RZ": 310
+      }
+    },
+    "final": {
+      "cnot_equiv": 192,
+      "single_qubit": 304,
+      "total_raw": 496,
+      "qubits": 7,
+      "gate_breakdown": {
+        "CNOT": 192,
+        "U3": 304
+      }
+    },
+    "timing": {
+      "a2a": 71.36,
+      "routing": 56.27,
+      "optimization": 45.2,
+      "total": 172.83
+    },
+    "all_to_all": {
+      "cnot_equiv": 89,
+      "single_qubit": 111,
+      "total_raw": 200,
+      "qubits": 7,
+      "gate_breakdown": {
+        "CNOT": 89,
+        "U3": 111
+      }
+    },
+    "routed": {
+      "cnot_equiv": 197,
+      "single_qubit": 641,
+      "total_raw": 800,
+      "qubits": 7,
+      "gate_breakdown": {
+        "CNOT": 140,
+        "RX": 138,
+        "RY": 276,
+        "RZ": 138,
+        "SWAP": 19,
+        "U3": 89
+      }
+    },
+    "rewrite_audit": {
+      "schema_version": 2,
+      "file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_bqskit/hhl_n7.audit.json.gz",
+      "sha256": "3dc640debcd3fe0ee2ce8151c7d23819eceec97895a15fb7e7d7b2872185e14c",
+      "summary": {
+        "events": 1078,
+        "rewrites": 1054,
+        "accepted_rewrites": 717,
+        "failed_synthesis_attempts": 0,
+        "fallbacks": 0,
+        "candidate_tolerance_misses": 0
+      },
+      "verified_rewrites": 1054,
+      "accepted_rewrites": 717,
+      "worst_process_infidelity": 9.456879723757083e-13,
+      "worst_accepted_process_infidelity": 9.456879723757083e-13,
+      "candidate_tolerance_misses": 0,
+      "accepted_spectral_error_bound": 2.3665599725001496e-06,
+      "replayed_native_rounds": 0,
+      "replayed_bqskit_invocations": 15,
+      "replayed_pam_routing_passes": 1,
+      "replayed_placement_passes": 2,
+      "replayed_qiskit_sabre_passes": 0,
+      "replayed_exact_osr_routing_passes": 0,
+      "replayed_squander_sabre_passes": 0,
+      "replayed_bqskit_stages": 3,
+      "chained_bqskit_events": 18,
+      "replayed_whole_circuit_transitions": 6,
+      "final_circuit_sha256": "d673743ffe49c3393589e67c94bc12114fe367803ca2b4fabe84eebfc16f1bba"
+    }
+  },
+  "grover_23.qasm": {
+    "file": "grover_23.qasm",
+    "dataset": "QASMBenchmarks",
+    "output_file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_bqskit/grover_23.qasm",
+    "status": "completed",
+    "strategy": "bqskit",
+    "pre_opt_strategy": "bqskit",
+    "routing_strategy": "seqpam-quick",
+    "source_fingerprint": "40819a0482b353b60a190164504d2132b7cecd2a365243df464ac344b6ab7ef0",
+    "configuration": {
+      "max_partition_size": 3,
+      "tolerance": 1e-14,
+      "osr_optimization_tolerance": 1e-06,
+      "synthesis_acceptance_tolerance": 1e-10,
+      "circuit_validation_tolerance": 1e-08,
+      "bqskit_synthesis_epsilon": 5.000000000125e-11,
+      "use_float": true,
+      "use_osr": true,
+      "use_graph_search": true,
+      "auto_expand_partition_size": false,
+      "partition_strategy": "ilp",
+      "routing_partition_strategy": "ilp",
+      "pam_swap_cnot_cost": 3.0,
+      "partition_workers": null,
+      "routing_synthesis_workers": 4,
+      "routing_column_max_iteration_loops": 8,
+      "routing_column_synthesis_mode": "topology-osr",
+      "exact_routing_catalog_progress": true,
+      "exact_routing_catalog_progress_interval": 25,
+      "exact_routing_light_sabre_seed_count": 32,
+      "exact_routing_light_sabre_trials_per_seed": 1,
+      "exact_routing_light_guided_cover_count": 8,
+      "exact_routing_minimum_cover_seed_count": 8,
+      "exact_routing_post_catalog_pam_seed_count": 12,
+      "exact_routing_pam_layout_passes": 3,
+      "exact_routing_pam_swap_cnot_costs": [
+        3.0
+      ],
+      "exact_routing_pam_cover_strategies": [
+        "kahn",
+        "ilp",
+        "ilp-routing"
+      ],
+      "exact_routing_lazy_osr": false,
+      "exact_routing_cover_pool_timeout_seconds": 10.0,
+      "exact_routing_token_seed_timeout_seconds": 0.0,
+      "exact_routing_token_seed_cover_strategies": [
+        "light-structural"
+      ],
+      "routing_synthesis_worker_memory_limit_gib": 16.0,
+      "routing_minimum_available_memory_fraction": 0.25,
+      "circuit_worker_memory_limit_gib": null,
+      "exact_routing_flow_seed_max_terms": 500000,
+      "exact_routing_fixed_cover_max_triangle_constraints": 500000,
+      "exact_routing_fixed_cover_backend": "sat",
+      "exact_routing_sat_solver": "glucose42",
+      "exact_routing_sat_max_estimated_clauses": 5000000,
+      "beam": null,
+      "partition_size_schedule": [
+        3
+      ]
+    },
+    "init": {
+      "cnot_equiv": 240,
+      "single_qubit": 424,
+      "total_raw": 104,
+      "qubits": 23,
+      "gate_breakdown": {
+        "CCX": 40,
+        "H": 40,
+        "X": 24
+      }
+    },
+    "final": {
+      "cnot_equiv": 244,
+      "single_qubit": 358,
+      "total_raw": 602,
+      "qubits": 23,
+      "gate_breakdown": {
+        "CNOT": 244,
+        "U3": 358
+      }
+    },
+    "timing": {
+      "a2a": 113.77,
+      "routing": 143.33,
+      "optimization": 74.1,
+      "total": 331.2
+    },
+    "all_to_all": {
+      "cnot_equiv": 218,
+      "single_qubit": 280,
+      "total_raw": 498,
+      "qubits": 23,
+      "gate_breakdown": {
+        "CNOT": 218,
+        "U3": 280
+      }
+    },
+    "routed": {
+      "cnot_equiv": 262,
+      "single_qubit": 1141,
+      "total_raw": 1399,
+      "qubits": 23,
+      "gate_breakdown": {
+        "CNOT": 256,
+        "RX": 256,
+        "RY": 512,
+        "RZ": 256,
+        "SWAP": 2,
+        "U3": 117
+      }
+    },
+    "rewrite_audit": {
+      "schema_version": 2,
+      "file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_bqskit/grover_23.audit.json.gz",
+      "sha256": "9f3441df99437d536696edf4bb95abc75bfb2dca7d1e6ca14439729de92608a4",
+      "summary": {
+        "events": 1598,
+        "rewrites": 1573,
+        "accepted_rewrites": 1243,
+        "failed_synthesis_attempts": 0,
+        "fallbacks": 0,
+        "candidate_tolerance_misses": 0
+      },
+      "verified_rewrites": 1573,
+      "accepted_rewrites": 1243,
+      "worst_process_infidelity": 1.1102230246251565e-15,
+      "worst_accepted_process_infidelity": 1.1102230246251565e-15,
+      "candidate_tolerance_misses": 0,
+      "accepted_spectral_error_bound": 7.563650723448924e-07,
+      "replayed_native_rounds": 0,
+      "replayed_bqskit_invocations": 16,
+      "replayed_pam_routing_passes": 1,
+      "replayed_placement_passes": 2,
+      "replayed_qiskit_sabre_passes": 0,
+      "replayed_exact_osr_routing_passes": 0,
+      "replayed_squander_sabre_passes": 0,
+      "replayed_bqskit_stages": 3,
+      "chained_bqskit_events": 19,
+      "replayed_whole_circuit_transitions": 6,
+      "final_circuit_sha256": "88116a19399ac25de6f96e08c1e8a3c3f75572ea53fdee3d6a98af943be1cb78"
+    }
+  },
+  "multiplier_n15.qasm": {
+    "file": "multiplier_n15.qasm",
+    "dataset": "QASMBenchmarks",
+    "output_file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_bqskit/multiplier_n15.qasm",
+    "status": "completed",
+    "strategy": "bqskit",
+    "pre_opt_strategy": "bqskit",
+    "routing_strategy": "seqpam-quick",
+    "source_fingerprint": "40819a0482b353b60a190164504d2132b7cecd2a365243df464ac344b6ab7ef0",
+    "configuration": {
+      "max_partition_size": 3,
+      "tolerance": 1e-14,
+      "osr_optimization_tolerance": 1e-06,
+      "synthesis_acceptance_tolerance": 1e-10,
+      "circuit_validation_tolerance": 1e-08,
+      "bqskit_synthesis_epsilon": 5.000000000125e-11,
+      "use_float": true,
+      "use_osr": true,
+      "use_graph_search": true,
+      "auto_expand_partition_size": false,
+      "partition_strategy": "ilp",
+      "routing_partition_strategy": "ilp",
+      "pam_swap_cnot_cost": 3.0,
+      "partition_workers": null,
+      "routing_synthesis_workers": 4,
+      "routing_column_max_iteration_loops": 8,
+      "routing_column_synthesis_mode": "topology-osr",
+      "exact_routing_catalog_progress": true,
+      "exact_routing_catalog_progress_interval": 25,
+      "exact_routing_light_sabre_seed_count": 32,
+      "exact_routing_light_sabre_trials_per_seed": 1,
+      "exact_routing_light_guided_cover_count": 8,
+      "exact_routing_minimum_cover_seed_count": 8,
+      "exact_routing_post_catalog_pam_seed_count": 12,
+      "exact_routing_pam_layout_passes": 3,
+      "exact_routing_pam_swap_cnot_costs": [
+        3.0
+      ],
+      "exact_routing_pam_cover_strategies": [
+        "kahn",
+        "ilp",
+        "ilp-routing"
+      ],
+      "exact_routing_lazy_osr": false,
+      "exact_routing_cover_pool_timeout_seconds": 10.0,
+      "exact_routing_token_seed_timeout_seconds": 0.0,
+      "exact_routing_token_seed_cover_strategies": [
+        "light-structural"
+      ],
+      "routing_synthesis_worker_memory_limit_gib": 16.0,
+      "routing_minimum_available_memory_fraction": 0.25,
+      "circuit_worker_memory_limit_gib": null,
+      "exact_routing_flow_seed_max_terms": 500000,
+      "exact_routing_fixed_cover_max_triangle_constraints": 500000,
+      "exact_routing_fixed_cover_backend": "sat",
+      "exact_routing_sat_solver": "glucose42",
+      "exact_routing_sat_max_estimated_clauses": 5000000,
+      "beam": null,
+      "partition_size_schedule": [
+        3
+      ]
+    },
+    "init": {
+      "cnot_equiv": 246,
+      "single_qubit": 328,
+      "total_raw": 70,
+      "qubits": 15,
+      "gate_breakdown": {
+        "CCX": 36,
+        "CNOT": 30,
+        "X": 4
+      }
+    },
+    "final": {
+      "cnot_equiv": 418,
+      "single_qubit": 660,
+      "total_raw": 1078,
+      "qubits": 15,
+      "gate_breakdown": {
+        "CNOT": 418,
+        "U3": 660
+      }
+    },
+    "timing": {
+      "a2a": 107.02,
+      "routing": 127.63,
+      "optimization": 121.17,
+      "total": 355.83
+    },
+    "all_to_all": {
+      "cnot_equiv": 210,
+      "single_qubit": 279,
+      "total_raw": 489,
+      "qubits": 15,
+      "gate_breakdown": {
+        "CNOT": 210,
+        "U3": 279
+      }
+    },
+    "routed": {
+      "cnot_equiv": 450,
+      "single_qubit": 1178,
+      "total_raw": 1504,
+      "qubits": 15,
+      "gate_breakdown": {
+        "CNOT": 264,
+        "RX": 260,
+        "RY": 520,
+        "RZ": 260,
+        "SWAP": 62,
+        "U3": 138
+      }
+    },
+    "rewrite_audit": {
+      "schema_version": 2,
+      "file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_bqskit/multiplier_n15.audit.json.gz",
+      "sha256": "4ed8998e4975086c8c0b6049083ef1579fe82d680b024c57dc62714742ce182f",
+      "summary": {
+        "events": 2313,
+        "rewrites": 2287,
+        "accepted_rewrites": 1642,
+        "failed_synthesis_attempts": 0,
+        "fallbacks": 0,
+        "candidate_tolerance_misses": 0
+      },
+      "verified_rewrites": 2287,
+      "accepted_rewrites": 1642,
+      "worst_process_infidelity": 1.3018475186754586e-12,
+      "worst_accepted_process_infidelity": 1.7763568394002505e-14,
+      "candidate_tolerance_misses": 0,
+      "accepted_spectral_error_bound": 2.2062531861449563e-06,
+      "replayed_native_rounds": 0,
+      "replayed_bqskit_invocations": 17,
+      "replayed_pam_routing_passes": 1,
+      "replayed_placement_passes": 2,
+      "replayed_qiskit_sabre_passes": 0,
+      "replayed_exact_osr_routing_passes": 0,
+      "replayed_squander_sabre_passes": 0,
+      "replayed_bqskit_stages": 3,
+      "chained_bqskit_events": 20,
+      "replayed_whole_circuit_transitions": 6,
+      "final_circuit_sha256": "b153da11b9aa6e62bf888668546d64db36af30d23c00b373e1367904c45cf25a"
+    }
+  },
+  "heisenberg-16-20.qasm": {
+    "file": "heisenberg-16-20.qasm",
+    "dataset": "QASMBenchmarks",
+    "output_file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_bqskit/heisenberg-16-20.qasm",
+    "status": "completed",
+    "strategy": "bqskit",
+    "pre_opt_strategy": "bqskit",
+    "routing_strategy": "seqpam-quick",
+    "source_fingerprint": "40819a0482b353b60a190164504d2132b7cecd2a365243df464ac344b6ab7ef0",
+    "configuration": {
+      "max_partition_size": 3,
+      "tolerance": 1e-14,
+      "osr_optimization_tolerance": 1e-06,
+      "synthesis_acceptance_tolerance": 1e-10,
+      "circuit_validation_tolerance": 1e-08,
+      "bqskit_synthesis_epsilon": 5.000000000125e-11,
+      "use_float": true,
+      "use_osr": true,
+      "use_graph_search": true,
+      "auto_expand_partition_size": false,
+      "partition_strategy": "ilp",
+      "routing_partition_strategy": "ilp",
+      "pam_swap_cnot_cost": 3.0,
+      "partition_workers": null,
+      "routing_synthesis_workers": 4,
+      "routing_column_max_iteration_loops": 8,
+      "routing_column_synthesis_mode": "topology-osr",
+      "exact_routing_catalog_progress": true,
+      "exact_routing_catalog_progress_interval": 25,
+      "exact_routing_light_sabre_seed_count": 32,
+      "exact_routing_light_sabre_trials_per_seed": 1,
+      "exact_routing_light_guided_cover_count": 8,
+      "exact_routing_minimum_cover_seed_count": 8,
+      "exact_routing_post_catalog_pam_seed_count": 12,
+      "exact_routing_pam_layout_passes": 3,
+      "exact_routing_pam_swap_cnot_costs": [
+        3.0
+      ],
+      "exact_routing_pam_cover_strategies": [
+        "kahn",
+        "ilp",
+        "ilp-routing"
+      ],
+      "exact_routing_lazy_osr": false,
+      "exact_routing_cover_pool_timeout_seconds": 10.0,
+      "exact_routing_token_seed_timeout_seconds": 0.0,
+      "exact_routing_token_seed_cover_strategies": [
+        "light-structural"
+      ],
+      "routing_synthesis_worker_memory_limit_gib": 16.0,
+      "routing_minimum_available_memory_fraction": 0.25,
+      "circuit_worker_memory_limit_gib": null,
+      "exact_routing_flow_seed_max_terms": 500000,
+      "exact_routing_fixed_cover_max_triangle_constraints": 500000,
+      "exact_routing_fixed_cover_backend": "sat",
+      "exact_routing_sat_solver": "glucose42",
+      "exact_routing_sat_max_estimated_clauses": 5000000,
+      "beam": null,
+      "partition_size_schedule": [
+        3
+      ]
+    },
+    "init": {
+      "cnot_equiv": 360,
+      "single_qubit": 668,
+      "total_raw": 1028,
+      "qubits": 16,
+      "gate_breakdown": {
+        "CNOT": 360,
+        "H": 240,
+        "RX": 240,
+        "RZ": 180,
+        "X": 8
+      }
+    },
+    "final": {
+      "cnot_equiv": 204,
+      "single_qubit": 253,
+      "total_raw": 457,
+      "qubits": 16,
+      "gate_breakdown": {
+        "CNOT": 204,
+        "U3": 253
+      }
+    },
+    "timing": {
+      "a2a": null,
+      "routing": null,
+      "optimization": 70.17,
+      "total": 70.18
+    },
+    "rewrite_audit": {
+      "schema_version": 2,
+      "file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_bqskit/heisenberg-16-20.audit.json.gz",
+      "sha256": "39d22a0cb01d241114fbe1a671f7ded8be65351dea1dfc054d12d758186976f8",
+      "summary": {
+        "events": 1459,
+        "rewrites": 1440,
+        "accepted_rewrites": 534,
+        "failed_synthesis_attempts": 0,
+        "fallbacks": 0,
+        "candidate_tolerance_misses": 0
+      },
+      "verified_rewrites": 1440,
+      "accepted_rewrites": 534,
+      "worst_process_infidelity": 5.435851768709199e-11,
+      "worst_accepted_process_infidelity": 5.435851768709199e-11,
+      "candidate_tolerance_misses": 0,
+      "accepted_spectral_error_bound": 1.2784783397322839e-05,
+      "replayed_native_rounds": 0,
+      "replayed_bqskit_invocations": 17,
+      "replayed_pam_routing_passes": 0,
+      "replayed_placement_passes": 0,
+      "replayed_qiskit_sabre_passes": 0,
+      "replayed_exact_osr_routing_passes": 0,
+      "replayed_squander_sabre_passes": 0,
+      "replayed_bqskit_stages": 1,
+      "chained_bqskit_events": 17,
+      "replayed_whole_circuit_transitions": 2,
+      "final_circuit_sha256": "e91b14262bc4634109e20abe91039a3e541020dac7d56b243d1c6734980d4d18"
+    }
+  },
+  "grover_33.qasm": {
+    "file": "grover_33.qasm",
+    "dataset": "QASMBenchmarks",
+    "output_file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_bqskit/grover_33.qasm",
+    "status": "completed",
+    "strategy": "bqskit",
+    "pre_opt_strategy": "bqskit",
+    "routing_strategy": "seqpam-quick",
+    "source_fingerprint": "40819a0482b353b60a190164504d2132b7cecd2a365243df464ac344b6ab7ef0",
+    "configuration": {
+      "max_partition_size": 3,
+      "tolerance": 1e-14,
+      "osr_optimization_tolerance": 1e-06,
+      "synthesis_acceptance_tolerance": 1e-10,
+      "circuit_validation_tolerance": 1e-08,
+      "bqskit_synthesis_epsilon": 5.000000000125e-11,
+      "use_float": true,
+      "use_osr": true,
+      "use_graph_search": true,
+      "auto_expand_partition_size": false,
+      "partition_strategy": "ilp",
+      "routing_partition_strategy": "ilp",
+      "pam_swap_cnot_cost": 3.0,
+      "partition_workers": null,
+      "routing_synthesis_workers": 4,
+      "routing_column_max_iteration_loops": 8,
+      "routing_column_synthesis_mode": "topology-osr",
+      "exact_routing_catalog_progress": true,
+      "exact_routing_catalog_progress_interval": 25,
+      "exact_routing_light_sabre_seed_count": 32,
+      "exact_routing_light_sabre_trials_per_seed": 1,
+      "exact_routing_light_guided_cover_count": 8,
+      "exact_routing_minimum_cover_seed_count": 8,
+      "exact_routing_post_catalog_pam_seed_count": 12,
+      "exact_routing_pam_layout_passes": 3,
+      "exact_routing_pam_swap_cnot_costs": [
+        3.0
+      ],
+      "exact_routing_pam_cover_strategies": [
+        "kahn",
+        "ilp",
+        "ilp-routing"
+      ],
+      "exact_routing_lazy_osr": false,
+      "exact_routing_cover_pool_timeout_seconds": 10.0,
+      "exact_routing_token_seed_timeout_seconds": 0.0,
+      "exact_routing_token_seed_cover_strategies": [
+        "light-structural"
+      ],
+      "routing_synthesis_worker_memory_limit_gib": 16.0,
+      "routing_minimum_available_memory_fraction": 0.25,
+      "circuit_worker_memory_limit_gib": null,
+      "exact_routing_flow_seed_max_terms": 500000,
+      "exact_routing_fixed_cover_max_triangle_constraints": 500000,
+      "exact_routing_fixed_cover_backend": "sat",
+      "exact_routing_sat_solver": "glucose42",
+      "exact_routing_sat_max_estimated_clauses": 5000000,
+      "beam": null,
+      "partition_size_schedule": [
+        3
+      ]
+    },
+    "init": {
+      "cnot_equiv": 360,
+      "single_qubit": 629,
+      "total_raw": 149,
+      "qubits": 33,
+      "gate_breakdown": {
+        "CCX": 60,
+        "H": 55,
+        "X": 34
+      }
+    },
+    "final": {
+      "cnot_equiv": 371,
+      "single_qubit": 545,
+      "total_raw": 916,
+      "qubits": 33,
+      "gate_breakdown": {
+        "CNOT": 371,
+        "U3": 545
+      }
+    },
+    "timing": {
+      "a2a": 167.38,
+      "routing": 236.12,
+      "optimization": 48.69,
+      "total": 452.19
+    },
+    "all_to_all": {
+      "cnot_equiv": 322,
+      "single_qubit": 428,
+      "total_raw": 750,
+      "qubits": 33,
+      "gate_breakdown": {
+        "CNOT": 322,
+        "U3": 428
+      }
+    },
+    "routed": {
+      "cnot_equiv": 389,
+      "single_qubit": 1709,
+      "total_raw": 2094,
+      "qubits": 33,
+      "gate_breakdown": {
+        "CNOT": 383,
+        "RX": 383,
+        "RY": 766,
+        "RZ": 383,
+        "SWAP": 2,
+        "U3": 177
+      }
+    },
+    "rewrite_audit": {
+      "schema_version": 2,
+      "file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_bqskit/grover_33.audit.json.gz",
+      "sha256": "560f722b1ec8a9f34140ae1962d6832cf3894ceb84d42848ccc3bfe20e258396",
+      "summary": {
+        "events": 1591,
+        "rewrites": 1567,
+        "accepted_rewrites": 1090,
+        "failed_synthesis_attempts": 0,
+        "fallbacks": 0,
+        "candidate_tolerance_misses": 0
+      },
+      "verified_rewrites": 1567,
+      "accepted_rewrites": 1090,
+      "worst_process_infidelity": 7.993605777301127e-15,
+      "worst_accepted_process_infidelity": 7.993605777301127e-15,
+      "candidate_tolerance_misses": 0,
+      "accepted_spectral_error_bound": 1.8145316662255067e-06,
+      "replayed_native_rounds": 0,
+      "replayed_bqskit_invocations": 15,
+      "replayed_pam_routing_passes": 1,
+      "replayed_placement_passes": 2,
+      "replayed_qiskit_sabre_passes": 0,
+      "replayed_exact_osr_routing_passes": 0,
+      "replayed_squander_sabre_passes": 0,
+      "replayed_bqskit_stages": 3,
+      "chained_bqskit_events": 18,
+      "replayed_whole_circuit_transitions": 6,
+      "final_circuit_sha256": "52263ab19ba3636680b2071b82a09d43c6428daf8d38c34ca620b99dcfcbd135"
+    }
+  },
+  "dnn_n16.qasm": {
+    "file": "dnn_n16.qasm",
+    "dataset": "QASMBenchmarks",
+    "output_file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_bqskit/dnn_n16.qasm",
+    "status": "completed",
+    "strategy": "bqskit",
+    "pre_opt_strategy": "bqskit",
+    "routing_strategy": "seqpam-quick",
+    "source_fingerprint": "40819a0482b353b60a190164504d2132b7cecd2a365243df464ac344b6ab7ef0",
+    "configuration": {
+      "max_partition_size": 3,
+      "tolerance": 1e-14,
+      "osr_optimization_tolerance": 1e-06,
+      "synthesis_acceptance_tolerance": 1e-10,
+      "circuit_validation_tolerance": 1e-08,
+      "bqskit_synthesis_epsilon": 5.000000000125e-11,
+      "use_float": true,
+      "use_osr": true,
+      "use_graph_search": true,
+      "auto_expand_partition_size": false,
+      "partition_strategy": "ilp",
+      "routing_partition_strategy": "ilp",
+      "pam_swap_cnot_cost": 3.0,
+      "partition_workers": null,
+      "routing_synthesis_workers": 4,
+      "routing_column_max_iteration_loops": 8,
+      "routing_column_synthesis_mode": "topology-osr",
+      "exact_routing_catalog_progress": true,
+      "exact_routing_catalog_progress_interval": 25,
+      "exact_routing_light_sabre_seed_count": 32,
+      "exact_routing_light_sabre_trials_per_seed": 1,
+      "exact_routing_light_guided_cover_count": 8,
+      "exact_routing_minimum_cover_seed_count": 8,
+      "exact_routing_post_catalog_pam_seed_count": 12,
+      "exact_routing_pam_layout_passes": 3,
+      "exact_routing_pam_swap_cnot_costs": [
+        3.0
+      ],
+      "exact_routing_pam_cover_strategies": [
+        "kahn",
+        "ilp",
+        "ilp-routing"
+      ],
+      "exact_routing_lazy_osr": false,
+      "exact_routing_cover_pool_timeout_seconds": 10.0,
+      "exact_routing_token_seed_timeout_seconds": 0.0,
+      "exact_routing_token_seed_cover_strategies": [
+        "light-structural"
+      ],
+      "routing_synthesis_worker_memory_limit_gib": 16.0,
+      "routing_minimum_available_memory_fraction": 0.25,
+      "circuit_worker_memory_limit_gib": null,
+      "exact_routing_flow_seed_max_terms": 500000,
+      "exact_routing_fixed_cover_max_triangle_constraints": 500000,
+      "exact_routing_fixed_cover_backend": "sat",
+      "exact_routing_sat_solver": "glucose42",
+      "exact_routing_sat_max_estimated_clauses": 5000000,
+      "beam": null,
+      "partition_size_schedule": [
+        3
+      ]
+    },
+    "init": {
+      "cnot_equiv": 384,
+      "single_qubit": 1632,
+      "total_raw": 2016,
+      "qubits": 16,
+      "gate_breakdown": {
+        "CNOT": 384,
+        "RX": 512,
+        "RY": 288,
+        "RZ": 320,
+        "U3": 512
+      }
+    },
+    "final": {
+      "cnot_equiv": 276,
+      "single_qubit": 466,
+      "total_raw": 742,
+      "qubits": 16,
+      "gate_breakdown": {
+        "CNOT": 276,
+        "U3": 466
+      }
+    },
+    "timing": {
+      "a2a": 55.76,
+      "routing": 303.43,
+      "optimization": 396.71,
+      "total": 755.92
+    },
+    "all_to_all": {
+      "cnot_equiv": 128,
+      "single_qubit": 214,
+      "total_raw": 342,
+      "qubits": 16,
+      "gate_breakdown": {
+        "CNOT": 128,
+        "U3": 214
+      }
+    },
+    "routed": {
+      "cnot_equiv": 314,
+      "single_qubit": 615,
+      "total_raw": 813,
+      "qubits": 16,
+      "gate_breakdown": {
+        "CNOT": 140,
+        "RX": 133,
+        "RY": 266,
+        "RZ": 133,
+        "SWAP": 58,
+        "U3": 83
+      }
+    },
+    "rewrite_audit": {
+      "schema_version": 2,
+      "file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_bqskit/dnn_n16.audit.json.gz",
+      "sha256": "04aa24628fd73f25309d0ca9eafb27bf782348443087eee16231dba152899c37",
+      "summary": {
+        "events": 1595,
+        "rewrites": 1568,
+        "accepted_rewrites": 1104,
+        "failed_synthesis_attempts": 0,
+        "fallbacks": 0,
+        "candidate_tolerance_misses": 0
+      },
+      "verified_rewrites": 1568,
+      "accepted_rewrites": 1104,
+      "worst_process_infidelity": 6.8833827526759706e-15,
+      "worst_accepted_process_infidelity": 6.8833827526759706e-15,
+      "candidate_tolerance_misses": 0,
+      "accepted_spectral_error_bound": 1.351752458728857e-06,
+      "replayed_native_rounds": 0,
+      "replayed_bqskit_invocations": 18,
+      "replayed_pam_routing_passes": 1,
+      "replayed_placement_passes": 2,
+      "replayed_qiskit_sabre_passes": 0,
+      "replayed_exact_osr_routing_passes": 0,
+      "replayed_squander_sabre_passes": 0,
+      "replayed_bqskit_stages": 3,
+      "chained_bqskit_events": 21,
+      "replayed_whole_circuit_transitions": 6,
+      "final_circuit_sha256": "1556845161b2cf03b002ae543fa38f53b8b49404bf6fc1dbdfbe33de2dab037c"
+    }
+  },
+  "qft_20.qasm": {
+    "file": "qft_20.qasm",
+    "dataset": "QASMBenchmarks",
+    "output_file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_bqskit/qft_20.qasm",
+    "status": "completed",
+    "strategy": "bqskit",
+    "pre_opt_strategy": "bqskit",
+    "routing_strategy": "seqpam-quick",
+    "source_fingerprint": "40819a0482b353b60a190164504d2132b7cecd2a365243df464ac344b6ab7ef0",
+    "configuration": {
+      "max_partition_size": 3,
+      "tolerance": 1e-14,
+      "osr_optimization_tolerance": 1e-06,
+      "synthesis_acceptance_tolerance": 1e-10,
+      "circuit_validation_tolerance": 1e-08,
+      "bqskit_synthesis_epsilon": 5.000000000125e-11,
+      "use_float": true,
+      "use_osr": true,
+      "use_graph_search": true,
+      "auto_expand_partition_size": false,
+      "partition_strategy": "ilp",
+      "routing_partition_strategy": "ilp",
+      "pam_swap_cnot_cost": 3.0,
+      "partition_workers": null,
+      "routing_synthesis_workers": 4,
+      "routing_column_max_iteration_loops": 8,
+      "routing_column_synthesis_mode": "topology-osr",
+      "exact_routing_catalog_progress": true,
+      "exact_routing_catalog_progress_interval": 25,
+      "exact_routing_light_sabre_seed_count": 32,
+      "exact_routing_light_sabre_trials_per_seed": 1,
+      "exact_routing_light_guided_cover_count": 8,
+      "exact_routing_minimum_cover_seed_count": 8,
+      "exact_routing_post_catalog_pam_seed_count": 12,
+      "exact_routing_pam_layout_passes": 3,
+      "exact_routing_pam_swap_cnot_costs": [
+        3.0
+      ],
+      "exact_routing_pam_cover_strategies": [
+        "kahn",
+        "ilp",
+        "ilp-routing"
+      ],
+      "exact_routing_lazy_osr": false,
+      "exact_routing_cover_pool_timeout_seconds": 10.0,
+      "exact_routing_token_seed_timeout_seconds": 0.0,
+      "exact_routing_token_seed_cover_strategies": [
+        "light-structural"
+      ],
+      "routing_synthesis_worker_memory_limit_gib": 16.0,
+      "routing_minimum_available_memory_fraction": 0.25,
+      "circuit_worker_memory_limit_gib": null,
+      "exact_routing_flow_seed_max_terms": 500000,
+      "exact_routing_fixed_cover_max_triangle_constraints": 500000,
+      "exact_routing_fixed_cover_backend": "sat",
+      "exact_routing_sat_solver": "glucose42",
+      "exact_routing_sat_max_estimated_clauses": 5000000,
+      "beam": null,
+      "partition_size_schedule": [
+        3
+      ]
+    },
+    "init": {
+      "cnot_equiv": 410,
+      "single_qubit": 590,
+      "total_raw": 1000,
+      "qubits": 20,
+      "gate_breakdown": {
+        "CNOT": 410,
+        "U2": 20,
+        "U3": 570
+      }
+    },
+    "final": {
+      "cnot_equiv": 908,
+      "single_qubit": 1477,
+      "total_raw": 2385,
+      "qubits": 20,
+      "gate_breakdown": {
+        "CNOT": 908,
+        "U3": 1477
+      }
+    },
+    "timing": {
+      "a2a": 68.72,
+      "routing": 201.93,
+      "optimization": 224.82,
+      "total": 495.49
+    },
+    "all_to_all": {
+      "cnot_equiv": 389,
+      "single_qubit": 424,
+      "total_raw": 813,
+      "qubits": 20,
+      "gate_breakdown": {
+        "CNOT": 389,
+        "U3": 424
+      }
+    },
+    "routed": {
+      "cnot_equiv": 992,
+      "single_qubit": 2407,
+      "total_raw": 3089,
+      "qubits": 20,
+      "gate_breakdown": {
+        "CNOT": 527,
+        "RX": 527,
+        "RY": 1054,
+        "RZ": 527,
+        "SWAP": 155,
+        "U3": 299
+      }
+    },
+    "rewrite_audit": {
+      "schema_version": 2,
+      "file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_bqskit/qft_20.audit.json.gz",
+      "sha256": "04818af7a8fe554fbc2ec4bd9fb57106a3a06b96740b6d07deb1203b68503e66",
+      "summary": {
+        "events": 5403,
+        "rewrites": 5373,
+        "accepted_rewrites": 3146,
+        "failed_synthesis_attempts": 0,
+        "fallbacks": 0,
+        "candidate_tolerance_misses": 0
+      },
+      "verified_rewrites": 5373,
+      "accepted_rewrites": 3146,
+      "worst_process_infidelity": 9.170575410166748e-11,
+      "worst_accepted_process_infidelity": 9.170575410166748e-11,
+      "candidate_tolerance_misses": 0,
+      "accepted_spectral_error_bound": 8.039696589417434e-05,
+      "replayed_native_rounds": 0,
+      "replayed_bqskit_invocations": 21,
+      "replayed_pam_routing_passes": 1,
+      "replayed_placement_passes": 2,
+      "replayed_qiskit_sabre_passes": 0,
+      "replayed_exact_osr_routing_passes": 0,
+      "replayed_squander_sabre_passes": 0,
+      "replayed_bqskit_stages": 3,
+      "chained_bqskit_events": 24,
+      "replayed_whole_circuit_transitions": 6,
+      "final_circuit_sha256": "39195168323d74a558c0b5b6a559f47cea4b22da3a8a65d56fe87ae3b671220d"
+    }
+  },
+  "adder_n64.qasm": {
+    "file": "adder_n64.qasm",
+    "dataset": "QASMBenchmarks",
+    "output_file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_bqskit/adder_n64.qasm",
+    "status": "completed",
+    "strategy": "bqskit",
+    "pre_opt_strategy": "bqskit",
+    "routing_strategy": "seqpam-quick",
+    "source_fingerprint": "40819a0482b353b60a190164504d2132b7cecd2a365243df464ac344b6ab7ef0",
+    "configuration": {
+      "max_partition_size": 3,
+      "tolerance": 1e-14,
+      "osr_optimization_tolerance": 1e-06,
+      "synthesis_acceptance_tolerance": 1e-10,
+      "circuit_validation_tolerance": 1e-08,
+      "bqskit_synthesis_epsilon": 5.000000000125e-11,
+      "use_float": true,
+      "use_osr": true,
+      "use_graph_search": true,
+      "auto_expand_partition_size": false,
+      "partition_strategy": "ilp",
+      "routing_partition_strategy": "ilp",
+      "pam_swap_cnot_cost": 3.0,
+      "partition_workers": null,
+      "routing_synthesis_workers": 4,
+      "routing_column_max_iteration_loops": 8,
+      "routing_column_synthesis_mode": "topology-osr",
+      "exact_routing_catalog_progress": true,
+      "exact_routing_catalog_progress_interval": 25,
+      "exact_routing_light_sabre_seed_count": 32,
+      "exact_routing_light_sabre_trials_per_seed": 1,
+      "exact_routing_light_guided_cover_count": 8,
+      "exact_routing_minimum_cover_seed_count": 8,
+      "exact_routing_post_catalog_pam_seed_count": 12,
+      "exact_routing_pam_layout_passes": 3,
+      "exact_routing_pam_swap_cnot_costs": [
+        3.0
+      ],
+      "exact_routing_pam_cover_strategies": [
+        "kahn",
+        "ilp",
+        "ilp-routing"
+      ],
+      "exact_routing_lazy_osr": false,
+      "exact_routing_cover_pool_timeout_seconds": 10.0,
+      "exact_routing_token_seed_timeout_seconds": 0.0,
+      "exact_routing_token_seed_cover_strategies": [
+        "light-structural"
+      ],
+      "routing_synthesis_worker_memory_limit_gib": 16.0,
+      "routing_minimum_available_memory_fraction": 0.25,
+      "circuit_worker_memory_limit_gib": null,
+      "exact_routing_flow_seed_max_terms": 500000,
+      "exact_routing_fixed_cover_max_triangle_constraints": 500000,
+      "exact_routing_fixed_cover_backend": "sat",
+      "exact_routing_sat_solver": "glucose42",
+      "exact_routing_sat_max_estimated_clauses": 5000000,
+      "beam": null,
+      "partition_size_schedule": [
+        3
+      ]
+    },
+    "init": {
+      "cnot_equiv": 455,
+      "single_qubit": 533,
+      "total_raw": 204,
+      "qubits": 64,
+      "gate_breakdown": {
+        "CCX": 56,
+        "CNOT": 119,
+        "X": 29
+      }
+    },
+    "final": {
+      "cnot_equiv": 2366,
+      "single_qubit": 3926,
+      "total_raw": 6292,
+      "qubits": 64,
+      "gate_breakdown": {
+        "CNOT": 2366,
+        "U3": 3926
+      }
+    },
+    "timing": {
+      "a2a": 95.04,
+      "routing": 214.55,
+      "optimization": 208.62,
+      "total": 518.25
+    },
+    "all_to_all": {
+      "cnot_equiv": 343,
+      "single_qubit": 559,
+      "total_raw": 902,
+      "qubits": 64,
+      "gate_breakdown": {
+        "CNOT": 343,
+        "U3": 559
+      }
+    },
+    "routed": {
+      "cnot_equiv": 2400,
+      "single_qubit": 1869,
+      "total_raw": 2949,
+      "qubits": 64,
+      "gate_breakdown": {
+        "CNOT": 420,
+        "RX": 420,
+        "RY": 840,
+        "RZ": 420,
+        "SWAP": 660,
+        "U3": 189
+      }
+    },
+    "rewrite_audit": {
+      "schema_version": 2,
+      "file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_bqskit/adder_n64.audit.json.gz",
+      "sha256": "00183a4af64b316b1395150ee56de02fb7731a770b8640d70225fc0778d0e606",
+      "summary": {
+        "events": 8618,
+        "rewrites": 8594,
+        "accepted_rewrites": 6694,
+        "failed_synthesis_attempts": 0,
+        "fallbacks": 0,
+        "candidate_tolerance_misses": 0
+      },
+      "verified_rewrites": 8594,
+      "accepted_rewrites": 6694,
+      "worst_process_infidelity": 2.6645352591003757e-14,
+      "worst_accepted_process_infidelity": 2.6645352591003757e-14,
+      "candidate_tolerance_misses": 0,
+      "accepted_spectral_error_bound": 1.3000562236320237e-05,
+      "replayed_native_rounds": 0,
+      "replayed_bqskit_invocations": 15,
+      "replayed_pam_routing_passes": 1,
+      "replayed_placement_passes": 2,
+      "replayed_qiskit_sabre_passes": 0,
+      "replayed_exact_osr_routing_passes": 0,
+      "replayed_squander_sabre_passes": 0,
+      "replayed_bqskit_stages": 3,
+      "chained_bqskit_events": 18,
+      "replayed_whole_circuit_transitions": 6,
+      "final_circuit_sha256": "b84190ff25f3b9205813c909f87bc475bdeb3fd906795bf63ca07123c096c0f1"
+    }
+  },
+  "grover_45.qasm": {
+    "file": "grover_45.qasm",
+    "dataset": "QASMBenchmarks",
+    "output_file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_bqskit/grover_45.qasm",
+    "status": "completed",
+    "strategy": "bqskit",
+    "pre_opt_strategy": "bqskit",
+    "routing_strategy": "seqpam-quick",
+    "source_fingerprint": "40819a0482b353b60a190164504d2132b7cecd2a365243df464ac344b6ab7ef0",
+    "configuration": {
+      "max_partition_size": 3,
+      "tolerance": 1e-14,
+      "osr_optimization_tolerance": 1e-06,
+      "synthesis_acceptance_tolerance": 1e-10,
+      "circuit_validation_tolerance": 1e-08,
+      "bqskit_synthesis_epsilon": 5.000000000125e-11,
+      "use_float": true,
+      "use_osr": true,
+      "use_graph_search": true,
+      "auto_expand_partition_size": false,
+      "partition_strategy": "ilp",
+      "routing_partition_strategy": "ilp",
+      "pam_swap_cnot_cost": 3.0,
+      "partition_workers": null,
+      "routing_synthesis_workers": 4,
+      "routing_column_max_iteration_loops": 8,
+      "routing_column_synthesis_mode": "topology-osr",
+      "exact_routing_catalog_progress": true,
+      "exact_routing_catalog_progress_interval": 25,
+      "exact_routing_light_sabre_seed_count": 32,
+      "exact_routing_light_sabre_trials_per_seed": 1,
+      "exact_routing_light_guided_cover_count": 8,
+      "exact_routing_minimum_cover_seed_count": 8,
+      "exact_routing_post_catalog_pam_seed_count": 12,
+      "exact_routing_pam_layout_passes": 3,
+      "exact_routing_pam_swap_cnot_costs": [
+        3.0
+      ],
+      "exact_routing_pam_cover_strategies": [
+        "kahn",
+        "ilp",
+        "ilp-routing"
+      ],
+      "exact_routing_lazy_osr": false,
+      "exact_routing_cover_pool_timeout_seconds": 10.0,
+      "exact_routing_token_seed_timeout_seconds": 0.0,
+      "exact_routing_token_seed_cover_strategies": [
+        "light-structural"
+      ],
+      "routing_synthesis_worker_memory_limit_gib": 16.0,
+      "routing_minimum_available_memory_fraction": 0.25,
+      "circuit_worker_memory_limit_gib": null,
+      "exact_routing_flow_seed_max_terms": 500000,
+      "exact_routing_fixed_cover_max_triangle_constraints": 500000,
+      "exact_routing_fixed_cover_backend": "sat",
+      "exact_routing_sat_solver": "glucose42",
+      "exact_routing_sat_max_estimated_clauses": 5000000,
+      "beam": null,
+      "partition_size_schedule": [
+        3
+      ]
+    },
+    "init": {
+      "cnot_equiv": 504,
+      "single_qubit": 875,
+      "total_raw": 203,
+      "qubits": 45,
+      "gate_breakdown": {
+        "CCX": 84,
+        "H": 73,
+        "X": 46
+      }
+    },
+    "final": {
+      "cnot_equiv": 510,
+      "single_qubit": 742,
+      "total_raw": 1252,
+      "qubits": 45,
+      "gate_breakdown": {
+        "CNOT": 510,
+        "U3": 742
+      }
+    },
+    "timing": {
+      "a2a": 241.41,
+      "routing": 263.33,
+      "optimization": 86.37,
+      "total": 591.11
+    },
+    "all_to_all": {
+      "cnot_equiv": 429,
+      "single_qubit": 581,
+      "total_raw": 1010,
+      "qubits": 45,
+      "gate_breakdown": {
+        "CNOT": 429,
+        "U3": 581
+      }
+    },
+    "routed": {
+      "cnot_equiv": 530,
+      "single_qubit": 2345,
+      "total_raw": 2871,
+      "qubits": 45,
+      "gate_breakdown": {
+        "CNOT": 524,
+        "RX": 524,
+        "RY": 1048,
+        "RZ": 524,
+        "SWAP": 2,
+        "U3": 249
+      }
+    },
+    "rewrite_audit": {
+      "schema_version": 2,
+      "file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_bqskit/grover_45.audit.json.gz",
+      "sha256": "97cdbb98184ca2bedc67b9e5f4b0aa242dd0b47813da9a18c5d2d6ec5db8412d",
+      "summary": {
+        "events": 3418,
+        "rewrites": 3391,
+        "accepted_rewrites": 2561,
+        "failed_synthesis_attempts": 0,
+        "fallbacks": 0,
+        "candidate_tolerance_misses": 0
+      },
+      "verified_rewrites": 3391,
+      "accepted_rewrites": 2561,
+      "worst_process_infidelity": 4.440892098500626e-15,
+      "worst_accepted_process_infidelity": 4.440892098500626e-15,
+      "candidate_tolerance_misses": 0,
+      "accepted_spectral_error_bound": 2.1700903605885303e-06,
+      "replayed_native_rounds": 0,
+      "replayed_bqskit_invocations": 18,
+      "replayed_pam_routing_passes": 1,
+      "replayed_placement_passes": 2,
+      "replayed_qiskit_sabre_passes": 0,
+      "replayed_exact_osr_routing_passes": 0,
+      "replayed_squander_sabre_passes": 0,
+      "replayed_bqskit_stages": 3,
+      "chained_bqskit_events": 21,
+      "replayed_whole_circuit_transitions": 6,
+      "final_circuit_sha256": "b89792a0690f8342277afff63df237111b4b3fb2cd5eb21a5c72294df4b3aa33"
+    }
+  },
+  "grover_61.qasm": {
+    "file": "grover_61.qasm",
+    "dataset": "QASMBenchmarks",
+    "output_file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_bqskit/grover_61.qasm",
+    "status": "completed",
+    "strategy": "bqskit",
+    "pre_opt_strategy": "bqskit",
+    "routing_strategy": "seqpam-quick",
+    "source_fingerprint": "40819a0482b353b60a190164504d2132b7cecd2a365243df464ac344b6ab7ef0",
+    "configuration": {
+      "max_partition_size": 3,
+      "tolerance": 1e-14,
+      "osr_optimization_tolerance": 1e-06,
+      "synthesis_acceptance_tolerance": 1e-10,
+      "circuit_validation_tolerance": 1e-08,
+      "bqskit_synthesis_epsilon": 5.000000000125e-11,
+      "use_float": true,
+      "use_osr": true,
+      "use_graph_search": true,
+      "auto_expand_partition_size": false,
+      "partition_strategy": "ilp",
+      "routing_partition_strategy": "ilp",
+      "pam_swap_cnot_cost": 3.0,
+      "partition_workers": null,
+      "routing_synthesis_workers": 4,
+      "routing_column_max_iteration_loops": 8,
+      "routing_column_synthesis_mode": "topology-osr",
+      "exact_routing_catalog_progress": true,
+      "exact_routing_catalog_progress_interval": 25,
+      "exact_routing_light_sabre_seed_count": 32,
+      "exact_routing_light_sabre_trials_per_seed": 1,
+      "exact_routing_light_guided_cover_count": 8,
+      "exact_routing_minimum_cover_seed_count": 8,
+      "exact_routing_post_catalog_pam_seed_count": 12,
+      "exact_routing_pam_layout_passes": 3,
+      "exact_routing_pam_swap_cnot_costs": [
+        3.0
+      ],
+      "exact_routing_pam_cover_strategies": [
+        "kahn",
+        "ilp",
+        "ilp-routing"
+      ],
+      "exact_routing_lazy_osr": false,
+      "exact_routing_cover_pool_timeout_seconds": 10.0,
+      "exact_routing_token_seed_timeout_seconds": 0.0,
+      "exact_routing_token_seed_cover_strategies": [
+        "light-structural"
+      ],
+      "routing_synthesis_worker_memory_limit_gib": 16.0,
+      "routing_minimum_available_memory_fraction": 0.25,
+      "circuit_worker_memory_limit_gib": null,
+      "exact_routing_flow_seed_max_terms": 500000,
+      "exact_routing_fixed_cover_max_triangle_constraints": 500000,
+      "exact_routing_fixed_cover_backend": "sat",
+      "exact_routing_sat_solver": "glucose42",
+      "exact_routing_sat_max_estimated_clauses": 5000000,
+      "beam": null,
+      "partition_size_schedule": [
+        3
+      ]
+    },
+    "init": {
+      "cnot_equiv": 696,
+      "single_qubit": 1203,
+      "total_raw": 275,
+      "qubits": 61,
+      "gate_breakdown": {
+        "CCX": 116,
+        "H": 97,
+        "X": 62
+      }
+    },
+    "final": {
+      "cnot_equiv": 705,
+      "single_qubit": 1028,
+      "total_raw": 1733,
+      "qubits": 61,
+      "gate_breakdown": {
+        "CNOT": 705,
+        "U3": 1028
+      }
+    },
+    "timing": {
+      "a2a": 327.1,
+      "routing": 360.12,
+      "optimization": 111.74,
+      "total": 798.99
+    },
+    "all_to_all": {
+      "cnot_equiv": 613,
+      "single_qubit": 806,
+      "total_raw": 1419,
+      "qubits": 61,
+      "gate_breakdown": {
+        "CNOT": 613,
+        "U3": 806
+      }
+    },
+    "routed": {
+      "cnot_equiv": 744,
+      "single_qubit": 3297,
+      "total_raw": 4037,
+      "qubits": 61,
+      "gate_breakdown": {
+        "CNOT": 738,
+        "RX": 738,
+        "RY": 1476,
+        "RZ": 738,
+        "SWAP": 2,
+        "U3": 345
+      }
+    },
+    "rewrite_audit": {
+      "schema_version": 2,
+      "file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_bqskit/grover_61.audit.json.gz",
+      "sha256": "ed72d889bd47d5d2c83effebfdaef8d5e4a09a2d34d1cd595c437d3d0881b317",
+      "summary": {
+        "events": 4872,
+        "rewrites": 4844,
+        "accepted_rewrites": 3574,
+        "failed_synthesis_attempts": 0,
+        "fallbacks": 0,
+        "candidate_tolerance_misses": 0
+      },
+      "verified_rewrites": 4844,
+      "accepted_rewrites": 3574,
+      "worst_process_infidelity": 9.385980881404521e-11,
+      "worst_accepted_process_infidelity": 9.385980881404521e-11,
+      "candidate_tolerance_misses": 0,
+      "accepted_spectral_error_bound": 2.601605895119579e-05,
+      "replayed_native_rounds": 0,
+      "replayed_bqskit_invocations": 19,
+      "replayed_pam_routing_passes": 1,
+      "replayed_placement_passes": 2,
+      "replayed_qiskit_sabre_passes": 0,
+      "replayed_exact_osr_routing_passes": 0,
+      "replayed_squander_sabre_passes": 0,
+      "replayed_bqskit_stages": 3,
+      "chained_bqskit_events": 22,
+      "replayed_whole_circuit_transitions": 6,
+      "final_circuit_sha256": "82938336e410dac8d707fe9a7644383d5104fa5301b3f1bd516edd867a49ddcd"
+    }
+  },
+  "grover_81.qasm": {
+    "file": "grover_81.qasm",
+    "dataset": "QASMBenchmarks",
+    "output_file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_bqskit/grover_81.qasm",
+    "status": "completed",
+    "strategy": "bqskit",
+    "pre_opt_strategy": "bqskit",
+    "routing_strategy": "seqpam-quick",
+    "source_fingerprint": "40819a0482b353b60a190164504d2132b7cecd2a365243df464ac344b6ab7ef0",
+    "configuration": {
+      "max_partition_size": 3,
+      "tolerance": 1e-14,
+      "osr_optimization_tolerance": 1e-06,
+      "synthesis_acceptance_tolerance": 1e-10,
+      "circuit_validation_tolerance": 1e-08,
+      "bqskit_synthesis_epsilon": 5.000000000125e-11,
+      "use_float": true,
+      "use_osr": true,
+      "use_graph_search": true,
+      "auto_expand_partition_size": false,
+      "partition_strategy": "ilp",
+      "routing_partition_strategy": "ilp",
+      "pam_swap_cnot_cost": 3.0,
+      "partition_workers": null,
+      "routing_synthesis_workers": 4,
+      "routing_column_max_iteration_loops": 8,
+      "routing_column_synthesis_mode": "topology-osr",
+      "exact_routing_catalog_progress": true,
+      "exact_routing_catalog_progress_interval": 25,
+      "exact_routing_light_sabre_seed_count": 32,
+      "exact_routing_light_sabre_trials_per_seed": 1,
+      "exact_routing_light_guided_cover_count": 8,
+      "exact_routing_minimum_cover_seed_count": 8,
+      "exact_routing_post_catalog_pam_seed_count": 12,
+      "exact_routing_pam_layout_passes": 3,
+      "exact_routing_pam_swap_cnot_costs": [
+        3.0
+      ],
+      "exact_routing_pam_cover_strategies": [
+        "kahn",
+        "ilp",
+        "ilp-routing"
+      ],
+      "exact_routing_lazy_osr": false,
+      "exact_routing_cover_pool_timeout_seconds": 10.0,
+      "exact_routing_token_seed_timeout_seconds": 0.0,
+      "exact_routing_token_seed_cover_strategies": [
+        "light-structural"
+      ],
+      "routing_synthesis_worker_memory_limit_gib": 16.0,
+      "routing_minimum_available_memory_fraction": 0.25,
+      "circuit_worker_memory_limit_gib": null,
+      "exact_routing_flow_seed_max_terms": 500000,
+      "exact_routing_fixed_cover_max_triangle_constraints": 500000,
+      "exact_routing_fixed_cover_backend": "sat",
+      "exact_routing_sat_solver": "glucose42",
+      "exact_routing_sat_max_estimated_clauses": 5000000,
+      "beam": null,
+      "partition_size_schedule": [
+        3
+      ]
+    },
+    "init": {
+      "cnot_equiv": 936,
+      "single_qubit": 1613,
+      "total_raw": 365,
+      "qubits": 81,
+      "gate_breakdown": {
+        "CCX": 156,
+        "H": 127,
+        "X": 82
+      }
+    },
+    "final": {
+      "cnot_equiv": 955,
+      "single_qubit": 1382,
+      "total_raw": 2337,
+      "qubits": 81,
+      "gate_breakdown": {
+        "CNOT": 955,
+        "U3": 1382
+      }
+    },
+    "timing": {
+      "a2a": 422.88,
+      "routing": 468.45,
+      "optimization": 126.71,
+      "total": 1018.08
+    },
+    "all_to_all": {
+      "cnot_equiv": 824,
+      "single_qubit": 1086,
+      "total_raw": 1910,
+      "qubits": 81,
+      "gate_breakdown": {
+        "CNOT": 824,
+        "U3": 1086
+      }
+    },
+    "routed": {
+      "cnot_equiv": 999,
+      "single_qubit": 4437,
+      "total_raw": 5432,
+      "qubits": 81,
+      "gate_breakdown": {
+        "CNOT": 993,
+        "RX": 993,
+        "RY": 1986,
+        "RZ": 993,
+        "SWAP": 2,
+        "U3": 465
+      }
+    },
+    "rewrite_audit": {
+      "schema_version": 2,
+      "file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_bqskit/grover_81.audit.json.gz",
+      "sha256": "9997a3adf210e62881b515a63cdc62d520a96446db4614a0be62c18628311a4b",
+      "summary": {
+        "events": 6546,
+        "rewrites": 6518,
+        "accepted_rewrites": 4820,
+        "failed_synthesis_attempts": 0,
+        "fallbacks": 0,
+        "candidate_tolerance_misses": 0
+      },
+      "verified_rewrites": 6518,
+      "accepted_rewrites": 4820,
+      "worst_process_infidelity": 7.105427357601002e-15,
+      "worst_accepted_process_infidelity": 1.7763568394002505e-15,
+      "candidate_tolerance_misses": 0,
+      "accepted_spectral_error_bound": 3.892802600777492e-06,
+      "replayed_native_rounds": 0,
+      "replayed_bqskit_invocations": 19,
+      "replayed_pam_routing_passes": 1,
+      "replayed_placement_passes": 2,
+      "replayed_qiskit_sabre_passes": 0,
+      "replayed_exact_osr_routing_passes": 0,
+      "replayed_squander_sabre_passes": 0,
+      "replayed_bqskit_stages": 3,
+      "chained_bqskit_events": 22,
+      "replayed_whole_circuit_transitions": 6,
+      "final_circuit_sha256": "13e8d18142e1da5461613102dfdd1073adbd1e6a5c038bde403d14551b1768db"
+    }
+  },
+  "quantum_volume_n40_d20_i0.qasm": {
+    "file": "quantum_volume_n40_d20_i0.qasm",
+    "dataset": "QASMBenchmarks",
+    "output_file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_bqskit/quantum_volume_n40_d20_i0.qasm",
+    "status": "completed",
+    "strategy": "bqskit",
+    "pre_opt_strategy": "bqskit",
+    "routing_strategy": "seqpam-quick",
+    "source_fingerprint": "40819a0482b353b60a190164504d2132b7cecd2a365243df464ac344b6ab7ef0",
+    "configuration": {
+      "max_partition_size": 3,
+      "tolerance": 1e-14,
+      "osr_optimization_tolerance": 1e-06,
+      "synthesis_acceptance_tolerance": 1e-10,
+      "circuit_validation_tolerance": 1e-08,
+      "bqskit_synthesis_epsilon": 5.000000000125e-11,
+      "use_float": true,
+      "use_osr": true,
+      "use_graph_search": true,
+      "auto_expand_partition_size": false,
+      "partition_strategy": "ilp",
+      "routing_partition_strategy": "ilp",
+      "pam_swap_cnot_cost": 3.0,
+      "partition_workers": null,
+      "routing_synthesis_workers": 4,
+      "routing_column_max_iteration_loops": 8,
+      "routing_column_synthesis_mode": "topology-osr",
+      "exact_routing_catalog_progress": true,
+      "exact_routing_catalog_progress_interval": 25,
+      "exact_routing_light_sabre_seed_count": 32,
+      "exact_routing_light_sabre_trials_per_seed": 1,
+      "exact_routing_light_guided_cover_count": 8,
+      "exact_routing_minimum_cover_seed_count": 8,
+      "exact_routing_post_catalog_pam_seed_count": 12,
+      "exact_routing_pam_layout_passes": 3,
+      "exact_routing_pam_swap_cnot_costs": [
+        3.0
+      ],
+      "exact_routing_pam_cover_strategies": [
+        "kahn",
+        "ilp",
+        "ilp-routing"
+      ],
+      "exact_routing_lazy_osr": false,
+      "exact_routing_cover_pool_timeout_seconds": 10.0,
+      "exact_routing_token_seed_timeout_seconds": 0.0,
+      "exact_routing_token_seed_cover_strategies": [
+        "light-structural"
+      ],
+      "routing_synthesis_worker_memory_limit_gib": 16.0,
+      "routing_minimum_available_memory_fraction": 0.25,
+      "circuit_worker_memory_limit_gib": null,
+      "exact_routing_flow_seed_max_terms": 500000,
+      "exact_routing_fixed_cover_max_triangle_constraints": 500000,
+      "exact_routing_fixed_cover_backend": "sat",
+      "exact_routing_sat_solver": "glucose42",
+      "exact_routing_sat_max_estimated_clauses": 5000000,
+      "beam": null,
+      "partition_size_schedule": [
+        3
+      ]
+    },
+    "init": {
+      "cnot_equiv": 1200,
+      "single_qubit": 2800,
+      "total_raw": 4000,
+      "qubits": 40,
+      "gate_breakdown": {
+        "CNOT": 1200,
+        "U1": 400,
+        "U3": 2400
+      }
+    },
+    "final": {
+      "cnot_equiv": 11070,
+      "single_qubit": 18271,
+      "total_raw": 29341,
+      "qubits": 40,
+      "gate_breakdown": {
+        "CNOT": 11070,
+        "U3": 18271
+      }
+    },
+    "timing": {
+      "a2a": 143.0,
+      "routing": 5535.79,
+      "optimization": 3043.22,
+      "total": 8722.23
+    },
+    "all_to_all": {
+      "cnot_equiv": 1170,
+      "single_qubit": 1911,
+      "total_raw": 3081,
+      "qubits": 40,
+      "gate_breakdown": {
+        "CNOT": 1170,
+        "U3": 1911
+      }
+    },
+    "routed": {
+      "cnot_equiv": 11797,
+      "single_qubit": 6286,
+      "total_raw": 11167,
+      "qubits": 40,
+      "gate_breakdown": {
+        "CNOT": 1423,
+        "RX": 1417,
+        "RY": 2834,
+        "RZ": 1417,
+        "SWAP": 3458,
+        "U3": 618
+      }
+    },
+    "rewrite_audit": {
+      "schema_version": 2,
+      "file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_bqskit/quantum_volume_n40_d20_i0.audit.json.gz",
+      "sha256": "dba7776a6ebe9c8d1493d7c9a3db234f6aec181d7a3f6811e5aeef80d0befd6f",
+      "summary": {
+        "events": 65147,
+        "rewrites": 65111,
+        "accepted_rewrites": 29705,
+        "failed_synthesis_attempts": 0,
+        "fallbacks": 0,
+        "candidate_tolerance_misses": 0
+      },
+      "verified_rewrites": 65111,
+      "accepted_rewrites": 29705,
+      "worst_process_infidelity": 8.040235144335384e-13,
+      "worst_accepted_process_infidelity": 8.040235144335384e-13,
+      "candidate_tolerance_misses": 0,
+      "accepted_spectral_error_bound": 5.33372844779983e-05,
+      "replayed_native_rounds": 0,
+      "replayed_bqskit_invocations": 27,
+      "replayed_pam_routing_passes": 1,
+      "replayed_placement_passes": 2,
+      "replayed_qiskit_sabre_passes": 0,
+      "replayed_exact_osr_routing_passes": 0,
+      "replayed_squander_sabre_passes": 0,
+      "replayed_bqskit_stages": 3,
+      "chained_bqskit_events": 30,
+      "replayed_whole_circuit_transitions": 6,
+      "final_circuit_sha256": "b8793efe855f861d3a038878f83987e9e4b35da5d64699a5511dd7cb3f66fc8e"
+    }
+  },
+  "multiplier_n75.qasm": {
+    "file": "multiplier_n75.qasm",
+    "dataset": "QASMBenchmarks",
+    "output_file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_bqskit/multiplier_n75.qasm",
+    "status": "completed",
+    "strategy": "bqskit",
+    "pre_opt_strategy": "bqskit",
+    "routing_strategy": "seqpam-quick",
+    "source_fingerprint": "40819a0482b353b60a190164504d2132b7cecd2a365243df464ac344b6ab7ef0",
+    "configuration": {
+      "max_partition_size": 3,
+      "tolerance": 1e-14,
+      "osr_optimization_tolerance": 1e-06,
+      "synthesis_acceptance_tolerance": 1e-10,
+      "circuit_validation_tolerance": 1e-08,
+      "bqskit_synthesis_epsilon": 5.000000000125e-11,
+      "use_float": true,
+      "use_osr": true,
+      "use_graph_search": true,
+      "auto_expand_partition_size": false,
+      "partition_strategy": "ilp",
+      "routing_partition_strategy": "ilp",
+      "pam_swap_cnot_cost": 3.0,
+      "partition_workers": null,
+      "routing_synthesis_workers": 4,
+      "routing_column_max_iteration_loops": 8,
+      "routing_column_synthesis_mode": "topology-osr",
+      "exact_routing_catalog_progress": true,
+      "exact_routing_catalog_progress_interval": 25,
+      "exact_routing_light_sabre_seed_count": 32,
+      "exact_routing_light_sabre_trials_per_seed": 1,
+      "exact_routing_light_guided_cover_count": 8,
+      "exact_routing_minimum_cover_seed_count": 8,
+      "exact_routing_post_catalog_pam_seed_count": 12,
+      "exact_routing_pam_layout_passes": 3,
+      "exact_routing_pam_swap_cnot_costs": [
+        3.0
+      ],
+      "exact_routing_pam_cover_strategies": [
+        "kahn",
+        "ilp",
+        "ilp-routing"
+      ],
+      "exact_routing_lazy_osr": false,
+      "exact_routing_cover_pool_timeout_seconds": 10.0,
+      "exact_routing_token_seed_timeout_seconds": 0.0,
+      "exact_routing_token_seed_cover_strategies": [
+        "light-structural"
+      ],
+      "routing_synthesis_worker_memory_limit_gib": 16.0,
+      "routing_minimum_available_memory_fraction": 0.25,
+      "circuit_worker_memory_limit_gib": null,
+      "exact_routing_flow_seed_max_terms": 500000,
+      "exact_routing_fixed_cover_max_triangle_constraints": 500000,
+      "exact_routing_fixed_cover_backend": "sat",
+      "exact_routing_sat_solver": "glucose42",
+      "exact_routing_sat_max_estimated_clauses": 5000000,
+      "beam": null,
+      "partition_size_schedule": [
+        3
+      ]
+    },
+    "init": {
+      "cnot_equiv": 7350,
+      "single_qubit": 9727,
+      "total_raw": 1957,
+      "qubits": 75,
+      "gate_breakdown": {
+        "CCX": 1080,
+        "CNOT": 870,
+        "X": 7
+      }
+    },
+    "final": {
+      "cnot_equiv": 51508,
+      "single_qubit": 81130,
+      "total_raw": 132638,
+      "qubits": 75,
+      "gate_breakdown": {
+        "CNOT": 51508,
+        "U3": 81130
+      }
+    },
+    "timing": {
+      "a2a": 5023.52,
+      "routing": 3612.43,
+      "optimization": 18146.25,
+      "total": 26783.72
+    },
+    "all_to_all": {
+      "cnot_equiv": 6047,
+      "single_qubit": 8059,
+      "total_raw": 14106,
+      "qubits": 75,
+      "gate_breakdown": {
+        "CNOT": 6047,
+        "U3": 8059
+      }
+    },
+    "routed": {
+      "cnot_equiv": 52912,
+      "single_qubit": 35563,
+      "total_raw": 58477,
+      "qubits": 75,
+      "gate_breakdown": {
+        "CNOT": 7915,
+        "RX": 7913,
+        "RY": 15826,
+        "RZ": 7913,
+        "SWAP": 14999,
+        "U3": 3911
+      }
+    },
+    "rewrite_audit": {
+      "schema_version": 2,
+      "file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_bqskit/multiplier_n75.audit.json.gz",
+      "sha256": "a228106b3c29191fdab5bf5e08ba30f5b4d6ffbf1d1b87dcf13f32c845447df3",
+      "summary": {
+        "events": 457992,
+        "rewrites": 457935,
+        "accepted_rewrites": 145618,
+        "failed_synthesis_attempts": 0,
+        "fallbacks": 0,
+        "candidate_tolerance_misses": 0
+      },
+      "verified_rewrites": 457935,
+      "accepted_rewrites": 145618,
+      "worst_process_infidelity": 1.7244206063082856e-11,
+      "worst_accepted_process_infidelity": 1.7244206063082856e-11,
+      "candidate_tolerance_misses": 0,
+      "accepted_spectral_error_bound": 0.0002667446796428197,
+      "replayed_native_rounds": 0,
+      "replayed_bqskit_invocations": 48,
+      "replayed_pam_routing_passes": 1,
+      "replayed_placement_passes": 2,
+      "replayed_qiskit_sabre_passes": 0,
+      "replayed_exact_osr_routing_passes": 0,
+      "replayed_squander_sabre_passes": 0,
+      "replayed_bqskit_stages": 3,
+      "chained_bqskit_events": 51,
+      "replayed_whole_circuit_transitions": 6,
+      "final_circuit_sha256": "e6460a79ae8aca9c16aa4e55e846ac1106097d509e7fb6808001adcb88aa883e"
+    }
+  }
+}
