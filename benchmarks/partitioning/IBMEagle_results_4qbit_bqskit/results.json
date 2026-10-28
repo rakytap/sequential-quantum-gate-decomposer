@@ -1,0 +1,3766 @@
+{
+  "tof_3.qasm": {
+    "file": "tof_3.qasm",
+    "dataset": "IBMEagle",
+    "output_file": "benchmarks/partitioning/IBMEagle_results_4qbit_bqskit/tof_3.qasm",
+    "status": "completed",
+    "strategy": "bqskit",
+    "pre_opt_strategy": "bqskit",
+    "routing_strategy": "seqpam-quick",
+    "source_fingerprint": "30ce6c2aa6d98af9ec3a7914f7f2e4cea92470fabe0899cadece1302f614e430",
+    "configuration": {
+      "max_partition_size": 4,
+      "tolerance": 1e-14,
+      "osr_optimization_tolerance": 1e-06,
+      "synthesis_acceptance_tolerance": 1e-10,
+      "circuit_validation_tolerance": 1e-08,
+      "bqskit_synthesis_epsilon": 5.000000000125e-11,
+      "use_float": true,
+      "use_osr": true,
+      "use_graph_search": true,
+      "auto_expand_partition_size": false,
+      "partition_strategy": "ilp",
+      "routing_partition_strategy": "ilp",
+      "pam_swap_cnot_cost": 3.0,
+      "partition_workers": null,
+      "routing_synthesis_workers": 4,
+      "routing_column_max_iteration_loops": 8,
+      "routing_column_synthesis_mode": "topology-osr",
+      "exact_routing_catalog_progress": true,
+      "exact_routing_catalog_progress_interval": 25,
+      "exact_routing_light_sabre_seed_count": 32,
+      "exact_routing_light_sabre_trials_per_seed": 1,
+      "exact_routing_light_guided_cover_count": 8,
+      "exact_routing_minimum_cover_seed_count": 8,
+      "exact_routing_post_catalog_pam_seed_count": 12,
+      "exact_routing_pam_layout_passes": 3,
+      "exact_routing_pam_swap_cnot_costs": [
+        3.0
+      ],
+      "exact_routing_pam_cover_strategies": [
+        "kahn",
+        "ilp",
+        "ilp-routing"
+      ],
+      "exact_routing_lazy_osr": false,
+      "exact_routing_cover_pool_timeout_seconds": 10.0,
+      "exact_routing_token_seed_timeout_seconds": 0.0,
+      "exact_routing_token_seed_cover_strategies": [
+        "light-structural"
+      ],
+      "routing_synthesis_worker_memory_limit_gib": 16.0,
+      "routing_minimum_available_memory_fraction": 0.25,
+      "circuit_worker_memory_limit_gib": null,
+      "exact_routing_flow_seed_max_terms": 500000,
+      "exact_routing_fixed_cover_max_triangle_constraints": 500000,
+      "exact_routing_fixed_cover_backend": "sat",
+      "exact_routing_sat_solver": "glucose42",
+      "exact_routing_sat_max_estimated_clauses": 5000000,
+      "beam": null,
+      "partition_size_schedule": [
+        4
+      ]
+    },
+    "init": {
+      "cnot_equiv": 18,
+      "single_qubit": 39,
+      "total_raw": 15,
+      "qubits": 5,
+      "gate_breakdown": {
+        "CCX": 3,
+        "H": 12
+      }
+    },
+    "final": {
+      "cnot_equiv": 19,
+      "single_qubit": 27,
+      "total_raw": 46,
+      "qubits": 5,
+      "gate_breakdown": {
+        "CNOT": 19,
+        "U3": 27
+      }
+    },
+    "timing": {
+      "a2a": 1060.21,
+      "routing": 22.58,
+      "optimization": 1976.88,
+      "total": 3059.67
+    },
+    "all_to_all": {
+      "cnot_equiv": 18,
+      "single_qubit": 22,
+      "total_raw": 40,
+      "qubits": 5,
+      "gate_breakdown": {
+        "CNOT": 18,
+        "U3": 22
+      }
+    },
+    "routed": {
+      "cnot_equiv": 19,
+      "single_qubit": 88,
+      "total_raw": 107,
+      "qubits": 5,
+      "gate_breakdown": {
+        "CNOT": 19,
+        "RX": 19,
+        "RY": 38,
+        "RZ": 19,
+        "U3": 12
+      }
+    },
+    "rewrite_audit": {
+      "schema_version": 2,
+      "file": "benchmarks/partitioning/IBMEagle_results_4qbit_bqskit/tof_3.audit.json.gz",
+      "sha256": "81a112bb8b1ae33e7d047223e51468921846e5c482f1ee917966ca947d6e565f",
+      "summary": {
+        "events": 98,
+        "rewrites": 78,
+        "accepted_rewrites": 63,
+        "failed_synthesis_attempts": 0,
+        "fallbacks": 0,
+        "candidate_tolerance_misses": 0
+      },
+      "verified_rewrites": 78,
+      "accepted_rewrites": 63,
+      "worst_process_infidelity": 8.881784197001252e-16,
+      "worst_accepted_process_infidelity": 8.881784197001252e-16,
+      "candidate_tolerance_misses": 0,
+      "accepted_spectral_error_bound": 1.4451761427545284e-07,
+      "replayed_native_rounds": 0,
+      "replayed_bqskit_invocations": 11,
+      "replayed_pam_routing_passes": 1,
+      "replayed_placement_passes": 2,
+      "replayed_qiskit_sabre_passes": 0,
+      "replayed_exact_osr_routing_passes": 0,
+      "replayed_squander_sabre_passes": 0,
+      "replayed_bqskit_stages": 3,
+      "chained_bqskit_events": 14,
+      "replayed_whole_circuit_transitions": 6,
+      "final_circuit_sha256": "a33fd63e24bbab10e2a4b7d9cc6f86c67d2c57ad26bed746c943aee3285f417a"
+    }
+  },
+  "barenco_tof_3.qasm": {
+    "file": "barenco_tof_3.qasm",
+    "dataset": "IBMEagle",
+    "output_file": "benchmarks/partitioning/IBMEagle_results_4qbit_bqskit/barenco_tof_3.qasm",
+    "status": "completed",
+    "strategy": "bqskit",
+    "pre_opt_strategy": "bqskit",
+    "routing_strategy": "seqpam-quick",
+    "source_fingerprint": "30ce6c2aa6d98af9ec3a7914f7f2e4cea92470fabe0899cadece1302f614e430",
+    "configuration": {
+      "max_partition_size": 4,
+      "tolerance": 1e-14,
+      "osr_optimization_tolerance": 1e-06,
+      "synthesis_acceptance_tolerance": 1e-10,
+      "circuit_validation_tolerance": 1e-08,
+      "bqskit_synthesis_epsilon": 5.000000000125e-11,
+      "use_float": true,
+      "use_osr": true,
+      "use_graph_search": true,
+      "auto_expand_partition_size": false,
+      "partition_strategy": "ilp",
+      "routing_partition_strategy": "ilp",
+      "pam_swap_cnot_cost": 3.0,
+      "partition_workers": null,
+      "routing_synthesis_workers": 4,
+      "routing_column_max_iteration_loops": 8,
+      "routing_column_synthesis_mode": "topology-osr",
+      "exact_routing_catalog_progress": true,
+      "exact_routing_catalog_progress_interval": 25,
+      "exact_routing_light_sabre_seed_count": 32,
+      "exact_routing_light_sabre_trials_per_seed": 1,
+      "exact_routing_light_guided_cover_count": 8,
+      "exact_routing_minimum_cover_seed_count": 8,
+      "exact_routing_post_catalog_pam_seed_count": 12,
+      "exact_routing_pam_layout_passes": 3,
+      "exact_routing_pam_swap_cnot_costs": [
+        3.0
+      ],
+      "exact_routing_pam_cover_strategies": [
+        "kahn",
+        "ilp",
+        "ilp-routing"
+      ],
+      "exact_routing_lazy_osr": false,
+      "exact_routing_cover_pool_timeout_seconds": 10.0,
+      "exact_routing_token_seed_timeout_seconds": 0.0,
+      "exact_routing_token_seed_cover_strategies": [
+        "light-structural"
+      ],
+      "routing_synthesis_worker_memory_limit_gib": 16.0,
+      "routing_minimum_available_memory_fraction": 0.25,
+      "circuit_worker_memory_limit_gib": null,
+      "exact_routing_flow_seed_max_terms": 500000,
+      "exact_routing_fixed_cover_max_triangle_constraints": 500000,
+      "exact_routing_fixed_cover_backend": "sat",
+      "exact_routing_sat_solver": "glucose42",
+      "exact_routing_sat_max_estimated_clauses": 5000000,
+      "beam": null,
+      "partition_size_schedule": [
+        4
+      ]
+    },
+    "init": {
+      "cnot_equiv": 24,
+      "single_qubit": 50,
+      "total_raw": 18,
+      "qubits": 5,
+      "gate_breakdown": {
+        "CCX": 4,
+        "H": 14
+      }
+    },
+    "final": {
+      "cnot_equiv": 27,
+      "single_qubit": 43,
+      "total_raw": 70,
+      "qubits": 5,
+      "gate_breakdown": {
+        "CNOT": 27,
+        "U3": 43
+      }
+    },
+    "timing": {
+      "a2a": 1684.63,
+      "routing": 29.89,
+      "optimization": 356.32,
+      "total": 2070.84
+    },
+    "all_to_all": {
+      "cnot_equiv": 24,
+      "single_qubit": 35,
+      "total_raw": 59,
+      "qubits": 5,
+      "gate_breakdown": {
+        "CNOT": 24,
+        "U3": 35
+      }
+    },
+    "routed": {
+      "cnot_equiv": 27,
+      "single_qubit": 123,
+      "total_raw": 150,
+      "qubits": 5,
+      "gate_breakdown": {
+        "CNOT": 27,
+        "RX": 27,
+        "RY": 54,
+        "RZ": 27,
+        "U3": 15
+      }
+    },
+    "rewrite_audit": {
+      "schema_version": 2,
+      "file": "benchmarks/partitioning/IBMEagle_results_4qbit_bqskit/barenco_tof_3.audit.json.gz",
+      "sha256": "7e4e1d40fd6f74b90d1f37b7c528eefb2825878f384547dfef76d80a7a6039d2",
+      "summary": {
+        "events": 123,
+        "rewrites": 103,
+        "accepted_rewrites": 81,
+        "failed_synthesis_attempts": 0,
+        "fallbacks": 0,
+        "candidate_tolerance_misses": 0
+      },
+      "verified_rewrites": 103,
+      "accepted_rewrites": 81,
+      "worst_process_infidelity": 4.440892098500626e-16,
+      "worst_accepted_process_infidelity": 4.440892098500626e-16,
+      "candidate_tolerance_misses": 0,
+      "accepted_spectral_error_bound": 8.276876765097843e-08,
+      "replayed_native_rounds": 0,
+      "replayed_bqskit_invocations": 11,
+      "replayed_pam_routing_passes": 1,
+      "replayed_placement_passes": 2,
+      "replayed_qiskit_sabre_passes": 0,
+      "replayed_exact_osr_routing_passes": 0,
+      "replayed_squander_sabre_passes": 0,
+      "replayed_bqskit_stages": 3,
+      "chained_bqskit_events": 14,
+      "replayed_whole_circuit_transitions": 6,
+      "final_circuit_sha256": "533f43ae2cca57244fa6dff60905250fda88ae8e7a796733cca428ffd21d25b2"
+    }
+  },
+  "mod5_4.qasm": {
+    "file": "mod5_4.qasm",
+    "dataset": "IBMEagle",
+    "output_file": "benchmarks/partitioning/IBMEagle_results_4qbit_bqskit/mod5_4.qasm",
+    "status": "completed",
+    "strategy": "bqskit",
+    "pre_opt_strategy": "bqskit",
+    "routing_strategy": "seqpam-quick",
+    "source_fingerprint": "30ce6c2aa6d98af9ec3a7914f7f2e4cea92470fabe0899cadece1302f614e430",
+    "configuration": {
+      "max_partition_size": 4,
+      "tolerance": 1e-14,
+      "osr_optimization_tolerance": 1e-06,
+      "synthesis_acceptance_tolerance": 1e-10,
+      "circuit_validation_tolerance": 1e-08,
+      "bqskit_synthesis_epsilon": 5.000000000125e-11,
+      "use_float": true,
+      "use_osr": true,
+      "use_graph_search": true,
+      "auto_expand_partition_size": false,
+      "partition_strategy": "ilp",
+      "routing_partition_strategy": "ilp",
+      "pam_swap_cnot_cost": 3.0,
+      "partition_workers": null,
+      "routing_synthesis_workers": 4,
+      "routing_column_max_iteration_loops": 8,
+      "routing_column_synthesis_mode": "topology-osr",
+      "exact_routing_catalog_progress": true,
+      "exact_routing_catalog_progress_interval": 25,
+      "exact_routing_light_sabre_seed_count": 32,
+      "exact_routing_light_sabre_trials_per_seed": 1,
+      "exact_routing_light_guided_cover_count": 8,
+      "exact_routing_minimum_cover_seed_count": 8,
+      "exact_routing_post_catalog_pam_seed_count": 12,
+      "exact_routing_pam_layout_passes": 3,
+      "exact_routing_pam_swap_cnot_costs": [
+        3.0
+      ],
+      "exact_routing_pam_cover_strategies": [
+        "kahn",
+        "ilp",
+        "ilp-routing"
+      ],
+      "exact_routing_lazy_osr": false,
+      "exact_routing_cover_pool_timeout_seconds": 10.0,
+      "exact_routing_token_seed_timeout_seconds": 0.0,
+      "exact_routing_token_seed_cover_strategies": [
+        "light-structural"
+      ],
+      "routing_synthesis_worker_memory_limit_gib": 16.0,
+      "routing_minimum_available_memory_fraction": 0.25,
+      "circuit_worker_memory_limit_gib": null,
+      "exact_routing_flow_seed_max_terms": 500000,
+      "exact_routing_fixed_cover_max_triangle_constraints": 500000,
+      "exact_routing_fixed_cover_backend": "sat",
+      "exact_routing_sat_solver": "glucose42",
+      "exact_routing_sat_max_estimated_clauses": 5000000,
+      "beam": null,
+      "partition_size_schedule": [
+        4
+      ]
+    },
+    "init": {
+      "cnot_equiv": 28,
+      "single_qubit": 51,
+      "total_raw": 23,
+      "qubits": 5,
+      "gate_breakdown": {
+        "CCX": 4,
+        "CNOT": 4,
+        "H": 14,
+        "X": 1
+      }
+    },
+    "final": {
+      "cnot_equiv": 19,
+      "single_qubit": 23,
+      "total_raw": 42,
+      "qubits": 5,
+      "gate_breakdown": {
+        "CNOT": 19,
+        "U3": 23
+      }
+    },
+    "timing": {
+      "a2a": 17416.73,
+      "routing": 13.44,
+      "optimization": 1508.77,
+      "total": 18938.94
+    },
+    "all_to_all": {
+      "cnot_equiv": 12,
+      "single_qubit": 16,
+      "total_raw": 28,
+      "qubits": 5,
+      "gate_breakdown": {
+        "CNOT": 12,
+        "U3": 16
+      }
+    },
+    "routed": {
+      "cnot_equiv": 23,
+      "single_qubit": 94,
+      "total_raw": 115,
+      "qubits": 5,
+      "gate_breakdown": {
+        "CNOT": 20,
+        "RX": 20,
+        "RY": 40,
+        "RZ": 20,
+        "SWAP": 1,
+        "U3": 14
+      }
+    },
+    "rewrite_audit": {
+      "schema_version": 2,
+      "file": "benchmarks/partitioning/IBMEagle_results_4qbit_bqskit/mod5_4.audit.json.gz",
+      "sha256": "8f34b8fbfc1cca03446ba4d740ee2ddd586d921afe0369993fda7b4fa1de6618",
+      "summary": {
+        "events": 137,
+        "rewrites": 113,
+        "accepted_rewrites": 101,
+        "failed_synthesis_attempts": 0,
+        "fallbacks": 0,
+        "candidate_tolerance_misses": 0
+      },
+      "verified_rewrites": 113,
+      "accepted_rewrites": 101,
+      "worst_process_infidelity": 6.661338147750939e-16,
+      "worst_accepted_process_infidelity": 6.661338147750939e-16,
+      "candidate_tolerance_misses": 0,
+      "accepted_spectral_error_bound": 6.497604597202905e-08,
+      "replayed_native_rounds": 0,
+      "replayed_bqskit_invocations": 15,
+      "replayed_pam_routing_passes": 1,
+      "replayed_placement_passes": 2,
+      "replayed_qiskit_sabre_passes": 0,
+      "replayed_exact_osr_routing_passes": 0,
+      "replayed_squander_sabre_passes": 0,
+      "replayed_bqskit_stages": 3,
+      "chained_bqskit_events": 18,
+      "replayed_whole_circuit_transitions": 6,
+      "final_circuit_sha256": "b750f9357ca30127ffca16aaa1271c1748d9e3681ef49da40ee3ae1e08fd38d3"
+    }
+  },
+  "tof_4.qasm": {
+    "file": "tof_4.qasm",
+    "dataset": "IBMEagle",
+    "output_file": "benchmarks/partitioning/IBMEagle_results_4qbit_bqskit/tof_4.qasm",
+    "status": "completed",
+    "strategy": "bqskit",
+    "pre_opt_strategy": "bqskit",
+    "routing_strategy": "seqpam-quick",
+    "source_fingerprint": "30ce6c2aa6d98af9ec3a7914f7f2e4cea92470fabe0899cadece1302f614e430",
+    "configuration": {
+      "max_partition_size": 4,
+      "tolerance": 1e-14,
+      "osr_optimization_tolerance": 1e-06,
+      "synthesis_acceptance_tolerance": 1e-10,
+      "circuit_validation_tolerance": 1e-08,
+      "bqskit_synthesis_epsilon": 5.000000000125e-11,
+      "use_float": true,
+      "use_osr": true,
+      "use_graph_search": true,
+      "auto_expand_partition_size": false,
+      "partition_strategy": "ilp",
+      "routing_partition_strategy": "ilp",
+      "pam_swap_cnot_cost": 3.0,
+      "partition_workers": null,
+      "routing_synthesis_workers": 4,
+      "routing_column_max_iteration_loops": 8,
+      "routing_column_synthesis_mode": "topology-osr",
+      "exact_routing_catalog_progress": true,
+      "exact_routing_catalog_progress_interval": 25,
+      "exact_routing_light_sabre_seed_count": 32,
+      "exact_routing_light_sabre_trials_per_seed": 1,
+      "exact_routing_light_guided_cover_count": 8,
+      "exact_routing_minimum_cover_seed_count": 8,
+      "exact_routing_post_catalog_pam_seed_count": 12,
+      "exact_routing_pam_layout_passes": 3,
+      "exact_routing_pam_swap_cnot_costs": [
+        3.0
+      ],
+      "exact_routing_pam_cover_strategies": [
+        "kahn",
+        "ilp",
+        "ilp-routing"
+      ],
+      "exact_routing_lazy_osr": false,
+      "exact_routing_cover_pool_timeout_seconds": 10.0,
+      "exact_routing_token_seed_timeout_seconds": 0.0,
+      "exact_routing_token_seed_cover_strategies": [
+        "light-structural"
+      ],
+      "routing_synthesis_worker_memory_limit_gib": 16.0,
+      "routing_minimum_available_memory_fraction": 0.25,
+      "circuit_worker_memory_limit_gib": null,
+      "exact_routing_flow_seed_max_terms": 500000,
+      "exact_routing_fixed_cover_max_triangle_constraints": 500000,
+      "exact_routing_fixed_cover_backend": "sat",
+      "exact_routing_sat_solver": "glucose42",
+      "exact_routing_sat_max_estimated_clauses": 5000000,
+      "beam": null,
+      "partition_size_schedule": [
+        4
+      ]
+    },
+    "init": {
+      "cnot_equiv": 30,
+      "single_qubit": 65,
+      "total_raw": 25,
+      "qubits": 7,
+      "gate_breakdown": {
+        "CCX": 5,
+        "H": 20
+      }
+    },
+    "final": {
+      "cnot_equiv": 34,
+      "single_qubit": 56,
+      "total_raw": 90,
+      "qubits": 7,
+      "gate_breakdown": {
+        "CNOT": 34,
+        "U3": 56
+      }
+    },
+    "timing": {
+      "a2a": 1860.91,
+      "routing": 63.82,
+      "optimization": 1874.9,
+      "total": 3799.64
+    },
+    "all_to_all": {
+      "cnot_equiv": 30,
+      "single_qubit": 41,
+      "total_raw": 71,
+      "qubits": 7,
+      "gate_breakdown": {
+        "CNOT": 30,
+        "U3": 41
+      }
+    },
+    "routed": {
+      "cnot_equiv": 36,
+      "single_qubit": 159,
+      "total_raw": 195,
+      "qubits": 7,
+      "gate_breakdown": {
+        "CNOT": 36,
+        "RX": 36,
+        "RY": 72,
+        "RZ": 36,
+        "U3": 15
+      }
+    },
+    "rewrite_audit": {
+      "schema_version": 2,
+      "file": "benchmarks/partitioning/IBMEagle_results_4qbit_bqskit/tof_4.audit.json.gz",
+      "sha256": "30f7d0dc5ccb407b38291499bf4905a78acc57ac63639f470f46c97e202fec08",
+      "summary": {
+        "events": 142,
+        "rewrites": 122,
+        "accepted_rewrites": 99,
+        "failed_synthesis_attempts": 0,
+        "fallbacks": 0,
+        "candidate_tolerance_misses": 0
+      },
+      "verified_rewrites": 122,
+      "accepted_rewrites": 99,
+      "worst_process_infidelity": 6.661338147750939e-16,
+      "worst_accepted_process_infidelity": 6.661338147750939e-16,
+      "candidate_tolerance_misses": 0,
+      "accepted_spectral_error_bound": 9.165917032046878e-08,
+      "replayed_native_rounds": 0,
+      "replayed_bqskit_invocations": 11,
+      "replayed_pam_routing_passes": 1,
+      "replayed_placement_passes": 2,
+      "replayed_qiskit_sabre_passes": 0,
+      "replayed_exact_osr_routing_passes": 0,
+      "replayed_squander_sabre_passes": 0,
+      "replayed_bqskit_stages": 3,
+      "chained_bqskit_events": 14,
+      "replayed_whole_circuit_transitions": 6,
+      "final_circuit_sha256": "fa9a285ca1af6a1f19a0d210789cda7d361aa8f8cfa0c8f5368be524d2c84903"
+    }
+  },
+  "tof_5.qasm": {
+    "file": "tof_5.qasm",
+    "dataset": "IBMEagle",
+    "output_file": "benchmarks/partitioning/IBMEagle_results_4qbit_bqskit/tof_5.qasm",
+    "status": "completed",
+    "strategy": "bqskit",
+    "pre_opt_strategy": "bqskit",
+    "routing_strategy": "seqpam-quick",
+    "source_fingerprint": "30ce6c2aa6d98af9ec3a7914f7f2e4cea92470fabe0899cadece1302f614e430",
+    "configuration": {
+      "max_partition_size": 4,
+      "tolerance": 1e-14,
+      "osr_optimization_tolerance": 1e-06,
+      "synthesis_acceptance_tolerance": 1e-10,
+      "circuit_validation_tolerance": 1e-08,
+      "bqskit_synthesis_epsilon": 5.000000000125e-11,
+      "use_float": true,
+      "use_osr": true,
+      "use_graph_search": true,
+      "auto_expand_partition_size": false,
+      "partition_strategy": "ilp",
+      "routing_partition_strategy": "ilp",
+      "pam_swap_cnot_cost": 3.0,
+      "partition_workers": null,
+      "routing_synthesis_workers": 4,
+      "routing_column_max_iteration_loops": 8,
+      "routing_column_synthesis_mode": "topology-osr",
+      "exact_routing_catalog_progress": true,
+      "exact_routing_catalog_progress_interval": 25,
+      "exact_routing_light_sabre_seed_count": 32,
+      "exact_routing_light_sabre_trials_per_seed": 1,
+      "exact_routing_light_guided_cover_count": 8,
+      "exact_routing_minimum_cover_seed_count": 8,
+      "exact_routing_post_catalog_pam_seed_count": 12,
+      "exact_routing_pam_layout_passes": 3,
+      "exact_routing_pam_swap_cnot_costs": [
+        3.0
+      ],
+      "exact_routing_pam_cover_strategies": [
+        "kahn",
+        "ilp",
+        "ilp-routing"
+      ],
+      "exact_routing_lazy_osr": false,
+      "exact_routing_cover_pool_timeout_seconds": 10.0,
+      "exact_routing_token_seed_timeout_seconds": 0.0,
+      "exact_routing_token_seed_cover_strategies": [
+        "light-structural"
+      ],
+      "routing_synthesis_worker_memory_limit_gib": 16.0,
+      "routing_minimum_available_memory_fraction": 0.25,
+      "circuit_worker_memory_limit_gib": null,
+      "exact_routing_flow_seed_max_terms": 500000,
+      "exact_routing_fixed_cover_max_triangle_constraints": 500000,
+      "exact_routing_fixed_cover_backend": "sat",
+      "exact_routing_sat_solver": "glucose42",
+      "exact_routing_sat_max_estimated_clauses": 5000000,
+      "beam": null,
+      "partition_size_schedule": [
+        4
+      ]
+    },
+    "init": {
+      "cnot_equiv": 42,
+      "single_qubit": 91,
+      "total_raw": 35,
+      "qubits": 9,
+      "gate_breakdown": {
+        "CCX": 7,
+        "H": 28
+      }
+    },
+    "final": {
+      "cnot_equiv": 48,
+      "single_qubit": 81,
+      "total_raw": 129,
+      "qubits": 9,
+      "gate_breakdown": {
+        "CNOT": 48,
+        "U3": 81
+      }
+    },
+    "timing": {
+      "a2a": 6622.01,
+      "routing": 42.56,
+      "optimization": 893.67,
+      "total": 7558.25
+    },
+    "all_to_all": {
+      "cnot_equiv": 41,
+      "single_qubit": 58,
+      "total_raw": 99,
+      "qubits": 9,
+      "gate_breakdown": {
+        "CNOT": 41,
+        "U3": 58
+      }
+    },
+    "routed": {
+      "cnot_equiv": 53,
+      "single_qubit": 235,
+      "total_raw": 288,
+      "qubits": 9,
+      "gate_breakdown": {
+        "CNOT": 53,
+        "RX": 51,
+        "RY": 102,
+        "RZ": 51,
+        "U3": 31
+      }
+    },
+    "rewrite_audit": {
+      "schema_version": 2,
+      "file": "benchmarks/partitioning/IBMEagle_results_4qbit_bqskit/tof_5.audit.json.gz",
+      "sha256": "090ff8019cdb0aca9b1efd945731170b34dfd5c2cbb2d534a6799887cbd237e3",
+      "summary": {
+        "events": 326,
+        "rewrites": 304,
+        "accepted_rewrites": 254,
+        "failed_synthesis_attempts": 0,
+        "fallbacks": 0,
+        "candidate_tolerance_misses": 0
+      },
+      "verified_rewrites": 304,
+      "accepted_rewrites": 254,
+      "worst_process_infidelity": 1.7763568394002505e-15,
+      "worst_accepted_process_infidelity": 4.440892098500626e-16,
+      "candidate_tolerance_misses": 0,
+      "accepted_spectral_error_bound": 6.488937430520013e-08,
+      "replayed_native_rounds": 0,
+      "replayed_bqskit_invocations": 13,
+      "replayed_pam_routing_passes": 1,
+      "replayed_placement_passes": 2,
+      "replayed_qiskit_sabre_passes": 0,
+      "replayed_exact_osr_routing_passes": 0,
+      "replayed_squander_sabre_passes": 0,
+      "replayed_bqskit_stages": 3,
+      "chained_bqskit_events": 16,
+      "replayed_whole_circuit_transitions": 6,
+      "final_circuit_sha256": "81030d0db3867467d32ac4df4644fb18366f141e64322cf54ed8ee7fede622ae"
+    }
+  },
+  "barenco_tof_4.qasm": {
+    "file": "barenco_tof_4.qasm",
+    "dataset": "IBMEagle",
+    "output_file": "benchmarks/partitioning/IBMEagle_results_4qbit_bqskit/barenco_tof_4.qasm",
+    "status": "completed",
+    "strategy": "bqskit",
+    "pre_opt_strategy": "bqskit",
+    "routing_strategy": "seqpam-quick",
+    "source_fingerprint": "30ce6c2aa6d98af9ec3a7914f7f2e4cea92470fabe0899cadece1302f614e430",
+    "configuration": {
+      "max_partition_size": 4,
+      "tolerance": 1e-14,
+      "osr_optimization_tolerance": 1e-06,
+      "synthesis_acceptance_tolerance": 1e-10,
+      "circuit_validation_tolerance": 1e-08,
+      "bqskit_synthesis_epsilon": 5.000000000125e-11,
+      "use_float": true,
+      "use_osr": true,
+      "use_graph_search": true,
+      "auto_expand_partition_size": false,
+      "partition_strategy": "ilp",
+      "routing_partition_strategy": "ilp",
+      "pam_swap_cnot_cost": 3.0,
+      "partition_workers": null,
+      "routing_synthesis_workers": 4,
+      "routing_column_max_iteration_loops": 8,
+      "routing_column_synthesis_mode": "topology-osr",
+      "exact_routing_catalog_progress": true,
+      "exact_routing_catalog_progress_interval": 25,
+      "exact_routing_light_sabre_seed_count": 32,
+      "exact_routing_light_sabre_trials_per_seed": 1,
+      "exact_routing_light_guided_cover_count": 8,
+      "exact_routing_minimum_cover_seed_count": 8,
+      "exact_routing_post_catalog_pam_seed_count": 12,
+      "exact_routing_pam_layout_passes": 3,
+      "exact_routing_pam_swap_cnot_costs": [
+        3.0
+      ],
+      "exact_routing_pam_cover_strategies": [
+        "kahn",
+        "ilp",
+        "ilp-routing"
+      ],
+      "exact_routing_lazy_osr": false,
+      "exact_routing_cover_pool_timeout_seconds": 10.0,
+      "exact_routing_token_seed_timeout_seconds": 0.0,
+      "exact_routing_token_seed_cover_strategies": [
+        "light-structural"
+      ],
+      "routing_synthesis_worker_memory_limit_gib": 16.0,
+      "routing_minimum_available_memory_fraction": 0.25,
+      "circuit_worker_memory_limit_gib": null,
+      "exact_routing_flow_seed_max_terms": 500000,
+      "exact_routing_fixed_cover_max_triangle_constraints": 500000,
+      "exact_routing_fixed_cover_backend": "sat",
+      "exact_routing_sat_solver": "glucose42",
+      "exact_routing_sat_max_estimated_clauses": 5000000,
+      "beam": null,
+      "partition_size_schedule": [
+        4
+      ]
+    },
+    "init": {
+      "cnot_equiv": 48,
+      "single_qubit": 98,
+      "total_raw": 34,
+      "qubits": 7,
+      "gate_breakdown": {
+        "CCX": 8,
+        "H": 26
+      }
+    },
+    "final": {
+      "cnot_equiv": 50,
+      "single_qubit": 80,
+      "total_raw": 130,
+      "qubits": 7,
+      "gate_breakdown": {
+        "CNOT": 50,
+        "U3": 80
+      }
+    },
+    "timing": {
+      "a2a": 1375.28,
+      "routing": 40.65,
+      "optimization": 502.29,
+      "total": 1918.21
+    },
+    "all_to_all": {
+      "cnot_equiv": 44,
+      "single_qubit": 58,
+      "total_raw": 102,
+      "qubits": 7,
+      "gate_breakdown": {
+        "CNOT": 44,
+        "U3": 58
+      }
+    },
+    "routed": {
+      "cnot_equiv": 52,
+      "single_qubit": 232,
+      "total_raw": 284,
+      "qubits": 7,
+      "gate_breakdown": {
+        "CNOT": 52,
+        "RX": 52,
+        "RY": 104,
+        "RZ": 52,
+        "U3": 24
+      }
+    },
+    "rewrite_audit": {
+      "schema_version": 2,
+      "file": "benchmarks/partitioning/IBMEagle_results_4qbit_bqskit/barenco_tof_4.audit.json.gz",
+      "sha256": "a463bca9201b386322c31fda4ba2417ed5ef034c53de856d0ad2072c5dace1ab",
+      "summary": {
+        "events": 213,
+        "rewrites": 192,
+        "accepted_rewrites": 147,
+        "failed_synthesis_attempts": 0,
+        "fallbacks": 0,
+        "candidate_tolerance_misses": 0
+      },
+      "verified_rewrites": 192,
+      "accepted_rewrites": 147,
+      "worst_process_infidelity": 8.881784197001252e-16,
+      "worst_accepted_process_infidelity": 6.661338147750939e-16,
+      "candidate_tolerance_misses": 0,
+      "accepted_spectral_error_bound": 1.4225144321396244e-07,
+      "replayed_native_rounds": 0,
+      "replayed_bqskit_invocations": 12,
+      "replayed_pam_routing_passes": 1,
+      "replayed_placement_passes": 2,
+      "replayed_qiskit_sabre_passes": 0,
+      "replayed_exact_osr_routing_passes": 0,
+      "replayed_squander_sabre_passes": 0,
+      "replayed_bqskit_stages": 3,
+      "chained_bqskit_events": 15,
+      "replayed_whole_circuit_transitions": 6,
+      "final_circuit_sha256": "704bde73871b39db5e520eaa91cecca78f253b01310efe95ab32e3e31f53fdb0"
+    }
+  },
+  "mod_mult_55.qasm": {
+    "file": "mod_mult_55.qasm",
+    "dataset": "IBMEagle",
+    "output_file": "benchmarks/partitioning/IBMEagle_results_4qbit_bqskit/mod_mult_55.qasm",
+    "status": "completed",
+    "strategy": "bqskit",
+    "pre_opt_strategy": "bqskit",
+    "routing_strategy": "seqpam-quick",
+    "source_fingerprint": "30ce6c2aa6d98af9ec3a7914f7f2e4cea92470fabe0899cadece1302f614e430",
+    "configuration": {
+      "max_partition_size": 4,
+      "tolerance": 1e-14,
+      "osr_optimization_tolerance": 1e-06,
+      "synthesis_acceptance_tolerance": 1e-10,
+      "circuit_validation_tolerance": 1e-08,
+      "bqskit_synthesis_epsilon": 5.000000000125e-11,
+      "use_float": true,
+      "use_osr": true,
+      "use_graph_search": true,
+      "auto_expand_partition_size": false,
+      "partition_strategy": "ilp",
+      "routing_partition_strategy": "ilp",
+      "pam_swap_cnot_cost": 3.0,
+      "partition_workers": null,
+      "routing_synthesis_workers": 4,
+      "routing_column_max_iteration_loops": 8,
+      "routing_column_synthesis_mode": "topology-osr",
+      "exact_routing_catalog_progress": true,
+      "exact_routing_catalog_progress_interval": 25,
+      "exact_routing_light_sabre_seed_count": 32,
+      "exact_routing_light_sabre_trials_per_seed": 1,
+      "exact_routing_light_guided_cover_count": 8,
+      "exact_routing_minimum_cover_seed_count": 8,
+      "exact_routing_post_catalog_pam_seed_count": 12,
+      "exact_routing_pam_layout_passes": 3,
+      "exact_routing_pam_swap_cnot_costs": [
+        3.0
+      ],
+      "exact_routing_pam_cover_strategies": [
+        "kahn",
+        "ilp",
+        "ilp-routing"
+      ],
+      "exact_routing_lazy_osr": false,
+      "exact_routing_cover_pool_timeout_seconds": 10.0,
+      "exact_routing_token_seed_timeout_seconds": 0.0,
+      "exact_routing_token_seed_cover_strategies": [
+        "light-structural"
+      ],
+      "routing_synthesis_worker_memory_limit_gib": 16.0,
+      "routing_minimum_available_memory_fraction": 0.25,
+      "circuit_worker_memory_limit_gib": null,
+      "exact_routing_flow_seed_max_terms": 500000,
+      "exact_routing_fixed_cover_max_triangle_constraints": 500000,
+      "exact_routing_fixed_cover_backend": "sat",
+      "exact_routing_sat_solver": "glucose42",
+      "exact_routing_sat_max_estimated_clauses": 5000000,
+      "beam": null,
+      "partition_size_schedule": [
+        4
+      ]
+    },
+    "init": {
+      "cnot_equiv": 48,
+      "single_qubit": 99,
+      "total_raw": 49,
+      "qubits": 9,
+      "gate_breakdown": {
+        "CCX": 7,
+        "CNOT": 6,
+        "H": 28,
+        "X": 8
+      }
+    },
+    "final": {
+      "cnot_equiv": 68,
+      "single_qubit": 96,
+      "total_raw": 164,
+      "qubits": 9,
+      "gate_breakdown": {
+        "CNOT": 68,
+        "U3": 96
+      }
+    },
+    "timing": {
+      "a2a": 51969.12,
+      "routing": 31.27,
+      "optimization": 7219.43,
+      "total": 59219.82
+    },
+    "all_to_all": {
+      "cnot_equiv": 40,
+      "single_qubit": 54,
+      "total_raw": 94,
+      "qubits": 9,
+      "gate_breakdown": {
+        "CNOT": 40,
+        "U3": 54
+      }
+    },
+    "routed": {
+      "cnot_equiv": 95,
+      "single_qubit": 296,
+      "total_raw": 369,
+      "qubits": 9,
+      "gate_breakdown": {
+        "CNOT": 62,
+        "RX": 62,
+        "RY": 124,
+        "RZ": 62,
+        "SWAP": 11,
+        "U3": 48
+      }
+    },
+    "rewrite_audit": {
+      "schema_version": 2,
+      "file": "benchmarks/partitioning/IBMEagle_results_4qbit_bqskit/mod_mult_55.audit.json.gz",
+      "sha256": "2e8641a932e0fa34cbf07bc4be0ee7eba4e61653244b569cb269a2c65b33732c",
+      "summary": {
+        "events": 503,
+        "rewrites": 472,
+        "accepted_rewrites": 324,
+        "failed_synthesis_attempts": 0,
+        "fallbacks": 0,
+        "candidate_tolerance_misses": 0
+      },
+      "verified_rewrites": 472,
+      "accepted_rewrites": 324,
+      "worst_process_infidelity": 1.3322676295501878e-15,
+      "worst_accepted_process_infidelity": 8.881784197001252e-16,
+      "candidate_tolerance_misses": 0,
+      "accepted_spectral_error_bound": 2.2574693296273286e-07,
+      "replayed_native_rounds": 0,
+      "replayed_bqskit_invocations": 22,
+      "replayed_pam_routing_passes": 1,
+      "replayed_placement_passes": 2,
+      "replayed_qiskit_sabre_passes": 0,
+      "replayed_exact_osr_routing_passes": 0,
+      "replayed_squander_sabre_passes": 0,
+      "replayed_bqskit_stages": 3,
+      "chained_bqskit_events": 25,
+      "replayed_whole_circuit_transitions": 6,
+      "final_circuit_sha256": "c44e3cdbacf762d804efbd19ff89401bc249fdc6414bef47dd981483541ed31a"
+    }
+  },
+  "QFT8.qasm": {
+    "file": "QFT8.qasm",
+    "dataset": "IBMEagle",
+    "output_file": "benchmarks/partitioning/IBMEagle_results_4qbit_bqskit/QFT8.qasm",
+    "status": "timeout",
+    "timeout_seconds": 86400.0,
+    "strategy": "bqskit",
+    "pre_opt_strategy": "bqskit",
+    "routing_strategy": "seqpam-quick",
+    "source_fingerprint": "30ce6c2aa6d98af9ec3a7914f7f2e4cea92470fabe0899cadece1302f614e430",
+    "configuration": {
+      "max_partition_size": 4,
+      "tolerance": 1e-14,
+      "osr_optimization_tolerance": 1e-06,
+      "synthesis_acceptance_tolerance": 1e-10,
+      "circuit_validation_tolerance": 1e-08,
+      "bqskit_synthesis_epsilon": 5.000000000125e-11,
+      "use_float": true,
+      "use_osr": true,
+      "use_graph_search": true,
+      "auto_expand_partition_size": false,
+      "partition_strategy": "ilp",
+      "routing_partition_strategy": "ilp",
+      "pam_swap_cnot_cost": 3.0,
+      "partition_workers": null,
+      "routing_synthesis_workers": 4,
+      "routing_column_max_iteration_loops": 8,
+      "routing_column_synthesis_mode": "topology-osr",
+      "exact_routing_catalog_progress": true,
+      "exact_routing_catalog_progress_interval": 25,
+      "exact_routing_light_sabre_seed_count": 32,
+      "exact_routing_light_sabre_trials_per_seed": 1,
+      "exact_routing_light_guided_cover_count": 8,
+      "exact_routing_minimum_cover_seed_count": 8,
+      "exact_routing_post_catalog_pam_seed_count": 12,
+      "exact_routing_pam_layout_passes": 3,
+      "exact_routing_pam_swap_cnot_costs": [
+        3.0
+      ],
+      "exact_routing_pam_cover_strategies": [
+        "kahn",
+        "ilp",
+        "ilp-routing"
+      ],
+      "exact_routing_lazy_osr": false,
+      "exact_routing_cover_pool_timeout_seconds": 10.0,
+      "exact_routing_token_seed_timeout_seconds": 0.0,
+      "exact_routing_token_seed_cover_strategies": [
+        "light-structural"
+      ],
+      "routing_synthesis_worker_memory_limit_gib": 16.0,
+      "routing_minimum_available_memory_fraction": 0.25,
+      "circuit_worker_memory_limit_gib": null,
+      "exact_routing_flow_seed_max_terms": 500000,
+      "exact_routing_fixed_cover_max_triangle_constraints": 500000,
+      "exact_routing_fixed_cover_backend": "sat",
+      "exact_routing_sat_solver": "glucose42",
+      "exact_routing_sat_max_estimated_clauses": 5000000,
+      "beam": null,
+      "partition_size_schedule": [
+        4
+      ]
+    },
+    "init": {
+      "cnot_equiv": 56,
+      "single_qubit": 92,
+      "total_raw": 148,
+      "qubits": 8,
+      "gate_breakdown": {
+        "CNOT": 56,
+        "H": 8,
+        "RZ": 84
+      }
+    },
+    "timing": {
+      "a2a": null,
+      "routing": null,
+      "optimization": null,
+      "total": 86400.0
+    }
+  },
+  "vbe_adder_3.qasm": {
+    "file": "vbe_adder_3.qasm",
+    "dataset": "IBMEagle",
+    "output_file": "benchmarks/partitioning/IBMEagle_results_4qbit_bqskit/vbe_adder_3.qasm",
+    "status": "completed",
+    "strategy": "bqskit",
+    "pre_opt_strategy": "bqskit",
+    "routing_strategy": "seqpam-quick",
+    "source_fingerprint": "30ce6c2aa6d98af9ec3a7914f7f2e4cea92470fabe0899cadece1302f614e430",
+    "configuration": {
+      "max_partition_size": 4,
+      "tolerance": 1e-14,
+      "osr_optimization_tolerance": 1e-06,
+      "synthesis_acceptance_tolerance": 1e-10,
+      "circuit_validation_tolerance": 1e-08,
+      "bqskit_synthesis_epsilon": 5.000000000125e-11,
+      "use_float": true,
+      "use_osr": true,
+      "use_graph_search": true,
+      "auto_expand_partition_size": false,
+      "partition_strategy": "ilp",
+      "routing_partition_strategy": "ilp",
+      "pam_swap_cnot_cost": 3.0,
+      "partition_workers": null,
+      "routing_synthesis_workers": 4,
+      "routing_column_max_iteration_loops": 8,
+      "routing_column_synthesis_mode": "topology-osr",
+      "exact_routing_catalog_progress": true,
+      "exact_routing_catalog_progress_interval": 25,
+      "exact_routing_light_sabre_seed_count": 32,
+      "exact_routing_light_sabre_trials_per_seed": 1,
+      "exact_routing_light_guided_cover_count": 8,
+      "exact_routing_minimum_cover_seed_count": 8,
+      "exact_routing_post_catalog_pam_seed_count": 12,
+      "exact_routing_pam_layout_passes": 3,
+      "exact_routing_pam_swap_cnot_costs": [
+        3.0
+      ],
+      "exact_routing_pam_cover_strategies": [
+        "kahn",
+        "ilp",
+        "ilp-routing"
+      ],
+      "exact_routing_lazy_osr": false,
+      "exact_routing_cover_pool_timeout_seconds": 10.0,
+      "exact_routing_token_seed_timeout_seconds": 0.0,
+      "exact_routing_token_seed_cover_strategies": [
+        "light-structural"
+      ],
+      "routing_synthesis_worker_memory_limit_gib": 16.0,
+      "routing_minimum_available_memory_fraction": 0.25,
+      "circuit_worker_memory_limit_gib": null,
+      "exact_routing_flow_seed_max_terms": 500000,
+      "exact_routing_fixed_cover_max_triangle_constraints": 500000,
+      "exact_routing_fixed_cover_backend": "sat",
+      "exact_routing_sat_solver": "glucose42",
+      "exact_routing_sat_max_estimated_clauses": 5000000,
+      "beam": null,
+      "partition_size_schedule": [
+        4
+      ]
+    },
+    "init": {
+      "cnot_equiv": 70,
+      "single_qubit": 120,
+      "total_raw": 50,
+      "qubits": 10,
+      "gate_breakdown": {
+        "CCX": 10,
+        "CNOT": 10,
+        "H": 30
+      }
+    },
+    "final": {
+      "cnot_equiv": 57,
+      "single_qubit": 74,
+      "total_raw": 131,
+      "qubits": 10,
+      "gate_breakdown": {
+        "CNOT": 57,
+        "U3": 74
+      }
+    },
+    "timing": {
+      "a2a": 23251.1,
+      "routing": 25.78,
+      "optimization": 4857.28,
+      "total": 28134.17
+    },
+    "all_to_all": {
+      "cnot_equiv": 38,
+      "single_qubit": 50,
+      "total_raw": 88,
+      "qubits": 10,
+      "gate_breakdown": {
+        "CNOT": 38,
+        "U3": 50
+      }
+    },
+    "routed": {
+      "cnot_equiv": 75,
+      "single_qubit": 285,
+      "total_raw": 350,
+      "qubits": 10,
+      "gate_breakdown": {
+        "CNOT": 60,
+        "RX": 60,
+        "RY": 120,
+        "RZ": 60,
+        "SWAP": 5,
+        "U3": 45
+      }
+    },
+    "rewrite_audit": {
+      "schema_version": 2,
+      "file": "benchmarks/partitioning/IBMEagle_results_4qbit_bqskit/vbe_adder_3.audit.json.gz",
+      "sha256": "8c8214379dfbb68b4f5f60ea9359d77c6c28d575ef4b40dd00e24f50c256524a",
+      "summary": {
+        "events": 337,
+        "rewrites": 312,
+        "accepted_rewrites": 273,
+        "failed_synthesis_attempts": 0,
+        "fallbacks": 0,
+        "candidate_tolerance_misses": 0
+      },
+      "verified_rewrites": 312,
+      "accepted_rewrites": 273,
+      "worst_process_infidelity": 2.886579864025407e-15,
+      "worst_accepted_process_infidelity": 1.3322676295501878e-15,
+      "candidate_tolerance_misses": 0,
+      "accepted_spectral_error_bound": 1.648088436434481e-07,
+      "replayed_native_rounds": 0,
+      "replayed_bqskit_invocations": 16,
+      "replayed_pam_routing_passes": 1,
+      "replayed_placement_passes": 2,
+      "replayed_qiskit_sabre_passes": 0,
+      "replayed_exact_osr_routing_passes": 0,
+      "replayed_squander_sabre_passes": 0,
+      "replayed_bqskit_stages": 3,
+      "chained_bqskit_events": 19,
+      "replayed_whole_circuit_transitions": 6,
+      "final_circuit_sha256": "0ec6a51f7a6c7176a813848a92ddf882333141366e410c89b8368af607c606a5"
+    }
+  },
+  "barenco_tof_5.qasm": {
+    "file": "barenco_tof_5.qasm",
+    "dataset": "IBMEagle",
+    "output_file": "benchmarks/partitioning/IBMEagle_results_4qbit_bqskit/barenco_tof_5.qasm",
+    "status": "completed",
+    "strategy": "bqskit",
+    "pre_opt_strategy": "bqskit",
+    "routing_strategy": "seqpam-quick",
+    "source_fingerprint": "30ce6c2aa6d98af9ec3a7914f7f2e4cea92470fabe0899cadece1302f614e430",
+    "configuration": {
+      "max_partition_size": 4,
+      "tolerance": 1e-14,
+      "osr_optimization_tolerance": 1e-06,
+      "synthesis_acceptance_tolerance": 1e-10,
+      "circuit_validation_tolerance": 1e-08,
+      "bqskit_synthesis_epsilon": 5.000000000125e-11,
+      "use_float": true,
+      "use_osr": true,
+      "use_graph_search": true,
+      "auto_expand_partition_size": false,
+      "partition_strategy": "ilp",
+      "routing_partition_strategy": "ilp",
+      "pam_swap_cnot_cost": 3.0,
+      "partition_workers": null,
+      "routing_synthesis_workers": 4,
+      "routing_column_max_iteration_loops": 8,
+      "routing_column_synthesis_mode": "topology-osr",
+      "exact_routing_catalog_progress": true,
+      "exact_routing_catalog_progress_interval": 25,
+      "exact_routing_light_sabre_seed_count": 32,
+      "exact_routing_light_sabre_trials_per_seed": 1,
+      "exact_routing_light_guided_cover_count": 8,
+      "exact_routing_minimum_cover_seed_count": 8,
+      "exact_routing_post_catalog_pam_seed_count": 12,
+      "exact_routing_pam_layout_passes": 3,
+      "exact_routing_pam_swap_cnot_costs": [
+        3.0
+      ],
+      "exact_routing_pam_cover_strategies": [
+        "kahn",
+        "ilp",
+        "ilp-routing"
+      ],
+      "exact_routing_lazy_osr": false,
+      "exact_routing_cover_pool_timeout_seconds": 10.0,
+      "exact_routing_token_seed_timeout_seconds": 0.0,
+      "exact_routing_token_seed_cover_strategies": [
+        "light-structural"
+      ],
+      "routing_synthesis_worker_memory_limit_gib": 16.0,
+      "routing_minimum_available_memory_fraction": 0.25,
+      "circuit_worker_memory_limit_gib": null,
+      "exact_routing_flow_seed_max_terms": 500000,
+      "exact_routing_fixed_cover_max_triangle_constraints": 500000,
+      "exact_routing_fixed_cover_backend": "sat",
+      "exact_routing_sat_solver": "glucose42",
+      "exact_routing_sat_max_estimated_clauses": 5000000,
+      "beam": null,
+      "partition_size_schedule": [
+        4
+      ]
+    },
+    "init": {
+      "cnot_equiv": 72,
+      "single_qubit": 146,
+      "total_raw": 50,
+      "qubits": 9,
+      "gate_breakdown": {
+        "CCX": 12,
+        "H": 38
+      }
+    },
+    "final": {
+      "cnot_equiv": 75,
+      "single_qubit": 111,
+      "total_raw": 186,
+      "qubits": 9,
+      "gate_breakdown": {
+        "CNOT": 75,
+        "U3": 111
+      }
+    },
+    "timing": {
+      "a2a": 4270.83,
+      "routing": 47.76,
+      "optimization": 4755.15,
+      "total": 9073.74
+    },
+    "all_to_all": {
+      "cnot_equiv": 65,
+      "single_qubit": 86,
+      "total_raw": 151,
+      "qubits": 9,
+      "gate_breakdown": {
+        "CNOT": 65,
+        "U3": 86
+      }
+    },
+    "routed": {
+      "cnot_equiv": 97,
+      "single_qubit": 373,
+      "total_raw": 460,
+      "qubits": 9,
+      "gate_breakdown": {
+        "CNOT": 82,
+        "RX": 80,
+        "RY": 160,
+        "RZ": 80,
+        "SWAP": 5,
+        "U3": 53
+      }
+    },
+    "rewrite_audit": {
+      "schema_version": 2,
+      "file": "benchmarks/partitioning/IBMEagle_results_4qbit_bqskit/barenco_tof_5.audit.json.gz",
+      "sha256": "be345759f781e035b05a60c5f936ab20d6530bba1a44a1ad7acd061df8ad85d2",
+      "summary": {
+        "events": 633,
+        "rewrites": 603,
+        "accepted_rewrites": 426,
+        "failed_synthesis_attempts": 0,
+        "fallbacks": 0,
+        "candidate_tolerance_misses": 0
+      },
+      "verified_rewrites": 603,
+      "accepted_rewrites": 426,
+      "worst_process_infidelity": 3.622369071365483e-11,
+      "worst_accepted_process_infidelity": 3.622369071365483e-11,
+      "candidate_tolerance_misses": 0,
+      "accepted_spectral_error_bound": 2.1269933642824804e-05,
+      "replayed_native_rounds": 0,
+      "replayed_bqskit_invocations": 21,
+      "replayed_pam_routing_passes": 1,
+      "replayed_placement_passes": 2,
+      "replayed_qiskit_sabre_passes": 0,
+      "replayed_exact_osr_routing_passes": 0,
+      "replayed_squander_sabre_passes": 0,
+      "replayed_bqskit_stages": 3,
+      "chained_bqskit_events": 24,
+      "replayed_whole_circuit_transitions": 6,
+      "final_circuit_sha256": "1aa111022c59606787ea855db95fc662a8ceca7f2f790072cfe870d637931aa7"
+    }
+  },
+  "csla_mux_3_original.qasm": {
+    "file": "csla_mux_3_original.qasm",
+    "dataset": "IBMEagle",
+    "output_file": "benchmarks/partitioning/IBMEagle_results_4qbit_bqskit/csla_mux_3_original.qasm",
+    "status": "completed",
+    "strategy": "bqskit",
+    "pre_opt_strategy": "bqskit",
+    "routing_strategy": "seqpam-quick",
+    "source_fingerprint": "30ce6c2aa6d98af9ec3a7914f7f2e4cea92470fabe0899cadece1302f614e430",
+    "configuration": {
+      "max_partition_size": 4,
+      "tolerance": 1e-14,
+      "osr_optimization_tolerance": 1e-06,
+      "synthesis_acceptance_tolerance": 1e-10,
+      "circuit_validation_tolerance": 1e-08,
+      "bqskit_synthesis_epsilon": 5.000000000125e-11,
+      "use_float": true,
+      "use_osr": true,
+      "use_graph_search": true,
+      "auto_expand_partition_size": false,
+      "partition_strategy": "ilp",
+      "routing_partition_strategy": "ilp",
+      "pam_swap_cnot_cost": 3.0,
+      "partition_workers": null,
+      "routing_synthesis_workers": 4,
+      "routing_column_max_iteration_loops": 8,
+      "routing_column_synthesis_mode": "topology-osr",
+      "exact_routing_catalog_progress": true,
+      "exact_routing_catalog_progress_interval": 25,
+      "exact_routing_light_sabre_seed_count": 32,
+      "exact_routing_light_sabre_trials_per_seed": 1,
+      "exact_routing_light_guided_cover_count": 8,
+      "exact_routing_minimum_cover_seed_count": 8,
+      "exact_routing_post_catalog_pam_seed_count": 12,
+      "exact_routing_pam_layout_passes": 3,
+      "exact_routing_pam_swap_cnot_costs": [
+        3.0
+      ],
+      "exact_routing_pam_cover_strategies": [
+        "kahn",
+        "ilp",
+        "ilp-routing"
+      ],
+      "exact_routing_lazy_osr": false,
+      "exact_routing_cover_pool_timeout_seconds": 10.0,
+      "exact_routing_token_seed_timeout_seconds": 0.0,
+      "exact_routing_token_seed_cover_strategies": [
+        "light-structural"
+      ],
+      "routing_synthesis_worker_memory_limit_gib": 16.0,
+      "routing_minimum_available_memory_fraction": 0.25,
+      "circuit_worker_memory_limit_gib": null,
+      "exact_routing_flow_seed_max_terms": 500000,
+      "exact_routing_fixed_cover_max_triangle_constraints": 500000,
+      "exact_routing_fixed_cover_backend": "sat",
+      "exact_routing_sat_solver": "glucose42",
+      "exact_routing_sat_max_estimated_clauses": 5000000,
+      "beam": null,
+      "partition_size_schedule": [
+        4
+      ]
+    },
+    "init": {
+      "cnot_equiv": 80,
+      "single_qubit": 130,
+      "total_raw": 70,
+      "qubits": 15,
+      "gate_breakdown": {
+        "CCX": 10,
+        "CNOT": 20,
+        "H": 40
+      }
+    },
+    "final": {
+      "cnot_equiv": 160,
+      "single_qubit": 217,
+      "total_raw": 377,
+      "qubits": 15,
+      "gate_breakdown": {
+        "CNOT": 160,
+        "U3": 217
+      }
+    },
+    "timing": {
+      "a2a": 4144.36,
+      "routing": 92.71,
+      "optimization": 5614.69,
+      "total": 9851.77
+    },
+    "all_to_all": {
+      "cnot_equiv": 70,
+      "single_qubit": 96,
+      "total_raw": 166,
+      "qubits": 15,
+      "gate_breakdown": {
+        "CNOT": 70,
+        "U3": 96
+      }
+    },
+    "routed": {
+      "cnot_equiv": 188,
+      "single_qubit": 432,
+      "total_raw": 556,
+      "qubits": 15,
+      "gate_breakdown": {
+        "CNOT": 92,
+        "RX": 92,
+        "RY": 184,
+        "RZ": 92,
+        "SWAP": 32,
+        "U3": 64
+      }
+    },
+    "rewrite_audit": {
+      "schema_version": 2,
+      "file": "benchmarks/partitioning/IBMEagle_results_4qbit_bqskit/csla_mux_3_original.audit.json.gz",
+      "sha256": "efbc640a832e173aca67b5d462380aedbc382fdc9c29570820abd696810f5511",
+      "summary": {
+        "events": 862,
+        "rewrites": 834,
+        "accepted_rewrites": 638,
+        "failed_synthesis_attempts": 0,
+        "fallbacks": 0,
+        "candidate_tolerance_misses": 0
+      },
+      "verified_rewrites": 834,
+      "accepted_rewrites": 638,
+      "worst_process_infidelity": 1.2878587085651816e-14,
+      "worst_accepted_process_infidelity": 1.2878587085651816e-14,
+      "candidate_tolerance_misses": 0,
+      "accepted_spectral_error_bound": 1.1362336433733175e-06,
+      "replayed_native_rounds": 0,
+      "replayed_bqskit_invocations": 19,
+      "replayed_pam_routing_passes": 1,
+      "replayed_placement_passes": 2,
+      "replayed_qiskit_sabre_passes": 0,
+      "replayed_exact_osr_routing_passes": 0,
+      "replayed_squander_sabre_passes": 0,
+      "replayed_bqskit_stages": 3,
+      "chained_bqskit_events": 22,
+      "replayed_whole_circuit_transitions": 6,
+      "final_circuit_sha256": "9efc243a5385ab4064b5e2d9032afeda679b9254f36ae20460d83c1e1e4c65ea"
+    }
+  },
+  "rc_adder_6.qasm": {
+    "file": "rc_adder_6.qasm",
+    "dataset": "IBMEagle",
+    "output_file": "benchmarks/partitioning/IBMEagle_results_4qbit_bqskit/rc_adder_6.qasm",
+    "status": "completed",
+    "strategy": "bqskit",
+    "pre_opt_strategy": "bqskit",
+    "routing_strategy": "seqpam-quick",
+    "source_fingerprint": "30ce6c2aa6d98af9ec3a7914f7f2e4cea92470fabe0899cadece1302f614e430",
+    "configuration": {
+      "max_partition_size": 4,
+      "tolerance": 1e-14,
+      "osr_optimization_tolerance": 1e-06,
+      "synthesis_acceptance_tolerance": 1e-10,
+      "circuit_validation_tolerance": 1e-08,
+      "bqskit_synthesis_epsilon": 5.000000000125e-11,
+      "use_float": true,
+      "use_osr": true,
+      "use_graph_search": true,
+      "auto_expand_partition_size": false,
+      "partition_strategy": "ilp",
+      "routing_partition_strategy": "ilp",
+      "pam_swap_cnot_cost": 3.0,
+      "partition_workers": null,
+      "routing_synthesis_workers": 4,
+      "routing_column_max_iteration_loops": 8,
+      "routing_column_synthesis_mode": "topology-osr",
+      "exact_routing_catalog_progress": true,
+      "exact_routing_catalog_progress_interval": 25,
+      "exact_routing_light_sabre_seed_count": 32,
+      "exact_routing_light_sabre_trials_per_seed": 1,
+      "exact_routing_light_guided_cover_count": 8,
+      "exact_routing_minimum_cover_seed_count": 8,
+      "exact_routing_post_catalog_pam_seed_count": 12,
+      "exact_routing_pam_layout_passes": 3,
+      "exact_routing_pam_swap_cnot_costs": [
+        3.0
+      ],
+      "exact_routing_pam_cover_strategies": [
+        "kahn",
+        "ilp",
+        "ilp-routing"
+      ],
+      "exact_routing_lazy_osr": false,
+      "exact_routing_cover_pool_timeout_seconds": 10.0,
+      "exact_routing_token_seed_timeout_seconds": 0.0,
+      "exact_routing_token_seed_cover_strategies": [
+        "light-structural"
+      ],
+      "routing_synthesis_worker_memory_limit_gib": 16.0,
+      "routing_minimum_available_memory_fraction": 0.25,
+      "circuit_worker_memory_limit_gib": null,
+      "exact_routing_flow_seed_max_terms": 500000,
+      "exact_routing_fixed_cover_max_triangle_constraints": 500000,
+      "exact_routing_fixed_cover_backend": "sat",
+      "exact_routing_sat_solver": "glucose42",
+      "exact_routing_sat_max_estimated_clauses": 5000000,
+      "beam": null,
+      "partition_size_schedule": [
+        4
+      ]
+    },
+    "init": {
+      "cnot_equiv": 93,
+      "single_qubit": 151,
+      "total_raw": 90,
+      "qubits": 14,
+      "gate_breakdown": {
+        "CCX": 11,
+        "CNOT": 27,
+        "H": 44,
+        "X": 8
+      }
+    },
+    "final": {
+      "cnot_equiv": 96,
+      "single_qubit": 137,
+      "total_raw": 233,
+      "qubits": 14,
+      "gate_breakdown": {
+        "CNOT": 96,
+        "U3": 137
+      }
+    },
+    "timing": {
+      "a2a": 3794.48,
+      "routing": 50.07,
+      "optimization": 2179.31,
+      "total": 6023.86
+    },
+    "all_to_all": {
+      "cnot_equiv": 79,
+      "single_qubit": 105,
+      "total_raw": 184,
+      "qubits": 14,
+      "gate_breakdown": {
+        "CNOT": 79,
+        "U3": 105
+      }
+    },
+    "routed": {
+      "cnot_equiv": 117,
+      "single_qubit": 497,
+      "total_raw": 606,
+      "qubits": 14,
+      "gate_breakdown": {
+        "CNOT": 105,
+        "RX": 105,
+        "RY": 210,
+        "RZ": 105,
+        "SWAP": 4,
+        "U3": 77
+      }
+    },
+    "rewrite_audit": {
+      "schema_version": 2,
+      "file": "benchmarks/partitioning/IBMEagle_results_4qbit_bqskit/rc_adder_6.audit.json.gz",
+      "sha256": "4aa00099c11e08ff12ed22a2bbc421c55a40da3ee0d2ef17ddfef71f79eb6a53",
+      "summary": {
+        "events": 718,
+        "rewrites": 691,
+        "accepted_rewrites": 483,
+        "failed_synthesis_attempts": 0,
+        "fallbacks": 0,
+        "candidate_tolerance_misses": 0
+      },
+      "verified_rewrites": 691,
+      "accepted_rewrites": 483,
+      "worst_process_infidelity": 6.439293542825908e-15,
+      "worst_accepted_process_infidelity": 6.439293542825908e-15,
+      "candidate_tolerance_misses": 0,
+      "accepted_spectral_error_bound": 4.595560673254572e-07,
+      "replayed_native_rounds": 0,
+      "replayed_bqskit_invocations": 18,
+      "replayed_pam_routing_passes": 1,
+      "replayed_placement_passes": 2,
+      "replayed_qiskit_sabre_passes": 0,
+      "replayed_exact_osr_routing_passes": 0,
+      "replayed_squander_sabre_passes": 0,
+      "replayed_bqskit_stages": 3,
+      "chained_bqskit_events": 21,
+      "replayed_whole_circuit_transitions": 6,
+      "final_circuit_sha256": "07b174ebd17d9c6008d8a44a39920f6a66767b4e210ced6a16584d169699c2aa"
+    }
+  },
+  "gf2^E4_mult.qasm": {
+    "file": "gf2^E4_mult.qasm",
+    "dataset": "IBMEagle",
+    "output_file": "benchmarks/partitioning/IBMEagle_results_4qbit_bqskit/gf2^E4_mult.qasm",
+    "status": "completed",
+    "strategy": "bqskit",
+    "pre_opt_strategy": "bqskit",
+    "routing_strategy": "seqpam-quick",
+    "source_fingerprint": "30ce6c2aa6d98af9ec3a7914f7f2e4cea92470fabe0899cadece1302f614e430",
+    "configuration": {
+      "max_partition_size": 4,
+      "tolerance": 1e-14,
+      "osr_optimization_tolerance": 1e-06,
+      "synthesis_acceptance_tolerance": 1e-10,
+      "circuit_validation_tolerance": 1e-08,
+      "bqskit_synthesis_epsilon": 5.000000000125e-11,
+      "use_float": true,
+      "use_osr": true,
+      "use_graph_search": true,
+      "auto_expand_partition_size": false,
+      "partition_strategy": "ilp",
+      "routing_partition_strategy": "ilp",
+      "pam_swap_cnot_cost": 3.0,
+      "partition_workers": null,
+      "routing_synthesis_workers": 4,
+      "routing_column_max_iteration_loops": 8,
+      "routing_column_synthesis_mode": "topology-osr",
+      "exact_routing_catalog_progress": true,
+      "exact_routing_catalog_progress_interval": 25,
+      "exact_routing_light_sabre_seed_count": 32,
+      "exact_routing_light_sabre_trials_per_seed": 1,
+      "exact_routing_light_guided_cover_count": 8,
+      "exact_routing_minimum_cover_seed_count": 8,
+      "exact_routing_post_catalog_pam_seed_count": 12,
+      "exact_routing_pam_layout_passes": 3,
+      "exact_routing_pam_swap_cnot_costs": [
+        3.0
+      ],
+      "exact_routing_pam_cover_strategies": [
+        "kahn",
+        "ilp",
+        "ilp-routing"
+      ],
+      "exact_routing_lazy_osr": false,
+      "exact_routing_cover_pool_timeout_seconds": 10.0,
+      "exact_routing_token_seed_timeout_seconds": 0.0,
+      "exact_routing_token_seed_cover_strategies": [
+        "light-structural"
+      ],
+      "routing_synthesis_worker_memory_limit_gib": 16.0,
+      "routing_minimum_available_memory_fraction": 0.25,
+      "circuit_worker_memory_limit_gib": null,
+      "exact_routing_flow_seed_max_terms": 500000,
+      "exact_routing_fixed_cover_max_triangle_constraints": 500000,
+      "exact_routing_fixed_cover_backend": "sat",
+      "exact_routing_sat_solver": "glucose42",
+      "exact_routing_sat_max_estimated_clauses": 5000000,
+      "beam": null,
+      "partition_size_schedule": [
+        4
+      ]
+    },
+    "init": {
+      "cnot_equiv": 99,
+      "single_qubit": 208,
+      "total_raw": 83,
+      "qubits": 12,
+      "gate_breakdown": {
+        "CCX": 16,
+        "CNOT": 3,
+        "H": 64
+      }
+    },
+    "final": {
+      "cnot_equiv": 260,
+      "single_qubit": 394,
+      "total_raw": 654,
+      "qubits": 12,
+      "gate_breakdown": {
+        "CNOT": 260,
+        "U3": 394
+      }
+    },
+    "timing": {
+      "a2a": 2151.82,
+      "routing": 73.71,
+      "optimization": 11413.32,
+      "total": 13638.86
+    },
+    "all_to_all": {
+      "cnot_equiv": 99,
+      "single_qubit": 131,
+      "total_raw": 230,
+      "qubits": 12,
+      "gate_breakdown": {
+        "CNOT": 99,
+        "U3": 131
+      }
+    },
+    "routed": {
+      "cnot_equiv": 296,
+      "single_qubit": 578,
+      "total_raw": 762,
+      "qubits": 12,
+      "gate_breakdown": {
+        "CNOT": 128,
+        "RX": 128,
+        "RY": 256,
+        "RZ": 128,
+        "SWAP": 56,
+        "U3": 66
+      }
+    },
+    "rewrite_audit": {
+      "schema_version": 2,
+      "file": "benchmarks/partitioning/IBMEagle_results_4qbit_bqskit/gf2^E4_mult.audit.json.gz",
+      "sha256": "c0ccbd09a2a57e9f4eb93f64c1ed2b7e95be1647dc730e8b9a1a022cad76c2dc",
+      "summary": {
+        "events": 1237,
+        "rewrites": 1211,
+        "accepted_rewrites": 929,
+        "failed_synthesis_attempts": 0,
+        "fallbacks": 0,
+        "candidate_tolerance_misses": 0
+      },
+      "verified_rewrites": 1211,
+      "accepted_rewrites": 929,
+      "worst_process_infidelity": 6.217248937900877e-15,
+      "worst_accepted_process_infidelity": 6.217248937900877e-15,
+      "candidate_tolerance_misses": 0,
+      "accepted_spectral_error_bound": 7.275369366891484e-07,
+      "replayed_native_rounds": 0,
+      "replayed_bqskit_invocations": 17,
+      "replayed_pam_routing_passes": 1,
+      "replayed_placement_passes": 2,
+      "replayed_qiskit_sabre_passes": 0,
+      "replayed_exact_osr_routing_passes": 0,
+      "replayed_squander_sabre_passes": 0,
+      "replayed_bqskit_stages": 3,
+      "chained_bqskit_events": 20,
+      "replayed_whole_circuit_transitions": 6,
+      "final_circuit_sha256": "f2948287d37a799ea00d12c646cab44997da9169c0f102d249c3305a51f101e1"
+    }
+  },
+  "tof_10.qasm": {
+    "file": "tof_10.qasm",
+    "dataset": "IBMEagle",
+    "output_file": "benchmarks/partitioning/IBMEagle_results_4qbit_bqskit/tof_10.qasm",
+    "status": "completed",
+    "strategy": "bqskit",
+    "pre_opt_strategy": "bqskit",
+    "routing_strategy": "seqpam-quick",
+    "source_fingerprint": "30ce6c2aa6d98af9ec3a7914f7f2e4cea92470fabe0899cadece1302f614e430",
+    "configuration": {
+      "max_partition_size": 4,
+      "tolerance": 1e-14,
+      "osr_optimization_tolerance": 1e-06,
+      "synthesis_acceptance_tolerance": 1e-10,
+      "circuit_validation_tolerance": 1e-08,
+      "bqskit_synthesis_epsilon": 5.000000000125e-11,
+      "use_float": true,
+      "use_osr": true,
+      "use_graph_search": true,
+      "auto_expand_partition_size": false,
+      "partition_strategy": "ilp",
+      "routing_partition_strategy": "ilp",
+      "pam_swap_cnot_cost": 3.0,
+      "partition_workers": null,
+      "routing_synthesis_workers": 4,
+      "routing_column_max_iteration_loops": 8,
+      "routing_column_synthesis_mode": "topology-osr",
+      "exact_routing_catalog_progress": true,
+      "exact_routing_catalog_progress_interval": 25,
+      "exact_routing_light_sabre_seed_count": 32,
+      "exact_routing_light_sabre_trials_per_seed": 1,
+      "exact_routing_light_guided_cover_count": 8,
+      "exact_routing_minimum_cover_seed_count": 8,
+      "exact_routing_post_catalog_pam_seed_count": 12,
+      "exact_routing_pam_layout_passes": 3,
+      "exact_routing_pam_swap_cnot_costs": [
+        3.0
+      ],
+      "exact_routing_pam_cover_strategies": [
+        "kahn",
+        "ilp",
+        "ilp-routing"
+      ],
+      "exact_routing_lazy_osr": false,
+      "exact_routing_cover_pool_timeout_seconds": 10.0,
+      "exact_routing_token_seed_timeout_seconds": 0.0,
+      "exact_routing_token_seed_cover_strategies": [
+        "light-structural"
+      ],
+      "routing_synthesis_worker_memory_limit_gib": 16.0,
+      "routing_minimum_available_memory_fraction": 0.25,
+      "circuit_worker_memory_limit_gib": null,
+      "exact_routing_flow_seed_max_terms": 500000,
+      "exact_routing_fixed_cover_max_triangle_constraints": 500000,
+      "exact_routing_fixed_cover_backend": "sat",
+      "exact_routing_sat_solver": "glucose42",
+      "exact_routing_sat_max_estimated_clauses": 5000000,
+      "beam": null,
+      "partition_size_schedule": [
+        4
+      ]
+    },
+    "init": {
+      "cnot_equiv": 102,
+      "single_qubit": 221,
+      "total_raw": 85,
+      "qubits": 19,
+      "gate_breakdown": {
+        "CCX": 17,
+        "H": 68
+      }
+    },
+    "final": {
+      "cnot_equiv": 117,
+      "single_qubit": 183,
+      "total_raw": 300,
+      "qubits": 19,
+      "gate_breakdown": {
+        "CNOT": 117,
+        "U3": 183
+      }
+    },
+    "timing": {
+      "a2a": 11207.93,
+      "routing": 71.9,
+      "optimization": 2124.9,
+      "total": 13404.74
+    },
+    "all_to_all": {
+      "cnot_equiv": 96,
+      "single_qubit": 132,
+      "total_raw": 228,
+      "qubits": 19,
+      "gate_breakdown": {
+        "CNOT": 96,
+        "U3": 132
+      }
+    },
+    "routed": {
+      "cnot_equiv": 123,
+      "single_qubit": 536,
+      "total_raw": 657,
+      "qubits": 19,
+      "gate_breakdown": {
+        "CNOT": 120,
+        "RX": 120,
+        "RY": 240,
+        "RZ": 120,
+        "SWAP": 1,
+        "U3": 56
+      }
+    },
+    "rewrite_audit": {
+      "schema_version": 2,
+      "file": "benchmarks/partitioning/IBMEagle_results_4qbit_bqskit/tof_10.audit.json.gz",
+      "sha256": "b9a72e358c9471905ad1ceb71442ae50b44a73bf470507c329ec561c31dfd96e",
+      "summary": {
+        "events": 907,
+        "rewrites": 877,
+        "accepted_rewrites": 611,
+        "failed_synthesis_attempts": 0,
+        "fallbacks": 0,
+        "candidate_tolerance_misses": 0
+      },
+      "verified_rewrites": 877,
+      "accepted_rewrites": 611,
+      "worst_process_infidelity": 5.773159728050814e-15,
+      "worst_accepted_process_infidelity": 5.773159728050814e-15,
+      "candidate_tolerance_misses": 0,
+      "accepted_spectral_error_bound": 4.805324557408045e-07,
+      "replayed_native_rounds": 0,
+      "replayed_bqskit_invocations": 21,
+      "replayed_pam_routing_passes": 1,
+      "replayed_placement_passes": 2,
+      "replayed_qiskit_sabre_passes": 0,
+      "replayed_exact_osr_routing_passes": 0,
+      "replayed_squander_sabre_passes": 0,
+      "replayed_bqskit_stages": 3,
+      "chained_bqskit_events": 24,
+      "replayed_whole_circuit_transitions": 6,
+      "final_circuit_sha256": "8f3a2fb7edfbd16144d74b448e2756b4bfb4fb005fe9c2042a51affb97df5a8f"
+    }
+  },
+  "mod_red_21.qasm": {
+    "file": "mod_red_21.qasm",
+    "dataset": "IBMEagle",
+    "output_file": "benchmarks/partitioning/IBMEagle_results_4qbit_bqskit/mod_red_21.qasm",
+    "status": "timeout",
+    "timeout_seconds": 86400.0,
+    "strategy": "bqskit",
+    "pre_opt_strategy": "bqskit",
+    "routing_strategy": "seqpam-quick",
+    "source_fingerprint": "30ce6c2aa6d98af9ec3a7914f7f2e4cea92470fabe0899cadece1302f614e430",
+    "configuration": {
+      "max_partition_size": 4,
+      "tolerance": 1e-14,
+      "osr_optimization_tolerance": 1e-06,
+      "synthesis_acceptance_tolerance": 1e-10,
+      "circuit_validation_tolerance": 1e-08,
+      "bqskit_synthesis_epsilon": 5.000000000125e-11,
+      "use_float": true,
+      "use_osr": true,
+      "use_graph_search": true,
+      "auto_expand_partition_size": false,
+      "partition_strategy": "ilp",
+      "routing_partition_strategy": "ilp",
+      "pam_swap_cnot_cost": 3.0,
+      "partition_workers": null,
+      "routing_synthesis_workers": 4,
+      "routing_column_max_iteration_loops": 8,
+      "routing_column_synthesis_mode": "topology-osr",
+      "exact_routing_catalog_progress": true,
+      "exact_routing_catalog_progress_interval": 25,
+      "exact_routing_light_sabre_seed_count": 32,
+      "exact_routing_light_sabre_trials_per_seed": 1,
+      "exact_routing_light_guided_cover_count": 8,
+      "exact_routing_minimum_cover_seed_count": 8,
+      "exact_routing_post_catalog_pam_seed_count": 12,
+      "exact_routing_pam_layout_passes": 3,
+      "exact_routing_pam_swap_cnot_costs": [
+        3.0
+      ],
+      "exact_routing_pam_cover_strategies": [
+        "kahn",
+        "ilp",
+        "ilp-routing"
+      ],
+      "exact_routing_lazy_osr": false,
+      "exact_routing_cover_pool_timeout_seconds": 10.0,
+      "exact_routing_token_seed_timeout_seconds": 0.0,
+      "exact_routing_token_seed_cover_strategies": [
+        "light-structural"
+      ],
+      "routing_synthesis_worker_memory_limit_gib": 16.0,
+      "routing_minimum_available_memory_fraction": 0.25,
+      "circuit_worker_memory_limit_gib": null,
+      "exact_routing_flow_seed_max_terms": 500000,
+      "exact_routing_fixed_cover_max_triangle_constraints": 500000,
+      "exact_routing_fixed_cover_backend": "sat",
+      "exact_routing_sat_solver": "glucose42",
+      "exact_routing_sat_max_estimated_clauses": 5000000,
+      "beam": null,
+      "partition_size_schedule": [
+        4
+      ]
+    },
+    "init": {
+      "cnot_equiv": 105,
+      "single_qubit": 241,
+      "total_raw": 108,
+      "qubits": 11,
+      "gate_breakdown": {
+        "CCX": 17,
+        "CNOT": 3,
+        "H": 64,
+        "X": 24
+      }
+    },
+    "timing": {
+      "a2a": null,
+      "routing": null,
+      "optimization": null,
+      "total": 86400.0
+    }
+  },
+  "gf2^E5_mult.qasm": {
+    "file": "gf2^E5_mult.qasm",
+    "dataset": "IBMEagle",
+    "output_file": "benchmarks/partitioning/IBMEagle_results_4qbit_bqskit/gf2^E5_mult.qasm",
+    "status": "completed",
+    "strategy": "bqskit",
+    "pre_opt_strategy": "bqskit",
+    "routing_strategy": "seqpam-quick",
+    "source_fingerprint": "30ce6c2aa6d98af9ec3a7914f7f2e4cea92470fabe0899cadece1302f614e430",
+    "configuration": {
+      "max_partition_size": 4,
+      "tolerance": 1e-14,
+      "osr_optimization_tolerance": 1e-06,
+      "synthesis_acceptance_tolerance": 1e-10,
+      "circuit_validation_tolerance": 1e-08,
+      "bqskit_synthesis_epsilon": 5.000000000125e-11,
+      "use_float": true,
+      "use_osr": true,
+      "use_graph_search": true,
+      "auto_expand_partition_size": false,
+      "partition_strategy": "ilp",
+      "routing_partition_strategy": "ilp",
+      "pam_swap_cnot_cost": 3.0,
+      "partition_workers": null,
+      "routing_synthesis_workers": 4,
+      "routing_column_max_iteration_loops": 8,
+      "routing_column_synthesis_mode": "topology-osr",
+      "exact_routing_catalog_progress": true,
+      "exact_routing_catalog_progress_interval": 25,
+      "exact_routing_light_sabre_seed_count": 32,
+      "exact_routing_light_sabre_trials_per_seed": 1,
+      "exact_routing_light_guided_cover_count": 8,
+      "exact_routing_minimum_cover_seed_count": 8,
+      "exact_routing_post_catalog_pam_seed_count": 12,
+      "exact_routing_pam_layout_passes": 3,
+      "exact_routing_pam_swap_cnot_costs": [
+        3.0
+      ],
+      "exact_routing_pam_cover_strategies": [
+        "kahn",
+        "ilp",
+        "ilp-routing"
+      ],
+      "exact_routing_lazy_osr": false,
+      "exact_routing_cover_pool_timeout_seconds": 10.0,
+      "exact_routing_token_seed_timeout_seconds": 0.0,
+      "exact_routing_token_seed_cover_strategies": [
+        "light-structural"
+      ],
+      "routing_synthesis_worker_memory_limit_gib": 16.0,
+      "routing_minimum_available_memory_fraction": 0.25,
+      "circuit_worker_memory_limit_gib": null,
+      "exact_routing_flow_seed_max_terms": 500000,
+      "exact_routing_fixed_cover_max_triangle_constraints": 500000,
+      "exact_routing_fixed_cover_backend": "sat",
+      "exact_routing_sat_solver": "glucose42",
+      "exact_routing_sat_max_estimated_clauses": 5000000,
+      "beam": null,
+      "partition_size_schedule": [
+        4
+      ]
+    },
+    "init": {
+      "cnot_equiv": 154,
+      "single_qubit": 325,
+      "total_raw": 129,
+      "qubits": 15,
+      "gate_breakdown": {
+        "CCX": 25,
+        "CNOT": 4,
+        "H": 100
+      }
+    },
+    "final": {
+      "cnot_equiv": 541,
+      "single_qubit": 843,
+      "total_raw": 1384,
+      "qubits": 15,
+      "gate_breakdown": {
+        "CNOT": 541,
+        "U3": 843
+      }
+    },
+    "timing": {
+      "a2a": 9603.93,
+      "routing": 103.24,
+      "optimization": 29048.51,
+      "total": 38755.69
+    },
+    "all_to_all": {
+      "cnot_equiv": 154,
+      "single_qubit": 200,
+      "total_raw": 354,
+      "qubits": 15,
+      "gate_breakdown": {
+        "CNOT": 154,
+        "U3": 200
+      }
+    },
+    "routed": {
+      "cnot_equiv": 583,
+      "single_qubit": 899,
+      "total_raw": 1226,
+      "qubits": 15,
+      "gate_breakdown": {
+        "CNOT": 199,
+        "RX": 199,
+        "RY": 398,
+        "RZ": 199,
+        "SWAP": 128,
+        "U3": 103
+      }
+    },
+    "rewrite_audit": {
+      "schema_version": 2,
+      "file": "benchmarks/partitioning/IBMEagle_results_4qbit_bqskit/gf2^E5_mult.audit.json.gz",
+      "sha256": "4b674781b21809089499c51f8397119a0b25edcd1c4acafe76fe856b022b5a2d",
+      "summary": {
+        "events": 2313,
+        "rewrites": 2287,
+        "accepted_rewrites": 1729,
+        "failed_synthesis_attempts": 0,
+        "fallbacks": 0,
+        "candidate_tolerance_misses": 0
+      },
+      "verified_rewrites": 2287,
+      "accepted_rewrites": 1729,
+      "worst_process_infidelity": 1.3322676295501878e-14,
+      "worst_accepted_process_infidelity": 1.3322676295501878e-14,
+      "candidate_tolerance_misses": 0,
+      "accepted_spectral_error_bound": 1.9391879965034045e-06,
+      "replayed_native_rounds": 0,
+      "replayed_bqskit_invocations": 17,
+      "replayed_pam_routing_passes": 1,
+      "replayed_placement_passes": 2,
+      "replayed_qiskit_sabre_passes": 0,
+      "replayed_exact_osr_routing_passes": 0,
+      "replayed_squander_sabre_passes": 0,
+      "replayed_bqskit_stages": 3,
+      "chained_bqskit_events": 20,
+      "replayed_whole_circuit_transitions": 6,
+      "final_circuit_sha256": "b3b66d4205c790910b76b7e3464e77b7b044cbcb1f108a72dcd895940cb36d81"
+    }
+  },
+  "csum_mux_9_corrected.qasm": {
+    "file": "csum_mux_9_corrected.qasm",
+    "dataset": "IBMEagle",
+    "output_file": "benchmarks/partitioning/IBMEagle_results_4qbit_bqskit/csum_mux_9_corrected.qasm",
+    "status": "completed",
+    "strategy": "bqskit",
+    "pre_opt_strategy": "bqskit",
+    "routing_strategy": "seqpam-quick",
+    "source_fingerprint": "30ce6c2aa6d98af9ec3a7914f7f2e4cea92470fabe0899cadece1302f614e430",
+    "configuration": {
+      "max_partition_size": 4,
+      "tolerance": 1e-14,
+      "osr_optimization_tolerance": 1e-06,
+      "synthesis_acceptance_tolerance": 1e-10,
+      "circuit_validation_tolerance": 1e-08,
+      "bqskit_synthesis_epsilon": 5.000000000125e-11,
+      "use_float": true,
+      "use_osr": true,
+      "use_graph_search": true,
+      "auto_expand_partition_size": false,
+      "partition_strategy": "ilp",
+      "routing_partition_strategy": "ilp",
+      "pam_swap_cnot_cost": 3.0,
+      "partition_workers": null,
+      "routing_synthesis_workers": 4,
+      "routing_column_max_iteration_loops": 8,
+      "routing_column_synthesis_mode": "topology-osr",
+      "exact_routing_catalog_progress": true,
+      "exact_routing_catalog_progress_interval": 25,
+      "exact_routing_light_sabre_seed_count": 32,
+      "exact_routing_light_sabre_trials_per_seed": 1,
+      "exact_routing_light_guided_cover_count": 8,
+      "exact_routing_minimum_cover_seed_count": 8,
+      "exact_routing_post_catalog_pam_seed_count": 12,
+      "exact_routing_pam_layout_passes": 3,
+      "exact_routing_pam_swap_cnot_costs": [
+        3.0
+      ],
+      "exact_routing_pam_cover_strategies": [
+        "kahn",
+        "ilp",
+        "ilp-routing"
+      ],
+      "exact_routing_lazy_osr": false,
+      "exact_routing_cover_pool_timeout_seconds": 10.0,
+      "exact_routing_token_seed_timeout_seconds": 0.0,
+      "exact_routing_token_seed_cover_strategies": [
+        "light-structural"
+      ],
+      "routing_synthesis_worker_memory_limit_gib": 16.0,
+      "routing_minimum_available_memory_fraction": 0.25,
+      "circuit_worker_memory_limit_gib": null,
+      "exact_routing_flow_seed_max_terms": 500000,
+      "exact_routing_fixed_cover_max_triangle_constraints": 500000,
+      "exact_routing_fixed_cover_backend": "sat",
+      "exact_routing_sat_solver": "glucose42",
+      "exact_routing_sat_max_estimated_clauses": 5000000,
+      "beam": null,
+      "partition_size_schedule": [
+        4
+      ]
+    },
+    "init": {
+      "cnot_equiv": 168,
+      "single_qubit": 280,
+      "total_raw": 56,
+      "qubits": 30,
+      "gate_breakdown": {
+        "CCX": 28,
+        "X": 28
+      }
+    },
+    "final": {
+      "cnot_equiv": 417,
+      "single_qubit": 650,
+      "total_raw": 1067,
+      "qubits": 30,
+      "gate_breakdown": {
+        "CNOT": 417,
+        "U3": 650
+      }
+    },
+    "timing": {
+      "a2a": 25419.44,
+      "routing": 81.93,
+      "optimization": 22405.59,
+      "total": 47906.97
+    },
+    "all_to_all": {
+      "cnot_equiv": 132,
+      "single_qubit": 181,
+      "total_raw": 313,
+      "qubits": 30,
+      "gate_breakdown": {
+        "CNOT": 132,
+        "U3": 181
+      }
+    },
+    "routed": {
+      "cnot_equiv": 446,
+      "single_qubit": 872,
+      "total_raw": 1154,
+      "qubits": 30,
+      "gate_breakdown": {
+        "CNOT": 200,
+        "RX": 187,
+        "RY": 374,
+        "RZ": 187,
+        "SWAP": 82,
+        "U3": 124
+      }
+    },
+    "rewrite_audit": {
+      "schema_version": 2,
+      "file": "benchmarks/partitioning/IBMEagle_results_4qbit_bqskit/csum_mux_9_corrected.audit.json.gz",
+      "sha256": "37802e312789ceed81df53ca40688f0e0b248077a9d4e4b055fee48724119429",
+      "summary": {
+        "events": 1841,
+        "rewrites": 1815,
+        "accepted_rewrites": 1441,
+        "failed_synthesis_attempts": 0,
+        "fallbacks": 0,
+        "candidate_tolerance_misses": 0
+      },
+      "verified_rewrites": 1815,
+      "accepted_rewrites": 1441,
+      "worst_process_infidelity": 2.9976021664879227e-14,
+      "worst_accepted_process_infidelity": 2.9976021664879227e-14,
+      "candidate_tolerance_misses": 0,
+      "accepted_spectral_error_bound": 2.03879982205171e-06,
+      "replayed_native_rounds": 0,
+      "replayed_bqskit_invocations": 17,
+      "replayed_pam_routing_passes": 1,
+      "replayed_placement_passes": 2,
+      "replayed_qiskit_sabre_passes": 0,
+      "replayed_exact_osr_routing_passes": 0,
+      "replayed_squander_sabre_passes": 0,
+      "replayed_bqskit_stages": 3,
+      "chained_bqskit_events": 20,
+      "replayed_whole_circuit_transitions": 6,
+      "final_circuit_sha256": "44a369f2339c261b4e97c51ef61760cd0e689700ecd8e2647b59b5ebc5db3814"
+    }
+  },
+  "QFTAdd8.qasm": {
+    "file": "QFTAdd8.qasm",
+    "dataset": "IBMEagle",
+    "output_file": "benchmarks/partitioning/IBMEagle_results_4qbit_bqskit/QFTAdd8.qasm",
+    "status": "timeout",
+    "timeout_seconds": 86400.0,
+    "strategy": "bqskit",
+    "pre_opt_strategy": "bqskit",
+    "routing_strategy": "seqpam-quick",
+    "source_fingerprint": "30ce6c2aa6d98af9ec3a7914f7f2e4cea92470fabe0899cadece1302f614e430",
+    "configuration": {
+      "max_partition_size": 4,
+      "tolerance": 1e-14,
+      "osr_optimization_tolerance": 1e-06,
+      "synthesis_acceptance_tolerance": 1e-10,
+      "circuit_validation_tolerance": 1e-08,
+      "bqskit_synthesis_epsilon": 5.000000000125e-11,
+      "use_float": true,
+      "use_osr": true,
+      "use_graph_search": true,
+      "auto_expand_partition_size": false,
+      "partition_strategy": "ilp",
+      "routing_partition_strategy": "ilp",
+      "pam_swap_cnot_cost": 3.0,
+      "partition_workers": null,
+      "routing_synthesis_workers": 4,
+      "routing_column_max_iteration_loops": 8,
+      "routing_column_synthesis_mode": "topology-osr",
+      "exact_routing_catalog_progress": true,
+      "exact_routing_catalog_progress_interval": 25,
+      "exact_routing_light_sabre_seed_count": 32,
+      "exact_routing_light_sabre_trials_per_seed": 1,
+      "exact_routing_light_guided_cover_count": 8,
+      "exact_routing_minimum_cover_seed_count": 8,
+      "exact_routing_post_catalog_pam_seed_count": 12,
+      "exact_routing_pam_layout_passes": 3,
+      "exact_routing_pam_swap_cnot_costs": [
+        3.0
+      ],
+      "exact_routing_pam_cover_strategies": [
+        "kahn",
+        "ilp",
+        "ilp-routing"
+      ],
+      "exact_routing_lazy_osr": false,
+      "exact_routing_cover_pool_timeout_seconds": 10.0,
+      "exact_routing_token_seed_timeout_seconds": 0.0,
+      "exact_routing_token_seed_cover_strategies": [
+        "light-structural"
+      ],
+      "routing_synthesis_worker_memory_limit_gib": 16.0,
+      "routing_minimum_available_memory_fraction": 0.25,
+      "circuit_worker_memory_limit_gib": null,
+      "exact_routing_flow_seed_max_terms": 500000,
+      "exact_routing_fixed_cover_max_triangle_constraints": 500000,
+      "exact_routing_fixed_cover_backend": "sat",
+      "exact_routing_sat_solver": "glucose42",
+      "exact_routing_sat_max_estimated_clauses": 5000000,
+      "beam": null,
+      "partition_size_schedule": [
+        4
+      ]
+    },
+    "init": {
+      "cnot_equiv": 184,
+      "single_qubit": 292,
+      "total_raw": 476,
+      "qubits": 16,
+      "gate_breakdown": {
+        "CNOT": 184,
+        "H": 16,
+        "RZ": 276
+      }
+    },
+    "timing": {
+      "a2a": null,
+      "routing": null,
+      "optimization": null,
+      "total": 86400.0
+    }
+  },
+  "qcla_com_7.qasm": {
+    "file": "qcla_com_7.qasm",
+    "dataset": "IBMEagle",
+    "output_file": "benchmarks/partitioning/IBMEagle_results_4qbit_bqskit/qcla_com_7.qasm",
+    "status": "completed",
+    "strategy": "bqskit",
+    "pre_opt_strategy": "bqskit",
+    "routing_strategy": "seqpam-quick",
+    "source_fingerprint": "30ce6c2aa6d98af9ec3a7914f7f2e4cea92470fabe0899cadece1302f614e430",
+    "configuration": {
+      "max_partition_size": 4,
+      "tolerance": 1e-14,
+      "osr_optimization_tolerance": 1e-06,
+      "synthesis_acceptance_tolerance": 1e-10,
+      "circuit_validation_tolerance": 1e-08,
+      "bqskit_synthesis_epsilon": 5.000000000125e-11,
+      "use_float": true,
+      "use_osr": true,
+      "use_graph_search": true,
+      "auto_expand_partition_size": false,
+      "partition_strategy": "ilp",
+      "routing_partition_strategy": "ilp",
+      "pam_swap_cnot_cost": 3.0,
+      "partition_workers": null,
+      "routing_synthesis_workers": 4,
+      "routing_column_max_iteration_loops": 8,
+      "routing_column_synthesis_mode": "topology-osr",
+      "exact_routing_catalog_progress": true,
+      "exact_routing_catalog_progress_interval": 25,
+      "exact_routing_light_sabre_seed_count": 32,
+      "exact_routing_light_sabre_trials_per_seed": 1,
+      "exact_routing_light_guided_cover_count": 8,
+      "exact_routing_minimum_cover_seed_count": 8,
+      "exact_routing_post_catalog_pam_seed_count": 12,
+      "exact_routing_pam_layout_passes": 3,
+      "exact_routing_pam_swap_cnot_costs": [
+        3.0
+      ],
+      "exact_routing_pam_cover_strategies": [
+        "kahn",
+        "ilp",
+        "ilp-routing"
+      ],
+      "exact_routing_lazy_osr": false,
+      "exact_routing_cover_pool_timeout_seconds": 10.0,
+      "exact_routing_token_seed_timeout_seconds": 0.0,
+      "exact_routing_token_seed_cover_strategies": [
+        "light-structural"
+      ],
+      "routing_synthesis_worker_memory_limit_gib": 16.0,
+      "routing_minimum_available_memory_fraction": 0.25,
+      "circuit_worker_memory_limit_gib": null,
+      "exact_routing_flow_seed_max_terms": 500000,
+      "exact_routing_fixed_cover_max_triangle_constraints": 500000,
+      "exact_routing_fixed_cover_backend": "sat",
+      "exact_routing_sat_solver": "glucose42",
+      "exact_routing_sat_max_estimated_clauses": 5000000,
+      "beam": null,
+      "partition_size_schedule": [
+        4
+      ]
+    },
+    "init": {
+      "cnot_equiv": 186,
+      "single_qubit": 373,
+      "total_raw": 153,
+      "qubits": 24,
+      "gate_breakdown": {
+        "CCX": 29,
+        "CNOT": 12,
+        "H": 97,
+        "X": 15
+      }
+    },
+    "final": {
+      "cnot_equiv": 347,
+      "single_qubit": 528,
+      "total_raw": 875,
+      "qubits": 24,
+      "gate_breakdown": {
+        "CNOT": 347,
+        "U3": 528
+      }
+    },
+    "timing": {
+      "a2a": 21415.92,
+      "routing": 91.38,
+      "optimization": 12538.84,
+      "total": 34046.15
+    },
+    "all_to_all": {
+      "cnot_equiv": 155,
+      "single_qubit": 216,
+      "total_raw": 371,
+      "qubits": 24,
+      "gate_breakdown": {
+        "CNOT": 155,
+        "U3": 216
+      }
+    },
+    "routed": {
+      "cnot_equiv": 415,
+      "single_qubit": 946,
+      "total_raw": 1223,
+      "qubits": 24,
+      "gate_breakdown": {
+        "CNOT": 208,
+        "RX": 204,
+        "RY": 408,
+        "RZ": 204,
+        "SWAP": 69,
+        "U3": 130
+      }
+    },
+    "rewrite_audit": {
+      "schema_version": 2,
+      "file": "benchmarks/partitioning/IBMEagle_results_4qbit_bqskit/qcla_com_7.audit.json.gz",
+      "sha256": "cc885c7ff7e5960548e67374e8bc091795fe691557481550f0af5347c7045fd2",
+      "summary": {
+        "events": 2008,
+        "rewrites": 1978,
+        "accepted_rewrites": 1369,
+        "failed_synthesis_attempts": 0,
+        "fallbacks": 0,
+        "candidate_tolerance_misses": 0
+      },
+      "verified_rewrites": 1978,
+      "accepted_rewrites": 1369,
+      "worst_process_infidelity": 1.4432899320127035e-14,
+      "worst_accepted_process_infidelity": 1.4432899320127035e-14,
+      "candidate_tolerance_misses": 0,
+      "accepted_spectral_error_bound": 1.5726376808706977e-06,
+      "replayed_native_rounds": 0,
+      "replayed_bqskit_invocations": 21,
+      "replayed_pam_routing_passes": 1,
+      "replayed_placement_passes": 2,
+      "replayed_qiskit_sabre_passes": 0,
+      "replayed_exact_osr_routing_passes": 0,
+      "replayed_squander_sabre_passes": 0,
+      "replayed_bqskit_stages": 3,
+      "chained_bqskit_events": 24,
+      "replayed_whole_circuit_transitions": 6,
+      "final_circuit_sha256": "d2baaa903442113d19006522df07eaa089286c2e1bcc0ab97b3ef8d86c37d06e"
+    }
+  },
+  "barenco_tof_10.qasm": {
+    "file": "barenco_tof_10.qasm",
+    "dataset": "IBMEagle",
+    "output_file": "benchmarks/partitioning/IBMEagle_results_4qbit_bqskit/barenco_tof_10.qasm",
+    "status": "completed",
+    "strategy": "bqskit",
+    "pre_opt_strategy": "bqskit",
+    "routing_strategy": "seqpam-quick",
+    "source_fingerprint": "30ce6c2aa6d98af9ec3a7914f7f2e4cea92470fabe0899cadece1302f614e430",
+    "configuration": {
+      "max_partition_size": 4,
+      "tolerance": 1e-14,
+      "osr_optimization_tolerance": 1e-06,
+      "synthesis_acceptance_tolerance": 1e-10,
+      "circuit_validation_tolerance": 1e-08,
+      "bqskit_synthesis_epsilon": 5.000000000125e-11,
+      "use_float": true,
+      "use_osr": true,
+      "use_graph_search": true,
+      "auto_expand_partition_size": false,
+      "partition_strategy": "ilp",
+      "routing_partition_strategy": "ilp",
+      "pam_swap_cnot_cost": 3.0,
+      "partition_workers": null,
+      "routing_synthesis_workers": 4,
+      "routing_column_max_iteration_loops": 8,
+      "routing_column_synthesis_mode": "topology-osr",
+      "exact_routing_catalog_progress": true,
+      "exact_routing_catalog_progress_interval": 25,
+      "exact_routing_light_sabre_seed_count": 32,
+      "exact_routing_light_sabre_trials_per_seed": 1,
+      "exact_routing_light_guided_cover_count": 8,
+      "exact_routing_minimum_cover_seed_count": 8,
+      "exact_routing_post_catalog_pam_seed_count": 12,
+      "exact_routing_pam_layout_passes": 3,
+      "exact_routing_pam_swap_cnot_costs": [
+        3.0
+      ],
+      "exact_routing_pam_cover_strategies": [
+        "kahn",
+        "ilp",
+        "ilp-routing"
+      ],
+      "exact_routing_lazy_osr": false,
+      "exact_routing_cover_pool_timeout_seconds": 10.0,
+      "exact_routing_token_seed_timeout_seconds": 0.0,
+      "exact_routing_token_seed_cover_strategies": [
+        "light-structural"
+      ],
+      "routing_synthesis_worker_memory_limit_gib": 16.0,
+      "routing_minimum_available_memory_fraction": 0.25,
+      "circuit_worker_memory_limit_gib": null,
+      "exact_routing_flow_seed_max_terms": 500000,
+      "exact_routing_fixed_cover_max_triangle_constraints": 500000,
+      "exact_routing_fixed_cover_backend": "sat",
+      "exact_routing_sat_solver": "glucose42",
+      "exact_routing_sat_max_estimated_clauses": 5000000,
+      "beam": null,
+      "partition_size_schedule": [
+        4
+      ]
+    },
+    "init": {
+      "cnot_equiv": 192,
+      "single_qubit": 386,
+      "total_raw": 130,
+      "qubits": 19,
+      "gate_breakdown": {
+        "CCX": 32,
+        "H": 98
+      }
+    },
+    "final": {
+      "cnot_equiv": 244,
+      "single_qubit": 379,
+      "total_raw": 623,
+      "qubits": 19,
+      "gate_breakdown": {
+        "CNOT": 244,
+        "U3": 379
+      }
+    },
+    "timing": {
+      "a2a": 2381.2,
+      "routing": 118.74,
+      "optimization": 2949.74,
+      "total": 5449.69
+    },
+    "all_to_all": {
+      "cnot_equiv": 186,
+      "single_qubit": 247,
+      "total_raw": 433,
+      "qubits": 19,
+      "gate_breakdown": {
+        "CNOT": 186,
+        "U3": 247
+      }
+    },
+    "routed": {
+      "cnot_equiv": 263,
+      "single_qubit": 974,
+      "total_raw": 1207,
+      "qubits": 19,
+      "gate_breakdown": {
+        "CNOT": 218,
+        "RX": 216,
+        "RY": 432,
+        "RZ": 216,
+        "SWAP": 15,
+        "U3": 110
+      }
+    },
+    "rewrite_audit": {
+      "schema_version": 2,
+      "file": "benchmarks/partitioning/IBMEagle_results_4qbit_bqskit/barenco_tof_10.audit.json.gz",
+      "sha256": "e1decaef1ad883648ae1ac200bd0d277e0e597e2595e880527ff3eb3e85b9cbc",
+      "summary": {
+        "events": 1521,
+        "rewrites": 1495,
+        "accepted_rewrites": 1137,
+        "failed_synthesis_attempts": 0,
+        "fallbacks": 0,
+        "candidate_tolerance_misses": 0
+      },
+      "verified_rewrites": 1495,
+      "accepted_rewrites": 1137,
+      "worst_process_infidelity": 1.1102230246251565e-15,
+      "worst_accepted_process_infidelity": 1.1102230246251565e-15,
+      "candidate_tolerance_misses": 0,
+      "accepted_spectral_error_bound": 7.315895646953584e-07,
+      "replayed_native_rounds": 0,
+      "replayed_bqskit_invocations": 17,
+      "replayed_pam_routing_passes": 1,
+      "replayed_placement_passes": 2,
+      "replayed_qiskit_sabre_passes": 0,
+      "replayed_exact_osr_routing_passes": 0,
+      "replayed_squander_sabre_passes": 0,
+      "replayed_bqskit_stages": 3,
+      "chained_bqskit_events": 20,
+      "replayed_whole_circuit_transitions": 6,
+      "final_circuit_sha256": "f1c3a8a6572b5d509141755570ba49783cefdd9709d3bb55e1fe750c252998e5"
+    }
+  },
+  "gf2^E6_mult.qasm": {
+    "file": "gf2^E6_mult.qasm",
+    "dataset": "IBMEagle",
+    "output_file": "benchmarks/partitioning/IBMEagle_results_4qbit_bqskit/gf2^E6_mult.qasm",
+    "status": "completed",
+    "strategy": "bqskit",
+    "pre_opt_strategy": "bqskit",
+    "routing_strategy": "seqpam-quick",
+    "source_fingerprint": "30ce6c2aa6d98af9ec3a7914f7f2e4cea92470fabe0899cadece1302f614e430",
+    "configuration": {
+      "max_partition_size": 4,
+      "tolerance": 1e-14,
+      "osr_optimization_tolerance": 1e-06,
+      "synthesis_acceptance_tolerance": 1e-10,
+      "circuit_validation_tolerance": 1e-08,
+      "bqskit_synthesis_epsilon": 5.000000000125e-11,
+      "use_float": true,
+      "use_osr": true,
+      "use_graph_search": true,
+      "auto_expand_partition_size": false,
+      "partition_strategy": "ilp",
+      "routing_partition_strategy": "ilp",
+      "pam_swap_cnot_cost": 3.0,
+      "partition_workers": null,
+      "routing_synthesis_workers": 4,
+      "routing_column_max_iteration_loops": 8,
+      "routing_column_synthesis_mode": "topology-osr",
+      "exact_routing_catalog_progress": true,
+      "exact_routing_catalog_progress_interval": 25,
+      "exact_routing_light_sabre_seed_count": 32,
+      "exact_routing_light_sabre_trials_per_seed": 1,
+      "exact_routing_light_guided_cover_count": 8,
+      "exact_routing_minimum_cover_seed_count": 8,
+      "exact_routing_post_catalog_pam_seed_count": 12,
+      "exact_routing_pam_layout_passes": 3,
+      "exact_routing_pam_swap_cnot_costs": [
+        3.0
+      ],
+      "exact_routing_pam_cover_strategies": [
+        "kahn",
+        "ilp",
+        "ilp-routing"
+      ],
+      "exact_routing_lazy_osr": false,
+      "exact_routing_cover_pool_timeout_seconds": 10.0,
+      "exact_routing_token_seed_timeout_seconds": 0.0,
+      "exact_routing_token_seed_cover_strategies": [
+        "light-structural"
+      ],
+      "routing_synthesis_worker_memory_limit_gib": 16.0,
+      "routing_minimum_available_memory_fraction": 0.25,
+      "circuit_worker_memory_limit_gib": null,
+      "exact_routing_flow_seed_max_terms": 500000,
+      "exact_routing_fixed_cover_max_triangle_constraints": 500000,
+      "exact_routing_fixed_cover_backend": "sat",
+      "exact_routing_sat_solver": "glucose42",
+      "exact_routing_sat_max_estimated_clauses": 5000000,
+      "beam": null,
+      "partition_size_schedule": [
+        4
+      ]
+    },
+    "init": {
+      "cnot_equiv": 221,
+      "single_qubit": 468,
+      "total_raw": 185,
+      "qubits": 18,
+      "gate_breakdown": {
+        "CCX": 36,
+        "CNOT": 5,
+        "H": 144
+      }
+    },
+    "final": {
+      "cnot_equiv": 656,
+      "single_qubit": 995,
+      "total_raw": 1651,
+      "qubits": 18,
+      "gate_breakdown": {
+        "CNOT": 656,
+        "U3": 995
+      }
+    },
+    "timing": {
+      "a2a": 2413.03,
+      "routing": 164.95,
+      "optimization": 28210.57,
+      "total": 30788.57
+    },
+    "all_to_all": {
+      "cnot_equiv": 221,
+      "single_qubit": 295,
+      "total_raw": 516,
+      "qubits": 18,
+      "gate_breakdown": {
+        "CNOT": 221,
+        "U3": 295
+      }
+    },
+    "routed": {
+      "cnot_equiv": 733,
+      "single_qubit": 1309,
+      "total_raw": 1750,
+      "qubits": 18,
+      "gate_breakdown": {
+        "CNOT": 295,
+        "RX": 295,
+        "RY": 590,
+        "RZ": 295,
+        "SWAP": 146,
+        "U3": 129
+      }
+    },
+    "rewrite_audit": {
+      "schema_version": 2,
+      "file": "benchmarks/partitioning/IBMEagle_results_4qbit_bqskit/gf2^E6_mult.audit.json.gz",
+      "sha256": "14bb0eb847a11fb7a09521018d9376e6b805bd3db3c4789461e84bb5444142d1",
+      "summary": {
+        "events": 2961,
+        "rewrites": 2934,
+        "accepted_rewrites": 2160,
+        "failed_synthesis_attempts": 0,
+        "fallbacks": 0,
+        "candidate_tolerance_misses": 0
+      },
+      "verified_rewrites": 2934,
+      "accepted_rewrites": 2160,
+      "worst_process_infidelity": 2.078559546703218e-12,
+      "worst_accepted_process_infidelity": 2.078559546703218e-12,
+      "candidate_tolerance_misses": 0,
+      "accepted_spectral_error_bound": 6.234513621622878e-06,
+      "replayed_native_rounds": 0,
+      "replayed_bqskit_invocations": 18,
+      "replayed_pam_routing_passes": 1,
+      "replayed_placement_passes": 2,
+      "replayed_qiskit_sabre_passes": 0,
+      "replayed_exact_osr_routing_passes": 0,
+      "replayed_squander_sabre_passes": 0,
+      "replayed_bqskit_stages": 3,
+      "chained_bqskit_events": 21,
+      "replayed_whole_circuit_transitions": 6,
+      "final_circuit_sha256": "2a15e71d6a1febfe07cd05bbebf3b85ae6a6a5c420330c1dcd4b21035e49aa73"
+    }
+  },
+  "QFT16.qasm": {
+    "file": "QFT16.qasm",
+    "dataset": "IBMEagle",
+    "output_file": "benchmarks/partitioning/IBMEagle_results_4qbit_bqskit/QFT16.qasm",
+    "status": "timeout",
+    "timeout_seconds": 86400.0,
+    "strategy": "bqskit",
+    "pre_opt_strategy": "bqskit",
+    "routing_strategy": "seqpam-quick",
+    "source_fingerprint": "30ce6c2aa6d98af9ec3a7914f7f2e4cea92470fabe0899cadece1302f614e430",
+    "configuration": {
+      "max_partition_size": 4,
+      "tolerance": 1e-14,
+      "osr_optimization_tolerance": 1e-06,
+      "synthesis_acceptance_tolerance": 1e-10,
+      "circuit_validation_tolerance": 1e-08,
+      "bqskit_synthesis_epsilon": 5.000000000125e-11,
+      "use_float": true,
+      "use_osr": true,
+      "use_graph_search": true,
+      "auto_expand_partition_size": false,
+      "partition_strategy": "ilp",
+      "routing_partition_strategy": "ilp",
+      "pam_swap_cnot_cost": 3.0,
+      "partition_workers": null,
+      "routing_synthesis_workers": 4,
+      "routing_column_max_iteration_loops": 8,
+      "routing_column_synthesis_mode": "topology-osr",
+      "exact_routing_catalog_progress": true,
+      "exact_routing_catalog_progress_interval": 25,
+      "exact_routing_light_sabre_seed_count": 32,
+      "exact_routing_light_sabre_trials_per_seed": 1,
+      "exact_routing_light_guided_cover_count": 8,
+      "exact_routing_minimum_cover_seed_count": 8,
+      "exact_routing_post_catalog_pam_seed_count": 12,
+      "exact_routing_pam_layout_passes": 3,
+      "exact_routing_pam_swap_cnot_costs": [
+        3.0
+      ],
+      "exact_routing_pam_cover_strategies": [
+        "kahn",
+        "ilp",
+        "ilp-routing"
+      ],
+      "exact_routing_lazy_osr": false,
+      "exact_routing_cover_pool_timeout_seconds": 10.0,
+      "exact_routing_token_seed_timeout_seconds": 0.0,
+      "exact_routing_token_seed_cover_strategies": [
+        "light-structural"
+      ],
+      "routing_synthesis_worker_memory_limit_gib": 16.0,
+      "routing_minimum_available_memory_fraction": 0.25,
+      "circuit_worker_memory_limit_gib": null,
+      "exact_routing_flow_seed_max_terms": 500000,
+      "exact_routing_fixed_cover_max_triangle_constraints": 500000,
+      "exact_routing_fixed_cover_backend": "sat",
+      "exact_routing_sat_solver": "glucose42",
+      "exact_routing_sat_max_estimated_clauses": 5000000,
+      "beam": null,
+      "partition_size_schedule": [
+        4
+      ]
+    },
+    "init": {
+      "cnot_equiv": 228,
+      "single_qubit": 358,
+      "total_raw": 586,
+      "qubits": 16,
+      "gate_breakdown": {
+        "CNOT": 228,
+        "H": 16,
+        "RZ": 342
+      }
+    },
+    "timing": {
+      "a2a": null,
+      "routing": null,
+      "optimization": null,
+      "total": 86400.0
+    }
+  },
+  "qcla_adder_10.qasm": {
+    "file": "qcla_adder_10.qasm",
+    "dataset": "IBMEagle",
+    "output_file": "benchmarks/partitioning/IBMEagle_results_4qbit_bqskit/qcla_adder_10.qasm",
+    "status": "completed",
+    "strategy": "bqskit",
+    "pre_opt_strategy": "bqskit",
+    "routing_strategy": "seqpam-quick",
+    "source_fingerprint": "30ce6c2aa6d98af9ec3a7914f7f2e4cea92470fabe0899cadece1302f614e430",
+    "configuration": {
+      "max_partition_size": 4,
+      "tolerance": 1e-14,
+      "osr_optimization_tolerance": 1e-06,
+      "synthesis_acceptance_tolerance": 1e-10,
+      "circuit_validation_tolerance": 1e-08,
+      "bqskit_synthesis_epsilon": 5.000000000125e-11,
+      "use_float": true,
+      "use_osr": true,
+      "use_graph_search": true,
+      "auto_expand_partition_size": false,
+      "partition_strategy": "ilp",
+      "routing_partition_strategy": "ilp",
+      "pam_swap_cnot_cost": 3.0,
+      "partition_workers": null,
+      "routing_synthesis_workers": 4,
+      "routing_column_max_iteration_loops": 8,
+      "routing_column_synthesis_mode": "topology-osr",
+      "exact_routing_catalog_progress": true,
+      "exact_routing_catalog_progress_interval": 25,
+      "exact_routing_light_sabre_seed_count": 32,
+      "exact_routing_light_sabre_trials_per_seed": 1,
+      "exact_routing_light_guided_cover_count": 8,
+      "exact_routing_minimum_cover_seed_count": 8,
+      "exact_routing_post_catalog_pam_seed_count": 12,
+      "exact_routing_pam_layout_passes": 3,
+      "exact_routing_pam_swap_cnot_costs": [
+        3.0
+      ],
+      "exact_routing_pam_cover_strategies": [
+        "kahn",
+        "ilp",
+        "ilp-routing"
+      ],
+      "exact_routing_lazy_osr": false,
+      "exact_routing_cover_pool_timeout_seconds": 10.0,
+      "exact_routing_token_seed_timeout_seconds": 0.0,
+      "exact_routing_token_seed_cover_strategies": [
+        "light-structural"
+      ],
+      "routing_synthesis_worker_memory_limit_gib": 16.0,
+      "routing_minimum_available_memory_fraction": 0.25,
+      "circuit_worker_memory_limit_gib": null,
+      "exact_routing_flow_seed_max_terms": 500000,
+      "exact_routing_fixed_cover_max_triangle_constraints": 500000,
+      "exact_routing_fixed_cover_backend": "sat",
+      "exact_routing_sat_solver": "glucose42",
+      "exact_routing_sat_max_estimated_clauses": 5000000,
+      "beam": null,
+      "partition_size_schedule": [
+        4
+      ]
+    },
+    "init": {
+      "cnot_equiv": 233,
+      "single_qubit": 424,
+      "total_raw": 181,
+      "qubits": 36,
+      "gate_breakdown": {
+        "CCX": 34,
+        "CNOT": 29,
+        "H": 118
+      }
+    },
+    "final": {
+      "cnot_equiv": 432,
+      "single_qubit": 649,
+      "total_raw": 1081,
+      "qubits": 36,
+      "gate_breakdown": {
+        "CNOT": 432,
+        "U3": 649
+      }
+    },
+    "timing": {
+      "a2a": 13250.69,
+      "routing": 131.9,
+      "optimization": 22809.21,
+      "total": 36191.81
+    },
+    "all_to_all": {
+      "cnot_equiv": 205,
+      "single_qubit": 268,
+      "total_raw": 473,
+      "qubits": 36,
+      "gate_breakdown": {
+        "CNOT": 205,
+        "U3": 268
+      }
+    },
+    "routed": {
+      "cnot_equiv": 470,
+      "single_qubit": 1235,
+      "total_raw": 1573,
+      "qubits": 36,
+      "gate_breakdown": {
+        "CNOT": 272,
+        "RX": 270,
+        "RY": 540,
+        "RZ": 270,
+        "SWAP": 66,
+        "U3": 155
+      }
+    },
+    "rewrite_audit": {
+      "schema_version": 2,
+      "file": "benchmarks/partitioning/IBMEagle_results_4qbit_bqskit/qcla_adder_10.audit.json.gz",
+      "sha256": "e33d08419c66c9f243462f68fe62154e7e367104b7ae1e1881ad41701dd6dc6e",
+      "summary": {
+        "events": 2488,
+        "rewrites": 2458,
+        "accepted_rewrites": 1667,
+        "failed_synthesis_attempts": 0,
+        "fallbacks": 0,
+        "candidate_tolerance_misses": 0
+      },
+      "verified_rewrites": 2458,
+      "accepted_rewrites": 1667,
+      "worst_process_infidelity": 1.021405182655144e-14,
+      "worst_accepted_process_infidelity": 1.021405182655144e-14,
+      "candidate_tolerance_misses": 0,
+      "accepted_spectral_error_bound": 1.8355585546342247e-06,
+      "replayed_native_rounds": 0,
+      "replayed_bqskit_invocations": 21,
+      "replayed_pam_routing_passes": 1,
+      "replayed_placement_passes": 2,
+      "replayed_qiskit_sabre_passes": 0,
+      "replayed_exact_osr_routing_passes": 0,
+      "replayed_squander_sabre_passes": 0,
+      "replayed_bqskit_stages": 3,
+      "chained_bqskit_events": 24,
+      "replayed_whole_circuit_transitions": 6,
+      "final_circuit_sha256": "23327f38478003e955ce21702ee397c651526e8f46484485d727224fb69805a1"
+    }
+  },
+  "gf2^E7_mult.qasm": {
+    "file": "gf2^E7_mult.qasm",
+    "dataset": "IBMEagle",
+    "output_file": "benchmarks/partitioning/IBMEagle_results_4qbit_bqskit/gf2^E7_mult.qasm",
+    "status": "timeout",
+    "timeout_seconds": 86400.0,
+    "strategy": "bqskit",
+    "pre_opt_strategy": "bqskit",
+    "routing_strategy": "seqpam-quick",
+    "source_fingerprint": "30ce6c2aa6d98af9ec3a7914f7f2e4cea92470fabe0899cadece1302f614e430",
+    "configuration": {
+      "max_partition_size": 4,
+      "tolerance": 1e-14,
+      "osr_optimization_tolerance": 1e-06,
+      "synthesis_acceptance_tolerance": 1e-10,
+      "circuit_validation_tolerance": 1e-08,
+      "bqskit_synthesis_epsilon": 5.000000000125e-11,
+      "use_float": true,
+      "use_osr": true,
+      "use_graph_search": true,
+      "auto_expand_partition_size": false,
+      "partition_strategy": "ilp",
+      "routing_partition_strategy": "ilp",
+      "pam_swap_cnot_cost": 3.0,
+      "partition_workers": null,
+      "routing_synthesis_workers": 4,
+      "routing_column_max_iteration_loops": 8,
+      "routing_column_synthesis_mode": "topology-osr",
+      "exact_routing_catalog_progress": true,
+      "exact_routing_catalog_progress_interval": 25,
+      "exact_routing_light_sabre_seed_count": 32,
+      "exact_routing_light_sabre_trials_per_seed": 1,
+      "exact_routing_light_guided_cover_count": 8,
+      "exact_routing_minimum_cover_seed_count": 8,
+      "exact_routing_post_catalog_pam_seed_count": 12,
+      "exact_routing_pam_layout_passes": 3,
+      "exact_routing_pam_swap_cnot_costs": [
+        3.0
+      ],
+      "exact_routing_pam_cover_strategies": [
+        "kahn",
+        "ilp",
+        "ilp-routing"
+      ],
+      "exact_routing_lazy_osr": false,
+      "exact_routing_cover_pool_timeout_seconds": 10.0,
+      "exact_routing_token_seed_timeout_seconds": 0.0,
+      "exact_routing_token_seed_cover_strategies": [
+        "light-structural"
+      ],
+      "routing_synthesis_worker_memory_limit_gib": 16.0,
+      "routing_minimum_available_memory_fraction": 0.25,
+      "circuit_worker_memory_limit_gib": null,
+      "exact_routing_flow_seed_max_terms": 500000,
+      "exact_routing_fixed_cover_max_triangle_constraints": 500000,
+      "exact_routing_fixed_cover_backend": "sat",
+      "exact_routing_sat_solver": "glucose42",
+      "exact_routing_sat_max_estimated_clauses": 5000000,
+      "beam": null,
+      "partition_size_schedule": [
+        4
+      ]
+    },
+    "init": {
+      "cnot_equiv": 300,
+      "single_qubit": 637,
+      "total_raw": 251,
+      "qubits": 21,
+      "gate_breakdown": {
+        "CCX": 49,
+        "CNOT": 6,
+        "H": 196
+      }
+    },
+    "timing": {
+      "a2a": null,
+      "routing": null,
+      "optimization": null,
+      "total": 86400.0
+    }
+  },
+  "qcla_mod_7.qasm": {
+    "file": "qcla_mod_7.qasm",
+    "dataset": "IBMEagle",
+    "output_file": "benchmarks/partitioning/IBMEagle_results_4qbit_bqskit/qcla_mod_7.qasm",
+    "status": "timeout",
+    "timeout_seconds": 86400.0,
+    "strategy": "bqskit",
+    "pre_opt_strategy": "bqskit",
+    "routing_strategy": "seqpam-quick",
+    "source_fingerprint": "30ce6c2aa6d98af9ec3a7914f7f2e4cea92470fabe0899cadece1302f614e430",
+    "configuration": {
+      "max_partition_size": 4,
+      "tolerance": 1e-14,
+      "osr_optimization_tolerance": 1e-06,
+      "synthesis_acceptance_tolerance": 1e-10,
+      "circuit_validation_tolerance": 1e-08,
+      "bqskit_synthesis_epsilon": 5.000000000125e-11,
+      "use_float": true,
+      "use_osr": true,
+      "use_graph_search": true,
+      "auto_expand_partition_size": false,
+      "partition_strategy": "ilp",
+      "routing_partition_strategy": "ilp",
+      "pam_swap_cnot_cost": 3.0,
+      "partition_workers": null,
+      "routing_synthesis_workers": 4,
+      "routing_column_max_iteration_loops": 8,
+      "routing_column_synthesis_mode": "topology-osr",
+      "exact_routing_catalog_progress": true,
+      "exact_routing_catalog_progress_interval": 25,
+      "exact_routing_light_sabre_seed_count": 32,
+      "exact_routing_light_sabre_trials_per_seed": 1,
+      "exact_routing_light_guided_cover_count": 8,
+      "exact_routing_minimum_cover_seed_count": 8,
+      "exact_routing_post_catalog_pam_seed_count": 12,
+      "exact_routing_pam_layout_passes": 3,
+      "exact_routing_pam_swap_cnot_costs": [
+        3.0
+      ],
+      "exact_routing_pam_cover_strategies": [
+        "kahn",
+        "ilp",
+        "ilp-routing"
+      ],
+      "exact_routing_lazy_osr": false,
+      "exact_routing_cover_pool_timeout_seconds": 10.0,
+      "exact_routing_token_seed_timeout_seconds": 0.0,
+      "exact_routing_token_seed_cover_strategies": [
+        "light-structural"
+      ],
+      "routing_synthesis_worker_memory_limit_gib": 16.0,
+      "routing_minimum_available_memory_fraction": 0.25,
+      "circuit_worker_memory_limit_gib": null,
+      "exact_routing_flow_seed_max_terms": 500000,
+      "exact_routing_fixed_cover_max_triangle_constraints": 500000,
+      "exact_routing_fixed_cover_backend": "sat",
+      "exact_routing_sat_solver": "glucose42",
+      "exact_routing_sat_max_estimated_clauses": 5000000,
+      "beam": null,
+      "partition_size_schedule": [
+        4
+      ]
+    },
+    "init": {
+      "cnot_equiv": 382,
+      "single_qubit": 738,
+      "total_raw": 294,
+      "qubits": 26,
+      "gate_breakdown": {
+        "CCX": 59,
+        "CNOT": 28,
+        "H": 200,
+        "X": 7
+      }
+    },
+    "timing": {
+      "a2a": null,
+      "routing": null,
+      "optimization": null,
+      "total": 86400.0
+    }
+  },
+  "gf2^E8_mult.qasm": {
+    "file": "gf2^E8_mult.qasm",
+    "dataset": "IBMEagle",
+    "output_file": "benchmarks/partitioning/IBMEagle_results_4qbit_bqskit/gf2^E8_mult.qasm",
+    "status": "timeout",
+    "timeout_seconds": 86400.0,
+    "strategy": "bqskit",
+    "pre_opt_strategy": "bqskit",
+    "routing_strategy": "seqpam-quick",
+    "source_fingerprint": "30ce6c2aa6d98af9ec3a7914f7f2e4cea92470fabe0899cadece1302f614e430",
+    "configuration": {
+      "max_partition_size": 4,
+      "tolerance": 1e-14,
+      "osr_optimization_tolerance": 1e-06,
+      "synthesis_acceptance_tolerance": 1e-10,
+      "circuit_validation_tolerance": 1e-08,
+      "bqskit_synthesis_epsilon": 5.000000000125e-11,
+      "use_float": true,
+      "use_osr": true,
+      "use_graph_search": true,
+      "auto_expand_partition_size": false,
+      "partition_strategy": "ilp",
+      "routing_partition_strategy": "ilp",
+      "pam_swap_cnot_cost": 3.0,
+      "partition_workers": null,
+      "routing_synthesis_workers": 4,
+      "routing_column_max_iteration_loops": 8,
+      "routing_column_synthesis_mode": "topology-osr",
+      "exact_routing_catalog_progress": true,
+      "exact_routing_catalog_progress_interval": 25,
+      "exact_routing_light_sabre_seed_count": 32,
+      "exact_routing_light_sabre_trials_per_seed": 1,
+      "exact_routing_light_guided_cover_count": 8,
+      "exact_routing_minimum_cover_seed_count": 8,
+      "exact_routing_post_catalog_pam_seed_count": 12,
+      "exact_routing_pam_layout_passes": 3,
+      "exact_routing_pam_swap_cnot_costs": [
+        3.0
+      ],
+      "exact_routing_pam_cover_strategies": [
+        "kahn",
+        "ilp",
+        "ilp-routing"
+      ],
+      "exact_routing_lazy_osr": false,
+      "exact_routing_cover_pool_timeout_seconds": 10.0,
+      "exact_routing_token_seed_timeout_seconds": 0.0,
+      "exact_routing_token_seed_cover_strategies": [
+        "light-structural"
+      ],
+      "routing_synthesis_worker_memory_limit_gib": 16.0,
+      "routing_minimum_available_memory_fraction": 0.25,
+      "circuit_worker_memory_limit_gib": null,
+      "exact_routing_flow_seed_max_terms": 500000,
+      "exact_routing_fixed_cover_max_triangle_constraints": 500000,
+      "exact_routing_fixed_cover_backend": "sat",
+      "exact_routing_sat_solver": "glucose42",
+      "exact_routing_sat_max_estimated_clauses": 5000000,
+      "beam": null,
+      "partition_size_schedule": [
+        4
+      ]
+    },
+    "init": {
+      "cnot_equiv": 405,
+      "single_qubit": 832,
+      "total_raw": 341,
+      "qubits": 24,
+      "gate_breakdown": {
+        "CCX": 64,
+        "CNOT": 21,
+        "H": 256
+      }
+    },
+    "timing": {
+      "a2a": null,
+      "routing": null,
+      "optimization": null,
+      "total": 86400.0
+    }
+  },
+  "adder_8.qasm": {
+    "file": "adder_8.qasm",
+    "dataset": "IBMEagle",
+    "output_file": "benchmarks/partitioning/IBMEagle_results_4qbit_bqskit/adder_8.qasm",
+    "status": "completed",
+    "strategy": "bqskit",
+    "pre_opt_strategy": "bqskit",
+    "routing_strategy": "seqpam-quick",
+    "source_fingerprint": "30ce6c2aa6d98af9ec3a7914f7f2e4cea92470fabe0899cadece1302f614e430",
+    "configuration": {
+      "max_partition_size": 4,
+      "tolerance": 1e-14,
+      "osr_optimization_tolerance": 1e-06,
+      "synthesis_acceptance_tolerance": 1e-10,
+      "circuit_validation_tolerance": 1e-08,
+      "bqskit_synthesis_epsilon": 5.000000000125e-11,
+      "use_float": true,
+      "use_osr": true,
+      "use_graph_search": true,
+      "auto_expand_partition_size": false,
+      "partition_strategy": "ilp",
+      "routing_partition_strategy": "ilp",
+      "pam_swap_cnot_cost": 3.0,
+      "partition_workers": null,
+      "routing_synthesis_workers": 4,
+      "routing_column_max_iteration_loops": 8,
+      "routing_column_synthesis_mode": "topology-osr",
+      "exact_routing_catalog_progress": true,
+      "exact_routing_catalog_progress_interval": 25,
+      "exact_routing_light_sabre_seed_count": 32,
+      "exact_routing_light_sabre_trials_per_seed": 1,
+      "exact_routing_light_guided_cover_count": 8,
+      "exact_routing_minimum_cover_seed_count": 8,
+      "exact_routing_post_catalog_pam_seed_count": 12,
+      "exact_routing_pam_layout_passes": 3,
+      "exact_routing_pam_swap_cnot_costs": [
+        3.0
+      ],
+      "exact_routing_pam_cover_strategies": [
+        "kahn",
+        "ilp",
+        "ilp-routing"
+      ],
+      "exact_routing_lazy_osr": false,
+      "exact_routing_cover_pool_timeout_seconds": 10.0,
+      "exact_routing_token_seed_timeout_seconds": 0.0,
+      "exact_routing_token_seed_cover_strategies": [
+        "light-structural"
+      ],
+      "routing_synthesis_worker_memory_limit_gib": 16.0,
+      "routing_minimum_available_memory_fraction": 0.25,
+      "circuit_worker_memory_limit_gib": null,
+      "exact_routing_flow_seed_max_terms": 500000,
+      "exact_routing_fixed_cover_max_triangle_constraints": 500000,
+      "exact_routing_fixed_cover_backend": "sat",
+      "exact_routing_sat_solver": "glucose42",
+      "exact_routing_sat_max_estimated_clauses": 5000000,
+      "beam": null,
+      "partition_size_schedule": [
+        4
+      ]
+    },
+    "init": {
+      "cnot_equiv": 409,
+      "single_qubit": 719,
+      "total_raw": 330,
+      "qubits": 24,
+      "gate_breakdown": {
+        "CCX": 57,
+        "CNOT": 67,
+        "H": 194,
+        "X": 12
+      }
+    },
+    "final": {
+      "cnot_equiv": 578,
+      "single_qubit": 881,
+      "total_raw": 1459,
+      "qubits": 24,
+      "gate_breakdown": {
+        "CNOT": 578,
+        "U3": 881
+      }
+    },
+    "timing": {
+      "a2a": 21196.53,
+      "routing": 148.85,
+      "optimization": 10911.81,
+      "total": 32257.21
+    },
+    "all_to_all": {
+      "cnot_equiv": 251,
+      "single_qubit": 343,
+      "total_raw": 594,
+      "qubits": 24,
+      "gate_breakdown": {
+        "CNOT": 251,
+        "U3": 343
+      }
+    },
+    "routed": {
+      "cnot_equiv": 650,
+      "single_qubit": 1567,
+      "total_raw": 2013,
+      "qubits": 24,
+      "gate_breakdown": {
+        "CNOT": 344,
+        "RX": 336,
+        "RY": 672,
+        "RZ": 336,
+        "SWAP": 102,
+        "U3": 223
+      }
+    },
+    "rewrite_audit": {
+      "schema_version": 2,
+      "file": "benchmarks/partitioning/IBMEagle_results_4qbit_bqskit/adder_8.audit.json.gz",
+      "sha256": "c2747f5476b292edf1e46749d253a5b6aa86dd10df8ed238bb8e5aaa2119d2dd",
+      "summary": {
+        "events": 3196,
+        "rewrites": 3165,
+        "accepted_rewrites": 2175,
+        "failed_synthesis_attempts": 0,
+        "fallbacks": 0,
+        "candidate_tolerance_misses": 0
+      },
+      "verified_rewrites": 3165,
+      "accepted_rewrites": 2175,
+      "worst_process_infidelity": 2.7977620220553945e-14,
+      "worst_accepted_process_infidelity": 2.7977620220553945e-14,
+      "candidate_tolerance_misses": 0,
+      "accepted_spectral_error_bound": 2.81559515223421e-06,
+      "replayed_native_rounds": 0,
+      "replayed_bqskit_invocations": 22,
+      "replayed_pam_routing_passes": 1,
+      "replayed_placement_passes": 2,
+      "replayed_qiskit_sabre_passes": 0,
+      "replayed_exact_osr_routing_passes": 0,
+      "replayed_squander_sabre_passes": 0,
+      "replayed_bqskit_stages": 3,
+      "chained_bqskit_events": 25,
+      "replayed_whole_circuit_transitions": 6,
+      "final_circuit_sha256": "493aeae34778e1491a21fc83730d08b78040369e9349a3b0a75dc0be94dadd07"
+    }
+  },
+  "gf2^E9_mult.qasm": {
+    "file": "gf2^E9_mult.qasm",
+    "dataset": "IBMEagle",
+    "output_file": "benchmarks/partitioning/IBMEagle_results_4qbit_bqskit/gf2^E9_mult.qasm",
+    "status": "timeout",
+    "timeout_seconds": 86400.0,
+    "strategy": "bqskit",
+    "pre_opt_strategy": "bqskit",
+    "routing_strategy": "seqpam-quick",
+    "source_fingerprint": "30ce6c2aa6d98af9ec3a7914f7f2e4cea92470fabe0899cadece1302f614e430",
+    "configuration": {
+      "max_partition_size": 4,
+      "tolerance": 1e-14,
+      "osr_optimization_tolerance": 1e-06,
+      "synthesis_acceptance_tolerance": 1e-10,
+      "circuit_validation_tolerance": 1e-08,
+      "bqskit_synthesis_epsilon": 5.000000000125e-11,
+      "use_float": true,
+      "use_osr": true,
+      "use_graph_search": true,
+      "auto_expand_partition_size": false,
+      "partition_strategy": "ilp",
+      "routing_partition_strategy": "ilp",
+      "pam_swap_cnot_cost": 3.0,
+      "partition_workers": null,
+      "routing_synthesis_workers": 4,
+      "routing_column_max_iteration_loops": 8,
+      "routing_column_synthesis_mode": "topology-osr",
+      "exact_routing_catalog_progress": true,
+      "exact_routing_catalog_progress_interval": 25,
+      "exact_routing_light_sabre_seed_count": 32,
+      "exact_routing_light_sabre_trials_per_seed": 1,
+      "exact_routing_light_guided_cover_count": 8,
+      "exact_routing_minimum_cover_seed_count": 8,
+      "exact_routing_post_catalog_pam_seed_count": 12,
+      "exact_routing_pam_layout_passes": 3,
+      "exact_routing_pam_swap_cnot_costs": [
+        3.0
+      ],
+      "exact_routing_pam_cover_strategies": [
+        "kahn",
+        "ilp",
+        "ilp-routing"
+      ],
+      "exact_routing_lazy_osr": false,
+      "exact_routing_cover_pool_timeout_seconds": 10.0,
+      "exact_routing_token_seed_timeout_seconds": 0.0,
+      "exact_routing_token_seed_cover_strategies": [
+        "light-structural"
+      ],
+      "routing_synthesis_worker_memory_limit_gib": 16.0,
+      "routing_minimum_available_memory_fraction": 0.25,
+      "circuit_worker_memory_limit_gib": null,
+      "exact_routing_flow_seed_max_terms": 500000,
+      "exact_routing_fixed_cover_max_triangle_constraints": 500000,
+      "exact_routing_fixed_cover_backend": "sat",
+      "exact_routing_sat_solver": "glucose42",
+      "exact_routing_sat_max_estimated_clauses": 5000000,
+      "beam": null,
+      "partition_size_schedule": [
+        4
+      ]
+    },
+    "init": {
+      "cnot_equiv": 494,
+      "single_qubit": 1053,
+      "total_raw": 413,
+      "qubits": 27,
+      "gate_breakdown": {
+        "CCX": 81,
+        "CNOT": 8,
+        "H": 324
+      }
+    },
+    "timing": {
+      "a2a": null,
+      "routing": null,
+      "optimization": null,
+      "total": 86400.0
+    }
+  },
+  "gf2^E10_mult.qasm": {
+    "file": "gf2^E10_mult.qasm",
+    "dataset": "IBMEagle",
+    "output_file": "benchmarks/partitioning/IBMEagle_results_4qbit_bqskit/gf2^E10_mult.qasm",
+    "status": "timeout",
+    "timeout_seconds": 86400.0,
+    "strategy": "bqskit",
+    "pre_opt_strategy": "bqskit",
+    "routing_strategy": "seqpam-quick",
+    "source_fingerprint": "30ce6c2aa6d98af9ec3a7914f7f2e4cea92470fabe0899cadece1302f614e430",
+    "configuration": {
+      "max_partition_size": 4,
+      "tolerance": 1e-14,
+      "osr_optimization_tolerance": 1e-06,
+      "synthesis_acceptance_tolerance": 1e-10,
+      "circuit_validation_tolerance": 1e-08,
+      "bqskit_synthesis_epsilon": 5.000000000125e-11,
+      "use_float": true,
+      "use_osr": true,
+      "use_graph_search": true,
+      "auto_expand_partition_size": false,
+      "partition_strategy": "ilp",
+      "routing_partition_strategy": "ilp",
+      "pam_swap_cnot_cost": 3.0,
+      "partition_workers": null,
+      "routing_synthesis_workers": 4,
+      "routing_column_max_iteration_loops": 8,
+      "routing_column_synthesis_mode": "topology-osr",
+      "exact_routing_catalog_progress": true,
+      "exact_routing_catalog_progress_interval": 25,
+      "exact_routing_light_sabre_seed_count": 32,
+      "exact_routing_light_sabre_trials_per_seed": 1,
+      "exact_routing_light_guided_cover_count": 8,
+      "exact_routing_minimum_cover_seed_count": 8,
+      "exact_routing_post_catalog_pam_seed_count": 12,
+      "exact_routing_pam_layout_passes": 3,
+      "exact_routing_pam_swap_cnot_costs": [
+        3.0
+      ],
+      "exact_routing_pam_cover_strategies": [
+        "kahn",
+        "ilp",
+        "ilp-routing"
+      ],
+      "exact_routing_lazy_osr": false,
+      "exact_routing_cover_pool_timeout_seconds": 10.0,
+      "exact_routing_token_seed_timeout_seconds": 0.0,
+      "exact_routing_token_seed_cover_strategies": [
+        "light-structural"
+      ],
+      "routing_synthesis_worker_memory_limit_gib": 16.0,
+      "routing_minimum_available_memory_fraction": 0.25,
+      "circuit_worker_memory_limit_gib": null,
+      "exact_routing_flow_seed_max_terms": 500000,
+      "exact_routing_fixed_cover_max_triangle_constraints": 500000,
+      "exact_routing_fixed_cover_backend": "sat",
+      "exact_routing_sat_solver": "glucose42",
+      "exact_routing_sat_max_estimated_clauses": 5000000,
+      "beam": null,
+      "partition_size_schedule": [
+        4
+      ]
+    },
+    "init": {
+      "cnot_equiv": 609,
+      "single_qubit": 1300,
+      "total_raw": 509,
+      "qubits": 30,
+      "gate_breakdown": {
+        "CCX": 100,
+        "CNOT": 9,
+        "H": 400
+      }
+    },
+    "timing": {
+      "a2a": null,
+      "routing": null,
+      "optimization": null,
+      "total": 86400.0
+    }
+  },
+  "QFT32.qasm": {
+    "file": "QFT32.qasm",
+    "dataset": "IBMEagle",
+    "output_file": "benchmarks/partitioning/IBMEagle_results_4qbit_bqskit/QFT32.qasm",
+    "status": "timeout",
+    "timeout_seconds": 86400.0,
+    "strategy": "bqskit",
+    "pre_opt_strategy": "bqskit",
+    "routing_strategy": "seqpam-quick",
+    "source_fingerprint": "30ce6c2aa6d98af9ec3a7914f7f2e4cea92470fabe0899cadece1302f614e430",
+    "configuration": {
+      "max_partition_size": 4,
+      "tolerance": 1e-14,
+      "osr_optimization_tolerance": 1e-06,
+      "synthesis_acceptance_tolerance": 1e-10,
+      "circuit_validation_tolerance": 1e-08,
+      "bqskit_synthesis_epsilon": 5.000000000125e-11,
+      "use_float": true,
+      "use_osr": true,
+      "use_graph_search": true,
+      "auto_expand_partition_size": false,
+      "partition_strategy": "ilp",
+      "routing_partition_strategy": "ilp",
+      "pam_swap_cnot_cost": 3.0,
+      "partition_workers": null,
+      "routing_synthesis_workers": 4,
+      "routing_column_max_iteration_loops": 8,
+      "routing_column_synthesis_mode": "topology-osr",
+      "exact_routing_catalog_progress": true,
+      "exact_routing_catalog_progress_interval": 25,
+      "exact_routing_light_sabre_seed_count": 32,
+      "exact_routing_light_sabre_trials_per_seed": 1,
+      "exact_routing_light_guided_cover_count": 8,
+      "exact_routing_minimum_cover_seed_count": 8,
+      "exact_routing_post_catalog_pam_seed_count": 12,
+      "exact_routing_pam_layout_passes": 3,
+      "exact_routing_pam_swap_cnot_costs": [
+        3.0
+      ],
+      "exact_routing_pam_cover_strategies": [
+        "kahn",
+        "ilp",
+        "ilp-routing"
+      ],
+      "exact_routing_lazy_osr": false,
+      "exact_routing_cover_pool_timeout_seconds": 10.0,
+      "exact_routing_token_seed_timeout_seconds": 0.0,
+      "exact_routing_token_seed_cover_strategies": [
+        "light-structural"
+      ],
+      "routing_synthesis_worker_memory_limit_gib": 16.0,
+      "routing_minimum_available_memory_fraction": 0.25,
+      "circuit_worker_memory_limit_gib": null,
+      "exact_routing_flow_seed_max_terms": 500000,
+      "exact_routing_fixed_cover_max_triangle_constraints": 500000,
+      "exact_routing_fixed_cover_backend": "sat",
+      "exact_routing_sat_solver": "glucose42",
+      "exact_routing_sat_max_estimated_clauses": 5000000,
+      "beam": null,
+      "partition_size_schedule": [
+        4
+      ]
+    },
+    "init": {
+      "cnot_equiv": 612,
+      "single_qubit": 950,
+      "total_raw": 1562,
+      "qubits": 32,
+      "gate_breakdown": {
+        "CNOT": 612,
+        "H": 32,
+        "RZ": 918
+      }
+    },
+    "timing": {
+      "a2a": null,
+      "routing": null,
+      "optimization": null,
+      "total": 86400.0
+    }
+  },
+  "QFTAdd16.qasm": {
+    "file": "QFTAdd16.qasm",
+    "dataset": "IBMEagle",
+    "output_file": "benchmarks/partitioning/IBMEagle_results_4qbit_bqskit/QFTAdd16.qasm",
+    "status": "timeout",
+    "timeout_seconds": 86400.0,
+    "strategy": "bqskit",
+    "pre_opt_strategy": "bqskit",
+    "routing_strategy": "seqpam-quick",
+    "source_fingerprint": "30ce6c2aa6d98af9ec3a7914f7f2e4cea92470fabe0899cadece1302f614e430",
+    "configuration": {
+      "max_partition_size": 4,
+      "tolerance": 1e-14,
+      "osr_optimization_tolerance": 1e-06,
+      "synthesis_acceptance_tolerance": 1e-10,
+      "circuit_validation_tolerance": 1e-08,
+      "bqskit_synthesis_epsilon": 5.000000000125e-11,
+      "use_float": true,
+      "use_osr": true,
+      "use_graph_search": true,
+      "auto_expand_partition_size": false,
+      "partition_strategy": "ilp",
+      "routing_partition_strategy": "ilp",
+      "pam_swap_cnot_cost": 3.0,
+      "partition_workers": null,
+      "routing_synthesis_workers": 4,
+      "routing_column_max_iteration_loops": 8,
+      "routing_column_synthesis_mode": "topology-osr",
+      "exact_routing_catalog_progress": true,
+      "exact_routing_catalog_progress_interval": 25,
+      "exact_routing_light_sabre_seed_count": 32,
+      "exact_routing_light_sabre_trials_per_seed": 1,
+      "exact_routing_light_guided_cover_count": 8,
+      "exact_routing_minimum_cover_seed_count": 8,
+      "exact_routing_post_catalog_pam_seed_count": 12,
+      "exact_routing_pam_layout_passes": 3,
+      "exact_routing_pam_swap_cnot_costs": [
+        3.0
+      ],
+      "exact_routing_pam_cover_strategies": [
+        "kahn",
+        "ilp",
+        "ilp-routing"
+      ],
+      "exact_routing_lazy_osr": false,
+      "exact_routing_cover_pool_timeout_seconds": 10.0,
+      "exact_routing_token_seed_timeout_seconds": 0.0,
+      "exact_routing_token_seed_cover_strategies": [
+        "light-structural"
+      ],
+      "routing_synthesis_worker_memory_limit_gib": 16.0,
+      "routing_minimum_available_memory_fraction": 0.25,
+      "circuit_worker_memory_limit_gib": null,
+      "exact_routing_flow_seed_max_terms": 500000,
+      "exact_routing_fixed_cover_max_triangle_constraints": 500000,
+      "exact_routing_fixed_cover_backend": "sat",
+      "exact_routing_sat_solver": "glucose42",
+      "exact_routing_sat_max_estimated_clauses": 5000000,
+      "beam": null,
+      "partition_size_schedule": [
+        4
+      ]
+    },
+    "init": {
+      "cnot_equiv": 716,
+      "single_qubit": 1106,
+      "total_raw": 1822,
+      "qubits": 32,
+      "gate_breakdown": {
+        "CNOT": 716,
+        "H": 32,
+        "RZ": 1074
+      }
+    },
+    "timing": {
+      "a2a": null,
+      "routing": null,
+      "optimization": null,
+      "total": 86400.0
+    }
+  }
+}
