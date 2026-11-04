@@ -1279,7 +1279,8 @@ void Optimization_Interface::optimization_problem_combined_non_static( Matrix_re
 ///////////////////////////////////////
 //std::cout << "number of qubits: " << instance->qbit_num << std::endl;
 //tbb::tick_count t0_DFE = tbb::tick_count::now();/////////////////////////////////    
-if ( Umtx.cols == Umtx.rows && instance->qbit_num >= 5 && instance->get_accelerator_num() > 0 ) {
+if ( Umtx.cols == Umtx.rows && instance->get_accelerator_num() > 0 &&
+     instance->qbit_num >= (is_groq_dfe() ? 2 : 5) ) {
 
     int gatesNum, redundantGateSets, gateSetNum;
     DFEgate_kernel_type* DFEgates = instance->convert_to_DFE_gates_with_derivates( parameters, gatesNum, gateSetNum, redundantGateSets );
