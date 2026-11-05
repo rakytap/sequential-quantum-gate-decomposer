@@ -290,6 +290,41 @@ apply_kernel_from_right_AVX_small(Matrix& u3_1qbit, Matrix& input, const int& ta
 
     const int index_step_target = 1 << target_qbit;
 
+    if (target_qbit == 0 && control_qbit < 0) {
+        // Adjacent complex columns fit in one AVX register. The general
+        // four-pair loop cannot run for this target and otherwise leaves
+        // every pair scalar, including the tiny HS-gradient suffixes.
+        const __m256d first_real = _mm256_setr_pd(
+            u3_1qbit[0].real, u3_1qbit[0].real,
+            u3_1qbit[1].real, u3_1qbit[1].real);
+        const __m256d first_imag = _mm256_setr_pd(
+            u3_1qbit[0].imag, u3_1qbit[0].imag,
+            u3_1qbit[1].imag, u3_1qbit[1].imag);
+        const __m256d second_real = _mm256_setr_pd(
+            u3_1qbit[2].real, u3_1qbit[2].real,
+            u3_1qbit[3].real, u3_1qbit[3].real);
+        const __m256d second_imag = _mm256_setr_pd(
+            u3_1qbit[2].imag, u3_1qbit[2].imag,
+            u3_1qbit[3].imag, u3_1qbit[3].imag);
+        for (int row = 0; row < input.rows; ++row) {
+            double* const values = reinterpret_cast<double*>(
+                input.get_data() + row * input.stride);
+            for (int col = 0; col + 1 < input.cols; col += 2) {
+                const __m256d pair = _mm256_loadu_pd(values + 2 * col);
+                const __m256d first = _mm256_permute2f128_pd(pair, pair, 0x00);
+                const __m256d second = _mm256_permute2f128_pd(pair, pair, 0x11);
+                const __m256d left = _mm256_fmaddsub_pd(
+                    first_real, first,
+                    _mm256_mul_pd(first_imag, _mm256_permute_pd(first, 0x05)));
+                const __m256d right = _mm256_fmaddsub_pd(
+                    second_real, second,
+                    _mm256_mul_pd(second_imag, _mm256_permute_pd(second, 0x05)));
+                _mm256_storeu_pd(values + 2 * col, _mm256_add_pd(left, right));
+            }
+        }
+        return;
+    }
+
     const __m256d u00r = _mm256_broadcast_sd(&u3_1qbit[0].real);
     const __m256d u00i = _mm256_broadcast_sd(&u3_1qbit[0].imag);
     const __m256d u01r = _mm256_broadcast_sd(&u3_1qbit[1].real);
@@ -379,6 +414,24 @@ apply_kernel_from_right_AVX_small(Matrix& u3_1qbit, Matrix& input, const int& ta
                     vec7 = tmp;
                     _mm256_storeu_pd(element_pair + col_idx, vec7);
                     _mm256_storeu_pd(element_pair + col_idx + 4, vec9);
+                }
+
+                // Two complex pairs need no real/imag deinterleaving. In
+                // particular, target 1 previously always took scalar code.
+                if (col_idx + 4 <= 2 * index_step_target) {
+                    const __m256d first = _mm256_loadu_pd(element + col_idx);
+                    const __m256d second = _mm256_loadu_pd(element_pair + col_idx);
+                    const __m256d first_swapped = _mm256_permute_pd(first, 0x05);
+                    const __m256d second_swapped = _mm256_permute_pd(second, 0x05);
+                    const __m256d out0 = _mm256_add_pd(
+                        _mm256_fmaddsub_pd(u00r, first, _mm256_mul_pd(u00i, first_swapped)),
+                        _mm256_fmaddsub_pd(u10r, second, _mm256_mul_pd(u10i, second_swapped)));
+                    const __m256d out1 = _mm256_add_pd(
+                        _mm256_fmaddsub_pd(u01r, first, _mm256_mul_pd(u01i, first_swapped)),
+                        _mm256_fmaddsub_pd(u11r, second, _mm256_mul_pd(u11i, second_swapped)));
+                    _mm256_storeu_pd(element + col_idx, out0);
+                    _mm256_storeu_pd(element_pair + col_idx, out1);
+                    col_idx += 4;
                 }
 
                 for (int c = col_idx / 2; c < index_step_target; ++c) {
@@ -1029,6 +1082,58 @@ apply_kernel_from_right_AVX(Matrix& u3_1qbit, Matrix& input, const int& target_q
     const __m256d u11r = _mm256_broadcast_sd(&u3_1qbit[3].real);
     const __m256d u11i = _mm256_broadcast_sd(&u3_1qbit[3].imag);
 
+    // For targets 0 and 1, the usual block loop falls back to scalar
+    // complex arithmetic. Pack two target-0 pairs or one target-1 block
+    // into AVX lanes when the control bit is constant across four columns.
+    if (index_step_target <= 2 && input.cols >= 4 && input.cols % 4 == 0 &&
+        (control_qbit < 0 || control_qbit >= 2)) {
+        auto complex_mul = [](__m256d real, __m256d imag, __m256d value,
+                              __m256d swapped) {
+            return _mm256_addsub_pd(_mm256_mul_pd(real, value),
+                                    _mm256_mul_pd(imag, swapped));
+        };
+
+        for (int row_idx = 0; row_idx < input.rows; ++row_idx) {
+            double* row_data = (double*)input.get_data() +
+                               2 * row_idx * input.stride;
+
+            for (int col = 0; col < input.cols; col += 4) {
+                if (control_qbit >= 0 && !((col >> control_qbit) & 1)) {
+                    continue;
+                }
+
+                const __m256d first = _mm256_loadu_pd(row_data + 2 * col);
+                const __m256d second = _mm256_loadu_pd(row_data + 2 * col + 4);
+                const __m256d element = index_step_target == 1
+                    ? _mm256_permute2f128_pd(first, second, 0x20) : first;
+                const __m256d element_pair = index_step_target == 1
+                    ? _mm256_permute2f128_pd(first, second, 0x31) : second;
+                const __m256d element_swapped = _mm256_permute_pd(element, 0x5);
+                const __m256d pair_swapped = _mm256_permute_pd(element_pair, 0x5);
+
+                const __m256d out_element = _mm256_add_pd(
+                    complex_mul(u00r, u00i, element, element_swapped),
+                    complex_mul(u10r, u10i, element_pair, pair_swapped));
+                const __m256d out_pair = _mm256_add_pd(
+                    complex_mul(u01r, u01i, element, element_swapped),
+                    complex_mul(u11r, u11i, element_pair, pair_swapped));
+
+                if (index_step_target == 1) {
+                    _mm256_storeu_pd(row_data + 2 * col,
+                                     _mm256_permute2f128_pd(out_element, out_pair, 0x20));
+                    _mm256_storeu_pd(row_data + 2 * col + 4,
+                                     _mm256_permute2f128_pd(out_element, out_pair, 0x31));
+                } else {
+                    _mm256_storeu_pd(row_data + 2 * col, out_element);
+                    _mm256_storeu_pd(row_data + 2 * col + 4, out_pair);
+                }
+            }
+        }
+
+        (void)matrix_size;
+        return;
+    }
+
     for (int row_idx = 0; row_idx < input.rows; row_idx++) {
 
         const int row_offset = row_idx * input.stride;
@@ -1512,5 +1617,3 @@ apply_kernel_from_right_AVX_parallel32(Matrix_float& u3_1qbit, Matrix_float& inp
 
     (void)matrix_size;
 }
-
-

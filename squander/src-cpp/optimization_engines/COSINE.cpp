@@ -138,7 +138,7 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
         }
         
         
-        long long export_circuit_2_binary_loc;
+        bool export_circuit_2_binary_loc = false;
         if ( config.count("export_circuit_2_binary_cosine") > 0 ) {
              config["export_circuit_2_binary_cosine"].get_property( export_circuit_2_binary_loc );  
         }
@@ -146,19 +146,16 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
              config["export_circuit_2_binary"].get_property( export_circuit_2_binary_loc );  
         }
         else {
-            export_circuit_2_binary_loc = 0;
+            export_circuit_2_binary_loc = false;
         }        
 
-        long long check_for_convergence;
+        bool check_for_convergence = true;
         if ( config.count("check_for_convergence") > 0 ) {
              config["check_for_convergence"].get_property( check_for_convergence );  
         }
         else if ( config.count("check_for_convergence_cosine") > 0 ) {
              config["check_for_convergence_cosine"].get_property( check_for_convergence );  
         }
-        else {
-            check_for_convergence = 1;
-        }        
 
 
         double optimization_tolerance_loc;
@@ -583,7 +580,7 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
                 sstream << "COSINE: processed iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "%, current minimum:" << current_minimum;
                 sstream << " " << " circuit simulation time: " << circuit_simulation_time  << std::endl;
                 print(sstream, 1);   
-                if ( export_circuit_2_binary_loc > 0 ) {
+                if ( export_circuit_2_binary_loc ) {
                     std::string filename("initial_circuit_iteration.binary");
                     if (project_name != "") { 
                         filename=project_name+ "_"  +filename;
@@ -618,12 +615,12 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
 
 
      
-            if ( std::abs( (f0_mean - current_minimum)/f0_mean) < 1e-7  && std::abs(var_f0/f0_mean) < 1e-7 && check_for_convergence > 0 ) {
+            if ( std::abs( (f0_mean - current_minimum)/f0_mean) < 1e-7  && std::abs(var_f0/f0_mean) < 1e-7 && check_for_convergence ) {
                 std::stringstream sstream;
                 sstream << "COSINE: converged to minimum at iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "%, current minimum:" << current_minimum;
                 sstream << " circuit simulation time: " << circuit_simulation_time  << std::endl;
                 print(sstream, 1);   
-                if ( export_circuit_2_binary_loc > 0 ) {
+                if ( export_circuit_2_binary_loc ) {
                     std::string filename("initial_circuit_iteration.binary");
                     if (project_name != "") { 
                         filename=project_name+ "_"  +filename;
@@ -653,5 +650,3 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
         print(sstream, 1); 
 
 }
-
-

@@ -1,0 +1,68 @@
+"""The small PuLP 3/4 API boundary used by partitioning and routing."""
+
+
+class PulpVariables:
+    """Create variables owned by their problem when the PuLP API supports it."""
+
+    def __init__(self, problem, pulp):
+        self.problem = problem
+        self.pulp = pulp
+
+    def __call__(self, *args, **kwargs):
+        add_variable = getattr(self.problem, "add_variable", None)
+        if add_variable is not None:
+            return add_variable(*args, **kwargs)
+        return self.pulp.LpVariable(*args, **kwargs)
+
+    def dicts(self, *args, **kwargs):
+        add_variable_dicts = getattr(self.problem, "add_variable_dicts", None)
+        if add_variable_dicts is not None:
+            # PuLP 4 converts Binary to Integer during recursive dict creation.
+            # Without explicit bounds, inner dimensions become unbounded.
+            if kwargs.get("cat") == "Binary":
+                kwargs.setdefault("lowBound", 0)
+                kwargs.setdefault("upBound", 1)
+            return add_variable_dicts(*args, **kwargs)
+        return self.pulp.LpVariable.dicts(*args, **kwargs)
+
+
+class PulpSolveBackend(str):
+    """Keep the backend name while carrying PuLP 4's per-solve statistics."""
+
+    def __new__(cls, name, solve_result):
+        backend = super().__new__(cls, name)
+        backend.solve_result = solve_result
+        return backend
+
+
+def cbc_solver(pulp, **kwargs):
+    """PuLP 4 uses COIN_CMD and installs CBC through its cbc extra."""
+    # Exact routing must not terminate at CBC's nonzero default absolute gap.
+    kwargs.setdefault("gapRel", 0.0)
+    kwargs.setdefault("gapAbs", 0.0)
+    solver_type = getattr(pulp, "PULP_CBC_CMD", None)
+    if solver_type is None:
+        solver_type = pulp.COIN_CMD
+    return solver_type(**kwargs)
+
+
+def pulp_solve_status(pulp, problem, backend):
+    """Read status from the solve result, not PuLP 4's removed problem.status."""
+    solve_result = getattr(backend, "solve_result", None)
+    if hasattr(solve_result, "status_str"):
+        if (
+            solve_result.status_str == "GapLimit"
+            and solve_result.has_solution
+            and solve_result.best_bound is not None
+            and solve_result.objective is not None
+            and solve_result.best_bound == solve_result.objective
+        ):
+            # Equal primal and dual objectives certify optimality, regardless
+            # of CBC's termination label. A merely small gap is not enough.
+            return "Optimal"
+        return solve_result.status_str
+    if solve_result is not None:
+        return pulp.LpStatus[int(solve_result)]
+    if hasattr(problem, "status"):
+        return pulp.LpStatus[problem.status]
+    raise RuntimeError("The PuLP solve result is unavailable.")

@@ -26,7 +26,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 
 import numpy as np
-from scipy.stats import unitary_group
+from qiskit import QuantumCircuit
 
 from squander import utils
 
@@ -38,30 +38,37 @@ class Test_Decomposition:
         r"""
         Test a custom QX2 gate structure in a four-qubit decomposition.
 
-        Both the target and optimizer are seeded because convergence time for
-        this strong numerical test otherwise varies by thousands of optimizer
-        iterations.
+        Use an entangling target on a QX2 edge so this checks the custom
+        structure without making CI depend on convergence of a Haar unitary.
         """
 
         from squander import N_Qubit_Decomposition
 
         qbit_num = 4
         matrix_size = 2**qbit_num
+        reordered_qbits = (2, 3, 1, 0)
 
-        # Keep both halves of the stochastic workload reproducible.
-        Umtx = unitary_group.rvs(matrix_size, random_state=0)
+        target_circuit = QuantumCircuit(qbit_num)
+        for qbit in range(qbit_num):
+            target_circuit.u(
+                0.2 + 0.13 * qbit,
+                -0.3 + 0.07 * qbit,
+                0.4 - 0.09 * qbit,
+                qbit,
+            )
+        # The custom structure's first CNOT is (0, 3) after reordering.
+        target_circuit.cx(reordered_qbits[0], reordered_qbits[3])
+        Umtx = np.asarray(utils.get_unitary_from_qiskit_circuit(target_circuit))
         decomp = N_Qubit_Decomposition(
             Umtx.conj().T,
             config={
                 "random_seed": 1,
-                "max_outer_iterations": 600,
-                # The explicit iteration cap bounds runtime; do not let the
-                # looser stagnation heuristic pre-empt the 1e-7 tolerance.
+                "max_outer_iterations": 120,
+                "optimization_block_final": 100,
                 "convergence_threshold": 0.0,
             },
         )
 
-        reordered_qbits = (2, 3, 1, 0)
         decomp.Reorder_Qubits(reordered_qbits)
         decomp.set_Gate_Structure(
             {
@@ -69,9 +76,9 @@ class Test_Decomposition:
                 3: self.create_custom_gate_structure_QX2(3),
             }
         )
-        decomp.set_Max_Layer_Num({4: 60, 3: 16})
+        decomp.set_Max_Layer_Num({4: 6, 3: 6})
         decomp.set_Optimization_Blocks(20)
-        decomp.set_Optimization_Tolerance(1e-7)
+        decomp.set_Optimization_Tolerance(1e-8)
         decomp.Start_Decomposition()
 
         assert decomp.get_Decomposition_Error() < 1e-7

@@ -28,7 +28,12 @@ limitations under the License.
 
 
 /**
-@brief A class describing a universal configuration element. Can store one element at once, by setting a value other attributes are reset.
+@brief A class describing a universal numeric configuration element.
+
+Boolean and integer representations are kept synchronized. This is required
+because Python historically accepted both ``True``/``False`` and ``1``/``0``
+for flag-valued configuration entries, and callers must observe the same value
+through either getter overload.
 */
 class Config_Element  {
 
