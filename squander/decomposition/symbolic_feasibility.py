@@ -60,6 +60,16 @@ def _nonzero_witness(expression):
         witness=simplify_exact(expression.subs(substitution))
         if not witness.has(sp.nan,sp.zoo) and witness.is_zero is False:
             return {str(symbol):str(value) for symbol in symbols}
+    # A diagonal probe can land entirely on a special-value locus. Vary one
+    # parameter at a time as well: t=1/2, shift=0 detects a phase that vanishes
+    # when both parameters are set to 1/2. These are exact nonidentity witnesses,
+    # not numerical acceptance tests or a proof for every specialization.
+    for symbol in symbols:
+        substitution={other:sp.S.Zero for other in symbols}
+        substitution[symbol]=sp.Rational(1,2)
+        witness=simplify_exact(expression.subs(substitution))
+        if not witness.has(sp.nan,sp.zoo) and witness.is_zero is False:
+            return {str(other):str(value) for other,value in substitution.items()}
     return None
 
 

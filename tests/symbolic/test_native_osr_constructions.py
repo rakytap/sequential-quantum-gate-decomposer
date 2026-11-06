@@ -65,6 +65,15 @@ def test_sixteenth_root_identity_is_proved_without_floating_angles():
     assert not zero_form(expression+sp.Rational(1,10**20))
 
 
+@pytest.mark.parametrize("angle",[-sp.pi/12,sp.pi/24,5*sp.pi/12])
+def test_constant_phase_proposals_accept_only_an_exact_root_identity(angle):
+    from symbolic_native_pauli import _phase
+    root=sp.expand_complex(sp.exp(sp.I*angle))
+    assert _phase(root)==angle
+    perturbed=root+sp.Rational(1,10**15)
+    assert _phase(perturbed)!=angle
+
+
 def test_projectively_local_native_specialization_can_still_need_a_phase_resource():
     exact=synthesize("Rxx",(sp.pi,),"xx_rz_ry",phase_exact=True,osr_seconds=10)
     projective=synthesize("Rxx",(sp.pi,),"xx_rz_ry",phase_exact=False,osr_seconds=10)
@@ -75,3 +84,12 @@ def test_projectively_local_native_specialization_can_still_need_a_phase_resourc
     word=_physical_scalar(sp.I,get_basis("xx_rz_ry"),2)
     assert sum(len(op[-1])==2 for op in word)==1
     assert prove_circuit_identity(sp.I*sp.eye(4),word)
+
+
+@pytest.mark.parametrize("basis",["ionq_aria_full","quantinuum_zzmax"])
+def test_three_wire_involution_square_provides_a_missing_exact_phase(basis):
+    from symbolic_contract import verify_circuit
+    factor=sp.exp(sp.I*sp.pi/4)
+    word=_physical_scalar(factor,get_basis(basis),3)
+    assert word and not any(op[0]=="GP" for op in word)
+    assert verify_circuit(factor*sp.eye(8),word,get_basis(basis))["status"]=="verified_symbolic"

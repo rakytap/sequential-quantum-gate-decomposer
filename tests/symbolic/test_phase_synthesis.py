@@ -63,6 +63,14 @@ def test_determinants_use_the_embedded_register_width():
     assert feasibility_obstruction(target,get_basis("cx_u")) is None
 
 
+def test_determinant_witness_can_vary_parameters_independently():
+    t,shift=sp.symbols("t global_shift",real=True)
+    obstruction=feasibility_obstruction(gates.make_gate("FSWAPPow",t,shift),get_basis("xx_rz_ry"))
+    assert obstruction["status"]=="proved_impossible"
+    assert obstruction["scope"]=="generic_family"
+    assert obstruction["exact_nonidentity_witness"]=={"global_shift":"0","t":"1/2"}
+
+
 def test_continuous_and_fixed_discrete_obstructions_are_separate():
     theta=sp.Symbol("theta",real=True)
     row=feasibility_obstruction(gates.make_gate("Ry",theta),get_basis("clifford_t_cx"),phase_exact=False)

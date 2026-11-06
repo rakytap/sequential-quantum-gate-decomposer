@@ -441,6 +441,33 @@ projective identity with scalar factor exactly one is also an exact circuit.
 `synthesis_run_index` and `last_attempt_phase_statuses` identify the latest raw
 attempt, whose outcome remains in the archive history.
 
+Nested exchange/Cartan motifs are lowered directly into the chosen native
+pulses rather than first expanding each inner motif into CNOTs. Fixed native
+powers use a numerical index only to propose a match, followed by an exact
+matrix identity check. The same rule applies to rational-angle proposals for
+constant roots of unity; sampled or rounded equality never accepts a circuit.
+
+Literal phase closure on three wires can need a resource unavailable on two.
+If Toffoli equals `factor * C`, then the physical word `C + C` equals
+`factor**(-2) * I_8`. The involution-square motif and native adjoints supply
+these three-wire centre phases without a physical GP gate. Their cost is
+charged in full; the chosen gadget is a construction, not a global minimum.
+
+For faster PDF compilation after exporting, install the optional `pypdf`
+package and run:
+
+```bash
+python examples/decomposition/build_symbolic_atlas.py \
+  --source-dir /tmp/symbolic-atlas --workers 16
+```
+
+This compiles individual LaTeX sheets concurrently, then assembles them with
+their alphabetical index links and bookmark hierarchy restored. Every sheet
+must remain exactly one PDF page. The Clifford volume also includes the 24
+exact representative matrices, fixing the phase convention for the tables.
+Long exact expressions in gate boxes use numbered definitions in the glossary;
+their expressions remain unrounded in both that glossary and the manifest.
+
 ## Validation
 
 ```bash

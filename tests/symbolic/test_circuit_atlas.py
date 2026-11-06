@@ -56,3 +56,16 @@ def test_qiskit_draws_exact_symbolic_math_and_operand_order():
     assert "<<<{1}" in source and "<<<{0}" in source
     with pytest.raises(ValueError, match="GP"):
         atlas.qiskit_latex(1, [(dict(gate="GP", parameters=["theta"], wires=[0]), 1)])
+
+
+def test_long_exact_parameters_keep_a_glossary_definition(tmp_path):
+    store=atlas.CircuitStore(tmp_path)
+    expression="atan((sqrt(2-sqrt(2))-sqrt(2+sqrt(2)))/(-sqrt(2+sqrt(2))-sqrt(2-sqrt(2))))"
+    symbol=store.expression(expression)
+    assert symbol==r"\eta_{1}"
+    assert store.aliases[expression]==symbol
+    operation=dict(gate="U3",parameters=["pi",expression,expression],wires=[0])
+    paths=store.render(1,[operation])
+    source=(tmp_path/paths[0]).read_text()
+    assert r"\eta_{1}" in source
+    assert r"\operatorname{atan}" not in source

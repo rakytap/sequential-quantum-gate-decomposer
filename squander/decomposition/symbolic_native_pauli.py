@@ -136,8 +136,20 @@ def cartan_native_source(a,b,c,entangler):
 def _phase(expression):
     expression=sp.simplify(sp.expand(expression.rewrite(sp.exp)))
     if not expression.free_symbols:
+        magnitude=sp.simplify(sp.expand_complex(expression*sp.conjugate(expression)-1))
+        if magnitude.is_zero is False:return None
         phase=sp.arg(expression)
-        if sp.simplify(phase/sp.pi).is_Rational:return phase
+        rational_phase=sp.simplify(phase/sp.pi)
+        if rational_phase.is_Rational:return sp.pi*rational_phase
+        # Index a possible root of unity, then prove it exactly. Numerical
+        # phase estimation proposes a rational angle; it never accepts one.
+        # This includes third/sixth roots used by SYC, beyond dyadic roots.
+        from fractions import Fraction
+        import math
+        value=complex(expression.evalf(24))
+        rational=Fraction(math.atan2(value.imag,value.real)/math.pi).limit_denominator(192)
+        proposed=sp.pi*sp.Rational(rational.numerator,rational.denominator)
+        if zero_form(expression-sp.exp(sp.I*proposed)):return proposed
         # Exact root-of-unity recovery. Each proposed phase is checked as an
         # algebraic identity; no angle is rounded from a floating argument.
         for denominator in (4,8,16,32):
@@ -242,6 +254,45 @@ def _variable_cartan_source(coordinates,basis):
     return tuple(word),sp.S.One
 
 
+def _projective_index(matrix):
+    """Numerical proposal index only; the selected word is then proved exactly."""
+    values=[complex(value.evalf(16)) for value in matrix]
+    pivot=max(range(len(values)),key=lambda i:round(abs(values[i]),9))
+    scale=values[pivot]
+    return pivot,tuple((round((value/scale).real,9),round((value/scale).imag,9)) for value in values)
+
+
+@lru_cache(maxsize=16)
+def _native_power_frames(entangler):
+    frames={}
+    pulse=((entangler,(0,1)),)
+    for count in (1,2,3):
+        for first,second in itertools.product(("I","X","Y","Z"),repeat=2):
+            frame=tuple((name,(q,)) for q,name in enumerate((first,second)) if name!="I")
+            word=frame+pulse*count+frame
+            matrix=sp.ImmutableMatrix(gates.compile_gates(2,word)).applyfunc(sp.simplify)
+            key=_projective_index(matrix)
+            if key not in frames:frames[key]=(word,matrix)
+    return frames
+
+
+def _fixed_power_source(coordinates,basis):
+    if basis.entangler not in {"SiSWAP","SSWAP"} or any(value.free_symbols for value in coordinates):return None
+    target=gates.make_gate("Canonical",*coordinates)
+    key=_projective_index(target)
+    candidate=_native_power_frames(basis.entangler).get(key)
+    if candidate is None:return None
+    word,matrix=candidate
+    pivot=key[0]
+    factor=sp.simplify(target[pivot]/matrix[pivot])
+    if __package__:
+        from .symbolic_identity import prove_circuit_identity
+    else:
+        from symbolic_identity import prove_circuit_identity
+    if prove_circuit_identity(target,word,factor) is True:return word,factor
+    return None
+
+
 def native_cartan_candidate(matrix,basis):
     result=bell_coordinates(matrix)
     before=after=()
@@ -252,7 +303,7 @@ def native_cartan_candidate(matrix,basis):
     coordinates,phase=result
     if basis.entangler in {"CX","CNOT","CZ","ECR","XX90","ZZMax","iSWAP"}:
         source=cartan_native_source(*coordinates,basis.entangler)
-    else:source=_variable_cartan_source(coordinates,basis)
+    else:source=_variable_cartan_source(coordinates,basis) or _fixed_power_source(coordinates,basis)
     if source is None:return None
     before_inverse=tuple(("Rz",-op[1],op[-1]) for op in reversed(before))
     after_inverse=tuple(("Rz",-op[1],op[-1]) for op in reversed(after))

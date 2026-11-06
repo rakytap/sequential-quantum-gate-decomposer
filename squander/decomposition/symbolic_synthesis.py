@@ -25,6 +25,11 @@ class RuleUnavailable(ValueError):
     pass
 
 
+@lru_cache(maxsize=32768)
+def _normalized_angle(angle):
+    return sp.simplify(angle)
+
+
 def _op(name, *parameters, wire=0):
     return (name, *parameters, (wire,))
 
@@ -34,11 +39,11 @@ def _cleanup(sequence):
     result = []
     additive = {"Rx", "Ry", "Rz", "P", "U1"}
     for operation in sequence:
-        if operation[0] in additive and sp.simplify(operation[1]) == 0:
+        if operation[0] in additive and _normalized_angle(operation[1]) == 0:
             continue
         if result and operation[0] in additive and result[-1][0] == operation[0] and result[-1][-1] == operation[-1]:
             previous = result.pop()
-            angle = sp.simplify(previous[1]+operation[1])
+            angle = _normalized_angle(previous[1]+operation[1])
             if angle != 0:
                 result.append((operation[0],angle,operation[-1]))
         elif result and len(operation) == 2 and operation == result[-1] and operation[0] in {"X","Y","Z","H","CX","CNOT","CZ","ECR"}:
@@ -230,6 +235,9 @@ def _physical_scalar(factor,basis,width=1):
             exponent=(state % 8-group_data()[-1] % 8)%8
             gadgets=_scalar_gadgets(basis)
             if exponent in gadgets:return gadgets[exponent]
+            if width>=3:
+                gadgets=_scalar_gadgets_three(basis)
+                if exponent in gadgets:return gadgets[exponent]
     raise RuleUnavailable("Scalar phase has no implemented physical correction in this basis")
 
 
@@ -278,7 +286,16 @@ def _native_candidates(name,parameters,basis,*,even=False,source_operations=None
         if name in {"CNOT","CX"}:
             source,f=native_cx(basis.entangler)
         else:
-            source,f=source_rule(name,args,even_cartan=even)
+            proposal=None
+            if (len(wires)==2 and basis.entangler in {"iSWAP","SiSWAP","SSWAP","Rxx","Rzz","Rzx","ZZPhase","fSim","TK2"}
+                    and name in {"Canonical","fSim","PhasedFSim","Rxx","Ryy","Rzz","SSWAP","SSWAPdg","SiSWAP","SiSWAPdg","SWAPPow","ISWAPPow","PhasedISWAPPow"}):
+                if __package__:
+                    from .symbolic_native_pauli import native_cartan_candidate
+                else:
+                    from symbolic_native_pauli import native_cartan_candidate
+                proposal=native_cartan_candidate(gates.make_gate(name,*args),basis)
+            if proposal is not None:source,f=proposal["sequence"],proposal["factor"]
+            else:source,f=source_rule(name,args,even_cartan=even)
         factor*=f
         for operation in source:
             expand(operation[0],operation[1:-1],tuple(wires[q] for q in operation[-1]),depth+1)
@@ -357,6 +374,73 @@ def _scalar_gadgets(basis):
                     paths[end]=candidate;changed=True
         if not changed:break
     return paths
+
+
+def _native_adjoint_word(sequence,basis):
+    """Adjoints in the same physical alphabet for the phase-centre motifs."""
+    output=[]
+    for op in reversed(sequence):
+        name,args,wires=op[0],op[1:-1],op[-1]
+        if name in {"Rx","Ry","Rz","Rxx","Rzz","Rzx","P","U1","IonQZZ","ZZPhase"}:
+            output.append((name,-args[0],wires))
+        elif name in {"U","U3"}:
+            theta,phi,lam=args
+            output.append((name,-theta,-lam,-phi,wires))
+        elif name in {"R","PhasedX"}:
+            output.append((name,-args[0],args[1],wires))
+        elif name=="TK2":output.append((name,*(-value for value in args),wires))
+        elif name in {"H","X","Y","Z","CX","CNOT","CZ","ECR","GPi"}:output.append(op)
+        elif name=="GPi2":output.append((name,args[0]+sp.Rational(1,2),wires))
+        elif name in {"IonQMS","IonQMSMax"}:
+            output.append((name,args[0]+sp.Rational(1,2),*args[1:],wires))
+        elif name in {"XX90","ZZMax"}:
+            frame,_=_rotation("Rz" if name=="XX90" else "Rx",sp.pi,basis)
+            frame=tuple((*local[:-1],(wires[0],)) for local in frame)
+            output.extend(frame+(op,)+_native_adjoint_word(frame,basis))
+        else:raise RuleUnavailable(f"No native adjoint phase motif for {name}")
+    return tuple(output)
+
+
+@lru_cache(maxsize=32)
+def _scalar_gadgets_three(basis):
+    """Reach three-wire eighth-root phases by squaring an involution circuit.
+
+    If Toffoli=f*C, then C*C=f**(-2) I_8. This genuinely three-wire centre
+    resource can exist when the desired scalar is impossible on two wires.
+    It is an explicit physical word, not a free phase operation.
+    """
+    import heapq
+    identity=group_data()[-1]
+    edges=[]
+    for phase,word in _scalar_gadgets(basis).items():
+        if phase:edges.append((phase,word))
+    for sequence,factor in _native_candidates("CCX",(),basis):
+        scalar=simplify_exact(1/factor**2)
+        state=exact_state(scalar*sp.eye(2))
+        if state is None:continue
+        phase=(state%8-identity%8)%8
+        if not phase:continue
+        word=sequence+sequence
+        edges.append((phase,word))
+        try:edges.append(((-phase)%8,_native_adjoint_word(word,basis)))
+        except RuleUnavailable:pass
+    # Additive path costs choose a constructive word; no global phase-gadget
+    # optimality is claimed. Safe cleanup is applied to the resulting word.
+    distances={0:(0,0.0,0)}
+    paths={0:()}
+    queue=[((0,0.0,0),0)]
+    while queue:
+        cost,phase=heapq.heappop(queue)
+        if distances[phase]!=cost:continue
+        for shift,word in edges:
+            weight=resource_key(word)
+            proposed=tuple(a+b for a,b in zip(cost,weight))
+            end=(phase+shift)%8
+            if proposed<distances.get(end,(float("inf"),)*3):
+                distances[end]=proposed
+                paths[end]=paths[phase]+word
+                heapq.heappush(queue,(proposed,end))
+    return {phase:_cleanup(word) for phase,word in paths.items()}
 
 
 def _matrix_sources(target,basis,seconds):

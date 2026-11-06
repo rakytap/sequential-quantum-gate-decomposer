@@ -18,7 +18,7 @@ else:
 
 
 MOTIF_SCHEMAS = {
-    "native_interaction_frame": ("XX90", "YY90", "ZZ90", "ZZMax", "IonQZZ", "ZZPhase", "IonQMS", "IonQMSMax", "TK2"),
+    "native_interaction_frame": ("XX90", "YY90", "ZZ90", "ZZMax", "IonQZZ", "ZZPhase", "IonQMS", "IonQMSMax", "TK2", "SYC"),
     "controlled_phase_or_rotation": ("CSXdg", "Deutsch", "CCP", "CCZPow", "CCXPow", "Controlled", "MCMT", "UC"),
     "excitation_exchange_echo": ("CZS", "CCZS", "fFredkin"),
     "fermionic_or_phased_exchange_power": ("FSWAPPow", "PhasedISWAPPow"),
@@ -68,10 +68,11 @@ def _controlled_local(matrix, controls, target):
     """Control an exact Clifford matrix without numeric Euler fitting."""
     matrix = sp.ImmutableMatrix(matrix)
     controls = tuple(controls)
+    equal = lambda other: all(sp.simplify(a-b) == 0 for a,b in zip(matrix,other))
     for name, angle in (("X", sp.pi), ("Sx", sp.pi/2), ("Sxdg", -sp.pi/2)):
-        if matrix == gates.make_gate(name):
+        if equal(gates.make_gate(name)):
             return (("H", (target,)),)+_phase_on_wires(angle, controls+(target,))+(("H", (target,)),)
-    if matrix == gates.make_gate("H"):
+    if equal(gates.make_gate("H")):
         return (("Ry", -sp.pi/4, (target,)),)+_phase_on_wires(sp.pi, controls+(target,))+(("Ry", sp.pi/4, (target,)),)
     state = exact_state(matrix)
     if state is None:
@@ -111,6 +112,8 @@ def diagonal_motif(entries):
 def catalog_motif(name, parameters):
     """Return a structural source proposal, or None when no motif applies."""
     p = tuple(parameters)
+    if name == "SYC":
+        return (("fSim",sp.pi/2,sp.pi/6,(0,1)),),sp.S.One
     if name in {"XX90", "YY90", "ZZ90", "ZZMax"}:
         axis = {"XX90":"Rxx", "YY90":"Ryy", "ZZ90":"Rzz", "ZZMax":"Rzz"}[name]
         return ((axis, sp.pi/2, (0,1)),), sp.S.One

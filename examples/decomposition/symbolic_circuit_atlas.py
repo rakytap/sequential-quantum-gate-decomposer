@@ -90,7 +90,7 @@ def parameter_symbols():
     return symbols
 
 
-def operation_label(operation, repeat=1):
+def operation_label(operation, repeat=1, aliases=None):
     name = operation["gate"]
     labels = {"U3": r"U_3", "U": "U", "Rz": r"R_z", "Ry": r"R_y", "Rx": r"R_x",
               "Rxx": r"R_{XX}", "Rzz": r"R_{ZZ}", "Rzx": r"R_{ZX}",
@@ -99,13 +99,13 @@ def operation_label(operation, repeat=1):
               "SiSWAP": r"\sqrt{\mathrm{iSWAP}}", "SSWAP": r"\sqrt{\mathrm{SWAP}}"}
     label = labels.get(name, r"\operatorname{" + escape(name) + "}")
     if operation["parameters"]:
-        label += r"\left(" + ",".join(parameter_latex(p) for p in operation["parameters"]) + r"\right)"
+        label += r"\left(" + ",".join((aliases or {}).get(p,parameter_latex(p)) for p in operation["parameters"]) + r"\right)"
     if repeat > 1:
         label = r"\left[" + label + r"\right]^{\times " + str(repeat) + "}"
     return "$" + label + "$"
 
 
-def qiskit_latex(width, operations):
+def qiskit_latex(width, operations, aliases=None):
     """Use Qiskit's LaTeX drawer, with exact parameter text rather than floats."""
     from qiskit import QuantumCircuit
     from qiskit.circuit import Gate
@@ -120,7 +120,7 @@ def qiskit_latex(width, operations):
         elif repeat == 1 and not operation["parameters"] and name in {"H", "X", "Y", "Z", "S", "T", "Sdg", "Tdg"}:
             getattr(circuit, name.lower())(*wires)
         else:
-            label = operation_label(operation, repeat)
+            label = operation_label(operation, repeat, aliases)
             token = "atlas" + hashlib.sha256(label.encode()).hexdigest()[:16]
             displaytext[token] = label
             circuit.append(Gate(token, len(wires), []), wires)
@@ -137,9 +137,19 @@ class CircuitStore:
         self.directory = output / "circuits"
         self.directory.mkdir(parents=True, exist_ok=True)
         self.paths = {}
+        self.aliases = {}
+
+    def expression(self,value):
+        formula=parameter_latex(value)
+        if len(formula)<=100:
+            return formula
+        if value not in self.aliases:
+            self.aliases[value]=r"\eta_{"+str(len(self.aliases)+1)+"}"
+        return self.aliases[value]
 
     def render(self, width, operations):
-        key = hashlib.sha256(json.dumps([2, width, operations, self.fold], sort_keys=True).encode()).hexdigest()[:24]
+        displayed={value:self.expression(value) for op in operations for value in op["parameters"]}
+        key = hashlib.sha256(json.dumps([3, width, operations, self.fold, displayed], sort_keys=True).encode()).hexdigest()[:24]
         if key in self.paths:
             return self.paths[key]
         grouped = compressed_operations(operations)
@@ -149,7 +159,7 @@ class CircuitStore:
             relative = f"circuits/{key}-{index}.tex"
             path = self.output / relative
             if not path.exists():
-                path.write_text(qiskit_latex(width, chunk))
+                path.write_text(qiskit_latex(width, chunk, displayed))
             paths.append(relative)
         self.paths[key] = paths
         return paths
@@ -205,6 +215,9 @@ def drawing(store, width, result, max_height="33mm"):
         if index:
             blocks.append(r"\par\vspace{1pt}{\tiny\color{muted}$\longrightarrow$ continued in time order}\par")
         blocks.append(r"\circuit{\input{" + path + "}}")
+    used=sorted({store.aliases[p] for op in result["operations"] for p in op["parameters"] if p in store.aliases})
+    if used:
+        blocks.append(r"\par{\scriptsize\color{muted}Exact definitions: $"+", ".join(used)+r"$ in the expression glossary.}")
     return r"\fitpanel{" + max_height + "}{" + "\n".join(blocks) + "}"
 
 
@@ -249,7 +262,7 @@ def gate_panel(store, basis, row, width):
         bodies.append(drawing(store, width, result, "18mm" if len(variants) == 2 else "39mm") + r"\par\vspace{.8mm}")
         if mode == "projective":
             factor = result.get("virtual_gp", {}).get("factor", "1")
-            bodies.append(r"\par{\scriptsize\color{muted}$U=" + parameter_latex(factor) + r"\,C$. Scalar metadata; no physical GP.}\par")
+            bodies.append(r"\par{\scriptsize\color{muted}$U=" + store.expression(factor) + r"\,C$. Scalar metadata; no physical GP.}\par")
     if row["phase_exact"]["status"] != "verified_symbolic":
         bodies.append(r"\par{\scriptsize\color{muted}Exact: " + escape(status_text(row["phase_exact"])) + "}")
     return panel(header + "\n".join(bodies), "62mm")
@@ -269,6 +282,7 @@ def gate_volume(report, output, store, names, archive_digest):
                   r"Register constructors use the recorded integer-width or matrix fixtures. These pages do not claim a solution for every register size.\par "
                   r"Circuits are drawn by Qiskit's LaTeX drawer. Long circuits continue on successive rows in time order. "
                   r"An explicit $[G]^{\times n}$ box denotes n consecutive identical primitive operations; their full physical count remains in E.\par "
+                  r"Long exact expressions use numbered $\eta_j$ labels defined in the expression glossary. No parameter is rounded or dropped.\par "
                   r"The separate Clifford volume lists every exact phase in each distinct one-qubit alphabet, with 24 circuits per page. "
                   r"Identical alphabets shared by multiple presets are printed once.\par\vspace{5mm}" +
                   r"\texttt{Archive SHA256: " + archive_digest + r"}\end{minipage}\newpage")
@@ -306,6 +320,12 @@ def gate_volume(report, output, store, names, archive_digest):
         source.append(r"\newpage")
         if (index + 1) % 25 == 0:
             print(f"Rendered {index+1}/{len(names)} target pages", flush=True)
+    expressions=list(store.aliases.items())
+    for start in range(0,len(expressions),18):
+        source.append(r"\pagehead{Exact expression glossary}{Definitions shared by the numbered circuit parameters and scalar factors.}{"+str(start+1)+"--"+str(min(start+18,len(expressions)))+"}")
+        for value,symbol in expressions[start:start+18]:
+            source.append(r"\par\vspace{3mm}\circuit{$"+symbol+"="+parameter_latex(value)+r"$}\par\vspace{3mm}")
+        source.append(r"\newpage")
     source.append(r"\end{document}")
     (output / "gates.tex").write_text("\n".join(source))
     return manifest
@@ -345,8 +365,17 @@ def clifford_volume(report, output, store, selected=()):
                   r"not arbitrary non-Clifford intermediate paths. Missing paths are labeled with that scope.\par "
                   r"All presets with the same one-qubit alphabet share the same table. Entanglers and ancillary qubits are unavailable in this one-wire reference."
                   r"\end{minipage}\vspace{5mm}\par")
+    source.append(r"\hyperref[clifford-representatives]{Exact representative matrices}\hfill p.~\pageref{clifford-representatives}\par")
     for key in alphabets:
         source.append(r"\hyperref[clifford-" + slug(key) + "]{" + escape(key) + r"}\hfill p.~\pageref{clifford-" + slug(key) + r"}\par")
+    source.append(r"\newpage")
+    source.append(r"\phantomsection\label{clifford-representatives}\pagehead{The 24 matrix representatives}{These exact matrices fix the global-phase convention for every table.}{Representative key}")
+    matrix_panels=[]
+    for index,name in enumerate(data[0].representatives):
+        matrix=data[1][data[3][name]]
+        formula=sp.latex(matrix,mat_str="pmatrix",mat_delim=None)
+        matrix_panels.append(panel(r"{\small\bfseries $C_{"+str(index)+"}$ / "+escape(name)+r"}\par\vspace{3mm}\circuit{$"+formula+"$}","36mm"))
+    source.append(grid(matrix_panels))
     source.append(r"\newpage")
     manifest = []
     for key in alphabets:
@@ -403,6 +432,7 @@ def main():
     manifest = dict(archive=str(args.archive), archive_sha256=digest, renderer="Qiskit latex_source",
                     gate_panels=gates, clifford_panels=cliffords, target_count=len(names),
                     basis_count=32, circuits_per_gate_page=32, circuits_per_clifford_page=24,
+                    expression_aliases={symbol:value for value,symbol in store.aliases.items()},
                     note="Exact symbolic proof statuses and certificate scopes are preserved; this atlas does not assert every target is solved.")
     with gzip.open(args.output_dir / "manifest.json.gz", "wt") as stream:
         json.dump(manifest, stream, separators=(",", ":"))

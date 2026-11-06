@@ -1,4 +1,5 @@
 import itertools
+import pickle
 
 import pytest
 import sympy as sp
@@ -10,7 +11,7 @@ from symbolic_identity import prove_circuit_identity
 from symbolic_synthesis import synthesize_matrix, synthesize
 
 
-MOTIF_NAMES = {"XX90", "YY90", "ZZ90", "ZZMax", "IonQZZ", "ZZPhase", "IonQMS", "IonQMSMax", "TK2",
+MOTIF_NAMES = {"XX90", "YY90", "ZZ90", "ZZMax", "IonQZZ", "ZZPhase", "IonQMS", "IonQMSMax", "TK2", "SYC",
                "CSXdg", "fFredkin", "Deutsch", "CCP", "CCZPow", "CCXPow", "FSWAPPow", "PhasedISWAPPow",
                "CZS", "CCZS", "Controlled", "MCMT", "UCRX", "UCRY", "UCRZ", "UC", "Diagonal", "Permutation", "LinearFunction"}
 
@@ -57,8 +58,29 @@ def test_exchange_echo_avoids_independent_fredkin_and_ccz_synthesis():
     assert result["source_motif"]["schema"] == "excitation_exchange_echo"
 
 
+@pytest.mark.parametrize("basis,count",[("iswap_u",6),("sqrt_iswap_u",4)])
+def test_nested_exchange_motifs_lower_directly_to_native_pulses(basis,count):
+    result=synthesize("fFredkin",(),basis,phase_exact=False)
+    assert result["status"]=="verified_symbolic"
+    assert result["cost"]["entanglers"]==count
+
+
 def test_controlled_hadamards_use_one_interaction_per_target():
     result = synthesize("MCMT", (make_gate("H"), 1, 2), "zz_u", phase_exact=False)
     assert result["status"] == "verified_symbolic"
     assert result["cost"]["entanglers"] == 2
     assert result["entangler_optimal"]
+
+
+def test_controlled_matrix_motif_survives_process_transport_normalization():
+    parameters=pickle.loads(pickle.dumps((make_gate("Sx"),2)))
+    result=synthesize("Controlled",parameters,"cx_u",phase_exact=False)
+    assert result["status"]=="verified_symbolic"
+    assert result["cost"]["entanglers"]==6
+
+
+def test_symbolic_exchange_frontier_finishes_within_its_archive_budget():
+    from symbolic_archive import bounded_synthesis
+    parameters=sp.symbols("theta phi gamma",real=True)
+    result=bounded_synthesis("CZS",parameters,"ibm_ecr",phase_exact=False,seconds=45)
+    assert result["status"]=="verified_symbolic"
