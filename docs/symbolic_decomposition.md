@@ -452,6 +452,12 @@ If Toffoli equals `factor * C`, then the physical word `C + C` equals
 `factor**(-2) * I_8`. The involution-square motif and native adjoints supply
 these three-wire centre phases without a physical GP gate. Their cost is
 charged in full; the chosen gadget is a construction, not a global minimum.
+Phase-exact records may carry a `phase_closure_certificate`: the engine proves
+`target = factor * prefix` and `correction = factor * identity`, then
+concatenates the two physical words. This is an exact composition proof and
+avoids a redundant expansion of the larger product. Both identities, the
+primitive alphabet and the full cost can be replayed with
+`symbolic_contract.verify_phase_closure_certificate`.
 
 For faster PDF compilation after exporting, install the optional `pypdf`
 package and run:

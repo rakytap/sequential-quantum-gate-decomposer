@@ -343,6 +343,18 @@ def hydrate_certificate(data):
     return solution
 
 
+def clifford_phase_obstruction(state,basis):
+    from symbolic_feasibility import determinant_group
+    order=determinant_group(basis,1)
+    if order is None:return None
+    determinant=sp.simplify(group_data()[1][state].det())
+    residual=sp.simplify(determinant**order-1)
+    if residual.is_zero is False:
+        return dict(method="one_wire_determinant_group",determinant=str(determinant),
+                    determinant_root_order=order,nonzero_witness=str(residual))
+    return None
+
+
 def clifford_volume(report, output, store, selected=()):
     from symbolic_contract import encode_sequence
     data = group_data()
@@ -393,16 +405,20 @@ def clifford_volume(report, output, store, selected=()):
                 actual = (data[3][name] % 8 + phase) % 8
                 state = 8 * representative + actual
                 title = r"{\small\bfseries $e^{i" + str(phase) + r"\pi/4}$ " + escape(name) + "}"
+                obstruction=None
                 if state in solution["distances"]:
                     sequence = clifford_path(solution, state)
                     result = dict(operations=encode_sequence(sequence))
                     body = title + r"\par{\scriptsize Score $" + sp.latex(sp.Rational(solution["distances"][state],500)) + r"$ / " + str(len(sequence)) + r" gates}\par"
                     body += drawing(store, 1, result, "21mm")
                 else:
-                    body = title + r"\par\vspace{4mm}{\small\color{muted}No exact-phase path in the certified alphabet.}"
+                    obstruction=clifford_phase_obstruction(state,BASIS_SETS[aliases[key][0]])
+                    text="Impossible: phase outside the local determinant group." if obstruction else "No exact-phase path in the certified alphabet."
+                    body = title + r"\par\vspace{4mm}{\small\color{muted}"+text+"}"
                 panels.append(panel(body, "36mm"))
                 manifest.append(dict(alphabet=key, phase=phase, representative=name, state=state,
-                                     reachable=state in solution["distances"], proof_scope=solution["proof_scope"]))
+                                     reachable=state in solution["distances"], proof_scope=solution["proof_scope"],
+                                     obstruction=obstruction))
             source.append(grid(panels))
             source.append(r"{\scriptsize\color{muted}Certificate scope: " + escape(solution["proof_scope"]) + r". Phase is part of the target matrix.}")
             source.append(r"\newpage")

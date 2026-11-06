@@ -118,6 +118,18 @@ def test_scalar_is_synthesized_using_only_allowed_gates_when_possible():
     assert synthesize("GP",(theta,1),"cx_rz_ry",phase_exact=True)["status"]=="proved_impossible"
 
 
+def test_composed_phase_closure_is_replayable_and_rejects_a_changed_factor():
+    from symbolic_contract import verify_phase_closure_certificate
+    theta=sp.Symbol("theta",real=True)
+    target=gates.make_gate("GP",theta,1)
+    result=synthesize("GP",(theta,1),"cx_u",phase_exact=True)
+    assert result["verification"]=="composition_of_exact_symbolic_identities"
+    assert verify_phase_closure_certificate(target,result,get_basis("cx_u"))
+    changed=copy.deepcopy(result)
+    changed["phase_closure_certificate"]["factor"]="exp(2*I*theta)"
+    assert not verify_phase_closure_certificate(target,changed,get_basis("cx_u"))
+
+
 def test_exponential_proof_handles_free_parameters_and_rejects_an_error():
     theta,phi=sp.symbols("theta phi",real=True)
     sequence=[("Rz",phi,(0,)),("Ry",theta,(0,)),("Rz",-phi,(0,))]

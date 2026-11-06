@@ -496,10 +496,38 @@ def _lower_matrix_sources(target,basis,phase_exact,seconds):
             factor=sp.simplify(factor*source["factor"])
             try:
                 if phase_exact and simplify_exact(factor-1)!=0:
-                    sequence=_cleanup(sequence+_physical_scalar(factor,basis,width))
+                    sequence=sequence+_physical_scalar(factor,basis,width)
                 prepared.append((sequence,factor,source["method"]))
             except RuleUnavailable:continue
     return prepared,search
+
+
+@lru_cache(maxsize=256)
+def _phase_word_proof(factor,sequence,basis,width):
+    return verify_circuit(factor*sp.eye(1<<width),sequence,basis,phase_exact=True)
+
+
+def _verify_phase_candidate(target,sequence,basis,phase_exact,factor):
+    """Prove phase closure by exact components, avoiding a redundant product.
+
+    Target=f*C and G=f*I prove G*C=target. Both component identities are
+    checked; the physical correction remains in the operation list and cost.
+    """
+    if phase_exact and simplify_exact(factor-1)!=0:
+        width=target.rows.bit_length()-1
+        correction=_physical_scalar(factor,basis,width)
+        if correction and sequence[-len(correction):]==correction:
+            prefix=sequence[:-len(correction)]
+            source=verify_circuit(target,prefix,basis,phase_exact=False,scalar_factor=factor)
+            phase=_phase_word_proof(factor,correction,basis,width)
+            if source["status"]==phase["status"]=="verified_symbolic":
+                return dict(status="verified_symbolic",phase_exact=True,cost=circuit_cost(sequence).as_dict(),
+                    operations=encode_sequence(sequence),virtual_gp=None,
+                    verification="composition_of_exact_symbolic_identities",
+                    phase_closure_certificate=dict(prefix_operations=len(prefix),factor=str(factor),
+                        prefix_identity="target = factor * prefix",correction_identity="correction = factor * identity",
+                        prefix_proof=source["verification"],correction_proof=phase["verification"]))
+    return verify_circuit(target,sequence,basis,phase_exact=phase_exact,scalar_factor=None if phase_exact else factor)
 
 
 @lru_cache(maxsize=256)
@@ -622,8 +650,7 @@ def synthesize_matrix(matrix,basis="cx_u",*,phase_exact=True,seconds=2.0):
     if obstruction:return dict(obstruction,phase_exact=phase_exact)
     prepared,search=_lower_matrix_sources(target,basis,phase_exact,seconds)
     for sequence,factor,method in sorted(prepared,key=lambda p:resource_key(p[0])):
-        result=verify_circuit(target,sequence,basis,phase_exact=phase_exact,
-                              scalar_factor=None if phase_exact else factor)
+        result=_verify_phase_candidate(target,sequence,basis,phase_exact,factor)
         if result["status"]=="verified_symbolic":
             result.update(construction_method=method,osr_search=search,optimality_scope="explicit_lower_bound_only")
             return _attach_osr_certificate(result,target,basis)
@@ -659,8 +686,7 @@ def synthesize(name, parameters=(), basis="cx_u", *, phase_exact=True,osr_second
                 alternatives,search=_lower_matrix_sources(target,basis,phase_exact,osr_seconds)
                 alternatives.append((sequence,factor,"direct_native_operation"))
                 for seq,phase,method in sorted(alternatives,key=lambda row:resource_key(row[0])):
-                    result=verify_circuit(target,seq,basis,phase_exact=phase_exact,
-                                          scalar_factor=None if phase_exact else phase)
+                    result=_verify_phase_candidate(target,seq,basis,phase_exact,phase)
                     if result["status"]=="verified_symbolic":
                         result.update(construction_method=method,osr_search=search,optimality_scope="explicit_lower_bound_only")
                         return _attach_osr_certificate(result,target,basis)
@@ -682,7 +708,7 @@ def synthesize(name, parameters=(), basis="cx_u", *, phase_exact=True,osr_second
                         for seq,f in _native_candidates("Identity",(target.rows.bit_length()-1,),basis,source_operations=source):
                             total=sp.simplify(phase*f)
                             if phase_exact and simplify_exact(total-1)!=0:
-                                seq=_cleanup(seq+_physical_scalar(total,basis,target.rows.bit_length()-1))
+                                seq=seq+_physical_scalar(total,basis,target.rows.bit_length()-1)
                             prepared.append((seq,total,"OSR_two_wire_window_resynthesis"))
                 except (RuleUnavailable,ValueError,KeyError):pass
             if target.rows<=16 and not window_records and (not candidates or min(resource_key(p[0])[0] for p in candidates)>1):
@@ -693,13 +719,12 @@ def synthesize(name, parameters=(), basis="cx_u", *, phase_exact=True,osr_second
                 if resource_key(seq)[0]>best_native:continue
                 try:
                     if phase_exact and simplify_exact(phase-1)!=0:
-                        seq=_cleanup(seq+_physical_scalar(phase,basis,target.rows.bit_length()-1))
+                        seq=seq+_physical_scalar(phase,basis,target.rows.bit_length()-1)
                     prepared.append((seq,phase,"analytical_source_construction"))
                 except RuleUnavailable as error:errors.append(str(error))
             prepared.sort(key=lambda pair:resource_key(pair[0]))
             for seq,phase,method in prepared:
-                result=verify_circuit(target,seq,basis,phase_exact=phase_exact,
-                                      scalar_factor=None if phase_exact else phase)
+                result=_verify_phase_candidate(target,seq,basis,phase_exact,phase)
                 if result["status"]=="verified_symbolic":
                     result.update(entangler_optimal=False,local_cost_optimal=False,optimality_scope="verified_upper_bound",construction_method=method)
                     if search is not None:result["osr_search"]=search
@@ -716,9 +741,8 @@ def synthesize(name, parameters=(), basis="cx_u", *, phase_exact=True,osr_second
                     return result
             return dict(status="unresolved",phase_exact=phase_exact,reason="; ".join(dict.fromkeys(errors)) or "Source identity not proved")
         if phase_exact and factor!=1:
-            sequence=_cleanup(sequence+_physical_scalar(factor,basis,target.rows.bit_length()-1))
-        result=verify_circuit(target,sequence,basis,phase_exact=phase_exact,
-                              scalar_factor=None if phase_exact else factor)
+            sequence=sequence+_physical_scalar(factor,basis,target.rows.bit_length()-1)
+        result=_verify_phase_candidate(target,sequence,basis,phase_exact,factor)
         if result["status"]=="verified_symbolic":
             result.update(entangler_optimal=(target.rows==2),local_cost_optimal=False,
                           optimality_scope="construction_only_except_zero_entangler_lower_bound")

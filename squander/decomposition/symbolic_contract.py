@@ -143,6 +143,28 @@ def encode_sequence(sequence):
     return [dict(gate=op[0], parameters=[str(p) for p in op[1:-1]], wires=list(op[-1])) for op in sequence]
 
 
+def verify_phase_closure_certificate(target,result,basis):
+    """Replay both exact component identities in a stored physical closure."""
+    if result.get("verification")!="composition_of_exact_symbolic_identities" or not result.get("phase_exact"):
+        return False
+    if result.get("virtual_gp") is not None:return False
+    target=sp.ImmutableMatrix(target)
+    symbols={str(symbol):symbol for symbol in target.free_symbols}
+    try:
+        sequence=tuple((op["gate"],*(sp.sympify(p,locals=symbols) for p in op["parameters"]),tuple(op["wires"]))
+                       for op in result["operations"])
+        sequence=validate_operations(sequence,basis,target.rows.bit_length()-1)
+        if circuit_cost(sequence).as_dict()!=result["cost"]:return False
+        certificate=result["phase_closure_certificate"]
+        split=certificate["prefix_operations"]
+        if not isinstance(split,int) or not 0<=split<len(sequence):return False
+        factor=sp.sympify(certificate["factor"],locals=symbols)
+        source=verify_circuit(target,sequence[:split],basis,phase_exact=False,scalar_factor=factor)
+        phase=verify_circuit(factor*sp.eye(target.rows),sequence[split:],basis,phase_exact=True)
+        return source["status"]==phase["status"]=="verified_symbolic"
+    except (KeyError,TypeError,ValueError):return False
+
+
 def retain_phase_results(exact, projective):
     """Prefer phase exact; retain projective only for a strictly better cost."""
     good = lambda row: row is not None and row.get("status") == "verified_symbolic"

@@ -94,6 +94,7 @@ def assemble(paths, pages, destinations, output):
     title="Symbolic gate atlas" if output.stem=="gates" else "All-phase Clifford atlas" if output.stem=="cliffords" else output.stem.replace("-"," ")
     writer.add_metadata({"/Title": title,
                          "/Author": "SQUANDER symbolic decomposition project"})
+    writer.compress_identical_objects(remove_duplicates=True,remove_unreferenced=True)
     with output.open("wb") as stream:
         writer.write(stream)
     return dict(pages=len(paths), repaired_index_links=link_count,

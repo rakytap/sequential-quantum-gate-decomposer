@@ -69,3 +69,12 @@ def test_long_exact_parameters_keep_a_glossary_definition(tmp_path):
     source=(tmp_path/paths[0]).read_text()
     assert r"\eta_{1}" in source
     assert r"\operatorname{atan}" not in source
+
+
+def test_missing_clifford_phases_have_a_basis_preserving_obstruction():
+    from symbolic_clifford_search import group_data
+    state=group_data()[3]["I_q1"]
+    proof=atlas.clifford_phase_obstruction(state,BASIS_SETS["cx_rz_ry"])
+    assert proof["method"]=="one_wire_determinant_group"
+    assert proof["determinant_root_order"]==1
+    assert atlas.clifford_phase_obstruction(state,BASIS_SETS["clifford_only"]) is None

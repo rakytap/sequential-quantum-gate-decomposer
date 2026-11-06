@@ -70,7 +70,17 @@ def _zero_coefficient(coefficient):
     if not coefficient.free_symbols:
         # Root-of-unity products beyond eighth roots do not always simplify
         # in exponential form. Their real/imaginary algebra is still exact.
-        return sp.simplify(sp.expand_complex(simplified))==0
+        expanded=sp.simplify(sp.expand_complex(simplified))
+        if expanded==0:return True
+        # Propose a remaining algebraic-zero check numerically, then decide it
+        # in an exact number field. A small numerical value never accepts an
+        # identity; nonzero rational perturbations remain nonzero in the field.
+        if expanded.is_algebraic is True:
+            try:
+                if abs(complex(expanded.evalf(50)))<1e-25:
+                    return sp.to_number_field(expanded).coeffs()==[0]
+            except (ValueError,TypeError,NotImplementedError):pass
+        return False
     return False
 
 
