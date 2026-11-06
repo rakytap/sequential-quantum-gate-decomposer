@@ -141,7 +141,7 @@ class CircuitStore:
 
     def expression(self,value):
         formula=parameter_latex(value)
-        if len(formula)<=100:
+        if len(formula)<=60:
             return formula
         if value not in self.aliases:
             self.aliases[value]=r"\eta_{"+str(len(self.aliases)+1)+"}"
@@ -186,20 +186,25 @@ def preamble(title, paper="gates"):
 \hypersetup{pdftitle={""" + escape(title) + r"""},pdfauthor={SQUANDER symbolic decomposition project}}
 \newsavebox{\circuitbox}
 \newsavebox{\panelbox}
+\newsavebox{\contentbox}
 \newcommand{\circuit}[1]{\sbox{\circuitbox}{#1}%
 \ifdim\wd\circuitbox>\linewidth\resizebox{\linewidth}{!}{\usebox{\circuitbox}}\else\usebox{\circuitbox}\fi}
 \newcommand{\fitpanel}[2]{\sbox{\panelbox}{\begin{minipage}{\linewidth}\centering #2\end{minipage}}%
 \ifdim\dimexpr\ht\panelbox+\dp\panelbox\relax>#1\resizebox*{!}{#1}{\usebox{\panelbox}}\else\usebox{\panelbox}\fi}
+\newcommand{\fitcontent}[2]{\sbox{\contentbox}{\begin{minipage}{\linewidth}#2\end{minipage}}%
+\ifdim\dimexpr\ht\contentbox+\dp\contentbox\relax>#1\resizebox*{!}{#1}{\usebox{\contentbox}}\else\usebox{\contentbox}\fi}
 \newcommand{\pagehead}[3]{\noindent{\color{accent}\small SQUANDER / SYMBOLIC CIRCUIT ATLAS}\hfill{\color{muted}\small #3}\par
 {\color{ink}\fontsize{24}{28}\selectfont\bfseries #1}\par
 {\color{muted}\small #2}\par\vspace{3mm}\hrule height .35pt\vspace{3mm}}
+""" + (r"\AtBeginDocument{\renewcommand{\small}{\fontsize{14}{17}\selectfont}\renewcommand{\scriptsize}{\fontsize{11}{13}\selectfont}\renewcommand{\tiny}{\fontsize{8}{10}\selectfont}}" if paper == "gates" else "") + r"""
+\AtBeginDocument{\color{ink}}
 \begin{document}
-\color{ink}
-""" + (r"\renewcommand{\small}{\fontsize{14}{17}\selectfont}\renewcommand{\scriptsize}{\fontsize{11}{13}\selectfont}\renewcommand{\tiny}{\fontsize{8}{10}\selectfont}\fontsize{14}{17}\selectfont" if paper == "gates" else "")
+"""
 
 
 def panel(body, height):
-    return r"\begin{minipage}[t][" + height + r"][t]{0.243\textwidth}" + body + r"\end{minipage}"
+    return (r"\begin{minipage}[t][" + height + r"][t]{0.243\textwidth}\vspace{0pt}\fitcontent{\dimexpr"+
+            height+r"-2mm\relax}{"+body+r"}\end{minipage}")
 
 
 def grid(panels, columns=4):

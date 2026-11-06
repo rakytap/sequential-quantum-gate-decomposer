@@ -1,0 +1,33 @@
+{
+  "gates": {
+    "pages": 336,
+    "repaired_index_links": 327,
+    "pdf_sha256": "51f7003755cbede1e59ad497ba6786c0fdc8d96dfad0ac62fd57b6868611dbee",
+    "bytes": 19606675
+  },
+  "cliffords": {
+    "pages": 98,
+    "repaired_index_links": 13,
+    "pdf_sha256": "1e699dd8025e7fd91c230250eae25371d26a1a25e639a86f73b100db66245ec2",
+    "bytes": 1884255
+  },
+  "preview-gates": {
+    "pages": 10,
+    "repaired_index_links": 6,
+    "pdf_sha256": "4f1fa3c548ced7f95327ac66626d366c0ffea101b988d1f115f118dc17c1486a",
+    "bytes": 857702
+  },
+  "preview-cliffords": {
+    "pages": 10,
+    "repaired_index_links": 2,
+    "pdf_sha256": "7dd52f126f9d004f3e983e0ce8faf9d6a76b97894601fb93bbf09b18a6b0edbf",
+    "bytes": 241811
+  },
+  "provenance": {
+    "archive_sha256": "98f19ce6d2d1b4af05dccd65fdda73f0f49f159d08acec0476eb1d0fe6669033",
+    "renderer_sha256": "640c56fa965eb0414897f767c788a7bfaddb3eb60d82640f5407d52631e5257c",
+    "builder_sha256": "c46921688d639c2b2307f70cf6b899f24fe2edbc0a8b14c050539ca2a633d108",
+    "tectonic_version": "0.17.0",
+    "pypdf_version": "6.21.4"
+  }
+}

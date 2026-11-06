@@ -412,7 +412,7 @@ The Qiskit LaTeX exporter produces two indexed volumes:
 
 ```bash
 python examples/decomposition/symbolic_circuit_atlas.py \
-  --archive benchmarks/symbolic/synthesis_osr_20261106.json.gz \
+  --archive benchmarks/symbolic/synthesis_reference_20261106.json.gz \
   --output-dir /tmp/symbolic-atlas
 cd /tmp/symbolic-atlas
 tectonic gates.tex
@@ -473,6 +473,10 @@ must remain exactly one PDF page. The Clifford volume also includes the 24
 exact representative matrices, fixing the phase convention for the tables.
 Long exact expressions in gate boxes use numbered definitions in the glossary;
 their expressions remain unrounded in both that glossary and the manifest.
+Dense sheets that exceed TeX's memory limit use individually compiled vector
+circuit fragments with the same font setup and panel layout. The current
+[reference edition](symbolic_atlas/README.md) includes the PDFs, portable
+LaTeX sources, provenance manifest and an explicit list of open cases.
 
 ## Validation
 

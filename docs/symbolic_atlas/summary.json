@@ -1,0 +1,58 @@
+{
+  "archive": "benchmarks/symbolic/synthesis_reference_20261106.json.gz",
+  "archive_sha256": "98f19ce6d2d1b4af05dccd65fdda73f0f49f159d08acec0476eb1d0fe6669033",
+  "schema": "symbolic-atlas-release-v1",
+  "synthesis_runs": 8,
+  "rows_including_history": 22374,
+  "target_count": 327,
+  "basis_count": 32,
+  "phase_results": {
+    "phase_exact": {
+      "verified_symbolic": 7598,
+      "proved_impossible": 2637,
+      "timeout": 97,
+      "unresolved": 132
+    },
+    "projective": {
+      "verified_symbolic": 10069,
+      "proved_impossible": 264,
+      "unresolved": 33,
+      "timeout": 98
+    },
+    "cells": 10464,
+    "projective_retained_as_strictly_cheaper": 4547
+  },
+  "matched_references": {
+    "sdk_fixed_equal": 2637,
+    "phase_exact_matched_entangler_minimum": 287,
+    "projective_matched_entangler_minimum": 141,
+    "sdk_fixed_better": 11
+  },
+  "entangler_optimal_flags_including_single_qubit": {
+    "phase_exact": 5839,
+    "projective": 7731
+  },
+  "clifford_alphabets": 12,
+  "clifford_target_slots": 2304,
+  "clifford_reachable": 1488,
+  "clifford_excluded": 816,
+  "clifford_proof_scopes": {
+    "listed_clifford_preserving_words_only": 2112,
+    "all_circuits_in_supplied_fixed_clifford_basis": 192
+  },
+  "compiler_errors_in_retained_phase_statuses": 0,
+  "source_hashes_verified": 25,
+  "validation": {
+    "tests_passed": 856,
+    "command": "python -m pytest tests/symbolic -q",
+    "revision": "d3d3c4b8402ad577dcaec57356d6fba1dae96c15",
+    "layout_tests_passed": 11,
+    "layout_test_command": "python -m pytest tests/symbolic/test_atlas_pdf_build.py tests/symbolic/test_circuit_atlas.py -q"
+  },
+  "limits": [
+    "Complete enumeration does not mean every feasible pair is solved.",
+    "Verified circuits are upper bounds unless their own certificate proves a minimum.",
+    "Entangler minimality does not imply minimum parameter-sensitive local score.",
+    "Fixed-target SDK improvements establish neither novelty nor a published optimum."
+  ]
+}

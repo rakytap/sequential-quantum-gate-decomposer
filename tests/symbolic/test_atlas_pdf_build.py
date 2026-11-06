@@ -1,5 +1,6 @@
 import importlib.util
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -44,3 +45,30 @@ def test_assembled_index_links_target_the_actual_merged_page(tmp_path):
     assert reader.outline[0].title=="SWAP"
     assert reader.get_destination_page_number(reader.outline[0])==1
     assert report["pages"]==2 and report["repaired_index_links"]==1
+
+
+def test_dense_page_fallback_keeps_exact_fragments_fonts_and_caches_vectors(tmp_path, monkeypatch):
+    circuits=tmp_path/"circuits"
+    circuits.mkdir()
+    fragment=r"\Qcircuit { & \gate{R_z(\theta)} & \qw }"
+    (circuits/"rotation.tex").write_text(fragment)
+    document=r"""\documentclass[10pt]{article}
+\usepackage[a3paper]{geometry}
+\AtBeginDocument{\fontsize{14}{17}\selectfont}
+\begin{document}\input{circuits/rotation.tex}\input{circuits/rotation.tex}\end{document}"""
+    calls=[]
+    def run(command, **kwargs):
+        source=Path(command[-1])
+        calls.append(source.read_text())
+        source.with_suffix(".pdf").touch()
+        return SimpleNamespace(returncode=0,stdout="",stderr="")
+    monkeypatch.setattr(builder.subprocess,"run",run)
+    rendered=builder.vectorize_circuits(document,"tectonic",tmp_path,tmp_path/"pages",30)
+    assert len(calls)==1
+    assert fragment in calls[0]
+    assert r"\AtBeginDocument{\fontsize{14}{17}\selectfont}" in calls[0]
+    assert r"\documentclass[border=1pt]{standalone}" in calls[0]
+    assert "geometry" not in calls[0]
+    assert rendered.count(r"\includegraphics{")==2 and r"\input{" not in rendered
+    assert builder.vectorize_circuits(document,"tectonic",tmp_path,tmp_path/"pages",30)==rendered
+    assert len(calls)==1

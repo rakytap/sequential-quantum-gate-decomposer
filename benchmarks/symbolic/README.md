@@ -1,5 +1,69 @@
 # Symbolic gate reference comparisons
 
+## Current motif/OSR reference edition
+
+[`synthesis_reference_20261106.json.gz`](synthesis_reference_20261106.json.gz)
+merges all 327 × 32 cells, retaining the least-cost verified incumbent for each
+phase policy across eight implementation snapshots. The indexed
+[gate and Clifford PDFs](../../docs/symbolic_atlas/README.md) and their sources
+are generated from this archive. The earlier datasets below remain historical
+snapshots.
+
+| Current outcome | Phase exact | Projective |
+| --- | ---: | ---: |
+| Symbolically verified | 7,598 | 10,069 |
+| Proved obstruction, with recorded scope/condition | 2,637 | 264 |
+| Time limit | 97 | 98 |
+| Unresolved construction | 132 | 33 |
+| Retained compiler errors | 0 | 0 |
+
+This includes a new complete bounded run and three targeted supplements:
+
+| Raw file | Cells | Budget per mode | Source revision |
+| --- | ---: | ---: | --- |
+| `synthesis_full_osr_20261106.json.gz` | 10,464 | 30 s | `b391dd11` |
+| `synthesis_motifs_20261106.json.gz` | 928 | 60 s | `c21e0494` |
+| `synthesis_motif_refinement_20261106.json.gz` | 192 | 90 s | `62b44f65` |
+| `synthesis_phase_proofs_20261106.json.gz` | 6 | 120 s | `d3d3c4b8` |
+
+The complete raw run includes 16 register-constructor compiler failures; the
+motif supplement resolves all of them. Raw outcomes are preserved even when
+the merged report has a successful replacement. Source hashes identify the
+actual implementation. `mode_source_run_indices` records the origin of each
+retained circuit; `synthesis_run_index` is the latest attempted run. Historical
+attempts and their indices are retained recursively.
+
+There are 4,547 verified exact cells with a strictly cheaper projective result.
+Matched fixed-target lower bounds certify 287 exact and 141 projective
+entangler minima, excluding separate one-qubit certificates. The eligible
+fixed-target Qiskit comparisons have 11 lower counts, 2,637 ties and zero higher
+counts. The lower counts concern fFredkin in different bases, including five
+CNOTs versus the SDK upper bound of seven and six iSWAPs versus eight. No
+novelty or global local-cost claim follows from these comparisons.
+
+The open modes are enumerated in
+[`open_cases.csv`](../../docs/symbolic_atlas/open_cases.csv). All cells are
+enumerated; 229 exact and 131 projective modes still require a construction,
+stronger feasibility proof or more search. The Clifford reference has all 192
+phase targets in each of 12 distinct local alphabets: 1,488 reachable circuits
+and 816 phases excluded by the one-wire determinant group. The H/S basis has a
+global local-cost certificate; other alphabet certificates retain their more
+limited search scope.
+
+Reproduce the current merge and reference analysis:
+
+```bash
+python examples/decomposition/symbolic_archive_analysis.py \
+  --input benchmarks/symbolic/synthesis_osr_20261106.json.gz \
+  --supplement benchmarks/symbolic/synthesis_full_osr_20261106.json.gz \
+  --supplement benchmarks/symbolic/synthesis_motifs_20261106.json.gz \
+  --supplement benchmarks/symbolic/synthesis_motif_refinement_20261106.json.gz \
+  --supplement benchmarks/symbolic/synthesis_phase_proofs_20261106.json.gz \
+  --output /tmp/synthesis-reference.json.gz
+```
+
+## Initial numerical reference and construction snapshots
+
 `reference_comparison_20261106.json.gz` records one explicit parameter binding
 for each of the 327 catalog definitions against all 32 basis presets. It is a
 reference dataset for developing the symbolic search, not a report of new
@@ -134,11 +198,11 @@ python examples/decomposition/symbolic_archive_analysis.py \
 
 The OSR guide in [`docs/symbolic_decomposition.md`](../../docs/symbolic_decomposition.md)
 describes the opaque-matrix API, exact cut/minor certificates, native Pauli
-networks, phase handling and scoped optimality claims. The planned reference
-atlas will sort targets alphabetically, index them, and place the 32 basis
-panels on each target's page. Verified circuits, proved obstructions and open
-cases must be distinguished, and exact/projective variants must retain their
-phase and certificate labels. Atlas rendering is not part of these data files.
+networks, phase handling and scoped optimality claims. The current reference
+atlas sorts targets alphabetically, indexes them, and places 32 basis panels
+on each target's page. Verified circuits, proved obstructions and open cases
+have distinct labels, with exact/projective phase policies and certificate
+scopes preserved. Its PDFs and manifests are separate artifacts linked above.
 
 The newer `symbolic_synthesis_archive.py` runner preserves free real parameters
 and forbids physical GP operations. Its phase-exact results require literal

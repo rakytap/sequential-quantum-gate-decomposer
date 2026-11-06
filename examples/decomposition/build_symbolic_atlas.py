@@ -49,10 +49,50 @@ def compile_page(job):
     command = [compiler, "--reruns", "0", "--keep-logs", "--outdir", str(directory), str(source)]
     process = subprocess.run(command, cwd=root, capture_output=True, text=True, timeout=timeout)
     source.with_suffix(".console.log").write_text(process.stdout+process.stderr)
+    if process.returncode and "TeX capacity exceeded" in process.stdout+process.stderr:
+        # A dense 32-panel sheet can exceed XeTeX's fixed node pool. Compile
+        # its Qcircuit fragments independently, retaining vector text/lines,
+        # then compose those small PDFs using the same layout and font setup.
+        source.write_text(vectorize_circuits(page["source"], compiler, root, directory, timeout))
+        process = subprocess.run(command, cwd=root, capture_output=True, text=True, timeout=timeout)
+        with source.with_suffix(".console.log").open("a") as log:
+            log.write("\nVector-fragment fallback:\n"+process.stdout+process.stderr)
     if process.returncode:
         raise RuntimeError(f"Failed to compile {volume} page {index+1}: {process.stderr[-1200:]}")
     stamp.write_text(digest)
     return index, output
+
+
+def vectorize_circuits(document, compiler, root, directory, timeout):
+    fragments = sorted(set(re.findall(r"\\input\{(circuits/[^}]+\.tex)\}", document)))
+    preamble = document.split(r"\begin{document}", 1)[0]
+    preamble = re.sub(r"\\documentclass(?:\[[^]]*\])?\{article\}",
+                      lambda _: r"\documentclass[border=1pt]{standalone}", preamble)
+    preamble = re.sub(r"\\usepackage\[[^]]*\]\{geometry\}", "", preamble)
+    tile_relative = "vector-circuits/"+hashlib.sha256(document.encode()).hexdigest()[:16]
+    tile_directory = directory / tile_relative
+    tile_directory.mkdir(parents=True, exist_ok=True)
+
+    def render(fragment):
+        body = (root / fragment).read_text()
+        source = preamble+r"\begin{document}"+body+r"\end{document}"
+        digest = hashlib.sha256(source.encode()).hexdigest()
+        target = tile_directory / (digest+".pdf")
+        if not target.exists():
+            tex = target.with_suffix(".tex")
+            tex.write_text(source)
+            process = subprocess.run([compiler, "--reruns", "0", "--outdir", str(tile_directory), str(tex)],
+                                     cwd=root, capture_output=True, text=True, timeout=timeout)
+            tex.with_suffix(".console.log").write_text(process.stdout+process.stderr)
+            if process.returncode:
+                raise RuntimeError(f"Failed to compile vector circuit {fragment}: {process.stderr[-1200:]}")
+        return fragment, tile_relative+"/"+target.name
+
+    # Keep nested compilation bounded even when multiple dense sheets fail.
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        replacements = dict(pool.map(render, fragments))
+    return re.sub(r"\\input\{(circuits/[^}]+\.tex)\}",
+                  lambda match: r"\includegraphics{"+replacements[match[1]]+"}", document)
 
 
 def assemble(paths, pages, destinations, output):
@@ -104,7 +144,10 @@ def assemble(paths, pages, destinations, output):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--source-dir", type=Path, required=True)
-    parser.add_argument("--compiler", default=shutil.which("tectonic"))
+    compiler=shutil.which("tectonic")
+    local_compiler=Path.home()/".local/bin/tectonic"
+    if compiler is None and local_compiler.is_file():compiler=str(local_compiler)
+    parser.add_argument("--compiler", default=compiler)
     parser.add_argument("--workers", type=int, default=min(16, os.cpu_count() or 1))
     parser.add_argument("--volume", choices=["gates", "cliffords"], action="append")
     parser.add_argument("--seconds-per-page", type=float, default=180)

@@ -71,6 +71,14 @@ def test_long_exact_parameters_keep_a_glossary_definition(tmp_path):
     assert r"\operatorname{atan}" not in source
 
 
+def test_independent_pages_keep_fonts_and_bound_the_entire_panel():
+    source=atlas.preamble("Gate atlas")
+    preamble=source.split(r"\begin{document}")[0]
+    assert r"\AtBeginDocument{\renewcommand{\small}{\fontsize{14}{17}" in preamble
+    body=atlas.panel("circuit and status", "62mm")
+    assert r"\fitcontent{\dimexpr62mm-2mm\relax}{circuit and status}" in body
+
+
 def test_missing_clifford_phases_have_a_basis_preserving_obstruction():
     from symbolic_clifford_search import group_data
     state=group_data()[3]["I_q1"]
