@@ -330,7 +330,14 @@ def _native_candidates(name,parameters,basis,*,even=False,source_operations=None
                 if key not in updated or resource_key(proposal)<resource_key(updated[key][0]):
                     updated[key]=(proposal,total)
         frontier=updated
-    return [(sequence,sp.simplify(factor*f)) for sequence,f in frontier.values()]
+    result=[(sequence,sp.simplify(factor*f)) for sequence,f in frontier.values()]
+    if source_operations is None:
+        if __package__:
+            from .symbolic_fixed_templates import fixed_template_candidates
+        else:
+            from symbolic_fixed_templates import fixed_template_candidates
+        result.extend(fixed_template_candidates(name,parameters,basis))
+    return result
 
 
 @lru_cache(maxsize=32)
