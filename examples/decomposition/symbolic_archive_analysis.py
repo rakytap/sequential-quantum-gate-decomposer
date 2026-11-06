@@ -70,6 +70,26 @@ def retain_incumbents(previous,replacement):
             raise ValueError(f"Verified construction contradicts an impossibility record: {replacement['gate']}/{replacement['basis']}/{mode}")
         if good:
             result,run=min(good,key=cost)
+            result=copy.deepcopy(result)
+            # A local rewrite does not invalidate a matching lower bound for
+            # the same target, native basis and phase contract. Carry that
+            # proof over independently of which construction won the score.
+            count=result["cost"]["entanglers"]
+            proof_keys=("osr_certificate","cnot_invariant_lower_bound",
+                        "entangler_optimality_certificate","phase_resource_lower_bound")
+            for source,unused in good:
+                if source["cost"]["entanglers"]!=count:continue
+                osr=source.get("osr_certificate",{})
+                phase_independent=(osr.get("lower_bound")==count and osr.get("condition")=="True"
+                                   or source.get("cnot_invariant_lower_bound")==count)
+                if not result.get("entangler_optimal") and (source.get("entangler_optimal") or phase_independent):
+                    result["entangler_optimal"]=True
+                    for key in proof_keys:
+                        if not source.get("entangler_optimal") and key not in {"osr_certificate","cnot_invariant_lower_bound"}:
+                            continue
+                        if key in source and (key!="phase_resource_lower_bound" or mode=="phase_exact"):
+                            result.setdefault(key,copy.deepcopy(source[key]))
+                    result["minimum_proof_retained_across_local_rewrite"]=True
         elif impossible:
             result,run=impossible[-1]
         else:

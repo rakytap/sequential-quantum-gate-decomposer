@@ -138,3 +138,23 @@ def test_a_verified_projective_identity_factor_is_also_an_exact_circuit():
     assert retained["phase_exact"]["virtual_gp"] is None
     assert retained["phase_exact"]["derived_from_projective_identity_factor"]
     assert retained["projective"] is None
+
+
+def test_local_rewrite_preserves_matching_bounds_without_transferring_exact_only_phase_claims():
+    def result(score,optimal):
+        return dict(status="verified_symbolic",cost=dict(entanglers=2,
+            parameter_score=str(score),single_qubit_gates=score),entangler_optimal=optimal)
+    old=dict(gate="test",basis="cx_u",phase_exact=result(20,True),projective=None,
+             phase_statuses=dict(phase_exact="verified_symbolic",projective="verified_symbolic"),synthesis_run_index=0)
+    old["phase_exact"]["entangler_optimality_certificate"]=dict(scope="exact phase only",count=2)
+    new=dict(old,phase_exact=result(10,False),projective=result(9,False),synthesis_run_index=1)
+    kept=analysis.retain_incumbents(old,new)
+    assert kept["phase_exact"]["entangler_optimal"]
+    assert kept["phase_exact"]["entangler_optimality_certificate"]["count"]==2
+    assert not kept["projective"]["entangler_optimal"]
+    # OSR is invariant under a scalar, so this bound also transfers projectively.
+    old["phase_exact"]["osr_certificate"]=dict(lower_bound=2,condition="True")
+    kept=analysis.retain_incumbents(old,new)
+    assert kept["projective"]["entangler_optimal"]
+    assert kept["projective"]["osr_certificate"]["lower_bound"]==2
+    assert "entangler_optimality_certificate" not in kept["projective"]
