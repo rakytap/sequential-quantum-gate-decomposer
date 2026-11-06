@@ -52,12 +52,9 @@ def create_custom_gate_structure_heavy_hex_3(qbit_num):
 
         if qbit == 0:
 
-            # add U3 fate to the block
-            Theta = True
-            Phi = False
-            Lambda = True      
-            Layer.add_U3( 0, Theta, Phi, Lambda )                 
-            Layer.add_U3( disentangle_qubit, Theta, Phi, Lambda ) 
+            # add U3 fate to the block  
+            Layer.add_U3( 0 )                 
+            Layer.add_U3( disentangle_qubit ) 
 
             # add CNOT gate to the block
             Layer.add_CNOT( 0, disentangle_qubit)
@@ -65,11 +62,8 @@ def create_custom_gate_structure_heavy_hex_3(qbit_num):
         elif qbit == 1:
 
             # add U3 fate to the block
-            Theta = True
-            Phi = False
-            Lambda = True      
-            Layer.add_U3( 0, Theta, Phi, Lambda )                 
-            Layer.add_U3( 1, Theta, Phi, Lambda ) 
+            Layer.add_U3( 0 )                 
+            Layer.add_U3( 1 ) 
 
             # add CNOT gate to the block
             Layer.add_CNOT( 0, 1)
@@ -78,12 +72,9 @@ def create_custom_gate_structure_heavy_hex_3(qbit_num):
 
         elif qbit == 2:
 
-            # add U3 fate to the block
-            Theta = True
-            Phi = False
-            Lambda = True      
-            Layer.add_U3( 2, Theta, Phi, Lambda )                 
-            Layer.add_U3( disentangle_qubit, Theta, Phi, Lambda ) 
+            # add U3 fate to the block 
+            Layer.add_U3( 2 )                 
+            Layer.add_U3( disentangle_qubit ) 
 
             # add CNOT gate to the block
             Layer.add_CNOT( disentangle_qubit, 2 )
@@ -122,11 +113,8 @@ def create_custom_gate_structure_heavy_hex_4(qbit_num):
         if qbit == 0:
 
             # add U3 fate to the block
-            Theta = True
-            Phi = False
-            Lambda = True      
-            Layer.add_U3( 0, Theta, Phi, Lambda )                 
-            Layer.add_U3( disentangle_qubit, Theta, Phi, Lambda ) 
+            Layer.add_U3( 0 )                 
+            Layer.add_U3( disentangle_qubit ) 
 
             # add CNOT gate to the block
             Layer.add_CNOT( 0, disentangle_qubit)
@@ -134,11 +122,8 @@ def create_custom_gate_structure_heavy_hex_4(qbit_num):
         elif qbit == 1:
 
             # add U3 fate to the block
-            Theta = True
-            Phi = False
-            Lambda = True      
-            Layer.add_U3( 0, Theta, Phi, Lambda )                 
-            Layer.add_U3( 1, Theta, Phi, Lambda ) 
+            Layer.add_U3( 0 )                 
+            Layer.add_U3( 1 ) 
 
             # add CNOT gate to the block
             Layer.add_CNOT( 0, 1)
@@ -148,11 +133,8 @@ def create_custom_gate_structure_heavy_hex_4(qbit_num):
         elif qbit == 2:
 
             # add U3 fate to the block
-            Theta = True
-            Phi = False
-            Lambda = True      
-            Layer.add_U3( 2, Theta, Phi, Lambda )                 
-            Layer.add_U3( 0, Theta, Phi, Lambda ) 
+            Layer.add_U3( 2 )                 
+            Layer.add_U3( 0 ) 
 
             # add CNOT gate to the block
             Layer.add_CNOT( 0, 2)

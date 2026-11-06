@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.10.2)
 # CMAKE to create the shared library of the quantum gate decomposition project
 
 # set the project name and version
-project(CQGD VERSION 1.9.6)
+project(CQGD VERSION 1.9.8)
 
 # reuse compilation time linking for use runtime linking 
 SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
@@ -24,8 +24,9 @@ if(DEFINED ENV{CONDA_PREFIX})
     message(STATUS "Configured BUILD_RPATH to prioritize conda libraries: ${CONDA_LIB_DIR}")
 endif()
 
-# specify the C++ standard
-set(CMAKE_CXX_STANDARD 11)
+# Eigen 5 requires C++14.  Keep one explicit project-wide baseline so fetched
+# and system-installed Eigen builds compile with identical language features.
+set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON) #for lib not just dll when no exports
 
@@ -67,7 +68,11 @@ endif()
 enable_testing()
 
 option(ENABLE_AVX "Enable AVX/AVX2/AVX512 kernels and compiler flags" ON)
-option(SQUANDER_PROFILE_BUILD "Build optimized binaries with profiler-friendly debug info and frame pointers" OFF)
+option(
+  SQUANDER_PROFILE_BUILD
+  "Opt in to profiling-friendly frame pointers (never enabled by default)"
+  OFF
+)
 
 if(SKBUILD)
     message(STATUS "The project is built using scikit-build")
@@ -142,10 +147,25 @@ endif()
 
 message("Include paths: " ${CMAKE_REQUIRED_INCLUDES})
 
-set(NUMPY_INC_DIR ${NumPy_INCLUDE_DIR})
+# Prefer NumPy headers from the active PYTHON_EXECUTABLE. FindNumPy can resolve to
+# a stale system path such as /usr/include -> python3.9 numpy 1.x while the env
+# runs NumPy 2.x, which then fails at import with ABI/_ARRAY_API errors.
+execute_process(
+    COMMAND ${PYTHON_EXECUTABLE} -c "import numpy; print(numpy.get_include())"
+    OUTPUT_VARIABLE NUMPY_INC_DIR_FROM_PYTHON
+    RESULT_VARIABLE NUMPY_GET_INCLUDE_FAILED
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+if(NOT NUMPY_GET_INCLUDE_FAILED AND NOT "${NUMPY_INC_DIR_FROM_PYTHON}" STREQUAL "")
+    set(NUMPY_INC_DIR ${NUMPY_INC_DIR_FROM_PYTHON})
+    message(STATUS "Using NumPy include from PYTHON_EXECUTABLE: ${NUMPY_INC_DIR}")
+else()
+    set(NUMPY_INC_DIR ${NumPy_INCLUDE_DIR})
+    message(STATUS "Using NumPy include from FindNumPy: ${NUMPY_INC_DIR}")
+endif()
 
 
-if(NOT NumPy_FOUND)
+if(NOT NumPy_FOUND AND NUMPY_GET_INCLUDE_FAILED)
     message(FATAL_ERROR "NumPy headers not found")
 endif()
 
@@ -439,8 +459,16 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   # using Clang
   message("-- Using Clang compiler")
   # setting basic compile flags for Clang
-  list(APPEND CXX_FLAGS_DEBUG "-Wall" "-Wpedantic" "-Wextra" "-fexceptions" "-DDEBUG" "-fno-builtin-malloc" "-fno-builtin-calloc" "-fno-builtin-realloc" "-fno-builtin-free" "-fpermissive")
+  list(APPEND CXX_FLAGS_DEBUG "-Wall" "-Wpedantic" "-Wextra" "-fexceptions" "-DDEBUG" "-fno-builtin-malloc" "-fno-builtin-calloc" "-fno-builtin-realloc" "-fno-builtin-free" "-fpermissive" "-g")
   list(APPEND CXX_FLAGS_RELEASE "-Wall" "-O3" "-m64" "-ggdb" "-DNDEBUG" "-fno-builtin-malloc" "-fno-builtin-calloc" "-fno-builtin-realloc" "-fno-builtin-free" "-fpermissive")
+
+  if (SQUANDER_PROFILE_BUILD)
+    # Frame pointers preserve useful native call stacks without changing the
+    # optimizer's inlining decisions.  Disabling inlining makes Eigen's
+    # fixed-size expression templates catastrophically unrepresentative.
+    list(APPEND CXX_FLAGS_RELEASE "-fno-omit-frame-pointer")
+    list(APPEND CXX_FLAGS_DEBUG "-fno-omit-frame-pointer")
+  endif()
 
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   # using GCC
@@ -448,6 +476,13 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   # setting basic compile flags for GCC
   list(APPEND CXX_FLAGS_DEBUG "-Wall" "-Wpedantic" "-Wextra" "-fexceptions" "-DDEBUG" "-fno-builtin-malloc" "-fno-builtin-calloc" "-fno-builtin-realloc" "-fno-builtin-free" "-fpermissive" "-g3" "-ggdb")
   list(APPEND CXX_FLAGS_RELEASE "-Wall" "-O3" "-m64" "-ggdb" "-DNDEBUG" "-fno-builtin-malloc" "-fno-builtin-calloc" "-fno-builtin-realloc" "-fno-builtin-free" "-fpermissive" "-ftree-vectorize")
+
+  if (SQUANDER_PROFILE_BUILD)
+    # Keep profiling builds optimized and representative; perf only needs
+    # frame pointers here, while Eigen depends on aggressive inlining.
+    list(APPEND CXX_FLAGS_RELEASE "-fno-omit-frame-pointer")
+    list(APPEND CXX_FLAGS_DEBUG "-fno-omit-frame-pointer")
+  endif()
 
   if (${HAVE_AVX512F_EXTENSIONS})
     list(APPEND CXX_FLAGS_RELEASE "-mavx512f" "-mfma" "-DUSE_AVX")
@@ -504,20 +539,6 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     list(APPEND CXX_FLAGS_RELEASE "/arch:AVX" "-DUSE_AVX")
   endif()
 
-endif()
-
-if(SQUANDER_PROFILE_BUILD)
-  message(STATUS "SQUANDER_PROFILE_BUILD enabled: adding optimized native profiling flags")
-  if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-    list(APPEND CXX_FLAGS_RELEASE "-g" "-fno-omit-frame-pointer")
-  elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
-    list(APPEND CXX_FLAGS_RELEASE "-g" "-fno-omit-frame-pointer")
-  elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-    list(APPEND CXX_FLAGS "/Zi" "/Oy-")
-    list(APPEND CXX_FLAGS_RELEASE "/Zi" "/Oy-")
-  else()
-    message(WARNING "SQUANDER_PROFILE_BUILD is enabled, but no profiler flags are known for ${CMAKE_CXX_COMPILER_ID}")
-  endif()
 endif()
 
 
@@ -832,6 +853,7 @@ list(APPEND qgd_files
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/decomposition/N_Qubit_Decomposition_adaptive.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/decomposition/N_Qubit_Decomposition_custom.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/decomposition/N_Qubit_Decomposition_Cost_Function.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/decomposition/OSR_Eigen_SVD.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/decomposition/Sub_Matrix_Decomposition_Cost_Function.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/decomposition/Sub_Matrix_Decomposition.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/decomposition/N_Qubit_Decomposition_Tree_Search.cpp
@@ -905,6 +927,61 @@ endif()
 
 add_library(qgd SHARED
     ${qgd_files})
+
+# Eigen's complex<float> eigensolver triggers GCC's historical psABI note
+# about the GCC 4.4 calling convention.  It is irrelevant to supported
+# toolchains; suppress it only for the Eigen-heavy translation unit.
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  set_source_files_properties(
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/decomposition/OSR_Eigen_SVD.cpp
+    PROPERTIES COMPILE_OPTIONS "-Wno-psabi"
+  )
+endif()
+
+# OSR evaluates decompositions of only a few tiny matrices (4x4, 16x4,
+# 64x4, and 16x16).
+# Use Eigen's header-only, fixed-size implementation for those SVDs rather
+# than paying the BLAS/LAPACK dispatch and thread-management cost per call.
+find_package(Eigen3 5.0.1 NO_MODULE QUIET)
+if(NOT TARGET Eigen3::Eigen)
+  if(CMAKE_VERSION VERSION_LESS 3.11)
+    message(FATAL_ERROR
+      "Eigen 5.0.1 was not found. Install Eigen or configure with CMake 3.11+ "
+      "so it can be fetched automatically.")
+  endif()
+
+  message(STATUS "Eigen 5.0.1 not found on system; fetching pinned Eigen 5.0.1 archive")
+  include(FetchContent)
+  if(POLICY CMP0135)
+    cmake_policy(SET CMP0135 NEW)
+  endif()
+  FetchContent_Declare(
+    eigen
+    URL
+      https://github.com/eigen-mirror/eigen/archive/refs/tags/5.0.1.tar.gz
+      https://gitlab.com/libeigen/eigen/-/archive/5.0.1/eigen-5.0.1.tar.gz
+    URL_HASH SHA256=e9c326dc8c05cd1e044c71f30f1b2e34a6161a3b6ecf445d56b53ff1669e3dec
+    TLS_VERIFY TRUE
+    # Deliberately absent: consume headers without configuring Eigen's project.
+    SOURCE_SUBDIR squander_headers_only
+  )
+  if(CMAKE_VERSION VERSION_LESS 3.18)
+    # Older CMake cannot honor SOURCE_SUBDIR in MakeAvailable yet.
+    FetchContent_GetProperties(eigen)
+    if(NOT eigen_POPULATED)
+      FetchContent_Populate(eigen)
+    endif()
+  else()
+    FetchContent_MakeAvailable(eigen)
+  endif()
+
+  # Eigen is header-only.  Exposing just its include directory avoids adding
+  # Eigen's own tests, benchmarks, and documentation to the SQUANDER build.
+  add_library(squander_eigen INTERFACE)
+  target_include_directories(squander_eigen SYSTEM INTERFACE
+    "${eigen_SOURCE_DIR}")
+  add_library(Eigen3::Eigen ALIAS squander_eigen)
+endif()
 # Ensure nlohmann/json is available for CI and local builds. Prefer a
 # vendored single-header in-tree to avoid FetchContent/configuring the
 # upstream CMake project (which can fail on some CI macOS/toolchain combos).
@@ -953,6 +1030,7 @@ target_compile_options(qgd PUBLIC
 
 # adding linking options
 target_link_libraries( qgd PRIVATE
+    Eigen3::Eigen
     ${BLAS_LIBRARIES}
     ${LAPACK_LIBRARIES}
     ${LAPACKE_LIBRARIES}
@@ -1040,7 +1118,7 @@ target_link_libraries(squander_common INTERFACE
     ${OpenMP_CXX_LIBRARIES}
 )
 
-target_compile_features(squander_common INTERFACE cxx_std_11)
+target_compile_features(squander_common INTERFACE cxx_std_14)
 
 
 # adding CMAKE files for Python extensions
@@ -1065,3 +1143,14 @@ install(TARGETS qgd
         LIBRARY DESTINATION squander
         RUNTIME DESTINATION squander  # Add this for Windows
         COMPONENT python)
+
+# Matrix-derived logical factors keep Eigen code out of Tree Search rebuilds.
+target_sources(qgd PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/squander/src-cpp/decomposition/OSR_Logical_Factor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/squander/src-cpp/decomposition/OSR_Logical_Factor_Tree.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/squander/src-cpp/decomposition/OSR_Logical_Phase_Factor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/squander/src-cpp/decomposition/OSR_Logical_Phase_Clifford.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/squander/src-cpp/decomposition/OSR_Parity_Network.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/squander/src-cpp/decomposition/OSR_Phase_Parity_Network.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/squander/src-cpp/decomposition/OSR_Phase_Polynomial.cpp
+)

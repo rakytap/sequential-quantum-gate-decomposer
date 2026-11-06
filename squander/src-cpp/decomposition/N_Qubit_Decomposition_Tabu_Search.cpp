@@ -195,7 +195,7 @@ N_Qubit_Decomposition_Tabu_Search::tabu_search_over_gate_structures() {
     
     std::vector<GrayCodeCNOT> possible_gate_structures;
 
-    long long use_osr = 0;
+    bool use_osr = false;
     if (config.count("use_osr") > 0) {
         config["use_osr"].get_property(use_osr);
     }
@@ -562,7 +562,6 @@ N_Qubit_Decomposition_Tabu_Search::draw_gate_structure_from_list( std::vector<Gr
     return chosen_gcode;
 
 }
-
 
 
 

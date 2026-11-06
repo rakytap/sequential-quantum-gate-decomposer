@@ -393,7 +393,12 @@ qgd_N_Qubit_Decomposition_custom_Wrapper_init(qgd_N_Qubit_Decomposition_Wrapper*
 }
 
 template<typename DecompT>
-static int search_wrapper_init(qgd_N_Qubit_Decomposition_Wrapper* self, PyObject* args, PyObject* kwds)
+static int search_wrapper_init(
+    qgd_N_Qubit_Decomposition_Wrapper* self,
+    PyObject* args,
+    PyObject* kwds,
+    bool preserve_float64_target = false
+)
 {
     static char* kwlist[] = {
         (char*)"Umtx", (char*)"qbit_num", (char*)"topology", 
@@ -422,7 +427,9 @@ static int search_wrapper_init(qgd_N_Qubit_Decomposition_Wrapper* self, PyObject
         
         auto topology_cpp = extract_topology(topology);
         auto config = extract_config(config_arg);
-        const bool use_float_constructor = Umtx_is_float32 || config_requests_float(config);
+        const bool use_float_constructor = Umtx_is_float32 || (
+            config_requests_float(config) && !preserve_float64_target
+        );
         if (use_float_constructor && !Umtx_is_float32) {
             Umtx_mtx_float = Umtx_mtx.to_float32();
         }
@@ -443,7 +450,12 @@ static int search_wrapper_init(qgd_N_Qubit_Decomposition_Wrapper* self, PyObject
 
 static int 
 qgd_N_Qubit_Decomposition_Tree_Search_Wrapper_init(qgd_N_Qubit_Decomposition_Wrapper* self, PyObject* args, PyObject* kwds) {
-    return search_wrapper_init<N_Qubit_Decomposition_Tree_Search>(self, args, kwds);
+    // Preserve the original float64 target for final Hilbert-Schmidt
+    // refinement. The double constructor still creates Umtx_float when
+    // config["use_float"] is true, so OSR retains its float32 hot path.
+    return search_wrapper_init<N_Qubit_Decomposition_Tree_Search>(
+        self, args, kwds, true
+    );
 }
 
 static int
@@ -571,6 +583,17 @@ qgd_N_Qubit_Decomposition_Wrapper_get_Optimized_Parameters(qgd_N_Qubit_Decomposi
     PyObject* parameter_arr = matrix_real_to_numpy( parameters_mtx );
 
     return parameter_arr;
+}
+
+/**
+@brief Return the float64 optimized parameters even when float32 search is enabled.
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_Wrapper_get_Optimized_Parameters_Double(qgd_N_Qubit_Decomposition_Wrapper *self)
+{
+    Matrix_real parameters_mtx = self->decomp->get_optimized_parameters();
+    parameters_mtx.set_owner(false);
+    return matrix_real_to_numpy(parameters_mtx);
 }
 
 /**
@@ -748,18 +771,24 @@ qgd_N_Qubit_Decomposition_Wrapper_set_Debugfile(qgd_N_Qubit_Decomposition_Wrappe
     }
     // determine the debugfile name type
     PyObject* debugfile_string = PyObject_Str(debugfile);
-    PyObject* debugfile_string_unicode = PyUnicode_AsEncodedString(debugfile_string, "utf-8", "~E~");
-    const char* debugfile_C = PyBytes_AS_STRING(debugfile_string_unicode);
-    Py_XDECREF(debugfile_string);
-    Py_XDECREF(debugfile_string_unicode);
-    // determine the length of the filename and initialize C++ variant of the string
-    Py_ssize_t string_length = PyBytes_Size(debugfile_string_unicode);
-    std::string debugfile_Cpp(debugfile_C, string_length);
+    if (!debugfile_string) {
+        return NULL;
+    }
+    Py_ssize_t string_length = 0;
+    const char* debugfile_C = PyUnicode_AsUTF8AndSize(debugfile_string, &string_length);
+    if (!debugfile_C) {
+        Py_DECREF(debugfile_string);
+        return NULL;
+    }
     try {
+        // Keep the Python-owned UTF-8 buffer alive until C++ has copied it.
+        std::string debugfile_Cpp(debugfile_C, static_cast<size_t>(string_length));
         // set the name of the debugfile on the C++ side
         self->decomp->set_debugfile(debugfile_Cpp);
+        Py_DECREF(debugfile_string);
         Py_RETURN_NONE;
     } catch (std::exception& e) {
+        Py_DECREF(debugfile_string);
         PyErr_SetString(PyExc_Exception, e.what());
         return NULL;
     }
@@ -899,11 +928,16 @@ static PyObject *
 qgd_N_Qubit_Decomposition_Wrapper_set_Gate_Structure(qgd_N_Qubit_Decomposition_Wrapper *self, PyObject *args)
 {
     // initiate variables for input arguments
-    PyObject* gate_structure_py; 
-    
-    // parsing input arguments
+    PyObject* gate_structure_py = NULL;
+
+    // parsing input arguments: circuit, parameters
     if (!PyArg_ParseTuple(args, "|O", &gate_structure_py)) {
         return Py_BuildValue("i", -1);
+    }
+
+    if (gate_structure_py == NULL) {
+        PyErr_SetString(PyExc_TypeError, "set_Gate_Structure requires a circuit argument");
+        return NULL;
     }
     
     // Check if input is a dictionary (map<int, Gates_block*> version: N_Qubit_Decomposition ONLY)
@@ -945,7 +979,7 @@ qgd_N_Qubit_Decomposition_Wrapper_set_Gate_Structure(qgd_N_Qubit_Decomposition_W
         PyErr_SetString(PyExc_AttributeError, "Dictionary-based set_Gate_Structure is only available for N_Qubit_Decomposition");
         return NULL;
     }
-    
+
     qgd_Circuit_Wrapper* qgd_op_block = (qgd_Circuit_Wrapper*)gate_structure_py;
     try {
         self->decomp->set_custom_gate_structure(qgd_op_block->gate);
@@ -1045,6 +1079,57 @@ qgd_N_Qubit_Decomposition_Wrapper_export_Unitary(qgd_N_Qubit_Decomposition_Wrapp
     std::string filename_str(filename_C);
     // export unitary to file
     self->decomp->export_unitary(filename_str);
+    return Py_BuildValue("i", 0);
+}
+
+/**
+@brief Export the current gate structure and optimized parameters into Squander binary format
+@param args Tuple containing filename string
+@return 0 on success
+@note applicable to: Decomposition, Adaptive, Custom, Tree Search, Tabu Search
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_Wrapper_export_Gate_Structure_to_Binary(qgd_N_Qubit_Decomposition_Wrapper *self, PyObject *args)
+{
+    PyObject* filename = NULL;
+    if (!PyArg_ParseTuple(args, "|O", &filename) || filename == NULL) {
+        PyErr_SetString(PyExc_TypeError, "export_Gate_Structure_to_Binary requires a filename argument");
+        return NULL;
+    }
+
+    PyObject* filename_string = PyObject_Str(filename);
+    if (filename_string == NULL) {
+        return NULL;
+    }
+    PyObject* filename_unicode = PyUnicode_AsEncodedString(filename_string, "utf-8", "~E~");
+    Py_DECREF(filename_string);
+    if (filename_unicode == NULL) {
+        return NULL;
+    }
+    const char* filename_C = PyBytes_AS_STRING(filename_unicode);
+    std::string filename_str(filename_C);
+
+    try {
+        Matrix_real parameters_mtx = self->decomp->get_optimized_parameters();
+        export_gate_list_to_binary(parameters_mtx, static_cast<Gates_block*>(self->decomp), filename_str, self->decomp->verbose);
+    }
+    catch (std::string err) {
+        Py_DECREF(filename_unicode);
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+    catch (std::exception& e) {
+        Py_DECREF(filename_unicode);
+        PyErr_SetString(PyExc_Exception, e.what());
+        return NULL;
+    }
+    catch (...) {
+        Py_DECREF(filename_unicode);
+        PyErr_SetString(PyExc_Exception, "export_Gate_Structure_to_Binary: failed to export circuit");
+        return NULL;
+    }
+
+    Py_DECREF(filename_unicode);
     return Py_BuildValue("i", 0);
 }
 
@@ -2030,6 +2115,30 @@ qgd_N_Qubit_Decomposition_Wrapper_Compress_Circuit(qgd_N_Qubit_Decomposition_Wra
 }
 
 /**
+@brief Call to remove blocks containing a trivial CRY gate (near identity); U3 gates are merged with subsequent gates
+@note applicable to: Adaptive
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_Wrapper_Remove_Trivial_CRY_Gates(qgd_N_Qubit_Decomposition_Wrapper *self)
+{
+    try {
+        N_Qubit_Decomposition_adaptive* adaptive_decomp = dynamic_cast<N_Qubit_Decomposition_adaptive*>(self->decomp);
+        if (adaptive_decomp == NULL) {
+            PyErr_SetString(PyExc_AttributeError, "Remove_Trivial_CRY_Gates is only available for N_Qubit_Decomposition_adaptive");
+            return NULL;
+        }
+        adaptive_decomp->remove_trivial_CRY_gates();
+        Py_RETURN_NONE;
+    } catch (std::string& err) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    } catch (std::exception& e) {
+        PyErr_SetString(PyExc_Exception, e.what());
+        return NULL;
+    }
+}
+
+/**
 @brief Call to finalize circuit
 @note applicable to: Adaptive
 */
@@ -2649,6 +2758,7 @@ qgd_N_Qubit_Decomposition_Wrapper_import_Qiskit_Circuit_standard(qgd_N_Qubit_Dec
         PyErr_SetString(PyExc_ImportError, "Failed to import squander.IO_interfaces.Qiskit_IO");
         return NULL;
     }
+      
     // Get the convert_Qiskit_to_Squander function
     PyObject* convert_func = PyObject_GetAttrString(qiskit_io_module, "convert_Qiskit_to_Squander");
     Py_DECREF(qiskit_io_module);
@@ -2666,7 +2776,7 @@ qgd_N_Qubit_Decomposition_Wrapper_import_Qiskit_Circuit_standard(qgd_N_Qubit_Dec
         PyErr_SetString(PyExc_ValueError, "convert_Qiskit_to_Squander should return (circuit, parameters)");
         return NULL;
     }
-
+    
     PyObject *circuit_squander = PyTuple_GetItem(convert_result, 0), *parameters = PyTuple_GetItem(convert_result, 1);
 
     // Set gate structure
@@ -3056,34 +3166,20 @@ qgd_N_Qubit_Decomposition_Wrapper_import_Qiskit_Circuit_adaptive(qgd_N_Qubit_Dec
     Py_DECREF(numpy_asarray_result);
 
     // Set gate structure and parameters
-    PyObject* set_gate_structure_args = PyTuple_Pack(1, Circuit_ret_result);
+    PyObject* set_gate_structure_args = PyTuple_Pack(2, Circuit_ret_result, numpt_flip_result);
     PyObject* set_gate_structure_result = qgd_N_Qubit_Decomposition_Wrapper_set_Gate_Structure(self, set_gate_structure_args);
     Py_DECREF(set_gate_structure_args);
     Py_DECREF(Circuit_ret_result);
-    if (!set_gate_structure_result) {
-        Py_DECREF(numpt_flip_result);
-        Py_DECREF(optimized_parameters);
-        Py_DECREF(single_qubit_gates);
-        Py_DECREF(qc_data_attr);
-        Py_DECREF(qc_qubits_attr);
-        Py_DECREF(qc);
-        return NULL;
-    }
-    Py_DECREF(set_gate_structure_result);
-
-    PyObject* set_optimized_params_args = PyTuple_Pack(1, numpt_flip_result);
-    PyObject* set_optimized_params_result = qgd_N_Qubit_Decomposition_Wrapper_set_Optimized_Parameters(self, set_optimized_params_args);
-    Py_DECREF(set_optimized_params_args);
     Py_DECREF(numpt_flip_result);
     Py_DECREF(optimized_parameters);
     Py_DECREF(single_qubit_gates);
     Py_DECREF(qc_data_attr);
     Py_DECREF(qc_qubits_attr);
     Py_DECREF(qc);
-    if (!set_optimized_params_result) {
+    if (!set_gate_structure_result) {
         return NULL;
     }
-    Py_DECREF(set_optimized_params_result);
+    Py_DECREF(set_gate_structure_result);
 
     Py_RETURN_NONE;
 }
@@ -3128,6 +3224,8 @@ These methods are available for all decomposition classes
      "Method to get the number of decomposing gates"}, \
     {"get_Optimized_Parameters", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_get_Optimized_Parameters, METH_NOARGS, \
      "Method to get the array of optimized parameters"}, \
+    {"get_Optimized_Parameters_Double", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_get_Optimized_Parameters_Double, METH_NOARGS, \
+     "Method to get the float64 array of optimized parameters"}, \
     {"get_Circuit", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_get_Circuit, METH_NOARGS, \
      "Method to get the incorporated circuit"}, \
     {"List_Gates", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_List_Gates, METH_NOARGS, \
@@ -3156,6 +3254,8 @@ These methods are available for all decomposition classes
      "Get the number of iterations"}, \
     {"export_Unitary", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_export_Unitary, METH_VARARGS, \
      "Export unitary matrix"}, \
+    {"export_Gate_Structure_to_Binary", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_export_Gate_Structure_to_Binary, METH_VARARGS, \
+     "Export the current gate structure and optimized parameters into Squander binary format"}, \
     {"get_Project_Name", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_get_Project_Name, METH_NOARGS, \
      "Get the name of SQUANDER project"}, \
     {"set_Project_Name", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_set_Project_Name, METH_VARARGS, \
@@ -3199,7 +3299,7 @@ These methods are available for all decomposition classes
     {"get_Qbit_Num", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_get_Qbit_Num, METH_NOARGS, \
      "Get the number of qubits"}, \
     {"set_Gate_Structure", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_set_Gate_Structure, METH_VARARGS, \
-     "Set custom gate structure for decomposition"}, \
+     "Set custom gate structure for decomposition: set_Gate_Structure(circuit)"}, \
     {"add_Finalyzing_Layer_To_Gate_Structure", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_add_Finalyzing_Layer_To_Gate_Structure, METH_NOARGS, \
      "Add finalizing layer to gate structure"}, \
     {"get_Gates", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_get_Gates, METH_NOARGS, \
@@ -3231,6 +3331,8 @@ static PyMethodDef qgd_N_Qubit_Decomposition_adaptive_methods[] = {
      "Method to get initial circuit in decomposition"},
     {"Compress_Circuit", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_Compress_Circuit, METH_NOARGS,
      "Method to compress gate structure"},
+    {"Remove_Trivial_CRY_Gates", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_Remove_Trivial_CRY_Gates, METH_NOARGS,
+     "Method to remove blocks containing a trivial CRY gate (near identity); U3 gates are merged with subsequent gates"},
     {"Finalize_Circuit", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_Finalize_Circuit, METH_VARARGS | METH_KEYWORDS,
      "Method to finalize the decomposition"},
     {"set_Gate_Structure_From_Binary", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_set_Gate_Structure_From_Binary, METH_VARARGS,

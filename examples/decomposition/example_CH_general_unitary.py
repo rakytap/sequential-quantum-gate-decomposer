@@ -43,12 +43,9 @@ def create_custom_gate_structure(qbit_num):
         layer = Circuit( qbit_num )
 
 
-        # add U3 fate to the block
-        Theta = True
-        Phi = False
-        Lambda = True      
-        layer.add_U3( qbit, Theta, Phi, Lambda )    
-        layer.add_U3( disentangle_qbit, Theta, Phi, Lambda )  
+        # add U3 fate to the block    
+        layer.add_U3( qbit )    
+        layer.add_U3( disentangle_qbit )  
 
 
         # Connecting every second target qubit with CNOT gate, and use CH gate otherwise

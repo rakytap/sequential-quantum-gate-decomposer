@@ -1,0 +1,390 @@
+{
+  "schema_version": 1,
+  "files": {
+    "benchmarks/partitioning/IBMEagle/QFT1024.qasm": {
+      "sha256": "2d12de050f968c6f12971d2208fc5704cac860f4c8353aa5c5a7a584942a711f",
+      "cnot_count": 24420,
+      "qubit_count": 1024
+    },
+    "benchmarks/partitioning/IBMEagle/QFT128.qasm": {
+      "sha256": "96447e25e2741a29a08cbf3c28e9dc07593e2cb51ab411050c9714829918122a",
+      "cnot_count": 2916,
+      "qubit_count": 128
+    },
+    "benchmarks/partitioning/IBMEagle/QFT16.qasm": {
+      "sha256": "20b9c8f4bd81f307d3ae7bbbbd0cd1a92ef68569ac7215867ff18065f8645a3a",
+      "cnot_count": 228,
+      "qubit_count": 16
+    },
+    "benchmarks/partitioning/IBMEagle/QFT2048.qasm": {
+      "sha256": "8a1b213ba88630371aa2505274dfe59413f84557016a0d79aa622ae5ce090ffd",
+      "cnot_count": 48996,
+      "qubit_count": 2048
+    },
+    "benchmarks/partitioning/IBMEagle/QFT256.qasm": {
+      "sha256": "60778acef10aa8c7c5a7d0f445857f5577a92cbfe4bddf9f931f98b08ca1a651",
+      "cnot_count": 5988,
+      "qubit_count": 256
+    },
+    "benchmarks/partitioning/IBMEagle/QFT32.qasm": {
+      "sha256": "58df236aeacf20e3e010bfb0338ebf76c15a873cf91a611f9dc18bdc56c45f57",
+      "cnot_count": 612,
+      "qubit_count": 32
+    },
+    "benchmarks/partitioning/IBMEagle/QFT512.qasm": {
+      "sha256": "f29c4d91b1e3cc9b5b250b5bb18405d4408bdb5693eb6e6fed8514b790742e09",
+      "cnot_count": 12132,
+      "qubit_count": 512
+    },
+    "benchmarks/partitioning/IBMEagle/QFT64.qasm": {
+      "sha256": "ef64290c32ed3b5fb1ef4eed41992de203751d7c28a0a1bf51c2c21bd153d603",
+      "cnot_count": 1380,
+      "qubit_count": 64
+    },
+    "benchmarks/partitioning/IBMEagle/QFT8.qasm": {
+      "sha256": "fedd8f0b1c4cbaa7a0a3f59cf09202c9824ecb8d6748cdcdce031ca69fc25be4",
+      "cnot_count": 56,
+      "qubit_count": 8
+    },
+    "benchmarks/partitioning/IBMEagle/QFTAdd1024.qasm": {
+      "sha256": "77346bf4971256c4bf4a7c06d56e42830afb61fe5e335258aadbdc988ace9560",
+      "cnot_count": 75308,
+      "qubit_count": 2048
+    },
+    "benchmarks/partitioning/IBMEagle/QFTAdd128.qasm": {
+      "sha256": "a6806ace5cf040f4abd22a3dc0f9918b1ac4d899b800b9e1f5edb8183b0139d6",
+      "cnot_count": 9004,
+      "qubit_count": 256
+    },
+    "benchmarks/partitioning/IBMEagle/QFTAdd16.qasm": {
+      "sha256": "857acc8870b3e67c6a62f44e7310b75d5cac554e0c5474c0adb264e0510ae109",
+      "cnot_count": 716,
+      "qubit_count": 32
+    },
+    "benchmarks/partitioning/IBMEagle/QFTAdd2048.qasm": {
+      "sha256": "19e146b809c8ac83b26c804ab5e6415d15cbb24c66e16c5a978e157ee62e0a71",
+      "cnot_count": 151084,
+      "qubit_count": 4096
+    },
+    "benchmarks/partitioning/IBMEagle/QFTAdd256.qasm": {
+      "sha256": "0ebd77e847dc234eea2d23fafb3a073581e4e58a19cf924982a113e39318353f",
+      "cnot_count": 18476,
+      "qubit_count": 512
+    },
+    "benchmarks/partitioning/IBMEagle/QFTAdd32.qasm": {
+      "sha256": "7a1511c5f1eccbae00ed59d92b410ede23c636182a3a1e854089d135a94c80f0",
+      "cnot_count": 1900,
+      "qubit_count": 64
+    },
+    "benchmarks/partitioning/IBMEagle/QFTAdd512.qasm": {
+      "sha256": "d5f81fdc24780df889f0e822d440e90b7fe89ac512d033e88e7b7b2079b4091d",
+      "cnot_count": 37420,
+      "qubit_count": 1024
+    },
+    "benchmarks/partitioning/IBMEagle/QFTAdd64.qasm": {
+      "sha256": "b6b80327124bcdeb2b1946d6c7cd1c8a40e5926c78327c17cbc00cff73bc3283",
+      "cnot_count": 4268,
+      "qubit_count": 128
+    },
+    "benchmarks/partitioning/IBMEagle/QFTAdd8.qasm": {
+      "sha256": "09783633af1270643085cbedb3b07aa1de627be52235938ccfc2c58449119a13",
+      "cnot_count": 184,
+      "qubit_count": 16
+    },
+    "benchmarks/partitioning/IBMEagle/adder_8.qasm": {
+      "sha256": "f9f44c06f01b2cfcc5688482ab663ae9c9b974c07921172dd8355482752d300f",
+      "cnot_count": 409,
+      "qubit_count": 24
+    },
+    "benchmarks/partitioning/IBMEagle/barenco_tof_10.qasm": {
+      "sha256": "1e5e75ee4888cca2274c48c8ac08dbbf42888b2f7d4dc0702117f882bbc65dfe",
+      "cnot_count": 192,
+      "qubit_count": 19
+    },
+    "benchmarks/partitioning/IBMEagle/barenco_tof_3.qasm": {
+      "sha256": "d48a1f070d776500cc8f32af2d5e921b66a2c046dd67422fcb204cd36517bfbf",
+      "cnot_count": 24,
+      "qubit_count": 5
+    },
+    "benchmarks/partitioning/IBMEagle/barenco_tof_4.qasm": {
+      "sha256": "9f19f4521209bc76107243250db8f6befffd0efe99b696516b09df9c434e0a80",
+      "cnot_count": 48,
+      "qubit_count": 7
+    },
+    "benchmarks/partitioning/IBMEagle/barenco_tof_5.qasm": {
+      "sha256": "2fdaccc4465aba6184aa8944fd2cc4321f9372f745e2dafe7cb928300fd05427",
+      "cnot_count": 72,
+      "qubit_count": 9
+    },
+    "benchmarks/partitioning/IBMEagle/csla_mux_3_original.qasm": {
+      "sha256": "e529e751e590990651822a0471c6b1b382eb945ad8657ca7fd2dac83718de7b2",
+      "cnot_count": 80,
+      "qubit_count": 15
+    },
+    "benchmarks/partitioning/IBMEagle/csum_mux_9_corrected.qasm": {
+      "sha256": "5cf5c5ff65495671c1d0331aed4d41dd2de750544d4d1a15c56c47650089ef56",
+      "cnot_count": 168,
+      "qubit_count": 30
+    },
+    "benchmarks/partitioning/IBMEagle/gf2^E10_mult.qasm": {
+      "sha256": "ba3e85b1be92403a62f68b68521ef3dd466460cb85c13fcc656db25326855afa",
+      "cnot_count": 609,
+      "qubit_count": 30
+    },
+    "benchmarks/partitioning/IBMEagle/gf2^E128_mult.qasm": {
+      "sha256": "9832d920ad5641fd6dd7dea28f48fc9aa82b3b564179827adc9f3cba7e2eceda",
+      "cnot_count": 98685,
+      "qubit_count": 384
+    },
+    "benchmarks/partitioning/IBMEagle/gf2^E131_mult.qasm": {
+      "sha256": "bd8abb06c42a917c766521f8be727c476e3a1678f0f47a702a2aa34291733291",
+      "cnot_count": 103616,
+      "qubit_count": 393
+    },
+    "benchmarks/partitioning/IBMEagle/gf2^E163_mult.qasm": {
+      "sha256": "22fcf3aeb0ea45c1f102d3c9588e43ba17f969a8e77451885553e3520b65a87c",
+      "cnot_count": 159900,
+      "qubit_count": 489
+    },
+    "benchmarks/partitioning/IBMEagle/gf2^E16_mult.qasm": {
+      "sha256": "85364df781fd0165d40c1b85c93af5661574577055bb71d48a131a09b38758e0",
+      "cnot_count": 1581,
+      "qubit_count": 48
+    },
+    "benchmarks/partitioning/IBMEagle/gf2^E32_mult.qasm": {
+      "sha256": "a5490e72de8ac273ac46818a0797808ddc67b3d81d8d2e1ac65622b8bca3c8e0",
+      "cnot_count": 6299,
+      "qubit_count": 96
+    },
+    "benchmarks/partitioning/IBMEagle/gf2^E4_mult.qasm": {
+      "sha256": "b60b96c6e17d506ab2f1705ad7d0c6ac9a1fe58216dd2d947794fffdfaf17e4e",
+      "cnot_count": 99,
+      "qubit_count": 12
+    },
+    "benchmarks/partitioning/IBMEagle/gf2^E5_mult.qasm": {
+      "sha256": "61722948c1f3c9456caf0047d3546f922b90904626dc1b539ae7ab6132070dc0",
+      "cnot_count": 154,
+      "qubit_count": 15
+    },
+    "benchmarks/partitioning/IBMEagle/gf2^E64_mult.qasm": {
+      "sha256": "c293041089cb21644bd230623f8efda63e9354f20624e5930d1b0adc3e02c2b2",
+      "cnot_count": 24765,
+      "qubit_count": 192
+    },
+    "benchmarks/partitioning/IBMEagle/gf2^E6_mult.qasm": {
+      "sha256": "ab0f137fdacb033e4d8e886e402b8f167c05f43b6bd23c6988216bc54c4e2d59",
+      "cnot_count": 221,
+      "qubit_count": 18
+    },
+    "benchmarks/partitioning/IBMEagle/gf2^E7_mult.qasm": {
+      "sha256": "385fbcceb5ba1fef7871752cf13bd43b66970e6c345b452321eb1156688ab2cf",
+      "cnot_count": 300,
+      "qubit_count": 21
+    },
+    "benchmarks/partitioning/IBMEagle/gf2^E8_mult.qasm": {
+      "sha256": "2b4ba46d732555aa3350022b0ac91b8761c4e6efcaf803116f239e45f7720b3c",
+      "cnot_count": 405,
+      "qubit_count": 24
+    },
+    "benchmarks/partitioning/IBMEagle/gf2^E9_mult.qasm": {
+      "sha256": "6abf1b2ea32336475d5bd30f88bf3893d302e87c48a767c7fd33620d3a79fd11",
+      "cnot_count": 494,
+      "qubit_count": 27
+    },
+    "benchmarks/partitioning/IBMEagle/mod5_4.qasm": {
+      "sha256": "f778834289fa6d2d94610e51a75ff58d9f7edda56a0b50ac3b29a41d13f69d43",
+      "cnot_count": 28,
+      "qubit_count": 5
+    },
+    "benchmarks/partitioning/IBMEagle/mod_adder_1024.qasm": {
+      "sha256": "cabb576fe92c8e842d4917200b1f2d3385941a27b48635c3afc160dd55d1ff58",
+      "cnot_count": 1720,
+      "qubit_count": 28
+    },
+    "benchmarks/partitioning/IBMEagle/mod_mult_55.qasm": {
+      "sha256": "b75f3c24881cd9876689c3de92b42aeef8765c9941d390dad90eb7183d9058f4",
+      "cnot_count": 48,
+      "qubit_count": 9
+    },
+    "benchmarks/partitioning/IBMEagle/mod_red_21.qasm": {
+      "sha256": "90f2e0d12f7fae186db36f40adfed1dcd0835612efaeeb94f089a26fc4940f7c",
+      "cnot_count": 105,
+      "qubit_count": 11
+    },
+    "benchmarks/partitioning/IBMEagle/qcla_adder_10.qasm": {
+      "sha256": "3cea147aa23364b51f2b4f886d9e29fa5265a2bafccdc85d271e1145c73af5a8",
+      "cnot_count": 233,
+      "qubit_count": 36
+    },
+    "benchmarks/partitioning/IBMEagle/qcla_com_7.qasm": {
+      "sha256": "82767264d0c916fb0a914e9d2d27e2847c66e65a1f2097cff2d5a04925788051",
+      "cnot_count": 186,
+      "qubit_count": 24
+    },
+    "benchmarks/partitioning/IBMEagle/qcla_mod_7.qasm": {
+      "sha256": "1ec337d226fed2d091fd08e4e37850e278003e65e00399ac0d4e6b17dbc0459b",
+      "cnot_count": 382,
+      "qubit_count": 26
+    },
+    "benchmarks/partitioning/IBMEagle/rc_adder_6.qasm": {
+      "sha256": "bb4ece5f9ea6ce8459da9d230190973aacdda59866573bc13b217a091e6cbff9",
+      "cnot_count": 93,
+      "qubit_count": 14
+    },
+    "benchmarks/partitioning/IBMEagle/tof_10.qasm": {
+      "sha256": "248cc0e29133831f302f0da03c026ee884231aaa8c4017f9e29dc5eefb990711",
+      "cnot_count": 102,
+      "qubit_count": 19
+    },
+    "benchmarks/partitioning/IBMEagle/tof_3.qasm": {
+      "sha256": "b72f2015f560708687d7d2ae03a153a3eea366b0e7da5b4c734fd1fbc2b716c9",
+      "cnot_count": 18,
+      "qubit_count": 5
+    },
+    "benchmarks/partitioning/IBMEagle/tof_4.qasm": {
+      "sha256": "3151f7721d51e49bbb5a331a52012e7ca2f2439a93c673ccd00d4c6f4da5479e",
+      "cnot_count": 30,
+      "qubit_count": 7
+    },
+    "benchmarks/partitioning/IBMEagle/tof_5.qasm": {
+      "sha256": "9e036e670e054f784ea38a6abe7967631815c5a2404d06955f245565de5f7f12",
+      "cnot_count": 42,
+      "qubit_count": 9
+    },
+    "benchmarks/partitioning/IBMEagle/vbe_adder_3.qasm": {
+      "sha256": "98549a8e19ad01added6870e4cf90844d3d5598adcca416baf826d0d097e11f4",
+      "cnot_count": 70,
+      "qubit_count": 10
+    },
+    "benchmarks/partitioning/QASMBenchmarks/adder_n4.qasm": {
+      "sha256": "5b3d96e05da3088df6113d2b229b0bc275b2d87ee947d6e82905e0fd298cf691",
+      "cnot_count": 10,
+      "qubit_count": 4
+    },
+    "benchmarks/partitioning/QASMBenchmarks/adder_n64.qasm": {
+      "sha256": "3f1a86408bb3684f69df69acdfb88feb27f8fc381a257561f18ce914ea151ed6",
+      "cnot_count": 455,
+      "qubit_count": 64
+    },
+    "benchmarks/partitioning/QASMBenchmarks/bv_n14.qasm": {
+      "sha256": "db90a35c40c528d128624ed6f52a7abd88981883485dc2c3e5532010a1c37510",
+      "cnot_count": 13,
+      "qubit_count": 14
+    },
+    "benchmarks/partitioning/QASMBenchmarks/bv_n140.qasm": {
+      "sha256": "97049b7968749de8c0687d31ed7416ff4de45f82afd6bdc4d6303cc842a7c4e1",
+      "cnot_count": 72,
+      "qubit_count": 140
+    },
+    "benchmarks/partitioning/QASMBenchmarks/cat_state_n22.qasm": {
+      "sha256": "3b29b96594f7c480c321eb2f8ad23450bfc5742285b9d8887f2c4033805c5503",
+      "cnot_count": 21,
+      "qubit_count": 22
+    },
+    "benchmarks/partitioning/QASMBenchmarks/dnn_n16.qasm": {
+      "sha256": "e4604a34a94fe73ef8acf50e7067dbcbf12d599290a22eb64e62e757d34b19b6",
+      "cnot_count": 384,
+      "qubit_count": 16
+    },
+    "benchmarks/partitioning/QASMBenchmarks/dnn_n8.qasm": {
+      "sha256": "d1ae4266151d3ccd3983edeebaf738ad10df9775855859f0eeb2413f0200776b",
+      "cnot_count": 192,
+      "qubit_count": 8
+    },
+    "benchmarks/partitioning/QASMBenchmarks/ghz_state_n23.qasm": {
+      "sha256": "e2d977e70a60b14eb7301e650bbc83ea3ee93ea8939c3799191927253d46f8f6",
+      "cnot_count": 22,
+      "qubit_count": 23
+    },
+    "benchmarks/partitioning/QASMBenchmarks/grover_19.qasm": {
+      "sha256": "728d775a142518c335d7f190b9f87aa41eac150680f601a19b0b5ef764b9c43c",
+      "cnot_count": 192,
+      "qubit_count": 19
+    },
+    "benchmarks/partitioning/QASMBenchmarks/grover_23.qasm": {
+      "sha256": "e7341d4649aa792246f5b79b29494c23f62afbc8ed972d535fb82842901b0c24",
+      "cnot_count": 240,
+      "qubit_count": 23
+    },
+    "benchmarks/partitioning/QASMBenchmarks/grover_33.qasm": {
+      "sha256": "47eaa7d1b9f050f07c49d00e7afd3e1b1308a44cfc93a35f58f32968de342892",
+      "cnot_count": 360,
+      "qubit_count": 33
+    },
+    "benchmarks/partitioning/QASMBenchmarks/grover_45.qasm": {
+      "sha256": "123fa0e5121201d8d407e2fa89163cda414fa6145bc562793b6a6341550570b6",
+      "cnot_count": 504,
+      "qubit_count": 45
+    },
+    "benchmarks/partitioning/QASMBenchmarks/grover_61.qasm": {
+      "sha256": "95daf0e531d0e5fb285e11bf7e84f510e8d1b36577bb93bd3bbc957b92d6316c",
+      "cnot_count": 696,
+      "qubit_count": 61
+    },
+    "benchmarks/partitioning/QASMBenchmarks/grover_81.qasm": {
+      "sha256": "3f8cf01650d11279f3b7467d900708a0ed40ce0ca7677189f1a61c4a5d2ddc6d",
+      "cnot_count": 936,
+      "qubit_count": 81
+    },
+    "benchmarks/partitioning/QASMBenchmarks/heisenberg-16-20.qasm": {
+      "sha256": "19dfe1a6725e25d92a4ddcdaf14e24c55c985ecec4a452bc718e91be8fdd8477",
+      "cnot_count": 360,
+      "qubit_count": 16
+    },
+    "benchmarks/partitioning/QASMBenchmarks/hhl_n7.qasm": {
+      "sha256": "beb5fda86778a3e93d2c5ded4941961e4276de31eaad057c633ef406e9524c05",
+      "cnot_count": 196,
+      "qubit_count": 7
+    },
+    "benchmarks/partitioning/QASMBenchmarks/ising_n10.qasm": {
+      "sha256": "2b5c8ac6e6417f89161ce127140ce8f9fed84139ee9889a4d75e6f126b6c6015",
+      "cnot_count": 90,
+      "qubit_count": 10
+    },
+    "benchmarks/partitioning/QASMBenchmarks/ising_n98.qasm": {
+      "sha256": "ac4755dd82c5e5e2bed8191cc6f106b1d3bdea1a086c3f86bf15f6cefa3a6b0a",
+      "cnot_count": 194,
+      "qubit_count": 98
+    },
+    "benchmarks/partitioning/QASMBenchmarks/multiplier_n15.qasm": {
+      "sha256": "45961e360770098ae258b7de44e36354daee8d202730f668b15d317d66d39593",
+      "cnot_count": 246,
+      "qubit_count": 15
+    },
+    "benchmarks/partitioning/QASMBenchmarks/multiplier_n400.qasm": {
+      "sha256": "9a00698aa72c3b26e4059e5e88c34a2919c214e3764a11796b7e774320cce8f5",
+      "cnot_count": 216000,
+      "qubit_count": 400
+    },
+    "benchmarks/partitioning/QASMBenchmarks/multiplier_n75.qasm": {
+      "sha256": "3bb9b731828931e8343e3f4e7bd16c2ff0a63755b415127a1b20d2e666f2d02b",
+      "cnot_count": 7350,
+      "qubit_count": 75
+    },
+    "benchmarks/partitioning/QASMBenchmarks/multiply_n13.qasm": {
+      "sha256": "9a57e9f7ec9978680a4374bfd6d2e965c36b6c956602e5e86626ffe0a00700ca",
+      "cnot_count": 40,
+      "qubit_count": 13
+    },
+    "benchmarks/partitioning/QASMBenchmarks/qft_20.qasm": {
+      "sha256": "aba04899c5ee6eb28521f4cc5069b73ec91c7630bc58e8fbf347d99d604e6bb5",
+      "cnot_count": 410,
+      "qubit_count": 20
+    },
+    "benchmarks/partitioning/QASMBenchmarks/quantum_volume_n40_d20_i0.qasm": {
+      "sha256": "8ea08ce96994aee3d579f64a45df6c51897b8a10d7414ce9bb9edd32921b55a6",
+      "cnot_count": 1200,
+      "qubit_count": 40
+    },
+    "benchmarks/partitioning/QASMBenchmarks/swap_test_n25.qasm": {
+      "sha256": "d3eb760e9a589cfd37885d58efa0b87a4dda49538e93ea01df4f016e216c890c",
+      "cnot_count": 84,
+      "qubit_count": 25
+    },
+    "benchmarks/partitioning/QASMBenchmarks/tfim.qasm": {
+      "sha256": "5285b3fc60c5951479028ba576a1d6eafadbd15e13a62103e2ffa9509c6fdb27",
+      "cnot_count": 60,
+      "qubit_count": 4
+    }
+  }
+}

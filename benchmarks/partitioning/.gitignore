@@ -1,0 +1,8 @@
+# Large evidence is distributed with the benchmark-data release. Keep Git clones
+# small, and prevent temporary indexes/backups from entering the result archive.
+/*_results_[34]qbit_TreeSearch/*
+!/*_results_[34]qbit_TreeSearch/results.json
+!/*_results_[34]qbit_TreeSearch/*.qasm
+/*_results_[34]qbit_bqskit/*
+!/*_results_[34]qbit_bqskit/results.json
+!/*_results_[34]qbit_bqskit/*.qasm
