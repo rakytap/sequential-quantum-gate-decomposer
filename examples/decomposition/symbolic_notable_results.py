@@ -93,6 +93,7 @@ def phase_polynomial_certificate():
 
 
 def independent_sycamore_sdk():
+    from symbolic_local_baselines import normalize_baseline
     from symbolic_references import _numeric, _transpile
     from qiskit import QuantumCircuit
     from qiskit.circuit.library import UnitaryGate
@@ -110,10 +111,12 @@ def independent_sycamore_sdk():
             raise ValueError("Independent SDK Sycamore output failed phase-sensitive replay")
         operations = [dict(gate=i.operation.name, parameters=[float(p) for p in i.operation.params],
             wires=[result.find_bit(q).index for q in i.qubits]) for i in result.data]
-        baseline = dict(status="verified_numeric", basis=basis, input="independent_matrix_synthesis",
+        baseline = dict(status="verified_numeric", basis=basis, num_qubits=2, input="independent_matrix_synthesis",
             entanglers=sum(len(op["wires"]) == 2 for op in operations),
             single_qubit_gates=sum(len(op["wires"]) == 1 for op in operations),
             global_phase=float(result.global_phase), operations=operations, max_error=error)
+        baseline = normalize_baseline(baseline)
+        baseline["single_qubit_gates"] = sum(len(op["wires"]) == 1 for op in baseline["operations"])
         baseline["exact_lift"] = lift_sdk_candidate(make_gate("SYC"), baseline, basis)
         rows.append(baseline)
     return dict(qiskit_version=qiskit.__version__, seed=219, optimization_level=3,
@@ -200,7 +203,8 @@ even if extra CNOTs are allowed. Our three-phase circuit attains that bound.
 This is not a minimum-local proof over arbitrary U(2) gates or SX-containing circuits.
 
 The independent SDK rows use matrix input, Qiskit 2.2.3, level 3, seed 219,
-and approximation degree one. Their circuits and numerical replay errors are stored
+and approximation degree one, followed by native one-qubit block cleanup and
+phase-sensitive replay. Their circuits and numerical replay errors are stored
 in the evidence JSON. They are separate from the main baseline, which also lets
 Qiskit optimize our supplied exact source. That source-fed baseline reproduces
 the three-local circuit, so its tie is not independent discovery by Qiskit.
@@ -222,7 +226,10 @@ Target & Basis & E ours/SDK & L ours/SDK \\\midrule
              f"there are {counts.get('equal_E_fewer_locals',0)} lower local counts, "
              f"{counts.get('equal_E_equal_locals',0)} ties and "
              f"{counts.get('equal_E_more_locals',0)} higher local counts at equal E. ")
-    text += r"""Aliases and related basis presets are counted separately. These are SDK comparisons,
+    text += r"""Aliases and related basis presets are counted separately. Native one-qubit SDK
+cleanup removes identity rotations introduced by the manual U-to-ZYZ adapter
+before counting; savings from that adapter artifact are not credited.
+These are SDK comparisons,
 not novelty claims or an exhaustive literature review. The full CSV includes every
 compared case, including regressions; a separate local-gap CSV is the work list.
 The table shows the largest local-count savings. E and L are raw physical counts;
