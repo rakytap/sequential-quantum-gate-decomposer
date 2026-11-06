@@ -48,6 +48,11 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+symbolic = [
+    "sympy>=1.12",
+    "deap>=1.4",
+]
 dev = [
     "pytest",
+    "sympy>=1.12",
 ]

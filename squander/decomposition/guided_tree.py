@@ -1,7 +1,7 @@
 """Experimental guided tree search for symbolic decomposition benchmarks.
 
-This module is intentionally kept under benchmarks/partitioning rather than
-production decomposition code. It supports sympy_gen/sympy_param experiments.
+This optional numerical helper supports the symbolic decomposition experiments
+in sympy_param. The exact gate catalog does not depend on this module.
 """
 
 from squander import N_Qubit_Decomposition_custom
