@@ -70,7 +70,8 @@ def bounded_synthesis(name,parameters,basis,*,phase_exact,seconds):
     start=time.monotonic()
     try:
         with wall_time_limit(seconds):
-            result=synthesize(name,parameters,basis,phase_exact=phase_exact)
+            result=synthesize(name,parameters,basis,phase_exact=phase_exact,
+                              osr_seconds=min(10,max(0.1,seconds/3)))
     except SymbolicDeadline:
         result=dict(status="timeout",phase_exact=phase_exact,reason="wall_clock_budget",budget_seconds=seconds)
     except Exception as error:

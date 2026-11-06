@@ -49,6 +49,16 @@ def test_targeted_reruns_preserve_each_source_revision_and_failed_attempt():
     assert merged["rows"][0]["previous_attempts"][0]["phase_exact"]["reason"]=="float control count"
     assert merged["summary"]["phase_exact"]==dict(verified_symbolic=1)
     assert "synthesis_run_index" not in old
+    # Appending to an already merged archive must keep the older correction's
+    # own source hashes, including the indices inside its attempt history.
+    third=copy.deepcopy(supplement)
+    third["source_sha256"]["adapter"]="OSR"
+    merged_again=analysis.merge_synthesis_runs([merged,third])
+    row=merged_again["rows"][0]
+    assert len(merged_again["synthesis_runs"])==3
+    assert row["synthesis_run_index"]==2
+    assert [old["synthesis_run_index"] for old in row["previous_attempts"]]==[0,1]
+    assert merged_again["synthesis_runs"][1]["source_sha256"]["adapter"]=="fixed"
     changed=copy.deepcopy(supplement)
     changed["rows"][0]["parameters"]=["phi","2"]
     with pytest.raises(ValueError,match="changes the target"):

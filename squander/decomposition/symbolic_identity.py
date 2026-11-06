@@ -7,6 +7,7 @@ converse or hidden phase relation is assumed.
 """
 
 import math
+from functools import lru_cache
 import sympy as sp
 
 if __package__:
@@ -15,11 +16,13 @@ else:
     from symbolic_gates import make_gate, apply_to
 
 
-def prove_circuit_identity(target, sequence, factor=1):
-    target=sp.ImmutableMatrix(target)
-    factor=sp.sympify(factor)
-    matrices=[make_gate(op[0],*op[1:-1]) for op in sequence]
-    expressions=[entry for matrix in [target,*matrices] for entry in matrix]+[factor]
+def exponential_forms(expressions,*,return_converter=False):
+    """Return exact rational forms and their inverse exponential substitution.
+
+    The formal variables are shared by every supplied expression. They are
+    used for algebra, not numerical samples or assumptions about independence
+    of the original gate parameters.
+    """
     rewritten=[sp.expand(entry.rewrite(sp.exp)) for entry in expressions]
     denominators={}
     def terms(argument):
@@ -31,7 +34,7 @@ def prove_circuit_identity(target, sequence, factor=1):
                     continue
                 coefficient,base=term.as_coeff_Mul()
                 if not coefficient.is_Rational:
-                    return None
+                    raise ValueError("Unsupported non-rational exponential coefficient")
                 old=denominators.get(base,1)
                 denominator=int(coefficient.q)
                 denominators[base]=old*denominator//math.gcd(old,denominator)
@@ -43,12 +46,53 @@ def prove_circuit_identity(target, sequence, factor=1):
                 result*=sp.simplify(sp.expand_complex(sp.exp(term)))
             else:
                 coefficient,base=term.as_coeff_Mul()
-                result*=symbols[base]**int(coefficient*denominators[base])
+                power=coefficient*denominators[base]
+                if power.is_Integer is not True:
+                    raise ValueError("The exponential context lacks this denominator")
+                result*=symbols[base]**int(power)
         return result
-    transformed=[]
-    for entry in rewritten:
+    def convert(expression):
+        entry=sp.expand(sp.sympify(expression).rewrite(sp.exp))
         replacements={e:exponential_value(e) for e in entry.atoms(sp.exp)}
-        transformed.append(sp.cancel(sp.expand(entry.xreplace(replacements))))
+        return sp.cancel(sp.expand(entry.xreplace(replacements)))
+    transformed=[convert(entry) for entry in rewritten]
+    inverse={symbols[base]:sp.exp(base/denominator) for base,denominator in denominators.items()}
+    if return_converter:return tuple(transformed),inverse,convert
+    return tuple(transformed),inverse
+
+
+@lru_cache(maxsize=8192)
+def _zero_coefficient(coefficient):
+    if coefficient==0:return True
+    if coefficient.is_Rational:return False
+    simplified=sp.simplify(coefficient)
+    if simplified==0:return True
+    if not coefficient.free_symbols:
+        # Root-of-unity products beyond eighth roots do not always simplify
+        # in exponential form. Their real/imaginary algebra is still exact.
+        return sp.simplify(sp.expand_complex(simplified))==0
+    return False
+
+
+def zero_form(expression,variables=()):
+    """Prove a rational expression zero, including its exact coefficients."""
+    expression=sp.cancel(sp.expand(expression))
+    if expression==0:return True
+    numerator=sp.fraction(expression)[0]
+    if variables:
+        coefficients=sp.Poly(numerator,*variables).coeffs()
+    else:
+        coefficients=[numerator]
+    return all(_zero_coefficient(coefficient) for coefficient in coefficients)
+
+
+def prove_circuit_identity(target, sequence, factor=1):
+    target=sp.ImmutableMatrix(target)
+    factor=sp.sympify(factor)
+    matrices=[make_gate(op[0],*op[1:-1]) for op in sequence]
+    expressions=[entry for matrix in [target,*matrices] for entry in matrix]+[factor]
+    try:transformed,inverse=exponential_forms(expressions)
+    except ValueError:return None
     position=0
     def restore(matrix):
         nonlocal position
@@ -62,15 +106,4 @@ def prove_circuit_identity(target, sequence, factor=1):
     actual=sp.eye(target.rows)
     for matrix,operation in zip(native,sequence):
         actual=apply_to(actual,width,matrix,operation[-1]).applyfunc(lambda x:sp.cancel(sp.expand(x)))
-    def zero(expression):
-        expression=sp.cancel(sp.expand(expression))
-        if expression==0:return True
-        # Eighth/sixteenth-root constants may have equivalent nested radical
-        # forms. Normalize their coefficients, without sampling the variables.
-        numerator=sp.fraction(expression)[0]
-        if symbols:
-            coefficients=sp.Poly(numerator,*symbols.values()).coeffs()
-        else:
-            coefficients=[numerator]
-        return all(sp.simplify(coefficient)==0 for coefficient in coefficients)
-    return all(zero(a-phase*b) for a,b in zip(target_form,actual))
+    return all(zero_form(a-phase*b,tuple(inverse)) for a,b in zip(target_form,actual))

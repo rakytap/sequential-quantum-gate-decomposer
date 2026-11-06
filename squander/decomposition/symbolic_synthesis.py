@@ -322,6 +322,16 @@ def _scalar_gadgets(basis):
     imaginary=(("Rz",sp.pi,(0,)),("Rz",sp.pi,(1,)),("CX",(0,1)),("Rz",sp.pi,(1,)),("CX",(0,1)))
     eighth,_=cartan_source(0,0,0,force_three=True)
     sources=[(imaginary,2),(_inverse(imaginary),6),(eighth,7),(_inverse(eighth),1)]
+    axes={"Rxx":("X","X"),"Rzz":("Z","Z"),"Rzx":("Z","X"),"ZZPhase":("Z","Z")}.get(basis.entangler)
+    if axes is not None:
+        angle=1 if basis.entangler=="ZZPhase" else sp.pi
+        centre=((basis.entangler,angle,(0,1)),)+tuple(("R"+axis,sp.pi,(q,)) for q,axis in enumerate(axes))
+        inverse_centre=tuple((op[0],-op[1],op[-1]) for op in reversed(centre))
+        sources.extend(((centre,2),(inverse_centre,6)))
+    if basis.entangler=="iSWAP":
+        centre=(("iSWAP",(0,1)),("Rx",sp.pi,(0,)),("iSWAP",(0,1)),("Rx",-sp.pi,(1,)))
+        # Avoid _inverse here: iSWAP's inverse is itself dressed by ZZ.
+        sources.extend(((centre,2),(centre*3,6)))
     edges=[]
     solution=solve_clifford_alphabet(basis.single_qubit_gates)
     identity=group_data()[-1]
@@ -349,7 +359,184 @@ def _scalar_gadgets(basis):
     return paths
 
 
-def synthesize(name, parameters=(), basis="cx_u", *, phase_exact=True):
+def _matrix_sources(target,basis,seconds):
+    target=sp.ImmutableMatrix(target)
+    if __package__:
+        from .symbolic_osr_search import osr_source_candidates
+        from .symbolic_clifford_two_qubit import clifford_source_candidate
+        from .symbolic_native_pauli import native_cartan_candidate
+    else:
+        from symbolic_osr_search import osr_source_candidates
+        from symbolic_clifford_two_qubit import clifford_source_candidate
+        from symbolic_native_pauli import native_cartan_candidate
+    if target.shape==(4,4):
+        if __package__:
+            from .symbolic_osr import product_from_form
+            from .symbolic_identity import exponential_forms
+        else:
+            from symbolic_osr import product_from_form
+            from symbolic_identity import exponential_forms
+        forms,inverse=exponential_forms(tuple(target))
+        if product_from_form(sp.ImmutableMatrix(4,4,forms),(0,),tuple(inverse)) is not None:
+            local,search=osr_source_candidates(target,basis,seconds=seconds,max_depth=0)
+            if local:return local,search
+    clifford=clifford_source_candidate(target,basis)
+    if clifford is not None:
+        return [clifford],dict(termination="exact_native_Clifford_coset_search",
+                               proof_scope=clifford["proof_scope"],discrete_minimum=clifford["discrete_minimum"],
+                               reachable_cosets=clifford["reachable_cosets"])
+    cartan=native_cartan_candidate(target,basis)
+    if cartan is not None:
+        return [cartan],dict(termination="native_commuting_Pauli_network_found",
+                             proof_scope=cartan["proof_scope"],coordinates=cartan["coordinates"])
+    return osr_source_candidates(target,basis,seconds=seconds)
+
+
+def _lower_matrix_sources(target,basis,phase_exact,seconds):
+    sources,search=_matrix_sources(target,basis,seconds)
+    prepared=[]
+    width=target.rows.bit_length()-1
+    for source in sources:
+        for sequence,factor in _native_candidates("Identity",(width,),basis,
+                                                  source_operations=source["sequence"]):
+            factor=sp.simplify(factor*source["factor"])
+            try:
+                if phase_exact and simplify_exact(factor-1)!=0:
+                    sequence=_cleanup(sequence+_physical_scalar(factor,basis,width))
+                prepared.append((sequence,factor,source["method"]))
+            except RuleUnavailable:continue
+    return prepared,search
+
+
+@lru_cache(maxsize=256)
+def _two_wire_source(name,parameters,basis,seconds):
+    """Resynthesize contiguous two-wire source windows before CX rebasing.
+
+    Each replacement has its own exact matrix proof and carries its scalar
+    into the enclosing construction. This is a local optimization, not a
+    certificate of a globally optimal multi-qubit circuit.
+    """
+    if __package__:
+        from .symbolic_rules import source_rule
+        from .symbolic_identity import prove_circuit_identity
+    else:
+        from symbolic_rules import source_rule
+        from symbolic_identity import prove_circuit_identity
+    source,factor=source_rule(name,parameters)
+    source=tuple(source)
+    replacements=[]
+    start=0
+    output=[]
+    while start<len(source):
+        operation=source[start]
+        if len(operation[-1])!=2:
+            output.append(operation);start+=1;continue
+        wires=tuple(sorted(operation[-1]))
+        end=start+1
+        last=start
+        while end<len(source) and set(source[end][-1])<=set(wires):
+            if len(source[end][-1])==2:last=end
+            end+=1
+        if last==start:
+            output.append(operation);start+=1;continue
+        window=source[start:last+1]
+        local=tuple((*op[:-1],tuple(wires.index(q) for q in op[-1])) for op in window)
+        baseline=min(_native_candidates("Identity",(2,),basis,source_operations=local),
+                     key=lambda pair:resource_key(pair[0]))
+        target=gates.compile_gates(2,local)
+        candidates,_=_lower_matrix_sources(target,basis,False,seconds)
+        candidates.sort(key=lambda row:resource_key(row[0]))
+        replacement=next((row for row in candidates
+                          if resource_key(row[0])<resource_key(baseline[0])
+                          and prove_circuit_identity(target,row[0],row[1]) is True),None)
+        if replacement is None:
+            output.extend(window)
+        else:
+            word,phase,method=replacement
+            output.extend((*op[:-1],tuple(wires[q] for q in op[-1])) for op in word)
+            factor*=phase
+            replacements.append(dict(wires=list(wires),before_entanglers=resource_key(baseline[0])[0],
+                                     after_entanglers=resource_key(word)[0],method=method))
+        start=last+1
+    return tuple(output),sp.simplify(factor),tuple(replacements)
+
+
+def _attach_osr_certificate(result,target,basis):
+    if __package__:
+        from .symbolic_osr import interaction_bound
+        from .symbolic_minimality import cnot_cost_certificate,fixed_native_one_pulse_exclusion
+    else:
+        from symbolic_osr import interaction_bound
+        from symbolic_minimality import cnot_cost_certificate,fixed_native_one_pulse_exclusion
+    bound=interaction_bound(target,basis)
+    result["osr_certificate"]=bound
+    count=result["cost"]["entanglers"]
+    result["entangler_optimal"]=False
+    if bound["lower_bound"]==count:
+        if bound["condition"]=="True":result["entangler_optimal"]=True
+        else:result["conditional_entangler_optimality"]=dict(count=count,condition=bound["condition"],source="exact_OSR_cut_bound")
+    if result["phase_exact"] and bound["lower_bound"]==0 and count>0:
+        if __package__:
+            from .symbolic_feasibility import determinant_group
+        else:
+            from symbolic_feasibility import determinant_group
+        if determinant_group(basis,1)==1:
+            # Tensor products of SU(2) operators preserve Y^tensor(n) under
+            # transpose congruence. A residual scalar can violate this even
+            # though every operator-Schmidt rank is one.
+            y=gates.make_gate("Y")
+            form=sp.kronecker_product(*([y]*(target.rows.bit_length()-1)))
+            differences=(target*form*target.T*form-sp.eye(target.rows)).applyfunc(lambda x:sp.simplify(sp.expand_complex(x)))
+            witness=next((value for value in differences if value.is_zero is False),None)
+            if witness is not None:
+                required=2 if not gates.gate_definition(basis.entangler).parameters else 1
+                result["phase_resource_lower_bound"]=dict(lower_bound=required,nonzero_witness=str(witness),
+                    method="SU2_local_spin_flip_congruence_and_fixed_pulse_OSR")
+                if count==required:result["entangler_optimal"]=True
+    if (target.shape==(4,4) and count==2 and bound["lower_bound"]>=1
+            and bound["condition"]=="True" and not gates.gate_definition(basis.entangler).parameters):
+        exclusion=fixed_native_one_pulse_exclusion(sp.ImmutableMatrix(target),gates.make_gate(basis.entangler))
+        if exclusion is not None:
+            result["entangler_optimal"]=True
+            result["entangler_optimality_certificate"]=exclusion
+    if target.shape==(4,4) and not target.free_symbols and basis.entangler in {"CX","CNOT","CZ","ECR","XX90","ZZMax","iSWAP"}:
+        exact=cnot_cost_certificate(target)
+        result["cnot_invariant_lower_bound"]=exact.lower_bound
+        if basis.entangler!="iSWAP":
+            if exact.lower_bound==count:result["entangler_optimal"]=True
+        elif exact.lower_bound==3 and count==3:
+            # Two mirror-DCNOT/iSWAP uses simulate exactly the same nonlocal
+            # classes as two CNOTs (Ye--Zhang--Guo, mirror-gate theorem).
+            result["entangler_optimal"]=True
+            result["entangler_optimality_certificate"]=dict(
+                lower_bound=3,method="two_iSWAP_mirror_theorem_and_CNOT_invariant_exclusion",
+                sources=["https://arxiv.org/abs/quant-ph/0407108","https://arxiv.org/abs/quant-ph/0308045"])
+    result["local_cost_optimal"]=False
+    return result
+
+
+def synthesize_matrix(matrix,basis="cx_u",*,phase_exact=True,seconds=2.0):
+    """Synthesize an opaque exact operator by native OSR factorization/search.
+
+    A finite search failure remains open. Every returned physical circuit is
+    proved against the entire symbolic matrix, including its phase policy.
+    """
+    basis=get_basis(basis) if isinstance(basis,str) else basis
+    target=sp.ImmutableMatrix(matrix)
+    if target.rows<4:raise ValueError("Use this OSR entry point for two or more qubits")
+    obstruction=feasibility_obstruction(target,basis,phase_exact=phase_exact)
+    if obstruction:return dict(obstruction,phase_exact=phase_exact)
+    prepared,search=_lower_matrix_sources(target,basis,phase_exact,seconds)
+    for sequence,factor,method in sorted(prepared,key=lambda p:resource_key(p[0])):
+        result=verify_circuit(target,sequence,basis,phase_exact=phase_exact,
+                              scalar_factor=None if phase_exact else factor)
+        if result["status"]=="verified_symbolic":
+            result.update(construction_method=method,osr_search=search,optimality_scope="explicit_lower_bound_only")
+            return _attach_osr_certificate(result,target,basis)
+    return dict(status="unresolved",phase_exact=phase_exact,reason="No verified OSR construction in this search budget",osr_search=search)
+
+
+def synthesize(name, parameters=(), basis="cx_u", *, phase_exact=True,osr_seconds=2.0):
     """Return a verified result, a proved obstruction, or an explicit open case."""
     basis=get_basis(basis) if isinstance(basis,str) else basis
     definition=gates.gate_definition(name)
@@ -374,6 +561,15 @@ def synthesize(name, parameters=(), basis="cx_u", *, phase_exact=True):
             sequence,factor=_local(name,parameters,basis)
         elif definition.name==basis.entangler:
             sequence,factor=((name,*parameters,(0,1)),),sp.S.One
+            if not target.free_symbols:
+                alternatives,search=_lower_matrix_sources(target,basis,phase_exact,osr_seconds)
+                alternatives.append((sequence,factor,"direct_native_operation"))
+                for seq,phase,method in sorted(alternatives,key=lambda row:resource_key(row[0])):
+                    result=verify_circuit(target,seq,basis,phase_exact=phase_exact,
+                                          scalar_factor=None if phase_exact else phase)
+                    if result["status"]=="verified_symbolic":
+                        result.update(construction_method=method,osr_search=search,optimality_scope="explicit_lower_bound_only")
+                        return _attach_osr_certificate(result,target,basis)
         else:
             candidates=[]
             errors=[]
@@ -383,18 +579,38 @@ def synthesize(name, parameters=(), basis="cx_u", *, phase_exact=True):
                 except (RuleUnavailable,ValueError,KeyError,ImportError,TypeError,AttributeError) as error:
                     errors.append(str(error))
             prepared=[]
+            search=None
+            window_records=()
+            if target.rows>4 and basis.entangler in {"iSWAP","Rxx","Rzz","Rzx","ZZPhase","fSim","TK2"}:
+                try:
+                    source,phase,window_records=_two_wire_source(name,parameters,basis,osr_seconds)
+                    if window_records:
+                        for seq,f in _native_candidates("Identity",(target.rows.bit_length()-1,),basis,source_operations=source):
+                            total=sp.simplify(phase*f)
+                            if phase_exact and simplify_exact(total-1)!=0:
+                                seq=_cleanup(seq+_physical_scalar(total,basis,target.rows.bit_length()-1))
+                            prepared.append((seq,total,"OSR_two_wire_window_resynthesis"))
+                except (RuleUnavailable,ValueError,KeyError):pass
+            if target.rows<=16 and not window_records and (not candidates or min(resource_key(p[0])[0] for p in candidates)>1):
+                discovered,search=_lower_matrix_sources(target,basis,phase_exact,osr_seconds)
+                prepared.extend(discovered)
+            best_native=min((resource_key(p[0])[0] for p in prepared),default=float("inf"))
             for seq,phase in candidates:
+                if resource_key(seq)[0]>best_native:continue
                 try:
                     if phase_exact and simplify_exact(phase-1)!=0:
                         seq=_cleanup(seq+_physical_scalar(phase,basis,target.rows.bit_length()-1))
-                    prepared.append((seq,phase))
+                    prepared.append((seq,phase,"analytical_source_construction"))
                 except RuleUnavailable as error:errors.append(str(error))
             prepared.sort(key=lambda pair:resource_key(pair[0]))
-            for seq,phase in prepared:
+            for seq,phase,method in prepared:
                 result=verify_circuit(target,seq,basis,phase_exact=phase_exact,
                                       scalar_factor=None if phase_exact else phase)
                 if result["status"]=="verified_symbolic":
-                    result.update(entangler_optimal=False,local_cost_optimal=False,optimality_scope="verified_upper_bound")
+                    result.update(entangler_optimal=False,local_cost_optimal=False,optimality_scope="verified_upper_bound",construction_method=method)
+                    if search is not None:result["osr_search"]=search
+                    if method=="OSR_two_wire_window_resynthesis":result["window_replacements"]=list(window_records)
+                    if method!="analytical_source_construction":_attach_osr_certificate(result,target,basis)
                     return result
             return dict(status="unresolved",phase_exact=phase_exact,reason="; ".join(dict.fromkeys(errors)) or "Source identity not proved")
         if phase_exact and factor!=1:

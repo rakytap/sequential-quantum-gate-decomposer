@@ -142,10 +142,10 @@ rejects gates from other bases. It measures a cost; it does not prove that the
 cost is minimal. An OSR lower bound must use the chosen entangler's actual
 cut-crossing capacity, rather than assuming every entangler has CNOT's rank.
 
-This catalog/basis milestone does **not** turn the legacy CNOT-guided heuristic
-into a certified optimal compiler for all these bases. The next synthesis step
-must retain symbolic equality checks and report minimum counts only when an
-exhaustive search or a matching mathematical lower bound certifies them.
+The matrix-based OSR engine below adds synthesis and lower-bound certificates.
+It is not a certified optimal compiler for every catalog/basis pair. Minimum
+counts require an exhaustive search in its declared scope or a matching
+mathematical lower bound.
 
 ## Phase-aware symbolic constructions and archives
 
@@ -154,9 +154,10 @@ proves their matrix identities with free real parameters. It orders candidates
 by native entangler count, the unchanged original parameter-sensitive score,
 then single-qubit gate count. These constructions are upper bounds; they do not
 yet establish optimal synthesis for all 327 definitions in all 32 presets.
-The current rule engine uses analytical identities and native CNOT frames,
-including attributed SDK gate definitions when available. This is separate
-from a general OSR search or a proof of a new decomposition.
+Analytical identities and native CNOT frames remain incumbent constructions.
+The matrix-based engine also discovers native interaction networks and
+resynthesizes two-wire sections of larger circuits. Attributed SDK definitions
+can supply incumbents; their use is recorded separately from OSR discovery.
 
 ```python
 from squander.decomposition.symbolic_synthesis import synthesize_phase_pair
@@ -164,6 +165,65 @@ from squander.decomposition.symbolic_synthesis import synthesize_phase_pair
 a, b, c = sp.symbols("a b c", real=True)
 result = synthesize_phase_pair("Canonical", (a, b, c), "cx_rz_ry")
 ```
+
+For an opaque operator, use `synthesize_matrix`; no catalog gate name or source
+circuit is passed to the search:
+
+```python
+from squander.decomposition.symbolic_gates import make_gate
+from squander.decomposition.symbolic_synthesis import synthesize_matrix
+
+theta = sp.Symbol("theta", real=True)
+target = make_gate("CP", theta)
+result = synthesize_matrix(target, "zz_u", phase_exact=False, seconds=5)
+```
+
+The engine realigns the operator across every nontrivial bipartition and
+computes exact operator-Schmidt ranks and rank-one factors. It uses rational
+functions of formal exponentials, without floating SVD thresholds or angle
+sampling. A nonzero minor witnesses each rank lower bound; parameter-dependent
+rank drops remain explicit conditions. Native pulse proposals are accepted
+only after recursive OSR factorization recovers their residual local factors
+and a complete circuit identity is proved.
+
+For commuting two-qubit interactions, binary Pauli transport discovers native
+two/three-pulse skeletons. Exact OSR recovers their local inverse. A verified
+Bell-spectrum calculation and local Z gauges cover Cartan, fSim and PhasedFSim
+families with free parameters. Their phase ratios propose angles; they do not
+replace the final identity proof, including zero-amplitude specializations.
+Contiguous two-wire source windows receive the same matrix-based treatment
+before native rebasing, with each replacement's scalar propagated into the
+enclosing circuit.
+
+Examples checked against complete exact matrices include:
+
+| Target | Native basis | Entanglers | Certificate scope |
+| --- | --- | ---: | --- |
+| Opaque three-wire CNOT chain | CX/U | 2 | Matching OSR connectivity bound |
+| SWAP | iSWAP/U | 3 | CNOT invariant exclusion and mirror-gate theorem |
+| SWAP | sqrt(SWAP)/U | 2 | OSR nonlocality and one-pulse invariant exclusion |
+| iSWAP | sqrt(iSWAP)/U | 2 | OSR nonlocality and one-pulse invariant exclusion |
+| Toffoli | iSWAP/U | 10 | Verified upper bound |
+| Toffoli | tunable ZZ/U | 5 | Verified upper bound |
+| Fredkin | iSWAP/U | 12 | Verified upper bound |
+| Fredkin | tunable ZZ/U | 6 | Verified upper bound |
+
+The finite two-qubit Clifford search closes over 20 local cosets and certifies
+its distance with Clifford local frames. Its scope alone does not prove a
+minimum with arbitrary continuous locals. The SWAP/iSWAP certificate uses the
+[mirror-gate theorem](https://arxiv.org/abs/quant-ph/0407108) together with the
+[CNOT invariant criterion](https://arxiv.org/abs/quant-ph/0308045) to exclude two
+iSWAP uses under arbitrary locals. One-pulse exclusions compare exact
+phase-normalized [local invariants](https://arxiv.org/abs/quant-ph/0002045).
+These certificates concern entangler count; local-score optimality remains a
+separate question.
+
+`seconds` checks the OSR proposal-search budget between algebra operations.
+An individual algebra operation, native Clifford setup or Cartan extraction
+can exceed that interval. The archive runner adds a hard per-mode Unix alarm
+around the entire synthesis and proof, retaining timeouts as open cases.
+Its proposal budget is at most one third of the per-mode allowance, capped at
+ten seconds. Search exhaustion is never recorded as mathematical impossibility.
 
 Phase-exact circuits contain only the allowed physical primitives, with no GP
 operation or free scalar repair. Projective circuits include the exact scalar

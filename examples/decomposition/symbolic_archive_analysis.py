@@ -29,26 +29,37 @@ def load(path):
 def merge_synthesis_runs(reports):
     """Replace selected cells while keeping their implementation provenance."""
     combined=copy.deepcopy(reports[0])
-    combined["synthesis_runs"]=[{k:copy.deepcopy(v) for k,v in report.items() if k!="rows"}
-                                for report in reports]
-    index={(row["gate"],row["basis"]):row for row in combined["rows"]}
-    for row in index.values():row["synthesis_run_index"]=0
-    for run,report in enumerate(reports[1:],1):
+    combined["synthesis_runs"]=[]
+    normalized=[]
+    for report in reports:
+        offset=len(combined["synthesis_runs"])
+        runs=report.get("synthesis_runs") or [{k:copy.deepcopy(v) for k,v in report.items() if k!="rows"}]
+        combined["synthesis_runs"].extend(copy.deepcopy(runs))
+        def remap(row):
+            row=copy.deepcopy(row)
+            local=row.get("synthesis_run_index",0)
+            if not isinstance(local,int) or not 0<=local<len(runs):
+                raise ValueError("Invalid source run index")
+            row["synthesis_run_index"]=offset+local
+            if "previous_attempts" in row:row["previous_attempts"]=[remap(old) for old in row["previous_attempts"]]
+            return row
+        normalized.append([remap(row) for row in report["rows"]])
+    index={(row["gate"],row["basis"]):row for row in normalized[0]}
+    for report,rows in zip(reports[1:],normalized[1:]):
         if report["comparison_contract"]!=combined["comparison_contract"]:
             raise ValueError("Supplement has a different comparison contract")
-        for replacement in report["rows"]:
+        for replacement in rows:
             key=replacement["gate"],replacement["basis"]
             if key not in index:raise ValueError("Supplement adds an unrequested cell")
             previous=index[key]
             if any(replacement[k]!=previous[k] for k in ("parameters","target_scope")):
                 raise ValueError("Supplement changes the target")
             row=copy.deepcopy(replacement)
-            row["synthesis_run_index"]=run
             row["previous_attempts"]=previous.get("previous_attempts",[])+[
                 {k:v for k,v in previous.items() if k!="previous_attempts"}]
             index[key]=row
     combined["rows"]=[index[row["gate"],row["basis"]] for row in combined["rows"]]
-    combined["mixed_synthesis_runs"]=len(reports)>1
+    combined["mixed_synthesis_runs"]=len(combined["synthesis_runs"])>1
     combined["source_provenance_policy"]="Resolve each row's synthesis_run_index in synthesis_runs; the root source hashes describe the first run"
     combined["summary"]={mode:dict(Counter(row["phase_statuses"][mode] for row in combined["rows"]))
                           for mode in ("phase_exact","projective")}

@@ -7,7 +7,32 @@ certifies an interaction count, not the secondary parameter-sensitive score.
 """
 
 from dataclasses import dataclass
+from functools import lru_cache
 import sympy as sp
+
+
+@lru_cache(maxsize=512)
+def fixed_native_one_pulse_exclusion(matrix,primitive):
+    """A sufficient exact exclusion under arbitrary projective local frames.
+
+    These phase-normalized spin-flip traces are local invariants. Unequal
+    invariants exclude one use; equality alone is not an equivalence proof.
+    A separate nonlocality proof must exclude zero before concluding a lower
+    bound of two interactions.
+    """
+    if matrix.shape!=(4,4) or matrix.free_symbols:return None
+    yy=sp.kronecker_product(sp.Matrix([[0,-sp.I],[sp.I,0]]),sp.Matrix([[0,-sp.I],[sp.I,0]]))
+    def invariants(operator):
+        gamma=operator*yy*operator.T*yy
+        delta=operator.det()
+        return sp.trace(gamma)**2/delta,sp.trace(gamma*gamma)/delta
+    for index,(target,native) in enumerate(zip(invariants(matrix),invariants(primitive))):
+        difference=sp.simplify(sp.expand_complex(target-native))
+        if difference.is_zero is False:
+            return dict(method="unequal_phase_normalized_spin_flip_invariants",
+                        invariant=index,nonzero_difference=str(difference),lower_bound=2,
+                        source="https://arxiv.org/abs/quant-ph/0002045")
+    return None
 
 
 def _simplify(expression):
