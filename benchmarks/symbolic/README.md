@@ -60,6 +60,33 @@ print(report["summary"])
 
 ## Symbolic phase policies
 
+[`synthesis_20261106.json.gz`](synthesis_20261106.json.gz) is the first bounded
+symbolic construction archive (594,120 bytes compressed). It enumerates all
+10,464 cells using eight seconds per phase mode. The original pass and the
+32-cell MCPhase integer-constructor correction are preserved as separate
+`synthesis_runs`, with per-row run indices, source hashes and previous failed
+attempts. This is a construction/development dataset, not an all-optimal result.
+
+| Outcome | Phase exact | Projective |
+| --- | ---: | ---: |
+| Symbolically verified | 6,584 | 8,819 |
+| Proved obstruction, under the recorded scope/condition | 2,586 | 264 |
+| Time limit | 465 | 393 |
+| Unresolved construction | 829 | 988 |
+| Compiler errors after correction | 0 | 0 |
+
+There are 4,058 cells where an exact circuit is verified and the retained
+projective circuit is strictly cheaper. Matched fixed-target references certify
+225 retained exact and 69 retained projective entangler minima; these counts
+exclude the separate zero-entangler one-qubit certificates. No minimum local
+score follows from matching an entangler lower bound.
+
+Among eligible fixed-target SDK comparisons, 2,434 tie its entangler upper bound
+and 38 use more entanglers. Those 38 remain optimization work; no SDK improvement
+or novelty is claimed. They occur in the iSWAP or tunable XX/ZZ/ZX bases, where
+replacing each CNOT independently leaves avoidable interactions. Unsupported
+SDK bases and unverified constructions contribute no win/loss outcome.
+
 The newer `symbolic_synthesis_archive.py` runner preserves free real parameters
 and forbids physical GP operations. Its phase-exact results require literal
 matrix equality; its projective results automatically record a virtual scalar
@@ -91,3 +118,39 @@ optional Wolfram exchange adapter has expression/wire/sign unit tests but has
 not been run against a licensed kernel. It contributes no wins, losses or
 minimum-count claims. A future native analytical run can be shared across
 compatible bases; rebased output must be identified and reverified separately.
+
+Apply the fixed-target reference analysis with:
+
+```bash
+python examples/decomposition/symbolic_archive_analysis.py \
+  --input /tmp/symbolic-synthesis.json.gz \
+  --output /tmp/symbolic-synthesis-with-references.json.gz
+```
+
+It attaches applicable published CNOT lower bounds only when each fixed native
+primitive is itself proved locally equivalent to one CNOT. A matching verified
+construction then certifies the entangler count, without certifying its local
+score. The numerical SDK comparison is restricted to fixed targets and the
+projective phase policy. Free-parameter families are not compared to one
+sampled SDK binding, and an improvement over an SDK output is not called novel.
+Compare the parameter-sensitive score within a supplied alphabet: native angle
+units and macro granularity differ between presets.
+
+To reproduce the two-pass construction workflow of this archive:
+
+```bash
+python examples/decomposition/symbolic_synthesis_archive.py \
+  --basis all --workers 24 --seconds-per-mode 8 --output /tmp/synthesis.json.gz
+python examples/decomposition/symbolic_synthesis_archive.py \
+  --gate MCPhase --basis all --workers 24 --seconds-per-mode 8 \
+  --output /tmp/mcphase.json.gz
+python examples/decomposition/symbolic_archive_analysis.py \
+  --input /tmp/synthesis.json.gz --supplement /tmp/mcphase.json.gz \
+  --output /tmp/synthesis-with-references.json.gz
+```
+
+The fixed adapter in the current source should eliminate the original control
+count exception even in a single full run. Time-limited outcomes can vary with
+available compute and caches; every accepted circuit still requires its exact
+identity proof. `--supplement` validates identical targets and phase contracts
+before replacing selected cells, and keeps each earlier attempt and revision.

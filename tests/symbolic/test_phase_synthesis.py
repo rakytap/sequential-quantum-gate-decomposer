@@ -13,6 +13,7 @@ from symbolic_clifford_search import solve_clifford_alphabet,verify_shortest_pat
 from symbolic_synthesis import synthesize,_physical_scalar
 from symbolic_rules import cartan_source,native_cx,source_rule
 from symbolic_uqc import decode_expression,import_native_result
+from symbolic_qiskit_source import analytical_definition
 
 
 def test_parameter_cost_matches_the_existing_implementation():
@@ -158,6 +159,14 @@ def test_custom_universality_labels_are_not_mathematical_evidence():
     assert feasibility_obstruction(gates.make_gate("CS"),basis,phase_exact=False) is None
     basis=make_basis("custom",("H","SqrtH"),"CX",universality="approximate_discrete")
     assert feasibility_obstruction(gates.make_gate("SqrtH"),basis,phase_exact=False) is None
+
+
+def test_sdk_symbolic_register_constructor_keeps_integer_controls():
+    pytest.importorskip("qiskit")
+    theta=sp.Symbol("theta",real=True)
+    sequence,factor=analytical_definition("MCPhase",(theta,2))
+    assert prove_circuit_identity(gates.make_gate("MCPhase",theta,2),sequence,factor)
+    assert not any(sp.sympify(p).atoms(sp.Float) for op in sequence for p in op[1:-1])
 
 
 def test_uqc_expression_import_is_exact_and_whitelisted():

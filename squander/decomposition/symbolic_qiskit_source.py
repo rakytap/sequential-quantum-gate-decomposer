@@ -39,6 +39,9 @@ def analytical_definition(name,parameters):
     def to_sdk(expression):
         expression=sp.sympify(expression)
         if expression in symbols:return sdk_symbols[str(expression)]
+        # Register constructors share this path with angle expressions.
+        # Qiskit rejects float control counts even when they are integral.
+        if expression.is_Integer:return int(expression)
         if not expression.free_symbols:return float(expression)
         if expression.is_Add:return sum(to_sdk(x) for x in expression.args)
         if expression.is_Mul:
