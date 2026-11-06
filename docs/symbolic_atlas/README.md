@@ -3,6 +3,16 @@
 [Gate atlas](gates.pdf) · [All-phase Clifford atlas](cliffords.pdf) ·
 [Gate preview](preview-gates.pdf) · [Clifford preview](preview-cliffords.pdf)
 
+[Notable results and local-gate comparisons](../symbolic_notable_results/notable_results.pdf) ·
+[Editable comparison LaTeX](../symbolic_notable_results/notable_results.tex) ·
+[Comparison source bundle](../symbolic_notable_results/sources.zip)
+
+The comparison LaTeX is self-contained, with inline circuit drawings: copy
+`notable_results.tex` alone into Prism. Compile it locally with
+`tectonic notable_results.tex`.
+The [local-savings list](../symbolic_notable_results/local_savings.csv) contains
+all 131 equal-entangler improvements against the cleaned SDK baseline.
+
 The gate volume contains 327 alphabetically indexed target pages, each with
 32 preserved basis presets. The separate Clifford volume contains 24 circuits
 per phase page: 192 phase targets in each of the 12 distinct local alphabets
@@ -24,7 +34,7 @@ circuits are globally optimal.** The current merged archive has these outcomes:
 
 Exact mode permits no physical GP gate or free scalar correction. Projective
 mode records its scalar explicitly. Both circuits are shown when the
-projective result is strictly cheaper; this occurs in 4,615 cells with a
+projective result is strictly cheaper; this occurs in 4,636 cells with a
 verified exact construction. Obstructions for parameterized families may be
 generic or conditional; their conditions remain in the data. Register
 constructors retain their recorded width or matrix fixture, rather than
@@ -33,7 +43,7 @@ claiming a circuit for every register size.
 A minimum label concerns entanglers only unless a separate local certificate
 says otherwise. Gate-panel labels explicitly say **E minimum** or **E upper
 bound**. The original ordering is entanglers, parameter-sensitive local
-score, then local gate count. There are 287 exact and 145 projective matches
+score, then local gate count. There are 287 exact and 153 projective matches
 to the curated fixed-target entangler lower bounds, in addition to the
 one-qubit and OSR certificates. The eligible fixed-target Qiskit comparison
 contains 11 lower counts, 2,662 ties and zero higher counts. The 11 lower counts
@@ -41,7 +51,7 @@ are fFredkin in different bases, including five CNOTs versus the stored SDK
 upper bound of seven and six iSWAPs versus eight. These comparisons establish
 neither novelty nor global optimality.
 
-The archive currently marks 634 exact and 815 projective constructions with
+The archive currently marks 634 exact and 820 projective constructions with
 nonzero entanglers as having unconditional minimum-count certificates. It also
 records 253 exact and 322 projective conditional certificates. Most other
 minimum-count flags concern zero-entangler circuits. These are entangler
@@ -81,7 +91,7 @@ matches can propose candidates and never certify them.
 
 The authoritative merged data are
 [`synthesis_reference_20261106.json.gz`](../../benchmarks/symbolic/synthesis_reference_20261106.json.gz).
-Twelve source snapshots and all earlier attempts are preserved. Each retained
+Thirteen source snapshots and all earlier attempts are preserved. Each retained
 phase result identifies its actual source run, even when a later attempt
 failed. The raw full run and motif/phase supplements are described in the
 [archive README](../../benchmarks/symbolic/README.md).
@@ -100,6 +110,18 @@ failed. The raw full run and motif/phase supplements are described in the
   Qiskit circuit fragment, plus the manifest, build report, gap list and exact
   phase examples. Its top-level `gates.tex` and `cliffords.tex` are the LaTeX
   sources of the two PDFs; keep their `circuits/` directory together.
+
+The separate local audit has 131 lower counts, 2,402 ties and 129 higher counts
+at equal entangler count among eligible fixed targets, after native SDK local
+cleanup removes adapter identity rotations. Against this cleaned baseline,
+the exact refinement reduced the local-count gaps from 254 to 129.
+These counts do not compare the secondary symbolic score when the SDK angles
+have no proved exact lift. See the
+[full local comparison CSV](../symbolic_notable_results/local_comparisons.csv)
+and [remaining local-count gaps](../symbolic_notable_results/local_optimization_gaps.csv).
+The Sycamore section compares three local gates with 27 in the cited published
+figure and 13 from independent Qiskit synthesis in Rz/SX/CX; both comparisons
+retain three CNOTs and use the projective policy for that alphabet.
 
 To edit or rebuild the existing LaTeX without regenerating the circuits,
 extract `sources.zip` into a directory and open `gates.tex` or `cliffords.tex`.

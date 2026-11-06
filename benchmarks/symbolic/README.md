@@ -4,7 +4,7 @@
 
 [`synthesis_reference_20261106.json.gz`](synthesis_reference_20261106.json.gz)
 merges all 327 × 32 cells, retaining the least-cost verified incumbent for each
-phase policy across twelve implementation snapshots. The indexed
+phase policy across thirteen implementation snapshots. The indexed
 [gate and Clifford PDFs](../../docs/symbolic_atlas/README.md) and their sources
 are generated from this archive. The earlier datasets below remain historical
 snapshots.
@@ -30,6 +30,7 @@ supplements below:
 | `synthesis_fixed_native_20261106.json.gz` | 96 | 45 s | `2c39f362` |
 | `synthesis_fixed_pivots_20261106.json.gz` | 9 | 90 s | `0bdf752f` |
 | `synthesis_final_exact_20261106.json.gz` | 2 | 120 s | `5f2c8f6b` |
+| `synthesis_sdk_locals_20261106.json.gz` | 235 | 45 s | `c5e84e60` |
 
 The complete raw run includes 16 register-constructor compiler failures; the
 motif supplement resolves all of them. Raw outcomes are preserved even when
@@ -45,8 +46,19 @@ pass resolves the exact Rzz/U3 C4X and C3SX cases by preserving simple
 root-of-unity phases. These raw outcomes remain separate from the successful
 incumbents; there are no compiler errors in the merged phase statuses.
 
-There are 4,615 verified exact cells with a strictly cheaper projective result.
-Matched fixed-target lower bounds certify 287 exact and 145 projective
+The fixed-target local refinement proves 101 literal-phase and 138 projective
+SDK lifts. Unproved proposals and one proof timeout retain their earlier
+verified incumbents. It removes 137 of the former 235 equal-entangler local
+count regressions in the original emitted SDK circuits. The stricter local
+audit first applies native one-qubit SDK cleanup, including removal of adapter
+identity rotations: against that baseline the gaps fall from 254 to 129.
+The 138 native template cells are also available
+to the normal compiler, which rechecks each exact identity. The full
+[local audit and cited Sycamore comparison](../../docs/symbolic_notable_results/notable_results.pdf)
+record local counts and distinguish them from the parameter-sensitive score.
+
+There are 4,636 verified exact cells with a strictly cheaper projective result.
+Matched fixed-target lower bounds certify 287 exact and 153 projective
 entangler minima, excluding separate one-qubit certificates. The eligible
 fixed-target Qiskit comparisons have 11 lower counts, 2,662 ties and zero higher
 counts. The lower counts concern fFredkin in different bases, including five
@@ -71,12 +83,27 @@ Reproduce the current merge and reference analysis:
 
 ```bash
 python examples/decomposition/symbolic_archive_analysis.py \
-  --input benchmarks/symbolic/synthesis_reference_20261106_initial.json.gz \
-  --supplement benchmarks/symbolic/synthesis_completion_20261106.json.gz \
-  --supplement benchmarks/symbolic/synthesis_fixed_native_20261106.json.gz \
-  --supplement benchmarks/symbolic/synthesis_fixed_pivots_20261106.json.gz \
-  --supplement benchmarks/symbolic/synthesis_final_exact_20261106.json.gz \
+  --input benchmarks/symbolic/synthesis_reference_20261106_classified.json.gz \
+  --supplement benchmarks/symbolic/synthesis_sdk_locals_20261106.json.gz \
   --output /tmp/synthesis-reference.json.gz
+```
+
+`synthesis_reference_20261106_classified.json.gz` preserves the twelve-run
+classification edition before local refinement; the earlier
+`synthesis_reference_20261106_initial.json.gz` preserves its eight-run input.
+
+`reference_locals_20261106.json.gz` preserves the numerical SDK baseline after
+native one-qubit cleanup and phase-sensitive operator replay. Its separate
+normalization provenance identifies the original reference file and cleanup
+source. It changes no entangler counts and makes no symbolic-family claim:
+
+```bash
+python examples/decomposition/symbolic_local_baselines.py \
+  --input benchmarks/symbolic/reference_comparison_20261106.json.gz \
+  --output /tmp/reference-locals.json.gz
+python examples/decomposition/symbolic_notable_results.py \
+  --archive benchmarks/symbolic/synthesis_reference_20261106.json.gz \
+  --baselines /tmp/reference-locals.json.gz --output-dir /tmp/notable-results
 ```
 
 ## Initial numerical reference and construction snapshots

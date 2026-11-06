@@ -377,6 +377,24 @@ exact circuit, including a separately supplied global-phase operation. Both
 legacy search methods remain available and their original gate score is
 unchanged.
 
+For fixed targets, `symbolic_sdk_lift.py` can propose rational multiples of pi
+from SDK angles, with a bounded denominator. It proves the complete exact
+matrix identity before assigning a symbolic score; failed proposals remain
+failures. Literal-phase corrections use physical basis gates and are charged.
+The 138 proved native template cells in `symbolic_fixed_templates.json` are
+also considered by ordinary `synthesize` calls and reverified before acceptance.
+They compete under the original objective rather than replacing a better
+incumbent. A local rewrite preserves a matching entangler lower-bound proof
+for its actual phase policy; a strict phase-only proof is not transferred
+projectively.
+
+The separate [notable-results document](symbolic_notable_results/notable_results.pdf)
+and its [LaTeX source](symbolic_notable_results/notable_results.tex) compare local
+counts as well as entanglers. Its Sycamore comparison separates independent
+SDK matrix synthesis from SDK optimization of our supplied source. The full
+local audit includes both savings and regressions; numerical angles that lack
+an exact lift have no certified symbolic-score comparison.
+
 The search acceptance check now requires an exact symbolic identity. A small
 sampled numerical error only triggers that check; it cannot certify a solution.
 Both methods accept an explicit `allow_global_phase` policy. The optimistic

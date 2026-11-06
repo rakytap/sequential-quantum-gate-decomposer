@@ -281,7 +281,7 @@ No numerical SDK sample certifies a free-parameter identity or global minimum.
 \url{https://www.wolfram.com/engine/faq/}, checked 6 November 2026.
 \end{thebibliography}\end{document}
 """
-    output.write_text(text)
+    output.write_text("\n".join(line.expandtabs().rstrip() for line in text.splitlines())+"\n")
 
 
 def main():

@@ -1,0 +1,158 @@
+\documentclass[11pt]{article}
+\usepackage[a4paper,margin=22mm]{geometry}
+\usepackage{amsmath,amssymb,booktabs,longtable,graphicx,qcircuit,hyperref}
+\usepackage[T1]{fontenc}
+\providecommand{\ket}[1]{\lvert #1\rangle}
+\title{Symbolic decomposition: notable results and comparison evidence}
+\author{SQUANDER symbolic decomposition project}
+\date{6 November 2026}
+\begin{document}\maketitle
+\noindent Evidence ledger for a future appendix, not a completed optimality or novelty claim.
+All counts preserve the recorded native basis, use no ancillas, and fix input/output wires.
+The objective is entanglers first, the original parameter-sensitive score second,
+and local gate count third. A smaller local count alone does not establish a lower score.
+\section{Sycamore: a concrete local-gate reduction}
+We use $\mathrm{SYC}=\mathrm{fSim}(\pi/2,\pi/6)$ with odd-parity swap amplitudes $-i$
+and $\ket{11}$ phase $e^{-i\pi/6}$. Figure 3 of AbuGhanem and Eleuch~\cite{syc}
+contains 15 Rz gates and 12 SX gates: 27 local operations and three CNOTs.
+This is a manual count of the displayed gate boxes; the two measurements are excluded.
+The figure has rounded angle labels, so its parameter-sensitive symbolic score and
+literal scalar phase are not reconstructed or asserted here.
+Our circuit has three locals and three CNOTs: an $8/9$ (88.9\%) local-count reduction
+against that displayed implementation, in the same Rz/SX/CX alphabet projectively.
+This does not assert that the displayed circuit is the best published local construction.
+\begin{center}\begin{tabular}{lllll}\toprule
+Construction & Alphabet & E & L & Phase contract \\\midrule
+Published Figure 3 & Rz/SX/CX & 3 & 27 & projective \\
+Our circuit & Rz/SX/CX & 3 & 3 & projective \\
+Our circuit & P/H/CX & 3 & 3 & literal phase \\
+Qiskit matrix input & cx\_u & 3 & 8 & scalar metadata \\
+Qiskit matrix input & cx\_rz\_ry & 3 & 22 & scalar metadata \\
+Qiskit matrix input & ibm\_cx & 3 & 13 & scalar metadata \\\bottomrule\end{tabular}\end{center}
+\noindent\begin{minipage}{\linewidth}\paragraph{Literal-phase CNOT/P construction}\begin{center}\resizebox{0.75\linewidth}{!}{\scalebox{1.0}{
+\Qcircuit @C=0.55em @R=0.5em @!R { \\
+                \nghost{{q}_{0} :  } & \lstick{{q}_{0} :  } & \gate{\operatorname{P}\left(-\,\frac{\pi}{12}\right)} & \ctrl{1} & \qw & \targ & \ctrl{1} & \qw & \qw\\
+                \nghost{{q}_{1} :  } & \lstick{{q}_{1} :  } & \gate{\operatorname{P}\left(-\,\frac{\pi}{12}\right)} & \targ & \gate{\operatorname{P}\left(-\,\frac{5\,\pi}{12}\right)} & \ctrl{-1} & \targ & \qw & \qw\\
+\\ }}}\end{center}\end{minipage}\par\medskip
+\noindent\begin{minipage}{\linewidth}\paragraph{Same three-angle construction using Rz; scalar shown below}\begin{center}\resizebox{0.75\linewidth}{!}{\scalebox{1.0}{
+\Qcircuit @C=0.55em @R=0.5em @!R { \\
+                \nghost{{q}_{0} :  } & \lstick{{q}_{0} :  } & \gate{R_z\left(-\,\frac{\pi}{12}\right)} & \ctrl{1} & \qw & \targ & \ctrl{1} & \qw & \qw\\
+                \nghost{{q}_{1} :  } & \lstick{{q}_{1} :  } & \gate{R_z\left(-\,\frac{\pi}{12}\right)} & \targ & \gate{R_z\left(-\,\frac{5\,\pi}{12}\right)} & \ctrl{-1} & \targ & \qw & \qw\\
+\\ }}}\end{center}\end{minipage}\par\medskip\paragraph{Matched score comparison.} In the same Rz/SX/CX basis, the independently synthesized SDK circuit has an exact rational-$\pi$ lift whose complete identity is proved. The original score is $\frac{3 \log{\left(3 \right)}}{5 \log{\left(2 \right)}} + \frac{9603}{500}\approx 20.157$ for ours and $\frac{3 \log{\left(3 \right)}}{5 \log{\left(2 \right)}} + \frac{19809}{500}\approx 40.569$ for the SDK circuit. Both have three CNOTs; the score includes the same entangler contribution and no free physical GP.
+
+The P circuit is exact without a GP operation. Replacing each P by Rz gives
+$\mathrm{SYC}=e^{-7i\pi/24}C_{Rz}$; this scalar is projective metadata.
+Literal equality in the Rz/SX/CX alphabet is obstructed by its determinant group.
+The phase polynomial has coefficients $(-\pi/12,-\pi/12,-5\pi/12)$ on
+$x_0,x_1,x_0\oplus x_1$. All are nonzero modulo $\pi$. Adding $2\pi$
+to truth-table phases changes these coefficients only by integer multiples of $\pi$.
+Therefore at least three phase gates are necessary within the CNOT/P subalphabet,
+even if extra CNOTs are allowed. Our three-phase circuit attains that bound.
+This is not a minimum-local proof over arbitrary U(2) gates or SX-containing circuits.
+
+The independent SDK rows use matrix input, Qiskit 2.2.3, level 3, seed 219,
+and approximation degree one, followed by native one-qubit block cleanup and
+phase-sensitive replay. Their circuits and numerical replay errors are stored
+in the evidence JSON. They are separate from the main baseline, which also lets
+Qiskit optimize our supplied exact source. That source-fed baseline reproduces
+the three-local circuit, so its tie is not independent discovery by Qiskit.
+Where the SDK angles have an exact rational-$\pi$ lift, the full identity is proved
+before assigning a symbolic score. Other floating angles are never rationalized
+and assigned an invented exact score.
+\section{The eleven entangler improvements}
+The eleven earlier SDK improvements all concern controlled fermionic SWAP
+(fFredkin) in different bases. They are completed constructions, separate from
+the B/SQiSW universal-bound gaps. They are not eleven different gate discoveries.
+Controlled fermionic SWAP is distinct from ordinary Fredkin; no comparison to
+the latter's lower bounds is made. Existence of this operation in the literature
+does not settle optimal decomposition cost~\cite{fermionic}.
+\begin{center}\begin{tabular}{llll}\toprule
+Target & Basis & E ours/SDK & L ours/SDK \\\midrule
+fFredkin & cx\_rz\_ry & 5/7 & 44/39 \\
+fFredkin & cx\_u & 5/7 & 22/17 \\
+fFredkin & cz\_rz\_rx & 5/7 & 42/19 \\
+fFredkin & cz\_u & 5/7 & 28/16 \\
+fFredkin & ibm\_cx & 5/7 & 37/33 \\
+fFredkin & ibm\_cz & 5/7 & 54/29 \\
+fFredkin & ibm\_ecr & 5/7 & 53/35 \\
+fFredkin & iswap\_u & 6/8 & 26/16 \\
+fFredkin & xx\_rz\_ry & 5/7 & 77/35 \\
+fFredkin & zx\_u & 5/7 & 32/16 \\
+fFredkin & zz\_u & 5/7 & 37/15 \\\bottomrule\end{tabular}\end{center}\section{Local-gate audit beyond Sycamore}
+Across 2673 eligible fixed-target/basis comparisons, there are 131 lower local counts, 2402 ties and 129 higher local counts at equal E. Aliases and related basis presets are counted separately. Native one-qubit SDK
+cleanup removes identity rotations introduced by the manual U-to-ZYZ adapter
+before counting; savings from that adapter artifact are not credited.
+These are SDK comparisons,
+not novelty claims or an exhaustive literature review. The full CSV includes every
+compared case, including regressions; a separate local-gap CSV is the work list.
+The table shows the largest local-count savings. E and L are raw physical counts;
+the exact score is recorded separately in the CSV/JSON.
+\begin{center}\begin{longtable}{llll}\toprule
+Target & Basis & E ours/SDK & L ours/SDK \\\midrule\endhead
+XX90 & xx\_rz\_ry & 1/1 & 0/12 \\
+Peres & ibm\_ecr & 5/5 & 31/42 \\
+ACX & ibm\_cx & 1/1 & 2/12 \\
+CT & cx\_rz\_ry & 2/2 & 3/13 \\
+CTdg & cx\_rz\_ry & 2/2 & 3/13 \\
+XX90 & ibm\_ecr & 1/1 & 6/16 \\
+C3X & cx\_rz\_ry & 14/14 & 19/28 \\
+CNOT & ibm\_ecr & 1/1 & 4/12 \\
+CSXdg & cx\_rz\_ry & 2/2 & 6/14 \\
+DB & cx\_rz\_ry & 2/2 & 8/16 \\
+SiSWAP & cx\_rz\_ry & 2/2 & 8/16 \\
+XX90 & ibm\_cx & 1/1 & 7/15 \\
+ACX & cx\_rz\_ry & 1/1 & 4/10 \\
+ACX & ibm\_ecr & 1/1 & 6/12 \\
+B & ibm\_cx & 2/2 & 9/15 \\
+FSWAP & cx\_rz\_ry & 2/2 & 8/14 \\
+B & cx\_rz\_ry & 2/2 & 8/13 \\
+CT & ibm\_cx & 2/2 & 3/8 \\
+CTdg & ibm\_cx & 2/2 & 3/8 \\
+FSWAP & ibm\_ecr & 2/2 & 9/14 \\
+SSWAP & cx\_rz\_ry & 3/3 & 14/19 \\
+SSWAPdg & cx\_rz\_ry & 3/3 & 14/19 \\
+C3X & ibm\_cx & 14/14 & 21/25 \\
+CH & cx\_rz\_ry & 1/1 & 2/6 \\
+CSWAP & cx\_rz\_ry & 7/7 & 14/18 \\\bottomrule\end{longtable}\end{center}
+\section{Other useful reference results}
+The separate Clifford atlas contains all 192 phase-resolved one-qubit Clifford
+targets for each supported local alphabet. H/S has a global shortest-path
+certificate; other alphabets retain their narrower recorded word-search scope.
+The exact phase examples include a Cartan kernel with $a=b=c=\pi/8$: three
+CNOTs projectively, four with literal phase and SU(2)-only Rz/Ry locals.
+Likewise, Rxx$(\pi)$ requires zero entanglers projectively and one with literal
+phase in the Rxx/Rz/Ry basis. These are certified resource-policy distinctions,
+not claims of priority over the literature.
+
+\section{Outstanding optimization and comparison work}
+Classification covers all $327\times32$ cells in both phase modes. This means a
+verified construction or a scoped obstruction, not global optimality.
+The two-B~\cite{b} and three-SQiSW~\cite{sq} bounds still identify 158 over-cap
+constructions per phase mode in the current archive. These are distinct from
+the local-count gaps above. Further minimum proofs and score optimization are
+needed even for many circuits below those caps. No competitor-wide dominance
+or exhaustive novelty claim is justified.
+UniversalQCompiler has zero executed comparisons pending a suitable Wolfram kernel.
+Wolfram's free developer engine is not automatically a free paper-benchmark license:
+its FAQ distinguishes development/testing from producing papers for organizational
+use. An existing university/site license or written research permission is a
+possible route~\cite{wolfram}; no new access has been obtained.
+
+\section{Reproduction and evidence scope}
+The companion JSON identifies the exact archive and SDK baseline SHA256 hashes,
+stores the independent Sycamore SDK circuits, and records the published figure's
+gate-type transcription and image hash. \texttt{local\_comparisons.csv} contains
+all eligible comparisons; \texttt{local\_optimization\_gaps.csv} retains regressions.
+Regenerate with \texttt{symbolic\_notable\_results.py}; compile this source with Tectonic.
+No numerical SDK sample certifies a free-parameter identity or global minimum.
+\begin{thebibliography}{9}
+\bibitem{syc} M. AbuGhanem and H. Eleuch, EPJ Quantum Technology 11, 36 (2024),
+\href{https://doi.org/10.1140/epjqt/s40507-024-00248-8}{doi:10.1140/epjqt/s40507-024-00248-8}, Figure 3.
+\bibitem{fermionic} \href{https://doi.org/10.1038/s41534-023-00711-x}{npj Quantum Information (2023), doi:10.1038/s41534-023-00711-x}.
+\bibitem{b} J. Zhang et al., Phys. Rev. Lett. 93, 020502 (2004),
+\href{https://arxiv.org/abs/quant-ph/0312193}{arXiv:quant-ph/0312193}.
+\bibitem{sq} C. Huang et al., Quantum Instruction Set Design for Performance,
+\href{https://arxiv.org/abs/2105.06074}{arXiv:2105.06074}.
+\bibitem{wolfram} Wolfram Engine FAQ, licensing and terms of use,
+\url{https://www.wolfram.com/engine/faq/}, checked 6 November 2026.
+\end{thebibliography}\end{document}
