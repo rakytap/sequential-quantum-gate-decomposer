@@ -270,6 +270,13 @@ def gate_panel(store, basis, row, width):
             bodies.append(r"\par{\scriptsize\color{muted}$U=" + store.expression(factor) + r"\,C$. Scalar metadata; no physical GP.}\par")
     if row["phase_exact"]["status"] != "verified_symbolic":
         bodies.append(r"\par{\scriptsize\color{muted}Exact: " + escape(status_text(row["phase_exact"])) + "}")
+    literature=row.get("literature_uniform_upper_bound_comparison",{})
+    gaps=[result for result in literature.get("modes",{}).values()
+          if result["status"]=="exceeds_published_uniform_bound"]
+    if gaps:
+        upper=min(result["uniform_upper_bound"] for result in gaps)
+        bodies.append(r"\par{\scriptsize\color{projective}Published uniform cap: $E\leq "+str(upper)+
+                      r"$. Current construction exceeds it; optimization remains.}")
     return panel(header + "\n".join(bodies), "62mm")
 
 
@@ -282,6 +289,7 @@ def gate_volume(report, output, store, names, archive_digest):
                   r"Both appear when the projective construction is strictly cheaper. Physical GP operations are forbidden.\par "
                   r"E counts native two-qubit primitives, L counts one-qubit operations. Scores are displayed rounded; the archive stores exact expressions. "
                   r"Only an explicit matching certificate establishes a minimum entangler count. A verified upper bound does not establish minimum local cost. "
+                  r"Published-cap notes identify constructions above known universal two-qubit bounds; these remain optimization gaps. "
                   r"Proof conditions, source hashes and attempt histories remain in the archive.\par "
                   r"Open cases are shown as open. Proved obstructions preserve the supplied basis and may be conditional for parameterized families. "
                   r"Register constructors use the recorded integer-width or matrix fixtures. These pages do not claim a solution for every register size.\par "
@@ -320,6 +328,7 @@ def gate_volume(report, output, store, names, archive_digest):
             manifest.append(dict(gate=name, basis=basis, phase_statuses=row["phase_statuses"] if row else {},
                                  modes=[mode for mode, _ in phase_variants(row)],
                                  mode_source_run_indices=row.get("mode_source_run_indices",{}) if row else {},
+                                 literature_uniform_upper_bound_comparison=row.get("literature_uniform_upper_bound_comparison") if row else None,
                                  synthesis_run_index=row.get("synthesis_run_index", 0) if row else None))
         source.append(grid(panels))
         source.append(r"\newpage")

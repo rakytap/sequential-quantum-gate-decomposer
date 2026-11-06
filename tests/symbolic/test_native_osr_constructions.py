@@ -59,6 +59,16 @@ def test_fixed_commuting_frames_recover_published_swap_entangler_minima(basis,co
         assert result["entangler_optimality_certificate"]["method"]=="SQiSW_Weyl_chamber_classification"
 
 
+@pytest.mark.parametrize("gate,basis",[("B","berkeley_b")]+[
+    (gate,basis) for gate in ("XX90","YY90") for basis in ("berkeley_b","sqrt_iswap_u","google_sqrt_iswap")])
+@pytest.mark.parametrize("exact",[False,True])
+def test_fixed_lattice_pivot_accepts_algebraic_nonzero_entries_without_symbolic_zero_flags(gate,basis,exact):
+    result=synthesize(gate,(),basis,phase_exact=exact,osr_seconds=5)
+    assert result["status"]=="verified_symbolic",result
+    assert result["cost"]["entanglers"]==(1 if gate=="B" else 2)
+    assert result["entangler_optimal"]
+
+
 @pytest.mark.parametrize("gate,basis,count",[("CCX","iswap_u",10),("CCX","zz_u",5),("CSWAP","zz_u",6)])
 def test_two_wire_osr_windows_reduce_multiqubit_native_cost(gate,basis,count):
     result=synthesize(gate,(),basis,osr_seconds=5)

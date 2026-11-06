@@ -79,6 +79,21 @@ def test_independent_pages_keep_fonts_and_bound_the_entire_panel():
     assert r"\fitcontent{\dimexpr62mm-2mm\relax}{circuit and status}" in body
 
 
+def test_known_published_bound_gap_is_visible_on_the_gate_panel():
+    class Store:
+        aliases={}
+        def render(self,*args):return []
+    row=dict(phase_exact=dict(status="verified_symbolic",operations=[],
+             cost=dict(entanglers=6,single_qubit_gates=0,parameter_score="24")),
+             projective=None,projective_omitted_as_no_better=True,
+             literature_uniform_upper_bound_comparison=dict(modes=dict(phase_exact=dict(
+                 status="exceeds_published_uniform_bound",uniform_upper_bound=2))))
+    source=atlas.gate_panel(Store(),"berkeley_b",row,2)
+    assert r"Published uniform cap: $E\leq 2$" in source
+    assert "optimization remains" in source
+    assert "proved minimum" not in source
+
+
 def test_missing_clifford_phases_have_a_basis_preserving_obstruction():
     from symbolic_clifford_search import group_data
     state=group_data()[3]["I_q1"]

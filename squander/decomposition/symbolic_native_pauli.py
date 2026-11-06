@@ -347,12 +347,21 @@ def _fixed_lattice_source(coordinates,basis):
     if word is None:return None
     target=gates.make_gate("Canonical",*coordinates)
     actual=gates.compile_gates(2,word)
-    pivot=next(i for i,value in enumerate(actual) if value.is_zero is False)
-    factor=sp.simplify(target[pivot]/actual[pivot])
     if __package__:
-        from .symbolic_identity import prove_circuit_identity
+        from .symbolic_identity import prove_circuit_identity,_cyclotomic_values
     else:
-        from symbolic_identity import prove_circuit_identity
+        from symbolic_identity import prove_circuit_identity,_cyclotomic_values
+    converted=_cyclotomic_values(tuple(dict.fromkeys([*actual,*target])))
+    if converted is not None:
+        domain,values=converted
+        pivot=next((i for i,value in enumerate(actual) if values[value]!=domain.zero),None)
+        if pivot is None:return None
+        factor=sp.simplify(domain.to_sympy(values[target[pivot]]/values[actual[pivot]]))
+    else:
+        actual=actual.applyfunc(lambda value:sp.simplify(sp.expand_complex(value)))
+        pivot=next((i for i,value in enumerate(actual) if value.is_zero is False),None)
+        if pivot is None:return None
+        factor=sp.simplify(target[pivot]/actual[pivot])
     if prove_circuit_identity(target,word,factor) is True:return word,factor
     return None
 
