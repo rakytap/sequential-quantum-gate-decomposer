@@ -5,7 +5,7 @@ import pytest
 import sympy as sp
 
 import symbolic_gates as gates
-from symbolic_minimality import cnot_cost_certificate
+from symbolic_minimality import cnot_cost_certificate,sqrt_iswap_cost_certificate
 from symbolic_references import qiskit_baseline, reference_ledger, verify_symbolic_candidate
 
 
@@ -28,6 +28,14 @@ def test_special_angles_do_not_inherit_a_generic_minimum():
     assert certificate.upper_bound == 2
     for angle, count in [(0, 0), (sp.pi/2, 1), (sp.pi, 0), (sp.pi/4, 2)]:
         assert cnot_cost_certificate(matrix.subs(theta, angle)).minimum == count
+
+
+@pytest.mark.parametrize("name,count",[("I",0),("SiSWAP",1),("SiSWAPdg",1),("B",2),("SWAP",3),("SSWAP",3)])
+def test_sqrt_iswap_classification_uses_exact_weyl_coordinates(name,count):
+    if name=="I":
+        target=sp.eye(4)
+    else:target=gates.make_gate(name)
+    assert sqrt_iswap_cost_certificate(target)["minimum"]==count
 
 
 def test_minimality_rejects_numeric_or_unproved_inputs():

@@ -480,6 +480,49 @@ LaTeX sources, provenance manifest and an explicit list of open cases.
 
 ## Validation
 
+Fixed circuits with rational-angle cyclotomic coefficients are verified by
+sparse multiplication in one exact number field. This retains literal scalar
+phase and operand order while avoiding repeated general expression
+simplification. Unsupported coefficients use the existing exact verifier;
+large cyclotomic denominators decline the fast path. Determinant obstructions
+use the same exact arithmetic. Additional rational witnesses avoid half-turn
+specializations that can hide a generic phase obstruction.
+
+`symbolic_rotation_vector.py` handles the three free real coordinates of RV
+with a polar SU(2) chart. Separate zero-amplitude branches cover the origin,
+polar axis and zero diagonal amplitude. Its certificate replays the symbolic
+chart lemma and the native Euler template. The U3 alphabet uses one operation
+projectively or two for literal phase, with no physical GP. Other bases lower
+the same proved template. Zero entanglers is certified; the parameter-sensitive
+local score remains an upper bound.
+
+A finite commuting Clifford-frame proposal search improves fixed Cartan
+targets without treating that proposal space as exhaustive. In particular,
+SWAP uses two B gates or three SQiSW gates. Matching lower bounds can certify
+these counts. The SQiSW certificate implements the published Weyl-chamber
+classification for recognized fixed rational Bell-diagonal classes:
+[Huang et al.](https://arxiv.org/abs/2105.06074).
+
+The archive analysis also checks the published uniform two-qubit upper bounds
+of two B gates and three SQiSW gates in the applicable local alphabets. This
+audit includes free families. Exceeding one of those bounds is a known
+optimization gap even if the delivered circuit verifies exactly. Falling
+below a uniform worst-case bound is not a novelty claim or a per-target
+minimality proof.
+
+To revisit only cells with an open phase mode, preserving successful
+incumbents during the later merge:
+
+```bash
+python examples/decomposition/symbolic_synthesis_archive.py \
+  --open-from benchmarks/symbolic/synthesis_reference_20261106.json.gz \
+  --basis all --workers 24 --seconds-per-mode 120 \
+  --output /tmp/symbolic-open-rerun.json.gz
+```
+
+Both phase modes are rerun for each selected cell. The selection's input hash
+is recorded, and a resume requires the same selection and implementation.
+
 ```bash
 python -m pytest tests/symbolic -q
 ```

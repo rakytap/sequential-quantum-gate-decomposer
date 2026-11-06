@@ -18,7 +18,7 @@ import sympy as sp
 ROOT=Path(__file__).resolve().parents[2]
 sys.path.insert(0,str(ROOT/"squander/decomposition"))
 from symbolic_bases import BASIS_SETS
-from symbolic_gates import make_gate
+from symbolic_gates import make_gate,gate_definition
 from symbolic_minimality import cnot_cost_certificate
 from symbolic_contract import retain_phase_results
 
@@ -180,6 +180,41 @@ def annotate(report,qiskit,ledger):
         row["qiskit_fixed_target_comparison"]=comparison
     report["matched_reference_summary"]=dict(statistics)
     report["matched_reference_policy"]="Fixed targets only; matching a lower bound certifies entanglers, never the secondary local score"
+    return annotate_uniform_literature_bounds(report)
+
+
+def annotate_uniform_literature_bounds(report):
+    """Audit analytical universal two-qubit bounds, including free families.
+
+    A circuit below a uniform worst-case bound is not a literature win. These
+    relaxed-local bounds expose known optimization gaps without inventing
+    per-target minima or comparing a family with a numerical SDK binding.
+    """
+    bounds={"berkeley_b":(2,"https://arxiv.org/abs/quant-ph/0312193"),
+            "sqrt_iswap_u":(3,"https://arxiv.org/abs/2105.06074"),
+            "google_sqrt_iswap":(3,"https://arxiv.org/abs/2105.06074")}
+    statistics=Counter()
+    for row in report["rows"]:
+        if row["basis"] not in bounds:continue
+        definition=gate_definition(row["gate"])
+        if definition.num_qubits!=2:
+            # The archived Unitary register fixture is explicitly the 4x4 B.
+            if (row["gate"]!="Unitary" or row["target_scope"]!="register_fixture"
+                    or row.get("parameters")!=[str(make_gate("B"))]):continue
+        upper,source=bounds[row["basis"]]
+        modes={}
+        for mode in ("phase_exact","projective"):
+            result=row.get(mode)
+            if mode=="projective" and row.get("projective_omitted_as_no_better"):result=row.get("phase_exact")
+            if not result or result["status"]!="verified_symbolic":continue
+            count=result["cost"]["entanglers"]
+            status="exceeds_published_uniform_bound" if count>upper else "within_published_uniform_bound"
+            modes[mode]=dict(status=status,construction_entanglers=count,uniform_upper_bound=upper)
+            statistics[mode+"_"+status]+=1
+        row["literature_uniform_upper_bound_comparison"]=dict(source=source,modes=modes,
+            scope="Any two-qubit unitary with arbitrary locals; these presets can synthesize scalar phase locally",
+            target_minimality_claim=False,novelty_claim=False)
+    report["literature_uniform_bound_summary"]=dict(statistics)
     return report
 
 

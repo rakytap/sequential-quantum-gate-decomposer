@@ -42,6 +42,8 @@ def main():
     parser.add_argument("--seconds-per-mode",type=float,default=10)
     parser.add_argument("--workers",type=int,default=1)
     parser.add_argument("--resume",action="store_true")
+    parser.add_argument("--open-from",type=Path,
+                        help="Rerun only gate/basis cells with an open phase mode in this archive")
     args=parser.parse_args()
     if args.seconds_per_mode<=0 or args.workers<1:parser.error("Positive time budget and worker count required")
     bases=list(BASIS_SETS) if not args.basis or "all" in args.basis else list(dict.fromkeys(args.basis))
@@ -52,6 +54,16 @@ def main():
         cases=[case for case in cases if case[0] in requested]
         if requested-{c[0] for c in cases}:parser.error("Use canonical catalog gate names")
     hashes=source_hashes()
+    selected=None
+    selection=None
+    if args.open_from:
+        opener=gzip.open if args.open_from.suffix==".gz" else open
+        with opener(args.open_from,"rt") as stream:previous=json.load(stream)
+        if previous["comparison_contract"]!=comparison_contract():parser.error("Open-case archive has a different comparison contract")
+        selected={(row["gate"],row["basis"]) for row in previous["rows"]
+                  if any(status not in {"verified_symbolic","proved_impossible"} for status in row["phase_statuses"].values())}
+        selection=dict(kind="open_gate_basis_cells",archive=str(args.open_from),
+                       archive_sha256=hashlib.sha256(args.open_from.read_bytes()).hexdigest())
     checkpoint=args.output.with_name(args.output.name+".partial.json.gz")
     old=None
     if args.resume:
@@ -62,6 +74,7 @@ def main():
             if old["source_sha256"]!=hashes or old["bases"]!=bases or old["case_names"]!=[c[0] for c in cases]:
                 parser.error("Checkpoint implementation or selection differs; use a new output file")
             if old["budget_seconds_per_mode"]!=args.seconds_per_mode:parser.error("Checkpoint time budget differs")
+            if old.get("selection")!=selection:parser.error("Checkpoint open-case selection differs")
     git=subprocess.run(["git","rev-parse","HEAD"],cwd=ROOT,text=True,capture_output=True)
     versions={name:importlib.metadata.version(name) for name in ("sympy","numpy")}
     try:versions["qiskit"]=importlib.metadata.version("qiskit")
@@ -69,6 +82,7 @@ def main():
     report=old or dict(schema_version=1,generated_at=datetime.now(timezone.utc).isoformat(),
         git_revision=git.stdout.strip(),source_sha256=hashes,versions=versions,comparison_contract=comparison_contract(),
         bases=bases,case_names=[c[0] for c in cases],budget_seconds_per_mode=args.seconds_per_mode)
+    if selection is not None:report["selection"]=selection
     # Deliberately deferred: no Wolfram license purchase and no fabricated results.
     report["universalqcompiler"]=dict(status="deferred_by_user",runs=0,
         source_revision="c72cd84a537786756ae8490c07f3f599aa411323",
@@ -90,8 +104,8 @@ def main():
             report["clifford_certificates"][key]=export_certificate(solution)
     completed={(r["gate"],r["basis"]) for r in report["rows"]}
     jobs=[(name,p,scope,basis,args.seconds_per_mode) for name,p,scope in cases for basis in bases
-          if (name,basis) not in completed]
-    total=len(cases)*len(bases)
+          if (name,basis) not in completed and (selected is None or (name,basis) in selected)]
+    total=len(jobs)+len(report["rows"])
     write_report(checkpoint,report)
     def accept(rows):
         for row in rows:
@@ -113,7 +127,8 @@ def main():
                        for mode in ("phase_exact","projective")}
     report["summary"].update(cells=len(report["rows"]),
         projective_retained_as_strictly_cheaper=sum(r["preferred"]=="projective" and r["phase_exact"]["status"]=="verified_symbolic" for r in report["rows"]))
-    report["complete_catalog_enumeration"]=len(report["rows"])==total
+    report["complete_catalog_enumeration"]=len(report["rows"])==len(cases)*len(bases)
+    report["complete_selected_cells"]=len(report["rows"])==total
     report["all_targets_solved"]=all(all(v in {"verified_symbolic","proved_impossible"} for v in r["phase_statuses"].values()) for r in report["rows"])
     write_report(args.output,report)
     checkpoint.unlink(missing_ok=True)

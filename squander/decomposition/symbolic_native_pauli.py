@@ -6,6 +6,7 @@ This supplies constructive upper bounds, not an unexplained optimality claim.
 """
 
 from functools import lru_cache
+from collections import deque
 import itertools
 import sympy as sp
 
@@ -13,6 +14,7 @@ if __package__:
     from . import symbolic_gates as gates
     from .symbolic_clifford import pauli_action,_signed_pauli
     from .symbolic_clifford_search import group_data
+    from .symbolic_clifford_search import exact_state
     from .symbolic_clifford_two_qubit import _columns,_local_frames,_multiply,local_coset_key,_apply
     from .symbolic_osr import product_factors
     from .symbolic_osr_search import recognize_local
@@ -21,6 +23,7 @@ else:
     import symbolic_gates as gates
     from symbolic_clifford import pauli_action,_signed_pauli
     from symbolic_clifford_search import group_data
+    from symbolic_clifford_search import exact_state
     from symbolic_clifford_two_qubit import _columns,_local_frames,_multiply,local_coset_key,_apply
     from symbolic_osr import product_factors
     from symbolic_osr_search import recognize_local
@@ -293,6 +296,67 @@ def _fixed_power_source(coordinates,basis):
     return None
 
 
+@lru_cache(maxsize=3)
+def _commuting_fixed_lattice(entangler):
+    """Shortest pulse words in a finite commuting Clifford-frame proposal set.
+
+    Coordinates have units pi/8 and are reduced modulo pi, which changes
+    only a scalar. Full matrix verification recovers/checks that scalar.
+    This search does not certify global optimality over continuous frames.
+    """
+    coefficients={"SiSWAP":(1,1,0),"SSWAP":(-1,-1,-1),"B":(2,1,0)}[entangler]
+    representatives=group_data()[0].representatives
+    state_names={state:name for name,state in group_data()[3].items()}
+    inverse_names={name:state_names[exact_state(gates.make_gate(name).H)] for name in representatives}
+    frames=[]
+    paulis=[gates.make_gate(axis) for axis in "XYZ"]
+    for name in representatives:
+        matrix=gates.make_gate(name)
+        images=tuple(_signed_pauli(matrix*p*matrix.H) for p in paulis)
+        frames.append((name,images))
+    generators={}
+    for (a,left),(b,right) in itertools.product(frames,repeat=2):
+        if any(x[1]!=y[1] for x,y in zip(left,right)):continue
+        vector=[0,0,0]
+        for coefficient,x,y in zip(coefficients,left,right):
+            vector["XYZ".index(x[1])]+=coefficient*x[0]*y[0]
+        vector=tuple(vector)
+        frame=tuple((name,(wire,)) for wire,name in enumerate((a,b)) if name!="I")
+        inverse=tuple((inverse_names[name],wires) for name,wires in reversed(frame))
+        word=inverse+((entangler,(0,1)),)+frame
+        if vector not in generators or len(word)<len(generators[vector]):generators[vector]=word
+    paths={(0,0,0):()}
+    queue=deque([(0,0,0)])
+    while queue:
+        state=queue.popleft()
+        old=paths[state]
+        if sum(isinstance(op[0],str) and op[0]==entangler for op in old)>=3:continue
+        for vector,word in generators.items():
+            following=tuple((a+b)%8 for a,b in zip(state,vector))
+            if following not in paths:
+                paths[following]=old+word
+                queue.append(following)
+    return paths
+
+
+def _fixed_lattice_source(coordinates,basis):
+    if basis.entangler not in {"SiSWAP","SSWAP","B"}:return None
+    units=tuple(sp.simplify(8*value/sp.pi) for value in coordinates)
+    if any(value.is_Integer is not True for value in units):return None
+    word=_commuting_fixed_lattice(basis.entangler).get(tuple(int(value)%8 for value in units))
+    if word is None:return None
+    target=gates.make_gate("Canonical",*coordinates)
+    actual=gates.compile_gates(2,word)
+    pivot=next(i for i,value in enumerate(actual) if value.is_zero is False)
+    factor=sp.simplify(target[pivot]/actual[pivot])
+    if __package__:
+        from .symbolic_identity import prove_circuit_identity
+    else:
+        from symbolic_identity import prove_circuit_identity
+    if prove_circuit_identity(target,word,factor) is True:return word,factor
+    return None
+
+
 def native_cartan_candidate(matrix,basis):
     result=bell_coordinates(matrix)
     before=after=()
@@ -303,7 +367,8 @@ def native_cartan_candidate(matrix,basis):
     coordinates,phase=result
     if basis.entangler in {"CX","CNOT","CZ","ECR","XX90","ZZMax","iSWAP"}:
         source=cartan_native_source(*coordinates,basis.entangler)
-    else:source=_variable_cartan_source(coordinates,basis) or _fixed_power_source(coordinates,basis)
+    else:source=(_variable_cartan_source(coordinates,basis) or _fixed_lattice_source(coordinates,basis)
+                 or _fixed_power_source(coordinates,basis))
     if source is None:return None
     before_inverse=tuple(("Rz",-op[1],op[-1]) for op in reversed(before))
     after_inverse=tuple(("Rz",-op[1],op[-1]) for op in reversed(after))

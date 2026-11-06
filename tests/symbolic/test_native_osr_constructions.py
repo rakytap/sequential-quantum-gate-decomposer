@@ -49,6 +49,16 @@ def test_native_powers_have_matching_continuous_local_invariant_bounds(gate,basi
     assert result["entangler_optimality_certificate"]["lower_bound"]==2
 
 
+@pytest.mark.parametrize("basis,count",[("berkeley_b",2),("sqrt_iswap_u",3),("google_sqrt_iswap",3)])
+def test_fixed_commuting_frames_recover_published_swap_entangler_minima(basis,count):
+    result=synthesize_matrix(gates.make_gate("SWAP"),basis,seconds=10)
+    assert result["status"]=="verified_symbolic"
+    assert result["cost"]["entanglers"]==count
+    assert result["entangler_optimal"]
+    if count==3:
+        assert result["entangler_optimality_certificate"]["method"]=="SQiSW_Weyl_chamber_classification"
+
+
 @pytest.mark.parametrize("gate,basis,count",[("CCX","iswap_u",10),("CCX","zz_u",5),("CSWAP","zz_u",6)])
 def test_two_wire_osr_windows_reduce_multiqubit_native_cost(gate,basis,count):
     result=synthesize(gate,(),basis,osr_seconds=5)

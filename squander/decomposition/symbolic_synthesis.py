@@ -586,10 +586,10 @@ def _two_wire_source(name,parameters,basis,seconds):
 def _attach_osr_certificate(result,target,basis):
     if __package__:
         from .symbolic_osr import interaction_bound
-        from .symbolic_minimality import cnot_cost_certificate,fixed_native_one_pulse_exclusion
+        from .symbolic_minimality import cnot_cost_certificate,fixed_native_one_pulse_exclusion,sqrt_iswap_cost_certificate
     else:
         from symbolic_osr import interaction_bound
-        from symbolic_minimality import cnot_cost_certificate,fixed_native_one_pulse_exclusion
+        from symbolic_minimality import cnot_cost_certificate,fixed_native_one_pulse_exclusion,sqrt_iswap_cost_certificate
     bound=interaction_bound(target,basis)
     result["osr_certificate"]=bound
     count=result["cost"]["entanglers"]
@@ -634,6 +634,13 @@ def _attach_osr_certificate(result,target,basis):
                 lower_bound=3,method="two_iSWAP_mirror_theorem_and_CNOT_invariant_exclusion",
                 sources=["https://arxiv.org/abs/quant-ph/0407108","https://arxiv.org/abs/quant-ph/0308045"])
     result["local_cost_optimal"]=False
+    if target.shape==(4,4) and basis.entangler=="SiSWAP":
+        certificate=sqrt_iswap_cost_certificate(target)
+        if certificate is not None:
+            result["native_invariant_lower_bound"]=certificate["minimum"]
+            if certificate["minimum"]==count:
+                result["entangler_optimal"]=True
+                result["entangler_optimality_certificate"]=certificate
     return result
 
 
@@ -667,6 +674,12 @@ def synthesize(name, parameters=(), basis="cx_u", *, phase_exact=True,osr_second
     if obstruction:
         return dict(obstruction,phase_exact=phase_exact)
     if target.rows==2:
+        if definition.name=="RV":
+            if __package__:
+                from .symbolic_rotation_vector import synthesize_rotation_vector
+            else:
+                from symbolic_rotation_vector import synthesize_rotation_vector
+            return synthesize_rotation_vector(parameters,basis,phase_exact=phase_exact)
         clifford=_best_clifford(target,basis,phase_exact)
         if clifford:
             return {k:v for k,v in clifford.items() if not k.startswith("_")}

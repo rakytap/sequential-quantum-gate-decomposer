@@ -96,11 +96,111 @@ def zero_form(expression,variables=()):
     return all(_zero_coefficient(coefficient) for coefficient in coefficients)
 
 
+@lru_cache(maxsize=32)
+def _cyclotomic_domain(denominator):
+    root=sp.exp(sp.I*sp.pi/denominator)
+    domain=sp.QQ.algebraic_field(root)
+    return domain,domain.from_sympy(root)
+
+
+def _cyclotomic_values(entries):
+    """Exact rational/root-of-unity coefficients, declining other constants.
+
+    A single cyclotomic generator avoids repeatedly discovering relations
+    between many equivalent nested radicals. Every conversion is algebraic;
+    neither floating evaluation nor tolerance enters the verifier.
+    """
+    rewritten=tuple(sp.sympify(entry).rewrite(sp.exp) for entry in entries)
+    denominator=8
+    for expression in rewritten:
+        for exponential in expression.atoms(sp.exp):
+            angle=sp.simplify(exponential.args[0]/(sp.I*sp.pi))
+            if angle.is_Rational is not True:return None
+            denominator=math.lcm(denominator,int(angle.q))
+    radicals=[(sp.sqrt(2),4,False),(sp.sqrt(3),6,False)]
+    upper=sp.sqrt(2)
+    for power in range(3,7):
+        radicals.extend([(sp.sqrt(2+upper),2**power,False),(sp.sqrt(2-upper),2**power,True)])
+        upper=sp.sqrt(2+upper)
+    present=[(value,period,sine) for value,period,sine in radicals if any(expr.has(value) for expr in rewritten)]
+    for _,period,_ in present:denominator=math.lcm(denominator,period)
+    if denominator>256:return None
+    domain,root=_cyclotomic_domain(denominator)
+    imaginary=root**(denominator//2)
+    constants={sp.I:imaginary}
+    for value,period,sine in present:
+        phase=root**(denominator//period)
+        inverse=domain.one/phase
+        constants[value]=-imaginary*(phase-inverse) if sine else phase+inverse
+    cache={}
+    def convert(expression):
+        if expression in cache:return cache[expression]
+        if expression.is_Rational:result=domain.convert(expression)
+        elif expression in constants:result=constants[expression]
+        elif expression.func==sp.exp:
+            angle=sp.simplify(expression.args[0]/(sp.I*sp.pi))
+            result=root**int(angle*denominator)
+        elif expression.is_Add:
+            result=sum((convert(term) for term in expression.args),domain.zero)
+        elif expression.is_Mul:
+            result=domain.one
+            for term in expression.args:result*=convert(term)
+        elif expression.is_Pow and expression.exp.is_Integer:
+            result=convert(expression.base)**int(expression.exp)
+        else:raise ValueError("Not a supported cyclotomic expression")
+        cache[expression]=result
+        return result
+    try:return domain,dict(zip(entries,map(convert,rewritten)))
+    except (ValueError,ZeroDivisionError):return None
+
+
+def _algebraic_circuit_identity(target,matrices,sequence,phase):
+    """Multiply fixed circuits in one exact number field, with sparse rows.
+
+    Repeated generic expression simplification after every embedded gate is
+    unnecessary here. A non-algebraic coefficient declines this fast path.
+    """
+    if __package__:
+        from . import symbolic_gates as gates
+    else:
+        import symbolic_gates as gates
+    entries=tuple(dict.fromkeys([entry for matrix in [target,*matrices] for entry in matrix]+[phase]))
+    converted=_cyclotomic_values(entries)
+    if converted is None:return None
+    domain,values=converted
+    width=target.rows.bit_length()-1
+    size=target.rows
+    actual=[{row:domain.one} for row in range(size)]
+    for matrix,operation in zip(matrices,sequence):
+        wires=operation[-1]
+        positions=wires if gates.little_endian else tuple(width-1-wire for wire in wires)
+        mask=sum(1<<wire for wire in positions)
+        offsets=[sum(((index>>bit)&1)<<wire for bit,wire in enumerate(positions)) for index in range(matrix.rows)]
+        coefficients=[[(column,values[matrix[row,column]]) for column in range(matrix.cols)
+                       if values[matrix[row,column]]!=domain.zero] for row in range(matrix.rows)]
+        for base in range(size):
+            if base&mask:continue
+            indices=[base|offset for offset in offsets]
+            previous=[actual[index] for index in indices]
+            for index,terms in zip(indices,coefficients):
+                result={}
+                for local,coefficient in terms:
+                    for column,value in previous[local].items():
+                        result[column]=result.get(column,domain.zero)+coefficient*value
+                actual[index]={column:value for column,value in result.items() if value!=domain.zero}
+    factor=values[phase]
+    return all(values[target[row,column]]==factor*actual[row].get(column,domain.zero)
+               for row in range(size) for column in range(size))
+
+
 def prove_circuit_identity(target, sequence, factor=1):
     target=sp.ImmutableMatrix(target)
     factor=sp.sympify(factor)
     matrices=[make_gate(op[0],*op[1:-1]) for op in sequence]
     expressions=[entry for matrix in [target,*matrices] for entry in matrix]+[factor]
+    if not any(expression.free_symbols for expression in expressions):
+        algebraic=_algebraic_circuit_identity(target,matrices,sequence,factor)
+        if algebraic is not None:return algebraic
     try:transformed,inverse=exponential_forms(expressions)
     except ValueError:return None
     position=0
@@ -112,6 +212,9 @@ def prove_circuit_identity(target, sequence, factor=1):
     target_form=restore(target)
     native=[restore(matrix) for matrix in matrices]
     phase=transformed[-1]
+    if not inverse:
+        algebraic=_algebraic_circuit_identity(target_form,native,sequence,phase)
+        if algebraic is not None:return algebraic
     width=target.rows.bit_length()-1
     actual=sp.eye(target.rows)
     for matrix,operation in zip(native,sequence):

@@ -47,6 +47,30 @@ def _clifford_t_field():
 
 @lru_cache(maxsize=2048)
 def _determinant(target):
+    if not target.free_symbols:
+        if __package__:
+            from .symbolic_identity import _cyclotomic_values
+        else:
+            from symbolic_identity import _cyclotomic_values
+        converted=_cyclotomic_values(tuple(dict.fromkeys(target)))
+        if converted is not None:
+            domain,values=converted
+            rows=[[values[target[i,j]] for j in range(target.cols)] for i in range(target.rows)]
+            determinant=domain.one
+            for column in range(target.cols):
+                pivot=next((row for row in range(column,target.rows) if rows[row][column]!=domain.zero),None)
+                if pivot is None:return sp.S.Zero
+                if pivot!=column:
+                    rows[pivot],rows[column]=rows[column],rows[pivot]
+                    determinant=-determinant
+                value=rows[column][column]
+                determinant*=value
+                for row in range(column+1,target.rows):
+                    if rows[row][column]==domain.zero:continue
+                    multiplier=rows[row][column]/value
+                    for j in range(column+1,target.cols):rows[row][j]-=multiplier*rows[column][j]
+                    rows[row][column]=domain.zero
+            return sp.simplify(domain.to_sympy(determinant))
     return sp.simplify(target.det())
 
 
@@ -65,11 +89,12 @@ def _nonzero_witness(expression):
     # when both parameters are set to 1/2. These are exact nonidentity witnesses,
     # not numerical acceptance tests or a proof for every specialization.
     for symbol in symbols:
-        substitution={other:sp.S.Zero for other in symbols}
-        substitution[symbol]=sp.Rational(1,2)
-        witness=simplify_exact(expression.subs(substitution))
-        if not witness.has(sp.nan,sp.zoo) and witness.is_zero is False:
-            return {str(other):str(value) for other,value in substitution.items()}
+        for value in (sp.Rational(1,2),sp.Rational(1,3),sp.Rational(1,5)):
+            substitution={other:sp.S.Zero for other in symbols}
+            substitution[symbol]=value
+            witness=simplify_exact(expression.subs(substitution))
+            if not witness.has(sp.nan,sp.zoo) and witness.is_zero is False:
+                return {str(other):str(value) for other,value in substitution.items()}
     return None
 
 
@@ -115,6 +140,11 @@ def feasibility_obstruction(target, basis, *, phase_exact=True):
             return dict(status="proved_impossible", obstruction="zero_qubit_no_physical_operation",
                         explanation="A zero-qubit circuit without GP contains only the identity.")
         return None
+    discrete = all(not gate_definition(name).parameters for name in basis.gates)
+    if discrete and target.free_symbols and _exact_variation(target,phase_exact):
+        return dict(status="proved_impossible", obstruction="discrete_alphabet_nonconstant_family",
+                    scope="generic_family", explanation="A fixed finite gate alphabet cannot express a nonconstant continuous family exactly.",
+                    source="https://arxiv.org/abs/1206.5236")
     if phase_exact:
         order = determinant_group(basis, width)
         if order is not None:
@@ -130,11 +160,6 @@ def feasibility_obstruction(target, basis, *, phase_exact=True):
                             scope="generic_family" if residual.free_symbols else "this_target",
                             exact_nonidentity_witness=witness,
                             explanation=f"Every allowed circuit has det(U)**{order}=1.")
-    discrete = all(not gate_definition(name).parameters for name in basis.gates)
-    if discrete and target.free_symbols and _exact_variation(target,phase_exact):
-        return dict(status="proved_impossible", obstruction="discrete_alphabet_nonconstant_family",
-                    scope="generic_family", explanation="A fixed finite gate alphabet cannot express a nonconstant continuous family exactly.",
-                    source="https://arxiv.org/abs/1206.5236")
     if basis.universality == "clifford" and _alphabet_is_clifford(basis) and not target.free_symbols and not is_clifford(target):
         return dict(status="proved_impossible", obstruction="not_a_clifford",
                     explanation="Every allowed primitive normalizes the Pauli group; this target does not.")

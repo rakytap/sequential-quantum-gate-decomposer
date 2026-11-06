@@ -62,6 +62,35 @@ class CNOTCostCertificate:
         return self.lower_bound if self.lower_bound == self.upper_bound else None
 
 
+def sqrt_iswap_cost_certificate(matrix):
+    """Exact SQiSW count for rational Bell-diagonal classes we can recognize.
+
+    Huang et al., PRL 130, 070601: in the Weyl chamber x>=y>=abs(z),
+    nontrivial/non-native classes need two SQiSW iff x-y>=abs(z), else three.
+    Arbitrary local unitaries and scalar phase are relaxed resources here;
+    a supplied-basis construction matching this bound proves its own count.
+    """
+    if __package__:
+        from .symbolic_native_pauli import bell_coordinates
+    else:
+        from symbolic_native_pauli import bell_coordinates
+    matrix=sp.ImmutableMatrix(matrix)
+    if matrix.shape!=(4,4) or matrix.free_symbols or matrix.atoms(sp.Float):return None
+    result=bell_coordinates(matrix)
+    if result is None:return None
+    coordinates,_=result
+    ratios=tuple(sp.simplify(value/sp.pi) for value in coordinates)
+    if any(value.is_Rational is not True for value in ratios):return None
+    x,y,z=sorted((abs((value+sp.Rational(1,4))%sp.Rational(1,2)-sp.Rational(1,4))
+                  for value in ratios),reverse=True)
+    minimum=(0 if x==0 else 1 if (x,y,z)==(sp.Rational(1,8),sp.Rational(1,8),0)
+             else 2 if x-y>=z else 3)
+    return dict(minimum=minimum,lower_bound=minimum,weyl_absolute_coordinates_pi=[str(value) for value in (x,y,z)],
+                method="SQiSW_Weyl_chamber_classification",
+                source="https://arxiv.org/abs/2105.06074",
+                local_resource_scope="arbitrary_local_unitaries_and_scalar_phase")
+
+
 def cnot_cost_certificate(matrix):
     """Prove a minimum or return exact parameter conditions for costs <=0,1,2.
 

@@ -71,6 +71,29 @@ def test_determinant_witness_can_vary_parameters_independently():
     assert obstruction["exact_nonidentity_witness"]=={"global_shift":"0","t":"1/2"}
 
 
+@pytest.mark.parametrize("name",["XXPow","YYPow","ZZPow","FSWAPPow"])
+def test_embedded_determinant_witness_escapes_half_turn_roots(name):
+    t,shift=sp.symbols("t global_shift",real=True)
+    obstruction=feasibility_obstruction(gates.make_gate(name,t,shift),get_basis("cx_rz_ry"))
+    assert obstruction["status"]=="proved_impossible"
+    assert obstruction["scope"]=="generic_family"
+    witness={sp.Symbol(key,real=True):sp.sympify(value) for key,value in obstruction["exact_nonidentity_witness"].items()}
+    residual=sp.sympify(obstruction["determinant"],locals={"t":t,"global_shift":shift})**obstruction["determinant_root_order"]-1
+    assert sp.simplify(sp.expand_complex(residual.subs(witness))).is_zero is False
+    # The identity specialization is still feasible, despite the generic obstruction.
+    assert feasibility_obstruction(gates.make_gate(name,0,shift),get_basis("cx_rz_ry")) is None
+
+
+def test_cyclotomic_fourier_determinants_keep_the_literal_phase_obstruction():
+    from symbolic_feasibility import _determinant
+    assert _determinant(gates.make_gate("QFT",3))==sp.I
+    assert _determinant(gates.make_gate("QFTdg",3))==-sp.I
+    assert _determinant(gates.make_gate("CX"))==-1
+    obstruction=feasibility_obstruction(gates.make_gate("QFT",3),get_basis("ibm_cx"))
+    assert obstruction["status"]=="proved_impossible"
+    assert feasibility_obstruction(gates.make_gate("QFT",3),get_basis("cx_u")) is None
+
+
 def test_continuous_and_fixed_discrete_obstructions_are_separate():
     theta=sp.Symbol("theta",real=True)
     row=feasibility_obstruction(gates.make_gate("Ry",theta),get_basis("clifford_t_cx"),phase_exact=False)

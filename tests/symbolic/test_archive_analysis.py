@@ -35,6 +35,22 @@ def test_only_matching_fixed_basis_counts_receive_minimum_certificates():
         analysis.annotate(dict(rows=[bad]),dict(rows=[]),reference_ledger())
 
 
+def test_uniform_literature_audit_exposes_verified_but_nonoptimal_families():
+    def row(name,basis,count,scope="free_real_family"):
+        return dict(gate=name,basis=basis,target_scope=scope,
+                    phase_exact=dict(status="verified_symbolic",cost=dict(entanglers=count)),
+                    projective=None,projective_omitted_as_no_better=True)
+    report=analysis.annotate_uniform_literature_bounds(dict(rows=[
+        row("Canonical","berkeley_b",6),row("PhasedFSim","sqrt_iswap_u",6),
+        row("SWAP","berkeley_b",2,"fixed_gate"),row("Rz","sqrt_iswap_u",0)]))
+    first,second,matched,one_wire=report["rows"]
+    assert first["literature_uniform_upper_bound_comparison"]["modes"]["phase_exact"]["status"]=="exceeds_published_uniform_bound"
+    assert second["literature_uniform_upper_bound_comparison"]["modes"]["projective"]["uniform_upper_bound"]==3
+    assert matched["literature_uniform_upper_bound_comparison"]["modes"]["projective"]["status"]=="within_published_uniform_bound"
+    assert not matched["literature_uniform_upper_bound_comparison"]["novelty_claim"]
+    assert "literature_uniform_upper_bound_comparison" not in one_wire
+
+
 def test_targeted_reruns_preserve_each_source_revision_and_failed_attempt():
     old=dict(gate="MCPhase",basis="cx_u",parameters=["theta","2"],target_scope="register_fixture",
              phase_statuses=dict(phase_exact="compiler_error",projective="compiler_error"),
