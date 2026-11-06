@@ -391,49 +391,83 @@ qasm_standard_gate_library = (
     "CCX", "CSWAP", "U", "I", "U1", "U2", "U3"
 )
 
-decomp_dict = {
-    "U3": lambda theta, phi, lbda: compile_gates(1, [('P', lbda, (0,)), ('Ry', theta, (0,)), ('P', phi, (0,))]).applyfunc(textbook_simp),
-    'GP': lambda theta, qbits: compile_gates(qbits, [gate for qbit in range(qbits) for gate in (("P", theta, [qbit]), ("X", [qbit]), ("P", theta, [qbit]), ("X", [qbit]))]),
-    'CZ': lambda: compile_gates(2, [("H", [1]), ("CNOT", [0, 1]), ("H", [1])]),
-    'CY': lambda: compile_gates(2, [("Sdg", [1]), ("CNOT", [0, 1]), ("S", [1])]),
-    'CH': lambda: compile_gates(2, [("Ry", sympy.pi/4, [1]), ("CNOT", [0, 1]), ("Ry", -sympy.pi/4, [1])]).applyfunc(textbook_simp),
-    'CP': lambda phi: compile_gates(2, [("P", phi/2, [0]), ("CNOT", [0, 1]), ("P", -phi/2, [1]), ("CNOT", [0, 1]), ("P", phi/2, [1])]),
-    'CRX': lambda theta: compile_gates(2, [("S", [1]), ("Ry", theta/2, [1]), ("CNOT", [0, 1]), ("Ry", -theta/2, [1]), ("CNOT", [0, 1]), ("Sdg", [1])]).applyfunc(textbook_simp),
-    'CRY': lambda theta: compile_gates(2, [("Ry", theta/2, [1]), ("CNOT", [0, 1]), ("Ry", -theta/2, [1]), ("CNOT", [0, 1])]).applyfunc(textbook_simp),
-    'CRZ': lambda theta: compile_gates(2, [("Rz", theta/2, [1]), ("CNOT", [0, 1]), ("Rz", -theta/2, [1]), ("CNOT", [0, 1])]),
-    'CSX': lambda: compile_gates(2, [("Sdg", [0]), ("H", [1]), ("Y", [1]), ("Tdg", [0]), ("CNOT", [0, 1]), ("Y", [1]), ("Tdg", [1]), ("CNOT", [0, 1]), ("T", [1]), ("H", [1])]).applyfunc(textbook_simp),
-    'CS': lambda: compile_gates(2, [("T", [0]), ("T", [1]), ("CNOT", [0, 1]), ("Tdg", [1]), ("CNOT", [0, 1])]).applyfunc(textbook_simp), #compile_gates(2, [("Rz", sympy.pi/4, [0]), ("CNOT", [0, 1]), ("Rz", -sympy.pi/4, [1]), ("CNOT", [0, 1]), ("Rz", sympy.pi/4, [1]), (gen_GP(sympy.pi/8, 2), [0, 1])]).applyfunc(textbook_simp)
-    'CR': lambda theta, phi: compile_gates(2, [("Rz", -phi+sympy.pi/2, [1]), ("CNOT", [0, 1]), ("Ry", -theta/2, [1]), ("CNOT", [0, 1]), ("Ry", theta/2, [1]), ("Rz", phi-sympy.pi/2, [1])]).applyfunc(textbook_simp),
-    'CROT': lambda theta, phi: compile_gates(2, [("Rz", -phi, [1]), ("Ry", sympy.pi/2, [1]), ("CNOT", [0, 1]), ("Rz", theta, [1]), ("CNOT", [0, 1]), ("Ry", -sympy.pi/2, [1]), ("Rz", phi, [1])]).applyfunc(textbook_simp),
-    'Rxx': lambda theta: compile_gates(2, [("CNOT", [0, 1]), ("Rx", theta, [0]), ("CNOT", [0, 1])]).applyfunc(textbook_simp),
-    'Ryy': lambda theta: compile_gates(2, [("Rx", sympy.pi/2, [0]), ("Rx", sympy.pi/2, [1]), ("CNOT", [0, 1]), ("Rz", theta, [1]), ("CNOT", [0, 1]), ("Rx", -sympy.pi/2, [0]), ("Rx", -sympy.pi/2, [1])]).applyfunc(textbook_simp),
-    'Rzz': lambda theta: compile_gates(2, [("CNOT", [0, 1]), ("Rz", theta, [1]), ("CNOT", [0, 1])]),
-    'Rxy': lambda phi: compile_gates(2, [("Sdg", [1]), ("S", [0]), ("Sx", [1]), ("S", [1]), ("CNOT", [1, 0]), ("Ry", -phi/2, [0]), ("Ry", -phi/2, [1]), ("CNOT", [1, 0]), ("Sdg", [0]), ("Sdg", [1]), ("Sxdg", [1]), ("S", [1])]).applyfunc(textbook_simp), #compile_gates(2, [(gen_Rxx_decomp(phi/2), [0,1]), (gen_Ryy_decomp(phi/2), [0,1])]).applyfunc(textbook_simp)
-    'Rxmy': lambda phi: compile_gates(2, [("Sdg", [0]), ("S", [1]), ("Sx", [0]), ("S", [0]), ("CNOT", [0, 1]), ("Ry", phi/2, [0]), ("Ry", -phi/2, [1]), ("CNOT", [0, 1]), ("Sdg", [0]), ("Sdg", [1]), ("Sxdg", [0]), ("S", [0])]).applyfunc(textbook_simp),
-    'xx_plus_yy': lambda phi, beta: compile_gates(2, [("Rz", beta, [0]), ("Sdg", [1]), ("S", [0]), ("Sx", [1]), ("S", [1]), ("CNOT", [1, 0]), ("Ry", -phi/2, [0]), ("Ry", -phi/2, [1]), ("CNOT", [1, 0]), ("Sdg", [0]), ("Sdg", [1]), ("Sxdg", [1]), ("S", [1]), ("Rz", -beta, [0])]).applyfunc(textbook_simp),
-    'xx_minus_yy': lambda phi, beta: compile_gates(2, [("Rz", beta, [1]), ("Sdg", [0]), ("S", [1]), ("Sx", [0]), ("S", [0]), ("CNOT", [0, 1]), ("Ry", phi/2, [0]), ("Ry", -phi/2, [1]), ("CNOT", [0, 1]), ("Sdg", [0]), ("Sdg", [1]), ("Sxdg", [0]), ("S", [0]), ("Rz", -beta, [1])]).applyfunc(textbook_simp),
-    'CZPowGate': lambda t: make_gate_decomp("CP", sympy.pi*t),
-    'iSWAP_pow': lambda alpha: make_gate_decomp("Rxy", -sympy.pi*alpha), #compile_gates(2, [("H", [0]), ("H", [1]), ("CNOT", [0,1]), ("Rz", -(alpha*sympy.pi)/2, [1]), ("CNOT", [0,1]), ("H", [0]), ("H", [1]), ("Sdg", [0]), ("Sdg", [1]), ("H", [0]), ("H", [1]), ("CNOT", [0,1]), ("Rz", -(alpha*sympy.pi)/2, [1]), ("CNOT", [0,1]), ("H", [0]), ("H", [1]), ("S", [0]), ("S", [1])]).applyfunc(textbook_simp)
-    'fSim': lambda theta, phi: compile_gates(2, [(make_gate_decomp("iSWAP_pow", -2*theta/sympy.pi), [0, 1]), (make_gate_decomp("CZPowGate", -phi/sympy.pi), [0, 1])]).applyfunc(textbook_simp),
-    #3 CNOT SYC: https://epjquantumtechnology.springeropen.com/articles/10.1140/epjqt/s40507-024-00248-8
-    #'SYC': lambda: compile_gates(2, [("Rz", -3*sympy.pi/4, [0]), ("Rz", sympy.pi/4, [1]), ("Sx", [0]), ("Sx", [1]), ("Rz", -sympy.pi, [0]), ("Rz", sympy.pi, [1]), ("Sx", [1]), ("Rz", 5*sympy.pi/2, [1]), ("CNOT", [0, 1]), ("Sx", [0]), ("Rz", -3*sympy.pi/4, [1]), ("Sx", [1]), ("Rz", sympy.pi, [1]), ("Sx", [1]), ("Rz", 9*sympy.pi/4, [1]), ("CNOT", [0, 1]), ("Rz", sympy.pi/2, [0]), ("Sx", [1]), ("Sx", [0]), ("Rz", sympy.pi/2, [1]), ("Rz", 11*sympy.pi/12, [0]), ("Sx", [1]), ("Sx", [0]), ("Rz", sympy.pi/2, [1]), ("CNOT", [0, 1]), ("Sx", [0]), ("Rz", sympy.pi/2, [1]), ("Rz", sympy.pi/6, [0]), ("Sx", [1]), ("Rz", -sympy.pi/3, [1]), ("GP", 17*sympy.pi/24, 2, [0, 1])]).applyfunc(textbook_simp), #gen_fSim_decomp(sympy.pi/2, sympy.pi/6)
-    'SYC': lambda: compile_gates(2, [('P', -sympy.pi/12, (0,)), ('P', -sympy.pi/12, (1,)), ('CNOT', [0, 1]), ('P', -5*sympy.pi/12, (1,)), ('CNOT', [1, 0]), ('CNOT', [0, 1])]).applyfunc(textbook_simp),
-    'CU': lambda theta, phi, lbda, gamma: compile_gates(2, [("Rz", (lbda-phi)/2, [1]), ("CNOT", [0, 1]), ("Rz", -(phi+lbda)/2, [1]), ("Ry", -theta/2, [1]), ("CNOT", [0, 1]), ("Ry", theta/2, [1]), ("Rz", phi, [1]), ("P", (lbda+phi)/2+gamma, [0])]).applyfunc(textbook_simp),
-    'CU3': lambda theta, phi, lbda: compile_gates(2, [("Rz", (lbda-phi)/2, [1]), ("CNOT", [0, 1]), ("Rz", -(phi+lbda)/2, [1]), ("Ry", -theta/2, [1]), ("CNOT", [0, 1]), ("Ry", theta/2, [1]), ("Rz", phi, [1]), ("P", (lbda+phi)/2, [0])]).applyfunc(textbook_simp),
-    'CCZ': lambda: compile_gates(3, [("CNOT", [1, 2]), ("Tdg", [2]), ("CNOT", [0, 2]), ("T", [2]), ("CNOT", [1, 2]), ("Tdg", [2]), ("CNOT", [0, 2]), ("T", [1]), ("T", [2]), ("CNOT", [0, 1]), ("T", [0]), ("Tdg", [1]), ("CNOT", [0, 1])]),
-    'CCX': lambda: compile_gates(3, [("H", [2]), ("CNOT", [1, 2]), ("Tdg", [2]), ("CNOT", [0, 2]), ("T", [2]), ("CNOT", [1, 2]), ("Tdg", [2]), ("CNOT", [0, 2]), ("T", [1]), ("T", [2]), ("H", [2]), ("CNOT", [0, 1]), ("T", [0]), ("Tdg", [1]), ("CNOT", [0, 1])]),
-    'SWAP': lambda: compile_gates(2, [("CNOT", [0, 1]), ("CNOT", [1, 0]), ("CNOT", [0, 1])]),
-    #7 CNOT CSWAP: https://arxiv.org/pdf/2305.18128
-    #'CSWAP': lambda: compile_gates(3, [("S", [1]), ("CNOT", [2, 1]), ("Sdg", [1]), ("Sx", [2]), ("T", [2]), ("CNOT", [0, 2]), ("T", [2]), ("CNOT", [1, 2]), ("T", [1]), ("Tdg", [2]), ("CNOT", [0, 2]), ("CNOT", [0, 1]), ("T", [2]), ("T", [0]), ("Tdg", [1]), ("H", [2]), ("CNOT", [0, 1]), ("CNOT", [2, 1]), ("GP", -sympy.pi/4, 3, [0, 1, 2])]).applyfunc(textbook_simp), #compile_gates(3, [("CNOT", [2, 1]), ("H", [2]), ("CNOT", [1, 2]), ("Tdg", [2]), ("CNOT", [0, 2]), ("T", [2]), ("CNOT", [1, 2]), ("Tdg", [2]), ("CNOT", [0, 2]), ("T", [1]), ("T", [2]), ("H", [2]), ("CNOT", [0, 1]), ("T", [0]), ("Tdg", [1]), ("CNOT", [0, 1]), ("CNOT", [2, 1])])
-    #'CSWAP': lambda: compile_gates(3, [('Tdg', (1,)), ('T', (2,)), ('CNOT', [2, 1]), ('T', (1,)), ('Rx', sympy.pi/2, (2,)), ('T', (2,)), ('CNOT', [0, 2]), ('T', (2,)), ('CNOT', [1, 2]), ('Tdg', (2,)), ('CNOT', [0, 2]), ('T', (2,)), ('Rx', -sympy.pi/4, (2,)), ('Ry', -sympy.pi/2, (2,)), ('CNOT', [0, 1]), ('T', (1,)), ('CNOT', [0, 1]), ('CNOT', [2, 1]), ('Tdg', (0,)), ('Tdg', (1,)), ('GP', -sympy.pi/8, 3, [0, 1, 2])]),
-    'CSWAP': lambda: compile_gates(3, [('Tdg', (1,)), ('T', (2,)), ('CNOT', [2, 1]), ('T', (1,)), ('T', (2,)), ('U2', -sympy.pi/4, sympy.pi/4, (2,)), ('CNOT', [0, 2]), ('T', (2,)), ('CNOT', [1, 2]), ('Tdg', (2,)), ('CNOT', [0, 2]), ('U2', 3*sympy.pi/4, -3*sympy.pi/4, (2,)), ('CNOT', [0, 1]), ('T', (1,)), ('CNOT', [0, 1]), ('CNOT', [2, 1]), ('Tdg', (0,)), ('Tdg', (1,))]),
-    'iSWAP': lambda: compile_gates(2, [("S", [0]), ("S", [1]), ("H", [0]), ("CNOT", [0, 1]), ("CNOT", [1, 0]), ("H", [1])]),
-    'SSWAP': lambda: compile_gates(2, [("CNOT", [0, 1]), ("H", [0]), ("T", [0]), ("Tdg", [1]), ("H", [0]), ("H", [1]), ("CNOT", [0, 1]), ("H", [0]), ("H", [1]), ("Tdg", [0]), ("H", [0]), ("CNOT", [0, 1]), ("Sdg", [0]), ("S", [1])]).applyfunc(textbook_simp),
-    #'SiSWAP': lambda: compile_gates(2, [("Sx", [0]), ("Rz", sympy.pi/2, [0]), ("CNOT", [0, 1]), ("Sx", [0]), ("Sx", [1]), ("Rz", sympy.pi*7/4, [0]), ("Rz", sympy.pi*7/4, [1]), ("Sx", [0]), ("Rz", sympy.pi/2, [0]), ("CNOT", [0, 1]), ("Sx", [0]), ("Sx", [1])]).applyfunc(textbook_simp),
-    'SiSWAP': lambda: compile_gates(2, [("Ry", sympy.pi/2, [0]), ("S", [1]), ("CNOT", [0, 1]), ("Ry", sympy.pi/4, [0]), ("Ry", sympy.pi/4, [1]), ("CNOT", [0, 1]), ("Ry", -sympy.pi/2, [0]), ("Sdg", [1])]).applyfunc(textbook_simp),
+# Constructive upper bounds; a stored circuit is not an optimality proof.
+# Fredkin seven-CNOT reference: https://arxiv.org/abs/2305.18128
+decomposition_sequences = {
+    'U3': lambda theta, phi, lbda: [('P', lbda, (0,)), ('Ry', theta, (0,)), ('P', phi, (0,))],
+    'GP': lambda theta, qbits: [("GP", theta, qbits, tuple(range(qbits)))],
+    'CZ': lambda : [('H', [1]), ('CNOT', [0, 1]), ('H', [1])],
+    'CY': lambda : [('Sdg', [1]), ('CNOT', [0, 1]), ('S', [1])],
+    'CH': lambda : [('Ry', sympy.pi / 4, [1]), ('CNOT', [0, 1]), ('Ry', -sympy.pi / 4, [1])],
+    'CP': lambda phi: [('P', phi / 2, [0]), ('CNOT', [0, 1]), ('P', -phi / 2, [1]), ('CNOT', [0, 1]), ('P', phi / 2, [1])],
+    'CRX': lambda theta: [('S', [1]), ('Ry', theta / 2, [1]), ('CNOT', [0, 1]), ('Ry', -theta / 2, [1]), ('CNOT', [0, 1]), ('Sdg', [1])],
+    'CRY': lambda theta: [('Ry', theta / 2, [1]), ('CNOT', [0, 1]), ('Ry', -theta / 2, [1]), ('CNOT', [0, 1])],
+    'CRZ': lambda theta: [('Rz', theta / 2, [1]), ('CNOT', [0, 1]), ('Rz', -theta / 2, [1]), ('CNOT', [0, 1])],
+    'CSX': lambda : [('Sdg', [0]), ('H', [1]), ('Y', [1]), ('Tdg', [0]), ('CNOT', [0, 1]), ('Y', [1]), ('Tdg', [1]), ('CNOT', [0, 1]), ('T', [1]), ('H', [1])],
+    'CS': lambda : [('T', [0]), ('T', [1]), ('CNOT', [0, 1]), ('Tdg', [1]), ('CNOT', [0, 1])],
+    'CR': lambda theta, phi: [('Rz', -phi + sympy.pi / 2, [1]), ('CNOT', [0, 1]), ('Ry', -theta / 2, [1]), ('CNOT', [0, 1]), ('Ry', theta / 2, [1]), ('Rz', phi - sympy.pi / 2, [1])],
+    'CROT': lambda theta, phi: [('Rz', -phi, [1]), ('Ry', sympy.pi / 2, [1]), ('CNOT', [0, 1]), ('Rz', theta, [1]), ('CNOT', [0, 1]), ('Ry', -sympy.pi / 2, [1]), ('Rz', phi, [1])],
+    'Rxx': lambda theta: [('CNOT', [0, 1]), ('Rx', theta, [0]), ('CNOT', [0, 1])],
+    'Ryy': lambda theta: [('Rx', sympy.pi / 2, [0]), ('Rx', sympy.pi / 2, [1]), ('CNOT', [0, 1]), ('Rz', theta, [1]), ('CNOT', [0, 1]), ('Rx', -sympy.pi / 2, [0]), ('Rx', -sympy.pi / 2, [1])],
+    'Rzz': lambda theta: [('CNOT', [0, 1]), ('Rz', theta, [1]), ('CNOT', [0, 1])],
+    'Rxy': lambda phi: [('Sdg', [1]), ('S', [0]), ('Sx', [1]), ('S', [1]), ('CNOT', [1, 0]), ('Ry', -phi / 2, [0]), ('Ry', -phi / 2, [1]), ('CNOT', [1, 0]), ('Sdg', [0]), ('Sdg', [1]), ('Sxdg', [1]), ('S', [1])],
+    'Rxmy': lambda phi: [('Sdg', [0]), ('S', [1]), ('Sx', [0]), ('S', [0]), ('CNOT', [0, 1]), ('Ry', phi / 2, [0]), ('Ry', -phi / 2, [1]), ('CNOT', [0, 1]), ('Sdg', [0]), ('Sdg', [1]), ('Sxdg', [0]), ('S', [0])],
+    'xx_plus_yy': lambda phi, beta: [('Rz', beta, [0]), ('Sdg', [1]), ('S', [0]), ('Sx', [1]), ('S', [1]), ('CNOT', [1, 0]), ('Ry', -phi / 2, [0]), ('Ry', -phi / 2, [1]), ('CNOT', [1, 0]), ('Sdg', [0]), ('Sdg', [1]), ('Sxdg', [1]), ('S', [1]), ('Rz', -beta, [0])],
+    'xx_minus_yy': lambda phi, beta: [('Rz', -beta, [1]), ('Sdg', [0]), ('S', [1]), ('Sx', [0]), ('S', [0]), ('CNOT', [0, 1]), ('Ry', phi / 2, [0]), ('Ry', -phi / 2, [1]), ('CNOT', [0, 1]), ('Sdg', [0]), ('Sdg', [1]), ('Sxdg', [0]), ('S', [0]), ('Rz', beta, [1])],
+    'CZPowGate': lambda t: decomposition_sequence('CP', sympy.pi * t),
+    'iSWAP_pow': lambda alpha: decomposition_sequence('Rxy', -sympy.pi * alpha),
+    'fSim': lambda theta, phi: decomposition_sequence("iSWAP_pow", -2*theta/sympy.pi) + decomposition_sequence("CZPowGate", -phi/sympy.pi),
+    'SYC': lambda : [('P', -sympy.pi / 12, (0,)), ('P', -sympy.pi / 12, (1,)), ('CNOT', [0, 1]), ('P', -5 * sympy.pi / 12, (1,)), ('CNOT', [1, 0]), ('CNOT', [0, 1])],
+    'CU': lambda theta, phi, lbda, gamma: [('Rz', (lbda - phi) / 2, [1]), ('CNOT', [0, 1]), ('Rz', -(phi + lbda) / 2, [1]), ('Ry', -theta / 2, [1]), ('CNOT', [0, 1]), ('Ry', theta / 2, [1]), ('Rz', phi, [1]), ('P', (lbda + phi) / 2 + gamma, [0])],
+    'CU3': lambda theta, phi, lbda: [('Rz', (lbda - phi) / 2, [1]), ('CNOT', [0, 1]), ('Rz', -(phi + lbda) / 2, [1]), ('Ry', -theta / 2, [1]), ('CNOT', [0, 1]), ('Ry', theta / 2, [1]), ('Rz', phi, [1]), ('P', (lbda + phi) / 2, [0])],
+    'CCZ': lambda : [('CNOT', [1, 2]), ('Tdg', [2]), ('CNOT', [0, 2]), ('T', [2]), ('CNOT', [1, 2]), ('Tdg', [2]), ('CNOT', [0, 2]), ('T', [1]), ('T', [2]), ('CNOT', [0, 1]), ('T', [0]), ('Tdg', [1]), ('CNOT', [0, 1])],
+    'CCX': lambda : [('H', [2]), ('CNOT', [1, 2]), ('Tdg', [2]), ('CNOT', [0, 2]), ('T', [2]), ('CNOT', [1, 2]), ('Tdg', [2]), ('CNOT', [0, 2]), ('T', [1]), ('T', [2]), ('H', [2]), ('CNOT', [0, 1]), ('T', [0]), ('Tdg', [1]), ('CNOT', [0, 1])],
+    'SWAP': lambda : [('CNOT', [0, 1]), ('CNOT', [1, 0]), ('CNOT', [0, 1])],
+    'CSWAP': lambda : [('Tdg', (1,)), ('T', (2,)), ('CNOT', [2, 1]), ('T', (1,)), ('T', (2,)), ('U2', -sympy.pi / 4, sympy.pi / 4, (2,)), ('CNOT', [0, 2]), ('T', (2,)), ('CNOT', [1, 2]), ('Tdg', (2,)), ('CNOT', [0, 2]), ('U2', 3 * sympy.pi / 4, -3 * sympy.pi / 4, (2,)), ('CNOT', [0, 1]), ('T', (1,)), ('CNOT', [0, 1]), ('CNOT', [2, 1]), ('Tdg', (0,)), ('Tdg', (1,))],
+    'iSWAP': lambda : [('S', [0]), ('S', [1]), ('H', [0]), ('CNOT', [0, 1]), ('CNOT', [1, 0]), ('H', [1])],
+    'SSWAP': lambda : [('CNOT', [0, 1]), ('H', [0]), ('T', [0]), ('Tdg', [1]), ('H', [0]), ('H', [1]), ('CNOT', [0, 1]), ('H', [0]), ('H', [1]), ('Tdg', [0]), ('H', [0]), ('CNOT', [0, 1]), ('Sdg', [0]), ('S', [1])],
+    'SiSWAP': lambda : [('Ry', sympy.pi / 2, [0]), ('S', [1]), ('CNOT', [0, 1]), ('Ry', sympy.pi / 4, [0]), ('Ry', sympy.pi / 4, [1]), ('CNOT', [0, 1]), ('Ry', -sympy.pi / 2, [0]), ('Sdg', [1])],
 }
 
-decomp_dict.update({gen: lambda gen=gen: compile_gates(1, clifford_decomps[gen]).applyfunc(textbook_simp) for gen in clifford_decomps})
+decomposition_sequences.update({name: lambda name=name: clifford_decomps[name]
+                                for name in clifford_decomps})
+# Margolus' optimal three-CNOT/four-local-rotation circuit, phase exact.
+# https://arxiv.org/abs/quant-ph/0312225
+decomposition_sequences["Margolus"] = lambda: [
+    ("Ry", sympy.pi/4, (2,)), ("CNOT", (1,2)),
+    ("Ry", sympy.pi/4, (2,)), ("CNOT", (0,2)),
+    ("Ry", -sympy.pi/4, (2,)), ("CNOT", (1,2)), ("Ry", -sympy.pi/4, (2,)),
+]
+# The final CNOT in the Toffoli reference cancels the Peres output CNOT.
+decomposition_sequences["Peres"] = lambda: decomposition_sequence("CCX")[:-1]
+decomposition_sequences["Toffoli"] = lambda: decomposition_sequence("CCX")
+decomposition_sequences["CCY"] = lambda: (
+    (("Sdg", (2,)),) + decomposition_sequence("CCX") + (("S", (2,)),))
+decomposition_sequences["RCCX"] = lambda: (
+    (("Sdg", (2,)),) + decomposition_sequence("Margolus") + (("S", (2,)),))
+
+def decomposition_sequence(name, *parameters):
+    """Return the stored phase-exact reference in circuit order, when available.
+
+    These sequences preserve the original library and are constructive upper
+    bounds. They are not a claim of minimum entangler or parameter cost.
+    """
+    canonical = GATE_ALIASES.get(name, name)
+    canonical = {"U": "U3", "CZPow": "CZPowGate",
+                 "ISWAPPow": "iSWAP_pow"}.get(canonical, canonical)
+    if canonical not in decomposition_sequences:
+        raise ValueError(f"No stored reference sequence for {name!r}")
+    # Materialize immutable tuples so callers cannot change the stored tables.
+    return tuple((*operation[:-1], tuple(operation[-1]))
+                 for operation in decomposition_sequences[canonical](*parameters))
+
+def _reference_matrix(name, *parameters):
+    width = int(parameters[1]) if name == "GP" else gate_descs[name][0]
+    return compile_gates(width, decomposition_sequence(name, *parameters))
+
+decomp_dict = {name: (lambda *parameters, name=name: _reference_matrix(name, *parameters))
+               for name in decomposition_sequences}
+
 
 def test_decomp():
     for gatepair in identity_pairs + gate_inverses_clifford:
@@ -480,12 +514,14 @@ CATALOG_SOURCES = {
     "wikipedia": "https://en.wikipedia.org/wiki/List_of_quantum_logic_gates",
     "qiskit": "https://quantum.cloud.ibm.com/docs/en/api/qiskit/circuit_library",
     "cirq": "https://quantumai.google/cirq/gatezoo",
+    "ionq": "https://docs.ionq.com/features/getting-started-with-native-gates",
+    "quantinuum": "https://docs.quantinuum.com/tket/api-docs/optype.html",
 }
 
 
 @dataclass(frozen=True)
 class GateDefinition:
-    """A named unitary or constructor; continuous parameters are real angles.
+    """A named unitary or constructor; parameter units are in ``convention``.
 
     ``num_qubits=None`` denotes a constructor whose arguments determine its
     width. ``defaults`` contains defaults for trailing arguments. Provider names
@@ -693,6 +729,42 @@ _register("CCP", 3, ("theta",), lambda theta: controlled_gate(make_gate("P", the
 _register("XX90", 2, (), lambda: _pauli_rotation("XX", sympy.pi/2))
 _register("YY90", 2, (), lambda: _pauli_rotation("YY", sympy.pi/2))
 _register("ZZ90", 2, (), lambda: _pauli_rotation("ZZ", sympy.pi/2))
+
+# IonQ phases and interaction parameters use native turns, not radians.
+# The first phase belongs to local wire 0 (the least-significant wire).
+# https://docs.ionq.com/features/getting-started-with-native-gates
+_register("GPi", 1, ("phi",), lambda phi: sympy.Matrix([
+    [0, sympy.exp(-2*sympy.pi*sympy.I*phi)],
+    [sympy.exp(2*sympy.pi*sympy.I*phi), 0],
+]), source="ionq", convention="IonQ native phase in turns")
+_register("GPi2", 1, ("phi",), lambda phi: (
+    sympy.eye(2)-sympy.I*make_gate("GPi", phi))/sympy.sqrt(2),
+    source="ionq", convention="IonQ native phase in turns")
+_register("IonQMS", 2, ("phi0", "phi1", "theta"),
+          lambda phi0, phi1, theta: sympy.cos(sympy.pi*theta)*sympy.eye(4)
+          - sympy.I*sympy.sin(sympy.pi*theta)*sympy.kronecker_product(
+              make_gate("GPi", phi1), make_gate("GPi", phi0)),
+          defaults=(sympy.Rational(1,4),), source="ionq",
+          convention="native turns; theta in [0,1/4] on hardware; phase phi0 on wire 0")
+_register("IonQMSMax", 2, ("phi0", "phi1"),
+          lambda phi0, phi1: make_gate("IonQMS", phi0, phi1), source="ionq",
+          convention="native turns; fixed fully entangling MS")
+_register("IonQZZ", 2, ("theta",), lambda theta: _pauli_rotation("ZZ", 2*sympy.pi*theta),
+          source="ionq", convention="exp(-i*pi*theta*ZZ); native turns")
+
+# TKET/Quantinuum parameters are half turns. TK2 is a compiler macro target,
+# not a promise that a general TK2 takes one physical entangling pulse.
+# https://docs.quantinuum.com/tket/api-docs/optype.html
+_register("PhasedX", 1, ("alpha", "beta"), lambda alpha, beta:
+          make_gate("Rz", sympy.pi*beta)*make_gate("Rx", sympy.pi*alpha)
+          *make_gate("Rz", -sympy.pi*beta), source="quantinuum",
+          convention="TKET half turns; Rz(beta*pi) Rx(alpha*pi) Rz(-beta*pi)")
+_register("ZZPhase", 2, ("alpha",), lambda alpha: _pauli_rotation("ZZ", sympy.pi*alpha),
+          source="quantinuum", convention="TKET half turns; Rzz(pi*alpha)")
+_register("ZZMax", 2, (), lambda: make_gate("ZZ90"), source="quantinuum")
+_register("TK2", 2, ("a", "b", "c"),
+          lambda a, b, c: _cartan(-sympy.pi*a/2, -sympy.pi*b/2, -sympy.pi*c/2),
+          source="quantinuum", convention="half turns; exp(-i*pi/2*(a XX+b YY+c ZZ)); compiler macro")
 for _label in ("XX", "YY", "ZZ"):
     _register(_label, 2, (), lambda label=_label: _pauli(label), source="cirq")
 _register("fSim", 2, ("theta", "phi"), _fsim, source="cirq")

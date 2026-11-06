@@ -40,3 +40,30 @@ def test_google_parameterized_gate_matrices():
     for name, params, gate in cases:
         actual = np.asarray(gates.make_gate(name,*params).evalf(), dtype=complex)
         assert np.allclose(actual, little_endian(cirq.unitary(gate)), atol=1e-12, rtol=0), name
+
+
+def test_ionq_turns_and_asymmetric_wire_phases_against_provider_sdk():
+    ionq = pytest.importorskip("cirq_ionq")
+    a, b, theta = sp.Rational(1, 7), sp.Rational(2, 9), sp.Rational(1, 8)
+    cases = [
+        ("GPi", (a,), ionq.GPIGate(phi=float(a))),
+        ("GPi2", (b,), ionq.GPI2Gate(phi=float(b))),
+        ("IonQMS", (a, b, theta), ionq.MSGate(phi0=float(a), phi1=float(b), theta=float(theta))),
+        ("IonQMSMax", (a, b), ionq.MSGate(phi0=float(a), phi1=float(b))),
+    ]
+    for name, parameters, operation in cases:
+        actual = np.asarray(gates.make_gate(name, *parameters).evalf(), dtype=complex)
+        assert np.allclose(actual, little_endian(cirq.unitary(operation)), atol=1e-12, rtol=0), name
+
+
+def test_provider_angle_units_keep_exact_phase():
+    a, b = sp.symbols("a b", real=True)
+    cases = [
+        (gates.make_gate("PhasedX", a, b), gates.make_gate("R", sp.pi*a, sp.pi*b)),
+        (gates.make_gate("IonQZZ", a), gates.make_gate("Rzz", 2*sp.pi*a)),
+        (gates.make_gate("ZZPhase", a), gates.make_gate("Rzz", sp.pi*a)),
+        (gates.make_gate("ZZMax"), gates.make_gate("Rzz", sp.pi/2)),
+        (gates.make_gate("IonQMS", 0, 0), gates.make_gate("Rxx", sp.pi/2)),
+    ]
+    for left, right in cases:
+        assert all(sp.simplify(sp.trigsimp(sp.expand_complex(x), method="fu")) == 0 for x in left-right)

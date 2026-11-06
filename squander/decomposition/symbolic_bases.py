@@ -86,9 +86,23 @@ _preset("xx_rz_ry", ("Rz", "Ry"), "Rxx")
 _preset("zz_u", ("U3",), "Rzz")
 _preset("zx_u", ("U3",), "Rzx")
 _preset("google_cz", ("PhasedXZ",), "CZ")
+_preset("google_sqrt_iswap", ("PhasedXZ",), "SiSWAP")
 _preset("google_syc", ("PhasedXZ",), "SYC")
 _preset("google_fsim", ("PhasedXZ",), "fSim")
 _preset("berkeley_b", ("U3",), "B")
+_preset("ionq_aria", ("GPi", "GPi2"), "IonQMS",
+        notes="Native turns; interaction theta restricted to [0,1/4] on hardware.")
+_preset("ionq_aria_full", ("GPi", "GPi2"), "IonQMSMax")
+_preset("ionq_forte", ("GPi", "GPi2"), "IonQZZ")
+_preset("quantinuum_zzmax", ("PhasedX", "Rz"), "ZZMax")
+_preset("quantinuum_zzphase", ("PhasedX", "Rz"), "ZZPhase")
+_preset("tket_tk2", ("PhasedX", "Rz"), "TK2",
+        notes="Compiler macro count; expand TK2 before comparing physical pulse counts.")
+_preset("rigetti_cz", ("Rz", "Sx", "X"), "CZ",
+        notes="Sx differs from native Rx(pi/2) by a tracked global phase.")
+_preset("aqt_rxx", ("R", "Rz"), "Rxx")
+_preset("iqm_cz", ("R",), "CZ",
+        notes="R(theta,phi) represents PRX in radians; IQM API units require conversion.")
 _preset("clifford_t_cx", ("H", "S", "T", "Tdg"), "CX", "approximate_discrete",
         "Dense universal; exact only for representable targets, not arbitrary symbolic angles.")
 _preset("clifford_t_cz", ("H", "S", "T", "Tdg"), "CZ", "approximate_discrete")
