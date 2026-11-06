@@ -131,9 +131,10 @@ def qiskit_latex(width, operations, aliases=None):
 
 
 class CircuitStore:
-    def __init__(self, output, fold=18):
+    def __init__(self, output, fold=18, long_fold=54):
         self.output = output
         self.fold = fold
+        self.long_fold = long_fold
         self.directory = output / "circuits"
         self.directory.mkdir(parents=True, exist_ok=True)
         self.paths = {}
@@ -149,11 +150,12 @@ class CircuitStore:
 
     def render(self, width, operations):
         displayed={value:self.expression(value) for op in operations for value in op["parameters"]}
-        key = hashlib.sha256(json.dumps([3, width, operations, self.fold, displayed], sort_keys=True).encode()).hexdigest()[:24]
+        grouped = compressed_operations(operations)
+        fold=self.long_fold if width>=4 and len(grouped)>4*self.fold else self.fold
+        key = hashlib.sha256(json.dumps([3, width, operations, fold, displayed], sort_keys=True).encode()).hexdigest()[:24]
         if key in self.paths:
             return self.paths[key]
-        grouped = compressed_operations(operations)
-        chunks = [grouped[start:start+self.fold] for start in range(0, len(grouped), self.fold)] or [[]]
+        chunks = [grouped[start:start+fold] for start in range(0, len(grouped), fold)] or [[]]
         paths = []
         for index, chunk in enumerate(chunks):
             relative = f"circuits/{key}-{index}.tex"
@@ -232,8 +234,8 @@ def cost_line(result):
         score = f"{float(sp.sympify(cost['parameter_score'])):.3f}"
     except (TypeError, ValueError):
         score = "symbolic"
-    certificate = ("proved minimum" if result.get("entangler_optimal") else
-                   "conditional minimum" if result.get("conditional_entangler_optimality") else "upper bound")
+    certificate = ("proved E minimum" if result.get("entangler_optimal") else
+                   "conditional E minimum" if result.get("conditional_entangler_optimality") else "E upper bound")
     return (f"E={cost['entanglers']} / L={cost['single_qubit_gates']} / score $\\approx$ {score}"
             + r"\hfill " + escape(certificate))
 
@@ -448,13 +450,15 @@ def main():
     parser.add_argument("--gate", action="append", default=[])
     parser.add_argument("--clifford-alphabet", action="append", default=[])
     parser.add_argument("--fold", type=int, default=18)
+    parser.add_argument("--long-fold", type=int, default=54,
+                        help="Operations per row for long circuits on four or more wires")
     args = parser.parse_args()
-    if args.fold < 1:
+    if args.fold < 1 or args.long_fold < 1:
         parser.error("Positive circuit fold length required")
     with gzip.open(args.archive, "rt") as stream:
         report = json.load(stream)
     args.output_dir.mkdir(parents=True, exist_ok=True)
-    store = CircuitStore(args.output_dir, args.fold)
+    store = CircuitStore(args.output_dir, args.fold, args.long_fold)
     digest = hashlib.sha256(args.archive.read_bytes()).hexdigest()
     names = ordered_targets(report, args.gate)
     gates = gate_volume(report, args.output_dir, store, names, digest)

@@ -4,20 +4,21 @@
 
 [`synthesis_reference_20261106.json.gz`](synthesis_reference_20261106.json.gz)
 merges all 327 × 32 cells, retaining the least-cost verified incumbent for each
-phase policy across eight implementation snapshots. The indexed
+phase policy across twelve implementation snapshots. The indexed
 [gate and Clifford PDFs](../../docs/symbolic_atlas/README.md) and their sources
 are generated from this archive. The earlier datasets below remain historical
 snapshots.
 
 | Current outcome | Phase exact | Projective |
 | --- | ---: | ---: |
-| Symbolically verified | 7,598 | 10,069 |
-| Proved obstruction, with recorded scope/condition | 2,637 | 264 |
-| Time limit | 97 | 98 |
-| Unresolved construction | 132 | 33 |
+| Symbolically verified | 7,702 | 10,196 |
+| Proved obstruction, with recorded scope/condition | 2,762 | 268 |
+| Time limit | 0 | 0 |
+| Unresolved construction | 0 | 0 |
 | Retained compiler errors | 0 | 0 |
 
-This includes a new complete bounded run and three targeted supplements:
+The construction history includes a complete bounded run and the targeted
+supplements below:
 
 | Raw file | Cells | Budget per mode | Source revision |
 | --- | ---: | ---: | --- |
@@ -25,6 +26,10 @@ This includes a new complete bounded run and three targeted supplements:
 | `synthesis_motifs_20261106.json.gz` | 928 | 60 s | `c21e0494` |
 | `synthesis_motif_refinement_20261106.json.gz` | 192 | 90 s | `62b44f65` |
 | `synthesis_phase_proofs_20261106.json.gz` | 6 | 120 s | `d3d3c4b8` |
+| `synthesis_completion_20261106.json.gz` | 288 | 120 s | `2c39f362` |
+| `synthesis_fixed_native_20261106.json.gz` | 96 | 45 s | `2c39f362` |
+| `synthesis_fixed_pivots_20261106.json.gz` | 9 | 90 s | `0bdf752f` |
+| `synthesis_final_exact_20261106.json.gz` | 2 | 120 s | `5f2c8f6b` |
 
 The complete raw run includes 16 register-constructor compiler failures; the
 motif supplement resolves all of them. Raw outcomes are preserved even when
@@ -33,18 +38,30 @@ actual implementation. `mode_source_run_indices` records the origin of each
 retained circuit; `synthesis_run_index` is the latest attempted run. Historical
 attempts and their indices are retained recursively.
 
-There are 4,547 verified exact cells with a strictly cheaper projective result.
-Matched fixed-target lower bounds certify 287 exact and 141 projective
+The completion pass reruns only the 288 cells containing the former 360 open
+phase modes. The fixed-native pass exposed seven algebraic pivot exceptions,
+which the nine-cell pivot rerun resolves in both modes. The final two-cell
+pass resolves the exact Rzz/U3 C4X and C3SX cases by preserving simple
+root-of-unity phases. These raw outcomes remain separate from the successful
+incumbents; there are no compiler errors in the merged phase statuses.
+
+There are 4,615 verified exact cells with a strictly cheaper projective result.
+Matched fixed-target lower bounds certify 287 exact and 145 projective
 entangler minima, excluding separate one-qubit certificates. The eligible
-fixed-target Qiskit comparisons have 11 lower counts, 2,637 ties and zero higher
+fixed-target Qiskit comparisons have 11 lower counts, 2,662 ties and zero higher
 counts. The lower counts concern fFredkin in different bases, including five
 CNOTs versus the SDK upper bound of seven and six iSWAPs versus eight. No
 novelty or global local-cost claim follows from these comparisons.
 
-The open modes are enumerated in
-[`open_cases.csv`](../../docs/symbolic_atlas/open_cases.csv). All cells are
-enumerated; 229 exact and 131 projective modes still require a construction,
-stronger feasibility proof or more search. The Clifford reference has all 192
+All 20,928 phase modes are now classified. The header-only
+[`open_cases.csv`](../../docs/symbolic_atlas/open_cases.csv) records that no
+construction mode remains open. This does not establish optimality for every
+verified circuit: the audit of the two-B and three-SQiSW uniform bounds still
+finds 158 exact and 158 projective optimization gaps, listed in
+[`known_optimization_gaps.csv`](../../docs/symbolic_atlas/known_optimization_gaps.csv).
+The Cartan trace/parity analysis adds conditional CNOT minima, including four
+for exact SU(2)-local synthesis versus three projectively where the trace
+condition is nonzero. The Clifford reference has all 192
 phase targets in each of 12 distinct local alphabets: 1,488 reachable circuits
 and 816 phases excluded by the one-wire determinant group. The H/S basis has a
 global local-cost certificate; other alphabet certificates retain their more
@@ -54,11 +71,11 @@ Reproduce the current merge and reference analysis:
 
 ```bash
 python examples/decomposition/symbolic_archive_analysis.py \
-  --input benchmarks/symbolic/synthesis_osr_20261106.json.gz \
-  --supplement benchmarks/symbolic/synthesis_full_osr_20261106.json.gz \
-  --supplement benchmarks/symbolic/synthesis_motifs_20261106.json.gz \
-  --supplement benchmarks/symbolic/synthesis_motif_refinement_20261106.json.gz \
-  --supplement benchmarks/symbolic/synthesis_phase_proofs_20261106.json.gz \
+  --input benchmarks/symbolic/synthesis_reference_20261106_initial.json.gz \
+  --supplement benchmarks/symbolic/synthesis_completion_20261106.json.gz \
+  --supplement benchmarks/symbolic/synthesis_fixed_native_20261106.json.gz \
+  --supplement benchmarks/symbolic/synthesis_fixed_pivots_20261106.json.gz \
+  --supplement benchmarks/symbolic/synthesis_final_exact_20261106.json.gz \
   --output /tmp/synthesis-reference.json.gz
 ```
 

@@ -1,36 +1,44 @@
 {
   "archive": "benchmarks/symbolic/synthesis_reference_20261106.json.gz",
-  "archive_sha256": "98f19ce6d2d1b4af05dccd65fdda73f0f49f159d08acec0476eb1d0fe6669033",
-  "schema": "symbolic-atlas-release-v1",
-  "synthesis_runs": 8,
-  "rows_including_history": 22374,
+  "archive_sha256": "bc551bf13d87f628bdfaab84027691162134ca6b94397041aff2bc4d2acbabf3",
+  "schema": "symbolic-atlas-release-v2",
+  "synthesis_runs": 12,
+  "rows_including_history": 22769,
   "target_count": 327,
   "basis_count": 32,
   "phase_results": {
     "phase_exact": {
-      "verified_symbolic": 7598,
-      "proved_impossible": 2637,
-      "timeout": 97,
-      "unresolved": 132
+      "verified_symbolic": 7702,
+      "proved_impossible": 2762
     },
     "projective": {
-      "verified_symbolic": 10069,
-      "proved_impossible": 264,
-      "unresolved": 33,
-      "timeout": 98
+      "verified_symbolic": 10196,
+      "proved_impossible": 268
     },
     "cells": 10464,
-    "projective_retained_as_strictly_cheaper": 4547
+    "projective_retained_as_strictly_cheaper": 4615
   },
   "matched_references": {
-    "sdk_fixed_equal": 2637,
+    "sdk_fixed_equal": 2662,
     "phase_exact_matched_entangler_minimum": 287,
-    "projective_matched_entangler_minimum": 141,
+    "projective_matched_entangler_minimum": 145,
     "sdk_fixed_better": 11
   },
+  "all_phase_modes_classified": true,
+  "all_circuits_globally_optimal": false,
+  "literature_uniform_bound_summary": {
+    "phase_exact_within_published_uniform_bound": 61,
+    "projective_within_published_uniform_bound": 61,
+    "phase_exact_exceeds_published_uniform_bound": 158,
+    "projective_exceeds_published_uniform_bound": 158
+  },
+  "cartan_phase_bound_summary": {
+    "phase_exact_matched_conditioned_minimum": 12,
+    "projective_matched_conditioned_minimum": 11
+  },
   "entangler_optimal_flags_including_single_qubit": {
-    "phase_exact": 5839,
-    "projective": 7731
+    "phase_exact": 5906,
+    "projective": 7803
   },
   "clifford_alphabets": 12,
   "clifford_target_slots": 2304,
@@ -41,18 +49,36 @@
     "all_circuits_in_supplied_fixed_clifford_basis": 192
   },
   "compiler_errors_in_retained_phase_statuses": 0,
-  "source_hashes_verified": 25,
+  "source_hashes_verified": 26,
   "validation": {
-    "tests_passed": 856,
+    "tests_passed": 912,
     "command": "python -m pytest tests/symbolic -q",
-    "revision": "d3d3c4b8402ad577dcaec57356d6fba1dae96c15",
-    "layout_tests_passed": 11,
+    "revision": "5f2c8f6b",
+    "layout_tests_passed": 12,
     "layout_test_command": "python -m pytest tests/symbolic/test_atlas_pdf_build.py tests/symbolic/test_circuit_atlas.py -q"
   },
   "limits": [
-    "Complete enumeration does not mean every feasible pair is solved.",
+    "All archived phase modes have a verified construction or scoped obstruction; register fixtures do not cover every width.",
     "Verified circuits are upper bounds unless their own certificate proves a minimum.",
     "Entangler minimality does not imply minimum parameter-sensitive local score.",
     "Fixed-target SDK improvements establish neither novelty nor a published optimum."
-  ]
+  ],
+  "minimum_certificate_coverage": {
+    "phase_exact": {
+      "verified": 7702,
+      "unconditional_entangler_minimum_flags": 5906,
+      "zero_entangler_minimum_flags": 5272,
+      "nonzero_entangler_minimum_flags": 634,
+      "conditional_entangler_minimum_flags": 253,
+      "local_cost_optimal_flags": 226
+    },
+    "projective": {
+      "verified": 10196,
+      "unconditional_entangler_minimum_flags": 7803,
+      "zero_entangler_minimum_flags": 6988,
+      "nonzero_entangler_minimum_flags": 815,
+      "conditional_entangler_minimum_flags": 322,
+      "local_cost_optimal_flags": 226
+    }
+  }
 }
