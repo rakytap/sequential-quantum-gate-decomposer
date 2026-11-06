@@ -87,6 +87,59 @@ or novelty is claimed. They occur in the iSWAP or tunable XX/ZZ/ZX bases, where
 replacing each CNOT independently leaves avoidable interactions. Unsupported
 SDK bases and unverified constructions contribute no win/loss outcome.
 
+The OSR update is archived separately in
+[`synthesis_osr_20261106.json.gz`](synthesis_osr_20261106.json.gz). It retains all
+10,464 cells, with **284 distinct cells rerun** using the implementation at
+`1076988f`; the remaining cells retain their earlier constructions and source
+snapshots. The raw reruns are
+[`synthesis_osr_regressions_20261106.json.gz`](synthesis_osr_regressions_20261106.json.gz)
+(16 targets in four bases) and
+[`synthesis_osr_families_20261106.json.gz`](synthesis_osr_families_20261106.json.gz)
+(Canonical, CP, CRX, fSim, PhasedFSim, SWAP and iSWAP in all 32 presets).
+The four overlapping SWAP cells retain both attempt histories.
+
+| Outcome after the OSR update | Phase exact | Projective |
+| --- | ---: | ---: |
+| Symbolically verified | 6,622 | 8,837 |
+| Proved obstruction, under the recorded scope/condition | 2,588 | 264 |
+| Time limit | 425 | 378 |
+| Unresolved construction | 829 | 985 |
+| Compiler errors | 0 | 0 |
+
+All 38 former fixed-target SDK entangler regressions now tie the baseline.
+There are 2,481 eligible fixed-target ties and zero worse counts; no SDK win or
+novelty claim is made. Among rerun modes with verified old and new circuits,
+81 phase-exact and 129 projective circuits have strictly lower costs, and none
+has a higher cost. Newly verified modes are additional to those improvements.
+These use the original lexicographic entangler/parameter/local-count objective;
+they are not a claim of globally minimum local score.
+
+Every projective mode in the two raw reruns either has an exact symbolic
+construction or a proved obstruction. Six phase-exact family cases still hit
+the 30-second limit; they were already timeouts in the earlier archive.
+The merged archive has 4,087 cells where a verified exact construction is more
+expensive than the retained projective construction. Each row resolves its
+`synthesis_run_index` in the flattened `synthesis_runs`, including indices in
+its `previous_attempts`; appending a rerun preserves older corrections' hashes.
+
+Reproduce the merge and fixed-target analysis with:
+
+```bash
+python examples/decomposition/symbolic_archive_analysis.py \
+  --input benchmarks/symbolic/synthesis_20261106.json.gz \
+  --supplement benchmarks/symbolic/synthesis_osr_regressions_20261106.json.gz \
+  --supplement benchmarks/symbolic/synthesis_osr_families_20261106.json.gz \
+  --output /tmp/synthesis-osr-with-references.json.gz
+```
+
+The OSR guide in [`docs/symbolic_decomposition.md`](../../docs/symbolic_decomposition.md)
+describes the opaque-matrix API, exact cut/minor certificates, native Pauli
+networks, phase handling and scoped optimality claims. The planned reference
+atlas will sort targets alphabetically, index them, and place the 32 basis
+panels on each target's page. Verified circuits, proved obstructions and open
+cases must be distinguished, and exact/projective variants must retain their
+phase and certificate labels. Atlas rendering is not part of these data files.
+
 The newer `symbolic_synthesis_archive.py` runner preserves free real parameters
 and forbids physical GP operations. Its phase-exact results require literal
 matrix equality; its projective results automatically record a virtual scalar
