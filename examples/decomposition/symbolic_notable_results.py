@@ -307,6 +307,8 @@ def main():
     args.output_dir.mkdir(parents=True, exist_ok=True)
     (args.output_dir/"notable_results.json").write_text(json.dumps(report, indent=2)+"\n")
     write_csv(args.output_dir/"local_comparisons.csv", rows)
+    write_csv(args.output_dir/"local_savings.csv",
+              [r for r in rows if r["status"] == "equal_E_fewer_locals"], fields=list(rows[0]))
     write_csv(args.output_dir/"local_optimization_gaps.csv",
               [r for r in rows if r["status"] == "equal_E_more_locals"], fields=list(rows[0]))
     write_tex(args.output_dir/"notable_results.tex", report, archive)
