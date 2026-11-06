@@ -40,7 +40,7 @@ def test_targeted_reruns_preserve_each_source_revision_and_failed_attempt():
              phase_statuses=dict(phase_exact="compiler_error",projective="compiler_error"),
              phase_exact=dict(status="compiler_error",reason="float control count"),preferred=None)
     new=dict(old,phase_statuses=dict(phase_exact="verified_symbolic",projective="verified_symbolic"),
-             phase_exact=dict(status="verified_symbolic"),preferred="phase_exact")
+             phase_exact=dict(status="verified_symbolic",cost=dict(entanglers=0,parameter_score="0",single_qubit_gates=0)),preferred="phase_exact")
     base=dict(rows=[old],source_sha256=dict(adapter="old"),comparison_contract=dict(ancillas=0))
     supplement=dict(rows=[new],source_sha256=dict(adapter="fixed"),comparison_contract=dict(ancillas=0))
     merged=analysis.merge_synthesis_runs([base,supplement])
@@ -63,3 +63,43 @@ def test_targeted_reruns_preserve_each_source_revision_and_failed_attempt():
     changed["rows"][0]["parameters"]=["phi","2"]
     with pytest.raises(ValueError,match="changes the target"):
         analysis.merge_synthesis_runs([base,changed])
+
+
+def test_time_limited_rerun_keeps_a_verified_incumbent_and_its_source():
+    good=dict(status="verified_symbolic",cost=dict(entanglers=2,parameter_score="8",single_qubit_gates=0))
+    old=dict(gate="SWAP",basis="cx_u",phase_exact=good,projective=None,
+             phase_statuses=dict(phase_exact="verified_symbolic",projective="verified_symbolic"),synthesis_run_index=0)
+    new=dict(old,phase_exact=dict(status="timeout"),projective=dict(status="timeout"),
+             phase_statuses=dict(phase_exact="timeout",projective="timeout"),synthesis_run_index=1)
+    retained=analysis.retain_incumbents(old,new)
+    assert retained["phase_exact"]["status"]=="verified_symbolic"
+    assert retained["mode_source_run_indices"]==dict(phase_exact=0,projective=0)
+    assert retained["last_attempt_phase_statuses"]["phase_exact"]=="timeout"
+    assert retained["synthesis_run_index"]==1
+
+
+def test_phase_policies_can_retain_different_best_runs():
+    def result(entanglers):
+        return dict(status="verified_symbolic",cost=dict(entanglers=entanglers,parameter_score="8",single_qubit_gates=0))
+    old=dict(gate="SWAP",basis="cx_u",phase_exact=result(2),projective=result(1),
+             phase_statuses=dict(phase_exact="verified_symbolic",projective="verified_symbolic"),synthesis_run_index=0)
+    new=dict(old,phase_exact=result(3),projective=result(0),synthesis_run_index=1)
+    retained=analysis.retain_incumbents(old,new)
+    assert retained["phase_exact"]["cost"]["entanglers"]==2
+    assert retained["projective"]["cost"]["entanglers"]==0
+    assert retained["mode_source_run_indices"]==dict(phase_exact=0,projective=1)
+    impossible=dict(new,phase_exact=dict(status="proved_impossible"))
+    with pytest.raises(ValueError,match="contradicts"):
+        analysis.retain_incumbents(old,impossible)
+
+
+def test_a_verified_projective_identity_factor_is_also_an_exact_circuit():
+    row=dict(gate="SWAP",basis="cx_u",phase_exact=dict(status="timeout"),
+             projective=dict(status="verified_symbolic",cost=dict(entanglers=3,parameter_score="12",single_qubit_gates=0),
+                             virtual_gp=dict(factor="1",physical=False,cost=0)),
+             phase_statuses=dict(phase_exact="timeout",projective="verified_symbolic"),synthesis_run_index=0)
+    retained=analysis.retain_incumbents(row,dict(row,synthesis_run_index=1))
+    assert retained["phase_exact"]["status"]=="verified_symbolic"
+    assert retained["phase_exact"]["virtual_gp"] is None
+    assert retained["phase_exact"]["derived_from_projective_identity_factor"]
+    assert retained["projective"] is None

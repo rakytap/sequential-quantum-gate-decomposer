@@ -389,7 +389,17 @@ def _matrix_sources(target,basis,seconds):
     if cartan is not None:
         return [cartan],dict(termination="native_commuting_Pauli_network_found",
                              proof_scope=cartan["proof_scope"],coordinates=cartan["coordinates"])
-    return osr_source_candidates(target,basis,seconds=seconds)
+    sources,search=osr_source_candidates(target,basis,seconds=seconds)
+    if not sources and target.shape==(4,4) and not target.free_symbols:
+        # A logical Clifford skeleton is a constructive fallback when the
+        # native pulse alphabet is non-Clifford or continuously parameterized.
+        # Its discrete CX distance is not a minimum in that native basis.
+        logical=clifford_source_candidate(target,get_basis("cx_u"))
+        if logical is not None:
+            logical["method"]="logical_CNOT_Clifford_skeleton_with_native_rebasing"
+            logical["proof_scope"]="logical_Clifford_construction; native optimality is separate"
+            sources.append(logical)
+    return sources,search
 
 
 def _lower_matrix_sources(target,basis,phase_exact,seconds):
@@ -573,7 +583,7 @@ def synthesize(name, parameters=(), basis="cx_u", *, phase_exact=True,osr_second
         else:
             candidates=[]
             errors=[]
-            cartan_family=definition.name in {"Canonical","fSim","PhasedFSim","SWAPPow"}
+            cartan_family=definition.name in {"Canonical","fSim","PhasedFSim","SWAPPow","TK2"}
             for even in ((False,True) if phase_exact and cartan_family else (False,)):
                 try:candidates.extend(_native_candidates(name,parameters,basis,even=even))
                 except (RuleUnavailable,ValueError,KeyError,ImportError,TypeError,AttributeError) as error:
@@ -610,7 +620,15 @@ def synthesize(name, parameters=(), basis="cx_u", *, phase_exact=True,osr_second
                     result.update(entangler_optimal=False,local_cost_optimal=False,optimality_scope="verified_upper_bound",construction_method=method)
                     if search is not None:result["osr_search"]=search
                     if method=="OSR_two_wire_window_resynthesis":result["window_replacements"]=list(window_records)
-                    if method!="analytical_source_construction":_attach_osr_certificate(result,target,basis)
+                    if method in {"analytical_source_construction","OSR_two_wire_window_resynthesis"}:
+                        if __package__:
+                            from .symbolic_catalog_motifs import motif_schema
+                        else:
+                            from symbolic_catalog_motifs import motif_schema
+                        schema=motif_schema(definition.name)
+                        if schema:result["source_motif"]=dict(schema=schema,scope="constructive_template; optimality is separate")
+                    if method!="analytical_source_construction" or target.rows<=8 and result["cost"]["entanglers"]<=2:
+                        _attach_osr_certificate(result,target,basis)
                     return result
             return dict(status="unresolved",phase_exact=phase_exact,reason="; ".join(dict.fromkeys(errors)) or "Source identity not proved")
         if phase_exact and factor!=1:

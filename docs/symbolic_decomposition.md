@@ -387,6 +387,60 @@ without multiprocessing. Real single-qubit searches are regression-tested.
 `find_min` concerns the searched ansatz and original gate score; it is not a
 proof that every entangler structure or universal basis has been exhausted.
 
+## Structural motifs and the circuit atlas
+
+`symbolic_catalog_motifs.py` records named constructive schemas, rather than
+an unrestricted genetic-programming grammar. They include native-unit/local
+frame translations, controlled rotations, exchange echoes, Gray-code uniform
+rotations, Walsh phase polynomials, wire permutations and binary Gaussian
+networks. Each schema preserves its parameters and scalar phase, supplies an
+upper bound, and is checked against the target's independent matrix definition.
+Archive results identify the applied `source_motif` when one supplies the
+construction. The matrix-driven OSR and native Pauli-network proposals remain
+additional candidates under the same resource ordering.
+
+For example, the controlled exchange echo in CCZS also supplies fFredkin at
+a fixed angle, giving a verified five-CNOT construction. A Gray-code network
+handles an arbitrary power-of-two array of independent rotation angles.
+These are constructive results; their local-score optimality and any novelty
+claim require separate evidence. The partition solver's block-order,
+commutation and fan/echo machinery is useful for extending the proposal
+alphabet, but its numerical fits or tolerance bounds cannot certify a symbolic
+family here.
+
+The Qiskit LaTeX exporter produces two indexed volumes:
+
+```bash
+python examples/decomposition/symbolic_circuit_atlas.py \
+  --archive benchmarks/symbolic/synthesis_osr_20261106.json.gz \
+  --output-dir /tmp/symbolic-atlas
+cd /tmp/symbolic-atlas
+tectonic gates.tex
+tectonic cliffords.tex
+```
+
+The gate volume has one alphabetically indexed page per target, with all 32
+basis panels. The separate Clifford volume has eight phase pages per distinct
+local alphabet, with 24 representative circuits per page: 192 exact phase
+targets per alphabet. The 32 presets share 12 local alphabets, which are printed
+once each with their corresponding presets listed. Clifford certificates are
+checked before drawing. Missing paths retain their stated alphabet scope.
+
+Gate pages use A1 landscape and Clifford pages A3 landscape. Both are vector
+PDFs intended to be zoomed; dense circuits continue on successive rows. An
+explicit repeated-pulse box preserves the physical count. Exact and retained
+projective circuits have separate labels, and projective scalar metadata is
+printed explicitly. Open or impossible cells are never filled with invented
+circuits. The manifest links every panel to its archive and source run.
+Use repeated `--gate` and `--clifford-alphabet` options for a smaller preview.
+
+The analysis merge retains the least-cost verified incumbent per phase policy
+when a later run times out or returns a worse construction. A verified
+projective identity with scalar factor exactly one is also an exact circuit.
+`mode_source_run_indices` identifies each retained circuit's implementation;
+`synthesis_run_index` and `last_attempt_phase_statuses` identify the latest raw
+attempt, whose outcome remains in the archive history.
+
 ## Validation
 
 ```bash

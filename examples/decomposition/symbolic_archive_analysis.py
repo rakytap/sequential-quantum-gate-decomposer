@@ -13,17 +13,74 @@ import hashlib
 import json
 from pathlib import Path
 import sys
+import sympy as sp
 
 ROOT=Path(__file__).resolve().parents[2]
 sys.path.insert(0,str(ROOT/"squander/decomposition"))
 from symbolic_bases import BASIS_SETS
 from symbolic_gates import make_gate
 from symbolic_minimality import cnot_cost_certificate
+from symbolic_contract import retain_phase_results
 
 
 def load(path):
     opener=gzip.open if path.suffix==".gz" else open
     with opener(path,"rt") as stream:return json.load(stream)
+
+
+def retain_incumbents(previous,replacement):
+    """Keep the least-cost proved circuit per phase policy, with its source."""
+    def options(row,mode):
+        source=row.get("mode_source_run_indices",{})
+        current=row.get("synthesis_run_index",0)
+        result=row.get(mode)
+        choices=[]
+        if result is not None:
+            choices.append((result,source.get(mode,current)))
+        projective=row.get("projective")
+        if (mode=="phase_exact" and projective and projective["status"]=="verified_symbolic"
+                and projective.get("virtual_gp",{}).get("factor")=="1"):
+            derived=copy.deepcopy(projective)
+            derived.update(phase_exact=True,virtual_gp=None,derived_from_projective_identity_factor=True)
+            choices.append((derived,source.get("projective",current)))
+        exact=row.get("phase_exact")
+        if mode=="projective" and exact and exact["status"]=="verified_symbolic":
+            # Literal equality is also a projective construction, independently
+            # of whether the separate projective search finished in its budget.
+            derived=copy.deepcopy(exact)
+            derived.update(phase_exact=False,virtual_gp=dict(factor="1",physical=False,cost=0),
+                           entangler_optimal=False,local_cost_optimal=False)
+            derived.pop("phase_resource_lower_bound",None)
+            choices.append((derived,source.get("phase_exact",current)))
+        return choices
+    def cost(choice):
+        result,run=choice
+        value=result["cost"]
+        return (value["entanglers"],float(sp.sympify(value["parameter_score"])),value["single_qubit_gates"],
+                -bool(result.get("entangler_optimal")),-bool(result.get("local_cost_optimal")),-run)
+    selected={}
+    provenance={}
+    for mode in ("phase_exact","projective"):
+        choices=options(previous,mode)+options(replacement,mode)
+        good=[choice for choice in choices if choice[0]["status"]=="verified_symbolic"]
+        impossible=[choice for choice in choices if choice[0]["status"]=="proved_impossible"]
+        if good and impossible:
+            raise ValueError(f"Verified construction contradicts an impossibility record: {replacement['gate']}/{replacement['basis']}/{mode}")
+        if good:
+            result,run=min(good,key=cost)
+        elif impossible:
+            result,run=impossible[-1]
+        else:
+            result=replacement.get(mode) or dict(status=replacement["phase_statuses"][mode])
+            run=replacement.get("mode_source_run_indices",{}).get(mode,replacement["synthesis_run_index"])
+        selected[mode]=copy.deepcopy(result)
+        provenance[mode]=run
+    row=copy.deepcopy(replacement)
+    row["last_attempt_phase_statuses"]=copy.deepcopy(replacement["phase_statuses"])
+    row["phase_statuses"]={mode:result["status"] for mode,result in selected.items()}
+    row.update(retain_phase_results(selected["phase_exact"],selected["projective"]))
+    row["mode_source_run_indices"]=provenance
+    return row
 
 
 def merge_synthesis_runs(reports):
@@ -41,6 +98,10 @@ def merge_synthesis_runs(reports):
             if not isinstance(local,int) or not 0<=local<len(runs):
                 raise ValueError("Invalid source run index")
             row["synthesis_run_index"]=offset+local
+            if "mode_source_run_indices" in row:
+                if any(not isinstance(value,int) or not 0<=value<len(runs) for value in row["mode_source_run_indices"].values()):
+                    raise ValueError("Invalid phase-policy source run index")
+                row["mode_source_run_indices"]={mode:offset+value for mode,value in row["mode_source_run_indices"].items()}
             if "previous_attempts" in row:row["previous_attempts"]=[remap(old) for old in row["previous_attempts"]]
             return row
         normalized.append([remap(row) for row in report["rows"]])
@@ -54,13 +115,14 @@ def merge_synthesis_runs(reports):
             previous=index[key]
             if any(replacement[k]!=previous[k] for k in ("parameters","target_scope")):
                 raise ValueError("Supplement changes the target")
-            row=copy.deepcopy(replacement)
+            row=retain_incumbents(previous,replacement)
             row["previous_attempts"]=previous.get("previous_attempts",[])+[
                 {k:v for k,v in previous.items() if k!="previous_attempts"}]
             index[key]=row
     combined["rows"]=[index[row["gate"],row["basis"]] for row in combined["rows"]]
     combined["mixed_synthesis_runs"]=len(combined["synthesis_runs"])>1
-    combined["source_provenance_policy"]="Resolve each row's synthesis_run_index in synthesis_runs; the root source hashes describe the first run"
+    combined["source_provenance_policy"]="Resolve mode_source_run_indices for retained phase results, falling back to synthesis_run_index; synthesis_run_index identifies the latest attempted run; root hashes describe the first run"
+    combined["incumbent_policy"]="Retain the least-cost verified circuit for each phase policy; preserve raw outcomes in last_attempt_phase_statuses and every earlier attempt"
     combined["summary"]={mode:dict(Counter(row["phase_statuses"][mode] for row in combined["rows"]))
                           for mode in ("phase_exact","projective")}
     combined["summary"].update(cells=len(combined["rows"]),

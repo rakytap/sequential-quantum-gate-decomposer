@@ -104,6 +104,12 @@ def _inverse(sequence):
 
 def source_rule(name,parameters,*,even_cartan=False):
     p=tuple(parameters)
+    if __package__:
+        from .symbolic_catalog_motifs import catalog_motif
+    else:
+        from symbolic_catalog_motifs import catalog_motif
+    proposal=catalog_motif(name,p)
+    if proposal is not None:return proposal
     if name in {"B","DB","iSWAP","SiSWAP","SSWAP"}:
         values={"B":(sp.pi/4,sp.pi/8,0),"DB":(-3*sp.pi/16,-3*sp.pi/16,0),
                 "iSWAP":(sp.pi/4,sp.pi/4,0),"SiSWAP":(sp.pi/8,sp.pi/8,0)}
