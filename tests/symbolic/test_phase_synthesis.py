@@ -196,6 +196,16 @@ def test_physical_phase_gadgets_charge_their_entanglers(exponent,expected_count)
     assert row["cost"]["entanglers"]==expected_count
 
 
+@pytest.mark.parametrize("angle",[15*sp.pi/32,-17*sp.pi/32])
+def test_high_order_scalar_phase_stays_an_exact_rational_angle(angle):
+    from symbolic_contract import verify_circuit
+    factor=sp.exp(sp.I*angle)
+    basis=get_basis("zz_u")
+    word=_physical_scalar(factor,basis,5)
+    assert all(not sp.sympify(value).has(sp.atan,sp.atan2) for op in word for value in op[1:-1])
+    assert verify_circuit(factor*sp.eye(32),word,basis)["status"]=="verified_symbolic"
+
+
 def test_custom_universality_labels_are_not_mathematical_evidence():
     # An incorrect caller label cannot make valid CS circuits impossible.
     basis=make_basis("custom",("H","S"),"CS",universality="clifford")

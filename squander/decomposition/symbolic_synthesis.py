@@ -210,16 +210,25 @@ def _local(name, parameters, basis):
 
 
 def _physical_scalar(factor,basis,width=1):
-    factor = simplify_exact(factor)
+    # Preserve a root-of-unity exponential before expanding its real/imaginary
+    # parts. Otherwise arg(exp(15*i*pi/32)) can become atan(cot(pi/32)), making
+    # an elementary exact phase unnecessarily transcendental to the verifier.
+    factor = sp.simplify(sp.sympify(factor))
     if factor == 1:
         return ()
     if not factor.free_symbols:
         row=_best_clifford(factor*sp.eye(2),basis,True)
         if row:
             return row["_sequence"]
-    constant,exponential=factor.as_independent(sp.exp,as_Add=False)
-    angle=(sp.arg(constant)+sp.simplify(exponential.args[0]/sp.I)
-           if exponential.func==sp.exp else sp.arg(factor))
+    if __package__:
+        from .symbolic_native_pauli import _phase
+    else:
+        from symbolic_native_pauli import _phase
+    angle=_phase(factor)
+    if angle is None:
+        constant,exponential=factor.as_independent(sp.exp,as_Add=False)
+        angle=(sp.arg(constant)+sp.simplify(exponential.args[0]/sp.I)
+               if exponential.func==sp.exp else sp.arg(factor))
     local=basis.single_qubit_gates
     if "U3" in local or "U" in local:
         u="U3" if "U3" in local else "U"

@@ -7,6 +7,7 @@ targets only. It establishes neither a free-family identity nor novelty.
 
 import argparse
 from collections import Counter
+from functools import lru_cache
 import copy
 import gzip
 import hashlib
@@ -21,6 +22,7 @@ from symbolic_bases import BASIS_SETS
 from symbolic_gates import make_gate,gate_definition
 from symbolic_minimality import cnot_cost_certificate
 from symbolic_contract import retain_phase_results
+from symbolic_feasibility import determinant_group
 
 
 def load(path):
@@ -180,7 +182,52 @@ def annotate(report,qiskit,ledger):
         row["qiskit_fixed_target_comparison"]=comparison
     report["matched_reference_summary"]=dict(statistics)
     report["matched_reference_policy"]="Fixed targets only; matching a lower bound certifies entanglers, never the secondary local score"
-    return annotate_uniform_literature_bounds(report)
+    return annotate_cartan_phase_bounds(annotate_uniform_literature_bounds(report))
+
+
+@lru_cache(maxsize=1)
+def verify_cartan_trace_lemma():
+    a,b,c=sp.symbols("a b c",real=True)
+    matrix=make_gate("Canonical",a,b,c)
+    yy=sp.kronecker_product(make_gate("Y"),make_gate("Y"))
+    imaginary=sp.im(sp.trace(matrix*yy*matrix.T*yy))
+    expected=4*sp.sin(2*a)*sp.sin(2*b)*sp.sin(2*c)
+    return sp.simplify(matrix.det()-1)==0 and sp.trigsimp(sp.expand_complex(imaginary-expected))==0
+
+
+def annotate_cartan_phase_bounds(report):
+    """Certify generic three-CNOT cost and the strict SU(2) parity surcharge."""
+    equivalent={"CX","CNOT","CZ","ECR","XX90","ZZMax"}
+    locals_={name:sp.Symbol(name,real=True) for name in ("a","b","c")}
+    statistics=Counter()
+    for row in report["rows"]:
+        if row["gate"]!="Canonical" or len(row.get("parameters",()))!=3:continue
+        basis=BASIS_SETS[row["basis"]]
+        if basis.entangler not in equivalent:continue
+        parameters=tuple(sp.sympify(value,locals=locals_) for value in row["parameters"])
+        if any(value.is_real is not True for value in parameters):continue
+        condition=sp.Ne(sp.prod(sp.sin(2*value) for value in parameters),0)
+        if condition==sp.false:continue
+        if not verify_cartan_trace_lemma():raise ArithmeticError("Cartan trace lemma did not verify")
+        parity=(determinant_group(basis,1)==1 and sp.simplify(make_gate(basis.entangler).det()+1)==0)
+        for mode in ("phase_exact","projective"):
+            result=row.get(mode)
+            if not result or result["status"]!="verified_symbolic":continue
+            count=4 if mode=="phase_exact" and parity else 3
+            if result["cost"]["entanglers"]!=count:continue
+            certificate=dict(count=count,condition=str(condition),
+                source="CNOT spin-flip trace exclusion"+(" and exact determinant parity" if count==4 else ""),
+                reference="https://arxiv.org/abs/quant-ph/0308045",
+                statement="A nonreal normalized spin-flip trace excludes two CNOTs; every supplied native pulse costs one CNOT under relaxed locals")
+            if count==4:
+                certificate["phase_parity"]=dict(target_determinant="1",local_determinant="1",native_determinant="-1",required_native_count="even")
+            if condition==sp.true:
+                result["entangler_optimal"]=True
+                result["entangler_optimality_certificate"]=certificate
+            else:result["conditional_entangler_optimality"]=certificate
+            statistics[mode+"_matched_conditioned_minimum"]+=1
+    report["cartan_phase_bound_summary"]=dict(statistics)
+    return report
 
 
 def annotate_uniform_literature_bounds(report):

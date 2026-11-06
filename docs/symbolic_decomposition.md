@@ -510,6 +510,22 @@ optimization gap even if the delivered circuit verifies exactly. Falling
 below a uniform worst-case bound is not a novelty claim or a per-target
 minimality proof.
 
+For the Cartan family, the analysis independently checks the spin-flip trace
+identity `Im tr(U YY U^T YY) = 4 sin(2a) sin(2b) sin(2c)`. Where this is
+nonzero, the published CNOT criterion excludes two CNOTs. Three therefore
+certifies the generic projective count when achieved. If the supplied local
+alphabet consists only of SU(2) gates and the native CNOT-equivalent primitive
+has determinant -1, literal determinant-one synthesis needs an even pulse
+count. A matching four-pulse construction is then conditionally optimal for
+exact phase. These conditions are recorded explicitly and do not apply to
+special angles where the trace's imaginary part vanishes.
+
+Physical scalar synthesis preserves rational root-of-unity angles before
+expanding them into real and imaginary parts. This avoids replacing a simple
+angle such as `15*pi/32` with an equivalent `atan(cot(pi/32))` expression that
+obscures its exact cyclotomic proof. The physical correction and its full cost
+remain in the delivered operation list.
+
 To revisit only cells with an open phase mode, preserving successful
 incumbents during the later merge:
 

@@ -51,6 +51,25 @@ def test_uniform_literature_audit_exposes_verified_but_nonoptimal_families():
     assert "literature_uniform_upper_bound_comparison" not in one_wire
 
 
+def test_cartan_generic_cost_distinguishes_exact_su2_parity_and_special_angles():
+    assert analysis.verify_cartan_trace_lemma()
+    def row(basis,exact,projective,parameters):
+        result=lambda count:dict(status="verified_symbolic",cost=dict(entanglers=count),entangler_optimal=False)
+        return dict(gate="Canonical",basis=basis,parameters=parameters,
+                    phase_exact=result(exact),projective=result(projective))
+    rows=[row("cx_rz_ry",4,3,["a","b","c"]),row("cx_u",3,3,["a","b","c"]),
+          row("cx_rz_ry",0,0,["0","0","0"]),
+          row("cx_rz_ry",4,3,["pi/8","pi/8","pi/8"])]
+    report=analysis.annotate_cartan_phase_bounds(dict(rows=rows))
+    strict,unrestricted,identity,special=report["rows"]
+    assert strict["phase_exact"]["conditional_entangler_optimality"]["count"]==4
+    assert strict["projective"]["conditional_entangler_optimality"]["count"]==3
+    assert unrestricted["phase_exact"]["conditional_entangler_optimality"]["count"]==3
+    assert "conditional_entangler_optimality" not in identity["phase_exact"]
+    assert special["phase_exact"]["entangler_optimal"]
+    assert special["phase_exact"]["entangler_optimality_certificate"]["phase_parity"]["required_native_count"]=="even"
+
+
 def test_targeted_reruns_preserve_each_source_revision_and_failed_attempt():
     old=dict(gate="MCPhase",basis="cx_u",parameters=["theta","2"],target_scope="register_fixture",
              phase_statuses=dict(phase_exact="compiler_error",projective="compiler_error"),
