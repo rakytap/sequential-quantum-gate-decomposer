@@ -129,8 +129,9 @@ gates in the same objective.
 | `clifford_t_cx`, `clifford_t_cz` | CX or CZ | H/S/T/Tdg |
 | `clifford_only` | CX | H/S; analysis only, not universal |
 
-The continuous presets are universal up to global phase. Include an explicit
-global phase when exact matrix equality is required. Clifford+T is dense
+The continuous presets are universal up to global phase. Literal equality can
+be impossible in the supplied basis; the synthesis contract below forbids a
+physical GP gate and records this obstruction. Clifford+T is dense
 universal, but an arbitrary symbolic angle generally has no exact finite
 Clifford+T representation. These modes are separate in `BasisSet.universality`.
 Custom `make_basis` calls validate widths and names; any claimed universality
@@ -145,6 +146,85 @@ This catalog/basis milestone does **not** turn the legacy CNOT-guided heuristic
 into a certified optimal compiler for all these bases. The next synthesis step
 must retain symbolic equality checks and report minimum counts only when an
 exhaustive search or a matching mathematical lower bound certifies them.
+
+## Phase-aware symbolic constructions and archives
+
+`symbolic_synthesis.synthesize` constructs circuits in the supplied basis and
+proves their matrix identities with free real parameters. It orders candidates
+by native entangler count, the unchanged original parameter-sensitive score,
+then single-qubit gate count. These constructions are upper bounds; they do not
+yet establish optimal synthesis for all 327 definitions in all 32 presets.
+The current rule engine uses analytical identities and native CNOT frames,
+including attributed SDK gate definitions when available. This is separate
+from a general OSR search or a proof of a new decomposition.
+
+```python
+from squander.decomposition.symbolic_synthesis import synthesize_phase_pair
+
+a, b, c = sp.symbols("a b c", real=True)
+result = synthesize_phase_pair("Canonical", (a, b, c), "cx_rz_ry")
+```
+
+Phase-exact circuits contain only the allowed physical primitives, with no GP
+operation or free scalar repair. Projective circuits include the exact scalar
+as automatic `virtual_gp` metadata at zero physical cost. Exact circuits are
+preferred when no more expensive; a projective circuit is retained alongside
+them only when strictly cheaper under the same objective.
+
+This distinction can affect entanglers as well as local cost. The three-CNOT
+Cartan identity uses a fixed scalar; the four-CNOT construction has literal
+equality using SU(2) rotations. Every CNOT has determinant -1, so an exact SU(4)
+target with SU(2)-only locals requires even CNOT parity. A projective minimum
+therefore cannot be transferred unchanged to the phase-exact problem.
+
+The compiler reports determinant-group, Clifford and number-field
+obstructions without adding gates to the basis. A `generic_family`
+impossibility record does not assert that every special parameter value is
+impossible: its exact nonzero condition and witness are retained. Unsupported
+constructions and timeouts remain open cases, never impossibility proofs.
+
+For one-qubit Cliffords, a shortest-path certificate contains all attainable
+phase-resolved states, exact edge circuits, costs, predecessor witnesses and
+Bellman inequalities. H/S exhausts all 192 variants and proves their minimum
+local score in that supplied alphabet. With continuous primitives or
+non-Clifford intermediates, the certificate covers the explicitly enumerated
+Clifford-preserving words only. Those more limited certificates do not claim
+global local-cost optimality. The frozen group table is checked against the
+independent exact Clifford analysis in the test suite.
+
+Generate a bounded, checkpointed archive with:
+
+```bash
+python examples/decomposition/symbolic_synthesis_archive.py \
+  --basis all --workers 4 --seconds-per-mode 10 \
+  --output /tmp/symbolic-synthesis.json.gz
+```
+
+The archive enumerates 10,464 gate/basis cells, evaluates both phase policies,
+and retains free real parameters, including optional `global_shift`. Register
+constructors have explicitly listed integer widths and matrix/list fixtures;
+they are not proofs for every register size or arbitrary matrix. Records
+distinguish exact verification, proved impossibility, unresolved cases,
+timeouts and compiler errors. Source hashes, package versions, setup
+certificates and per-mode wall times are included. `--resume` accepts an
+interrupted checkpoint only when its source hashes, selection and budget
+match. A complete enumeration does not mean that every synthesis problem has
+been solved.
+
+The numerical Qiskit archive remains a separate sample baseline. Its permitted
+SDK scalar correction differs from the new physical phase-exact policy. A
+free-parameter identity must not be called an improvement over a matched
+analytical competitor merely because it beats one sampled SDK output.
+
+UniversalQCompiler comparisons are deferred at the user's request: no licensed
+Wolfram kernel is available and none is being purchased. It has zero benchmark
+runs and is excluded from competitor outcomes. `symbolic_uqc.py` and the
+optional native `.wls` adapter preserve exact expression trees, native wire
+order and rotation signs, but the Wolfram integration has not been executed.
+Any future comparison should run its native analytical method once per target
+family, verify the returned free-parameter identity, then separately label
+rebasing into other compatible alphabets. It is not necessary to run its
+native compiler independently for every gate/basis cell.
 
 There are 32 presets. Hardware sources and unit conventions are recorded in
 [`symbolic_reference_ledger.json`](../squander/decomposition/symbolic_reference_ledger.json).

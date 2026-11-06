@@ -1,0 +1,158 @@
+"""Exact circuits, resource objectives, and the two global-phase policies.
+
+Physical GP operations are forbidden. In projective mode the scalar needed
+to recover the target is automatic metadata and has zero physical cost.
+"""
+
+from dataclasses import dataclass
+from functools import lru_cache
+import sympy as sp
+
+if __package__:
+    from .symbolic_gates import compile_gates, gate_definition
+else:
+    from symbolic_gates import compile_gates, gate_definition
+
+
+def simplify_exact(value):
+    if value == 0:
+        return sp.S.Zero
+    value = sp.simplify(sp.trigsimp(value, method="fu"))
+    if value == 0:
+        return value
+    return sp.simplify(sp.trigsimp(sp.expand_complex(value), method="fu"))
+
+
+def exact_equal(left, right):
+    return left.shape == right.shape and all(simplify_exact(a-b) == 0 for a, b in zip(left, right))
+
+
+def parameter_score(sequence):
+    """The original get_gatecost formula, evaluated as an exact expression.
+
+    Keep DEAP out of the core compiler. A separate regression compares this
+    expression with the unchanged legacy implementation.
+    """
+    # Global simplify can combine the logarithms into enormous integer powers
+    # (and even hit Python's integer-printing limit). Add their exact values
+    # directly; no log-combination is needed for scoring or serialization.
+    return sum((_operation_score(tuple(operation)) for operation in sequence),sp.S.Zero)
+
+
+@lru_cache(maxsize=16384)
+def _operation_score(operation):
+    total=sp.Integer(1 << len(operation[-1]))
+    for parameter in operation[1:-1]:
+        denominator=sp.simplify(parameter).as_numer_denom()[1]
+        total+=(sp.log(sp.Abs(denominator),2)+sp.Rational(1,100))/5
+    return total
+
+
+@lru_cache(maxsize=16384)
+def _operation_weight(operation):
+    return float(_operation_score(operation))
+
+
+def resource_key(sequence):
+    return (sum(len(op[-1])==2 for op in sequence),sum(_operation_weight(tuple(op)) for op in sequence),
+            sum(len(op[-1])==1 for op in sequence))
+
+
+@dataclass(frozen=True)
+class CircuitCost:
+    entanglers: int
+    parameter_score: object
+    single_qubit_gates: int
+
+    @property
+    def key(self):
+        return self.entanglers, float(self.parameter_score), self.single_qubit_gates
+
+    def as_dict(self):
+        return dict(entanglers=self.entanglers, parameter_score=str(self.parameter_score),
+                    single_qubit_gates=self.single_qubit_gates)
+
+
+def circuit_cost(sequence):
+    sequence = tuple(sequence)
+    return CircuitCost(sum(len(op[-1]) == 2 for op in sequence), parameter_score(sequence),
+                       sum(len(op[-1]) == 1 for op in sequence))
+
+
+def validate_operations(sequence, basis, width):
+    normalized = {"U3": "U", "U1": "P", "CNOT": "CX"}
+    canonical = lambda name: normalized.get(gate_definition(name).name, gate_definition(name).name)
+    allowed = {canonical(name) for name in basis.gates}
+    result = []
+    for operation in sequence:
+        name = gate_definition(operation[0]).name
+        if name == "GP":
+            raise ValueError("A physical GP gate is forbidden by the synthesis contract")
+        if canonical(name) not in allowed:
+            raise ValueError(f"Gate {name!r} is outside basis {basis.name!r}")
+        wires = tuple(operation[-1])
+        if (len(wires) != gate_definition(name).num_qubits or len(set(wires)) != len(wires)
+                or any(not isinstance(q, int) or isinstance(q, bool) or not 0 <= q < width for q in wires)):
+            raise ValueError("Invalid operation wires")
+        parameters = tuple(sp.sympify(p) for p in operation[1:-1])
+        if any(p.atoms(sp.Float) for p in parameters):
+            raise ValueError("Symbolic circuits cannot contain floating constants")
+        result.append((operation[0], *parameters, wires))
+    return tuple(result)
+
+
+def verify_circuit(target, sequence, basis, *, phase_exact=True, scalar_factor=None):
+    """Prove literal equality or infer and prove the unique scalar correction."""
+    target = sp.ImmutableMatrix(target)
+    if target.atoms(sp.Float):
+        raise ValueError("An exact target cannot contain floating constants")
+    width = target.rows.bit_length()-1
+    if target.shape != (1 << width, 1 << width):
+        raise ValueError("Target must have a square power-of-two dimension")
+    sequence = validate_operations(sequence, basis, width)
+    actual = None
+    if phase_exact:
+        factor = sp.S.One
+    elif scalar_factor is not None:
+        factor=sp.sympify(scalar_factor)
+    else:
+        actual = compile_gates(width, sequence)
+        pivot = next((i for i, value in enumerate(actual) if value.is_zero is False), None)
+        if pivot is None:
+            pivot = next((i for i, value in enumerate(actual) if simplify_exact(value) != 0), None)
+        if pivot is None:
+            return dict(status="identity_not_proved", phase_exact=False)
+        factor = simplify_exact(target[pivot]/actual[pivot])
+    if __package__:
+        from .symbolic_identity import prove_circuit_identity
+    else:
+        from symbolic_identity import prove_circuit_identity
+    proved=prove_circuit_identity(target,sequence,factor)
+    if proved is None:
+        actual=compile_gates(width,sequence) if actual is None else actual
+        proved=exact_equal(target,factor*actual)
+    if simplify_exact(factor*sp.conjugate(factor)-1) != 0 or not proved:
+        return dict(status="identity_not_proved", phase_exact=phase_exact)
+    return dict(status="verified_symbolic", phase_exact=phase_exact,
+                cost=circuit_cost(sequence).as_dict(), operations=encode_sequence(sequence),
+                virtual_gp=None if phase_exact else dict(factor=str(factor), physical=False, cost=0),
+                verification="exact_exponential_polynomial_identity")
+
+
+def encode_sequence(sequence):
+    return [dict(gate=op[0], parameters=[str(p) for p in op[1:-1]], wires=list(op[-1])) for op in sequence]
+
+
+def retain_phase_results(exact, projective):
+    """Prefer phase exact; retain projective only for a strictly better cost."""
+    good = lambda row: row is not None and row.get("status") == "verified_symbolic"
+    def key(row):
+        cost = row["cost"]
+        return cost["entanglers"], float(sp.sympify(cost["parameter_score"])), cost["single_qubit_gates"]
+    if good(exact):
+        keep_projective = good(projective) and key(projective) < key(exact)
+        return dict(preferred="projective" if keep_projective else "phase_exact", phase_exact=exact,
+                    projective=projective if keep_projective else None,
+                    projective_omitted_as_no_better=good(projective) and not keep_projective)
+    return dict(preferred="projective" if good(projective) else None, phase_exact=exact,
+                projective=projective, projective_omitted_as_no_better=False)
