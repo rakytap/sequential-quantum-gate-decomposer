@@ -304,6 +304,19 @@ def get_gatecost(compiled_circuit, param_syms):
     param_cost = 0.2
     gatecost = sum((1<<len(x[1]))+sum((complex(sympy.log(sympy.Abs(z.to_sympy(param_syms).simplify().as_numer_denom()[1]), 2).evalf()).real+0.01)*param_cost for z in x[2]) for x in compiled_circuit.gates)
     return gatecost
+
+def exact_residual_identity(matrix, allow_global_phase=False):
+    """Prove a residual is identity; sampling never constitutes this proof."""
+    matrix = sympy.ImmutableMatrix(matrix)
+    if matrix.rows != matrix.cols or matrix.rows == 0 or matrix.atoms(sympy.Float):
+        return False
+    simplify = lambda x: sympy.simplify(sympy.trigsimp(sympy.expand_complex(x), method="fu"))
+    phase = matrix[0, 0] if allow_global_phase else sympy.S.One
+    if allow_global_phase and simplify(phase*sympy.conjugate(phase)-1) != 0:
+        return False
+    return all(simplify(matrix[i,j]-(phase if i==j else 0)) == 0
+               for i in range(matrix.rows) for j in range(matrix.cols))
+
 def eval_circ(unitary, params, compiled_circuit, symonly=False, allow_global_phase=False):
     param_syms = [vardict[x[1]] for x in params]
     num_qubits, rescirc = get_eval_circ(unitary, param_syms, compiled_circuit)
@@ -320,11 +333,15 @@ def eval_circ(unitary, params, compiled_circuit, symonly=False, allow_global_pha
     symcost = eval_symcost(num_qubits, rescirc, allow_global_phase=allow_global_phase)
     osrcost = eval_osrcost(num_qubits, rescirc, params, param_syms)
     gatecost = get_gatecost(compiled_circuit, param_syms)
-    if osrcost == 0.0 and (symcost == 0.0 or cost == 0.0):
-        print("Found exact solution:", compiled_circuit, osrcost, symcost, cost, gatecost)
-        print(rescirc)
+    if osrcost == 0.0 and (symcost == 0.0 or (not symonly and abs(cost) <= 1e-12)):
+        if exact_residual_identity(rescirc, allow_global_phase):
+            symcost = 0.0
+            print("Found exact solution:", compiled_circuit, osrcost, symcost, cost, gatecost)
+            print(rescirc)
+        elif symcost == 0.0:
+            symcost = 1.0
     return (osrcost, symcost, cost, gatecost), rescirc
-def evaluate(individual, pset, hof, unitary, params, num_qubits, ansatz, cost_func_method):
+def evaluate(individual, pset, hof, unitary, params, num_qubits, ansatz, cost_func_method, allow_global_phase=True):
     #print(individual)
     compiled_circuit = CircuitBuilder()
     count = 0
@@ -340,8 +357,8 @@ def evaluate(individual, pset, hof, unitary, params, num_qubits, ansatz, cost_fu
             compiled_circuit.add_circuit(cc)
             count += 1
     #print(compiled_circuit)
-    (osrcost, symcost, cost, gatecost), rescirc = eval_circ(unitary, params, compiled_circuit, allow_global_phase=True)
-    if cost == 0.0 or symcost == 0:
+    (osrcost, symcost, cost, gatecost), rescirc = eval_circ(unitary, params, compiled_circuit, allow_global_phase=allow_global_phase)
+    if symcost == 0:
         hof.clear()
         hof.insert(individual)
     import math
@@ -404,7 +421,7 @@ def gen_ansatz(gate, scale_max, layers, basis, u3_ansatz=False, gp_gate=False):
         ansatz.append((1, functools.partial(gen_gate_qubits, 'GP', tuple(range(num_qubits)))))
         regions.append(False)
     return ansatz, regions, num_qubits, Umtx, param_info
-def decompose_unitary(gate, scale_max, layers=4, basis=('CNOT', 'S', 'Sdg', 'T', 'Tdg', 'Ry', 'Rz', 'H')):
+def decompose_unitary(gate, scale_max, layers=4, basis=('CNOT', 'S', 'Sdg', 'T', 'Tdg', 'Ry', 'Rz', 'H'), allow_global_phase=True):
     ansatz, regions, num_qubits, Umtx, param_info = gen_ansatz(gate, scale_max, layers, basis, u3_ansatz=False)
 
     pset = gp.PrimitiveSetTyped("MAIN", [ParamIndex for _ in param_info], CircuitBuilder)
@@ -464,7 +481,7 @@ def decompose_unitary(gate, scale_max, layers=4, basis=('CNOT', 'S', 'Sdg', 'T',
     hof = tools.HallOfFame(1)
     #toolbox/pset contains wrapper functions
     cost_func_method = COST_METHOD_TRACE
-    toolbox.register("evaluate", functools.partial(evaluate, pset=pset, hof=hof, unitary=Umtx, params=param_info, num_qubits=num_qubits, ansatz=ansatz, cost_func_method=cost_func_method))
+    toolbox.register("evaluate", functools.partial(evaluate, pset=pset, hof=hof, unitary=Umtx, params=param_info, num_qubits=num_qubits, ansatz=ansatz, cost_func_method=cost_func_method, allow_global_phase=allow_global_phase))
     # Prefer parsimony to control tree bloat
     #toolbox.register("select", tools.selDoubleTournament, fitness_size=7, parsimony_size=1.4, fitness_first=True)
     toolbox.register("select", tools.selNSGA2)
@@ -491,9 +508,9 @@ def decompose_unitary(gate, scale_max, layers=4, basis=('CNOT', 'S', 'Sdg', 'T',
     stats.register("std", np.std)
     stats.register("min", np.min)
     stats.register("max", np.max)
-    pool = multiprocessing.Pool()
-    toolbox.register("map", pool.map)
-    algorithms.eaSimple(pop, toolbox, cxpb=0.6, mutpb=0.3, ngen=100000, stats=stats, halloffame=hof, verbose=True)
+    with multiprocessing.Pool() as pool:
+        toolbox.register("map", pool.map)
+        algorithms.eaSimple(pop, toolbox, cxpb=0.6, mutpb=0.3, ngen=100000, stats=stats, halloffame=hof, verbose=True)
     #algorithms.eaMuPlusLambda(pop, toolbox, mu=100, lambda_=1000, cxpb=0.6, mutpb=0.3, ngen=100000, stats=stats, halloffame=hof, verbose=True)
     #algorithms.eaMuCommaLambda(pop, toolbox, mu=100, lambda_=1000, cxpb=0.6, mutpb=0.3, ngen=100000, stats=stats, halloffame=hof, verbose=True)
     #algorithms.eaGenerateUpdate(toolbox, ngen=100000, stats=stats, halloffame=hof, verbose=True)
@@ -526,9 +543,15 @@ def key_conv(x):
     #return sympy.Trace(sympy.Abs(re)+sympy.Abs(im)*sympy.I).rewrite(sympy.Sum)
     return sympy.Add(*(sympy.Abs(re)+sympy.Abs(im)*sympy.I))
     #return sympy.Abs(sympy.Add(*(re+im)))
-def best_first(starts, is_goal, neighbors, eval_E, canonicalize, find_min=False):
+def best_first(starts, is_goal, neighbors, eval_E, canonicalize, find_min=False, workers=None):
+    if workers == 1:
+        return _best_first(starts, is_goal, neighbors, eval_E, canonicalize, find_min, map)
+    with multiprocessing.Pool(processes=workers) as pool:
+        return _best_first(starts, is_goal, neighbors, eval_E, canonicalize, find_min, pool.map)
+
+def _best_first(starts, is_goal, neighbors, eval_E, canonicalize, find_min, map_evaluations):
     import heapq
-    p = multiprocessing.Pool()
+    serial = itertools.count()
     # starts: iterable of nodes (can be just [start_node])
     pq = []
     best_E_by_key = {}   # dominance pruning per canonical state
@@ -537,13 +560,14 @@ def best_first(starts, is_goal, neighbors, eval_E, canonicalize, find_min=False)
         E, k = eval_E(s)
         k = key_conv(k)
         best_E_by_key[k] = E
-        heapq.heappush(pq, (E, s))
+        heapq.heappush(pq, (E, next(serial), s))
     bestE, best = None, None
     while pq:
-        E, node = heapq.heappop(pq)
+        E, _, node = heapq.heappop(pq)
 
         if is_goal(E):
-            bestE, best = E, node
+            if bestE is None or E[3] < bestE[3]:
+                bestE, best = E, node
             if not find_min: return node
             continue
 
@@ -558,7 +582,7 @@ def best_first(starts, is_goal, neighbors, eval_E, canonicalize, find_min=False)
         nbrs = neighbors(node, E, bestE)
         if len(nbrs) == 0: continue
         print(E, node, k, knb)
-        for nb, (Enb, knb) in zip(nbrs, p.map(eval_E, nbrs)):
+        for nb, (Enb, knb) in zip(nbrs, map_evaluations(eval_E, nbrs)):
         #for nb in nbrs:
         #    Enb, knb = eval_E(nb)
             knb = key_conv(knb)
@@ -567,7 +591,7 @@ def best_first(starts, is_goal, neighbors, eval_E, canonicalize, find_min=False)
                 continue
 
             best_E_by_key[knb] = Enb
-            heapq.heappush(pq, (Enb, nb))
+            heapq.heappush(pq, (Enb, next(serial), nb))
 
     return best
 def make_circ(ansatz, node, num_qubits):
@@ -647,7 +671,7 @@ def gen_clifford():
 #not maximally entangling: CS, CT
 #maximally entangling: CNOT, CZ, CY, CH, iSWAP, SiSWAP (partial), XX(pi/4), exp(i pi/4 (X⊗X + Y⊗Y)), SSWAP (partial)
 #maximally entangling only at specific angles: CRX, CRY, CRZ, CP, Rxy, iSWAP_pow
-def decompose_unitary_search(orig_gate, scale_max, layers=4, basis=('CNOT',)+single_gate_clifford+('T', 'Tdg', 'P', 'Rx', 'Ry', 'Rz', 'U2'), allow_global_phase=True, find_min=False):
+def decompose_unitary_search(orig_gate, scale_max, layers=4, basis=('CNOT',)+single_gate_clifford+('T', 'Tdg', 'P', 'Rx', 'Ry', 'Rz', 'U2'), allow_global_phase=True, find_min=False, workers=None):
     ansatz, regions, num_qubits, Umtx, param_info = gen_ansatz(orig_gate, scale_max, layers, basis)
     no_ansatz = False
     if no_ansatz: ansatz, regions = [None], [True]
@@ -756,12 +780,6 @@ def decompose_unitary_search(orig_gate, scale_max, layers=4, basis=('CNOT',)+sin
 
     #startcost = eval_circ(Umtx, param_info, CircuitBuilder())[0]
     starts = list(itertools.product(*[(((),) if region else ((x,) for x in gen_angles(1))) for region in regions for qbit in range(num_qubits if region else 1)]))
-    starts[0] = ((), (('Tdg', 1,),), (('T', 2,),), (), (('T', 1,),), (('Rx', sympy.pi/2, 2,), ('T', 2,)), (), (), (('T', 2,),),
-                 (), (), (('Tdg', 2,),), (), (), (('T', 2,), ('Rx', -sympy.pi/4, 2,), ('Ry', -sympy.pi/2, 2,)), (), (('T', 1,),), (),
-                 (), (), (), (('Tdg', 0,),), (('Tdg', 1,),), ())
-    starts[0] = ((), (('Tdg', 1,),), (('T', 2,),), (), (('T', 1,),), (('T', 2,),), (), (), (('T', 2,),),
-                 (), (), (('Tdg', 2,),), (), (), (('T', 2,),), (), (('T', 1,),), (),
-                 (), (), (), (('Tdg', 0,),), (('Tdg', 1,),), ())
     #'CSWAP': lambda: compile_gates(3, [('Tdg', (1,)), ('T', (2,)), ('CNOT', [2, 1]), ('T', (1,)), ('Rx', sympy.pi/2, (2,)), ('T', (2,)), ('CNOT', [0, 2]), ('T', (2,)), ('CNOT', [1, 2]), ('Tdg', (2,)), ('CNOT', [0, 2]), ('T', (2,)), ('Rx', -sympy.pi/4, (2,)), ('Ry', -sympy.pi/2, (2,)), ('CNOT', [0, 1]), ('T', (1,)), ('CNOT', [0, 1]), ('CNOT', [2, 1]), ('Tdg', (0,)), ('Tdg', (1,)), ('GP', -sympy.pi/8, 3, [0, 1, 2])]),
     #res = A_star(starts, lambda node: eval(node) == 0, lambda node: eval(node),
     #       lambda node: [tuple(x+((gate[1:],) if gate[0] == i else ()) for i, x in enumerate(node)) for gate in gates],
@@ -791,14 +809,14 @@ def decompose_unitary_search(orig_gate, scale_max, layers=4, basis=('CNOT',)+sin
         yield from (mat for pauli_dressing in pauli_dressings for preU in preUs for mat in (sympy.ImmutableMatrix(eval_circ(preU, param_info, pauli_dressing, True, allow_global_phase=allow_global_phase)[2]),) if mat != U)
         #yield from (mat for pauli_dressing in pauli_dressings for mat in (sympy.ImmutableMatrix(eval_circ(U, param_info, pauli_dressing, True, allow_global_phase=allow_global_phase)[2]),) if mat != U)
 
-    res = best_first(starts, lambda E: E[0] == 0.0 and (E[1] == 0.0 or E[2] == 0.0), get_neighbors,
-                     functools.partial(eval, Umtx, param_info, ansatz, allow_global_phase), canonicalize, find_min=find_min)
+    res = best_first(starts, lambda E: E[0] == 0.0 and E[1] == 0.0, get_neighbors,
+                     functools.partial(eval, Umtx, param_info, ansatz, allow_global_phase), canonicalize, find_min=find_min, workers=workers)
     if res is None: return res
     if not find_min and not no_ansatz:
         basis_no_clifford = tuple(g for g in basis if g not in clifford_descs)
         print(res)
         def remap_qubits(x, qbit): return tuple(z[:-1] + (qbit,) for z in x)
-        res = tuple(region if len(region) <= 1 else remap_qubits(decompose_unitary_search((1, param_info, lambda *args: compile_gates(1, make_circ([None], (remap_qubits(region, 0),), 1).to_sympy(args))), scale_max, layers, basis=basis_no_clifford, find_min=True)[0][0], i % num_qubits)
+        res = tuple(region if len(region) <= 1 else remap_qubits(decompose_unitary_search((1, param_info, lambda *args: compile_gates(1, make_circ([None], (remap_qubits(region, 0),), 1).to_sympy(args))), scale_max, layers, basis=basis_no_clifford, find_min=True, workers=workers)[0][0], i % num_qubits)
                     for i, region in enumerate(res))
         print(res)
     invparams = {vardict[x[1]]: x[1] for x in param_info}

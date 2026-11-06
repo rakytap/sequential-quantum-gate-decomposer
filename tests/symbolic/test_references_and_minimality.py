@@ -132,6 +132,9 @@ def test_sdk_phase_correction_cannot_hide_a_relative_phase_or_wrong_operator(mon
     ("Margolus", (), "cx_u", 3), ("Margolus", (), "ibm_cx", 3),
     ("CCX", (), "cx_rz_ry", 6), ("CCX", (), "xx_rz_ry", 6),
     ("CCXPow", (sp.Rational(1,7),), "ibm_cx", 20),
+    ("WalshHadamard", (3,), "cx_u", 0), ("QFT", (3,), "cx_u", 9),
+    ("QFTdg", (3,), "cx_u", 9), ("Permutation", ((2,0,1),), "cx_u", 6),
+    ("MS", (3, sp.pi/7), "cx_u", 6),
 ])
 def test_sdk_comparisons_replay_with_phase_and_respect_known_upper_bounds(gate, params, basis, bound):
     pytest.importorskip("qiskit")

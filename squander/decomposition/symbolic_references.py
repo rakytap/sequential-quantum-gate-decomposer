@@ -82,6 +82,46 @@ def _sdk_gate(name, parameters, target):
     from qiskit.quantum_info import Operator
     from qiskit.exceptions import QiskitError
     canonical = gates.gate_definition(name).name
+    # Register constructors have integer widths, matrix/list arguments, and
+    # keyword control states. Converting every argument to float discards their
+    # structure and can make a tensor product acquire spurious entanglers.
+    from qiskit import QuantumCircuit
+    from qiskit.quantum_info import Pauli
+    matrix = lambda value: _numeric(sp.ImmutableMatrix(value))
+    constructors = {
+        "MCX": lambda: library.MCXGate(int(parameters[0]), ctrl_state=(
+            int(parameters[1]) if len(parameters) > 1 and parameters[1] is not None else None)),
+        "MCPhase": lambda: library.MCPhaseGate(float(parameters[0]), int(parameters[1])),
+        "MCMT": lambda: library.MCMTGate(library.UnitaryGate(matrix(parameters[0])),
+                                         int(parameters[1]), int(parameters[2])),
+        "QFT": lambda: library.QFTGate(int(parameters[0])),
+        "QFTdg": lambda: library.QFTGate(int(parameters[0])).inverse(),
+        "MS": lambda: library.MSGate(int(parameters[0]), float(parameters[1])),
+        "Pauli": lambda: library.PauliGate(parameters[0]),
+        "PauliRotation": lambda: library.PauliEvolutionGate(Pauli(parameters[0]), time=float(parameters[1])/2),
+        "Permutation": lambda: library.PermutationGate(list(parameters[0])),
+        "LinearFunction": lambda: library.LinearFunction(np.asarray(parameters[0], dtype=bool)),
+        "Diagonal": lambda: library.DiagonalGate([complex(value) for value in parameters[0]]),
+        "UC": lambda: library.UCGate([matrix(value) for value in parameters[0]]),
+        "UCRX": lambda: library.UCRXGate([float(value) for value in parameters[0]]),
+        "UCRY": lambda: library.UCRYGate([float(value) for value in parameters[0]]),
+        "UCRZ": lambda: library.UCRZGate([float(value) for value in parameters[0]]),
+        "Controlled": lambda: library.UnitaryGate(matrix(parameters[0])).control(
+            int(parameters[1]) if len(parameters) > 1 else 1,
+            ctrl_state=(int(parameters[2]) if len(parameters) > 2 and parameters[2] is not None else None)),
+    }
+    if canonical in {"WalshHadamard", "Identity"}:
+        circuit = QuantumCircuit(int(parameters[0]))
+        if canonical == "WalshHadamard":
+            circuit.h(range(circuit.num_qubits))
+        constructors[canonical] = circuit.to_gate
+    if canonical in constructors:
+        try:
+            operation = constructors[canonical]()
+            if np.allclose(Operator(operation).data, target, atol=1e-12, rtol=0):
+                return operation, canonical+".structured_constructor"
+        except (TypeError, ValueError, AttributeError, QiskitError):
+            pass
     for class_name, catalog_name in gates._QISKIT_NAMES.items():
         if catalog_name != canonical:
             continue
@@ -120,10 +160,20 @@ def _transpile(circuit, basis, seed):
     zyz = basis in {"cx_rz_ry", "xx_rz_ry"}
     compiler_basis = (allowed[0], "u") if zyz else allowed
     result = transpile(circuit, basis_gates=list(compiler_basis), optimization_level=3,
-                       approximation_degree=1.0, seed_transpiler=seed)
+                       approximation_degree=1.0, seed_transpiler=seed, qubits_initially_zero=False)
+    level = 3
+    if result.layout is not None and result.layout.final_index_layout() != list(range(result.num_qubits)):
+        # Levels 2/3 may replace actual SWAPs with a virtual output permutation.
+        # Our contract fixes the input AND output wire order, so those SWAPs
+        # must be synthesized and charged. Level 1 retains the permutation.
+        result = transpile(circuit, basis_gates=list(compiler_basis), optimization_level=1,
+                           approximation_degree=1.0, seed_transpiler=seed, qubits_initially_zero=False)
+        level = 1
+    result.metadata = dict(result.metadata or {}, symbolic_reference_optimization_level=level)
     if not zyz:
         return result
     expanded = QuantumCircuit(result.num_qubits, global_phase=result.global_phase)
+    expanded.metadata = result.metadata
     for instruction in result.data:
         wires = [result.find_bit(q).index for q in instruction.qubits]
         if instruction.operation.name == "u":
@@ -150,6 +200,7 @@ def qiskit_baseline(name, parameters=(), basis="cx_u", *, seed=219, tolerance=2e
     get_basis(basis)
     row = {"gate": name, "parameters": [str(p) for p in parameters], "basis": basis,
            "seed": seed, "ancillas": 0, "topology": "all_to_all",
+           "qubits_initially_zero": False,
            "symbolic_proof": False, "parameter_sensitive_score": None}
     if basis not in QISKIT_BASES:
         return dict(row, status="unsupported_sdk_basis")
@@ -201,7 +252,8 @@ def qiskit_baseline(name, parameters=(), basis="cx_u", *, seed=219, tolerance=2e
             verified.append(dict(row, status="verified_numeric", input=source,
                                  entanglers=entanglers, parameter_slots=slots,
                                  global_phase=float(result.global_phase), operations=operations,
-                                 max_error=error, explicit_sdk_phase_correction=phase_correction))
+                                 max_error=error, explicit_sdk_phase_correction=phase_correction,
+                                 optimization_level=result.metadata.get("symbolic_reference_optimization_level")))
         except Exception as error:
             failures.append({"input": source, "error": str(error)})
     if not verified:

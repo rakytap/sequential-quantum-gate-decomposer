@@ -10,7 +10,9 @@
     "primary_objective": "minimum primitive entanglers",
     "secondary_objective": "unchanged legacy parameter-sensitive gate score for exact symbolic circuits",
     "sdk_score": "numerical parameter slots are diagnostic only; never substituted for the symbolic score",
-    "family_policy": "one parameter binding is not a proof for the entire parameterized family"
+    "family_policy": "one parameter binding is not a proof for the entire parameterized family",
+    "input_state": "arbitrary; logical qubits are not assumed zero-initialized",
+    "wire_order": "fixed on input and output; final permutations are not free"
   },
   "sources": {
     "sbm2004": {

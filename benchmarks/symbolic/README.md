@@ -7,14 +7,18 @@ optimal symbolic synthesis results.
 
 The eleven supported Qiskit adapters provide 3,597 matrix-verified numerical
 upper bounds. The other 6,867 cells explicitly report `unsupported_sdk_basis`.
-No circuit failed verification and no selected result exceeded an applicable
-fixed-gate literature bound in the curated ledger (24 comparisons).
+Every selected circuit passed verification, every supported comparison had a
+valid circuit, and no selected result exceeded an applicable fixed-gate
+literature bound in the curated ledger (24 comparisons).
 
 The run uses Qiskit 2.2.3, SymPy 1.14.0, NumPy as recorded in the JSON, and seed
 219. Connectivity is all-to-all with zero ancillas. All operations, parameters,
 global phases, errors, attempted inputs, source checksums, and compiler failures
 are retained. Scalar-phase corrections are explicit operations on the delivered
 circuit's global phase; the verifier does not ignore phase differences.
+Inputs are arbitrary states, and both input and output wire orders are fixed.
+Register structure is retained; virtual output permutations are materialized
+through Qiskit's permutation-preserving compilation path and charged.
 
 | Gate | Selected CNOT upper bound |
 | --- | ---: |

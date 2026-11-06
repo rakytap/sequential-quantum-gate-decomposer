@@ -222,6 +222,11 @@ synthesis is worse. An SDK scalar-phase omission is repaired in the delivered
 circuit and recorded explicitly, then matrix equality is checked again.
 Relative-phase errors are rejected. A nonzero exit status reports a compiler
 failure or a regression against an applicable recorded literature bound.
+Register constructors retain their integer widths and tensor-product structure.
+The compiler assumes arbitrary input states and fixes both input and output
+wire order. Qiskit's [virtual output permutations](https://quantum.cloud.ibm.com/docs/en/api/qiskit/2.2/qiskit.transpiler.TranspileLayout)
+are therefore not free SWAPs: the adapter retains and charges their physical
+implementation, recording when it uses the permutation-preserving level 1 path.
 
 A numerical binding is an upper-bound witness for that binding, never a proof
 for a whole symbolic family. SDK parameter-slot counts are diagnostic only;
@@ -229,7 +234,18 @@ floating angles are not converted to invented exact fractions to score them.
 `verify_symbolic_candidate` checks the exact matrix identity first, rejects a
 worse matched reference count, and computes the original `get_gatecost` for an
 exact circuit, including a separately supplied global-phase operation. Both
-legacy search methods and their score remain unchanged.
+legacy search methods remain available and their original gate score is
+unchanged.
+
+The search acceptance check now requires an exact symbolic identity. A small
+sampled numerical error only triggers that check; it cannot certify a solution.
+Both methods accept an explicit `allow_global_phase` policy. The optimistic
+search also removes the old unconditional Fredkin seed, keeps the cheapest
+goal when `find_min=True`, handles priority ties without ordering circuit
+objects, and closes its worker pool on return. Pass `workers=1` to run it
+without multiprocessing. Real single-qubit searches are regression-tested.
+`find_min` concerns the searched ansatz and original gate score; it is not a
+proof that every entangler structure or universal basis has been exhausted.
 
 ## Validation
 
