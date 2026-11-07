@@ -58,3 +58,12 @@ def test_continuous_native_ms_control_axis_is_proved_before_it_is_used():
     changed=copy.deepcopy(result)
     changed["controlled_chart_certificate"]["additional_frames"][0][1][1]="pi/7"
     assert not verify_controlled_chart_certificate(target,changed,basis)
+
+
+def test_opaque_matrix_entry_point_uses_the_native_osr_chart():
+    from symbolic_synthesis import synthesize_matrix
+    theta=sp.Symbol("theta",real=True)
+    target=gates.make_gate("CRX",theta)
+    result=synthesize_matrix(target,"sqrt_iswap_u",phase_exact=False,seconds=1)
+    assert result["status"]=="verified_symbolic" and result["cost"]["entanglers"]==2
+    assert verify_controlled_chart_certificate(target,result,get_basis("sqrt_iswap_u"))

@@ -671,7 +671,7 @@ def _attach_osr_certificate(result,target,basis):
     return result
 
 
-def synthesize_matrix(matrix,basis="cx_u",*,phase_exact=True,seconds=2.0):
+def _synthesize_matrix_existing(matrix,basis="cx_u",*,phase_exact=True,seconds=2.0):
     """Synthesize an opaque exact operator by native OSR factorization/search.
 
     A finite search failure remains open. Every returned physical circuit is
@@ -791,12 +791,9 @@ def _synthesize_existing(name, parameters=(), basis="cx_u", *, phase_exact=True,
         return dict(status="unresolved",phase_exact=phase_exact,reason=str(error))
 
 
-def synthesize(name,parameters=(),basis="cx_u",*,phase_exact=True,osr_seconds=2.0):
-    """Keep a proved native chart incumbent while optimizing its cost."""
-    selected=get_basis(basis) if isinstance(basis,str) else basis
+def _native_chart_incumbent(target,selected,phase_exact,additional=()):
     incumbent=None
     if selected.entangler in {"B","SiSWAP"}:
-        target=gates.make_gate(name,*parameters)
         if target.shape==(4,4) and not feasibility_obstruction(target,selected,phase_exact=phase_exact):
             if __package__:
                 from .symbolic_controlled_chart import synthesize_controlled_chart
@@ -811,16 +808,17 @@ def synthesize(name,parameters=(),basis="cx_u",*,phase_exact=True,osr_seconds=2.
                 if angle is not None and angle.is_real is True:
                     incumbent=synthesize_controlled_phase(angle,selected,phase_exact=phase_exact)
             if incumbent is None:
-                additional=()
-                if gates.gate_definition(name).name in {"IonQMS","IonQMSMax"}:
-                    additional=((("H",),("Rz",2*sp.pi*sp.sympify(parameters[0]))),)
                 incumbent=synthesize_controlled_chart(target,selected,phase_exact=phase_exact,
                                                        additional_frames=additional)
+    return incumbent
+
+
+def _with_chart_incumbent(incumbent,search):
     if __package__:
         from .symbolic_archive import SymbolicDeadline
     else:
         from symbolic_archive import SymbolicDeadline
-    try:result=_synthesize_existing(name,parameters,selected,phase_exact=phase_exact,osr_seconds=osr_seconds)
+    try:result=search()
     except SymbolicDeadline:
         if incumbent is None:raise
         return dict(incumbent,additional_search="wall_clock_budget_exhausted_after_proved_incumbent")
@@ -829,6 +827,27 @@ def synthesize(name,parameters=(),basis="cx_u",*,phase_exact=True,osr_seconds=2.
         cost=value["cost"]
         return cost["entanglers"],float(sp.sympify(cost["parameter_score"])),cost["single_qubit_gates"]
     return incumbent if result["status"]!="verified_symbolic" or key(incumbent)<key(result) else result
+
+
+def synthesize(name,parameters=(),basis="cx_u",*,phase_exact=True,osr_seconds=2.0):
+    """Keep a proved native chart incumbent while optimizing its cost."""
+    selected=get_basis(basis) if isinstance(basis,str) else basis
+    additional=()
+    if gates.gate_definition(name).name in {"IonQMS","IonQMSMax"}:
+        additional=((("H",),("Rz",2*sp.pi*sp.sympify(parameters[0]))),)
+    incumbent=(_native_chart_incumbent(gates.make_gate(name,*parameters),selected,phase_exact,additional)
+               if selected.entangler in {"B","SiSWAP"} else None)
+    return _with_chart_incumbent(incumbent,lambda:_synthesize_existing(
+        name,parameters,selected,phase_exact=phase_exact,osr_seconds=osr_seconds))
+
+
+def synthesize_matrix(matrix,basis="cx_u",*,phase_exact=True,seconds=2.0):
+    """Apply the same native OSR chart rules to opaque exact matrices."""
+    selected=get_basis(basis) if isinstance(basis,str) else basis
+    target=sp.ImmutableMatrix(matrix)
+    incumbent=_native_chart_incumbent(target,selected,phase_exact)
+    return _with_chart_incumbent(incumbent,lambda:_synthesize_matrix_existing(
+        target,selected,phase_exact=phase_exact,seconds=seconds))
 
 
 def synthesize_phase_pair(name,parameters=(),basis="cx_u"):

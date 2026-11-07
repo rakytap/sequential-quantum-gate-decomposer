@@ -56,6 +56,8 @@ def main():
     parser.add_argument("--output",type=Path,required=True)
     parser.add_argument("--workers",type=int,default=8)
     parser.add_argument("--seconds-per-mode",type=float,default=60)
+    parser.add_argument("--native-two-qubit",action="store_true",
+        help="Optimize fixed B/SQiSW words above their one-wire layer count, including bases unsupported by the SDK")
     args=parser.parse_args()
     if args.workers<1 or args.seconds_per_mode<=0:parser.error("Positive budget and workers required")
     previous,baselines=load(args.input),load(args.baselines)
@@ -63,6 +65,14 @@ def main():
     selected=[]
     for row in previous["rows"]:
         result=projective_result(row);base=sdk.get((row["gate"],row["basis"]))
+        if args.native_two_qubit:
+            if (row["target_scope"]!="fixed_gate" or row["basis"] not in {"berkeley_b","sqrt_iswap_u","google_sqrt_iswap"}
+                    or not result or result["status"]!="verified_symbolic" or make_gate(row["gate"]).shape!=(4,4)):continue
+            cap=2*(result["cost"]["entanglers"]+1)
+            exact=row.get("phase_exact") or {}
+            if (result["cost"]["single_qubit_gates"]>cap or exact.get("status")=="verified_symbolic"
+                    and exact["cost"]["single_qubit_gates"]>2*(exact["cost"]["entanglers"]+1)+1):selected.append(row)
+            continue
         if row["target_scope"]!="fixed_gate" or not result or not base or result["status"]!="verified_symbolic":continue
         if (result["cost"]["entanglers"]==base["entanglers"] and result["cost"]["single_qubit_gates"]>
                 sum(len(op["wires"])==1 for op in base["operations"])):selected.append(row)
@@ -71,7 +81,8 @@ def main():
         git_revision=subprocess.check_output(["git","rev-parse","HEAD"],cwd=ROOT,text=True).strip(),
         source_sha256=hashes,comparison_contract=comparison_contract(),versions=baselines["versions"],
         selection=dict(input=str(args.input),input_sha256=hashlib.sha256(args.input.read_bytes()).hexdigest(),
-            baselines=str(args.baselines),baseline_sha256=hashlib.sha256(args.baselines.read_bytes()).hexdigest()),
+            baselines=str(args.baselines),baseline_sha256=hashlib.sha256(args.baselines.read_bytes()).hexdigest(),
+            kind="native_two_qubit_local_layers" if args.native_two_qubit else "SDK_local_count_gaps"),
         budget_seconds_per_mode=args.seconds_per_mode,rows=[],clifford_certificates={})
     checkpoint=args.output.with_name(args.output.name+".partial.json.gz")
     with mp.get_context("fork").Pool(args.workers) as pool:
