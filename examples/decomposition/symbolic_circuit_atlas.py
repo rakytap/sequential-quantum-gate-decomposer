@@ -339,8 +339,10 @@ def gate_volume(report, output, store, names, archive_digest):
     expressions=list(store.aliases.items())
     for start in range(0,len(expressions),18):
         source.append(r"\pagehead{Exact expression glossary}{Definitions shared by the numbered circuit parameters and scalar factors.}{"+str(start+1)+"--"+str(min(start+18,len(expressions)))+"}")
+        source.append(r"\fitcontent{\dimexpr\textheight-36mm\relax}{")
         for value,symbol in expressions[start:start+18]:
             source.append(r"\par\vspace{3mm}\circuit{$"+symbol+"="+parameter_latex(value)+r"$}\par\vspace{3mm}")
+        source.append("}")
         source.append(r"\newpage")
     source.append(r"\end{document}")
     (output / "gates.tex").write_text("\n".join(source))

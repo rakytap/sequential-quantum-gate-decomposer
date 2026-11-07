@@ -5,7 +5,7 @@ import sympy as sp
 
 import symbolic_gates as gates
 from symbolic_identity import prove_circuit_identity
-from symbolic_native_echoes import b_cartan_source,b_pauli_echo,sqrt_iswap_exchange_source,b_sqrt_swap_source
+from symbolic_native_echoes import b_cartan_source,b_pauli_echo,sqrt_iswap_exchange_source,b_sqrt_swap_source,native_dcx_source
 
 
 @pytest.mark.parametrize("axes",list(itertools.product("XYZ",repeat=2)))
@@ -69,3 +69,10 @@ def test_explicit_real_phase_does_not_need_a_root_of_unity_search():
     angle=sp.acos(1/sp.sqrt(3))-sp.pi/2
     assert _phase(sp.exp(sp.I*angle))==angle
     assert _phase(sp.exp(sp.Symbol("theta",real=True))) is None
+
+
+@pytest.mark.parametrize("native",["B","SiSWAP"])
+def test_dcx_is_a_proved_clifford_frame_around_two_native_pulses(native):
+    word,factor=native_dcx_source(native)
+    assert sum(len(op[-1])==2 for op in word)==2
+    assert prove_circuit_identity(gates.make_gate("DCX"),word,factor)

@@ -154,7 +154,7 @@ def _cyclotomic_values(entries):
     except (ValueError,ZeroDivisionError):return None
 
 
-def _algebraic_circuit_identity(target,matrices,sequence,phase):
+def _algebraic_circuit_matrix(target,matrices,sequence,phase=1):
     """Multiply fixed circuits in one exact number field, with sparse rows.
 
     Repeated generic expression simplification after every embedded gate is
@@ -188,9 +188,41 @@ def _algebraic_circuit_identity(target,matrices,sequence,phase):
                     for column,value in previous[local].items():
                         result[column]=result.get(column,domain.zero)+coefficient*value
                 actual[index]={column:value for column,value in result.items() if value!=domain.zero}
+    return domain,values,actual
+
+
+def _algebraic_circuit_identity(target,matrices,sequence,phase):
+    data=_algebraic_circuit_matrix(target,matrices,sequence,phase)
+    if data is None:return None
+    domain,values,actual=data
     factor=values[phase]
     return all(values[target[row,column]]==factor*actual[row].get(column,domain.zero)
-               for row in range(size) for column in range(size))
+               for row in range(target.rows) for column in range(target.cols))
+
+
+def infer_algebraic_circuit_scalar(target,sequence):
+    """Infer and prove a fixed circuit's scalar in one exact number field.
+
+    None declines the algebraic domain; False proves that no scalar works.
+    A returned expression is checked against every matrix entry and its
+    exact unit norm before it can replace a slower symbolic matrix product.
+    """
+    target=sp.ImmutableMatrix(target)
+    matrices=[make_gate(op[0],*op[1:-1]) for op in sequence]
+    if target.free_symbols or any(matrix.free_symbols for matrix in matrices):return None
+    data=_algebraic_circuit_matrix(target,matrices,sequence)
+    if data is None:return None
+    domain,values,actual=data
+    pivot=next(((row,column,value) for row,entries in enumerate(actual)
+                for column,value in entries.items() if value!=domain.zero),None)
+    if pivot is None:return False
+    row,column,value=pivot
+    factor=values[target[row,column]]/value
+    if not all(values[target[row,column]]==factor*actual[row].get(column,domain.zero)
+               for row in range(target.rows) for column in range(target.cols)):return False
+    expression=domain.to_sympy(factor)
+    if domain.from_sympy(expression*sp.conjugate(expression))!=domain.one:return False
+    return expression
 
 
 def prove_circuit_identity(target, sequence, factor=1):

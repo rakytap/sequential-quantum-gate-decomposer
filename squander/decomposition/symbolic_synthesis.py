@@ -337,6 +337,18 @@ def _native_candidates(name,parameters,basis,*,even=False,source_operations=None
         else:
             from symbolic_fixed_templates import fixed_template_candidates
         result.extend(fixed_template_candidates(name,parameters,basis))
+        if name=="DCX" and not parameters and basis.entangler in {"B","SiSWAP"}:
+            if __package__:
+                from .symbolic_native_echoes import native_dcx_source
+                from .symbolic_local_rewrite import optimize_local_word
+            else:
+                from symbolic_native_echoes import native_dcx_source
+                from symbolic_local_rewrite import optimize_local_word
+            word,scalar=native_dcx_source(basis.entangler)
+            for candidate,phase in _native_candidates("Identity",(2,),basis,source_operations=word):
+                result.append((candidate,scalar*phase))
+                fused,correction,records=optimize_local_word(candidate,basis,2)
+                if records:result.append((fused,sp.simplify(scalar*phase*correction)))
         if basis.entangler=="B" and "U3" in basis.single_qubit_gates and name in {"SSWAP","SSWAPdg"} and not parameters:
             if __package__:
                 from .symbolic_native_echoes import b_sqrt_swap_source
@@ -796,13 +808,21 @@ def _native_chart_incumbent(target,selected,phase_exact,additional=()):
     if selected.entangler in {"B","SiSWAP"}:
         if target.shape==(4,4) and not feasibility_obstruction(target,selected,phase_exact=phase_exact):
             if __package__:
+                from .symbolic_native_fixed import synthesize_fixed_native
+                from .symbolic_matchgate_chart import synthesize_matchgate_chart
                 from .symbolic_controlled_chart import synthesize_controlled_chart
                 from .symbolic_sqrt_iswap_phase import synthesize_controlled_phase
                 from .symbolic_native_pauli import _phase
             else:
+                from symbolic_native_fixed import synthesize_fixed_native
+                from symbolic_matchgate_chart import synthesize_matchgate_chart
                 from symbolic_controlled_chart import synthesize_controlled_chart
                 from symbolic_sqrt_iswap_phase import synthesize_controlled_phase
                 from symbolic_native_pauli import _phase
+            incumbent=synthesize_fixed_native(target,selected,phase_exact=phase_exact)
+            if incumbent is not None:return incumbent
+            incumbent=synthesize_matchgate_chart(target,selected,phase_exact=phase_exact)
+            if incumbent is not None:return incumbent
             if selected.entangler=="SiSWAP" and target==sp.diag(1,1,1,target[3,3]):
                 angle=_phase(target[3,3])
                 if angle is not None and angle.is_real is True:

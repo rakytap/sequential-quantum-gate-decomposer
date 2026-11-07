@@ -99,3 +99,62 @@ def b_sqrt_swap_source(dagger=False):
           ("U3",sp.pi/3,beta,beta,(1,)),("U3",sp.pi/4,sp.pi,sp.pi,(0,)),
           ("B",(0,1)),("U3",-sp.pi/2,sp.pi,sp.pi/2,(0,)))
     return word,sp.exp(-sp.I*(beta-sp.pi/2))
+
+
+def native_dcx_source(entangler):
+    """Clifford frames around iSWAP, keeping its native two-pulse form."""
+    before=(("U3",0,0,-sp.pi/2,(1,)),("U3",sp.pi/2,0,0,(0,)))
+    after=(("U3",-sp.pi/2,0,-sp.pi/2,(1,)),("U3",0,0,sp.pi,(0,)))
+    if entangler=="SiSWAP":middle=(("SiSWAP",(0,1)),)*2
+    elif entangler=="B":middle=b_cartan_source((sp.pi/4,sp.pi/4,0))[0]
+    else:return None
+    return before+middle+after,sp.S.One
+
+
+def sqrt_iswap_berkeley_source():
+    """Two SQiSWs and three local rotations, with literal SU(4) phase."""
+    beta=2*sp.atan2(2**sp.Rational(-1,4),sp.sqrt(2)*sp.sin(sp.pi/8))
+    epsilon=sp.pi-beta
+    rx=lambda angle:("U3",angle,-sp.pi/2,sp.pi/2,(0,))
+    return (rx(epsilon),("SiSWAP",(0,1)),rx(-beta),("SiSWAP",(0,1)),rx(epsilon)),sp.S.One
+
+
+def _inverse_sqrt_iswap_word(word):
+    """Invert native U3/SQiSW words and absorb inverse-pulse Z frames."""
+    expanded=[]
+    for op in reversed(word):
+        if op[0]=="SiSWAP":expanded.extend((("Z",(0,)),op,("Z",(0,))))
+        else:
+            _,theta,phi,lam,wire=op
+            expanded.append(("U3",-theta,-lam,-phi,wire))
+    pending=[[],[]];output=[]
+    def flush(wire):
+        block=pending[wire]
+        local=[op for op in block if op[0]!="Z"]
+        if not local:
+            if len(block)%2:output.append(("U3",0,0,sp.pi,(wire,)))
+        else:
+            if len(local)!=1:raise ValueError("Unexpected inverse native layer")
+            op=local[0];index=block.index(op)
+            before=sum(item[0]=="Z" for item in block[:index])%2
+            after=sum(item[0]=="Z" for item in block[index+1:])%2
+            output.append(("U3",op[1],op[2]+after*sp.pi,op[3]+before*sp.pi,op[-1]))
+        pending[wire]=[]
+    for op in expanded:
+        if len(op[-1])==1:pending[op[-1][0]].append(op)
+        else:flush(0);flush(1);output.append(op)
+    flush(0);flush(1)
+    return tuple(output)
+
+
+def sqrt_iswap_sqrt_swap_source(dagger=False):
+    """Three SQiSWs; all fixed identities are proved before compiler use."""
+    beta=2*sp.atan2(2**sp.Rational(-1,4),sp.sqrt(2)*sp.sin(sp.pi/8))
+    epsilon=sp.pi-beta
+    rx=lambda angle,wire:("U3",angle,-sp.pi/2,sp.pi/2,(wire,))
+    word=(("U3",sp.pi,sp.pi/2,sp.pi/2,(0,)),("SiSWAP",(0,1)),
+          ("U3",sp.pi/2,sp.pi/2,sp.pi/2,(0,)),rx(sp.pi/2-epsilon,1),
+          ("SiSWAP",(0,1)),rx(-sp.pi,0),rx(-epsilon,1),("SiSWAP",(0,1)),
+          rx(sp.pi/2,0),rx(sp.pi/2-epsilon,1))
+    if dagger:return word,sp.exp(-sp.I*sp.pi/8)
+    return _inverse_sqrt_iswap_word(word),sp.exp(sp.I*sp.pi/8)

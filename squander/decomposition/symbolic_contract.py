@@ -116,13 +116,21 @@ def verify_circuit(target, sequence, basis, *, phase_exact=True, scalar_factor=N
     elif scalar_factor is not None:
         factor=sp.sympify(scalar_factor)
     else:
-        actual = compile_gates(width, sequence)
-        pivot = next((i for i, value in enumerate(actual) if value.is_zero is False), None)
-        if pivot is None:
-            pivot = next((i for i, value in enumerate(actual) if simplify_exact(value) != 0), None)
-        if pivot is None:
-            return dict(status="identity_not_proved", phase_exact=False)
-        factor = simplify_exact(target[pivot]/actual[pivot])
+        if __package__:
+            from .symbolic_identity import infer_algebraic_circuit_scalar
+        else:
+            from symbolic_identity import infer_algebraic_circuit_scalar
+        inferred=infer_algebraic_circuit_scalar(target,sequence)
+        if inferred is False:return dict(status="identity_not_proved",phase_exact=False)
+        if inferred is not None:factor=inferred
+        else:
+            actual = compile_gates(width, sequence)
+            pivot = next((i for i, value in enumerate(actual) if value.is_zero is False), None)
+            if pivot is None:
+                pivot = next((i for i, value in enumerate(actual) if simplify_exact(value) != 0), None)
+            if pivot is None:
+                return dict(status="identity_not_proved", phase_exact=False)
+            factor = simplify_exact(target[pivot]/actual[pivot])
     if __package__:
         from .symbolic_identity import prove_circuit_identity
     else:
