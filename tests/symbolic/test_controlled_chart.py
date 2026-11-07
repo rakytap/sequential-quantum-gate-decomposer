@@ -20,6 +20,9 @@ def test_controlled_su2_chart_keeps_a_full_cu_family_and_phase_contract(basis_na
     assert verify_controlled_chart_lemma()
     assert result["cost"]["entanglers"]==2
     assert verify_controlled_chart_certificate(target,result,basis)
+    legacy=copy.deepcopy(result)
+    legacy["controlled_chart_certificate"].pop("additional_frames",None)
+    assert verify_controlled_chart_certificate(target,legacy,basis)
     changed=copy.deepcopy(result)
     previous=changed["operations"][0]["parameters"][0]
     changed["operations"][0]["parameters"][0]="("+previous+")+pi"

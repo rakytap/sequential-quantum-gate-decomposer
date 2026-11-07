@@ -72,3 +72,25 @@ def test_phase_flips_around_a_nonclifford_native_rotation_need_one_local(exact):
     assert result["cost"]["single_qubit_gates"]==1
     assert result["operations"][0]["gate"]=="Rx"
     assert verify_local_rewrite_certificate(target,result,basis)
+
+
+def test_recorded_block_proof_replays_independently_of_the_optimizer(monkeypatch):
+    import symbolic_local_rewrite as rewrite
+    basis=get_basis("cx_u")
+    word=(("U3",sp.pi/2,0,sp.pi,(0,)),("U3",0,0,sp.pi/4,(0,)),
+          ("U3",sp.pi/2,0,sp.pi,(0,)),("U3",0,0,sp.pi/3,(0,)))
+    target=gates.compile_gates(1,word)
+    parent=verify_circuit(target,word,basis,phase_exact=True)
+    result=optimize_local_result(target,parent,basis)
+    assert result["local_rewrite_certificate"]["phase_absorption"] is not None
+    assert result["cost"]["single_qubit_gates"]==2
+    def unavailable(*args,**kwargs):raise AssertionError("Replay must not rerun a search")
+    monkeypatch.setattr(rewrite,"optimize_local_result",unavailable)
+    monkeypatch.setattr(rewrite,"_block",unavailable)
+    assert verify_local_rewrite_certificate(target,result,basis)
+    tampered=copy.deepcopy(result)
+    tampered["local_rewrite_certificate"]["phase_absorption"]["factor"]="1"
+    assert not verify_local_rewrite_certificate(target,tampered,basis)
+    projective=copy.deepcopy(result)
+    projective.update(phase_exact=False,virtual_gp=dict(factor="1",physical=False,cost=0))
+    assert verify_local_rewrite_certificate(target,projective,basis)

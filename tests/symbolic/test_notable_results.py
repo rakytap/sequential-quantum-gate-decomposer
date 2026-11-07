@@ -49,3 +49,14 @@ def test_shorter_verified_alternative_does_not_override_score_priority():
     assert compared[0]["smaller_local_count_has_higher_verified_score"]
     assert compared[0]["shorter_verified_alternative_score"]=="9"
     assert compared[0]["sdk_parameter_score"] is None
+
+
+def test_local_layer_count_opportunities_keep_literal_phase_and_score_scopes():
+    result=dict(status="verified_symbolic",cost=dict(entanglers=2,single_qubit_gates=7))
+    row=dict(gate="SYC",basis="berkeley_b",phase_exact=result,projective=result)
+    rows=notable.local_layer_audit(dict(rows=[row]))
+    assert len(rows)==1 and rows[0]["phase_policy"]=="projective"
+    assert rows[0]["local_layer_count_cap"]==6
+    assert not rows[0]["parameter_score_improvement_proved"]
+    row["basis"]="cz_rz_rx"
+    assert notable.local_layer_audit(dict(rows=[row]))==[]

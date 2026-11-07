@@ -292,6 +292,10 @@ def verify_controlled_chart_certificate(target,result,basis):
                          for word in result["controlled_chart_certificate"].get("additional_frames",[]))
         expected=synthesize_controlled_chart(target,basis,phase_exact=result["phase_exact"],additional_frames=additional)
     except (ValueError,KeyError,TypeError):return False
-    return expected is not None and all(result.get(key)==expected.get(key) for key in
-        ("status","operations","cost","virtual_gp","controlled_chart_certificate",
-         "entangler_optimal","entangler_optimality_certificate","conditional_entangler_optimality"))
+    if expected is None:return False
+    certificate=dict(result["controlled_chart_certificate"])
+    certificate.setdefault("additional_frames",[])
+    return (certificate==expected["controlled_chart_certificate"] and
+        all(result.get(key)==expected.get(key) for key in
+            ("status","operations","cost","virtual_gp","entangler_optimal",
+             "entangler_optimality_certificate","conditional_entangler_optimality")))

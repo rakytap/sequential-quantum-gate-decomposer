@@ -16,6 +16,8 @@ import sympy as sp
 from symbolic_gates import make_gate, decomposition_sequence
 from symbolic_identity import prove_circuit_identity
 from symbolic_sdk_lift import lift_sdk_candidate
+from symbolic_bases import get_basis
+from symbolic_gates import gate_definition
 from symbolic_circuit_atlas import escape, qiskit_latex, compressed_operations
 
 
@@ -81,6 +83,30 @@ def local_audit(archive, baselines):
             smaller_local_count_has_higher_verified_score=priority_tradeoff,
             score_comparison="not_certified_from_floating_SDK_angles", novelty_claim=False))
     return sorted(rows, key=lambda r:(r["gate"].casefold(), r["basis"])), dict(counts)
+
+
+def local_layer_audit(archive):
+    """Local-count opportunities, without a claim about the secondary score.
+
+    E entanglers split each wire into at most E+1 local blocks. U3/PhasedXZ
+    represent each block projectively; one extra local absorbs the scalar
+    for literal equality. Fewer locals need not mean a lower original score.
+    """
+    rows=[]
+    for row in archive["rows"]:
+        if gate_definition(row["gate"]).num_qubits!=2:continue
+        if not ({"U3","U","PhasedXZ"}&set(get_basis(row["basis"]).single_qubit_gates)):continue
+        for mode in ("phase_exact","projective"):
+            result=row.get(mode) if mode=="phase_exact" else effective_projective(row)
+            if not result or result.get("status")!="verified_symbolic":continue
+            cost=result["cost"]
+            cap=2*(cost["entanglers"]+1)+(mode=="phase_exact")
+            if cost["single_qubit_gates"]>cap:
+                rows.append(dict(gate=row["gate"],basis=row["basis"],phase_policy=mode,
+                    entanglers=cost["entanglers"],local_gates=cost["single_qubit_gates"],
+                    local_layer_count_cap=cap,parameter_score_improvement_proved=False,
+                    scope="local-count opportunity; native basis and entangler count preserved"))
+    return sorted(rows,key=lambda r:(r["gate"].casefold(),r["basis"],r["phase_policy"]))
 
 
 def phase_polynomial_certificate():
@@ -307,6 +333,26 @@ No numerical SDK sample certifies a free-parameter identity or global minimum.
 \url{https://www.wolfram.com/engine/faq/}, checked 6 November 2026.
 \end{thebibliography}\end{document}
 """
+    native_rows=[]
+    for row in report.get("native_examples",[]):
+        exact=row.get("phase_exact") or {}
+        projective=row.get("projective") or {}
+        def counts(result):
+            cost=result.get("cost")
+            return f"{cost['entanglers']}/{cost['single_qubit_gates']}" if cost else "--"
+        native_rows.append(escape(row["gate"])+" & "+escape(row["basis"])+" & "+counts(exact)+" & "+counts(projective)+r" \\")
+    native=(r"\section{Certified native-basis constructions}"+"\n"+
+        r"The table records physical entanglers/local gates (E/L). Controlled-phase, CU and native MS rows retain all their real parameters. "
+        r"The controlled-block OSR-two certificate excludes one B or SQiSW pulse whenever the relative block is nonscalar. "
+        r"The square-root SWAP circuits use two B gates and five locals projectively, six with literal phase. "
+        r"These constructions do not assert a global local-gate or parameter-score minimum, or priority over the literature."+"\n"+
+        r"\begin{center}\begin{tabular}{llll}\toprule Target & Basis & Literal E/L & Projective E/L \\\midrule"+"\n"+
+        "\n".join(native_rows)+r"\bottomrule\end{tabular}\end{center}"+"\n")
+    native+=(r"The SDK regression count is not the full local optimization work list. "
+             r"The separate native local-layer CSV records "+str(len(report.get("local_layer_opportunities",[])))+
+             r" phase modes above a local-block count cap, including parameterized families and bases without SDK support. "
+             r"That cap alone does not certify a smaller parameter-sensitive score."+"\n")
+    text=text.replace(r"\section{Outstanding optimization and comparison work}",native+r"\section{Outstanding optimization and comparison work}")
     output.write_text("\n".join(line.expandtabs().rstrip() for line in text.splitlines())+"\n")
 
 
@@ -325,6 +371,11 @@ def main():
         generator_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
         comparison_summary=counts, comparisons=rows,
         literature_uniform_bound_summary=archive.get("literature_uniform_bound_summary",{}),
+        local_layer_opportunities=local_layer_audit(archive),
+        native_examples=[dict(gate=row["gate"],basis=row["basis"],phase_exact=row.get("phase_exact"),
+                              projective=effective_projective(row)) for row in archive["rows"]
+            if (row["gate"],row["basis"]) in {("SYC","berkeley_b"),("SSWAP","berkeley_b"),("SSWAPdg","berkeley_b"),
+                ("CP","sqrt_iswap_u"),("CU","sqrt_iswap_u"),("IonQMS","sqrt_iswap_u")}],
         sycamore=dict(published=PAPER, independent_sdk=sdk,
             archived_constructions=[dict(basis=row["basis"], phase_exact=row.get("phase_exact"),
                 projective=effective_projective(row)) for row in archive["rows"]
@@ -338,6 +389,9 @@ def main():
               [r for r in rows if r["status"] == "equal_E_fewer_locals"], fields=list(rows[0]))
     write_csv(args.output_dir/"local_optimization_gaps.csv",
               [r for r in rows if r["status"] == "equal_E_more_locals"], fields=list(rows[0]))
+    write_csv(args.output_dir/"native_local_layer_opportunities.csv",report["local_layer_opportunities"],
+        fields=["gate","basis","phase_policy","entanglers","local_gates","local_layer_count_cap",
+                "parameter_score_improvement_proved","scope"])
     write_tex(args.output_dir/"notable_results.tex", report, archive)
     print(json.dumps(counts, sort_keys=True))
 

@@ -58,12 +58,14 @@ def main():
     parser.add_argument("--seconds-per-mode",type=float,default=60)
     parser.add_argument("--native-two-qubit",action="store_true",
         help="Optimize fixed B/SQiSW words above their one-wire layer count, including bases unsupported by the SDK")
+    parser.add_argument("--gate",action="append",default=[],help="Restrict refinement to these catalog targets")
     args=parser.parse_args()
     if args.workers<1 or args.seconds_per_mode<=0:parser.error("Positive budget and workers required")
     previous,baselines=load(args.input),load(args.baselines)
     sdk={(r["gate"],r["basis"]):r for r in baselines["rows"] if r["status"]=="verified_numeric"}
     selected=[]
     for row in previous["rows"]:
+        if args.gate and row["gate"] not in args.gate:continue
         result=projective_result(row);base=sdk.get((row["gate"],row["basis"]))
         if args.native_two_qubit:
             if (row["target_scope"]!="fixed_gate" or row["basis"] not in {"berkeley_b","sqrt_iswap_u","google_sqrt_iswap"}
@@ -82,6 +84,7 @@ def main():
         source_sha256=hashes,comparison_contract=comparison_contract(),versions=baselines["versions"],
         selection=dict(input=str(args.input),input_sha256=hashlib.sha256(args.input.read_bytes()).hexdigest(),
             baselines=str(args.baselines),baseline_sha256=hashlib.sha256(args.baselines.read_bytes()).hexdigest(),
+            gates=args.gate,
             kind="native_two_qubit_local_layers" if args.native_two_qubit else "SDK_local_count_gaps"),
         budget_seconds_per_mode=args.seconds_per_mode,rows=[],clifford_certificates={})
     checkpoint=args.output.with_name(args.output.name+".partial.json.gz")

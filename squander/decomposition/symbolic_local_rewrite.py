@@ -152,18 +152,40 @@ def optimize_local_result(target, parent, basis):
         return parent
     factor = sp.simplify(parent_factor*scalar)
     correction = ()
+    absorption=None
     if phase_exact and factor != 1:
         if __package__:
             from .symbolic_synthesis import _physical_scalar
+            from .symbolic_sqrt_iswap_phase import _phase_in_u3,_phase_in_phased_xz
+            from .symbolic_native_pauli import _phase
         else:
             from symbolic_synthesis import _physical_scalar
+            from symbolic_sqrt_iswap_phase import _phase_in_u3,_phase_in_phased_xz
+            from symbolic_native_pauli import _phase
         try:
             correction = _physical_scalar(factor, basis, width)
         except ValueError:
             return parent
         if prove_circuit_identity(factor*sp.eye(1 << width), correction) is not True:
             return parent
-        word += correction
+        choices=[(word+correction,None)]
+        angle=_phase(factor)
+        if angle is not None:
+            for index,op in enumerate(word):
+                if op[0] not in {"U3","U","PhasedXZ"}:continue
+                before=("U3",*op[1:]) if op[0]=="U" else op
+                close=_phase_in_phased_xz if op[0]=="PhasedXZ" else _phase_in_u3
+                replacement=close(before,angle)
+                choices.append((word[:index]+replacement+word[index+1:],
+                    dict(index=index,before=encode_sequence((op,)),after=encode_sequence(replacement),factor=str(factor))))
+        for proposed,record in sorted(choices,key=lambda pair:resource_key(pair[0])):
+            if record is not None:
+                op=word[record["index"]]
+                replacement=tuple((*item[:-1],(0,)) for item in _decode(record["after"]))
+                if prove_circuit_identity(factor*gates.make_gate(op[0],*op[1:-1]),replacement) is not True:continue
+                correction=()
+            word,absorption=proposed,record
+            break
     if resource_key(word) >= resource_key(sequence):
         return parent
     result = {key:value for key,value in parent.items()}
@@ -174,7 +196,7 @@ def optimize_local_result(target, parent, basis):
         local_cost_optimal=False,
         local_rewrite_certificate=dict(parent_operations=parent["operations"],
             parent_factor=str(parent_factor), parent_phase_exact=phase_exact,
-            blocks=records, correction=encode_sequence(correction)))
+            blocks=records, correction=encode_sequence(correction),phase_absorption=absorption))
     return result
 
 
@@ -184,13 +206,65 @@ def verify_local_rewrite_certificate(target, result, basis):
     try:
         certificate = result["local_rewrite_certificate"]
         phase_exact = certificate["parent_phase_exact"]
-        parent = dict(status="verified_symbolic",phase_exact=phase_exact,
-            operations=certificate["parent_operations"],
-            virtual_gp=None if phase_exact else dict(factor=certificate["parent_factor"]))
-        parent_word = _decode(parent["operations"])
-        parent["cost"] = circuit_cost(parent_word).as_dict()
-        expected = optimize_local_result(sp.ImmutableMatrix(target), parent, basis)
-        return all(result.get(key) == expected.get(key) for key in
-                   ("operations","cost","virtual_gp","local_rewrite_certificate","verification"))
+        target=sp.ImmutableMatrix(target)
+        width=target.rows.bit_length()-1
+        result_phase_exact=result.get("phase_exact")
+        if not isinstance(result_phase_exact,bool):return False
+        parent_word=validate_operations(_decode(certificate["parent_operations"]),basis,width)
+        factor=sp.sympify(certificate["parent_factor"])
+        if phase_exact and factor!=1:return False
+        if verify_circuit(target,parent_word,basis,phase_exact=phase_exact,scalar_factor=factor)["status"]!="verified_symbolic":return False
+        pending=[[] for unused in range(width)]
+        output=[]
+        records=iter(certificate["blocks"])
+        next_record=next(records,None)
+        def flush(wire):
+            nonlocal factor,next_record
+            original=tuple(pending[wire])
+            if not original:return
+            if next_record is not None and next_record["wire"]==wire and next_record["original"]==encode_sequence(original):
+                replacement=validate_operations(_decode(next_record["replacement"]),basis,width)
+                if any(op[-1]!=(wire,) for op in replacement):raise ValueError("Nonlocal block replacement")
+                scalar=sp.sympify(next_record["factor"])
+                if sp.simplify(scalar*sp.conjugate(scalar)-1)!=0:raise ValueError("Nonunit scalar")
+                before=tuple((*op[:-1],(0,)) for op in original)
+                after=tuple((*op[:-1],(0,)) for op in replacement)
+                if prove_circuit_identity(gates.compile_gates(1,before),after,scalar) is not True:raise ValueError("Unproved block")
+                output.extend(replacement);factor*=scalar
+                next_record=next(records,None)
+            else:output.extend(original)
+            pending[wire]=[]
+        for op in parent_word:
+            if len(op[-1])==1:pending[op[-1][0]].append(op)
+            else:
+                for wire in op[-1]:flush(wire)
+                output.append(op)
+        for wire in range(width):flush(wire)
+        if next_record is not None:return False
+        word=tuple(output)
+        factor=sp.simplify(factor)
+        correction=validate_operations(_decode(certificate["correction"]),basis,width)
+        absorption=certificate.get("phase_absorption")
+        if absorption is not None:
+            if not phase_exact or correction:return False
+            index=absorption["index"]
+            if not isinstance(index,int) or not 0<=index<len(word):return False
+            before=word[index]
+            if len(before[-1])!=1 or absorption["before"]!=encode_sequence((before,)):return False
+            after=validate_operations(_decode(absorption["after"]),basis,width)
+            if any(op[-1]!=before[-1] for op in after):return False
+            if sp.simplify(sp.sympify(absorption["factor"])-factor)!=0:return False
+            local=tuple((*op[:-1],(0,)) for op in after)
+            if prove_circuit_identity(factor*gates.make_gate(before[0],*before[1:-1]),local) is not True:return False
+            word=word[:index]+after+word[index+1:]
+        elif phase_exact:
+            if prove_circuit_identity(factor*sp.eye(1<<width),correction) is not True:return False
+            word+=correction
+        elif correction:return False
+        effective_scalar=sp.S.One if phase_exact else factor
+        if result_phase_exact and effective_scalar!=1:return False
+        phase=None if result_phase_exact else dict(factor=str(effective_scalar),physical=False,cost=0)
+        return (result["operations"]==encode_sequence(word) and result["cost"]==circuit_cost(word).as_dict()
+                and result["virtual_gp"]==phase)
     except (ValueError,KeyError,TypeError):
         return False
