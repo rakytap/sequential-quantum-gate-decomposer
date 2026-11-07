@@ -1,7 +1,7 @@
 {
   "policy": "Each listed raw refinement source hash checked against its recorded Git revision",
-  "runs": 16,
-  "source_blobs_checked": 536,
+  "runs": 22,
+  "source_blobs_checked": 780,
   "failures": [],
   "checks": [
     {
@@ -99,6 +99,42 @@
       "sha256": "51e41e895f7587ffd8087634a4b3a2a84e7446d2842664688f3fd298a28ad6c7",
       "revision": "c6bf1ffd6ed5f91eec2843fcb5ce3ae92e6562e6",
       "source_blobs_checked": 37
+    },
+    {
+      "archive": "benchmarks/symbolic/synthesis_global_b_charts_20261107.json.gz",
+      "sha256": "fe94ff76d9756be129a31309757595d600d6efdcf7ed9e57d9bb276741f0057b",
+      "revision": "35d9c593a7553da11c8cd984151d1d21155251d5",
+      "source_blobs_checked": 39
+    },
+    {
+      "archive": "benchmarks/symbolic/synthesis_global_clifford_t_20261107.json.gz",
+      "sha256": "1858749831ac461656dd87a968b21c7327385fca92d42459eb218da31090e5da",
+      "revision": "35d9c593a7553da11c8cd984151d1d21155251d5",
+      "source_blobs_checked": 39
+    },
+    {
+      "archive": "benchmarks/symbolic/synthesis_native_basis_transfer_20261107.json.gz",
+      "sha256": "2c1713f209a880784307fd7094e82b135a646fb528f77565ca8606afad32f8d4",
+      "revision": "9385be3c75bdc2468684979ff5432a0e1342aabf",
+      "source_blobs_checked": 40
+    },
+    {
+      "archive": "benchmarks/symbolic/synthesis_local_polar_iswap_20261107.json.gz",
+      "sha256": "a34a9b9ab2719301b937f1d3f7f9cc57f08dfea8071f7c1f200067d2cb5ce960",
+      "revision": "e388bba07f8b0a292b78ae71a06de88191aca766",
+      "source_blobs_checked": 42
+    },
+    {
+      "archive": "benchmarks/symbolic/synthesis_local_polar_peres_20261107.json.gz",
+      "sha256": "c2004621832176baa50432276cda855a78ce63195b1afd9069d52c5ea4c52396",
+      "revision": "e388bba07f8b0a292b78ae71a06de88191aca766",
+      "source_blobs_checked": 42
+    },
+    {
+      "archive": "benchmarks/symbolic/synthesis_native_euler_frames_20261107.json.gz",
+      "sha256": "e1db280a621ae259b6123bd945e7c24673edfe49e029609cd34dd6c4cbac9b2a",
+      "revision": "e388bba07f8b0a292b78ae71a06de88191aca766",
+      "source_blobs_checked": 42
     }
   ]
 }

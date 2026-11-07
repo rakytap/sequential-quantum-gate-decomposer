@@ -202,12 +202,18 @@ def write_tex(output, report, archive):
 \providecommand{\ket}[1]{\lvert #1\rangle}
 \title{Symbolic decomposition: notable results and comparison evidence}
 \author{SQUANDER symbolic decomposition project}
-\date{6 November 2026}
+\date{7 November 2026}
 \begin{document}\maketitle
 \noindent Evidence ledger for a future appendix, not a completed optimality or novelty claim.
 All counts preserve the recorded native basis, use no ancillas, and fix input/output wires.
-The objective is entanglers first, the original parameter-sensitive score second,
+The objective is entanglers first, the parameter-sensitive score with nonnegative denominator penalties second,
 and local gate count third. A smaller local count alone does not establish a lower score.
+New native local constructions include C3SX/iSWAP at 40 locals versus SDK 56,
+C4X/iSWAP at 78 versus 113, C4X/IBM-CZ at 130 versus 143, and
+C4X/CZ/Rz/Rx at 69 versus 72. Peres/Rxx/Rz/Ry matches 35.
+All preserve the native entangler count; these are proved constructions, not
+claims that the local counts are globally minimum.
+The version-2 clamp prevents negative-cost identity cycles. An exact audit of all 1,390 retained parameter expressions before the C4X transfer proved their scores unchanged; no existing circuit rerun was needed.
 \section{Sycamore: a concrete local-gate reduction}
 We use $\mathrm{SYC}=\mathrm{fSim}(\pi/2,\pi/6)$ with odd-parity swap amplitudes $-i$
 and $\ket{11}$ phase $e^{-i\pi/6}$. Figure 3 of AbuGhanem and Eleuch~\cite{syc}
@@ -234,7 +240,7 @@ Construction & Alphabet & E & L & Phase contract \\\midrule
         sdk_score = sp.sympify(lifted["cost"]["parameter_score"])
         text += (r"\paragraph{Matched score comparison.} In the same Rz/SX/CX basis, "
                  r"the independently synthesized SDK circuit has an exact rational-$\pi$ lift "
-                 r"whose complete identity is proved. The original score is $"+sp.latex(ours_score)+
+                 r"whose complete identity is proved. The retained score is $"+sp.latex(ours_score)+
                  r"\approx "+f"{float(ours_score):.3f}"+r"$ for ours and $"+sp.latex(sdk_score)+
                  r"\approx "+f"{float(sdk_score):.3f}"+r"$ for the SDK circuit. Both have three CNOTs; "
                  r"the score includes the same entangler contribution and no free physical GP. "+"\n")
@@ -292,7 +298,10 @@ Target & Basis & E ours/SDK & L ours/SDK \\\midrule\endhead
 \section{Other useful reference results}
 The separate Clifford atlas contains all 192 phase-resolved one-qubit Clifford
 targets for each supported local alphabet. H/S has a global shortest-path
-certificate; other alphabets retain their narrower recorded word-search scope.
+certificate. H/S/T/Tdg now has an exhaustive exact-word proof covering
+non-Clifford intermediates: a radius-seven ball of 628 exact matrices
+certifies all 192 targets, with maximum shortest length 14. Continuous
+alphabets retain their narrower recorded word-search scope.
 The exact phase examples include a Cartan kernel with $a=b=c=\pi/8$: three
 CNOTs projectively, four with literal phase and SU(2)-only Rz/Ry locals.
 Likewise, Rxx$(\pi)$ requires zero entanglers projectively and one with literal

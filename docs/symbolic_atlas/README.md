@@ -1,4 +1,4 @@
-# Symbolic circuit atlas — 6 November 2026
+# Symbolic circuit atlas — 7 November 2026
 
 [Gate atlas](gates.pdf) · [All-phase Clifford atlas](cliffords.pdf) ·
 [Gate preview](preview-gates.pdf) · [Clifford preview](preview-cliffords.pdf)
@@ -7,11 +7,22 @@
 [Editable comparison LaTeX](../symbolic_notable_results/notable_results.tex) ·
 [Comparison source bundle](../symbolic_notable_results/sources.zip)
 
+[Global minimum proofs and objective audit](../symbolic_optimality/proofs.pdf) ·
+[Editable proof LaTeX](../symbolic_optimality/proofs.tex) ·
+[Exact certificate replays](../symbolic_optimality/verification.json)
+
+The approved objective revision clamps negative denominator penalties. An exact
+audit of 1,390 retained angle expressions preserved every score at migration.
+The archive now includes 372 literal and 1,144 projective global minimum
+certificates from primitive/support floors, independently of the all-phase
+Clifford proofs. These counts can overlap other certificates and do not
+establish global optimality of the full grid.
+
 The comparison LaTeX is self-contained, with inline circuit drawings: copy
 `notable_results.tex` alone into Prism. Compile it locally with
 `tectonic notable_results.tex`.
 The [local-savings list](../symbolic_notable_results/local_savings.csv) contains
-all 180 equal-entangler improvements against the cleaned SDK baseline.
+all 184 equal-entangler improvements against the cleaned SDK baseline.
 
 The gate volume contains 327 alphabetically indexed target pages, each with
 32 preserved basis presets. The separate Clifford volume contains 24 circuits
@@ -34,7 +45,7 @@ circuits are globally optimal.** The current merged archive has these outcomes:
 
 Exact mode permits no physical GP gate or free scalar correction. Projective
 mode records its scalar explicitly. Both circuits are shown when the
-projective result is strictly cheaper; this occurs in 4,702 cells with a
+projective result is strictly cheaper; this occurs in 4,716 cells with a
 verified exact construction. Obstructions for parameterized families may be
 generic or conditional; their conditions remain in the data. Register
 constructors retain their recorded width or matrix fixture, rather than
@@ -42,8 +53,8 @@ claiming a circuit for every register size.
 
 A minimum label concerns entanglers only unless a separate local certificate
 says otherwise. Gate-panel labels explicitly say **E minimum** or **E upper
-bound**. The original ordering is entanglers, parameter-sensitive local
-score, then local gate count. There are 287 exact and 158 projective matches
+bound**. The ordering is entanglers, parameter-sensitive local
+score with nonnegative denominator penalties, then local gate count. There are 287 exact and 158 projective matches
 to the curated fixed-target entangler lower bounds, in addition to the
 one-qubit and OSR certificates. The eligible fixed-target Qiskit comparison
 contains 11 lower counts, 2,662 ties and zero higher counts. The 11 lower counts
@@ -60,7 +71,7 @@ certificates; the parameter-sensitive local objective has a separate scope.
 The literature audit also checks universal two-qubit upper bounds: two
 [B gates](https://arxiv.org/abs/quant-ph/0312193), or three
 [SQiSW gates](https://arxiv.org/abs/2105.06074), with the corresponding arbitrary
-local alphabets. There are still **15 exact and 15 projective modes above
+local alphabets. There are still **10 exact and 10 projective modes above
 those published bounds**. These are known optimization gaps among successful
 constructions, listed separately and marked on the relevant PDF panels. A
 count below a uniform worst-case bound is not a new per-target result.
@@ -76,9 +87,15 @@ resource-policy differences; no novelty claim is made.
 
 The Clifford tables contain 1,488 reachable exact circuits and 816 phases
 excluded by the alphabet's one-wire determinant group. The H/S table has a
-global shortest-path certificate over its full 192-element phase group. For
-continuous and Clifford+T alphabets, the listed word search has the narrower
-scope printed in the volume; its local cost is not asserted globally minimal.
+global shortest-path certificate over its full 192-element phase group.
+H/S/T/Tdg now has an exhaustive exact-word proof including non-Clifford
+intermediates: 628 matrices through radius seven certify all 192 targets,
+with maximum minimum length 14. Continuous alphabets retain the narrower
+scope printed in the volume.
+
+The five formerly over-cap B families now use two B gates in both phase modes.
+The remaining ten cap gaps per phase belong to the five free families in the
+two SQiSW presets.
 
 New exact native constructions include two SQiSWs and three U3 rotations for
 B with literal phase, three SQiSWs for Sycamore and both square-root-SWAPs,
@@ -117,16 +134,16 @@ failed. The raw full run and motif/phase supplements are described in the
   phase examples. Its top-level `gates.tex` and `cliffords.tex` are the LaTeX
   sources of the two PDFs; keep their `circuits/` directory together.
 
-The separate local audit has 180 lower counts, 2,476 ties and 6 higher counts
+The separate local audit has 184 lower counts, 2,477 ties and 1 higher count
 at equal entangler count among eligible fixed targets, after native SDK local
 cleanup removes adapter identity rotations. Against this cleaned baseline,
-the exact refinements reduced the local-count gaps from 254 to 6 (and from
-129 in the preceding release).
+the exact refinements reduced the local-count gaps from 254 to 1 (and from
+6 in the preceding release).
 These counts do not compare the secondary symbolic score when the SDK angles
 have no proved exact lift. See the
 [full local comparison CSV](../symbolic_notable_results/local_comparisons.csv)
 and [remaining local-count gaps](../symbolic_notable_results/local_optimization_gaps.csv).
-One remaining count gap is a proved secondary-score tradeoff: C3X/Rzz/U3
+The remaining count gap has a verified secondary-score tradeoff: C3X/Rzz/U3
 uses 28 locals with score 115.594; its verified 24-local alternative scores
 116.37. The declared objective retains the lower score.
 The [native local-layer audit](../symbolic_notable_results/native_local_layer_opportunities.csv)
@@ -134,6 +151,11 @@ also records opportunities beyond the SDK-supported bases; these count
 bounds do not certify an improvement of the parameter-sensitive score.
 The [source validation](source-validation.json) checks every listed new raw
 refinement hash against its recorded Git revision.
+
+The newest local improvements include C3SX/iSWAP at 40 locals versus SDK 56,
+C4X/iSWAP at 78 versus 113, C4X/CZ/Rz/Rx at 69 versus 72, and
+C4X/IBM-CZ at 130 versus 143. Peres/Rxx/Rz/Ry matches 35.
+These are proved constructions, not unrestricted local-minimum claims.
 
 The Sycamore section compares three local gates with 27 in the cited published
 figure and 13 from independent Qiskit synthesis in Rz/SX/CX; both comparisons

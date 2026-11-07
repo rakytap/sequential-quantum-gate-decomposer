@@ -2,18 +2,18 @@
   "schema": "symbolic-notable-results-v1",
   "archive": {
     "path": "benchmarks/symbolic/synthesis_reference_20261106.json.gz",
-    "sha256": "42801de08223f8c13a8099d008dbfec907c8d5c231eac49b2d6b529cb3f969cc"
+    "sha256": "0bb0da1e6a7fe9d555178ac093275c11b0bbcd580b91d99aef08e4ad5e7a0cec"
   },
   "sdk_baselines": {
     "path": "benchmarks/symbolic/reference_locals_20261106.json.gz",
     "sha256": "9d76d51813fdfd0e7b700eb75a2a54b59ad325451c96234320f725caa412f77a"
   },
-  "generator_sha256": "aaad3e029b97d9c6f1e93c1bb60b0fdfa5248227f3de33ee85df0c74d7184f97",
+  "generator_sha256": "e64841e052460da5bc845fd69cede848aec41b968911dc6fe0eff7661f512957",
   "comparison_summary": {
-    "equal_E_equal_locals": 2476,
-    "equal_E_fewer_locals": 180,
+    "equal_E_equal_locals": 2477,
+    "equal_E_fewer_locals": 184,
     "fewer_entanglers": 11,
-    "equal_E_more_locals": 6
+    "equal_E_more_locals": 1
   },
   "comparisons": [
     {
@@ -572,13 +572,13 @@
       "basis": "iswap_u",
       "phase_policy": "projective",
       "entanglers": 26,
-      "local_gates": 80,
-      "exact_parameter_score": "7382/25",
+      "local_gates": 40,
+      "exact_parameter_score": "4911/25",
       "sdk_entanglers": 26,
       "sdk_local_gates": 56,
       "delta_entanglers": 0,
-      "delta_local_gates": 24,
-      "status": "equal_E_more_locals",
+      "delta_local_gates": -16,
+      "status": "equal_E_fewer_locals",
       "sdk_input": "C3SXGate",
       "sdk_parameter_score": null,
       "shorter_verified_alternative_score": null,
@@ -895,13 +895,13 @@
       "basis": "cz_rz_rx",
       "phase_policy": "projective",
       "entanglers": 36,
-      "local_gates": 267,
-      "exact_parameter_score": "374267/500",
+      "local_gates": 69,
+      "exact_parameter_score": "2*log(3)/(5*log(2)) + 154869/500",
       "sdk_entanglers": 36,
       "sdk_local_gates": 72,
       "delta_entanglers": 0,
-      "delta_local_gates": 195,
-      "status": "equal_E_more_locals",
+      "delta_local_gates": -3,
+      "status": "equal_E_fewer_locals",
       "sdk_input": "C4XGate",
       "sdk_parameter_score": null,
       "shorter_verified_alternative_score": null,
@@ -952,13 +952,13 @@
       "basis": "ibm_cz",
       "phase_policy": "projective",
       "entanglers": 36,
-      "local_gates": 267,
-      "exact_parameter_score": "361339/500",
+      "local_gates": 130,
+      "exact_parameter_score": "2*log(3)/(5*log(2)) + 53639/125",
       "sdk_entanglers": 36,
       "sdk_local_gates": 143,
       "delta_entanglers": 0,
-      "delta_local_gates": 124,
-      "status": "equal_E_more_locals",
+      "delta_local_gates": -13,
+      "status": "equal_E_fewer_locals",
       "sdk_input": "C4XGate",
       "sdk_parameter_score": null,
       "shorter_verified_alternative_score": null,
@@ -990,13 +990,13 @@
       "basis": "iswap_u",
       "phase_policy": "projective",
       "entanglers": 54,
-      "local_gates": 168,
-      "exact_parameter_score": "76576/125",
+      "local_gates": 78,
+      "exact_parameter_score": "100167/250",
       "sdk_entanglers": 54,
       "sdk_local_gates": 113,
       "delta_entanglers": 0,
-      "delta_local_gates": 55,
-      "status": "equal_E_more_locals",
+      "delta_local_gates": -35,
+      "status": "equal_E_fewer_locals",
       "sdk_input": "C4XGate",
       "sdk_parameter_score": null,
       "shorter_verified_alternative_score": null,
@@ -21073,13 +21073,13 @@
       "basis": "xx_rz_ry",
       "phase_policy": "projective",
       "entanglers": 5,
-      "local_gates": 44,
-      "exact_parameter_score": "59049/500",
+      "local_gates": 35,
+      "exact_parameter_score": "2352/25",
       "sdk_entanglers": 5,
       "sdk_local_gates": 35,
       "delta_entanglers": 0,
-      "delta_local_gates": 9,
-      "status": "equal_E_more_locals",
+      "delta_local_gates": 0,
+      "status": "equal_E_equal_locals",
       "sdk_input": "stored_exact_reference",
       "sdk_parameter_score": null,
       "shorter_verified_alternative_score": null,
@@ -50805,10 +50805,10 @@
     }
   ],
   "literature_uniform_bound_summary": {
-    "phase_exact_within_published_uniform_bound": 204,
-    "projective_within_published_uniform_bound": 204,
-    "phase_exact_exceeds_published_uniform_bound": 15,
-    "projective_exceeds_published_uniform_bound": 15
+    "phase_exact_within_published_uniform_bound": 209,
+    "projective_within_published_uniform_bound": 209,
+    "phase_exact_exceeds_published_uniform_bound": 10,
+    "projective_exceeds_published_uniform_bound": 10
   },
   "local_layer_opportunities": [
     {
@@ -51088,26 +51088,6 @@
       "entanglers": 2,
       "local_gates": 11,
       "local_layer_count_cap": 6,
-      "parameter_score_improvement_proved": false,
-      "scope": "local-count opportunity; native basis and entangler count preserved"
-    },
-    {
-      "gate": "Canonical",
-      "basis": "berkeley_b",
-      "phase_policy": "phase_exact",
-      "entanglers": 6,
-      "local_gates": 19,
-      "local_layer_count_cap": 15,
-      "parameter_score_improvement_proved": false,
-      "scope": "local-count opportunity; native basis and entangler count preserved"
-    },
-    {
-      "gate": "Canonical",
-      "basis": "berkeley_b",
-      "phase_policy": "projective",
-      "entanglers": 6,
-      "local_gates": 17,
-      "local_layer_count_cap": 14,
       "parameter_score_improvement_proved": false,
       "scope": "local-count opportunity; native basis and entangler count preserved"
     },
@@ -53803,26 +53783,6 @@
     },
     {
       "gate": "fSim",
-      "basis": "berkeley_b",
-      "phase_policy": "phase_exact",
-      "entanglers": 6,
-      "local_gates": 19,
-      "local_layer_count_cap": 15,
-      "parameter_score_improvement_proved": false,
-      "scope": "local-count opportunity; native basis and entangler count preserved"
-    },
-    {
-      "gate": "fSim",
-      "basis": "berkeley_b",
-      "phase_policy": "projective",
-      "entanglers": 6,
-      "local_gates": 19,
-      "local_layer_count_cap": 14,
-      "parameter_score_improvement_proved": false,
-      "scope": "local-count opportunity; native basis and entangler count preserved"
-    },
-    {
-      "gate": "fSim",
       "basis": "cz_u",
       "phase_policy": "phase_exact",
       "entanglers": 3,
@@ -55203,26 +55163,6 @@
     },
     {
       "gate": "PhasedFSim",
-      "basis": "berkeley_b",
-      "phase_policy": "phase_exact",
-      "entanglers": 6,
-      "local_gates": 23,
-      "local_layer_count_cap": 15,
-      "parameter_score_improvement_proved": false,
-      "scope": "local-count opportunity; native basis and entangler count preserved"
-    },
-    {
-      "gate": "PhasedFSim",
-      "basis": "berkeley_b",
-      "phase_policy": "projective",
-      "entanglers": 6,
-      "local_gates": 23,
-      "local_layer_count_cap": 14,
-      "parameter_score_improvement_proved": false,
-      "scope": "local-count opportunity; native basis and entangler count preserved"
-    },
-    {
-      "gate": "PhasedFSim",
       "basis": "cx_u",
       "phase_policy": "phase_exact",
       "entanglers": 3,
@@ -56573,26 +56513,6 @@
     },
     {
       "gate": "SWAPPow",
-      "basis": "berkeley_b",
-      "phase_policy": "phase_exact",
-      "entanglers": 6,
-      "local_gates": 19,
-      "local_layer_count_cap": 15,
-      "parameter_score_improvement_proved": false,
-      "scope": "local-count opportunity; native basis and entangler count preserved"
-    },
-    {
-      "gate": "SWAPPow",
-      "basis": "berkeley_b",
-      "phase_policy": "projective",
-      "entanglers": 6,
-      "local_gates": 17,
-      "local_layer_count_cap": 14,
-      "parameter_score_improvement_proved": false,
-      "scope": "local-count opportunity; native basis and entangler count preserved"
-    },
-    {
-      "gate": "SWAPPow",
       "basis": "cz_u",
       "phase_policy": "phase_exact",
       "entanglers": 3,
@@ -56788,26 +56708,6 @@
       "entanglers": 3,
       "local_gates": 10,
       "local_layer_count_cap": 9,
-      "parameter_score_improvement_proved": false,
-      "scope": "local-count opportunity; native basis and entangler count preserved"
-    },
-    {
-      "gate": "TK2",
-      "basis": "berkeley_b",
-      "phase_policy": "phase_exact",
-      "entanglers": 6,
-      "local_gates": 19,
-      "local_layer_count_cap": 15,
-      "parameter_score_improvement_proved": false,
-      "scope": "local-count opportunity; native basis and entangler count preserved"
-    },
-    {
-      "gate": "TK2",
-      "basis": "berkeley_b",
-      "phase_policy": "projective",
-      "entanglers": 6,
-      "local_gates": 17,
-      "local_layer_count_cap": 14,
       "parameter_score_improvement_proved": false,
       "scope": "local-count opportunity; native basis and entangler count preserved"
     },

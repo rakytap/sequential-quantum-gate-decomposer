@@ -27,8 +27,6 @@ Barenco,zx_u,phase_exact,2,9,7,False,local-count opportunity; native basis and e
 Barenco,zx_u,projective,2,9,6,False,local-count opportunity; native basis and entangler count preserved
 Barenco,zz_u,phase_exact,2,12,7,False,local-count opportunity; native basis and entangler count preserved
 Barenco,zz_u,projective,2,11,6,False,local-count opportunity; native basis and entangler count preserved
-Canonical,berkeley_b,phase_exact,6,19,15,False,local-count opportunity; native basis and entangler count preserved
-Canonical,berkeley_b,projective,6,17,14,False,local-count opportunity; native basis and entangler count preserved
 Canonical,cz_u,phase_exact,3,10,9,False,local-count opportunity; native basis and entangler count preserved
 Canonical,google_cz,phase_exact,3,10,9,False,local-count opportunity; native basis and entangler count preserved
 Canonical,google_sqrt_iswap,phase_exact,6,19,15,False,local-count opportunity; native basis and entangler count preserved
@@ -298,8 +296,6 @@ DB,sqrt_swap_u,projective,4,14,10,False,local-count opportunity; native basis an
 DB,zx_u,phase_exact,2,8,7,False,local-count opportunity; native basis and entangler count preserved
 DB,zz_u,phase_exact,2,8,7,False,local-count opportunity; native basis and entangler count preserved
 ECR,xx90_u,projective,1,5,4,False,local-count opportunity; native basis and entangler count preserved
-fSim,berkeley_b,phase_exact,6,19,15,False,local-count opportunity; native basis and entangler count preserved
-fSim,berkeley_b,projective,6,19,14,False,local-count opportunity; native basis and entangler count preserved
 fSim,cz_u,phase_exact,3,10,9,False,local-count opportunity; native basis and entangler count preserved
 fSim,cz_u,projective,3,10,8,False,local-count opportunity; native basis and entangler count preserved
 fSim,google_cz,phase_exact,3,10,9,False,local-count opportunity; native basis and entangler count preserved
@@ -438,8 +434,6 @@ Magic,google_fsim,projective,1,6,4,False,local-count opportunity; native basis a
 Magic,sqrt_swap_u,phase_exact,2,8,7,False,local-count opportunity; native basis and entangler count preserved
 Magic,sqrt_swap_u,projective,2,8,6,False,local-count opportunity; native basis and entangler count preserved
 Magic,zz_u,phase_exact,1,6,5,False,local-count opportunity; native basis and entangler count preserved
-PhasedFSim,berkeley_b,phase_exact,6,23,15,False,local-count opportunity; native basis and entangler count preserved
-PhasedFSim,berkeley_b,projective,6,23,14,False,local-count opportunity; native basis and entangler count preserved
 PhasedFSim,cx_u,phase_exact,3,11,9,False,local-count opportunity; native basis and entangler count preserved
 PhasedFSim,cx_u,projective,3,11,8,False,local-count opportunity; native basis and entangler count preserved
 PhasedFSim,cz_u,phase_exact,3,12,9,False,local-count opportunity; native basis and entangler count preserved
@@ -575,8 +569,6 @@ SiSWAPdg,zz_u,phase_exact,2,8,7,False,local-count opportunity; native basis and 
 SSWAP,iswap_u,phase_exact,3,10,9,False,local-count opportunity; native basis and entangler count preserved
 SSWAPdg,zx_u,phase_exact,3,10,9,False,local-count opportunity; native basis and entangler count preserved
 SSWAPdg,zz_u,phase_exact,3,10,9,False,local-count opportunity; native basis and entangler count preserved
-SWAPPow,berkeley_b,phase_exact,6,19,15,False,local-count opportunity; native basis and entangler count preserved
-SWAPPow,berkeley_b,projective,6,17,14,False,local-count opportunity; native basis and entangler count preserved
 SWAPPow,cz_u,phase_exact,3,10,9,False,local-count opportunity; native basis and entangler count preserved
 SWAPPow,google_cz,phase_exact,3,10,9,False,local-count opportunity; native basis and entangler count preserved
 SWAPPow,google_sqrt_iswap,phase_exact,6,19,15,False,local-count opportunity; native basis and entangler count preserved
@@ -597,8 +589,6 @@ SYC,sqrt_swap_u,projective,6,15,14,False,local-count opportunity; native basis a
 SYC,xx90_u,phase_exact,3,12,9,False,local-count opportunity; native basis and entangler count preserved
 SYC,xx90_u,projective,3,10,8,False,local-count opportunity; native basis and entangler count preserved
 SYC,zz_u,phase_exact,3,10,9,False,local-count opportunity; native basis and entangler count preserved
-TK2,berkeley_b,phase_exact,6,19,15,False,local-count opportunity; native basis and entangler count preserved
-TK2,berkeley_b,projective,6,17,14,False,local-count opportunity; native basis and entangler count preserved
 TK2,cz_u,phase_exact,3,10,9,False,local-count opportunity; native basis and entangler count preserved
 TK2,google_cz,phase_exact,3,10,9,False,local-count opportunity; native basis and entangler count preserved
 TK2,google_sqrt_iswap,phase_exact,6,19,15,False,local-count opportunity; native basis and entangler count preserved

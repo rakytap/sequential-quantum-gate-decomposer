@@ -3,9 +3,9 @@
 ## Current motif/OSR reference edition
 
 [`synthesis_reference_20261106.json.gz`](synthesis_reference_20261106.json.gz)
-merges all 327 × 32 cells and both phase policies across 29 source snapshots.
+merges all 327 × 32 cells and both phase policies across 35 source snapshots.
 Each retained circuit minimizes the recorded lexicographic objective among
-verified candidates: entanglers, original parameter-sensitive score, local count.
+verified candidates: entanglers, parameter-sensitive score with nonnegative denominator penalties, local count.
 This is **not a claim of global optimality**. The indexed
 [gate and Clifford PDFs and editable LaTeX](../../docs/symbolic_atlas/README.md)
 are generated from this archive.
@@ -16,18 +16,18 @@ are generated from this archive.
 | Proved obstruction with recorded scope/condition | 2,762 | 268 |
 | Retained timeout, unresolved construction or compiler error | 0 | 0 |
 
-There are 4,702 cells with a verified literal circuit and a strictly cheaper
+There are 4,716 cells with a verified literal circuit and a strictly cheaper
 projective circuit. No physical GP operation is allowed. Register constructors
 retain their width/matrix fixtures; generic obstructions retain their conditions.
 All 20,928 phase modes are classified, while optimality remains a separate task.
 
 The successful constructions still exceed the published two-B/three-SQiSW
-uniform caps in **15 literal and 15 projective modes**, down from 158 each.
+uniform caps in **10 literal and 10 projective modes**, down from 158 each.
 The [gap CSV](../../docs/symbolic_atlas/known_optimization_gaps.csv) lists them.
 Among eligible fixed-target SDK comparisons, entanglers are lower in 11 cases,
 equal in 2,662, and higher in zero. All eleven improvements concern fFredkin
 in distinct basis presets. The cleaned matched local-count audit has
-180 lower, 2,476 equal and 6 higher counts at equal entangler count.
+184 lower, 2,477 equal and 1 higher counts at equal entangler count.
 C3X/Rzz/U3 retains 28 locals because its score 115.594 beats the proved
 24-local alternative's 116.37. A count gap need not be a score regression.
 See the [cited comparison appendix](../../docs/symbolic_notable_results/notable_results.pdf),
@@ -49,9 +49,33 @@ minima, excluding separate one-qubit certificates. Nonzero-entangler minimum
 flags total 671 literal and 857 projective; conditional flags total
 342 and 411, respectively. Local-score proofs are separate.
 The Clifford volume has 192 phase targets in each of 12 local alphabets:
-1,488 reachable and 816 determinant-group exclusions. H/S has a global
-shortest-path certificate; other alphabets keep their narrower search scopes.
+1,488 reachable and 816 determinant-group exclusions. H/S and H/S/T/Tdg have global
+shortest-word certificates. The latter exhausts non-Clifford intermediates
+through a radius-seven exact word ball of 628 matrices; the longest minimum
+word has 14 gates. Continuous alphabets keep their narrower search scopes.
 UniversalQCompiler remains deferred with zero executed comparisons.
+
+Objective version 2 clamps only negative logarithmic denominator penalties.
+The historical formula admitted exact negative-cost identity cycles. The
+[compatibility audit](objective_v2_compatibility_20261107.json) proves that all
+1,390 retained angle expressions at migration keep their scores unchanged;
+no existing successful result needed rerunning. Historical run contracts remain
+inside their source snapshots. The subsequent new circuits use version 2.
+
+Independent primitive/support floors certify global lexicographic minima in
+372 literal and 1,144 projective phase modes. These counts can overlap other
+certificates. Another 24 literal and 31 projective constructions match a
+secondary floor at fixed E without a matching entangler-minimum proof.
+The [proof ledger](../../docs/symbolic_optimality/proofs.pdf) and
+[exact replay report](../../docs/symbolic_optimality/verification.json) retain
+the assumptions and distinguish whole-family claims from specializations.
+
+New matched local improvements include C3SX/iSWAP (40 versus SDK 56),
+C4X/iSWAP (78 versus 113), C4X/CZ/Rz/Rx (69 versus 72), and
+C4X/IBM-CZ (130 versus 143). Peres/Rxx/Rz/Ry now matches 35 locals.
+The remaining published-cap gaps are the five free families Canonical,
+fSim, PhasedFSim, SWAPPow and TK2 in the two SQiSW presets.
+
 
 The raw full run and all construction refinements are preserved:
 
@@ -82,6 +106,12 @@ The raw full run and all construction refinements are preserved:
 | `synthesis_native_phase_absorption_20261106.json.gz` | 8 | 60.0 s | `6beb0a60` |
 | `synthesis_native_fixed_matchgates_20261106.json.gz` | 21 | 120.0 s | `cbc150cf` |
 | `synthesis_sdk_algebraic_frames_20261107.json.gz` | 8 | 300.0 s | `c6bf1ffd` |
+| `synthesis_global_b_charts_20261107.json.gz` | 5 | 150.0 s | `35d9c593` |
+| `synthesis_global_clifford_t_20261107.json.gz` | 384 | 15.0 s | `35d9c593` |
+| `synthesis_native_basis_transfer_20261107.json.gz` | 3 | 180.0 s | `9385be3c` |
+| `synthesis_local_polar_iswap_20261107.json.gz` | 2 | 150.0 s | `e388bba0` |
+| `synthesis_local_polar_peres_20261107.json.gz` | 1 | 120.0 s | `e388bba0` |
+| `synthesis_native_euler_frames_20261107.json.gz` | 2 | 150.0 s | `e388bba0` |
 
 Source hashes identify the implementation of each run. `mode_source_run_indices`
 identifies the origin of each retained phase result; `synthesis_run_index`
@@ -95,36 +125,26 @@ Reproduce the merge and reference analysis from the repository root:
 
 ```bash
 python examples/decomposition/symbolic_archive_analysis.py \
-  --input benchmarks/symbolic/synthesis_reference_20261106_classified.json.gz \
-  --supplement benchmarks/symbolic/synthesis_sdk_locals_20261106.json.gz \
-  --supplement benchmarks/symbolic/synthesis_cleaned_locals_20261106.json.gz \
-  --supplement benchmarks/symbolic/synthesis_local_blocks_20261106.json.gz \
-  --supplement benchmarks/symbolic/synthesis_native_echoes_20261106.json.gz \
-  --supplement benchmarks/symbolic/synthesis_native_controlled_20261106.json.gz \
-  --supplement benchmarks/symbolic/synthesis_sdk_gauges_20261106.json.gz \
-  --supplement benchmarks/symbolic/synthesis_native_ms_axes_20261106.json.gz \
-  --supplement benchmarks/symbolic/synthesis_sdk_gauge_scalars_20261106.json.gz \
-  --supplement benchmarks/symbolic/synthesis_fixed_transfers_20261106.json.gz \
-  --supplement benchmarks/symbolic/synthesis_local_blocks_deep_20261106.json.gz \
-  --supplement benchmarks/symbolic/synthesis_native_sqrt_swap_20261106.json.gz \
-  --supplement benchmarks/symbolic/synthesis_local_periods_20261106.json.gz \
-  --supplement benchmarks/symbolic/synthesis_native_local_layers_20261106.json.gz \
-  --supplement benchmarks/symbolic/synthesis_local_axes_20261106.json.gz \
-  --supplement benchmarks/symbolic/synthesis_native_phase_absorption_20261106.json.gz \
-  --supplement benchmarks/symbolic/synthesis_native_fixed_matchgates_20261106.json.gz \
-  --supplement benchmarks/symbolic/synthesis_sdk_algebraic_frames_20261107.json.gz \
+  --input benchmarks/symbolic/synthesis_reference_20261107_global_proofs_base.json.gz \
+  --supplement benchmarks/symbolic/synthesis_local_polar_iswap_20261107.json.gz \
+  --supplement benchmarks/symbolic/synthesis_local_polar_peres_20261107.json.gz \
+  --supplement benchmarks/symbolic/synthesis_native_euler_frames_20261107.json.gz \
   --output /tmp/synthesis-reference.json.gz
 ```
 
-The classified input preserves the twelve-run classification edition; the
-`initial` reference archive preserves its earlier eight-run input. Original raw
-compiler failures remain in history even when a later verified result wins.
+The immutable 32-run input preserves the classification, earlier refinements,
+Clifford+T proof upgrade and audited objective migration. The separate
+`objective_v2_base` snapshot preserves the preceding 31-run migration state.
+Raw candidates, failures, earlier source contracts and losing exact alternatives
+remain in history. A fresh gzip file can have a different byte hash while its
+scientific records are identical.
 
-The cleaned numerical SDK baseline is `reference_locals_20261106.json.gz`.
-Its native block cleanup and phase-sensitive replay remove adapter identity
-rotations; they make no symbolic-family claim. Regenerate the local audit with:
+Replay the new retained certificates and rebuild the local comparison with:
 
 ```bash
+python examples/decomposition/symbolic_global_proof_audit.py \
+  --archive benchmarks/symbolic/synthesis_reference_20261106.json.gz \
+  --output /tmp/global-proof-verification.json
 python examples/decomposition/symbolic_notable_results.py \
   --archive benchmarks/symbolic/synthesis_reference_20261106.json.gz \
   --baselines benchmarks/symbolic/reference_locals_20261106.json.gz \
@@ -161,8 +181,8 @@ through Qiskit's permutation-preserving compilation path and charged.
 | Toffoli / CCX | 6 |
 | Fredkin / CSWAP | 7 |
 
-The original parameter-sensitive score is preserved in the symbolic search.
-These numerical compiler outputs do not have that score: SDK parameter-slot
+The parameter-sensitive score now uses the audited nonnegative-denominator
+revision; the earlier retained scores are unchanged. These numerical compiler outputs do not have that score: SDK parameter-slot
 counts are separate diagnostics. A successful sample is not a symbolic proof
 for all parameter values. Proved minima and parameter-dependent exact tests
 are documented in [the symbolic guide](../../docs/symbolic_decomposition.md)

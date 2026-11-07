@@ -1,0 +1,5682 @@
+{
+  "archive": "benchmarks/symbolic/synthesis_reference_20261106.json.gz",
+  "archive_sha256": "0bb0da1e6a7fe9d555178ac093275c11b0bbcd580b91d99aef08e4ad5e7a0cec",
+  "covered_phase_modes": 790,
+  "methods": {
+    "integer_ring_matrix_identity_and_exhaustive_global_word_minimum": 768,
+    "exact_two_B_Cartan_chart_and_native_lowering": 10,
+    "exact_feasibility_obstruction": 4,
+    "exact_parent_U2_polar_components_and_phase_absorption": 5,
+    "exact_native_parent_local_components_and_CZ_commutations": 3
+  },
+  "failures": [],
+  "source_checks": [
+    {
+      "path": "benchmarks/symbolic/synthesis_global_b_charts_20261107.json.gz",
+      "sha256": "fe94ff76d9756be129a31309757595d600d6efdcf7ed9e57d9bb276741f0057b",
+      "revision": "35d9c593a7553da11c8cd984151d1d21155251d5",
+      "source_blobs": 39,
+      "run_index": 29
+    },
+    {
+      "path": "benchmarks/symbolic/synthesis_global_clifford_t_20261107.json.gz",
+      "sha256": "1858749831ac461656dd87a968b21c7327385fca92d42459eb218da31090e5da",
+      "revision": "35d9c593a7553da11c8cd984151d1d21155251d5",
+      "source_blobs": 39,
+      "run_index": 30
+    },
+    {
+      "path": "benchmarks/symbolic/synthesis_native_basis_transfer_20261107.json.gz",
+      "sha256": "2c1713f209a880784307fd7094e82b135a646fb528f77565ca8606afad32f8d4",
+      "revision": "9385be3c75bdc2468684979ff5432a0e1342aabf",
+      "source_blobs": 40,
+      "run_index": 31
+    },
+    {
+      "path": "benchmarks/symbolic/synthesis_local_polar_iswap_20261107.json.gz",
+      "sha256": "a34a9b9ab2719301b937f1d3f7f9cc57f08dfea8071f7c1f200067d2cb5ce960",
+      "revision": "e388bba07f8b0a292b78ae71a06de88191aca766",
+      "source_blobs": 42,
+      "run_index": 32
+    },
+    {
+      "path": "benchmarks/symbolic/synthesis_local_polar_peres_20261107.json.gz",
+      "sha256": "c2004621832176baa50432276cda855a78ce63195b1afd9069d52c5ea4c52396",
+      "revision": "e388bba07f8b0a292b78ae71a06de88191aca766",
+      "source_blobs": 42,
+      "run_index": 33
+    },
+    {
+      "path": "benchmarks/symbolic/synthesis_native_euler_frames_20261107.json.gz",
+      "sha256": "e1db280a621ae259b6123bd945e7c24673edfe49e029609cd34dd6c4cbac9b2a",
+      "revision": "e388bba07f8b0a292b78ae71a06de88191aca766",
+      "source_blobs": 42,
+      "run_index": 34
+    }
+  ],
+  "distinct_source_blobs": 121,
+  "clifford_exact_word_ball": {
+    "alphabet": [
+      "H",
+      "S",
+      "T",
+      "Tdg"
+    ],
+    "radius": 7,
+    "exact_word_ball_size": 628,
+    "exact_word_ball_sha256": "e7c7e0492f5ee55d0b80adacc65331c9dc0c2230cd04e2b1b53c58441e7462af",
+    "proof_scope": "all_words_in_fixed_H_S_T_Tdg_alphabet_including_nonclifford_intermediates",
+    "global_local_optimality": true
+  },
+  "historical_cost_obstruction": {
+    "status": "proved_no_global_minimum",
+    "scope": "unrestricted real-angle legacy parameter score",
+    "operations": [
+      {
+        "gate": "U3",
+        "parameters": [
+          "1/log(2049/2048)",
+          "0",
+          "0"
+        ],
+        "wires": [
+          0
+        ]
+      },
+      {
+        "gate": "U3",
+        "parameters": [
+          "-1/log(2049/2048)",
+          "0",
+          "0"
+        ],
+        "wires": [
+          0
+        ]
+      }
+    ],
+    "identity_verification": "exact_free_real_U3_inverse_identity",
+    "exact_score": "2*log(log(2049/2048))/(5*log(2)) + 1003/250",
+    "strict_score_upper_bound": "-97/250",
+    "log_inequality_derivative": "-cost_x/(cost_x + 1)",
+    "consequence": "Appending arbitrarily many exact identity pairs preserves both phase policies and entangler count while the score tends to minus infinity"
+  },
+  "exact_B_pole_replays": [
+    {
+      "z": "-pi/4",
+      "phase_exact": false,
+      "verification": "exact_exponential_polynomial_identity"
+    },
+    {
+      "z": "-pi/4",
+      "phase_exact": true,
+      "verification": "exact_exponential_polynomial_identity"
+    },
+    {
+      "z": "pi/4",
+      "phase_exact": false,
+      "verification": "exact_exponential_polynomial_identity"
+    },
+    {
+      "z": "pi/4",
+      "phase_exact": true,
+      "verification": "exact_exponential_polynomial_identity"
+    }
+  ],
+  "records": [
+    {
+      "gate": "I",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "I",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "I",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "I",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "H",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "H",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "H",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "H",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "S",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "S",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "S",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "S",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sdg",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sdg",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sdg",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sdg",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sx",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sx",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sx",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sx",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sxdg",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sxdg",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sxdg",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sxdg",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "X",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "X",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "X",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "X",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Y",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Y",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Y",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Y",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Z",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Z",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Z",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Z",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "fSim",
+      "basis": "berkeley_b",
+      "mode": "phase_exact",
+      "method": "exact_two_B_Cartan_chart_and_native_lowering",
+      "source_run": 29
+    },
+    {
+      "gate": "fSim",
+      "basis": "berkeley_b",
+      "mode": "projective",
+      "method": "exact_two_B_Cartan_chart_and_native_lowering",
+      "source_run": 29
+    },
+    {
+      "gate": "Peres",
+      "basis": "xx_rz_ry",
+      "mode": "phase_exact",
+      "method": "exact_feasibility_obstruction",
+      "source_run": 33
+    },
+    {
+      "gate": "Peres",
+      "basis": "xx_rz_ry",
+      "mode": "projective",
+      "method": "exact_parent_U2_polar_components_and_phase_absorption",
+      "source_run": 33
+    },
+    {
+      "gate": "I_q1",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "I_q1",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "I_q1",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "I_q1",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "I_q2",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "I_q2",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "I_q2",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "I_q2",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "I_q3",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "I_q3",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "I_q3",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "I_q3",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "I_q4",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "I_q4",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "I_q4",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "I_q4",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "I_q5",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "I_q5",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "I_q5",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "I_q5",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "I_q6",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "I_q6",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "I_q6",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "I_q6",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "I_q7",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "I_q7",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "I_q7",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "I_q7",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "X_q1",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "X_q1",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "X_q1",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "X_q1",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "X_q2",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "X_q2",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "X_q2",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "X_q2",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "X_q3",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "X_q3",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "X_q3",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "X_q3",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "X_q4",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "X_q4",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "X_q4",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "X_q4",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "X_q5",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "X_q5",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "X_q5",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "X_q5",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "X_q6",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "X_q6",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "X_q6",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "X_q6",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "X_q7",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "X_q7",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "X_q7",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "X_q7",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Y_q1",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Y_q1",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Y_q1",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Y_q1",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Y_q2",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Y_q2",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Y_q2",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Y_q2",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Y_q3",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Y_q3",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Y_q3",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Y_q3",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Y_q4",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Y_q4",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Y_q4",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Y_q4",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Y_q5",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Y_q5",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Y_q5",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Y_q5",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Y_q6",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Y_q6",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Y_q6",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Y_q6",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Y_q7",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Y_q7",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Y_q7",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Y_q7",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Z_q1",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Z_q1",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Z_q1",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Z_q1",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Z_q2",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Z_q2",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Z_q2",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Z_q2",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Z_q3",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Z_q3",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Z_q3",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Z_q3",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Z_q4",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Z_q4",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Z_q4",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Z_q4",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Z_q5",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Z_q5",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Z_q5",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Z_q5",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Z_q6",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Z_q6",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Z_q6",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Z_q6",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Z_q7",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Z_q7",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Z_q7",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Z_q7",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "H_q1",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "H_q1",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "H_q1",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "H_q1",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "H_q2",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "H_q2",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "H_q2",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "H_q2",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "H_q3",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "H_q3",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "H_q3",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "H_q3",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "H_q4",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "H_q4",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "H_q4",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "H_q4",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "H_q5",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "H_q5",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "H_q5",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "H_q5",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "H_q6",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "H_q6",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "H_q6",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "H_q6",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "H_q7",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "H_q7",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "H_q7",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "H_q7",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HX",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HX",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HX",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HX",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HX_q1",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HX_q1",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HX_q1",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HX_q1",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HX_q2",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HX_q2",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HX_q2",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HX_q2",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HX_q3",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HX_q3",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HX_q3",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HX_q3",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HX_q4",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HX_q4",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HX_q4",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HX_q4",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HX_q5",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HX_q5",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HX_q5",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HX_q5",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HX_q6",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HX_q6",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HX_q6",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HX_q6",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HX_q7",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HX_q7",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HX_q7",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HX_q7",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HY",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HY",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HY",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HY",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HY_q1",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HY_q1",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HY_q1",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HY_q1",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HY_q2",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HY_q2",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HY_q2",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HY_q2",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HY_q3",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HY_q3",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HY_q3",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HY_q3",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HY_q4",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HY_q4",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HY_q4",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HY_q4",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HY_q5",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HY_q5",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HY_q5",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HY_q5",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HY_q6",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HY_q6",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HY_q6",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HY_q6",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HY_q7",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HY_q7",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HY_q7",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HY_q7",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HZ",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HZ",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HZ",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HZ",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HZ_q1",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HZ_q1",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HZ_q1",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HZ_q1",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HZ_q2",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HZ_q2",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HZ_q2",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HZ_q2",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HZ_q3",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HZ_q3",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HZ_q3",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HZ_q3",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HZ_q4",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HZ_q4",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HZ_q4",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HZ_q4",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HZ_q5",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HZ_q5",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HZ_q5",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HZ_q5",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HZ_q6",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HZ_q6",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HZ_q6",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HZ_q6",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HZ_q7",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HZ_q7",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HZ_q7",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HZ_q7",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "S_q1",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "S_q1",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "S_q1",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "S_q1",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "S_q2",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "S_q2",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "S_q2",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "S_q2",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "S_q3",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "S_q3",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "S_q3",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "S_q3",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "S_q4",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "S_q4",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "S_q4",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "S_q4",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "S_q5",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "S_q5",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "S_q5",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "S_q5",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "S_q6",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "S_q6",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "S_q6",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "S_q6",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "S_q7",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "S_q7",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "S_q7",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "S_q7",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SX",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SX",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SX",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SX",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SX_q1",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SX_q1",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SX_q1",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SX_q1",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SX_q2",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SX_q2",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SX_q2",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SX_q2",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SX_q3",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SX_q3",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SX_q3",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SX_q3",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SX_q4",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SX_q4",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SX_q4",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SX_q4",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SX_q5",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SX_q5",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SX_q5",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SX_q5",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SX_q6",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SX_q6",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SX_q6",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SX_q6",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SX_q7",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SX_q7",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SX_q7",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SX_q7",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SY",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SY",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SY",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SY",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SY_q1",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SY_q1",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SY_q1",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SY_q1",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SY_q2",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SY_q2",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SY_q2",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SY_q2",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SY_q3",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SY_q3",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SY_q3",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SY_q3",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SY_q4",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SY_q4",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SY_q4",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SY_q4",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SY_q5",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SY_q5",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SY_q5",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SY_q5",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SY_q6",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SY_q6",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SY_q6",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SY_q6",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SY_q7",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SY_q7",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SY_q7",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SY_q7",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sdg_q1",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sdg_q1",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sdg_q1",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sdg_q1",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sdg_q2",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sdg_q2",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sdg_q2",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sdg_q2",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sdg_q3",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sdg_q3",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sdg_q3",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sdg_q3",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sdg_q4",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sdg_q4",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sdg_q4",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sdg_q4",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sdg_q5",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sdg_q5",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sdg_q5",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sdg_q5",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sdg_q6",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sdg_q6",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sdg_q6",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sdg_q6",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sdg_q7",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sdg_q7",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sdg_q7",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sdg_q7",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HS",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HS",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HS",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HS",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HS_q1",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HS_q1",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HS_q1",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HS_q1",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HS_q2",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HS_q2",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HS_q2",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HS_q2",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HS_q3",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HS_q3",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HS_q3",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HS_q3",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HS_q4",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HS_q4",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HS_q4",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HS_q4",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HS_q5",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HS_q5",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HS_q5",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HS_q5",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HS_q6",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HS_q6",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HS_q6",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HS_q6",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HS_q7",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HS_q7",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HS_q7",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HS_q7",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSX",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSX",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSX",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSX",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSX_q1",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSX_q1",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSX_q1",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSX_q1",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSX_q2",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSX_q2",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSX_q2",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSX_q2",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSX_q3",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSX_q3",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSX_q3",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSX_q3",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSX_q4",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSX_q4",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSX_q4",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSX_q4",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSX_q5",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSX_q5",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSX_q5",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSX_q5",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSX_q6",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSX_q6",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSX_q6",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSX_q6",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSX_q7",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSX_q7",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSX_q7",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSX_q7",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSY",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSY",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSY",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSY",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSY_q1",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSY_q1",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSY_q1",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSY_q1",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSY_q2",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSY_q2",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSY_q2",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSY_q2",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSY_q3",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSY_q3",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSY_q3",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSY_q3",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSY_q4",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSY_q4",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSY_q4",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSY_q4",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSY_q5",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSY_q5",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSY_q5",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSY_q5",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSY_q6",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSY_q6",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSY_q6",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSY_q6",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSY_q7",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSY_q7",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSY_q7",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSY_q7",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSdg",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSdg",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSdg",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSdg",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSdg_q1",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSdg_q1",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSdg_q1",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSdg_q1",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSdg_q2",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSdg_q2",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSdg_q2",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSdg_q2",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSdg_q3",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSdg_q3",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSdg_q3",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSdg_q3",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSdg_q4",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSdg_q4",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSdg_q4",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSdg_q4",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSdg_q5",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSdg_q5",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSdg_q5",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSdg_q5",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSdg_q6",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSdg_q6",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSdg_q6",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSdg_q6",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSdg_q7",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSdg_q7",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSdg_q7",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "HSdg_q7",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SH",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SH",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SH",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SH",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SH_q1",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SH_q1",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SH_q1",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SH_q1",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SH_q2",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SH_q2",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SH_q2",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SH_q2",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SH_q3",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SH_q3",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SH_q3",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SH_q3",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SH_q4",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SH_q4",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SH_q4",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SH_q4",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SH_q5",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SH_q5",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SH_q5",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SH_q5",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SH_q6",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SH_q6",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SH_q6",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SH_q6",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SH_q7",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SH_q7",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SH_q7",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SH_q7",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHX",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHX",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHX",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHX",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHX_q1",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHX_q1",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHX_q1",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHX_q1",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHX_q2",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHX_q2",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHX_q2",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHX_q2",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHX_q3",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHX_q3",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHX_q3",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHX_q3",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHX_q4",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHX_q4",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHX_q4",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHX_q4",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHX_q5",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHX_q5",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHX_q5",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHX_q5",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHX_q6",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHX_q6",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHX_q6",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHX_q6",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHX_q7",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHX_q7",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHX_q7",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHX_q7",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHY",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHY",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHY",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHY",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHY_q1",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHY_q1",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHY_q1",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHY_q1",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHY_q2",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHY_q2",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHY_q2",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHY_q2",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHY_q3",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHY_q3",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHY_q3",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHY_q3",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHY_q4",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHY_q4",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHY_q4",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHY_q4",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHY_q5",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHY_q5",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHY_q5",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHY_q5",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHY_q6",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHY_q6",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHY_q6",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHY_q6",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHY_q7",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHY_q7",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHY_q7",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHY_q7",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHZ",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHZ",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHZ",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHZ",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHZ_q1",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHZ_q1",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHZ_q1",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHZ_q1",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHZ_q2",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHZ_q2",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHZ_q2",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHZ_q2",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHZ_q3",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHZ_q3",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHZ_q3",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHZ_q3",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHZ_q4",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHZ_q4",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHZ_q4",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHZ_q4",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHZ_q5",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHZ_q5",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHZ_q5",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHZ_q5",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHZ_q6",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHZ_q6",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHZ_q6",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHZ_q6",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHZ_q7",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHZ_q7",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHZ_q7",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SHZ_q7",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sx_q1",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sx_q1",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sx_q1",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sx_q1",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sx_q2",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sx_q2",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sx_q2",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sx_q2",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sx_q3",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sx_q3",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sx_q3",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sx_q3",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sx_q4",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sx_q4",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sx_q4",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sx_q4",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sx_q5",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sx_q5",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sx_q5",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sx_q5",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sx_q6",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sx_q6",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sx_q6",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sx_q6",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sx_q7",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sx_q7",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sx_q7",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sx_q7",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sxdg_q1",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sxdg_q1",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sxdg_q1",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sxdg_q1",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sxdg_q2",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sxdg_q2",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sxdg_q2",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sxdg_q2",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sxdg_q3",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sxdg_q3",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sxdg_q3",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sxdg_q3",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sxdg_q4",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sxdg_q4",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sxdg_q4",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sxdg_q4",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sxdg_q5",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sxdg_q5",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sxdg_q5",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sxdg_q5",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sxdg_q6",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sxdg_q6",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sxdg_q6",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sxdg_q6",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sxdg_q7",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sxdg_q7",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sxdg_q7",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Sxdg_q7",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SxY",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SxY",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SxY",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SxY",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SxY_q1",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SxY_q1",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SxY_q1",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SxY_q1",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SxY_q2",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SxY_q2",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SxY_q2",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SxY_q2",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SxY_q3",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SxY_q3",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SxY_q3",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SxY_q3",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SxY_q4",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SxY_q4",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SxY_q4",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SxY_q4",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SxY_q5",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SxY_q5",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SxY_q5",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SxY_q5",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SxY_q6",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SxY_q6",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SxY_q6",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SxY_q6",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SxY_q7",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SxY_q7",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SxY_q7",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SxY_q7",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SxZ",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SxZ",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SxZ",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SxZ",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SxZ_q1",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SxZ_q1",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SxZ_q1",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SxZ_q1",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SxZ_q2",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SxZ_q2",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SxZ_q2",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SxZ_q2",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SxZ_q3",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SxZ_q3",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SxZ_q3",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SxZ_q3",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SxZ_q4",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SxZ_q4",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SxZ_q4",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SxZ_q4",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SxZ_q5",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SxZ_q5",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SxZ_q5",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SxZ_q5",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SxZ_q6",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SxZ_q6",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SxZ_q6",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SxZ_q6",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SxZ_q7",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SxZ_q7",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SxZ_q7",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "SxZ_q7",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "method": "integer_ring_matrix_identity_and_exhaustive_global_word_minimum",
+      "source_run": 30
+    },
+    {
+      "gate": "Canonical",
+      "basis": "berkeley_b",
+      "mode": "phase_exact",
+      "method": "exact_two_B_Cartan_chart_and_native_lowering",
+      "source_run": 29
+    },
+    {
+      "gate": "Canonical",
+      "basis": "berkeley_b",
+      "mode": "projective",
+      "method": "exact_two_B_Cartan_chart_and_native_lowering",
+      "source_run": 29
+    },
+    {
+      "gate": "C4X",
+      "basis": "ibm_cz",
+      "mode": "phase_exact",
+      "method": "exact_feasibility_obstruction",
+      "source_run": 34
+    },
+    {
+      "gate": "C4X",
+      "basis": "ibm_cz",
+      "mode": "projective",
+      "method": "exact_native_parent_local_components_and_CZ_commutations",
+      "source_run": 34
+    },
+    {
+      "gate": "C4X",
+      "basis": "cz_rz_rx",
+      "mode": "phase_exact",
+      "method": "exact_feasibility_obstruction",
+      "source_run": 31
+    },
+    {
+      "gate": "C4X",
+      "basis": "cz_rz_rx",
+      "mode": "projective",
+      "method": "exact_native_parent_local_components_and_CZ_commutations",
+      "source_run": 31
+    },
+    {
+      "gate": "C4X",
+      "basis": "iswap_u",
+      "mode": "phase_exact",
+      "method": "exact_parent_U2_polar_components_and_phase_absorption",
+      "source_run": 32
+    },
+    {
+      "gate": "C4X",
+      "basis": "iswap_u",
+      "mode": "projective",
+      "method": "exact_parent_U2_polar_components_and_phase_absorption",
+      "source_run": 32
+    },
+    {
+      "gate": "C4X",
+      "basis": "rigetti_cz",
+      "mode": "phase_exact",
+      "method": "exact_feasibility_obstruction",
+      "source_run": 34
+    },
+    {
+      "gate": "C4X",
+      "basis": "rigetti_cz",
+      "mode": "projective",
+      "method": "exact_native_parent_local_components_and_CZ_commutations",
+      "source_run": 34
+    },
+    {
+      "gate": "C3SX",
+      "basis": "iswap_u",
+      "mode": "phase_exact",
+      "method": "exact_parent_U2_polar_components_and_phase_absorption",
+      "source_run": 32
+    },
+    {
+      "gate": "C3SX",
+      "basis": "iswap_u",
+      "mode": "projective",
+      "method": "exact_parent_U2_polar_components_and_phase_absorption",
+      "source_run": 32
+    },
+    {
+      "gate": "TK2",
+      "basis": "berkeley_b",
+      "mode": "phase_exact",
+      "method": "exact_two_B_Cartan_chart_and_native_lowering",
+      "source_run": 29
+    },
+    {
+      "gate": "TK2",
+      "basis": "berkeley_b",
+      "mode": "projective",
+      "method": "exact_two_B_Cartan_chart_and_native_lowering",
+      "source_run": 29
+    },
+    {
+      "gate": "PhasedFSim",
+      "basis": "berkeley_b",
+      "mode": "phase_exact",
+      "method": "exact_two_B_Cartan_chart_and_native_lowering",
+      "source_run": 29
+    },
+    {
+      "gate": "PhasedFSim",
+      "basis": "berkeley_b",
+      "mode": "projective",
+      "method": "exact_two_B_Cartan_chart_and_native_lowering",
+      "source_run": 29
+    },
+    {
+      "gate": "SWAPPow",
+      "basis": "berkeley_b",
+      "mode": "phase_exact",
+      "method": "exact_two_B_Cartan_chart_and_native_lowering",
+      "source_run": 29
+    },
+    {
+      "gate": "SWAPPow",
+      "basis": "berkeley_b",
+      "mode": "projective",
+      "method": "exact_two_B_Cartan_chart_and_native_lowering",
+      "source_run": 29
+    }
+  ],
+  "policy": "Exact arithmetic, component lemmas, and source hashes; no numerical acceptance",
+  "projective_scalar_completeness": {
+    "coefficient_field": "Q(sqrt(2),i)=Q(zeta_8)",
+    "coefficient_field_degree": 4,
+    "primitive_determinant_order_divides": 8,
+    "Clifford_determinant_order_divides": 4,
+    "excluded_odd_sixteenth_root_degree": 8,
+    "complete_scalar_phase_group": "eighth_roots_of_unity",
+    "implication": "Minimizing over the eight exact phases proves the unrestricted projective word minimum"
+  },
+  "c3x_available_tradeoff_v2_cost_check": {
+    "retained": {
+      "entanglers": 13,
+      "parameter_score": "57797/500",
+      "single_qubit_gates": 28
+    },
+    "available_shorter": {
+      "entanglers": 13,
+      "parameter_score": "11637/100",
+      "single_qubit_gates": 24
+    },
+    "unchanged_by_objective_migration": true,
+    "claim_scope": "These two witnesses; no exclusion of a better unknown circuit"
+  }
+}

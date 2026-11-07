@@ -28,7 +28,7 @@ C3SX,cz_u,projective,20,27,79481/500,20,27,0,0,equal_E_equal_locals,C3SXGate,,,F
 C3SX,ibm_cx,projective,20,26,18681/125,20,26,0,0,equal_E_equal_locals,C3SXGate,,,False,not_certified_from_floating_SDK_angles,False
 C3SX,ibm_cz,projective,20,84,6652/25,20,84,0,0,equal_E_equal_locals,C3SXGate,,,False,not_certified_from_floating_SDK_angles,False
 C3SX,ibm_ecr,projective,20,88,137451/500,20,88,0,0,equal_E_equal_locals,C3SXGate,,,False,not_certified_from_floating_SDK_angles,False
-C3SX,iswap_u,projective,26,80,7382/25,26,56,0,24,equal_E_more_locals,C3SXGate,,,False,not_certified_from_floating_SDK_angles,False
+C3SX,iswap_u,projective,26,40,4911/25,26,56,0,-16,equal_E_fewer_locals,C3SXGate,,,False,not_certified_from_floating_SDK_angles,False
 C3SX,xx_rz_ry,projective,13,67,5364/25,13,67,0,0,equal_E_equal_locals,C3SXGate,,,False,not_certified_from_floating_SDK_angles,False
 C3SX,zx_u,projective,13,26,64891/500,13,26,0,0,equal_E_equal_locals,C3SXGate,,,False,not_certified_from_floating_SDK_angles,False
 C3SX,zz_u,projective,13,27,32247/250,13,27,0,0,equal_E_equal_locals,C3SXGate,,,False,not_certified_from_floating_SDK_angles,False
@@ -45,12 +45,12 @@ C3X,zx_u,projective,13,29,612/5,13,30,0,-1,equal_E_fewer_locals,C3XGate,,,False,
 C3X,zz_u,projective,13,28,57797/500,13,24,0,4,equal_E_more_locals,C3XGate,,11637/100,True,not_certified_from_floating_SDK_angles,False
 C4X,cx_rz_ry,projective,36,54,69927/250,36,54,0,0,equal_E_equal_locals,C4XGate,,,False,not_certified_from_floating_SDK_angles,False
 C4X,cx_u,projective,36,41,126923/500,36,41,0,0,equal_E_equal_locals,C4XGate,,,False,not_certified_from_floating_SDK_angles,False
-C4X,cz_rz_rx,projective,36,267,374267/500,36,72,0,195,equal_E_more_locals,C4XGate,,,False,not_certified_from_floating_SDK_angles,False
+C4X,cz_rz_rx,projective,36,69,2*log(3)/(5*log(2)) + 154869/500,36,72,0,-3,equal_E_fewer_locals,C4XGate,,,False,not_certified_from_floating_SDK_angles,False
 C4X,cz_u,projective,36,46,2*log(3)/(5*log(2)) + 68719/250,36,46,0,0,equal_E_equal_locals,C4XGate,,,False,not_certified_from_floating_SDK_angles,False
 C4X,ibm_cx,projective,36,59,144449/500,36,59,0,0,equal_E_equal_locals,C4XGate,,,False,not_certified_from_floating_SDK_angles,False
-C4X,ibm_cz,projective,36,267,361339/500,36,143,0,124,equal_E_more_locals,C4XGate,,,False,not_certified_from_floating_SDK_angles,False
+C4X,ibm_cz,projective,36,130,2*log(3)/(5*log(2)) + 53639/125,36,143,0,-13,equal_E_fewer_locals,C4XGate,,,False,not_certified_from_floating_SDK_angles,False
 C4X,ibm_ecr,projective,36,169,64174/125,36,169,0,0,equal_E_equal_locals,C4XGate,,,False,not_certified_from_floating_SDK_angles,False
-C4X,iswap_u,projective,54,168,76576/125,54,113,0,55,equal_E_more_locals,C4XGate,,,False,not_certified_from_floating_SDK_angles,False
+C4X,iswap_u,projective,54,78,100167/250,54,113,0,-35,equal_E_fewer_locals,C4XGate,,,False,not_certified_from_floating_SDK_angles,False
 C4X,xx_rz_ry,projective,27,147,113487/250,27,147,0,0,equal_E_equal_locals,C4XGate,,,False,not_certified_from_floating_SDK_angles,False
 C4X,zx_u,projective,27,54,129989/500,27,54,0,0,equal_E_equal_locals,C4XGate,,,False,not_certified_from_floating_SDK_angles,False
 C4X,zz_u,projective,27,53,2*log(3)/(5*log(2)) + 59243/250,27,55,0,-2,equal_E_fewer_locals,C4XGate,,,False,not_certified_from_floating_SDK_angles,False
@@ -1107,7 +1107,7 @@ Peres,ibm_cx,projective,5,12,23609/500,5,12,0,0,equal_E_equal_locals,stored_exac
 Peres,ibm_cz,projective,5,26,37613/500,5,26,0,0,equal_E_equal_locals,stored_exact_reference,,,False,not_certified_from_floating_SDK_angles,False
 Peres,ibm_ecr,projective,5,31,43013/500,5,42,0,-11,equal_E_fewer_locals,stored_exact_reference,,,False,not_certified_from_floating_SDK_angles,False
 Peres,iswap_u,projective,10,16,9962/125,10,23,0,-7,equal_E_fewer_locals,stored_exact_reference,,,False,not_certified_from_floating_SDK_angles,False
-Peres,xx_rz_ry,projective,5,44,59049/500,5,35,0,9,equal_E_more_locals,stored_exact_reference,,,False,not_certified_from_floating_SDK_angles,False
+Peres,xx_rz_ry,projective,5,35,2352/25,5,35,0,0,equal_E_equal_locals,stored_exact_reference,,,False,not_certified_from_floating_SDK_angles,False
 Peres,zx_u,projective,5,11,12019/250,5,13,0,-2,equal_E_fewer_locals,stored_exact_reference,,,False,not_certified_from_floating_SDK_angles,False
 Peres,zz_u,projective,5,10,4427/100,5,13,0,-3,equal_E_fewer_locals,stored_exact_reference,,,False,not_certified_from_floating_SDK_angles,False
 RC3X,cx_rz_ry,projective,6,12,6503/125,6,12,0,0,equal_E_equal_locals,RC3XGate,,,False,not_certified_from_floating_SDK_angles,False

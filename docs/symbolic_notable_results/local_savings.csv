@@ -8,12 +8,16 @@ ACX,xx_rz_ry,projective,1,8,10709/500,1,9,0,-1,equal_E_fewer_locals,UnitaryGate,
 B,cx_rz_ry,projective,2,8,3177/125,2,13,0,-5,equal_E_fewer_locals,UnitaryGate,,,False,not_certified_from_floating_SDK_angles,False
 B,ibm_cx,projective,2,9,13201/500,2,15,0,-6,equal_E_fewer_locals,UnitaryGate,,,False,not_certified_from_floating_SDK_angles,False
 B,ibm_ecr,projective,2,14,4727/125,2,15,0,-1,equal_E_fewer_locals,UnitaryGate,,,False,not_certified_from_floating_SDK_angles,False
+C3SX,iswap_u,projective,26,40,4911/25,26,56,0,-16,equal_E_fewer_locals,C3SXGate,,,False,not_certified_from_floating_SDK_angles,False
 C3X,cx_rz_ry,projective,14,19,51719/500,14,28,0,-9,equal_E_fewer_locals,C3XGate,,,False,not_certified_from_floating_SDK_angles,False
 C3X,cx_u,projective,14,17,49751/500,14,19,0,-2,equal_E_fewer_locals,C3XGate,,,False,not_certified_from_floating_SDK_angles,False
 C3X,cz_u,projective,14,17,45751/500,14,19,0,-2,equal_E_fewer_locals,C3XGate,,,False,not_certified_from_floating_SDK_angles,False
 C3X,ibm_cx,projective,14,21,53717/500,14,25,0,-4,equal_E_fewer_locals,C3XGate,,,False,not_certified_from_floating_SDK_angles,False
 C3X,iswap_u,projective,26,42,50513/250,26,56,0,-14,equal_E_fewer_locals,C3XGate,,,False,not_certified_from_floating_SDK_angles,False
 C3X,zx_u,projective,13,29,612/5,13,30,0,-1,equal_E_fewer_locals,C3XGate,,,False,not_certified_from_floating_SDK_angles,False
+C4X,cz_rz_rx,projective,36,69,2*log(3)/(5*log(2)) + 154869/500,36,72,0,-3,equal_E_fewer_locals,C4XGate,,,False,not_certified_from_floating_SDK_angles,False
+C4X,ibm_cz,projective,36,130,2*log(3)/(5*log(2)) + 53639/125,36,143,0,-13,equal_E_fewer_locals,C4XGate,,,False,not_certified_from_floating_SDK_angles,False
+C4X,iswap_u,projective,54,78,100167/250,54,113,0,-35,equal_E_fewer_locals,C4XGate,,,False,not_certified_from_floating_SDK_angles,False
 C4X,zz_u,projective,27,53,2*log(3)/(5*log(2)) + 59243/250,27,55,0,-2,equal_E_fewer_locals,C4XGate,,,False,not_certified_from_floating_SDK_angles,False
 CCX,ibm_cz,projective,6,28,41713/500,6,29,0,-1,equal_E_fewer_locals,stored_exact_reference,,,False,not_certified_from_floating_SDK_angles,False
 CCX,iswap_u,projective,10,16,9887/125,10,23,0,-7,equal_E_fewer_locals,CCXGate,,,False,not_certified_from_floating_SDK_angles,False
