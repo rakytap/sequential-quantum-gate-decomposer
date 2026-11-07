@@ -101,3 +101,13 @@ def test_missing_clifford_phases_have_a_basis_preserving_obstruction():
     assert proof["method"]=="one_wire_determinant_group"
     assert proof["determinant_root_order"]==1
     assert atlas.clifford_phase_obstruction(state,BASIS_SETS["clifford_only"]) is None
+
+
+def test_family_budget_label_is_distinct_from_a_fixed_target_minimum():
+    result = dict(cost=dict(entanglers=3, single_qubit_gates=4, parameter_score='20'))
+    fixed = dict(scope='fixed_target_minimum')
+    family = dict(scope='minimum_uniform_family_budget')
+    assert 'E upper bound' in atlas.cost_line(result)
+    assert 'proved E minimum' in atlas.cost_line(result, fixed)
+    assert 'minimum uniform E budget' in atlas.cost_line(result, family)
+    assert 'proved E minimum' not in atlas.cost_line(result, family)

@@ -228,7 +228,7 @@ def drawing(store, width, result, max_height="33mm"):
     return r"\fitpanel{" + max_height + "}{" + "\n".join(blocks) + "}"
 
 
-def cost_line(result):
+def cost_line(result, independent_proof=None):
     cost = result["cost"]
     try:
         score = f"{float(sp.sympify(cost['parameter_score'])):.3f}"
@@ -236,6 +236,11 @@ def cost_line(result):
         score = "symbolic"
     certificate = ("proved E minimum" if result.get("entangler_optimal") else
                    "conditional E minimum" if result.get("conditional_entangler_optimality") else "E upper bound")
+    if independent_proof:
+        if independent_proof['scope'] == 'fixed_target_minimum':
+            certificate = 'proved E minimum'
+        elif not result.get('entangler_optimal'):
+            certificate = 'minimum uniform E budget'
     return (f"E={cost['entanglers']} / L={cost['single_qubit_gates']} / score $\\approx$ {score}"
             + r"\hfill " + escape(certificate))
 
@@ -265,7 +270,8 @@ def gate_panel(store, basis, row, width):
     bodies = []
     for mode, result in variants:
         color, label = ("exact", "EXACT PHASE") if mode == "phase_exact" else ("projective", "PROJECTIVE")
-        bodies.append(r"{\scriptsize\color{" + color + r"}\bfseries " + label + r"}\quad{\scriptsize " + cost_line(result) + r"}\par")
+        independent = row.get('independent_entangler_certificates',{}).get(mode)
+        bodies.append(r"{\scriptsize\color{" + color + r"}\bfseries " + label + r"}\quad{\scriptsize " + cost_line(result, independent) + r"}\par")
         bodies.append(drawing(store, width, result, "18mm" if len(variants) == 2 else "39mm") + r"\par\vspace{.8mm}")
         if mode == "projective":
             factor = result.get("virtual_gp", {}).get("factor", "1")
@@ -292,6 +298,7 @@ def gate_volume(report, output, store, names, archive_digest):
                   r"E counts native two-qubit primitives, L counts one-qubit operations. Scores are displayed rounded; the archive stores exact expressions. "
                   r"Objective version 2 clamps negative denominator penalties; an exact compatibility audit preserves the earlier retained scores. "
                   r"Only an explicit matching certificate establishes a minimum entangler count. A verified upper bound does not establish minimum local cost. "
+                  r"A minimum uniform E budget concerns a circuit for the whole parameterized family: a certified hard member forces that budget, while special parameter values can require fewer pulses. "
                   r"Published-cap notes identify constructions above known universal two-qubit bounds; these remain optimization gaps. "
                   r"Proof conditions, source hashes and attempt histories remain in the archive.\par "
                   r"Open cases are shown as open. Proved obstructions preserve the supplied basis and may be conditional for parameterized families. "
@@ -331,6 +338,7 @@ def gate_volume(report, output, store, names, archive_digest):
             manifest.append(dict(gate=name, basis=basis, phase_statuses=row["phase_statuses"] if row else {},
                                  modes=[mode for mode, _ in phase_variants(row)],
                                  mode_source_run_indices=row.get("mode_source_run_indices",{}) if row else {},
+                                 independent_entangler_certificates=row.get('independent_entangler_certificates',{}) if row else {},
                                  literature_uniform_upper_bound_comparison=row.get("literature_uniform_upper_bound_comparison") if row else None,
                                  synthesis_run_index=row.get("synthesis_run_index", 0) if row else None))
         source.append(grid(panels))
