@@ -7,7 +7,7 @@ fits and process budgets are preserved; numerical fits are not lower bounds.
 """
 import argparse
 from concurrent.futures import ThreadPoolExecutor,as_completed
-import gzip,hashlib,importlib.metadata,itertools,json,os,signal,subprocess,sys,time
+import gzip,hashlib,importlib.metadata,itertools,json,os,signal,subprocess,sys,tempfile,time
 from pathlib import Path
 import numpy as np
 
@@ -74,27 +74,33 @@ def baseline(tool,name,kind):
         from pytket import Circuit,OpType
         from pytket.circuit import Unitary2qBox,Unitary3qBox
         from pytket.qasm import circuit_from_qasm_str,circuit_to_qasm_str
-        from pytket.passes import FullPeepholeOptimise,AutoRebase
+        from pytket.passes import FullPeepholeOptimise,AutoRebase,DecomposeBoxes
         if kind=='matrix':
             c=Circuit(n);box=(Unitary2qBox if n==2 else Unitary3qBox)(reorder(target))
             c.add_gate(box,list(range(n)))
         else:
-            c=circuit_from_qasm_str(qasm2.dumps(transpile(source,basis_gates=['u3','cx'],optimization_level=0)))
+            lowered=transpile(source,basis_gates=['u3','cx'],optimization_level=0)
+            c=circuit_from_qasm_str(qasm2.dumps(lowered))
+            c.add_phase(float(lowered.global_phase)/np.pi)
         if np.max(np.abs(c.get_unitary()-reorder(target)))>1e-11:raise ArithmeticError('tket input ordering')
+        DecomposeBoxes().apply(c)
         FullPeepholeOptimise(allow_swaps=False).apply(c)
         AutoRebase({OpType.U3,OpType.CX},allow_swaps=False).apply(c)
         if any(a!=b for a,b in c.implicit_qubit_permutation().items()):raise ArithmeticError('tket implicit output permutation')
         commands=c.get_commands()
         result=dict(**replay(c.get_unitary(),reorder(target)),entanglers=sum(len(i.qubits)==2 for i in commands),
                     locals=sum(len(i.qubits)==1 for i in commands),depth=c.depth(),qasm=circuit_to_qasm_str(c),
-                    settings=dict(pass_name='FullPeepholeOptimise then AutoRebase CX/U3',allow_swaps=False))
+                    settings=dict(pass_name='DecomposeBoxes; FullPeepholeOptimise; AutoRebase CX/U3',allow_swaps=False))
     else:
         from bqskit import compile
         from bqskit.ir.circuit import Circuit
         if kind=='matrix':value=reorder(target)
         else:
-            value=Circuit.from_qasm(qasm2.dumps(transpile(source,basis_gates=['u3','cx'],optimization_level=0)))
-            if np.max(np.abs(np.asarray(value.get_unitary())-reorder(target)))>1e-11:raise ArithmeticError('BQSKit input ordering')
+            text=qasm2.dumps(transpile(source,basis_gates=['u3','cx'],optimization_level=0))
+            with tempfile.NamedTemporaryFile(mode='w',suffix='.qasm') as f:
+                f.write(text);f.flush();value=Circuit.from_file(f.name)
+            if replay(np.asarray(value.get_unitary()),reorder(target))['status']!='verified_numeric':
+                raise ArithmeticError('BQSKit input ordering')
         out=compile(value,optimization_level=3,max_synthesis_size=3,synthesis_epsilon=1e-12,
                     seed=219,num_workers=1,num_blas_threads=1)
         ops=list(out)
