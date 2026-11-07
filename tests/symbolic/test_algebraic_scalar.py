@@ -30,3 +30,13 @@ def test_fixed_projective_verification_does_not_build_a_generic_symbolic_matrix(
 def test_free_angle_declines_fixed_field_scalar_inference():
     theta=sp.Symbol("theta",real=True)
     assert infer_algebraic_circuit_scalar(gates.make_gate("Rx",theta),(("U3",theta,-sp.pi/2,sp.pi/2,(0,)),)) is None
+
+
+def test_normalized_dyadic_radicals_share_the_same_exact_number_field():
+    from symbolic_identity import _cyclotomic_values
+    entries=(sp.sqrt(sp.Rational(1,2)+sp.sqrt(2)/4),
+             sp.sqrt(sp.Rational(1,2)-sp.sqrt(2)/4),sp.sqrt(6))
+    domain,values=_cyclotomic_values(entries)
+    assert values[entries[0]]==domain.from_sympy(sp.cos(sp.pi/8))
+    assert values[entries[1]]==domain.from_sympy(sp.sin(sp.pi/8))
+    assert values[entries[2]]**2==domain.convert(6)

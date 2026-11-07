@@ -99,8 +99,12 @@ def zero_form(expression,variables=()):
 @lru_cache(maxsize=32)
 def _cyclotomic_domain(denominator):
     root=sp.exp(sp.I*sp.pi/denominator)
-    domain=sp.QQ.algebraic_field(root)
-    return domain,domain.from_sympy(root)
+    variable=sp.Dummy("cyclotomic_root")
+    # exp(i*pi/d) is a primitive 2d-th root. Supplying its known minimal
+    # polynomial avoids rediscovering a high-degree radical representation.
+    polynomial=sp.Poly(sp.cyclotomic_poly(2*denominator,variable),variable,domain=sp.QQ)
+    domain=sp.QQ.algebraic_field((polynomial,root))
+    return domain,domain.unit
 
 
 def _cyclotomic_values(entries):
@@ -117,21 +121,27 @@ def _cyclotomic_values(entries):
             angle=sp.simplify(exponential.args[0]/(sp.I*sp.pi))
             if angle.is_Rational is not True:return None
             denominator=math.lcm(denominator,int(angle.q))
-    radicals=[(sp.sqrt(2),4,False),(sp.sqrt(3),6,False)]
+    radicals=[(sp.sqrt(2),4,False,sp.S.One),(sp.sqrt(3),6,False,sp.S.One)]
     upper=sp.sqrt(2)
     for power in range(3,7):
-        radicals.extend([(sp.sqrt(2+upper),2**power,False),(sp.sqrt(2-upper),2**power,True)])
+        radicals.extend([(sp.sqrt(2+upper),2**power,False,sp.S.One),
+                         (sp.sqrt(2-upper),2**power,True,sp.S.One),
+                         (sp.sqrt((2+upper)/4),2**power,False,sp.Rational(1,2)),
+                         (sp.sqrt((2-upper)/4),2**power,True,sp.Rational(1,2))])
         upper=sp.sqrt(2+upper)
-    present=[(value,period,sine) for value,period,sine in radicals if any(expr.has(value) for expr in rewritten)]
-    for _,period,_ in present:denominator=math.lcm(denominator,period)
+    present=[(value,period,sine,scale) for value,period,sine,scale in radicals if any(expr.has(value) for expr in rewritten)]
+    has_sqrt_six=any(expr.has(sp.sqrt(6)) for expr in rewritten)
+    if has_sqrt_six:present.extend(radicals[:2])
+    for _,period,_,_ in present:denominator=math.lcm(denominator,period)
     if denominator>256:return None
     domain,root=_cyclotomic_domain(denominator)
     imaginary=root**(denominator//2)
     constants={sp.I:imaginary}
-    for value,period,sine in present:
+    for value,period,sine,scale in present:
         phase=root**(denominator//period)
         inverse=domain.one/phase
-        constants[value]=-imaginary*(phase-inverse) if sine else phase+inverse
+        constants[value]=domain.convert(scale)*(-imaginary*(phase-inverse) if sine else phase+inverse)
+    if has_sqrt_six:constants[sp.sqrt(6)]=constants[sp.sqrt(2)]*constants[sp.sqrt(3)]
     cache={}
     def convert(expression):
         if expression in cache:return cache[expression]

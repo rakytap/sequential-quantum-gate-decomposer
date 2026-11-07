@@ -1,6 +1,7 @@
 """Use numerical SDK angles only as proposals for exact fixed-target circuits.
 
-Rational multiples of pi are recovered within a bounded proposal alphabet.
+Rational multiples of pi and a small explicit algebraic-angle dictionary are
+recovered within a bounded proposal alphabet.
 Every delivered circuit is then proved against the exact target. This is not
 symbolic-family synthesis, and an unsuccessful lift proves no obstruction.
 """
@@ -38,6 +39,19 @@ def propose_pi_angle(value, max_denominator=384, tolerance=1e-11):
     return sp.pi * sp.Rational(ratio.numerator, ratio.denominator)
 
 
+def propose_exact_angle(value):
+    direct=propose_pi_angle(value)
+    if direct is not None:return direct
+    # These angles occur in analytical Euler frames for controlled gates.
+    # Matching floats proposes an expression; only the subsequent complete
+    # exact target identity can accept it. This is no free-gauge assumption.
+    for base in (sp.acos(1/sp.sqrt(3)),sp.atan(1/sp.sqrt(2))):
+        for coefficient in (1,-1,2,-2,sp.Rational(1,2),sp.Rational(-1,2)):
+            offset=propose_pi_angle(float(value)-float(coefficient*base))
+            if offset is not None:return coefficient*base+offset
+    return None
+
+
 def _gauge_fixed_proposal(baseline):
     """Propose zero gauges with matched signs/scales and rational-pi offsets.
 
@@ -50,7 +64,7 @@ def _gauge_fixed_proposal(baseline):
     if not math.isfinite(float(baseline.get("global_phase",0))):return None
     representatives=[]
     def angle(value):
-        direct=propose_pi_angle(value)
+        direct=propose_exact_angle(value)
         if direct is not None:return direct
         for old in representatives:
             for coefficient in (1,-1,sp.Rational(1,2),sp.Rational(-1,2),2,-2,
@@ -88,7 +102,7 @@ def lift_sdk_candidate(target, baseline, basis, *, phase_exact=False):
         name = NAMES.get(operation["gate"])
         if name is None:
             return dict(declined, reason="SDK primitive has no exact lift")
-        parameters = tuple(propose_pi_angle(p) for p in operation["parameters"])
+        parameters = tuple(propose_exact_angle(p) for p in operation["parameters"])
         if any(p is None for p in parameters):
             gauge_fixed=True
             break
@@ -129,5 +143,6 @@ def lift_sdk_candidate(target, baseline, basis, *, phase_exact=False):
                  proposal_provenance=dict(input=baseline.get("input"),
                      numerical_angles_are_not_a_proof=True,
                      max_pi_denominator=384, symbolic_family_claim=False,
+                     algebraic_angle_dictionary=["acos(1/sqrt(3))","atan(1/sqrt(2))"],
                      gauge_fixed=gauge_fixed,proposed_gauges=gauge_count if gauge_fixed else 0))
     return proof

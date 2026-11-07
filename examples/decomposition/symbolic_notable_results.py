@@ -317,9 +317,13 @@ possible route~\cite{wolfram}; no new access has been obtained.
 \section{Reproduction and evidence scope}
 The companion JSON identifies the exact archive and SDK baseline SHA256 hashes,
 stores the independent Sycamore SDK circuits, and records the published figure's
-gate-type transcription and image hash. \texttt{local\_comparisons.csv} contains
-all eligible comparisons; \texttt{local\_optimization\_gaps.csv} retains regressions.
-Regenerate with \texttt{symbolic\_notable\_results.py}; compile this source with Tectonic.
+gate-type transcription and image hash. \nolinkurl{local_comparisons.csv} contains
+all eligible comparisons; \nolinkurl{local_optimization_gaps.csv} retains regressions.
+\nolinkurl{native_local_layer_opportunities.csv} separately lists native U3/PhasedXZ
+circuits exceeding one local per wire per pulse layer, plus a literal-phase
+closure when needed. These are count opportunities, not certified improvements
+under the parameter-sensitive score.
+Regenerate with \nolinkurl{symbolic_notable_results.py}; compile this source with Tectonic.
 No numerical SDK sample certifies a free-parameter identity or global minimum.
 \begin{thebibliography}{9}
 \bibitem{syc} M. AbuGhanem and H. Eleuch, EPJ Quantum Technology 11, 36 (2024),
@@ -345,6 +349,9 @@ No numerical SDK sample certifies a free-parameter identity or global minimum.
         r"The table records physical entanglers/local gates (E/L). Controlled-phase, CU and native MS rows retain all their real parameters. "
         r"The controlled-block OSR-two certificate excludes one B or SQiSW pulse whenever the relative block is nonscalar. "
         r"The square-root SWAP circuits use two B gates and five locals projectively, six with literal phase. "
+        r"The B target uses two SQiSW pulses and three U3 rotations with literal phase. "
+        r"The SQiSW Sycamore motif uses three pulses and a proved parity-block chart. "
+        r"The CZS rows use a two-pulse number-conserving matchgate chart with all three parameters free. "
         r"These constructions do not assert a global local-gate or parameter-score minimum, or priority over the literature."+"\n"+
         r"\begin{center}\begin{tabular}{llll}\toprule Target & Basis & Literal E/L & Projective E/L \\\midrule"+"\n"+
         "\n".join(native_rows)+r"\bottomrule\end{tabular}\end{center}"+"\n")
@@ -375,6 +382,8 @@ def main():
         native_examples=[dict(gate=row["gate"],basis=row["basis"],phase_exact=row.get("phase_exact"),
                               projective=effective_projective(row)) for row in archive["rows"]
             if (row["gate"],row["basis"]) in {("SYC","berkeley_b"),("SSWAP","berkeley_b"),("SSWAPdg","berkeley_b"),
+                *((name,basis) for name in ("B","DCX","SSWAP","SSWAPdg","SYC","CZS")
+                  for basis in ("sqrt_iswap_u","google_sqrt_iswap")),("CZS","berkeley_b"),
                 ("CP","sqrt_iswap_u"),("CU","sqrt_iswap_u"),("IonQMS","sqrt_iswap_u")}],
         sycamore=dict(published=PAPER, independent_sdk=sdk,
             archived_constructions=[dict(basis=row["basis"], phase_exact=row.get("phase_exact"),

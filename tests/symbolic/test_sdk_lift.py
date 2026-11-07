@@ -7,6 +7,17 @@ import symbolic_gates as gates
 from symbolic_sdk_lift import lift_sdk_candidate, propose_pi_angle
 
 
+def test_explicit_algebraic_angles_are_proposals_outside_the_pi_alphabet():
+    from symbolic_sdk_lift import propose_exact_angle
+    angle=sp.acos(1/sp.sqrt(3))
+    assert propose_pi_angle(float(angle)) is None
+    assert propose_exact_angle(float(angle))==angle
+    # atan(1/sqrt(2)) = pi/2-acos(1/sqrt(3)); the first dictionary
+    # representative is this equivalent expression with its pi offset.
+    assert propose_exact_angle(float(-sp.pi+sp.atan(1/sp.sqrt(2))))==-sp.pi/2-angle
+    assert propose_exact_angle(float("nan")) is None
+
+
 def sycamore_baseline():
     return dict(status="verified_numeric", basis="ibm_cx", input="test_proposal",
         global_phase=float(-7*sp.pi/24), operations=[
