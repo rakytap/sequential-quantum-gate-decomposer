@@ -138,3 +138,58 @@ def evaluate_program(data, inputs, outputs, substitutions, *, digits=None):
         return answer is sp.true
 
     return tuple(visit(sp.sympify(value, locals=environment)) for value in outputs)
+
+
+def compile_numeric_program(data, inputs, outputs, *, equality_tolerance=1e-10):
+    """Compile a trusted exact DAG for reusable double-precision binding.
+
+    Bindings remain lazy, so unused singular branches are never evaluated.
+    This evaluator is an interoperability path, not an identity certificate.
+    The program's existing exact verifier supplies the family guarantee.
+    """
+    import cmath
+    import math
+    from types import SimpleNamespace
+    from sympy.printing.pycode import PythonCodePrinter
+    inputs=tuple(sorted(set(inputs),key=str))
+    environment,bindings=decode_program(data,inputs)
+    indices={symbol:i for i,symbol in enumerate(bindings)}
+    arguments={symbol:'_p'+str(i) for i,symbol in enumerate(inputs)}
+
+    class Printer(PythonCodePrinter):
+        def _print_Symbol(self,value):
+            if value in indices:return '_get('+str(indices[value])+')'
+            if value in arguments:return arguments[value]
+            raise ValueError('Unknown numerical program symbol')
+        def _print_re(self,value):return '('+self._print(value.args[0])+').real'
+        def _print_im(self,value):return '('+self._print(value.args[0])+').imag'
+        def _print_conjugate(self,value):return '('+self._print(value.args[0])+').conjugate()'
+        def _print_Equality(self,value):return '_close('+','.join(map(self._print,value.args))+')'
+        def _print_Unequality(self,value):return '(not _close('+','.join(map(self._print,value.args))+'))'
+    printer=Printer()
+    codes=[compile(printer.doprint(expression),'<exact_scalar_dag>','eval') for expression in bindings.values()]
+    output_codes=[compile(printer.doprint(sp.sympify(value,locals=environment)),
+                          '<exact_scalar_output>','eval') for value in outputs]
+    real_flags=[symbol.is_real is True for symbol in bindings]
+    def real(value):
+        value=complex(value)
+        if abs(value.imag)>1e-7:raise ArithmeticError('Numerical binding left the real chart')
+        return value.real
+    functions={name:getattr(math,name) for name in dir(math) if not name.startswith('_')}
+    functions.update(sqrt=cmath.sqrt,exp=cmath.exp,sin=cmath.sin,cos=cmath.cos,
+                     atan2=lambda y,x:math.atan2(real(y),real(x)),floor=lambda x:math.floor(real(x)))
+    common=dict(math=SimpleNamespace(**functions),abs=abs,min=min,max=max,
+                _close=lambda a,b:abs(a-b)<equality_tolerance)
+    def evaluate(substitutions):
+        supplied={str(key):value for key,value in substitutions.items()}
+        if set(supplied)!=set(map(str,inputs)):raise ValueError('Supply every original parameter exactly once')
+        namespace=dict(common,**{arguments[symbol]:real(supplied[str(symbol)]) for symbol in inputs})
+        cache={}
+        def get(index):
+            if index not in cache:
+                value=eval(codes[index],{'__builtins__':{}},namespace)
+                cache[index]=real(value) if real_flags[index] else value
+            return cache[index]
+        namespace['_get']=get
+        return tuple(eval(code,{'__builtins__':{}},namespace) for code in output_codes)
+    return evaluate

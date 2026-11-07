@@ -31,3 +31,34 @@ def test_controlled_cost_cannot_be_classified_by_relative_weyl_class():
     examples=weyl_class_cost_counterexamples()
     assert [r['minimum_cx'] for r in examples]==[0,1,2]
     assert [r['singleton_cut_ranks'] for r in examples]==[[1,1,1],[2,2,1],[2,2,2]]
+
+
+def test_balanced_normal_form_polynomial_components():
+    from symbolic_balanced_involution import verify_normal_form_polynomials
+    assert verify_normal_form_polynomials()
+
+
+@pytest.mark.parametrize('edge,coordinates',[
+    ('alpha_zero',lambda t:(0,t)),('alpha_half_pi',lambda t:(sp.pi/2,t)),
+    ('beta_zero',lambda t:(t,0)),('beta_half_pi',lambda t:(t,sp.pi/2))])
+def test_entire_rank_two_boundary_has_a_literal_three_cnot_word(edge,coordinates):
+    from symbolic_balanced_involution import normal_form,boundary_source
+    from symbolic_gates import make_controlled
+    from symbolic_identity import prove_circuit_identity
+    t=sp.Symbol('balanced_theta',real=True)
+    assert prove_circuit_identity(make_controlled(normal_form(*coordinates(t)),2),boundary_source(edge,t)) is True
+
+
+@pytest.mark.parametrize('a,b,minimum',[(0,0,1),(0,sp.pi/2,2),(sp.pi/2,0,2),(sp.pi/2,sp.pi/2,1),
+                                    (0,sp.pi/4,3),(sp.pi/4,0,3),(sp.pi/4,sp.pi/4,4)])
+def test_balanced_classification_includes_every_rank_stratum(a,b,minimum):
+    from symbolic_balanced_involution import normal_form,balanced_controlled_cost
+    assert balanced_controlled_cost(normal_form(a,b).applyfunc(sp.simplify))['minimum_cx']==minimum
+
+
+def test_whole_balanced_normal_form_has_a_four_cnot_construction():
+    from symbolic_balanced_involution import normal_form,controlled_normal_form_source
+    from symbolic_gates import make_controlled
+    from symbolic_identity import prove_circuit_identity
+    a,b=sp.symbols('balanced_alpha balanced_beta',real=True)
+    assert prove_circuit_identity(make_controlled(normal_form(a,b),2),controlled_normal_form_source(a,b)) is True
