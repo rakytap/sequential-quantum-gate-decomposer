@@ -8,6 +8,7 @@ and parameter-sensitive local optimality remain separate responsibilities.
 
 from functools import lru_cache
 import itertools
+import json
 import sympy as sp
 
 if __package__:
@@ -287,4 +288,8 @@ def verify_small_count_certificate(target, basis, certificate):
                                            phase_exact=certificate['phase_exact'])
     except (ValueError, KeyError, TypeError, ArithmeticError):
         return False
-    return expected is not None and certificate == expected
+    # JSON represents tuple-valued profile fields as lists. Compare their
+    # canonical interchange forms so an archived proof replays exactly as
+    # the in-memory certificate does.
+    return (expected is not None
+            and json.dumps(certificate,sort_keys=True)==json.dumps(expected,sort_keys=True))

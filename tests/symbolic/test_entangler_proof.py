@@ -1,4 +1,5 @@
 import copy
+import json
 
 import pytest
 import sympy as sp
@@ -27,6 +28,7 @@ def test_three_pulse_exclusion_covers_fixed_and_variable_native_rotations(basis)
     assert proof['scope'] == 'fixed_target_minimum'
     assert proof['witness']['evidence'][-1]['method'] == 'real_two_pulse_spin_trace'
     assert verify_small_count_certificate(target, get_basis(basis), proof)
+    assert verify_small_count_certificate(target, get_basis(basis), json.loads(json.dumps(proof)))
 
 
 def test_two_pulse_exclusion_does_not_exclude_one_native_pulse():

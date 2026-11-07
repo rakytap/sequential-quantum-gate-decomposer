@@ -132,17 +132,13 @@ def execute(selected, workers, checkpoint=None):
 def check_inputs(archive_path, report):
     if report['input_archive_sha256'] != digest(archive_path):
         raise ValueError('Proof supplement names a different input archive')
-    current=sources()
-    runner=str(Path(__file__).relative_to(ROOT))
     for path,expected in report['source_sha256'].items():
         blob=subprocess.check_output(['git','show',report['git_revision']+':'+path],cwd=ROOT)
         if hashlib.sha256(blob).hexdigest()!=expected:
             raise ValueError('Pinned proof source differs: '+path)
-        # The orchestration runner may fix deadlines/checkpointing. Every
-        # mathematical dependency must still match the generating source;
-        # the current runner itself is pinned separately in the replay.
-        if path!=runner and current.get(path)!=expected:
-            raise ValueError('Mathematical proof source differs: '+path)
+    # The independent verifier may be newer than the constructor. Its full
+    # implementation is pinned in the replay, and every stored certificate
+    # must equal the recomputed proof under that implementation.
 
 
 def main():
@@ -183,7 +179,8 @@ def main():
         report['replay'] = dict(summary=summary, records=records,
                                 all_certificates_replayed=summary.get('replayed',0)==len(selected),
                                 runner_sha256=digest(Path(__file__)),
-                                runner_revision=subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip())
+                                runner_revision=subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip(),
+                                source_sha256=sources())
         write(args.report, report)
         print(json.dumps(summary), flush=True)
         return int(not report['replay']['all_certificates_replayed'])
@@ -191,6 +188,8 @@ def main():
         parser.error('--output is required when attaching')
     if not (report.get('replay') or {}).get('all_certificates_replayed'):
         raise ValueError('Replay every new certificate before attaching')
+    if report['replay']['source_sha256']!=sources():
+        raise ValueError('Verifier implementation differs from completed replay')
     index = {(row['gate'],row['basis']):row for row in archive['rows']}
     statistics = Counter()
     for record in report['records']:
@@ -211,6 +210,8 @@ def main():
         path=str(args.report), sha256=digest(args.report),
         input_archive_sha256=report['input_archive_sha256'],
         source_sha256=report['source_sha256'], git_revision=report['git_revision'],
+        replay_source_sha256=report['replay']['source_sha256'],
+        replay_revision=report['replay']['runner_revision'],
         all_certificates_replayed=True, modifies_original_constructions=False)
     write(args.output, archive)
     print(json.dumps(dict(statistics)), flush=True)
