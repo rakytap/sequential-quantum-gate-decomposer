@@ -1,0 +1,53 @@
+{
+  "kind": "exact_SQiSW_construction_frontier",
+  "archive": "benchmarks/symbolic/sqrt_iswap_frontier_20261107.json.gz",
+  "archive_sha256": "afdc8f7654a1f7d91d84f57ad0a5966fe189703fc62e046a2cc1e3190a0a8e0a",
+  "source_commit": "ad80b28e2960abf8b9c21895ed4ee313299a4cd6",
+  "source_files": 46,
+  "primary_scored_archive": {
+    "path": "benchmarks/symbolic/synthesis_reference_20261106.json.gz",
+    "sha256": "e4d7c8086e4361b97120819ab7bf42bb5e8fd4c95f5b4c87386063a2dfa1a8e5",
+    "modified": false
+  },
+  "summary": {
+    "cells": 10,
+    "phase_modes": 20,
+    "all_construction_certificates_replayed": true,
+    "matched_minimum_uniform_budgets": 20,
+    "published_uniform_caps_exceeded": 0,
+    "local_scores_evaluated": 0,
+    "global_local_minima_proved": 0,
+    "unscored_aliases_used_as_scores": false
+  },
+  "serialized_replay": {
+    "certificates": 20,
+    "status": "passed",
+    "source_commit_blobs_verified": true
+  },
+  "focused_tests": {
+    "initial_run": "34 passed",
+    "additional_exact_and_guard_checks": "5 passed"
+  },
+  "full_symbolic_suite": "1133 passed, 1 warning in 1047.40s (0:17:27)",
+  "public_constructor": "symbolic_sqrt_iswap_cartan.synthesize_sqrt_iswap_cartan",
+  "default_scored_compiler_uses_frontier": false,
+  "existing_full_atlases_updated": false,
+  "pending_work": [
+    "Evaluate local scores without scoring expression aliases or changing objective version 2.",
+    "Integrate shared-expression results into the scored compiler and full atlas.",
+    "Continue local-cost optimization and broader global-optimality proofs."
+  ],
+  "limitations": [
+    "Local parameter scores of the new shared-expression circuits are unscored.",
+    "Minimum uniform family budgets do not establish pointwise minima.",
+    "No new global local-score minimum or literature novelty is claimed.",
+    "The primary scored archive and existing full atlases are unchanged."
+  ],
+  "artifacts": {
+    "docs/symbolic_optimality/sqrt_iswap_cartan.pdf": "c048abb01b2c16d6d6c7dc3f14e628f8c84c77708f9f0faf5731de9e58b8da65",
+    "docs/symbolic_optimality/sqrt_iswap_cartan.tex": "8e94b42a0a9b24a1a4624e05831f1afe3973a1f8e1463a2d152a2ed7cea2b2d8",
+    "docs/symbolic_optimality/sqrt_iswap_cartan_circuit.tex": "063e87c54c0724235822c37ee12d0b67e215fdfe70e644db40baf525e4fe14b9",
+    "docs/symbolic_optimality/sqrt_iswap_cartan_sources.zip": "4468b9164022d11b44caf0fc8b40304b50a8d77f16b0fd91d20c2b28c6e2bb3c",
+    "docs/symbolic_notable_results/sqrt_iswap_frontier.csv": "4cc7405cbe4e57d82e3c862693ebcfe05d72fdbde67052e10141b30d006d7ab4"
+  }
+}
