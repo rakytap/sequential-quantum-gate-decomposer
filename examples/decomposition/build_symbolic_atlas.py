@@ -18,7 +18,7 @@ def split_document(source):
     pages = [page for page in body.split(r"\newpage") if page.strip()]
     destinations = {}
     for index, page in enumerate(pages):
-        for label in re.findall(r"\\label\{((?:gate|clifford)-[^}]+)\}", page):
+        for label in re.findall(r"\\label\{((?:gate|clifford|expression-program)-[^}]+)\}", page):
             destinations[label] = index
     result = []
     for index, page in enumerate(pages):

@@ -111,3 +111,18 @@ def test_family_budget_label_is_distinct_from_a_fixed_target_minimum():
     assert 'proved E minimum' in atlas.cost_line(result, fixed)
     assert 'minimum uniform E budget' in atlas.cost_line(result, family)
     assert 'proved E minimum' not in atlas.cost_line(result, family)
+
+
+def test_shared_angles_have_scoped_definitions_and_no_invented_score(tmp_path):
+    from symbolic_expression_program import ExpressionProgram
+    x=sp.Symbol('x',real=True)
+    p=ExpressionProgram((x,));angle=p.bind(sp.atan2(sp.sin(x),sp.cos(x)))
+    store=atlas.CircuitStore(tmp_path)
+    result=dict(operations=[dict(gate='U3',parameters=[str(angle),'0','0'],wires=[0])],
+                expression_program=p.encode(),cost=dict(entanglers=0,single_qubit_gates=1,parameter_score=None))
+    drawing=atlas.drawing(store,1,result)
+    assert 'shared-expression program 1' in drawing
+    assert len(store.programs)==1
+    assert (tmp_path/'programs/program-1.json').exists()
+    assert 'score unresolved' in atlas.cost_line(result)
+    assert str(angle) not in (tmp_path/next(iter(store.paths.values()))[0]).read_text()

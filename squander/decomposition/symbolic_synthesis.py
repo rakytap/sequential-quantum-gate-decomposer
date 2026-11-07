@@ -337,6 +337,12 @@ def _native_candidates(name,parameters,basis,*,even=False,source_operations=None
         else:
             from symbolic_fixed_templates import fixed_template_candidates
         result.extend(fixed_template_candidates(name,parameters,basis))
+        if name=='fFredkin' and not parameters:
+            if __package__:
+                from .symbolic_controlled_rank_bound import four_cnot_source
+            else:
+                from symbolic_controlled_rank_bound import four_cnot_source
+            result.extend(_native_candidates('Identity',(3,),basis,source_operations=four_cnot_source()))
         if name=="DCX" and not parameters and basis.entangler in {"B","SiSWAP"}:
             if __package__:
                 from .symbolic_native_echoes import native_dcx_source
@@ -673,6 +679,16 @@ def _attach_osr_certificate(result,target,basis):
                 lower_bound=3,method="two_iSWAP_mirror_theorem_and_CNOT_invariant_exclusion",
                 sources=["https://arxiv.org/abs/quant-ph/0407108","https://arxiv.org/abs/quant-ph/0308045"])
     result["local_cost_optimal"]=False
+    if target.shape==(8,8) and target==gates.make_gate('fFredkin'):
+        if __package__:
+            from .symbolic_controlled_rank_bound import controlled_full_rank_lower_bound
+        else:
+            from symbolic_controlled_rank_bound import controlled_full_rank_lower_bound
+        certificate=controlled_full_rank_lower_bound(sp.ImmutableMatrix(target),basis.entangler)
+        if certificate:
+            result['entangler_optimality_certificate']=certificate
+            result['native_invariant_lower_bound']=certificate['lower_bound']
+            if count==certificate['lower_bound']:result['entangler_optimal']=True
     if target.shape==(4,4) and basis.entangler=="SiSWAP":
         certificate=sqrt_iswap_cost_certificate(target)
         if certificate is not None:
@@ -789,7 +805,7 @@ def _synthesize_existing(name, parameters=(), basis="cx_u", *, phase_exact=True,
                             from symbolic_catalog_motifs import motif_schema
                         schema=motif_schema(definition.name)
                         if schema:result["source_motif"]=dict(schema=schema,scope="constructive_template; optimality is separate")
-                    if method!="analytical_source_construction" or target.rows<=8 and result["cost"]["entanglers"]<=2:
+                    if method!="analytical_source_construction" or definition.name=='fFredkin' or target.rows<=8 and result["cost"]["entanglers"]<=2:
                         _attach_osr_certificate(result,target,basis)
                     return result
             return dict(status="unresolved",phase_exact=phase_exact,reason="; ".join(dict.fromkeys(errors)) or "Source identity not proved")
@@ -837,6 +853,12 @@ def _native_chart_incumbent(target,selected,phase_exact,additional=()):
                 else:
                     from symbolic_b_cartan import synthesize_b_cartan
                 incumbent=synthesize_b_cartan(target,selected,phase_exact=phase_exact)
+            if incumbent is None and selected.entangler=="SiSWAP" and target.free_symbols:
+                if __package__:
+                    from .symbolic_sqrt_iswap_cartan import synthesize_sqrt_iswap_cartan
+                else:
+                    from symbolic_sqrt_iswap_cartan import synthesize_sqrt_iswap_cartan
+                incumbent=synthesize_sqrt_iswap_cartan(target,selected,phase_exact=phase_exact)
     return incumbent
 
 
@@ -850,10 +872,15 @@ def _with_chart_incumbent(incumbent,search):
         if incumbent is None:raise
         return dict(incumbent,additional_search="wall_clock_budget_exhausted_after_proved_incumbent")
     if incumbent is None:return result
-    def key(value):
-        cost=value["cost"]
-        return cost["entanglers"],float(sp.sympify(cost["parameter_score"])),cost["single_qubit_gates"]
-    return incumbent if result["status"]!="verified_symbolic" or key(incumbent)<key(result) else result
+    if result['status'] != 'verified_symbolic':return incumbent
+    if __package__:
+        from .symbolic_contract import compare_recorded_costs
+    else:
+        from symbolic_contract import compare_recorded_costs
+    comparison=compare_recorded_costs(incumbent['cost'],result['cost'])
+    if comparison is None:
+        return dict(result,uncompared_same_entangler_incumbent=incumbent)
+    return incumbent if comparison<0 else result
 
 
 def synthesize(name,parameters=(),basis="cx_u",*,phase_exact=True,osr_seconds=2.0):

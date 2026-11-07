@@ -58,7 +58,9 @@ def retain_incumbents(previous,replacement):
     def cost(choice):
         result,run=choice
         value=result["cost"]
-        return (value["entanglers"],float(sp.sympify(value["parameter_score"])),value["single_qubit_gates"],
+        score=value.get('parameter_score')
+        return (value["entanglers"],score is None,0 if score is None else float(sp.sympify(score)),
+                0 if score is None else value["single_qubit_gates"],
                 -bool(result.get("entangler_optimal")),-bool(result.get("local_cost_optimal")),-run)
     selected={}
     provenance={}
@@ -75,6 +77,11 @@ def retain_incumbents(previous,replacement):
             # the same target, native basis and phase contract. Carry that
             # proof over independently of which construction won the score.
             count=result["cost"]["entanglers"]
+            uncertain=[copy.deepcopy(source) for source,unused in good
+                       if source['cost']['entanglers']==count
+                       and source['cost'].get('parameter_score') is None and source!=result]
+            if uncertain:
+                result['uncompared_same_entangler_alternatives']=uncertain
             proof_keys=("osr_certificate","cnot_invariant_lower_bound",
                         "entangler_optimality_certificate","phase_resource_lower_bound")
             for source,unused in good:
@@ -161,6 +168,9 @@ def merge_synthesis_runs(reports):
         projective_retained_as_strictly_cheaper=sum(row["preferred"]=="projective" and row["phase_exact"]["status"]=="verified_symbolic" for row in combined["rows"]))
     combined["all_targets_solved"]=all(all(status in {"verified_symbolic","proved_impossible"}
         for status in row["phase_statuses"].values()) for row in combined["rows"])
+    combined['secondary_scores_unresolved']=sum(
+        result is not None and result.get('status')=='verified_symbolic' and result['cost'].get('parameter_score') is None
+        for row in combined['rows'] for result in (row.get('phase_exact'),row.get('projective')))
     return combined
 
 

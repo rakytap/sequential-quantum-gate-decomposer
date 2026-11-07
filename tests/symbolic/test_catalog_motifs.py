@@ -54,7 +54,8 @@ def test_nonclifford_native_basis_can_rebase_an_opaque_clifford_skeleton():
 def test_exchange_echo_avoids_independent_fredkin_and_ccz_synthesis():
     result = synthesize("fFredkin", (), "cx_u", phase_exact=False)
     assert result["status"] == "verified_symbolic"
-    assert result["cost"]["entanglers"] == 5
+    assert result["cost"]["entanglers"] == 4
+    assert result['entangler_optimal']
     assert result["source_motif"]["schema"] == "excitation_exchange_echo"
 
 

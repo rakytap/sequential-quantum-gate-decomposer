@@ -108,6 +108,7 @@ def secondary_score_floor_certificate(target,result,basis):
     if result.get('status')!='verified_symbolic':return None
     target=sp.ImmutableMatrix(target)
     cost=result['cost'];E=cost['entanglers']
+    if cost.get('parameter_score') is None:return None
     support,literal=({},None) if E else _support_witnesses(target,result['phase_exact'])
     local_bound=max(len(support),int(literal is not None))
     def arity(name):

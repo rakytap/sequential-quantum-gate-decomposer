@@ -139,6 +139,27 @@ class CircuitStore:
         self.directory.mkdir(parents=True, exist_ok=True)
         self.paths = {}
         self.aliases = {}
+        self.programs = {}
+
+    def register_program(self, program):
+        digest=hashlib.sha256(json.dumps(program,sort_keys=True).encode()).hexdigest()
+        if digest not in self.programs:
+            index=len(self.programs)+1
+            self.programs[digest]=(index,program)
+            directory=self.output/'programs'
+            directory.mkdir(exist_ok=True)
+            (directory/f'program-{index}.json').write_text(json.dumps(program,indent=2)+'\n')
+        return self.programs[digest][0]
+
+    def program_expression(self, value, program):
+        index=self.register_program(program)
+        environment=dict(parameter_symbols())
+        names={}
+        for j,row in enumerate(program['bindings']):
+            symbol=sp.Symbol(row['symbol'],**({'real':True} if row['real'] else {}))
+            environment[row['symbol']]=symbol
+            names[symbol]=r'\xi_{'+str(index)+','+str(j)+'}'
+        return sp.latex(sp.sympify(value,locals=environment),symbol_names=names)
 
     def expression(self,value):
         formula=parameter_latex(value)
@@ -148,8 +169,9 @@ class CircuitStore:
             self.aliases[value]=r"\eta_{"+str(len(self.aliases)+1)+"}"
         return self.aliases[value]
 
-    def render(self, width, operations):
-        displayed={value:self.expression(value) for op in operations for value in op["parameters"]}
+    def render(self, width, operations, expression_program=None):
+        displayed={value:(self.program_expression(value,expression_program) if expression_program else self.expression(value))
+                   for op in operations for value in op["parameters"]}
         grouped = compressed_operations(operations)
         fold=self.long_fold if width>=4 and len(grouped)>4*self.fold else self.fold
         key = hashlib.sha256(json.dumps([3, width, operations, fold, displayed], sort_keys=True).encode()).hexdigest()[:24]
@@ -218,13 +240,19 @@ def grid(panels, columns=4):
 
 def drawing(store, width, result, max_height="33mm"):
     blocks = []
-    for index, path in enumerate(store.render(width, result["operations"])):
+    program=result.get('expression_program')
+    paths=store.render(width,result['operations'],expression_program=program) if program else store.render(width,result['operations'])
+    for index, path in enumerate(paths):
         if index:
             blocks.append(r"\par\vspace{1pt}{\tiny\color{muted}$\longrightarrow$ continued in time order}\par")
         blocks.append(r"\circuit{\input{" + path + "}}")
     used=sorted({store.aliases[p] for op in result["operations"] for p in op["parameters"] if p in store.aliases})
     if used:
         blocks.append(r"\par{\scriptsize\color{muted}Exact definitions: $"+", ".join(used)+r"$ in the expression glossary.}")
+    if program:
+        index=store.register_program(program)
+        blocks.append(r'\par{\scriptsize\color{muted}Derived angles: \hyperref[expression-program-'+str(index)+
+                      r']{exact shared-expression program '+str(index)+r'}.}')
     return r"\fitpanel{" + max_height + "}{" + "\n".join(blocks) + "}"
 
 
@@ -235,13 +263,15 @@ def cost_line(result, independent_proof=None):
     except (TypeError, ValueError):
         score = "symbolic"
     certificate = ("proved E minimum" if result.get("entangler_optimal") else
+                   'minimum uniform E budget' if result.get('uniform_entangler_budget_certificate') else
                    "conditional E minimum" if result.get("conditional_entangler_optimality") else "E upper bound")
     if independent_proof:
         if independent_proof['scope'] == 'fixed_target_minimum':
             certificate = 'proved E minimum'
         elif not result.get('entangler_optimal'):
             certificate = 'minimum uniform E budget'
-    return (f"E={cost['entanglers']} / L={cost['single_qubit_gates']} / score $\\approx$ {score}"
+    score_text='score unresolved' if cost.get('parameter_score') is None else f'score $\\approx$ {score}'
+    return (f"E={cost['entanglers']} / L={cost['single_qubit_gates']} / {score_text}"
             + r"\hfill " + escape(certificate))
 
 
@@ -275,7 +305,9 @@ def gate_panel(store, basis, row, width):
         bodies.append(drawing(store, width, result, "18mm" if len(variants) == 2 else "39mm") + r"\par\vspace{.8mm}")
         if mode == "projective":
             factor = result.get("virtual_gp", {}).get("factor", "1")
-            bodies.append(r"\par{\scriptsize\color{muted}$U=" + store.expression(factor) + r"\,C$. Scalar metadata; no physical GP.}\par")
+            program=result.get('expression_program')
+            displayed=store.program_expression(factor,program) if program else store.expression(factor)
+            bodies.append(r"\par{\scriptsize\color{muted}$U=" + displayed + r"\,C$. Scalar metadata; no physical GP.}\par")
     if row["phase_exact"]["status"] != "verified_symbolic":
         bodies.append(r"\par{\scriptsize\color{muted}Exact: " + escape(status_text(row["phase_exact"])) + "}")
     literature=row.get("literature_uniform_upper_bound_comparison",{})
@@ -294,8 +326,8 @@ def gate_volume(report, output, store, names, archive_digest):
     source.append(r"{\Large " + str(len(names)) + r" targets $\times$ 32 basis panels}\par\vspace{5mm}")
     source.append(r"\begin{minipage}{.8\linewidth}\large Each target has one page with 32 basis panels in alphabetical order. "
                   r"Blue labels denote literal matrix equality. Brown labels denote a projective circuit with its exact scalar factor. "
-                  r"Both appear when the projective construction is strictly cheaper. Physical GP operations are forbidden.\par "
-                  r"E counts native two-qubit primitives, L counts one-qubit operations. Scores are displayed rounded; the archive stores exact expressions. "
+                  r"Both appear when the projective construction is cheaper or their secondary-score comparison remains unresolved. Physical GP operations are forbidden.\par "
+                  r"E counts native two-qubit primitives, L counts one-qubit operations. Evaluated scores are displayed rounded; the archive stores exact expressions. Shared-expression scores that exceeded their evaluation budget are labelled unresolved. "
                   r"Objective version 2 clamps negative denominator penalties; an exact compatibility audit preserves the earlier retained scores. "
                   r"Only an explicit matching certificate establishes a minimum entangler count. A verified upper bound does not establish minimum local cost. "
                   r"A minimum uniform E budget concerns a circuit for the whole parameterized family: a certified hard member forces that budget, while special parameter values can require fewer pulses. "
@@ -353,6 +385,21 @@ def gate_volume(report, output, store, names, archive_digest):
             source.append(r"\par\vspace{3mm}\circuit{$"+symbol+"="+parameter_latex(value)+r"$}\par\vspace{3mm}")
         source.append("}")
         source.append(r"\newpage")
+    for index,program in store.programs.values():
+        bindings=program['bindings']
+        for start in range(0,len(bindings),36):
+            if start==0:
+                source.append(r'\phantomsection\label{expression-program-'+str(index)+'}')
+            source.append(r'\pagehead{Exact shared-expression program '+str(index)+
+                          r'}{Original parameters: '+escape(', '.join(program['inputs']))+
+                          r'. Bindings are definitions, not additional free angles.}{Bindings '+
+                          str(start)+'--'+str(min(start+36,len(bindings))-1)+'}')
+            source.append(r'\small Evaluate definitions in order. Piecewise expressions select the first satisfied case; unused singular branches are not evaluated. The source bundle also includes the machine-readable program.\par')
+            source.append(r'\fitcontent{\dimexpr\textheight-53mm\relax}{\begin{multicols}{2}')
+            for j,row in enumerate(bindings[start:start+36],start):
+                formula=store.program_expression(row['expression'],program)
+                source.append(r'\par\vspace{2mm}\circuit{$\xi_{'+str(index)+','+str(j)+'}='+formula+r'$}\par')
+            source.append(r'\end{multicols}}\newpage')
     source.append(r"\end{document}")
     (output / "gates.tex").write_text("\n".join(source))
     return manifest
@@ -480,6 +527,9 @@ def main():
                     gate_panels=gates, clifford_panels=cliffords, target_count=len(names),
                     basis_count=32, circuits_per_gate_page=32, circuits_per_clifford_page=24,
                     expression_aliases={symbol:value for value,symbol in store.aliases.items()},
+                    expression_programs=[dict(index=index,bindings=len(program['bindings']),
+                                              path=f'programs/program-{index}.json')
+                                         for index,program in store.programs.values()],
                     note="Exact symbolic proof statuses and certificate scopes are preserved; this atlas does not assert every target is solved.")
     with gzip.open(args.output_dir / "manifest.json.gz", "wt") as stream:
         json.dump(manifest, stream, separators=(",", ":"))

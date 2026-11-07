@@ -185,16 +185,33 @@ def verify_phase_closure_certificate(target,result,basis):
     except (KeyError,TypeError,ValueError):return False
 
 
+def compare_recorded_costs(left, right):
+    """Compare exact recorded objectives, returning None for an unknown score.
+
+    A strict entangler improvement is decisive even when its secondary score
+    has not been evaluated. An unknown score never becomes zero, a tie, or a
+    reason to use the tertiary local-count objective.
+    """
+    if left['entanglers'] != right['entanglers']:
+        return -1 if left['entanglers'] < right['entanglers'] else 1
+    if left.get('parameter_score') is None or right.get('parameter_score') is None:
+        return None
+    lkey = float(sp.sympify(left['parameter_score'])), left['single_qubit_gates']
+    rkey = float(sp.sympify(right['parameter_score'])), right['single_qubit_gates']
+    return -1 if lkey < rkey else 1 if lkey > rkey else 0
+
+
 def retain_phase_results(exact, projective):
     """Prefer phase exact; retain projective only for a strictly better cost."""
     good = lambda row: row is not None and row.get("status") == "verified_symbolic"
-    def key(row):
-        cost = row["cost"]
-        return cost["entanglers"], float(sp.sympify(cost["parameter_score"])), cost["single_qubit_gates"]
     if good(exact):
-        keep_projective = good(projective) and key(projective) < key(exact)
-        return dict(preferred="projective" if keep_projective else "phase_exact", phase_exact=exact,
+        comparison = compare_recorded_costs(projective['cost'], exact['cost']) if good(projective) else 1
+        keep_projective = good(projective) and (comparison is None or comparison < 0)
+        result = dict(preferred="projective" if comparison is not None and comparison < 0 else "phase_exact", phase_exact=exact,
                     projective=projective if keep_projective else None,
                     projective_omitted_as_no_better=good(projective) and not keep_projective)
+        if comparison is None:
+            result['phase_cost_comparison'] = 'secondary_score_unresolved_both_modes_retained'
+        return result
     return dict(preferred="projective" if good(projective) else None, phase_exact=exact,
                 projective=projective, projective_omitted_as_no_better=False)
