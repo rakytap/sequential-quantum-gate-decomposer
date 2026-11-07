@@ -21,17 +21,7 @@ from symbolic_gates import gate_definition
 from symbolic_circuit_atlas import escape, qiskit_latex, compressed_operations
 
 
-PAPER = dict(title="Full quantum tomography study of Google's Sycamore gate on IBM's quantum computers",
-    authors="Muhammad AbuGhanem and Hichem Eleuch", year=2024, figure=3,
-    url="https://link.springer.com/article/10.1140/epjqt/s40507-024-00248-8",
-    figure_url="https://media.springernature.com/full/springer-static/image/art%3A10.1140%2Fepjqt%2Fs40507-024-00248-8/MediaObjects/40507_2024_248_Fig3_HTML.jpg",
-    figure_sha256="231c3a1a327190d3118514348e10013874229b7ce5465792236f5abfd1752807",
-    local_gate_types_by_wire=[
-        ["Rz", "Sx", "Rz", "Sx", "Rz", "Sx", "Rz", "Sx", "Sx", "Rz"],
-        ["Rz", "Sx", "Rz", "Sx", "Rz", "Rz", "Sx", "Rz", "Sx", "Rz",
-         "Sx", "Rz", "Sx", "Rz", "Rz", "Sx", "Rz"]],
-    count_method="Manual transcription of gate TYPES in Figure 3; measurements excluded",
-    angle_reconstruction=False, phase_policy="projective", novelty_claim=False)
+
 
 
 def load(path):
@@ -174,203 +164,87 @@ def write_csv(path, rows, fields=None):
 
 
 def write_tex(output, report, archive):
-    syc = {r["basis"]:r for r in archive["rows"] if r["gate"] == "SYC"}
-    drawings = []
-    for basis, label in (("cx_h_phase", "Literal-phase CNOT/P construction"),
-                         ("ibm_cx", "Same three-angle construction using Rz; scalar shown below")):
-        result = syc[basis]["phase_exact"] if basis == "cx_h_phase" else effective_projective(syc[basis])
-        drawings.append(r"\noindent\begin{minipage}{\linewidth}\paragraph{"+label+r"}\begin{center}\resizebox{0.75\linewidth}{!}{"+
-            qiskit_latex(2, compressed_operations(result["operations"]))+r"}\end{center}\end{minipage}\par\medskip")
-    sdk = report["sycamore"]["independent_sdk"]["rows"]
-    table = [r"Published Figure 3 & Rz/SX/CX & 3 & 27 & projective \\",
-             r"Our circuit & Rz/SX/CX & 3 & 3 & projective \\",
-             r"Our circuit & P/H/CX & 3 & 3 & literal phase \\"]
-    for row in sdk:
-        table.append("Qiskit matrix input & "+escape(row["basis"])+" & "+str(row["entanglers"])+" & "+
-                     str(row["single_qubit_gates"])+r" & scalar metadata \\")
-    winners = [r for r in report["comparisons"] if r["delta_entanglers"] < 0]
-    local = sorted((r for r in report["comparisons"] if r["status"] == "equal_E_fewer_locals"),
-                   key=lambda r:(r["delta_local_gates"], r["gate"], r["basis"]))
-    def resource_table(rows):
-        return "\n".join(escape(r["gate"])+" & "+escape(r["basis"])+" & "+
-            f"{r['entanglers']}/{r['sdk_entanglers']} & {r['local_gates']}/{r['sdk_local_gates']}"+r" \\" for r in rows)
-    counts = report["comparison_summary"]
-    preamble = r"""\documentclass[11pt]{article}
+    text=r'''\documentclass[11pt]{article}
 \usepackage[a4paper,margin=22mm]{geometry}
+\usepackage[T1]{fontenc}\usepackage{lmodern}
 \usepackage{amsmath,amssymb,booktabs,longtable,graphicx,qcircuit,hyperref}
-\usepackage[T1]{fontenc}
-\providecommand{\ket}[1]{\lvert #1\rangle}
-\title{Symbolic decomposition: notable results and comparison evidence}
-\author{SQUANDER symbolic decomposition project}
-\date{7 November 2026}
+\title{Symbolic circuit reference: selected identities and comparisons}
+\author{Gregory Morse \and Peter Rakyta}\date{7 November 2026}
 \begin{document}\maketitle
-\noindent Evidence ledger for a future appendix, not a completed optimality or novelty claim.
-All counts preserve the recorded native basis, use no ancillas, and fix input/output wires.
-The objective is entanglers first, the parameter-sensitive score with nonnegative denominator penalties second,
-and local gate count third. A smaller local count alone does not establish a lower score.
-New native local constructions include C3SX/iSWAP at 40 locals versus SDK 56,
-C4X/iSWAP at 78 versus 113, C4X/IBM-CZ at 130 versus 143, and
-C4X/CZ/Rz/Rx at 69 versus 72. Peres/Rxx/Rz/Ry matches 35.
-All preserve the native entangler count; these are proved constructions, not
-claims that the local counts are globally minimum.
-The version-2 clamp prevents negative-cost identity cycles. An exact audit of all 1,390 retained parameter expressions before the C4X transfer proved their scores unchanged; no existing circuit rerun was needed.
-\section{Sycamore: a concrete local-gate reduction}
-We use $\mathrm{SYC}=\mathrm{fSim}(\pi/2,\pi/6)$ with odd-parity swap amplitudes $-i$
-and $\ket{11}$ phase $e^{-i\pi/6}$. Figure 3 of AbuGhanem and Eleuch~\cite{syc}
-contains 15 Rz gates and 12 SX gates: 27 local operations and three CNOTs.
-This is a manual count of the displayed gate boxes; the two measurements are excluded.
-The figure has rounded angle labels, so its parameter-sensitive symbolic score and
-literal scalar phase are not reconstructed or asserted here.
-Our circuit has three locals and three CNOTs: an $8/9$ (88.9\%) local-count reduction
-against that displayed implementation, in the same Rz/SX/CX alphabet projectively.
-This does not assert that the displayed circuit is the best published local construction.
-\begin{center}\begin{tabular}{lllll}\toprule
-Construction & Alphabet & E & L & Phase contract \\\midrule
-"""
-    bounds=archive.get("literature_uniform_bound_summary",{})
-    exact_gaps=bounds.get("phase_exact_exceeds_published_uniform_bound",0)
-    projective_gaps=bounds.get("projective_exceeds_published_uniform_bound",0)
-    macros=(r"\newcommand{\UniformExactGaps}{"+str(exact_gaps)+"}\n"+
-            r"\newcommand{\UniformProjectiveGaps}{"+str(projective_gaps)+"}\n")
-    text = preamble.replace(r"\begin{document}",macros+r"\begin{document}",1)+"\n".join(table)+r"\bottomrule\end{tabular}\end{center}"+"\n"+"\n".join(drawings)
-    lifted = next(row["exact_lift"] for row in sdk if row["basis"] == "ibm_cx")
-    ours = effective_projective(syc["ibm_cx"])
-    if lifted["status"] == "verified_symbolic":
-        ours_score = sp.sympify(ours["cost"]["parameter_score"])
-        sdk_score = sp.sympify(lifted["cost"]["parameter_score"])
-        text += (r"\paragraph{Matched score comparison.} In the same Rz/SX/CX basis, "
-                 r"the independently synthesized SDK circuit has an exact rational-$\pi$ lift "
-                 r"whose complete identity is proved. The retained score is $"+sp.latex(ours_score)+
-                 r"\approx "+f"{float(ours_score):.3f}"+r"$ for ours and $"+sp.latex(sdk_score)+
-                 r"\approx "+f"{float(sdk_score):.3f}"+r"$ for the SDK circuit. Both have three CNOTs; "
-                 r"the score includes the same entangler contribution and no free physical GP. "+"\n")
-    text += r"""
-The P circuit is exact without a GP operation. Replacing each P by Rz gives
-$\mathrm{SYC}=e^{-7i\pi/24}C_{Rz}$; this scalar is projective metadata.
-Literal equality in the Rz/SX/CX alphabet is obstructed by its determinant group.
-The phase polynomial has coefficients $(-\pi/12,-\pi/12,-5\pi/12)$ on
-$x_0,x_1,x_0\oplus x_1$. All are nonzero modulo $\pi$. Adding $2\pi$
-to truth-table phases changes these coefficients only by integer multiples of $\pi$.
-Therefore at least three phase gates are necessary within the CNOT/P subalphabet,
-even if extra CNOTs are allowed. Our three-phase circuit attains that bound.
-This is not a minimum-local proof over arbitrary U(2) gates or SX-containing circuits.
-
-The independent SDK rows use matrix input, Qiskit 2.2.3, level 3, seed 219,
-and approximation degree one, followed by native one-qubit block cleanup and
-phase-sensitive replay. Their circuits and numerical replay errors are stored
-in the evidence JSON. They are separate from the main baseline, which also lets
-Qiskit optimize our supplied exact source. That source-fed baseline reproduces
-the three-local circuit, so its tie is not independent discovery by Qiskit.
-Where the SDK angles have an exact rational-$\pi$ lift, the full identity is proved
-before assigning a symbolic score. Other floating angles are never rationalized
-and assigned an invented exact score.
-\section{The eleven entangler improvements}
-The eleven earlier SDK improvements all concern controlled fermionic SWAP
-(fFredkin) in different bases. They are completed constructions, separate from
-the B/SQiSW universal-bound gaps. They are not eleven different gate discoveries.
-Controlled fermionic SWAP is distinct from ordinary Fredkin; no comparison to
-the latter's lower bounds is made. Existence of this operation in the literature
-does not settle optimal decomposition cost~\cite{fermionic}.
-\begin{center}\begin{tabular}{llll}\toprule
-Target & Basis & E ours/SDK & L ours/SDK \\\midrule
-"""+resource_table(winners)+r"\bottomrule\end{tabular}\end{center}"
-    text += r"\section{Local-gate audit beyond Sycamore}"+"\n"
-    text += (f"Across {len(report['comparisons'])} eligible fixed-target/basis comparisons, "
-             f"there are {counts.get('equal_E_fewer_locals',0)} lower local counts, "
-             f"{counts.get('equal_E_equal_locals',0)} ties and "
-             f"{counts.get('equal_E_more_locals',0)} higher local counts at equal E. ")
-    text += r"""Aliases and related basis presets are counted separately. Native one-qubit SDK
-cleanup removes identity rotations introduced by the manual U-to-ZYZ adapter
-before counting; savings from that adapter artifact are not credited.
-These are SDK comparisons,
-not novelty claims or an exhaustive literature review. The full CSV includes every
-compared case, including regressions; a separate local-gap CSV is the work list.
-The table shows the largest local-count savings. E and L are raw physical counts;
-the exact score is recorded separately in the CSV/JSON.
-Some larger local counts are deliberate score tradeoffs: the declared objective
-prefers a lower parameter-sensitive score before counting local gates.
-Where an exact shorter alternative is present in the archive's history, the CSV
-records its score and whether the retained circuit has a strictly lower score.
-\begin{center}\begin{longtable}{llll}\toprule
-Target & Basis & E ours/SDK & L ours/SDK \\\midrule\endhead
-"""+resource_table(local[:25])+r"\bottomrule\end{longtable}\end{center}"
-    text += r"""
-\section{Other useful reference results}
-The separate Clifford atlas contains all 192 phase-resolved one-qubit Clifford
-targets for each supported local alphabet. H/S has a global shortest-path
-certificate. H/S/T/Tdg now has an exhaustive exact-word proof covering
-non-Clifford intermediates: a radius-seven ball of 628 exact matrices
-certifies all 192 targets, with maximum shortest length 14. Continuous
-alphabets retain their narrower recorded word-search scope.
-The exact phase examples include a Cartan kernel with $a=b=c=\pi/8$: three
-CNOTs projectively, four with literal phase and SU(2)-only Rz/Ry locals.
-Likewise, Rxx$(\pi)$ requires zero entanglers projectively and one with literal
-phase in the Rxx/Rz/Ry basis. These are certified resource-policy distinctions,
-not claims of priority over the literature.
-
-\section{Outstanding optimization and comparison work}
-Classification covers all $327\times32$ cells in both phase modes. This means a
-verified construction or a scoped obstruction, not global optimality.
-The two-B~\cite{b} and three-SQiSW~\cite{sq} bounds identify
-\UniformExactGaps{} literal-phase and \UniformProjectiveGaps{} projective over-cap
-constructions in the current archive. These are distinct from
-the local-count gaps above. Further minimum proofs and score optimization are
-needed even for many circuits below those caps. No competitor-wide dominance
-or exhaustive novelty claim is justified.
-UniversalQCompiler has zero executed comparisons pending a suitable Wolfram kernel.
-Wolfram's free developer engine is not automatically a free paper-benchmark license:
-its FAQ distinguishes development/testing from producing papers for organizational
-use. An existing university/site license or written research permission is a
-possible route~\cite{wolfram}; no new access has been obtained.
-
-\section{Reproduction and evidence scope}
-The companion JSON identifies the exact archive and SDK baseline SHA256 hashes,
-stores the independent Sycamore SDK circuits, and records the published figure's
-gate-type transcription and image hash. \nolinkurl{local_comparisons.csv} contains
-all eligible comparisons; \nolinkurl{local_optimization_gaps.csv} retains regressions.
-\nolinkurl{native_local_layer_opportunities.csv} separately lists native U3/PhasedXZ
-circuits exceeding one local per wire per pulse layer, plus a literal-phase
-closure when needed. These are count opportunities, not certified improvements
-under the parameter-sensitive score.
-Regenerate with \nolinkurl{symbolic_notable_results.py}; compile this source with Tectonic.
-No numerical SDK sample certifies a free-parameter identity or global minimum.
+This appendix records exact identities and scoped comparisons. The revised
+manuscript and its current independent compiler table are authoritative.
+The atlas is not claimed to dominate every tool or publication.
+\section{Controlled fermionic SWAP}
+The literal CX/U3 circuit has four CNOTs and six locals. The interaction
+count is optimal among arbitrary Ising-class interactions without ancillas;
+the local count is an upper bound. BQSKit independently finds four-CNOT,
+six-local circuits, so discovering the upper bound is not a new compiler
+advantage. The lower theorem extends to all controlled balanced involutions.
+The three-qubit hardware family of Warren et al.\ is related physical
+context, not a proof of these CNOT counts~\cite{fermionic}.
+\section{Sycamore phase contract}
+For $\mathrm{SYC}=\mathrm{fSim}(\pi/2,\pi/6)$, the exact P/CX circuit and
+the projective Rz/CX circuit below each use three entanglers and three
+locals. In the Rz circuit, $\mathrm{SYC}=e^{-7i\pi/24}C$.
+The phase-polynomial certificate proves the three-phase lower bound only
+in the CNOT/P subalphabet; it does not establish an unrestricted local
+minimum. The former tomography-figure comparison has been withdrawn.
+'''
+    for basis in ('cx_h_phase','ibm_cx'):
+        row=next(r for r in archive['rows'] if r['gate']=='SYC' and r['basis']==basis)
+        result=row['phase_exact'] if basis=='cx_h_phase' else effective_projective(row)
+        text+=r'\paragraph{'+escape(basis)+r'}\begin{center}\resizebox{.9\linewidth}{!}{'+qiskit_latex(2,compressed_operations(result['operations']))+r'}\end{center}'+'\n'
+    text+=r'''\section{Current independent fixed-target comparison}
+The table gives $E/L$ in CX/U3 and the best verified recorded route for each
+tool. Inputs are independent library words or target matrices, not the
+atlas output. A dash excludes all recorded outputs on that route that fail
+its replay threshold or budget. Quartz and QUESO optimize total NAM gates;
+their locals are then fused to U3 without changing the entangling skeleton.
+'''
+    text+=(ROOT/'docs/symbolic_manuscript/generated/strong_sdks.tex').read_text()
+    text+=r'''BQSKit matches fFredkin and beats the SSWAP local count. tket and
+BQSKit beat the C3X local count. Quartz's 30-CX C4X circuit beats the current
+36-CX atlas entry. These losses are retained. The earlier eleven SDK
+entangler wins were all fFredkin in different alphabets.
+\section{Historical broad local-count audit}
+The CSV files retain comparisons against the older, explicitly identified
+SDK routes, including source-fed routes. They are not comparisons against
+all compiler strategies. Counts and parameter-description score are different
+objectives; a smaller $L$ alone does not prove a better archived score.
+'''
+    losses=[r for r in report['comparisons'] if r['status']=='equal_E_more_locals']
+    text+=r'\begin{center}\begin{tabular}{lr}\toprule Historical status & Cells\\\midrule'+'\n'
+    for name,count in sorted(report['comparison_summary'].items()):text+=escape(name)+' & '+str(count)+r'\\'+'\n'
+    text+=r'\bottomrule\end{tabular}\end{center}'+'\n'
+    text+=r'''\section{Established native bounds and proof scope}
+The universal two-B construction~\cite{b} and the SQiSW two-pulse Weyl
+region and three-pulse universal construction~\cite{sq} are prior results.
+The released exact charts implement them with explicit scalar handling and
+branch definitions. The new invariant iff proof rewrites the known SQiSW
+region; it is not a new universal pulse cap. The 192 one-qubit phase-resolved
+Clifford circuits are a finite reference, not a large unexplored class.
+\section{Reproduction}
+The companion JSON and CSVs retain archive hashes, exact identities, older
+comparison settings, and every local-count regression. The revised review
+bundle additionally includes the stronger SDK/Quartz/QUESO outputs, failures,
+optimality ledger, theorem checks, and both complete atlas PDFs and sources.
+UniversalQCompiler has no executed comparison because its licensed kernel
+was unavailable. No numerical sample proves a symbolic family identity or
+an unrestricted global minimum.
 \begin{thebibliography}{9}
-\bibitem{syc} M. AbuGhanem and H. Eleuch, EPJ Quantum Technology 11, 36 (2024),
-\href{https://doi.org/10.1140/epjqt/s40507-024-00248-8}{doi:10.1140/epjqt/s40507-024-00248-8}, Figure 3.
-\bibitem{fermionic} \href{https://doi.org/10.1038/s41534-023-00711-x}{npj Quantum Information (2023), doi:10.1038/s41534-023-00711-x}.
-\bibitem{b} J. Zhang et al., Phys. Rev. Lett. 93, 020502 (2004),
-\href{https://arxiv.org/abs/quant-ph/0312193}{arXiv:quant-ph/0312193}.
-\bibitem{sq} C. Huang et al., Quantum Instruction Set Design for Performance,
+\bibitem{fermionic} C. W. Warren, J. Fern\'andez-Pend\'as, S. Ahmed, et al.,
+Extensive characterization and implementation of a family of three-qubit
+gates at the coherence limit, npj Quantum Information 9, 44 (2023),
+\href{https://doi.org/10.1038/s41534-023-00711-x}{doi:10.1038/s41534-023-00711-x}.
+\bibitem{b} J. Zhang, J. Vala, S. Sastry, and K. B. Whaley, Minimum
+construction of two-qubit quantum operations, Physical Review Letters 93,
+020502 (2004), \href{https://arxiv.org/abs/quant-ph/0312193}{arXiv:quant-ph/0312193}.
+\bibitem{sq} C. Huang et al., Quantum instruction set design for performance,
+Physical Review Letters 130, 070601 (2023),
 \href{https://arxiv.org/abs/2105.06074}{arXiv:2105.06074}.
-\bibitem{wolfram} Wolfram Engine FAQ, licensing and terms of use,
-\url{https://www.wolfram.com/engine/faq/}, checked 6 November 2026.
 \end{thebibliography}\end{document}
-"""
-    native_rows=[]
-    for row in report.get("native_examples",[]):
-        exact=row.get("phase_exact") or {}
-        projective=row.get("projective") or {}
-        def counts(result):
-            cost=result.get("cost")
-            return f"{cost['entanglers']}/{cost['single_qubit_gates']}" if cost else "--"
-        native_rows.append(escape(row["gate"])+" & "+escape(row["basis"])+" & "+counts(exact)+" & "+counts(projective)+r" \\")
-    native=(r"\section{Certified native-basis constructions}"+"\n"+
-        r"The table records physical entanglers/local gates (E/L). Controlled-phase, CU and native MS rows retain all their real parameters. "
-        r"The controlled-block OSR-two certificate excludes one B or SQiSW pulse whenever the relative block is nonscalar. "
-        r"The square-root SWAP circuits use two B gates and five locals projectively, six with literal phase. "
-        r"The B target uses two SQiSW pulses and three U3 rotations with literal phase. "
-        r"The SQiSW Sycamore motif uses three pulses and a proved parity-block chart. "
-        r"The CZS rows use a two-pulse number-conserving matchgate chart with all three parameters free. "
-        r"These constructions do not assert a global local-gate or parameter-score minimum, or priority over the literature."+"\n"+
-        r"\begin{center}\begin{tabular}{llll}\toprule Target & Basis & Literal E/L & Projective E/L \\\midrule"+"\n"+
-        "\n".join(native_rows)+r"\bottomrule\end{tabular}\end{center}"+"\n")
-    native+=(r"The SDK regression count is not the full local optimization work list. "
-             r"The separate native local-layer CSV records "+str(len(report.get("local_layer_opportunities",[])))+
-             r" phase modes above a local-block count cap, including parameterized families and bases without SDK support. "
-             r"That cap alone does not certify a smaller parameter-sensitive score."+"\n")
-    text=text.replace(r"\section{Outstanding optimization and comparison work}",native+r"\section{Outstanding optimization and comparison work}")
-    output.write_text("\n".join(line.expandtabs().rstrip() for line in text.splitlines())+"\n")
-
+'''
+    output.write_text('\n'.join(line.expandtabs().rstrip() for line in text.splitlines())+'\n')
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
@@ -394,7 +268,7 @@ def main():
                 *((name,basis) for name in ("B","DCX","SSWAP","SSWAPdg","SYC","CZS")
                   for basis in ("sqrt_iswap_u","google_sqrt_iswap")),("CZS","berkeley_b"),
                 ("CP","sqrt_iswap_u"),("CU","sqrt_iswap_u"),("IonQMS","sqrt_iswap_u")}],
-        sycamore=dict(published=PAPER, independent_sdk=sdk,
+        sycamore=dict(independent_sdk=sdk,
             archived_constructions=[dict(basis=row["basis"], phase_exact=row.get("phase_exact"),
                 projective=effective_projective(row)) for row in archive["rows"]
                 if row["gate"] == "SYC" and row["basis"] in {"cx_u", "cx_h_phase", "ibm_cx"}],

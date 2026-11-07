@@ -62,3 +62,19 @@ def test_whole_balanced_normal_form_has_a_four_cnot_construction():
     from symbolic_identity import prove_circuit_identity
     a,b=sp.symbols('balanced_alpha balanced_beta',real=True)
     assert prove_circuit_identity(make_controlled(normal_form(a,b),2),controlled_normal_form_source(a,b)) is True
+
+
+@pytest.mark.parametrize('name',['SWAP','CNOT','iSWAP'])
+def test_balanced_classification_rejects_operators_outside_its_hypotheses(name):
+    from symbolic_balanced_involution import balanced_controlled_cost
+    from symbolic_gates import make_gate
+    assert balanced_controlled_cost(make_gate(name)) is None
+
+
+def test_balanced_classification_is_invariant_under_exact_local_conjugacy():
+    from symbolic_balanced_involution import balanced_controlled_cost,normal_form
+    from symbolic_gates import make_gate
+    frame=sp.kronecker_product(make_gate('H'),make_gate('S'))
+    for a,b,cost in ((0,0,1),(0,sp.pi/2,2),(0,sp.pi/4,3),(sp.pi/4,sp.pi/4,4)):
+        target=(frame*normal_form(a,b)*frame.H).applyfunc(sp.simplify)
+        assert balanced_controlled_cost(target)['minimum_cx']==cost

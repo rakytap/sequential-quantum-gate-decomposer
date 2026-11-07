@@ -5,6 +5,8 @@ from pathlib import Path
 import numpy as np
 from qiskit import transpile,qasm2
 from qiskit.quantum_info import Operator
+from qiskit.transpiler import PassManager
+from qiskit.transpiler.passes import Optimize1qGatesDecomposition
 from symbolic_referee_sdks import CASES,ROOT,source_case,replay,qiskit_counts
 
 def digest(p):return hashlib.sha256(p.read_bytes()).hexdigest()
@@ -35,8 +37,7 @@ def job(tool,name,out):
         text=text[text.index('OPENQASM'):]
         native=qasm2.loads(text)
         row.update(replay(Operator(native).data,target))
-        normalized=transpile(native,basis_gates=['cx','u3'],optimization_level=1,
-                             seed_transpiler=219,qubits_initially_zero=False)
+        normalized=PassManager([Optimize1qGatesDecomposition(basis=['u3'])]).run(native)
         row.update(native_counts=dict(native.count_ops()),qasm=text,
                    normalized_cx_u3=qiskit_counts(normalized),normalized_qasm=qasm2.dumps(normalized))
         if replay(Operator(normalized).data,target)['status']!='verified_numeric':raise ArithmeticError('Normalization replay')
@@ -45,7 +46,26 @@ def job(tool,name,out):
     return row
 
 def main():
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--output',type=Path,required=True);a=p.parse_args()
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--output',type=Path,required=True)
+    p.add_argument('--normalize-existing',action='store_true');a=p.parse_args()
+    if a.normalize_existing:
+        with gzip.open(a.output,'rt') as f:report=json.load(f)
+        for row in report['rows']:
+            if not row.get('qasm'):continue
+            native=qasm2.loads(row['qasm']);target=source_case(row['gate'])[0]
+            value=replay(Operator(native).data,target)
+            if value['status']!='verified_numeric':
+                if row.get('error'):row['previous_normalization_error']=row.pop('error')
+                row.update(value)
+                continue
+            normalized=PassManager([Optimize1qGatesDecomposition(basis=['u3'])]).run(native)
+            if replay(Operator(normalized).data,target)['status']!='verified_numeric':raise ArithmeticError('Local fusion replay')
+            if row.get('error'):row['previous_normalization_error']=row.pop('error')
+            row.update(value,normalized_cx_u3=qiskit_counts(normalized),normalized_qasm=qasm2.dumps(normalized))
+        report.update(normalization='Local fusion only: Optimize1qGatesDecomposition, U3; entangling skeleton unchanged',
+                      normalization_script_sha256=digest(Path(__file__)))
+        with gzip.open(a.output,'wt') as f:json.dump(report,f)
+        return
     work=Path('/tmp/referee-rule-final');work.mkdir(exist_ok=True)
     report=dict(schema='referee-rule-optimizers-v1',script_sha256=digest(Path(__file__)),
                 source_revision=subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip(),
