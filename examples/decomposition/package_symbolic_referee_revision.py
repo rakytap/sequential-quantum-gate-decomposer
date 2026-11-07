@@ -16,6 +16,7 @@ def main():
     verification=json.loads((DOC/'referee-verification.json').read_text())
     assert sha(archive)==revision['archive_sha256']==verification['archive_sha256']
     assert verification['all_changed_constructions_replayed'] and verification['all_source_checks_passed']
+    shutil.copy2(DOC/'referee-verification.json',DOC/'release-verification.json')
     logs={'full_suite':Path('/tmp/referee_full_symbolic_tests.log'),'focused_suite':Path('/tmp/referee_focused_tests.log')}
     validation={}
     for key,path in logs.items():

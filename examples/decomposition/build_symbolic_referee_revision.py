@@ -11,6 +11,11 @@ from symbolic_archive import symbolic_cases
 DATA=ROOT/'benchmarks/symbolic';DOC=ROOT/'docs/symbolic_manuscript';OUT=DOC/'generated'
 def load(name):return json.load(gzip.open(DATA/name,'rt'))
 def sha(p):return hashlib.sha256(p.read_bytes()).hexdigest()
+def dump_frozen(path,data):
+    # No timestamp or pathname in the gzip header: identical views hash equally.
+    with path.open('wb') as stream:
+        with gzip.GzipFile(filename='',fileobj=stream,mode='wb',mtime=0) as output:
+            output.write(json.dumps(data,separators=(',',':')).encode())
 def effective(r,m):return r['phase_exact'] if m=='projective' and r.get('projective_omitted_as_no_better') else r.get(m)
 def esc(s):return str(s).replace('_',r'\_').replace('%',r'\%').replace('&',r'\&')
 def table(name,header,rows,columns=None):
@@ -49,13 +54,15 @@ def archive_view():
     base=clean(copy.deepcopy(original))
     base['scientific_view']=dict(original_archive_sha256=sha(DATA/'synthesis_reference_20261107_manuscript.json.gz'),
          policy='Metadata-only scientific view; construction signatures unchanged')
-    with gzip.open(DATA/'synthesis_reference_20261107_referee_base.json.gz','wt') as f:json.dump(base,f,separators=(',',':'))
+    dump_frozen(DATA/'synthesis_reference_20261107_referee_base.json.gz',base)
     merged['scientific_view']=dict(original_archive_sha256=sha(DATA/'synthesis_reference_20261107_manuscript.json.gz'),
          supplement_sha256=sha(DATA/'synthesis_ffredkin_referee_20261107.json.gz'),
-         editorial_metadata_replacements=dict(edits),omitted_fields=['previous_attempts','raw_attempt'],
+         editorial_metadata_replacements=dict(unexecuted_comparator_status_fields=edits['deferred_by_user'],
+                                               license_availability_descriptions=edits['user declined purchase']),
+         omitted_fields=['previous_attempts','raw_attempt'],
          policy='Construction payloads are unchanged except for cost-selected, exactly verified fFredkin replacements; historical attempts remain in immutable source archives')
     path=DATA/'synthesis_reference_20261107_referee.json.gz'
-    with gzip.open(path,'wt') as f:json.dump(merged,f,separators=(',',':'))
+    dump_frozen(path,merged)
     return merged,path
 
 def coverage(a):

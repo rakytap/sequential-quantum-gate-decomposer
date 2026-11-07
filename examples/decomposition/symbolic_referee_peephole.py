@@ -34,6 +34,39 @@ def parse(path):
     return width,tuple(word)
 
 def effective(row):return row['phase_exact'] if row.get('projective_omitted_as_no_better') else row['projective']
+
+def materialize(word,basis,index):
+    from symbolic_bases import get_basis
+    from symbolic_contract import resource_key
+    from symbolic_synthesis import _native_candidates,_verify_phase_candidate
+    @lru_cache(None)
+    def local(op):
+        source=(*op[:-1],(0,))
+        choices=_native_candidates('Identity',(1,),get_basis(basis),source_operations=(source,))
+        sequence,factor=min(choices,key=lambda pair:resource_key(pair[0]))
+        result=_verify_phase_candidate(gates.make_gate(op[0],*op[1:-1]),sequence,get_basis(basis),False,factor)
+        assert result['status']=='verified_symbolic'
+        return result
+    operations=[];factors=[]
+    for op in word:
+        result=local(op) if len(op[-1])==1 else effective(index[{'CX':'CNOT'}.get(op[0],op[0]),basis])
+        assert result['status']=='verified_symbolic' and not result.get('expression_program')
+        for gate in result['operations']:
+            operations.append(dict(gate=gate['gate'],parameters=gate['parameters'],wires=[op[-1][q] for q in gate['wires']]))
+        factors.append((result.get('virtual_gp') or {}).get('factor','1'))
+    return dict(operations=operations,scalar_factors=factors)
+
+def numeric_circuit(width,operations):
+    from qiskit import QuantumCircuit
+    circuit=QuantumCircuit(width);matrices={}
+    for op in operations:
+        key=op['gate'],tuple(op['parameters'])
+        if key not in matrices:
+            args=tuple(sp.sympify(v) for v in op['parameters'])
+            matrices[key]=np.array(gates.make_gate(op['gate'],*args).evalf(18),complex)
+        circuit.unitary(matrices[key],op['wires'])
+    return circuit
+
 def main():
     archive=json.load(gzip.open(ROOT/'benchmarks/symbolic/synthesis_reference_20261107_manuscript.json.gz','rt'))
     index={(r['gate'],r['basis']):r for r in archive['rows']}
@@ -95,8 +128,30 @@ def main():
             for m in matches:
                 if basis in m['gains']:
                     for k in (0,1):after[k]+=m['gains'][basis]['after'][k]-m['gains'][basis]['before'][k]
+            optimized=[];extra=[];position=0
+            for match in matches:
+                if basis not in match['gains']:continue
+                optimized.extend(word[position:match['start']]);optimized.append((match['gate'],tuple(match['wires'])))
+                extra.append(match['scalar']);position=match['end']
+            optimized.extend(word[position:])
+            baseline=materialize(word,basis,index);compiled=materialize(tuple(optimized),basis,index)
+            compiled['scalar_factors'].extend(extra)
+            actual=[sum(len(op['wires'])==k for op in compiled['operations']) for k in (2,1)]
+            assert actual==after
+            from qiskit.quantum_info import Statevector
+            original=[dict(gate=op[0],parameters=list(map(str,op[1:-1])),wires=list(op[-1])) for op in word]
+            target_circuit=numeric_circuit(width,original);native_circuit=numeric_circuit(width,compiled['operations'])
+            factor=np.prod([complex(sp.N(sp.sympify(s),18)) for s in compiled['scalar_factors']])
+            rng=np.random.default_rng(219);errors=[]
+            for trial in range(2):
+                vector=rng.normal(size=2**width)+1j*rng.normal(size=2**width);vector/=np.linalg.norm(vector)
+                state=Statevector(vector)
+                error=float(np.max(np.abs(factor*state.evolve(native_circuit).data-state.evolve(target_circuit).data)))
+                if error>1e-8:raise ArithmeticError('Materialized native output replay')
+                errors.append(error)
             report['rows'].append(dict(path=str(path.relative_to(ROOT)),sha256=hashlib.sha256(path.read_bytes()).hexdigest(),
                  width=width,source_operations=len(word),basis=basis,before=before,after=after,
+                 baseline_native=baseline,optimized_native=compiled,numerical_state_replay_errors=errors,
                  matches=[m for m in matches if basis in m['gains']],match_seconds=time.perf_counter()-start,
                  proof='Composition of exact window identities and archived exact primitive lowerings'))
             print(path.name,basis,before,after,flush=True)

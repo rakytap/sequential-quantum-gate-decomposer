@@ -343,7 +343,7 @@ def gate_volume(report, output, store, names, archive_digest):
                   r"Only an explicit matching certificate establishes a minimum entangler count. A verified upper bound does not establish minimum local cost. "
                   r"A minimum uniform E budget concerns a circuit for the whole parameterized family: a certified hard member forces that budget, while special parameter values can require fewer pulses. "
                   r"Published-cap notes identify constructions above known universal two-qubit bounds; these remain optimization gaps. "
-                  r"Proof conditions, source hashes and attempt histories remain in the archive.\par "
+                  r"Proof conditions and source hashes remain in the scientific archive; attempt histories remain in the dated source archives.\par "
                   r"Open cases are shown as open. Proved obstructions preserve the supplied basis and may be conditional for parameterized families. "
                   r"Register constructors use the recorded integer-width or matrix fixtures. These pages do not claim a solution for every register size.\par "
                   r"Circuits are drawn by Qiskit's LaTeX drawer. Long circuits continue on successive rows in time order. "
