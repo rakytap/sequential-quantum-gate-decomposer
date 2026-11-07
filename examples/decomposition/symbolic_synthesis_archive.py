@@ -83,10 +83,9 @@ def main():
         git_revision=git.stdout.strip(),source_sha256=hashes,versions=versions,comparison_contract=comparison_contract(),
         bases=bases,case_names=[c[0] for c in cases],budget_seconds_per_mode=args.seconds_per_mode)
     if selection is not None:report["selection"]=selection
-    # Deliberately deferred: no Wolfram license purchase and no fabricated results.
-    report["universalqcompiler"]=dict(status="deferred_by_user",runs=0,
+    report["universalqcompiler"]=dict(status="not_run_license_unavailable",runs=0,
         source_revision="c72cd84a537786756ae8490c07f3f599aa411323",
-        reason="Licensed Wolfram kernel unavailable; user declined purchase",
+        reason="Licensed Wolfram kernel unavailable",
         future_strategy="One native analytical run per target family, followed by separately labelled native-basis rebasing")
     report.setdefault("rows",[])
     report.setdefault("clifford_certificates",{})
