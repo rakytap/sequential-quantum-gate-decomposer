@@ -182,6 +182,16 @@ def interaction_proposals(basis,angles):
             except KeyError:return
             if sum(len(op[-1])==2 for op in frame)==1 and frame!=word:
                 yield frame,gates.make_gate("CX")/factor
+        if entangler=="B":
+            if __package__:
+                from .symbolic_native_echoes import b_pauli_echo
+            else:
+                from symbolic_native_echoes import b_pauli_echo
+            for angle in angles:
+                if angle==0:continue
+                for axes in itertools.product("ZXY",repeat=2):
+                    word,factor=b_pauli_echo(axes,angle)
+                    yield word,gates.make_gate("PauliRotation","".join(reversed(axes)),angle)/factor
         if entangler=="iSWAP":
             # iSWAP conjugates local Paulis to nonlocal Pauli products. Its
             # inverse is ZZ*iSWAP, so an arbitrary Pauli rotation uses two

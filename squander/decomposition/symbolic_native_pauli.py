@@ -376,8 +376,15 @@ def native_cartan_candidate(matrix,basis):
     coordinates,phase=result
     if basis.entangler in {"CX","CNOT","CZ","ECR","XX90","ZZMax","iSWAP"}:
         source=cartan_native_source(*coordinates,basis.entangler)
-    else:source=(_variable_cartan_source(coordinates,basis) or _fixed_lattice_source(coordinates,basis)
-                 or _fixed_power_source(coordinates,basis))
+    else:
+        if __package__:
+            from .symbolic_native_echoes import b_cartan_source,sqrt_iswap_exchange_source
+        else:
+            from symbolic_native_echoes import b_cartan_source,sqrt_iswap_exchange_source
+        echo=(b_cartan_source(coordinates) if basis.entangler=="B" else
+              sqrt_iswap_exchange_source(coordinates) if basis.entangler=="SiSWAP" else None)
+        source=(_variable_cartan_source(coordinates,basis) or _fixed_lattice_source(coordinates,basis)
+                or echo or _fixed_power_source(coordinates,basis))
     if source is None:return None
     before_inverse=tuple(("Rz",-op[1],op[-1]) for op in reversed(before))
     after_inverse=tuple(("Rz",-op[1],op[-1]) for op in reversed(after))
