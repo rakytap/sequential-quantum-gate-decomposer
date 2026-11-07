@@ -3,107 +3,132 @@
 ## Current motif/OSR reference edition
 
 [`synthesis_reference_20261106.json.gz`](synthesis_reference_20261106.json.gz)
-merges all 327 × 32 cells, retaining the least-cost verified incumbent for each
-phase policy across thirteen implementation snapshots. The indexed
-[gate and Clifford PDFs](../../docs/symbolic_atlas/README.md) and their sources
-are generated from this archive. The earlier datasets below remain historical
-snapshots.
+merges all 327 × 32 cells and both phase policies across 29 source snapshots.
+Each retained circuit minimizes the recorded lexicographic objective among
+verified candidates: entanglers, original parameter-sensitive score, local count.
+This is **not a claim of global optimality**. The indexed
+[gate and Clifford PDFs and editable LaTeX](../../docs/symbolic_atlas/README.md)
+are generated from this archive.
 
-| Current outcome | Phase exact | Projective |
+| Current outcome | Literal phase | Projective |
 | --- | ---: | ---: |
 | Symbolically verified | 7,702 | 10,196 |
-| Proved obstruction, with recorded scope/condition | 2,762 | 268 |
-| Time limit | 0 | 0 |
-| Unresolved construction | 0 | 0 |
-| Retained compiler errors | 0 | 0 |
+| Proved obstruction with recorded scope/condition | 2,762 | 268 |
+| Retained timeout, unresolved construction or compiler error | 0 | 0 |
 
-The construction history includes a complete bounded run and the targeted
-supplements below:
+There are 4,702 cells with a verified literal circuit and a strictly cheaper
+projective circuit. No physical GP operation is allowed. Register constructors
+retain their width/matrix fixtures; generic obstructions retain their conditions.
+All 20,928 phase modes are classified, while optimality remains a separate task.
+
+The successful constructions still exceed the published two-B/three-SQiSW
+uniform caps in **15 literal and 15 projective modes**, down from 158 each.
+The [gap CSV](../../docs/symbolic_atlas/known_optimization_gaps.csv) lists them.
+Among eligible fixed-target SDK comparisons, entanglers are lower in 11 cases,
+equal in 2,662, and higher in zero. All eleven improvements concern fFredkin
+in distinct basis presets. The cleaned matched local-count audit has
+180 lower, 2,476 equal and 6 higher counts at equal entangler count.
+C3X/Rzz/U3 retains 28 locals because its score 115.594 beats the proved
+24-local alternative's 116.37. A count gap need not be a score regression.
+See the [cited comparison appendix](../../docs/symbolic_notable_results/notable_results.pdf),
+[local-gap CSV](../../docs/symbolic_notable_results/local_optimization_gaps.csv),
+and [native layer opportunities](../../docs/symbolic_notable_results/native_local_layer_opportunities.csv).
+Layer count opportunities are not certified score improvements.
+
+New native proofs include controlled SU(2)/phase charts, B echoes, SQiSW
+exchange and fixed motifs, a parity-block Sycamore chart, a two-pulse CZS
+matchgate chart, continuous IonQ MS control frames, and exact local rewrites.
+Numerical SDK output only proposes fixed-target circuits. Rational-π and
+explicit algebraic Euler-angle proposals must pass a complete exact identity.
+Raw losing candidates and failed attempts remain available for audit.
+The normal compiler also has 313 fixed-target template cells;
+it checks full identities again before accepting these templates.
+
+Matched curated lower bounds certify 287 literal and 158 projective entangler
+minima, excluding separate one-qubit certificates. Nonzero-entangler minimum
+flags total 671 literal and 857 projective; conditional flags total
+342 and 411, respectively. Local-score proofs are separate.
+The Clifford volume has 192 phase targets in each of 12 local alphabets:
+1,488 reachable and 816 determinant-group exclusions. H/S has a global
+shortest-path certificate; other alphabets keep their narrower search scopes.
+UniversalQCompiler remains deferred with zero executed comparisons.
+
+The raw full run and all construction refinements are preserved:
 
 | Raw file | Cells | Budget per mode | Source revision |
 | --- | ---: | ---: | --- |
-| `synthesis_full_osr_20261106.json.gz` | 10,464 | 30 s | `b391dd11` |
-| `synthesis_motifs_20261106.json.gz` | 928 | 60 s | `c21e0494` |
-| `synthesis_motif_refinement_20261106.json.gz` | 192 | 90 s | `62b44f65` |
-| `synthesis_phase_proofs_20261106.json.gz` | 6 | 120 s | `d3d3c4b8` |
-| `synthesis_completion_20261106.json.gz` | 288 | 120 s | `2c39f362` |
-| `synthesis_fixed_native_20261106.json.gz` | 96 | 45 s | `2c39f362` |
-| `synthesis_fixed_pivots_20261106.json.gz` | 9 | 90 s | `0bdf752f` |
-| `synthesis_final_exact_20261106.json.gz` | 2 | 120 s | `5f2c8f6b` |
-| `synthesis_sdk_locals_20261106.json.gz` | 235 | 45 s | `c5e84e60` |
+| `synthesis_full_osr_20261106.json.gz` | 10,464 | 30.0 s | `b391dd11` |
+| `synthesis_motifs_20261106.json.gz` | 928 | 60.0 s | `c21e0494` |
+| `synthesis_motif_refinement_20261106.json.gz` | 192 | 90.0 s | `62b44f65` |
+| `synthesis_phase_proofs_20261106.json.gz` | 6 | 120.0 s | `d3d3c4b8` |
+| `synthesis_completion_20261106.json.gz` | 288 | 120.0 s | `2c39f362` |
+| `synthesis_fixed_native_20261106.json.gz` | 96 | 45.0 s | `2c39f362` |
+| `synthesis_fixed_pivots_20261106.json.gz` | 9 | 90.0 s | `0bdf752f` |
+| `synthesis_final_exact_20261106.json.gz` | 2 | 120.0 s | `5f2c8f6b` |
+| `synthesis_sdk_locals_20261106.json.gz` | 235 | 45.0 s | `c5e84e60` |
+| `synthesis_cleaned_locals_20261106.json.gz` | 129 | 120.0 s | `0d4979ac` |
+| `synthesis_local_blocks_20261106.json.gz` | 98 | 90.0 s | `928fcf7c` |
+| `synthesis_native_echoes_20261106.json.gz` | 174 | 90.0 s | `40f98fe3` |
+| `synthesis_native_controlled_20261106.json.gz` | 174 | 120.0 s | `603df966` |
+| `synthesis_sdk_gauges_20261106.json.gz` | 24 | 180.0 s | `603df966` |
+| `synthesis_native_ms_axes_20261106.json.gz` | 6 | 120.0 s | `ba8e01b4` |
+| `synthesis_sdk_gauge_scalars_20261106.json.gz` | 11 | 180.0 s | `ba8e01b4` |
+| `synthesis_fixed_transfers_20261106.json.gz` | 51 | 120.0 s | `66f807ca` |
+| `synthesis_local_blocks_deep_20261106.json.gz` | 11 | 600.0 s | `9b1542a2` |
+| `synthesis_native_sqrt_swap_20261106.json.gz` | 2 | 180.0 s | `f03198c2` |
+| `synthesis_local_periods_20261106.json.gz` | 9 | 120.0 s | `bba8ccc7` |
+| `synthesis_native_local_layers_20261106.json.gz` | 34 | 90.0 s | `c5640588` |
+| `synthesis_local_axes_20261106.json.gz` | 9 | 120.0 s | `24dcf58b` |
+| `synthesis_native_phase_absorption_20261106.json.gz` | 8 | 60.0 s | `6beb0a60` |
+| `synthesis_native_fixed_matchgates_20261106.json.gz` | 21 | 120.0 s | `cbc150cf` |
+| `synthesis_sdk_algebraic_frames_20261107.json.gz` | 8 | 300.0 s | `c6bf1ffd` |
 
-The complete raw run includes 16 register-constructor compiler failures; the
-motif supplement resolves all of them. Raw outcomes are preserved even when
-the merged report has a successful replacement. Source hashes identify the
-actual implementation. `mode_source_run_indices` records the origin of each
-retained circuit; `synthesis_run_index` is the latest attempted run. Historical
-attempts and their indices are retained recursively.
+Source hashes identify the implementation of each run. `mode_source_run_indices`
+identifies the origin of each retained phase result; `synthesis_run_index`
+identifies the latest attempt. `previous_attempts` and `raw_attempt` preserve
+history, including exact alternatives that lose under the declared score.
+The [source-validation report](../../docs/symbolic_atlas/source-validation.json)
+checks each listed new refinement against its recorded Git blobs. Earlier
+historical snapshots retain their own provenance and scopes.
 
-The completion pass reruns only the 288 cells containing the former 360 open
-phase modes. The fixed-native pass exposed seven algebraic pivot exceptions,
-which the nine-cell pivot rerun resolves in both modes. The final two-cell
-pass resolves the exact Rzz/U3 C4X and C3SX cases by preserving simple
-root-of-unity phases. These raw outcomes remain separate from the successful
-incumbents; there are no compiler errors in the merged phase statuses.
-
-The fixed-target local refinement proves 101 literal-phase and 138 projective
-SDK lifts. Unproved proposals and one proof timeout retain their earlier
-verified incumbents. It removes 137 of the former 235 equal-entangler local
-count regressions in the original emitted SDK circuits. The stricter local
-audit first applies native one-qubit SDK cleanup, including removal of adapter
-identity rotations: against that baseline the gaps fall from 254 to 129.
-The 138 native template cells are also available
-to the normal compiler, which rechecks each exact identity. The full
-[local audit and cited Sycamore comparison](../../docs/symbolic_notable_results/notable_results.pdf)
-record local counts and distinguish them from the parameter-sensitive score.
-
-There are 4,636 verified exact cells with a strictly cheaper projective result.
-Matched fixed-target lower bounds certify 287 exact and 153 projective
-entangler minima, excluding separate one-qubit certificates. The eligible
-fixed-target Qiskit comparisons have 11 lower counts, 2,662 ties and zero higher
-counts. The lower counts concern fFredkin in different bases, including five
-CNOTs versus the SDK upper bound of seven and six iSWAPs versus eight. No
-novelty or global local-cost claim follows from these comparisons.
-
-All 20,928 phase modes are now classified. The header-only
-[`open_cases.csv`](../../docs/symbolic_atlas/open_cases.csv) records that no
-construction mode remains open. This does not establish optimality for every
-verified circuit: the audit of the two-B and three-SQiSW uniform bounds still
-finds 158 exact and 158 projective optimization gaps, listed in
-[`known_optimization_gaps.csv`](../../docs/symbolic_atlas/known_optimization_gaps.csv).
-The Cartan trace/parity analysis adds conditional CNOT minima, including four
-for exact SU(2)-local synthesis versus three projectively where the trace
-condition is nonzero. The Clifford reference has all 192
-phase targets in each of 12 distinct local alphabets: 1,488 reachable circuits
-and 816 phases excluded by the one-wire determinant group. The H/S basis has a
-global local-cost certificate; other alphabet certificates retain their more
-limited search scope.
-
-Reproduce the current merge and reference analysis:
+Reproduce the merge and reference analysis from the repository root:
 
 ```bash
 python examples/decomposition/symbolic_archive_analysis.py \
   --input benchmarks/symbolic/synthesis_reference_20261106_classified.json.gz \
   --supplement benchmarks/symbolic/synthesis_sdk_locals_20261106.json.gz \
+  --supplement benchmarks/symbolic/synthesis_cleaned_locals_20261106.json.gz \
+  --supplement benchmarks/symbolic/synthesis_local_blocks_20261106.json.gz \
+  --supplement benchmarks/symbolic/synthesis_native_echoes_20261106.json.gz \
+  --supplement benchmarks/symbolic/synthesis_native_controlled_20261106.json.gz \
+  --supplement benchmarks/symbolic/synthesis_sdk_gauges_20261106.json.gz \
+  --supplement benchmarks/symbolic/synthesis_native_ms_axes_20261106.json.gz \
+  --supplement benchmarks/symbolic/synthesis_sdk_gauge_scalars_20261106.json.gz \
+  --supplement benchmarks/symbolic/synthesis_fixed_transfers_20261106.json.gz \
+  --supplement benchmarks/symbolic/synthesis_local_blocks_deep_20261106.json.gz \
+  --supplement benchmarks/symbolic/synthesis_native_sqrt_swap_20261106.json.gz \
+  --supplement benchmarks/symbolic/synthesis_local_periods_20261106.json.gz \
+  --supplement benchmarks/symbolic/synthesis_native_local_layers_20261106.json.gz \
+  --supplement benchmarks/symbolic/synthesis_local_axes_20261106.json.gz \
+  --supplement benchmarks/symbolic/synthesis_native_phase_absorption_20261106.json.gz \
+  --supplement benchmarks/symbolic/synthesis_native_fixed_matchgates_20261106.json.gz \
+  --supplement benchmarks/symbolic/synthesis_sdk_algebraic_frames_20261107.json.gz \
   --output /tmp/synthesis-reference.json.gz
 ```
 
-`synthesis_reference_20261106_classified.json.gz` preserves the twelve-run
-classification edition before local refinement; the earlier
-`synthesis_reference_20261106_initial.json.gz` preserves its eight-run input.
+The classified input preserves the twelve-run classification edition; the
+`initial` reference archive preserves its earlier eight-run input. Original raw
+compiler failures remain in history even when a later verified result wins.
 
-`reference_locals_20261106.json.gz` preserves the numerical SDK baseline after
-native one-qubit cleanup and phase-sensitive operator replay. Its separate
-normalization provenance identifies the original reference file and cleanup
-source. It changes no entangler counts and makes no symbolic-family claim:
+The cleaned numerical SDK baseline is `reference_locals_20261106.json.gz`.
+Its native block cleanup and phase-sensitive replay remove adapter identity
+rotations; they make no symbolic-family claim. Regenerate the local audit with:
 
 ```bash
-python examples/decomposition/symbolic_local_baselines.py \
-  --input benchmarks/symbolic/reference_comparison_20261106.json.gz \
-  --output /tmp/reference-locals.json.gz
 python examples/decomposition/symbolic_notable_results.py \
   --archive benchmarks/symbolic/synthesis_reference_20261106.json.gz \
-  --baselines /tmp/reference-locals.json.gz --output-dir /tmp/notable-results
+  --baselines benchmarks/symbolic/reference_locals_20261106.json.gz \
+  --output-dir /tmp/notable-results
 ```
 
 ## Initial numerical reference and construction snapshots

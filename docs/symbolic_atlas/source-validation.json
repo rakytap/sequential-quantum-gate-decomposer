@@ -1,0 +1,104 @@
+{
+  "policy": "Each listed raw refinement source hash checked against its recorded Git revision",
+  "runs": 16,
+  "source_blobs_checked": 536,
+  "failures": [],
+  "checks": [
+    {
+      "archive": "benchmarks/symbolic/synthesis_cleaned_locals_20261106.json.gz",
+      "sha256": "4ce9226ca9226866eeb4103ee1dca5371401a9a94fb4f6859ba717d855248380",
+      "revision": "0d4979ac433ccbdb90758614d4a4e20a2ebb6d43",
+      "source_blobs_checked": 30
+    },
+    {
+      "archive": "benchmarks/symbolic/synthesis_local_blocks_20261106.json.gz",
+      "sha256": "2ccd2b56d1ebc4536a179dae39015477cf810361ab9e216b749999bea6f8ee14",
+      "revision": "928fcf7cea46b77c0d4612bd1ca8bfdbe63cbaed",
+      "source_blobs_checked": 31
+    },
+    {
+      "archive": "benchmarks/symbolic/synthesis_native_echoes_20261106.json.gz",
+      "sha256": "d97d3eb32d78199b2b169edd37f57602d5274d8a1444af7e4563b61da6fda424",
+      "revision": "40f98fe37eda63d4afaf89f9bf8f4ede1da736f4",
+      "source_blobs_checked": 31
+    },
+    {
+      "archive": "benchmarks/symbolic/synthesis_native_controlled_20261106.json.gz",
+      "sha256": "4e8f698cab9a255f6d8b7694e3697d98798c7386bcb6d2987fe9de523a2b3b06",
+      "revision": "603df966096fae448d45914cb3883fe30d50972f",
+      "source_blobs_checked": 33
+    },
+    {
+      "archive": "benchmarks/symbolic/synthesis_sdk_gauges_20261106.json.gz",
+      "sha256": "44d853cc56e46e6cc7364d6b745f7176a03f2a720d4128ed62ffe437f7704f48",
+      "revision": "603df966096fae448d45914cb3883fe30d50972f",
+      "source_blobs_checked": 34
+    },
+    {
+      "archive": "benchmarks/symbolic/synthesis_native_ms_axes_20261106.json.gz",
+      "sha256": "9c2e3159c5c4a227f146286dd44d48a8c04a0a8126365dd18fcebcf9aa58b85e",
+      "revision": "ba8e01b48f6f9e196022f653518f20282e922109",
+      "source_blobs_checked": 33
+    },
+    {
+      "archive": "benchmarks/symbolic/synthesis_sdk_gauge_scalars_20261106.json.gz",
+      "sha256": "bfec755d28b8649f379dd29198c70304ee0bc0e2a5ca07ad0913677342cac33d",
+      "revision": "ba8e01b48f6f9e196022f653518f20282e922109",
+      "source_blobs_checked": 34
+    },
+    {
+      "archive": "benchmarks/symbolic/synthesis_fixed_transfers_20261106.json.gz",
+      "sha256": "d94f92d131ebae87ef42f5fc4a064df7e6f198779d9e6d85dd2e7ca56ef505b8",
+      "revision": "66f807ca18444576a89d7ceee703d57894122a23",
+      "source_blobs_checked": 34
+    },
+    {
+      "archive": "benchmarks/symbolic/synthesis_local_blocks_deep_20261106.json.gz",
+      "sha256": "e593f0174387c6d95a3b085826f61c841764f18f4e3d68352273eba3e6956db2",
+      "revision": "9b1542a2ebc0af6a5270ae919e7bd0ed7d8c4b8d",
+      "source_blobs_checked": 34
+    },
+    {
+      "archive": "benchmarks/symbolic/synthesis_native_sqrt_swap_20261106.json.gz",
+      "sha256": "097a993d9d82b7a813f3a01d77231f8863dbdacf15bf7c534b704bb405b4d8b1",
+      "revision": "f03198c2a9f69a3cd85abe02ee93b09b9d8679e7",
+      "source_blobs_checked": 33
+    },
+    {
+      "archive": "benchmarks/symbolic/synthesis_local_periods_20261106.json.gz",
+      "sha256": "95cb17e606d19608b518fd9df0dd1e3354be8c22870a1600d454c8c8bdbb80d0",
+      "revision": "bba8ccc758c03f6758fb504a46fff54aae015c0b",
+      "source_blobs_checked": 34
+    },
+    {
+      "archive": "benchmarks/symbolic/synthesis_native_local_layers_20261106.json.gz",
+      "sha256": "f62ada79c25848e83bfa654d9aba39d0b4c4f249be5025a01b2deed41e9c140a",
+      "revision": "c5640588b25871b8bfb850132cf1779258e17de4",
+      "source_blobs_checked": 34
+    },
+    {
+      "archive": "benchmarks/symbolic/synthesis_local_axes_20261106.json.gz",
+      "sha256": "91a70af49fb0d0353c72f92590d8efdd6c6af4bcb002c7022c0610cbb10332f5",
+      "revision": "24dcf58b63e3f6ffb88087f20ac61b5a19661eab",
+      "source_blobs_checked": 34
+    },
+    {
+      "archive": "benchmarks/symbolic/synthesis_native_phase_absorption_20261106.json.gz",
+      "sha256": "815f2a3c2ff80fe73b1ba90e9cba3972a420cf7dd25b4f3e3ee832dd3c98c334",
+      "revision": "6beb0a60e17d10c7bfc5d52f1145aee29dd19ed1",
+      "source_blobs_checked": 34
+    },
+    {
+      "archive": "benchmarks/symbolic/synthesis_native_fixed_matchgates_20261106.json.gz",
+      "sha256": "47675aad6e6355d18ad6bdf6b6f09d77aaf0f4a59ac572bce338812cec7eaa17",
+      "revision": "cbc150cf230ffecee581fd8b0b6653207bf4fa16",
+      "source_blobs_checked": 36
+    },
+    {
+      "archive": "benchmarks/symbolic/synthesis_sdk_algebraic_frames_20261107.json.gz",
+      "sha256": "51e41e895f7587ffd8087634a4b3a2a84e7446d2842664688f3fd298a28ad6c7",
+      "revision": "c6bf1ffd6ed5f91eec2843fcb5ce3ae92e6562e6",
+      "source_blobs_checked": 37
+    }
+  ]
+}

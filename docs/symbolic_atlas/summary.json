@@ -1,9 +1,9 @@
 {
   "archive": "benchmarks/symbolic/synthesis_reference_20261106.json.gz",
-  "archive_sha256": "9f7f5d8eaac71fa1573e097f261a80a44beddda9761092d98aaf062ed4e34e73",
+  "archive_sha256": "42801de08223f8c13a8099d008dbfec907c8d5c231eac49b2d6b529cb3f969cc",
   "schema": "symbolic-atlas-release-v2",
-  "synthesis_runs": 13,
-  "rows_including_history": 23004,
+  "synthesis_runs": 29,
+  "rows_including_history": 24777,
   "target_count": 327,
   "basis_count": 32,
   "phase_results": {
@@ -16,29 +16,29 @@
       "proved_impossible": 268
     },
     "cells": 10464,
-    "projective_retained_as_strictly_cheaper": 4636
+    "projective_retained_as_strictly_cheaper": 4702
   },
   "matched_references": {
     "sdk_fixed_equal": 2662,
     "phase_exact_matched_entangler_minimum": 287,
-    "projective_matched_entangler_minimum": 153,
+    "projective_matched_entangler_minimum": 158,
     "sdk_fixed_better": 11
   },
   "all_phase_modes_classified": true,
   "all_circuits_globally_optimal": false,
   "literature_uniform_bound_summary": {
-    "phase_exact_within_published_uniform_bound": 61,
-    "projective_within_published_uniform_bound": 61,
-    "phase_exact_exceeds_published_uniform_bound": 158,
-    "projective_exceeds_published_uniform_bound": 158
+    "phase_exact_within_published_uniform_bound": 204,
+    "projective_within_published_uniform_bound": 204,
+    "phase_exact_exceeds_published_uniform_bound": 15,
+    "projective_exceeds_published_uniform_bound": 15
   },
   "cartan_phase_bound_summary": {
     "phase_exact_matched_conditioned_minimum": 12,
     "projective_matched_conditioned_minimum": 11
   },
   "entangler_optimal_flags_including_single_qubit": {
-    "phase_exact": 5906,
-    "projective": 7808
+    "phase_exact": 5943,
+    "projective": 7845
   },
   "clifford_alphabets": 12,
   "clifford_target_slots": 2304,
@@ -49,17 +49,68 @@
     "all_circuits_in_supplied_fixed_clifford_basis": 192
   },
   "compiler_errors_in_retained_phase_statuses": 0,
-  "source_hashes_verified": 28,
+  "source_hashes_verified": 37,
   "validation": {
-    "tests_passed": 924,
-    "command": "python -m pytest tests/symbolic -q",
-    "revision": "6d4dd3b0",
-    "post_suite_archive_tests_passed": 8,
-    "post_suite_archive_revision": "63cc14c2",
-    "layout_tests_passed": 12,
+    "tests_passed": 1035,
+    "command": "python -m pytest tests/symbolic -x -q",
+    "revision": "ddc458c9",
+    "registry_before_export_revision": "ddc458c9",
+    "new_template_replays": {
+      "registry_sha256": "e27f3ae526d92e548e79d2421fb8c9ac4a168c36fcebe260d9802728b8b8e9a3",
+      "compared_revision": "ddc458c9",
+      "replayed": 6,
+      "failures": 0,
+      "checks": [
+        {
+          "gate": "C4X",
+          "basis": "cz_u",
+          "source_mode": "phase_exact",
+          "elapsed_seconds": 22.0058954320848
+        },
+        {
+          "gate": "DCX",
+          "basis": "berkeley_b",
+          "source_mode": "phase_exact",
+          "elapsed_seconds": 0.2684483863413334
+        },
+        {
+          "gate": "DCX",
+          "basis": "google_sqrt_iswap",
+          "source_mode": "phase_exact",
+          "elapsed_seconds": 0.017281782813370228
+        },
+        {
+          "gate": "DCX",
+          "basis": "sqrt_iswap_u",
+          "source_mode": "phase_exact",
+          "elapsed_seconds": 0.011563261970877647
+        },
+        {
+          "gate": "RC3X",
+          "basis": "ibm_cz",
+          "source_mode": "phase_exact",
+          "elapsed_seconds": 55.1252444954589
+        },
+        {
+          "gate": "RC3X",
+          "basis": "ibm_cz",
+          "source_mode": "projective",
+          "elapsed_seconds": 19.352518655359745
+        }
+      ]
+    },
+    "layout_tests_passed": 13,
     "layout_test_command": "python -m pytest tests/symbolic/test_atlas_pdf_build.py tests/symbolic/test_circuit_atlas.py -q",
-    "native_local_cleanup_tests_passed": 12,
-    "native_local_cleanup_revision": "38716644"
+    "certificate_guard_tests": {
+      "tests_passed": 31,
+      "revision": "94d874f5b2bb52ceee3d2072ffa5aaf0f7b3a4d5",
+      "command": "python -m pytest tests/symbolic/test_native_fixed.py tests/symbolic/test_controlled_chart.py -q"
+    },
+    "post_export_checks": {
+      "tests_passed": 28,
+      "registry_revision": "2d421f64",
+      "scope": "fixed templates, notable audit, archive analysis, atlas layout and assembly"
+    }
   },
   "limits": [
     "All archived phase modes have a verified construction or scoped obstruction; register fixtures do not cover every width.",
@@ -71,27 +122,130 @@
   "minimum_certificate_coverage": {
     "phase_exact": {
       "verified": 7702,
-      "unconditional_entangler_minimum_flags": 5906,
+      "unconditional_entangler_minimum_flags": 5943,
       "zero_entangler_minimum_flags": 5272,
       "local_cost_optimal_flags": 226,
-      "nonzero_entangler_minimum_flags": 634,
-      "conditional_entangler_minimum_flags": 253
+      "nonzero_entangler_minimum_flags": 671,
+      "conditional_entangler_minimum_flags": 342
     },
     "projective": {
       "verified": 10196,
-      "unconditional_entangler_minimum_flags": 7808,
+      "unconditional_entangler_minimum_flags": 7845,
       "zero_entangler_minimum_flags": 6988,
       "local_cost_optimal_flags": 226,
-      "nonzero_entangler_minimum_flags": 820,
-      "conditional_entangler_minimum_flags": 322
+      "nonzero_entangler_minimum_flags": 857,
+      "conditional_entangler_minimum_flags": 411
     }
   },
-  "local_gate_comparison_summary": {
-    "equal_E_equal_locals": 2402,
-    "equal_E_fewer_locals": 131,
-    "equal_E_more_locals": 129,
-    "fewer_entanglers": 11
+  "refinement_source_validation": {
+    "policy": "Each listed raw refinement source hash checked against its recorded Git revision",
+    "runs": 16,
+    "source_blobs_checked": 536,
+    "failures": [],
+    "checks": [
+      {
+        "archive": "benchmarks/symbolic/synthesis_cleaned_locals_20261106.json.gz",
+        "sha256": "4ce9226ca9226866eeb4103ee1dca5371401a9a94fb4f6859ba717d855248380",
+        "revision": "0d4979ac433ccbdb90758614d4a4e20a2ebb6d43",
+        "source_blobs_checked": 30
+      },
+      {
+        "archive": "benchmarks/symbolic/synthesis_local_blocks_20261106.json.gz",
+        "sha256": "2ccd2b56d1ebc4536a179dae39015477cf810361ab9e216b749999bea6f8ee14",
+        "revision": "928fcf7cea46b77c0d4612bd1ca8bfdbe63cbaed",
+        "source_blobs_checked": 31
+      },
+      {
+        "archive": "benchmarks/symbolic/synthesis_native_echoes_20261106.json.gz",
+        "sha256": "d97d3eb32d78199b2b169edd37f57602d5274d8a1444af7e4563b61da6fda424",
+        "revision": "40f98fe37eda63d4afaf89f9bf8f4ede1da736f4",
+        "source_blobs_checked": 31
+      },
+      {
+        "archive": "benchmarks/symbolic/synthesis_native_controlled_20261106.json.gz",
+        "sha256": "4e8f698cab9a255f6d8b7694e3697d98798c7386bcb6d2987fe9de523a2b3b06",
+        "revision": "603df966096fae448d45914cb3883fe30d50972f",
+        "source_blobs_checked": 33
+      },
+      {
+        "archive": "benchmarks/symbolic/synthesis_sdk_gauges_20261106.json.gz",
+        "sha256": "44d853cc56e46e6cc7364d6b745f7176a03f2a720d4128ed62ffe437f7704f48",
+        "revision": "603df966096fae448d45914cb3883fe30d50972f",
+        "source_blobs_checked": 34
+      },
+      {
+        "archive": "benchmarks/symbolic/synthesis_native_ms_axes_20261106.json.gz",
+        "sha256": "9c2e3159c5c4a227f146286dd44d48a8c04a0a8126365dd18fcebcf9aa58b85e",
+        "revision": "ba8e01b48f6f9e196022f653518f20282e922109",
+        "source_blobs_checked": 33
+      },
+      {
+        "archive": "benchmarks/symbolic/synthesis_sdk_gauge_scalars_20261106.json.gz",
+        "sha256": "bfec755d28b8649f379dd29198c70304ee0bc0e2a5ca07ad0913677342cac33d",
+        "revision": "ba8e01b48f6f9e196022f653518f20282e922109",
+        "source_blobs_checked": 34
+      },
+      {
+        "archive": "benchmarks/symbolic/synthesis_fixed_transfers_20261106.json.gz",
+        "sha256": "d94f92d131ebae87ef42f5fc4a064df7e6f198779d9e6d85dd2e7ca56ef505b8",
+        "revision": "66f807ca18444576a89d7ceee703d57894122a23",
+        "source_blobs_checked": 34
+      },
+      {
+        "archive": "benchmarks/symbolic/synthesis_local_blocks_deep_20261106.json.gz",
+        "sha256": "e593f0174387c6d95a3b085826f61c841764f18f4e3d68352273eba3e6956db2",
+        "revision": "9b1542a2ebc0af6a5270ae919e7bd0ed7d8c4b8d",
+        "source_blobs_checked": 34
+      },
+      {
+        "archive": "benchmarks/symbolic/synthesis_native_sqrt_swap_20261106.json.gz",
+        "sha256": "097a993d9d82b7a813f3a01d77231f8863dbdacf15bf7c534b704bb405b4d8b1",
+        "revision": "f03198c2a9f69a3cd85abe02ee93b09b9d8679e7",
+        "source_blobs_checked": 33
+      },
+      {
+        "archive": "benchmarks/symbolic/synthesis_local_periods_20261106.json.gz",
+        "sha256": "95cb17e606d19608b518fd9df0dd1e3354be8c22870a1600d454c8c8bdbb80d0",
+        "revision": "bba8ccc758c03f6758fb504a46fff54aae015c0b",
+        "source_blobs_checked": 34
+      },
+      {
+        "archive": "benchmarks/symbolic/synthesis_native_local_layers_20261106.json.gz",
+        "sha256": "f62ada79c25848e83bfa654d9aba39d0b4c4f249be5025a01b2deed41e9c140a",
+        "revision": "c5640588b25871b8bfb850132cf1779258e17de4",
+        "source_blobs_checked": 34
+      },
+      {
+        "archive": "benchmarks/symbolic/synthesis_local_axes_20261106.json.gz",
+        "sha256": "91a70af49fb0d0353c72f92590d8efdd6c6af4bcb002c7022c0610cbb10332f5",
+        "revision": "24dcf58b63e3f6ffb88087f20ac61b5a19661eab",
+        "source_blobs_checked": 34
+      },
+      {
+        "archive": "benchmarks/symbolic/synthesis_native_phase_absorption_20261106.json.gz",
+        "sha256": "815f2a3c2ff80fe73b1ba90e9cba3972a420cf7dd25b4f3e3ee832dd3c98c334",
+        "revision": "6beb0a60e17d10c7bfc5d52f1145aee29dd19ed1",
+        "source_blobs_checked": 34
+      },
+      {
+        "archive": "benchmarks/symbolic/synthesis_native_fixed_matchgates_20261106.json.gz",
+        "sha256": "47675aad6e6355d18ad6bdf6b6f09d77aaf0f4a59ac572bce338812cec7eaa17",
+        "revision": "cbc150cf230ffecee581fd8b0b6653207bf4fa16",
+        "source_blobs_checked": 36
+      },
+      {
+        "archive": "benchmarks/symbolic/synthesis_sdk_algebraic_frames_20261107.json.gz",
+        "sha256": "51e41e895f7587ffd8087634a4b3a2a84e7446d2842664688f3fd298a28ad6c7",
+        "revision": "c6bf1ffd6ed5f91eec2843fcb5ce3ae92e6562e6",
+        "source_blobs_checked": 37
+      }
+    ]
   },
-  "local_gate_comparison_scope": "Fixed targets, projective contract, native-cleaned verified SDK baseline; local counts do not certify parameter-score ordering",
-  "notable_results": "docs/symbolic_notable_results/notable_results.pdf"
+  "local_count_summary": {
+    "equal_E_equal_locals": 2476,
+    "equal_E_fewer_locals": 180,
+    "fewer_entanglers": 11,
+    "equal_E_more_locals": 6
+  },
+  "native_local_layer_opportunity_count": 695
 }
