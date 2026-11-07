@@ -9,6 +9,7 @@ import argparse
 from datetime import datetime, timezone
 import gzip
 import hashlib
+import importlib.metadata
 import json
 from pathlib import Path
 import subprocess
@@ -56,15 +57,17 @@ def generate(primary_path):
                 if previous != 6 or result['cost']['entanglers'] != 3:
                     raise ValueError('Unexpected primary archive or construction count')
                 row[mode] = result
-                row.setdefault('previous_scored_entangler_counts', {})[mode] = previous
+                row.setdefault('previous_scored_costs', {})[mode] = old[name, basis_name][mode]['cost']
                 row.setdefault('construction_and_replay_seconds', {})[mode] = time.monotonic()-start
             rows.append(row)
             print(name+'/'+basis_name+': both phase policies replayed, 6 -> 3 SQiSW', flush=True)
-    paths = [Path(__file__), *sorted((ROOT/'squander/decomposition').glob('symbolic_*.py')),
+    paths = [Path(__file__), ROOT/'squander/decomposition/sympy_gen.py',
+             *sorted((ROOT/'squander/decomposition').glob('symbolic_*.py')),
              *sorted((ROOT/'squander/decomposition').glob('symbolic_*.json'))]
     return dict(schema_version=1, kind='exact_SQiSW_construction_frontier',
                 generated_at=datetime.now(timezone.utc).isoformat(),
                 git_revision=subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip(),
+                versions={name: importlib.metadata.version(name) for name in ('sympy', 'numpy')},
                 source_sha256={str(path.relative_to(ROOT)): digest(path) for path in paths},
                 primary_scored_archive=dict(path=str(primary_path.relative_to(ROOT)), sha256=digest(primary_path),
                                            modified=False),
@@ -83,6 +86,13 @@ def replay(report):
     expected = {(name, basis) for name in FAMILIES for basis in BASES}
     if report.get('kind') != 'exact_SQiSW_construction_frontier':
         raise ValueError('Unexpected archive kind')
+    revision = report['git_revision']
+    if len(revision) != 40 or any(value not in '0123456789abcdef' for value in revision):
+        raise ValueError('Invalid source commit')
+    for path, expected_hash in report['source_sha256'].items():
+        blob = subprocess.check_output(['git', 'show', revision+':'+path], cwd=ROOT)
+        if hashlib.sha256(blob).hexdigest() != expected_hash:
+            raise ValueError('Source blob does not match archived commit: '+path)
     if {(row['gate'], row['basis']) for row in report['rows']} != expected or len(report['rows']) != 10:
         raise ValueError('Incomplete or duplicate frontier grid')
     count = 0
