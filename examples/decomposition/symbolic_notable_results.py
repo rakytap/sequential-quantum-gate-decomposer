@@ -226,7 +226,7 @@ Construction & Alphabet & E & L & Phase contract \\\midrule
     projective_gaps=bounds.get("projective_exceeds_published_uniform_bound",0)
     macros=(r"\newcommand{\UniformExactGaps}{"+str(exact_gaps)+"}\n"+
             r"\newcommand{\UniformProjectiveGaps}{"+str(projective_gaps)+"}\n")
-    text = preamble+macros+"\n".join(table)+r"\bottomrule\end{tabular}\end{center}"+"\n"+"\n".join(drawings)
+    text = preamble.replace(r"\begin{document}",macros+r"\begin{document}",1)+"\n".join(table)+r"\bottomrule\end{tabular}\end{center}"+"\n"+"\n".join(drawings)
     lifted = next(row["exact_lift"] for row in sdk if row["basis"] == "ibm_cx")
     ours = effective_projective(syc["ibm_cx"])
     if lifted["status"] == "verified_symbolic":
