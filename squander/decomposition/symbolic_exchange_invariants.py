@@ -2,7 +2,7 @@
 
 The SQiSW test uses scalar-invariant inequalities, avoiding numerical Weyl
 canonicalization. The sqrt-SWAP test uses its rank-one reflection spectrum.
-These are lower bounds only, not symbolic three-pulse constructions.
+The SQiSW inequalities also characterize its entire two-pulse region.
 """
 
 from functools import lru_cache
@@ -16,6 +16,39 @@ else:
     import symbolic_gates as gates
     from symbolic_entangler_proof import spin_data, _zero, _nonzero_constant
     from symbolic_minimality import _simplify
+
+
+@lru_cache(maxsize=1)
+def verify_sqrt_iswap_iff_reduction():
+    """Exact algebra behind the invariant iff; chamber order is proved in text.
+
+    For X=cos(2x),Y=cos(2y),Z=cos(2|z|), the invariant test reduces
+    to X**2+Y**2+Z**2-2*X*Y*Z-1 >= 0. Its two roots in X are
+    cos(2(y+|z|)) and cos(2(y-|z|)). Chamber ordering chooses the
+    lower root. This uses no sampled Weyl coordinates or rank tolerances.
+    """
+    X,Y,Z,t=sp.symbols('iff_X iff_Y iff_Z iff_t',real=True)
+    W=2*(X*X+Y*Y+Z*Z-1)
+    discriminant=X*X+Y*Y+Z*Z-2*X*Y*Z-1
+    if sp.expand(W-4*X*Y*Z-2*discriminant)!=0:return False
+    roots_product=(X-Y*Z-t)*(X-Y*Z+t)
+    if sp.expand(roots_product-discriminant).subs(t*t,(1-Y*Y)*(1-Z*Z)).expand()!=0:return False
+    u,v=sp.symbols('iff_u iff_v',real=True)
+    # |(u+iv)^2|=u^2+v^2; |g1|+Re(g1)=2u^2.
+    return sp.expand((u*u+v*v)+sp.re((u+sp.I*v)**2)-2*u*u)==0
+
+
+def sqrt_iswap_two_pulse_condition(g1,g2):
+    """Necessary AND sufficient with arbitrary U(2) locals and scalar phase.
+
+    On the canonical chamber this is exactly x >= y+|z| (Huang et al.,
+    PRL 130, 070601). It describes at most two pulses, not an optimum
+    local count or literal feasibility in a determinant-restricted basis.
+    """
+    g1,g2=map(sp.sympify,(g1,g2))
+    W=sp.simplify(sp.re(g2)+1)
+    gap=sp.simplify(W*W-8*(sp.Abs(g1)+sp.re(g1)))
+    return sp.And(sp.Ge(W,0),sp.Ge(gap,0))
 
 
 @lru_cache(maxsize=1)

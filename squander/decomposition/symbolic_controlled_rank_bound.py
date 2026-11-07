@@ -38,6 +38,49 @@ def four_cnot_source():
             ('Rz',p,(1,)),('Rx',-p,(2,)))
 
 
+def three_arbitrary_interaction_source():
+    """K, CZ(c,a), K^dagger implements controlled-fSWAP exactly.
+
+    Each K is ONE unrestricted two-qubit operation, not one Ising pulse.
+    In little-endian target coordinates K^dagger (I tensor Z) K = F.
+    """
+    r=sp.sqrt(2)/2
+    K=sp.ImmutableMatrix([[1,0,0,0],[0,r,-r,0],[0,r,r,0],[0,0,0,1]])
+    return K
+
+
+def verify_arbitrary_interaction_source():
+    K=three_arbitrary_interaction_source()
+    local_z=sp.kronecker_product(sp.eye(2),gates.make_gate('Z'))
+    F=gates.make_gate('FSWAP')
+    if not _zero(K.H*K-sp.eye(4)) or not _zero(K.H*local_z*K-F):return False
+    before=gates.apply_to(sp.eye(8),3,K,(1,2))
+    after=gates.apply_to(sp.eye(8),3,K.H,(1,2))
+    middle=gates.apply_to(sp.eye(8),3,gates.make_gate('CZ'),(0,1))
+    return _zero(after*middle*before-gates.make_gate('fFredkin'))
+
+
+def weyl_class_cost_counterexamples():
+    """All V are local, while C(V) has CX costs 0,1,2 respectively.
+
+    Singleton cut ranks 1, (2,1), and (2,2) prove the lower bounds.
+    The last circuit needs both target-control edges to reach both targets.
+    Thus Weyl(V) alone cannot determine the CNOT cost of controlled-V.
+    """
+    Z=gates.make_gate('Z');I=sp.eye(2)
+    rows=[]
+    for name,V,word in [('I',sp.eye(4),()),
+                        ('Za',sp.kronecker_product(I,Z),(('CZ',(0,1)),)),
+                        ('ZaZb',sp.kronecker_product(Z,Z),(('CZ',(0,1)),('CZ',(0,2))))]:
+        target=gates.make_controlled(V,2)
+        if not _zero(gates.compile_gates(3,word)-target):raise ArithmeticError('Controlled-local counterexample failed')
+        ranks=[schmidt_certificate(target,(q,)).fixed_rank for q in range(3)]
+        rows.append(dict(relative_block=name,relative_weyl_class='local',
+                         minimum_cx=len(word),singleton_cut_ranks=ranks,
+                         proof='exact identity and mandatory nontrivial target cuts'))
+    return rows
+
+
 @lru_cache(maxsize=1)
 def verify_controlled_rank_lemmas():
     # Conjugating any one-wire operator by an Ising gate has the other
