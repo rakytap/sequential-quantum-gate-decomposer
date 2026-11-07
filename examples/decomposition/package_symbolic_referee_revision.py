@@ -58,7 +58,7 @@ def main():
         if p.name.startswith(('symbolic_','build_symbolic','verify_symbolic','package_symbolic')):
             members['repository/'+str(p.relative_to(ROOT))]=p
     for p in (ROOT/'tests/symbolic').glob('*.py'):members['repository/'+str(p.relative_to(ROOT))]=p
-    requirements='\n'.join(n+'=='+importlib.metadata.version(n) for n in ('numpy','scipy','sympy','qiskit','matplotlib','pypdf','pytest'))+'\n'
+    requirements='\n'.join(n+'=='+importlib.metadata.version(n) for n in ('numpy','scipy','sympy','qiskit','cirq-core','matplotlib','pypdf','pytest'))+'\n'
     members['requirements-symbolic.txt']=requirements.encode()
     sdk=json.load(gzip.open(DATA/'referee_strong_sdks_final_20261107.json.gz','rt'))
     members['requirements-sdk-python312.txt']=('\n'.join(n+'=='+v for n,v in sdk['versions'].items())+'\n').encode()
