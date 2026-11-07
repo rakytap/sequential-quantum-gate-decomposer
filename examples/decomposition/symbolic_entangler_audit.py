@@ -14,7 +14,6 @@ import hashlib
 import json
 import multiprocessing as mp
 from pathlib import Path
-import signal
 import subprocess
 import sys
 import time
@@ -22,7 +21,7 @@ import time
 ROOT = Path(__file__).resolve().parents[2]
 SOURCE = ROOT/'squander/decomposition'
 sys.path.insert(0, str(SOURCE))
-from symbolic_archive import symbolic_cases
+from symbolic_archive import symbolic_cases, wall_time_limit, SymbolicDeadline
 from symbolic_bases import BASIS_SETS
 from symbolic_gates import make_gate
 from symbolic_entangler_proof import small_count_certificate, verify_small_count_certificate
@@ -59,35 +58,27 @@ def target(name):
     return make_gate(name, *CASES[name])
 
 
-def expired(unused_signum, unused_frame):
-    raise TimeoutError('Exact lower-bound budget expired')
-
-
 def run_job(job):
     name, basis_name, count, exact, seconds, expected = job
     start = time.monotonic()
-    old = signal.signal(signal.SIGALRM, expired)
-    signal.setitimer(signal.ITIMER_REAL, seconds)
     result = dict(gate=name, basis=basis_name, entanglers=count, phase_exact=exact)
     try:
-        matrix = target(name)
-        if matrix.shape != (4,4):
-            result['status'] = 'outside_two_qubit_proof_scope'
-        elif expected is None:
-            certificate = small_count_certificate(matrix, BASIS_SETS[basis_name], count, phase_exact=exact)
-            result['status'] = 'certified' if certificate else 'no_matching_lower_bound'
-            if certificate:
-                result['certificate'] = certificate
-        else:
-            valid = verify_small_count_certificate(matrix, BASIS_SETS[basis_name], expected)
-            result['status'] = 'replayed' if valid else 'replay_failed'
-    except TimeoutError:
+        with wall_time_limit(seconds):
+            matrix = target(name)
+            if matrix.shape != (4,4):
+                result['status'] = 'outside_two_qubit_proof_scope'
+            elif expected is None:
+                certificate = small_count_certificate(matrix, BASIS_SETS[basis_name], count, phase_exact=exact)
+                result['status'] = 'certified' if certificate else 'no_matching_lower_bound'
+                if certificate:
+                    result['certificate'] = certificate
+            else:
+                valid = verify_small_count_certificate(matrix, BASIS_SETS[basis_name], expected)
+                result['status'] = 'replayed' if valid else 'replay_failed'
+    except SymbolicDeadline:
         result['status'] = 'proof_timeout'
     except Exception as error:
         result.update(status='proof_error', error=type(error).__name__+': '+str(error))
-    finally:
-        signal.setitimer(signal.ITIMER_REAL, 0)
-        signal.signal(signal.SIGALRM, old)
     result['elapsed_seconds'] = time.monotonic()-start
     return result
 
@@ -115,7 +106,7 @@ def jobs(archive, seconds):
     return selected
 
 
-def execute(selected, workers):
+def execute(selected, workers, checkpoint=None):
     records = []
     counts = Counter()
     def consume(iterator):
@@ -125,20 +116,33 @@ def execute(selected, workers):
             if len(records) <= 3 or len(records)%50 == 0:
                 print(len(records), '/', len(selected), dict(counts), result['gate'],
                       result['basis'], flush=True)
+            if checkpoint and len(records)%100 == 0:
+                write(checkpoint,dict(records=records,summary=dict(counts)))
     if workers == 1:
         consume(map(run_job, selected))
     else:
         with mp.get_context('fork').Pool(workers) as pool:
             consume(pool.imap_unordered(run_job, selected, chunksize=4))
     records.sort(key=lambda row:(row['gate'],row['basis'],not row['phase_exact']))
+    if checkpoint:
+        write(checkpoint,dict(records=records,summary=dict(counts)))
     return records, dict(counts)
 
 
 def check_inputs(archive_path, report):
     if report['input_archive_sha256'] != digest(archive_path):
         raise ValueError('Proof supplement names a different input archive')
-    if report['source_sha256'] != sources():
-        raise ValueError('Proof implementation/source hashes differ')
+    current=sources()
+    runner=str(Path(__file__).relative_to(ROOT))
+    for path,expected in report['source_sha256'].items():
+        blob=subprocess.check_output(['git','show',report['git_revision']+':'+path],cwd=ROOT)
+        if hashlib.sha256(blob).hexdigest()!=expected:
+            raise ValueError('Pinned proof source differs: '+path)
+        # The orchestration runner may fix deadlines/checkpointing. Every
+        # mathematical dependency must still match the generating source;
+        # the current runner itself is pinned separately in the replay.
+        if path!=runner and current.get(path)!=expected:
+            raise ValueError('Mathematical proof source differs: '+path)
 
 
 def main():
@@ -156,7 +160,8 @@ def main():
     if args.action == 'generate':
         selected = jobs(archive, args.seconds_per_proof)
         print('Selected', len(selected), 'two-qubit phase modes', flush=True)
-        records, summary = execute(selected, args.workers)
+        records, summary = execute(selected, args.workers,
+                                   args.report.with_name(args.report.name+'.partial.gz'))
         report = dict(schema_version=1, generated_at=datetime.now(timezone.utc).isoformat(),
                       input_archive=str(args.archive), input_archive_sha256=digest(args.archive),
                       git_revision=subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip(),
@@ -176,13 +181,15 @@ def main():
                     for row in report['records'] if row['status'] == 'certified']
         records, summary = execute(selected, args.workers)
         report['replay'] = dict(summary=summary, records=records,
-                                all_certificates_replayed=summary.get('replayed',0)==len(selected))
+                                all_certificates_replayed=summary.get('replayed',0)==len(selected),
+                                runner_sha256=digest(Path(__file__)),
+                                runner_revision=subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip())
         write(args.report, report)
         print(json.dumps(summary), flush=True)
         return int(not report['replay']['all_certificates_replayed'])
     if not args.output:
         parser.error('--output is required when attaching')
-    if not report.get('replay',{}).get('all_certificates_replayed'):
+    if not (report.get('replay') or {}).get('all_certificates_replayed'):
         raise ValueError('Replay every new certificate before attaching')
     index = {(row['gate'],row['basis']):row for row in archive['rows']}
     statistics = Counter()

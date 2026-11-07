@@ -7,14 +7,13 @@ import gzip
 import hashlib
 import json
 from pathlib import Path
-import signal
 import subprocess
 import sys
 
 ROOT=Path(__file__).resolve().parents[2]
 sys.path.insert(0,str(ROOT/'squander/decomposition'))
 import sympy as sp
-from symbolic_archive import symbolic_cases
+from symbolic_archive import symbolic_cases,wall_time_limit,SymbolicDeadline
 from symbolic_bases import BASIS_SETS
 from symbolic_gates import make_gate
 from symbolic_entangler_proof import _specializations
@@ -60,9 +59,6 @@ def main():
     args=parser.parse_args()
     archive=load(args.archive)
     cache={};records=[];statistics=Counter();timeouts=[]
-    def expired(*unused):
-        raise TimeoutError('Exchange proof budget expired')
-    signal.signal(signal.SIGALRM,expired)
     for row in archive['rows']:
         native=BASIS_SETS[row['basis']].entangler
         if native not in {'SiSWAP','SSWAP'}:
@@ -77,21 +73,19 @@ def main():
         key=name,native
         if key not in cache:
             cached=None
-            signal.setitimer(signal.ITIMER_REAL,args.seconds_per_profile)
             try:
-                for substitution in witnesses(name,target):
-                    specialized=sp.ImmutableMatrix(target.subs(substitution))
-                    proof=exchange_three_pulse_lower_bound(specialized,native)
-                    if proof:
-                        # Replay the actual stored instance. The construction is
-                        # unchanged; this proves only its independent lower bound.
-                        assert exchange_three_pulse_lower_bound(specialized,native)==proof
-                        cached=(substitution,proof)
-                        break
-            except TimeoutError:
+                with wall_time_limit(args.seconds_per_profile):
+                    for substitution in witnesses(name,target):
+                        specialized=sp.ImmutableMatrix(target.subs(substitution))
+                        proof=exchange_three_pulse_lower_bound(specialized,native)
+                        if proof:
+                            # Replay the actual stored instance. The construction is
+                            # unchanged; this proves only its independent lower bound.
+                            assert exchange_three_pulse_lower_bound(specialized,native)==proof
+                            cached=(substitution,proof)
+                            break
+            except SymbolicDeadline:
                 timeouts.append(dict(gate=name,native=native))
-            finally:
-                signal.setitimer(signal.ITIMER_REAL,0)
             cache[key]=cached
         if cache[key] is None:
             continue
