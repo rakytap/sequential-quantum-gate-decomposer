@@ -57,8 +57,15 @@ def compile_page(job):
         process = subprocess.run(command, cwd=root, capture_output=True, text=True, timeout=timeout)
         with source.with_suffix(".console.log").open("a") as log:
             log.write("\nVector-fragment fallback:\n"+process.stdout+process.stderr)
+    if process.returncode and "Running xdvipdfmx" in process.stdout and not process.stderr.strip():
+        # A failed backend process can leave no diagnostic after a successful
+        # TeX pass. Retry the same prepared sheet once; never cache a failure.
+        process = subprocess.run(command, cwd=root, capture_output=True, text=True, timeout=timeout)
+        with source.with_suffix(".console.log").open("a") as log:
+            log.write("\nPDF backend retry:\n"+process.stdout+process.stderr)
     if process.returncode:
-        raise RuntimeError(f"Failed to compile {volume} page {index+1}: {process.stderr[-1200:]}")
+        raise RuntimeError(f"Failed to compile {volume} page {index+1} (exit {process.returncode}): "+
+                           (process.stdout+process.stderr)[-1200:])
     stamp.write_text(digest)
     return index, output
 

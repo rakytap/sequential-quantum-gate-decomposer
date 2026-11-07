@@ -337,6 +337,17 @@ def _native_candidates(name,parameters,basis,*,even=False,source_operations=None
         else:
             from symbolic_fixed_templates import fixed_template_candidates
         result.extend(fixed_template_candidates(name,parameters,basis))
+        if basis.entangler=="B" and "U3" in basis.single_qubit_gates and name in {"SSWAP","SSWAPdg"} and not parameters:
+            if __package__:
+                from .symbolic_native_echoes import b_sqrt_swap_source
+                from .symbolic_sqrt_iswap_phase import _phase_in_u3
+            else:
+                from symbolic_native_echoes import b_sqrt_swap_source
+                from symbolic_sqrt_iswap_phase import _phase_in_u3
+            word,scalar=b_sqrt_swap_source(name=="SSWAPdg")
+            result.append((word,scalar))
+            angle=(sp.acos(1/sp.sqrt(3))-sp.pi/2)*(1 if name=="SSWAPdg" else -1)
+            result.append((_phase_in_u3(word[0],angle)+word[1:],sp.S.One))
     return result
 
 

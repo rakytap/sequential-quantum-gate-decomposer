@@ -81,3 +81,21 @@ def sqrt_iswap_exchange_source(coordinates):
     word=(("Rz",-sp.pi/2,(0,)),("Z",(0,)),("SiSWAP",(0,1)),("Z",(0,)),
           ("Rz",2*a,(0,)),("Rz",-2*a,(1,)),("SiSWAP",(0,1)),("Rz",sp.pi/2,(0,)))
     return inverse(frame)+sign+word+sign+frame,sp.S.One
+
+
+def b_sqrt_swap_source(dagger=False):
+    """A five-local two-B motif; its full fixed identity is checked on use."""
+    beta=sp.acos(1/sp.sqrt(3))
+    if dagger:
+        word=(("U3",sp.pi/2,sp.pi/2,-sp.pi,(0,)),("B",(0,1)),
+              ("U3",-sp.pi/4,0,0,(0,)),("U3",-sp.pi/3,-beta,-beta,(1,)),
+              ("B",(0,1)),("U3",sp.pi/2,0,sp.pi/4,(0,)),
+              ("U3",sp.pi/4,sp.pi/2,sp.pi/2,(1,)))
+        return word,sp.exp(sp.I*(beta-sp.pi/2))
+    # Invert the positive-phase circuit and use B^dagger=Z_0 B Z_0.
+    # Its four Zs are absorbed exactly into adjacent U3 phase parameters.
+    word=(("U3",-sp.pi/4,-sp.pi/2,-sp.pi/2,(1,)),
+          ("U3",-sp.pi/2,3*sp.pi/4,0,(0,)),("B",(0,1)),
+          ("U3",sp.pi/3,beta,beta,(1,)),("U3",sp.pi/4,sp.pi,sp.pi,(0,)),
+          ("B",(0,1)),("U3",-sp.pi/2,sp.pi,sp.pi/2,(0,)))
+    return word,sp.exp(-sp.I*(beta-sp.pi/2))

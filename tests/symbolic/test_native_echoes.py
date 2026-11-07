@@ -5,7 +5,7 @@ import sympy as sp
 
 import symbolic_gates as gates
 from symbolic_identity import prove_circuit_identity
-from symbolic_native_echoes import b_cartan_source,b_pauli_echo,sqrt_iswap_exchange_source
+from symbolic_native_echoes import b_cartan_source,b_pauli_echo,sqrt_iswap_exchange_source,b_sqrt_swap_source
 
 
 @pytest.mark.parametrize("axes",list(itertools.product("XYZ",repeat=2)))
@@ -44,3 +44,28 @@ def test_two_sqrt_iswap_exchange_echo_is_symbolic_without_angle_folding(position
     word,factor=sqrt_iswap_exchange_source(values)
     assert sum(len(op[-1])==2 for op in word)==2
     assert prove_circuit_identity(gates.make_gate("Canonical",*values),word,factor)
+
+
+@pytest.mark.parametrize("name",["SSWAP","SSWAPdg"])
+def test_two_b_square_root_swap_has_five_locals_with_a_full_exact_proof(name):
+    word,factor=b_sqrt_swap_source(name=="SSWAPdg")
+    assert sum(len(op[-1])==2 for op in word)==2
+    assert sum(len(op[-1])==1 for op in word)==5
+    assert prove_circuit_identity(gates.make_gate(name),word,factor)
+
+
+@pytest.mark.parametrize("exact",[False,True])
+def test_square_root_swap_compiler_preserves_two_b_pulses_and_charges_literal_phase(exact):
+    from symbolic_synthesis import synthesize
+    result=synthesize("SSWAPdg",(),"berkeley_b",phase_exact=exact,osr_seconds=2)
+    assert result["status"]=="verified_symbolic"
+    assert result["cost"]["entanglers"]==2 and result["entangler_optimal"]
+    assert result["cost"]["single_qubit_gates"]==(6 if exact else 5)
+    assert not result["local_cost_optimal"]
+
+
+def test_explicit_real_phase_does_not_need_a_root_of_unity_search():
+    from symbolic_native_pauli import _phase
+    angle=sp.acos(1/sp.sqrt(3))-sp.pi/2
+    assert _phase(sp.exp(sp.I*angle))==angle
+    assert _phase(sp.exp(sp.Symbol("theta",real=True))) is None

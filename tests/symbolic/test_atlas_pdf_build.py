@@ -72,3 +72,19 @@ def test_dense_page_fallback_keeps_exact_fragments_fonts_and_caches_vectors(tmp_
     assert rendered.count(r"\includegraphics{")==2 and r"\input{" not in rendered
     assert builder.vectorize_circuits(document,"tectonic",tmp_path,tmp_path/"pages",30)==rendered
     assert len(calls)==1
+
+
+def test_blank_pdf_backend_failure_is_retried_before_stamping(tmp_path,monkeypatch):
+    calls=[]
+    def run(command,**kwargs):
+        calls.append(command)
+        source=Path(command[-1])
+        if len(calls)==1:
+            return SimpleNamespace(returncode=-11,stdout="note: Running xdvipdfmx ...",stderr="")
+        source.with_suffix(".pdf").touch()
+        return SimpleNamespace(returncode=0,stdout="completed",stderr="")
+    monkeypatch.setattr(builder.subprocess,"run",run)
+    page=dict(source=r"\documentclass{article}\begin{document}test\end{document}")
+    index,output=builder.compile_page(("tectonic",tmp_path,"gates",0,page,30))
+    assert index==0 and output.exists() and output.with_suffix(".sha256").exists()
+    assert len(calls)==2

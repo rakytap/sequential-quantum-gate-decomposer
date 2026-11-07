@@ -137,6 +137,10 @@ def cartan_native_source(a,b,c,entangler):
 
 
 def _phase(expression):
+    expression=sp.sympify(expression)
+    if expression.func==sp.exp:
+        angle=sp.simplify(expression.args[0]/sp.I)
+        if angle.is_real is True:return angle
     expression=sp.simplify(sp.expand(expression.rewrite(sp.exp)))
     if not expression.free_symbols:
         magnitude=sp.simplify(sp.expand_complex(expression*sp.conjugate(expression)-1))
@@ -166,7 +170,8 @@ def _phase(expression):
         elif not term.free_symbols:phase+=sp.arg(term)
         else:return None
     forms,inverse=exponential_forms((expression-sp.exp(sp.I*phase),))
-    return sp.simplify(phase) if zero_form(forms[0],tuple(inverse)) else None
+    phase=sp.simplify(phase)
+    return phase if phase.is_real is True and zero_form(forms[0],tuple(inverse)) else None
 
 
 def bell_coordinates(matrix):
