@@ -57,6 +57,27 @@ def _block(sequence, basis):
     proposals = [(sequence, sp.S.One),(wrapped,wrap_scalar)]
     if matrix == sp.eye(2):
         proposals.append(((), sp.S.One))
+    a,b,c,d=matrix
+    # A pure native axis can be hidden by phase flips around a non-Clifford
+    # rotation. Recover it directly instead of emitting three Euler gates.
+    for axis in ("Rx","Ry","Rz"):
+        if axis not in basis.single_qubit_gates:continue
+        if axis=="Rz":
+            if b!=0 or c!=0:continue
+            first,last=sp.arg(a),sp.arg(d)
+            angle=sp.simplify(last-first)
+            scalar=sp.exp(sp.I*(first+last)/2)
+        else:
+            if sp.simplify(a-d)!=0 or sp.simplify(b-(c if axis=="Rx" else -c))!=0:continue
+            first=sp.arg(a) if a!=0 else sp.arg(sp.I*b if axis=="Rx" else c)
+            sine=sp.simplify(sp.re((sp.I*b if axis=="Rx" else c)*sp.exp(-sp.I*first)))
+            angle=2*sp.atan2(sine,sp.Abs(a))
+            scalar=sp.exp(sp.I*first)
+        word=_cleanup(((axis,angle,(0,)),))
+        proposals.append((word,scalar))
+        if scalar==-1 and word:
+            # One extra full turn absorbs -I at the same native gate count.
+            proposals.append((((axis,angle+2*sp.pi,(0,)),),sp.S.One))
     clifford = _best_clifford(matrix, basis, False)
     if clifford is not None:
         proposals.append((clifford["_sequence"], clifford["_factor"]))
@@ -72,7 +93,7 @@ def _block(sequence, basis):
             proposals.append((_cleanup(word), sp.simplify(phase*factor)))
     except (ValueError, KeyError, TypeError):
         pass
-    for word, factor in sorted(proposals, key=lambda item:resource_key(item[0])):
+    for word, factor in sorted(proposals, key=lambda item:(resource_key(item[0]),item[1]!=1)):
         if word == sequence and factor == 1:
             return sequence, sp.S.One
         if prove_circuit_identity(matrix, word, factor) is True:

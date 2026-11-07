@@ -60,3 +60,15 @@ def test_single_full_turn_is_removed_projectively_and_its_literal_scalar_is_char
     exact=optimize_local_result(target,literal,basis)
     assert exact["cost"]["single_qubit_gates"]==1
     assert exact["virtual_gp"] is None
+
+
+@pytest.mark.parametrize("exact",[False,True])
+def test_phase_flips_around_a_nonclifford_native_rotation_need_one_local(exact):
+    basis=get_basis("cz_rz_rx")
+    word=(("Rz",-sp.pi,(0,)),("Rx",sp.pi/4,(0,)),("Rz",-sp.pi,(0,)))
+    target=gates.compile_gates(1,word)
+    parent=verify_circuit(target,word,basis,phase_exact=exact,scalar_factor=1)
+    result=optimize_local_result(target,parent,basis)
+    assert result["cost"]["single_qubit_gates"]==1
+    assert result["operations"][0]["gate"]=="Rx"
+    assert verify_local_rewrite_certificate(target,result,basis)
