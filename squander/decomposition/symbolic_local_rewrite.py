@@ -38,10 +38,23 @@ def _block(sequence, basis):
         from .symbolic_synthesis import _local, _best_clifford, _cleanup
     else:
         from symbolic_synthesis import _local, _best_clifford, _cleanup
-    if len(sequence) < 2:
+    wrapped=[]
+    wrap_scalar=sp.S.One
+    for op in sequence:
+        if op[0] in {"Rx","Ry","Rz","P","U1"}:
+            turns=sp.simplify(op[1]/(2*sp.pi))
+            if turns.is_Rational:
+                periods=sp.floor(turns+sp.Rational(1,2))
+                angle=sp.simplify(op[1]-2*sp.pi*periods)
+                if op[0] in {"Rx","Ry","Rz"}:wrap_scalar*=(-1)**periods
+                if angle!=0:wrapped.append((op[0],angle,op[-1]))
+                continue
+        wrapped.append(op)
+    wrapped=_cleanup(tuple(wrapped))
+    if len(sequence) < 2 and wrapped==sequence and wrap_scalar==1:
         return sequence, sp.S.One
     matrix = gates.compile_gates(1, sequence).applyfunc(sp.simplify)
-    proposals = [(sequence, sp.S.One)]
+    proposals = [(sequence, sp.S.One),(wrapped,wrap_scalar)]
     if matrix == sp.eye(2):
         proposals.append(((), sp.S.One))
     clifford = _best_clifford(matrix, basis, False)

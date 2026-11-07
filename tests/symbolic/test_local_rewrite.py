@@ -46,3 +46,17 @@ def test_unproved_parent_and_physical_gp_are_rejected():
     parent=dict(status="verified_symbolic",phase_exact=True,operations=[],virtual_gp=None)
     with pytest.raises(ValueError,match="parent identity"):
         optimize_local_result(gates.make_gate("X"),parent,basis)
+
+
+def test_single_full_turn_is_removed_projectively_and_its_literal_scalar_is_charged():
+    basis=get_basis("cx_rz_ry")
+    word=(("Rz",-2*sp.pi,(0,)),)
+    target=-sp.eye(2)
+    parent=verify_circuit(target,word,basis,phase_exact=False,scalar_factor=1)
+    result=optimize_local_result(target,parent,basis)
+    assert result["operations"]==[] and result["virtual_gp"]["factor"]=="-1"
+    assert verify_local_rewrite_certificate(target,result,basis)
+    literal=verify_circuit(target,word,basis,phase_exact=True)
+    exact=optimize_local_result(target,literal,basis)
+    assert exact["cost"]["single_qubit_gates"]==1
+    assert exact["virtual_gp"] is None
