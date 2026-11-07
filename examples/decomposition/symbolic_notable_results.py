@@ -41,6 +41,13 @@ def effective_projective(row):
     return row.get("projective") or (row.get("phase_exact") if row.get("projective_omitted_as_no_better") else None)
 
 
+def historical_results(row):
+    for mode in ("phase_exact","projective"):
+        result=row.get(mode)
+        if result and result.get("status")=="verified_symbolic":yield result
+    for previous in row.get("previous_attempts",[]):yield from historical_results(previous)
+
+
 def local_audit(archive, baselines):
     sdk = {(r["gate"], r["basis"]):r for r in baselines["rows"] if r["status"] == "verified_numeric"}
     rows, counts = [], Counter()
@@ -56,6 +63,12 @@ def local_audit(archive, baselines):
         de, dl = cost["entanglers"]-baseline["entanglers"], cost["single_qubit_gates"]-local
         status = "fewer_entanglers" if de < 0 else "more_entanglers" if de > 0 else (
             "equal_E_fewer_locals" if dl < 0 else "equal_E_more_locals" if dl > 0 else "equal_E_equal_locals")
+        shorter=[result for result in historical_results(row)
+                 if result["cost"]["entanglers"]==cost["entanglers"]
+                 and result["cost"]["single_qubit_gates"]<cost["single_qubit_gates"]]
+        alternative=min(shorter,key=lambda r:float(sp.sympify(r["cost"]["parameter_score"])),default=None)
+        alternative_score=alternative["cost"]["parameter_score"] if alternative else None
+        priority_tradeoff=bool(alternative and float(sp.sympify(cost["parameter_score"]))<float(sp.sympify(alternative_score)))
         counts[status] += 1
         rows.append(dict(gate=row["gate"], basis=row["basis"], phase_policy="projective",
             entanglers=cost["entanglers"], local_gates=cost["single_qubit_gates"],
@@ -63,6 +76,8 @@ def local_audit(archive, baselines):
             sdk_entanglers=baseline["entanglers"], sdk_local_gates=local,
             delta_entanglers=de, delta_local_gates=dl, status=status,
             sdk_input=baseline.get("input"), sdk_parameter_score=None,
+            shorter_verified_alternative_score=alternative_score,
+            smaller_local_count_has_higher_verified_score=priority_tradeoff,
             score_comparison="not_certified_from_floating_SDK_angles", novelty_claim=False))
     return sorted(rows, key=lambda r:(r["gate"].casefold(), r["basis"])), dict(counts)
 
@@ -239,6 +254,10 @@ not novelty claims or an exhaustive literature review. The full CSV includes eve
 compared case, including regressions; a separate local-gap CSV is the work list.
 The table shows the largest local-count savings. E and L are raw physical counts;
 the exact score is recorded separately in the CSV/JSON.
+Some larger local counts are deliberate score tradeoffs: the declared objective
+prefers a lower parameter-sensitive score before counting local gates.
+Where an exact shorter alternative is present in the archive's history, the CSV
+records its score and whether the retained circuit has a strictly lower score.
 \begin{center}\begin{longtable}{llll}\toprule
 Target & Basis & E ours/SDK & L ours/SDK \\\midrule\endhead
 """+resource_table(local[:25])+r"\bottomrule\end{longtable}\end{center}"

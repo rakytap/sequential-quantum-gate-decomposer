@@ -34,3 +34,18 @@ def test_sycamore_local_proof_has_the_restricted_phase_polynomial_scope():
     assert proof["coefficient_angles"] == ["-pi/12", "-pi/12", "-5*pi/12"]
     counts = Counter(gate for row in notable.PAPER["local_gate_types_by_wire"] for gate in row)
     assert counts == dict(Rz=15, Sx=12)
+
+
+def test_shorter_verified_alternative_does_not_override_score_priority():
+    retained=dict(status="verified_symbolic",cost=dict(entanglers=2,single_qubit_gates=5,parameter_score="7"))
+    shorter=dict(status="verified_symbolic",cost=dict(entanglers=2,single_qubit_gates=3,parameter_score="9"))
+    row=dict(gate="fixed",basis="cx_u",target_scope="fixed_gate",phase_exact=retained,
+             projective=None,projective_omitted_as_no_better=True,
+             previous_attempts=[dict(projective=shorter)])
+    sdk=dict(gate="fixed",basis="cx_u",status="verified_numeric",entanglers=2,
+             operations=[dict(wires=[0])]*3)
+    compared,counts=notable.local_audit(dict(rows=[row]),dict(rows=[sdk]))
+    assert counts==dict(equal_E_more_locals=1)
+    assert compared[0]["smaller_local_count_has_higher_verified_score"]
+    assert compared[0]["shorter_verified_alternative_score"]=="9"
+    assert compared[0]["sdk_parameter_score"] is None
