@@ -52,6 +52,95 @@ def commute_diagonal_locals(sequence,width):
     return _cleanup(output)
 
 
+def _ibm_variants(operation):
+    theta,phi,lam=operation[1:-1]
+    if theta==0:return (((('Rz',phi+lam,(0,)),),(phi+lam)/2),)
+    rows=[]
+    for flip in (0,1):
+        t,p,l=(-1)**flip*theta,phi+flip*sp.pi,lam+flip*sp.pi
+        rows.append(((('Rz',l,(0,)),('Sx',(0,)),('Rz',t+sp.pi,(0,)),
+                      ('Sx',(0,)),('Rz',p+sp.pi,(0,))),sp.pi/2+(p+l)/2))
+    if theta==sp.pi/2:
+        rows.append(((('Rz',lam-sp.pi/2,(0,)),('Sx',(0,)),('Rz',phi+sp.pi/2,(0,))),
+                     (phi+lam)/2-sp.pi/4))
+    return tuple(rows)
+
+
+@lru_cache(maxsize=1)
+def verify_ibm_variant_lemma():
+    t,p,l=sp.symbols('transfer_t transfer_p transfer_l',real=True)
+    for theta in (t,sp.S.Zero,sp.pi/2):
+        target=gates.make_gate('U3',theta,p,l)
+        for word,angle in _ibm_variants(('U3',theta,p,l,(0,))):
+            if prove_circuit_identity(target,word,sp.exp(sp.I*angle)) is not True:return False
+    n=sp.Symbol('transfer_period',integer=True)
+    difference=gates.make_gate('Rz',t+2*sp.pi*n)-(-1)**n*gates.make_gate('Rz',t)
+    if any(sp.simplify(sp.expand_complex(value))!=0 for value in difference):return False
+    return verify_diagonal_commutation_lemma()
+
+
+def _emit_ibm(pending,word,final=False):
+    output=[];phase=sp.S.Zero
+    def flush():
+        nonlocal pending,phase
+        angle=sp.simplify(pending)
+        turns=sp.simplify(angle/(2*sp.pi))
+        if turns.is_Rational:
+            periods=sp.floor(turns+sp.Rational(1,2))
+            angle=sp.simplify(angle-2*sp.pi*periods);phase+=sp.pi*periods
+        if angle!=0:output.append(('Rz',angle,(0,)))
+        pending=sp.S.Zero
+    for operation in word:
+        if operation[0]=='Rz':pending+=operation[1]
+        else:flush();output.append(operation)
+    if final:flush()
+    return sp.simplify(pending),tuple(output),phase
+
+
+def _ibm_dynamic_transfer(source,width):
+    """Search native Euler variants along independent diagonal wire frames.
+
+    Selection is constructive. The exact matrix lemmas certify every choice;
+    this finite variant search does not assert unrestricted global optimality.
+    """
+    if not verify_ibm_variant_lemma():raise ArithmeticError('Native Euler variant lemma failed')
+    if __package__:
+        from .symbolic_synthesis import _cleanup
+    else:
+        from symbolic_synthesis import _cleanup
+    selected={}
+    for wire in range(width):
+        states={sp.S.Zero:((),[])}
+        for index,operation in enumerate(source):
+            if operation[-1]!=(wire,):continue
+            updated={}
+            for pending,(old,choices) in states.items():
+                for variant,(word,unused) in enumerate(_ibm_variants(operation)):
+                    end,extra,unused=_emit_ibm(pending,word)
+                    candidate=(_cleanup(old+extra),choices+[(index,variant)])
+                    if end not in updated or resource_key(candidate[0])<resource_key(updated[end][0]):updated[end]=candidate
+            states=updated
+        complete=[]
+        for pending,(old,choices) in states.items():
+            unused,extra,unused=_emit_ibm(pending,(),True)
+            complete.append((_cleanup(old+extra),choices))
+        selected.update(min(complete,key=lambda candidate:resource_key(candidate[0]))[1])
+    output=[];pending=[sp.S.Zero]*width;phase=sp.S.Zero;records=[]
+    for index,operation in enumerate(source):
+        if len(operation[-1])==2:output.append(operation);continue
+        wire=operation[-1][0]
+        word,angle=_ibm_variants(operation)[selected[index]]
+        pending[wire],extra,wrapped=_emit_ibm(pending[wire],word)
+        output.extend((*entry[:-1],(wire,)) for entry in extra)
+        phase+=angle+wrapped
+        records.append(dict(original=encode_sequence((operation,)),native_variant=selected[index],
+                            replacement=encode_sequence(word),scalar_angle=str(angle)))
+    for wire in range(width):
+        unused,extra,wrapped=_emit_ibm(pending[wire],(),True)
+        output.extend((*entry[:-1],(wire,)) for entry in extra);phase+=wrapped
+    return tuple(output),sp.simplify(phase),records
+
+
 @lru_cache(maxsize=4)
 def _parent(name):
     candidates=fixed_template_candidates(name,(),get_basis('cz_u'))
@@ -84,16 +173,21 @@ def synthesize_template_transfer(name,basis,*,phase_exact):
     word,factor=parent
     output=[]
     components=[]
-    for operation in word:
-        if len(operation[-1])==2:output.append(operation);continue
-        canonical=(*operation[:-1],(0,))
-        lowered,scalar=_lower_component(canonical,basis)
-        output.extend((*op[:-1],operation[-1]) for op in lowered)
-        factor*=scalar
-        components.append(dict(original=encode_sequence((canonical,)),replacement=encode_sequence(lowered),factor=str(scalar)))
-    factor=sp.simplify(factor)
     width=gates.make_gate(name).rows.bit_length()-1
-    output=commute_diagonal_locals(output,width)
+    variant_dp=set(basis.single_qubit_gates)=={'Rz','Sx','X'}
+    if variant_dp:
+        output,angle,components=_ibm_dynamic_transfer(word,width)
+        factor*=sp.exp(sp.I*angle)
+    else:
+        for operation in word:
+            if len(operation[-1])==2:output.append(operation);continue
+            canonical=(*operation[:-1],(0,))
+            lowered,scalar=_lower_component(canonical,basis)
+            output.extend((*op[:-1],operation[-1]) for op in lowered)
+            factor*=scalar
+            components.append(dict(original=encode_sequence((canonical,)),replacement=encode_sequence(lowered),factor=str(scalar)))
+        output=commute_diagonal_locals(output,width)
+    factor=sp.simplify(factor)
     if phase_exact and factor!=1:
         if __package__:
             from .symbolic_synthesis import _physical_scalar,RuleUnavailable
@@ -109,7 +203,8 @@ def synthesize_template_transfer(name,basis,*,phase_exact):
         construction_method='native_template_basis_transfer',
         basis_transfer_certificate=dict(target=name,parent_basis='cz_u',parent_operations=encode_sequence(word),
             parent_factor=str(parent[1]),components=components,
-            commutations='Rz_commutes_with_CZ_on_either_wire'),
+            commutations='Rz_commutes_with_CZ_on_either_wire',
+            native_variant_dp=variant_dp,variant_optimality_scope='constructive finite variant search'),
         entangler_optimal=False,local_cost_optimal=False,optimality_scope='constructive upper bound')
 
 

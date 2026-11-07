@@ -870,6 +870,14 @@ def synthesize(name,parameters=(),basis="cx_u",*,phase_exact=True,osr_seconds=2.
         else:
             from symbolic_basis_transfer import synthesize_template_transfer
         incumbent=synthesize_template_transfer("C4X",selected,phase_exact=phase_exact)
+    if not parameters and (gates.gate_definition(name).name,selected.name) in {
+            ("C3SX","iswap_u"),("C4X","iswap_u"),("Peres","xx_rz_ry")}:
+        if not feasibility_obstruction(gates.make_gate(name),selected,phase_exact=phase_exact):
+            if __package__:
+                from .symbolic_local_polar import synthesize_local_polar
+            else:
+                from symbolic_local_polar import synthesize_local_polar
+            incumbent=synthesize_local_polar(gates.gate_definition(name).name,selected,phase_exact=phase_exact)
     return _with_chart_incumbent(incumbent,lambda:_synthesize_existing(
         name,parameters,selected,phase_exact=phase_exact,osr_seconds=osr_seconds))
 

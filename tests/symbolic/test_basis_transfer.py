@@ -17,7 +17,7 @@ def test_diagonal_commutation_preserves_free_angles_and_blocked_wire_order():
     assert prove_circuit_identity(gates.compile_gates(2,word),output) is True
 
 
-@pytest.mark.parametrize('name,count',[('cz_rz_rx',69),('ibm_cz',163)])
+@pytest.mark.parametrize('name,count',[('cz_rz_rx',69),('ibm_cz',130)])
 def test_c4x_parent_and_local_components_are_replayed_before_acceptance(name,count):
     basis=get_basis(name);target=gates.make_gate('C4X')
     result=synthesize_template_transfer('C4X',basis,phase_exact=False)
