@@ -8,12 +8,12 @@ import sympy as sp
 if __package__:
     from . import symbolic_gates as gates
     from .symbolic_bases import get_basis
-    from .symbolic_contract import retain_phase_results
+    from .symbolic_contract import retain_phase_results,PARAMETER_SCORE_POLICY
     from .symbolic_synthesis import synthesize
 else:
     import symbolic_gates as gates
     from symbolic_bases import get_basis
-    from symbolic_contract import retain_phase_results
+    from symbolic_contract import retain_phase_results,PARAMETER_SCORE_POLICY
     from symbolic_synthesis import synthesize
 
 
@@ -91,7 +91,8 @@ def archive_cell(job):
 
 
 def comparison_contract():
-    return dict(objective=["native_two_qubit_operations","original_parameter_sensitive_score","single_qubit_operations"],
+    return dict(objective=["native_two_qubit_operations","nonnegative_parameter_sensitive_score","single_qubit_operations"],
+                parameter_score_policy=dict(PARAMETER_SCORE_POLICY),
                 phase_exact="Literal equality; physical GP and free scalar corrections forbidden",
                 projective="Exact equality after automatic virtual scalar metadata at zero physical cost",
                 basis_policy="Preserve every supplied primitive; no silent augmentation",

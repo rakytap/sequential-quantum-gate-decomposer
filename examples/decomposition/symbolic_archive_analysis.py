@@ -145,6 +145,13 @@ def merge_synthesis_runs(reports):
                 {k:v for k,v in previous.items() if k!="previous_attempts"}]
             index[key]=row
     combined["rows"]=[index[row["gate"],row["basis"]] for row in combined["rows"]]
+    # A later exhaustive alphabet proof strengthens the old restricted-word
+    # certificate independently of which circuits win the cost comparison.
+    for run in combined["synthesis_runs"]:
+        for key,certificate in run.get("clifford_certificates",{}).items():
+            previous=combined.setdefault("clifford_certificates",{}).get(key)
+            if previous is None or certificate.get("global_local_optimality") or not previous.get("global_local_optimality"):
+                combined["clifford_certificates"][key]=copy.deepcopy(certificate)
     combined["mixed_synthesis_runs"]=len(combined["synthesis_runs"])>1
     combined["source_provenance_policy"]="Resolve mode_source_run_indices for retained phase results, falling back to synthesis_run_index; synthesis_run_index identifies the latest attempted run; root hashes describe the first run"
     combined["incumbent_policy"]="Retain the least-cost verified circuit for each phase policy; preserve raw outcomes in last_attempt_phase_statuses and every earlier attempt"
@@ -288,6 +295,39 @@ def annotate_uniform_literature_bounds(report):
     return report
 
 
+def annotate_secondary_cost_floors(report):
+    """Attach independent analytic score floors without altering circuits."""
+    if report.get("comparison_contract",{}).get("parameter_score_policy",{}).get("version")!=2:
+        report["secondary_cost_floor_summary"]=dict(status="requires_nonnegative_objective_v2")
+        return report
+    from symbolic_archive import symbolic_cases
+    from symbolic_cost_proof import secondary_score_floor_certificate
+    cases={name:parameters for name,parameters,scope in symbolic_cases()}
+    targets={}
+    statistics=Counter()
+    for row in report["rows"]:
+        row.pop("secondary_cost_floor_certificates",None)
+        certificates={}
+        for mode in ("phase_exact","projective"):
+            result=row.get(mode)
+            if mode=="projective" and row.get("projective_omitted_as_no_better"):
+                exact=row.get("phase_exact")
+                result=dict(exact,phase_exact=False) if exact else None
+            if not result or result.get("status")!="verified_symbolic":continue
+            if result["cost"]["entanglers"] and result["cost"]["single_qubit_gates"]:continue
+            name=row["gate"]
+            if name not in targets:targets[name]=make_gate(name,*cases[name])
+            certificate=secondary_score_floor_certificate(targets[name],result,BASIS_SETS[row["basis"]])
+            if certificate:
+                certificates[mode]=certificate
+                statistics[mode+"_secondary_minimum_at_fixed_E"]+=1
+                if certificate["global_lexicographic_minimum"]:statistics[mode+"_global_lexicographic_minimum"]+=1
+        if certificates:row["secondary_cost_floor_certificates"]=certificates
+    report["secondary_cost_floor_summary"]=dict(statistics)
+    report["secondary_cost_floor_source_sha256"]=hashlib.sha256((ROOT/"squander/decomposition/symbolic_cost_proof.py").read_bytes()).hexdigest()
+    return report
+
+
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--input",type=Path,required=True)
@@ -299,6 +339,7 @@ def main():
     ledger=ROOT/"squander/decomposition/symbolic_reference_ledger.json"
     report=merge_synthesis_runs([load(path) for path in [args.input,*args.supplement]])
     report=annotate(report,load(args.qiskit),load(ledger))
+    report=annotate_secondary_cost_floors(report)
     report["reference_analysis_sha256"]={str(path):hashlib.sha256(path.read_bytes()).hexdigest()
         for path in (Path(__file__),args.input,*args.supplement,args.qiskit,ledger)}
     opener=gzip.open if args.output.suffix==".gz" else open

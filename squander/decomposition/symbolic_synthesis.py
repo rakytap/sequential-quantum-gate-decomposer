@@ -725,10 +725,8 @@ def _synthesize_existing(name, parameters=(), basis="cx_u", *, phase_exact=True,
     if not target.free_symbols:
         if all(simplify_exact(a-b)==0 for a,b in zip(target,sp.eye(target.rows))):
             result=verify_circuit(target,(),basis,phase_exact=phase_exact,scalar_factor=1)
-            fixed_local=all(not gates.gate_definition(gate).parameters for gate in basis.single_qubit_gates)
-            result.update(entangler_optimal=True,local_cost_optimal=fixed_local,
-                          optimality_scope="empty_circuit" if fixed_local else
-                          "minimum_operation_counts; unrestricted_legacy_parameter_score_not_certified")
+            result.update(entangler_optimal=True,local_cost_optimal=True,
+                          optimality_scope="empty_circuit_and_nonnegative_objective")
             return result
     try:
         if definition.name=="GP":
@@ -866,6 +864,12 @@ def synthesize(name,parameters=(),basis="cx_u",*,phase_exact=True,osr_seconds=2.
         additional=((("H",),("Rz",2*sp.pi*sp.sympify(parameters[0]))),)
     incumbent=(_native_chart_incumbent(gates.make_gate(name,*parameters),selected,phase_exact,additional)
                if selected.entangler in {"B","SiSWAP"} else None)
+    if not parameters and gates.gate_definition(name).name=="C4X" and selected.entangler=="CZ" and not phase_exact:
+        if __package__:
+            from .symbolic_basis_transfer import synthesize_template_transfer
+        else:
+            from symbolic_basis_transfer import synthesize_template_transfer
+        incumbent=synthesize_template_transfer("C4X",selected,phase_exact=phase_exact)
     return _with_chart_incumbent(incumbent,lambda:_synthesize_existing(
         name,parameters,selected,phase_exact=phase_exact,osr_seconds=osr_seconds))
 

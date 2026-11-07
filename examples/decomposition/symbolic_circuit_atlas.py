@@ -357,6 +357,8 @@ def hydrate_certificate(data):
                     edges=[(edge["target"], edge["cost_ticks"], decode(edge["operations"])) for edge in data["edges"]],
                     distances={int(key): value for key, value in data["distances"].items()},
                     predecessors={int(key): tuple(value) for key, value in data["predecessors"].items()})
+    if "exhaustive_word_certificate" in data:
+        solution["exhaustive_word_certificate"]=data["exhaustive_word_certificate"]
     verify_shortest_path_certificate(solution)
     return solution
 
@@ -391,8 +393,8 @@ def clifford_volume(report, output, store, selected=()):
                   r"Every displayed circuit equals its target literally; no scalar-phase repair or physical GP is included. "
                   r"The names identify actual catalog matrices, including the legacy distinction between SX and square-root X (Sx).\par "
                   r"Shortest-path costs use the original parameter-sensitive metric. A fixed Clifford alphabet such as H/S exhausts its allowed words. "
-                  r"For continuous or Clifford+T alphabets, the certificate covers the listed Clifford-preserving specializations and macro words, "
-                  r"not arbitrary non-Clifford intermediate paths. Missing paths are labeled with that scope.\par "
+                  r"H/S/T/Tdg also has an exhaustive exact-word proof, including non-Clifford intermediate paths. "
+                  r"For continuous alphabets the certificate covers the listed specializations and macro words. Missing paths retain that scope.\par "
                   r"All presets with the same one-qubit alphabet share the same table. Entanglers and ancillary qubits are unavailable in this one-wire reference."
                   r"\end{minipage}\vspace{5mm}\par")
     source.append(r"\hyperref[clifford-representatives]{Exact representative matrices}\hfill p.~\pageref{clifford-representatives}\par")

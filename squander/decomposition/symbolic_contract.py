@@ -28,10 +28,11 @@ def exact_equal(left, right):
 
 
 def parameter_score(sequence):
-    """The original get_gatecost formula, evaluated as an exact expression.
+    """Nonnegative-denominator revision of the historical parameter score.
 
-    Keep DEAP out of the core compiler. A separate regression compares this
-    expression with the unchanged legacy implementation.
+    Clamp only the logarithmic denominator penalty at zero. Ordinary scores
+    with denominator magnitude >=1 are unchanged; negative-cost identity
+    cycles in the unrestricted historical formula are excluded.
     """
     # Global simplify can combine the logarithms into enormous integer powers
     # (and even hit Python's integer-printing limit). Add their exact values
@@ -43,9 +44,20 @@ def parameter_score(sequence):
 def _operation_score(operation):
     total=sp.Integer(1 << len(operation[-1]))
     for parameter in operation[1:-1]:
-        denominator=sp.simplify(parameter).as_numer_denom()[1]
-        total+=(sp.log(sp.Abs(denominator),2)+sp.Rational(1,100))/5
+        total+=_parameter_penalty(parameter)
     return total
+
+
+@lru_cache(maxsize=32768)
+def _parameter_penalty(parameter):
+    denominator=sp.simplify(parameter).as_numer_denom()[1]
+    return (sp.log(sp.Max(1,sp.Abs(denominator)),2)+sp.Rational(1,100))/5
+
+
+PARAMETER_SCORE_POLICY=dict(version=2,name="nonnegative_denominator_penalty",
+    denominator_term="log2(Max(1, Abs(denominator(simplify(parameter)))))",
+    operation_base="2**wire_count",parameter_surcharge="1/500",
+    compatibility="Historical scores are identical when all denominator magnitudes are at least one")
 
 
 @lru_cache(maxsize=16384)
