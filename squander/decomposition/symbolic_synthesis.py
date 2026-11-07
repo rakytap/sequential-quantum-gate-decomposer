@@ -725,7 +725,10 @@ def _synthesize_existing(name, parameters=(), basis="cx_u", *, phase_exact=True,
     if not target.free_symbols:
         if all(simplify_exact(a-b)==0 for a,b in zip(target,sp.eye(target.rows))):
             result=verify_circuit(target,(),basis,phase_exact=phase_exact,scalar_factor=1)
-            result.update(entangler_optimal=True,local_cost_optimal=True,optimality_scope="empty_circuit")
+            fixed_local=all(not gates.gate_definition(gate).parameters for gate in basis.single_qubit_gates)
+            result.update(entangler_optimal=True,local_cost_optimal=fixed_local,
+                          optimality_scope="empty_circuit" if fixed_local else
+                          "minimum_operation_counts; unrestricted_legacy_parameter_score_not_certified")
             return result
     try:
         if definition.name=="GP":
@@ -830,6 +833,12 @@ def _native_chart_incumbent(target,selected,phase_exact,additional=()):
             if incumbent is None:
                 incumbent=synthesize_controlled_chart(target,selected,phase_exact=phase_exact,
                                                        additional_frames=additional)
+            if incumbent is None and selected.entangler=="B":
+                if __package__:
+                    from .symbolic_b_cartan import synthesize_b_cartan
+                else:
+                    from symbolic_b_cartan import synthesize_b_cartan
+                incumbent=synthesize_b_cartan(target,selected,phase_exact=phase_exact)
     return incumbent
 
 

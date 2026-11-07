@@ -172,9 +172,31 @@ def solve_clifford_alphabet(local_gates):
     distance, predecessor = _dijkstra(edges)
     fixed_clifford_alphabet = all(not gate_definition(name).parameters and exact_state(make_gate(name)) is not None
                                    for name in local_gates)
+    exhaustive = None
+    if set(local_gates)=={"H","S","T","Tdg"}:
+        if __package__:
+            from .symbolic_clifford_t_global import solve_global_clifford_t
+        else:
+            from symbolic_clifford_t_global import solve_global_clifford_t
+        exhaustive=solve_global_clifford_t()
+        for state,word in exhaustive["solutions"].items():
+            if state==group_data()[-1]:continue
+            operations=tuple((name,(0,)) for name in word)
+            if _ticks(operations)!=1000*len(word):raise ArithmeticError("Fixed alphabet cost changed")
+            cost=1000*len(word)
+            if state not in edges_by_state or cost<edges_by_state[state][1]:
+                edges_by_state[state]=state,cost,operations
+        edges=list(edges_by_state.values())
+        distance,predecessor=_dijkstra(edges)
+        if any(distance[state]!=1000*len(word) for state,word in exhaustive["solutions"].items()):
+            raise ArithmeticError("Clifford shortest paths contradict exhaustive word search")
     result = dict(local_gates=local_gates, edges=edges, distances=distance, predecessors=predecessor,
-                  proof_scope="all_circuits_in_supplied_fixed_clifford_basis" if fixed_clifford_alphabet
-                  else "listed_clifford_preserving_words_only", global_local_optimality=fixed_clifford_alphabet)
+                  proof_scope=exhaustive["proof_scope"] if exhaustive else
+                      "all_circuits_in_supplied_fixed_clifford_basis" if fixed_clifford_alphabet
+                      else "listed_clifford_preserving_words_only",
+                  global_local_optimality=fixed_clifford_alphabet or exhaustive is not None)
+    if exhaustive:
+        result["exhaustive_word_certificate"]={key:value for key,value in exhaustive.items() if key!="solutions"}
     verify_shortest_path_certificate(result)
     return result
 
@@ -191,13 +213,42 @@ def verify_shortest_path_certificate(solution):
     """Check attainability plus every Bellman inequality and closure edge."""
     identity = group_data()[-1]
     distances, edges = solution["distances"], solution["edges"]
+    fixed_clifford=all(not gate_definition(name).parameters and exact_state(make_gate(name)) is not None
+                      for name in solution["local_gates"])
+    if solution.get("global_local_optimality") and not fixed_clifford and not solution.get("exhaustive_word_certificate"):
+        raise ValueError("Global minimum flag lacks an exhaustive alphabet proof")
+    if solution.get("exhaustive_word_certificate") is not None:
+        if set(solution["local_gates"])!={"H","S","T","Tdg"}:
+            raise ValueError("Exhaustive word proof has a different alphabet")
+        if __package__:
+            from .symbolic_clifford_t_global import solve_global_clifford_t
+        else:
+            from symbolic_clifford_t_global import solve_global_clifford_t
+        exhaustive=solve_global_clifford_t()
+        if (solution["exhaustive_word_certificate"]!={k:v for k,v in exhaustive.items() if k!="solutions"}
+            or solution.get("proof_scope")!=exhaustive["proof_scope"]
+            or solution.get("global_local_optimality") is not True
+            or distances!={state:1000*len(word) for state,word in exhaustive["solutions"].items()}):
+            raise ValueError("Exhaustive Clifford+T proof mismatch")
     if distances.get(identity) != 0:
         raise ValueError("Invalid Clifford identity distance")
     for state,weight,operations in edges:
-        actual=sp.eye(2)
-        for operation in operations:
-            actual=make_gate(operation[0],*operation[1:-1])*actual
-        if exact_state(actual)!=state or _ticks(operations)!=weight or weight<=0:
+        if any(op[0] not in solution["local_gates"] or op[-1]!=(0,) for op in operations):
+            raise ValueError("Clifford edge is outside the supplied alphabet")
+        if solution.get("exhaustive_word_certificate"):
+            if __package__:
+                from .symbolic_clifford_t_global import _encode,_step
+            else:
+                from symbolic_clifford_t_global import _encode,_step
+            actual=_encode(sp.eye(2))
+            if any(len(op)!=2 for op in operations):raise ValueError("Fixed Clifford+T edge has parameters")
+            for operation in operations:actual=_step(actual,operation[0])
+            matched=state in group_data()[1] and actual==_encode(group_data()[1][state])
+        else:
+            actual=sp.eye(2)
+            for operation in operations:actual=make_gate(operation[0],*operation[1:-1])*actual
+            matched=exact_state(actual)==state
+        if not matched or _ticks(operations)!=weight or weight<=0:
             raise ValueError("Invalid Clifford edge identity or weight")
     for state, cost in distances.items():
         if state != identity:
@@ -213,9 +264,12 @@ def verify_shortest_path_certificate(solution):
 
 
 def export_certificate(solution):
-    return dict(local_gates=list(solution["local_gates"]), proof_scope=solution["proof_scope"],
+    result=dict(local_gates=list(solution["local_gates"]), proof_scope=solution["proof_scope"],
                 global_local_optimality=solution["global_local_optimality"], cost_unit="1/500 legacy gate score",
                 identity_state=group_data()[-1], reachable_states=len(solution["distances"]),
                 distances={str(k):v for k,v in solution["distances"].items()},
                 predecessors={str(k):list(v) for k,v in solution["predecessors"].items()},
                 edges=[dict(target=state, cost_ticks=weight, operations=encode_sequence(ops)) for state,weight,ops in solution["edges"]])
+    if "exhaustive_word_certificate" in solution:
+        result["exhaustive_word_certificate"]=solution["exhaustive_word_certificate"]
+    return result
