@@ -38,6 +38,40 @@ def propose_pi_angle(value, max_denominator=384, tolerance=1e-11):
     return sp.pi * sp.Rational(ratio.numerator, ratio.denominator)
 
 
+def _gauge_fixed_proposal(baseline):
+    """Propose zero gauges with matched signs/scales and rational-pi offsets.
+
+    Numerical relations only suggest a new exact word. In particular, this
+    does not assert that an inferred gauge is free. The complete proposed
+    circuit still has to pass the exact fixed-target identity proof.
+    """
+    if not all(math.isfinite(float(value)) for operation in baseline["operations"]
+               for value in operation["parameters"]):return None
+    if not math.isfinite(float(baseline.get("global_phase",0))):return None
+    representatives=[]
+    def angle(value):
+        direct=propose_pi_angle(value)
+        if direct is not None:return direct
+        for old in representatives:
+            for coefficient in (1,-1,sp.Rational(1,2),sp.Rational(-1,2),2,-2,
+                                sp.Rational(1,4),sp.Rational(-1,4)):
+                offset=propose_pi_angle(float(value)-float(coefficient)*old,tolerance=1e-10)
+                if offset is not None:return offset
+        representatives.append(float(value))
+        return sp.S.Zero
+    word=[]
+    for operation in baseline["operations"]:
+        name=NAMES.get(operation["gate"])
+        if name is None:return None
+        parameters=tuple(angle(value) for value in operation["parameters"])
+        if name=="U3" and parameters[0]==0:
+            parameters=(sp.S.Zero,sp.S.Zero,sp.simplify(parameters[1]+parameters[2]))
+            if parameters[2]==0:continue
+        word.append((name,*parameters,tuple(operation["wires"])))
+    phase=angle(baseline.get("global_phase",0))
+    return tuple(word),phase,len(representatives)
+
+
 def lift_sdk_candidate(target, baseline, basis, *, phase_exact=False):
     target = sp.ImmutableMatrix(target)
     selected = get_basis(basis)
@@ -49,20 +83,27 @@ def lift_sdk_candidate(target, baseline, basis, *, phase_exact=False):
     if phase_exact and feasibility_obstruction(target, selected, phase_exact=True):
         return dict(declined, reason="Exact phase is obstructed in this preserved basis")
     sequence = []
+    gauge_fixed=False
     for operation in baseline["operations"]:
         name = NAMES.get(operation["gate"])
         if name is None:
             return dict(declined, reason="SDK primitive has no exact lift")
         parameters = tuple(propose_pi_angle(p) for p in operation["parameters"])
         if any(p is None for p in parameters):
-            return dict(declined, reason="Angle outside the bounded rational-pi proposal alphabet")
+            gauge_fixed=True
+            break
         sequence.append((name, *parameters, tuple(operation["wires"])))
+    proposal=_gauge_fixed_proposal(baseline) if gauge_fixed else None
+    if gauge_fixed:
+        if proposal is None:return dict(declined,reason="SDK primitive has no exact lift")
+        sequence,angle,gauge_count=proposal
+    else:
+        angle=propose_pi_angle(baseline.get("global_phase",0))
     width = target.rows.bit_length()-1
     try:
         sequence = validate_operations(sequence, selected, width)
     except ValueError as error:
         return dict(declined, reason=str(error))
-    angle = propose_pi_angle(baseline.get("global_phase", 0))
     if angle is None:
         return dict(declined, reason="Scalar outside the proposal alphabet")
     factor = sp.exp(sp.I * angle)
@@ -78,9 +119,10 @@ def lift_sdk_candidate(target, baseline, basis, *, phase_exact=False):
             return dict(declined, reason=str(error))
     if proof["status"] != "verified_symbolic":
         return dict(declined, reason="Physical phase closure failed")
-    proof.update(construction_method="exact_lift_of_fixed_target_SDK_proposal",
+    proof.update(construction_method="exact_lift_of_fixed_target_SDK_gauge_proposal" if gauge_fixed else "exact_lift_of_fixed_target_SDK_proposal",
                  entangler_optimal=False, local_cost_optimal=False,
                  proposal_provenance=dict(input=baseline.get("input"),
                      numerical_angles_are_not_a_proof=True,
-                     max_pi_denominator=384, symbolic_family_claim=False))
+                     max_pi_denominator=384, symbolic_family_claim=False,
+                     gauge_fixed=gauge_fixed,proposed_gauges=gauge_count if gauge_fixed else 0))
     return proof

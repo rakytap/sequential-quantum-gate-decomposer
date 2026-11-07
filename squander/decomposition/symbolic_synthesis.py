@@ -680,7 +680,7 @@ def synthesize_matrix(matrix,basis="cx_u",*,phase_exact=True,seconds=2.0):
     return dict(status="unresolved",phase_exact=phase_exact,reason="No verified OSR construction in this search budget",osr_search=search)
 
 
-def synthesize(name, parameters=(), basis="cx_u", *, phase_exact=True,osr_seconds=2.0):
+def _synthesize_existing(name, parameters=(), basis="cx_u", *, phase_exact=True,osr_seconds=2.0):
     """Return a verified result, a proved obstruction, or an explicit open case."""
     basis=get_basis(basis) if isinstance(basis,str) else basis
     definition=gates.gate_definition(name)
@@ -778,6 +778,42 @@ def synthesize(name, parameters=(), basis="cx_u", *, phase_exact=True,osr_second
         return result
     except RuleUnavailable as error:
         return dict(status="unresolved",phase_exact=phase_exact,reason=str(error))
+
+
+def synthesize(name,parameters=(),basis="cx_u",*,phase_exact=True,osr_seconds=2.0):
+    """Keep a proved native chart incumbent while optimizing its cost."""
+    selected=get_basis(basis) if isinstance(basis,str) else basis
+    incumbent=None
+    if selected.entangler in {"B","SiSWAP"}:
+        target=gates.make_gate(name,*parameters)
+        if target.shape==(4,4) and not feasibility_obstruction(target,selected,phase_exact=phase_exact):
+            if __package__:
+                from .symbolic_controlled_chart import synthesize_controlled_chart
+                from .symbolic_sqrt_iswap_phase import synthesize_controlled_phase
+                from .symbolic_native_pauli import _phase
+            else:
+                from symbolic_controlled_chart import synthesize_controlled_chart
+                from symbolic_sqrt_iswap_phase import synthesize_controlled_phase
+                from symbolic_native_pauli import _phase
+            if selected.entangler=="SiSWAP" and target==sp.diag(1,1,1,target[3,3]):
+                angle=_phase(target[3,3])
+                if angle is not None and angle.is_real is True:
+                    incumbent=synthesize_controlled_phase(angle,selected,phase_exact=phase_exact)
+            if incumbent is None:
+                incumbent=synthesize_controlled_chart(target,selected,phase_exact=phase_exact)
+    if __package__:
+        from .symbolic_archive import SymbolicDeadline
+    else:
+        from symbolic_archive import SymbolicDeadline
+    try:result=_synthesize_existing(name,parameters,selected,phase_exact=phase_exact,osr_seconds=osr_seconds)
+    except SymbolicDeadline:
+        if incumbent is None:raise
+        return dict(incumbent,additional_search="wall_clock_budget_exhausted_after_proved_incumbent")
+    if incumbent is None:return result
+    def key(value):
+        cost=value["cost"]
+        return cost["entanglers"],float(sp.sympify(cost["parameter_score"])),cost["single_qubit_gates"]
+    return incumbent if result["status"]!="verified_symbolic" or key(incumbent)<key(result) else result
 
 
 def synthesize_phase_pair(name,parameters=(),basis="cx_u"):

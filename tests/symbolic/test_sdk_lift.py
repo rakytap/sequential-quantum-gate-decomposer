@@ -62,3 +62,19 @@ def test_unsupported_angles_and_free_families_are_declined():
     theta = sp.Symbol("theta", real=True)
     assert lift_sdk_candidate(gates.make_gate("Rx", theta),
                               sycamore_baseline(), "ibm_cx")["status"] == "proposal_not_proved"
+
+
+def test_arbitrary_sdk_euler_gauge_can_suggest_a_short_exact_circuit():
+    gauge=-2.3221963071026046
+    baseline=dict(status="verified_numeric",basis="cz_u",global_phase=0,operations=[
+        dict(gate="u",parameters=[float(sp.pi/2),gauge,float(-sp.pi)],wires=[1]),
+        dict(gate="cz",parameters=[],wires=[0,1]),
+        dict(gate="u",parameters=[float(sp.pi/2),0,-gauge],wires=[1])])
+    result=lift_sdk_candidate(gates.make_gate("ACX"),baseline,"cz_u")
+    assert result["status"]=="verified_symbolic"
+    assert result["cost"]["single_qubit_gates"]==2
+    assert result["proposal_provenance"]["gauge_fixed"]
+    wrong=sp.Matrix(gates.make_gate("ACX"));wrong[0,0]+=sp.Rational(1,10**30)
+    assert lift_sdk_candidate(wrong,baseline,"cz_u")["status"]=="proposal_not_proved"
+    baseline["operations"][0]["parameters"][1]=float("inf")
+    assert lift_sdk_candidate(gates.make_gate("ACX"),baseline,"cz_u")["status"]=="proposal_not_proved"
