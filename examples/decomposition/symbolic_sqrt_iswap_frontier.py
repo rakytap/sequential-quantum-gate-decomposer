@@ -53,11 +53,21 @@ def generate(primary_path):
                         raise ArithmeticError('Certificate replay failed')
                 if result['uniform_entangler_budget_certificate']['minimum'] != 3:
                     raise ArithmeticError('Missing matching family lower bound')
-                previous = old[name, basis_name][mode]['cost']['entanglers']
+                previous_row = old[name, basis_name]
+                previous_result = previous_row[mode]
+                source_mode = mode
+                if (previous_result is None and mode == 'projective'
+                        and previous_row.get('projective_omitted_as_no_better')):
+                    previous_result = previous_row['phase_exact']
+                    source_mode = 'phase_exact'
+                if previous_result is None:
+                    raise ValueError('Missing previous scored phase result')
+                previous = previous_result['cost']['entanglers']
                 if previous != 6 or result['cost']['entanglers'] != 3:
                     raise ValueError('Unexpected primary archive or construction count')
                 row[mode] = result
-                row.setdefault('previous_scored_costs', {})[mode] = old[name, basis_name][mode]['cost']
+                row.setdefault('previous_scored_costs', {})[mode] = previous_result['cost']
+                row.setdefault('previous_scored_source_modes', {})[mode] = source_mode
                 row.setdefault('construction_and_replay_seconds', {})[mode] = time.monotonic()-start
             rows.append(row)
             print(name+'/'+basis_name+': both phase policies replayed, 6 -> 3 SQiSW', flush=True)
