@@ -286,6 +286,19 @@ family, verify the returned free-parameter identity, then separately label
 rebasing into other compatible alphabets. It is not necessary to run its
 native compiler independently for every gate/basis cell.
 
+A Python reimplementation is technically plausible. The pinned Apache-2.0
+source implements its algorithms using matrix arithmetic, eigensystems, SVD,
+null spaces and symbolic simplification, with QI helper functions. These
+operations have Python counterparts; Mathematica is not an inherent
+mathematical dependency. The current two-qubit implementation also uses
+`N`, `Chop` and tolerance-based branches for eigenvalue ordering and CNOT-count
+selection. Retaining symbolic output therefore does not by itself establish
+support for every free-parameter family. A port would need explicit tests for
+these branches, phase conventions and degenerate spectra. Until checked
+against original outputs it should be labeled a reimplementation, rather than
+an executed UniversalQCompiler benchmark. See the
+[pinned implementation](https://github.com/Q-Compiler/UniversalQCompiler/blob/c72cd84a537786756ae8490c07f3f599aa411323/UniversalQCompiler.m).
+
 There are 32 presets. Hardware sources and unit conventions are recorded in
 [`symbolic_reference_ledger.json`](../squander/decomposition/symbolic_reference_ledger.json).
 The [IonQ definitions](https://docs.ionq.com/features/getting-started-with-native-gates)

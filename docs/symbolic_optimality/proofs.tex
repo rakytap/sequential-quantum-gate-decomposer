@@ -204,6 +204,97 @@ matched SDK audit: 28 locals score 115.594, whereas its available proved
 24-local alternative scores 116.37. This establishes a tradeoff between
 those two witnesses, not the impossibility of a better unknown circuit.
 
+\section{Independent native lower bounds}
+For a two-qubit unitary $U$, write $\Gamma=U(YY)U^T(YY)$ and $\Delta=\det U$.
+The scalar-normalized local invariants used here are~\cite{makhlin}
+\[
+ g_1=\frac{(\operatorname{tr}\Gamma)^2}{16\Delta},\qquad
+ g_2=\frac{(\operatorname{tr}\Gamma)^2-\operatorname{tr}(\Gamma^2)}{4\Delta}.
+\]
+They require no choice of a fourth root of $\det U$. An exact nonzero
+realignment minor excludes a local product. Unequal invariants or unequal
+fixed operator-Schmidt ranks exclude one fixed native pulse. For a variable
+Ising interaction, every pulse has crossing Schmidt rank at most two;
+a target of rank four therefore needs at least two pulses.
+
+In the magic basis, arbitrary determinant-one local frames are real matrices
+$O\in SO(4)$. Partition $O$ into four $2\times2$ blocks. Their squared
+Frobenius norms are $X,Y,Y,X$, by subtracting the block row and column norm
+equations. For two Ising pulses, with possibly different interaction angles,
+\[
+ \operatorname{tr}(D_1^2 O^T D_2^2 O)
+ =2\cos(a+b)X+2\cos(a-b)Y\in\mathbb R.
+\]
+For the iSWAP edge the second sign becomes negative and the trace is again
+real. Thus two such pulses require $g_1\geq0$ and real. Two square-root-SWAP
+pulses instead have purely imaginary normalized spin trace, requiring
+$g_1\leq0$ and real. The native zero- and one-pulse classes are excluded
+separately before a three-pulse lower bound is asserted. This distinction is
+necessary: a single SYC or square-root-SWAP need not be cancellable by a
+second identical native pulse.
+
+A single fSim has a monic cubic annihilator for its spin matrix,
+\[
+ (\Gamma-e^{-i\phi}I)(\Gamma^2-2\cos(2\theta)\Gamma+I)=0.
+\]
+The identity is checked for free real parameters, including degeneracies.
+A target with four linearly independent vectorized powers
+$I,\Gamma,\Gamma^2,\Gamma^3$ cannot be locally equivalent to one fSim.
+One exact nonzero $4\times4$ Krylov minor certifies that independence.
+
+For square-root-SWAP there is a stronger two-pulse relation. Its normalized
+spin spectrum is a scalar multiple of a real reflection. A product of two
+such reflections gives $g_1=-\rho^2$, $g_2=1-4\rho$, $0\leq\rho\leq1$.
+Consequently
+\[
+ 16g_1+(g_2-1)^2=0
+\]
+is necessary for two pulses. The implementation proves the reflection traces
+by polynomial reduction modulo the unit-vector norm equation.
+
+\section{An algebraic SQiSW two-pulse exclusion}
+Let $V$ be a two-SQiSW circuit in the magic basis, with arbitrary real
+quaternion middle factors
+$aI+i(bX+cY+dZ)$ and $eI+i(fX+hY+kZ)$, each of unit norm.
+Put $A=\det\operatorname{Re}V$, $C=\det\operatorname{Im}V$. Direct exact
+polynomial identities give
+\[
+ C=\tfrac14\big[(a^2+d^2)(f^2+h^2)-(b^2+c^2)(e^2+k^2)\big]^2\geq0,
+\]
+\[
+ \tfrac14\operatorname{Re}\operatorname{tr}(V^TV)
+ =(ak-de)^2+(bh-cf)^2\geq0.
+\]
+For an SU(4) unitary, the latter trace is $A-C$ and
+$A+C=(g_2+1)/4$; these relations are proved on a free Cartan diagonal and
+transported through the real determinant-one KAK frames. Hence $A,C\geq0$.
+Writing $g_1=(u+iv)^2$ gives
+$u^2=(|g_1|+\operatorname{Re}g_1)/2$. Therefore two SQiSW pulses necessarily obey
+\[
+ W=g_2+1\geq0,\qquad W^2\geq8(|g_1|+\operatorname{Re}g_1).
+\]
+These are scalar-invariant tests; multiplication by $i$ merely interchanges
+$A$ and $C$. The local and one-SQiSW classes also obey both inequalities.
+An exact negative $W$ or negative squared gap therefore proves a three-pulse
+lower bound directly, without numerical Weyl canonicalization. This section
+does not supply a missing three-pulse construction; the uniform upper bound
+comes from the published SQiSW compilation scheme~\cite{sqisw}.
+
+For a parameterized target, one exact hard specialization proves a necessary
+\emph{uniform family budget}. A matching circuit for the entire family proves
+that budget optimal. Other parameter values can have smaller minima.
+The archive stores this scope separately from fixed-target minima and leaves
+the original construction operations, scores, and source indices unchanged.
+No minimum local score follows from these native-count certificates.
+
+The independent native audit matches 3,274 archived phase modes: 681 literal
+and 928 projective fixed-target minima, and 710 literal and 955 projective
+minimum uniform family budgets. Of these, 1,224 previously had neither a
+minimum-count flag nor a conditional minimum-count certificate. The separate
+exchange audit supplies 18 matched fixed-target certificates and 132 further
+lower bounds without matching constructions; these counts can overlap the
+native audit. The reports retain unsuccessful proof attempts separately.
+
 \section{Reproduction}
 Run \nolinkurl{pytest tests/symbolic/test_b_cartan.py}
 and \nolinkurl{pytest tests/symbolic/test_clifford_t_global.py}.
@@ -212,6 +303,14 @@ The counterexample is regenerated by
 Raw source-pinned archive refinements retain their exact implementation hashes
 and separate phase policies. A verified circuit is an upper bound until its
 matching lower bound and assumptions are recorded.
+The independent audit is generated, replayed, and attached with
+\nolinkurl{examples/decomposition/symbolic_entangler_audit.py}.
+Its source-pinned report records successful certificates, declined cases,
+and proof timeouts separately. These timeouts concern new lower-bound
+searches; they do not undo the existing exact construction proofs.
+\nolinkurl{examples/decomposition/symbolic_exchange_audit.py} adds the
+separately replayed exchange witnesses. The original 790 construction and
+Clifford certificate replays remain in \nolinkurl{verification.json}.
 
 \begin{thebibliography}{9}
 \bibitem{b} J. Zhang, J. Vala, S. Sastry, K. B. Whaley,
@@ -222,5 +321,8 @@ Phys. Rev. Lett. 93, 020502 (2004),
 states and optimization of quantum computations,
 Quantum Information Processing 1, 243--252 (2002),
 \url{https://arxiv.org/abs/quant-ph/0002045}.
+\bibitem{sqisw} C. Huang et al., Quantum Instruction Set Design for Performance,
+Phys. Rev. Lett. 130, 070601 (2023),
+\url{https://arxiv.org/abs/2105.06074}.
 \end{thebibliography}
 \end{document}

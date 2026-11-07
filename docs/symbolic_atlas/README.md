@@ -18,6 +18,20 @@ certificates from primitive/support floors, independently of the all-phase
 Clifford proofs. These counts can overlap other certificates and do not
 establish global optimality of the full grid.
 
+An independent native-count audit now supplies 3,290 matching certificates
+after combining cut/spin and exchange proofs: 689 literal and 936 projective
+fixed-target minima, plus 710 literal and 955 projective minimum uniform
+family budgets. There are 1,224 phase modes that previously had no minimum
+certificate. A uniform family budget is necessary to handle a certified hard
+member; special parameter values can use fewer pulses. These certificates
+do not establish minimum local scores. The original circuits, scores and
+source-run indices are unchanged. See the
+[coverage list](../symbolic_optimality/entangler_coverage.csv),
+[validation summary](../symbolic_optimality/native_bounds_summary.json), and
+[unmatched lower-bound attempts](../symbolic_optimality/unmatched_native_bounds.csv).
+The last list records additional proof searches, independently of the complete
+construction classification below.
+
 The comparison LaTeX is self-contained, with inline circuit drawings: copy
 `notable_results.tex` alone into Prism. Compile it locally with
 `tectonic notable_results.tex`.
@@ -114,7 +128,7 @@ matches can propose candidates and never certify them.
 
 The authoritative merged data are
 [`synthesis_reference_20261106.json.gz`](../../benchmarks/symbolic/synthesis_reference_20261106.json.gz).
-Twenty-nine source snapshots and all earlier attempts are preserved. Each retained
+Thirty-five source snapshots and all earlier attempts are preserved. Each retained
 phase result identifies its actual source run, even when a later attempt
 failed. The raw full run and motif/phase supplements are described in the
 [archive README](../../benchmarks/symbolic/README.md).
@@ -126,7 +140,7 @@ failed. The raw full run and motif/phase supplements are described in the
   PDF hashes, page counts and repaired index links.
 - [`open_cases.csv`](open_cases.csv) is now header-only: no phase mode remains
   unclassified. [`known_optimization_gaps.csv`](known_optimization_gaps.csv)
-  lists the 30 phase modes above the audited published uniform bounds. These
+  lists the 20 phase modes above the audited published uniform bounds. These
   are optimization gaps among verified circuits, rather than missing proofs
   of their matrix identities.
 - [`sources.zip`](sources.zip) contains both LaTeX volumes and every referenced

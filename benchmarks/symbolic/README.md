@@ -151,6 +151,46 @@ python examples/decomposition/symbolic_notable_results.py \
   --output-dir /tmp/notable-results
 ```
 
+The current release additionally carries independent native-count proof
+overlays. `synthesis_reference_20261107_native_bound_base.json.gz` preserves
+the exact 35-run input before these annotations. The overlays change no
+construction, score, original flag or source-run index.
+
+`native_entangler_proofs_20261107.json.gz` contains 3,274 matching certificates,
+all replayed from their serialized forms. Its additional 270 declined and
+237 timed-out attempts concern lower-bound searches. The separate exchange
+report contains 18 matching fixed-target certificates and 132 lower bounds
+without matching constructions; there is overlap between the reports. Their
+union contains 3,290 matches, including 1,224 phase modes previously without
+a minimum certificate. Family witnesses prove minimum uniform budgets, not
+pointwise minima or minimum local scores.
+
+To replay and apply the native overlay, then recompute the exchange overlay:
+
+```bash
+python examples/decomposition/symbolic_entangler_audit.py replay \
+  --archive benchmarks/symbolic/synthesis_reference_20261107_native_bound_base.json.gz \
+  --report benchmarks/symbolic/native_entangler_proofs_20261107.json.gz \
+  --workers 8 --seconds-per-proof 60
+python examples/decomposition/symbolic_entangler_audit.py attach \
+  --archive benchmarks/symbolic/synthesis_reference_20261107_native_bound_base.json.gz \
+  --report benchmarks/symbolic/native_entangler_proofs_20261107.json.gz \
+  --output /tmp/native-bound-overlay.json.gz
+python examples/decomposition/symbolic_exchange_audit.py \
+  --archive benchmarks/symbolic/synthesis_reference_20261107_native_bound_base.json.gz \
+  --report /tmp/exchange-proof-report.json.gz \
+  --output /tmp/exchange-bound-overlay.json.gz
+python examples/decomposition/merge_symbolic_proof_overlays.py \
+  --base benchmarks/symbolic/synthesis_reference_20261107_native_bound_base.json.gz \
+  --overlay /tmp/native-bound-overlay.json.gz \
+  --overlay /tmp/exchange-bound-overlay.json.gz \
+  --output benchmarks/symbolic/synthesis_reference_20261106.json.gz
+```
+
+The merger verifies source/report hashes and rejects changes to any original
+construction payload or provenance. The proof ledger, coverage CSV and
+unchanged-payload checks are in `docs/symbolic_optimality`.
+
 ## Initial numerical reference and construction snapshots
 
 `reference_comparison_20261106.json.gz` records one explicit parameter binding

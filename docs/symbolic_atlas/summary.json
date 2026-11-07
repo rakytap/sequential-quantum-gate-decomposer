@@ -1,7 +1,7 @@
 {
   "archive": "benchmarks/symbolic/synthesis_reference_20261106.json.gz",
-  "archive_sha256": "0bb0da1e6a7fe9d555178ac093275c11b0bbcd580b91d99aef08e4ad5e7a0cec",
-  "schema": "symbolic-atlas-release-v3",
+  "archive_sha256": "e4d7c8086e4361b97120819ab7bf42bb5e8fd4c95f5b4c87386063a2dfa1a8e5",
+  "schema": "symbolic-atlas-release-v4",
   "synthesis_runs": 35,
   "rows_including_history": 25571,
   "target_count": 327,
@@ -101,7 +101,7 @@
       ]
     },
     "new_certificate_replays": {
-      "archive": "benchmarks/symbolic/synthesis_reference_20261106.json.gz",
+      "archive": "benchmarks/symbolic/synthesis_reference_20261107_native_bound_base.json.gz",
       "archive_sha256": "0bb0da1e6a7fe9d555178ac093275c11b0bbcd580b91d99aef08e4ad5e7a0cec",
       "covered_phase_modes": 790,
       "methods": {
@@ -251,9 +251,13 @@
       }
     },
     "new_certificate_replay_report": "docs/symbolic_optimality/verification.json",
-    "new_certificate_replay_report_sha256": "550e4205bd6038dd7a47c94e751a727eb5e3305320dae6543d4c073e7711c54d",
-    "layout_tests_passed": 13,
-    "layout_test_command": "python -m pytest tests/symbolic/test_atlas_pdf_build.py tests/symbolic/test_circuit_atlas.py -q"
+    "new_certificate_replay_report_sha256": "d4c0e74a2d223d6c2554f05ca51724d62abb86866f2622c458057f045445091a",
+    "layout_tests_passed": 14,
+    "layout_test_command": "python -m pytest tests/symbolic/test_atlas_pdf_build.py tests/symbolic/test_circuit_atlas.py -q",
+    "independent_bound_focused_tests_passed": 53,
+    "independent_bound_validation_report": "docs/symbolic_optimality/native_bounds_summary.json",
+    "independent_bound_validation_report_sha256": "ebcfb5a8da322d87e74816ad2e5e044b0191bcaf41503098e2393f11a4ff4173",
+    "construction_replay_transfer": "All original construction payloads, scores and source indices are unchanged; original replays apply to the preserved input archive"
   },
   "limits": [
     "All archived phase modes have a verified construction or scoped obstruction; register fixtures do not cover every width.",
@@ -494,5 +498,81 @@
     "phase_exact_global_lexicographic_minimum": 372,
     "projective_secondary_minimum_at_fixed_E": 1175,
     "projective_global_lexicographic_minimum": 1144
+  },
+  "independent_entangler_proofs": {
+    "archive": "benchmarks/symbolic/synthesis_reference_20261106.json.gz",
+    "archive_sha256": "e4d7c8086e4361b97120819ab7bf42bb5e8fd4c95f5b4c87386063a2dfa1a8e5",
+    "unchanged_construction_archive": "benchmarks/symbolic/synthesis_reference_20261107_native_bound_base.json.gz",
+    "unchanged_construction_archive_sha256": "0bb0da1e6a7fe9d555178ac093275c11b0bbcd580b91d99aef08e4ad5e7a0cec",
+    "construction_payloads_unchanged": true,
+    "source_run_indices_unchanged": true,
+    "scores_unchanged": true,
+    "construction_modes_compared": 20928,
+    "source_snapshots": 35,
+    "native_audit_summary": {
+      "certified": 3274,
+      "no_matching_lower_bound": 270,
+      "proof_timeout": 237
+    },
+    "native_replay_summary": {
+      "replayed": 3274
+    },
+    "native_matching_certificates": 3274,
+    "exchange_summary": {
+      "phase_exact_lower_bound_only": 66,
+      "projective_lower_bound_only": 66,
+      "phase_exact_fixed_target_minimum": 9,
+      "projective_fixed_target_minimum": 9
+    },
+    "exchange_proof_timeouts": [
+      {
+        "gate": "CZS",
+        "native": "SSWAP"
+      },
+      {
+        "gate": "TK2",
+        "native": "SSWAP"
+      }
+    ],
+    "union_matching_minimum_certificates": {
+      "phase_exact_fixed_target_minimum": 689,
+      "projective_fixed_target_minimum": 936,
+      "phase_exact_minimum_uniform_family_budget": 710,
+      "projective_minimum_uniform_family_budget": 955
+    },
+    "previously_without_minimum_certificate": {
+      "phase_exact": 470,
+      "projective": 754
+    },
+    "distinct_source_blobs_checked": 129,
+    "all_proof_source_checks_passed": true,
+    "proof_reports": [
+      {
+        "path": "benchmarks/symbolic/native_entangler_proofs_20261107.json.gz",
+        "sha256": "e9739d309a0b98465fa464f1b369d3b05b997bb3c7afec408657c2a86db8627c"
+      },
+      {
+        "path": "benchmarks/symbolic/exchange_entangler_proofs_20261107.json.gz",
+        "sha256": "8152898103d4527e50b1639d5f66d56adaf888e3ef2079c9839b4edb4c50cc1d"
+      }
+    ],
+    "prior_construction_replay_report": {
+      "path": "docs/symbolic_optimality/verification.json",
+      "sha256": "d4c0e74a2d223d6c2554f05ca51724d62abb86866f2622c458057f045445091a",
+      "phase_modes": 790,
+      "scope": "Unchanged construction payloads from the preserved input archive"
+    },
+    "focused_tests": {
+      "passed": 53,
+      "log": "/tmp/symbolic-native-bounds-final-tests.log",
+      "revision": "ba1505ce4e0fb8ddf7100fcc43a7a0058fb41e01",
+      "command": "python3 -m pytest tests/symbolic/test_entangler_proof.py tests/symbolic/test_exchange_invariants.py tests/symbolic/test_entangler_audit.py tests/symbolic/test_proof_overlays.py tests/symbolic/test_atlas_pdf_build.py tests/symbolic/test_circuit_atlas.py tests/symbolic/test_archive_analysis.py -q"
+    },
+    "limits": [
+      "Entangler certificates do not prove minimum parameter-sensitive local scores.",
+      "A minimum uniform family budget is not a pointwise minimum at every specialization.",
+      "Ten SQiSW cap gaps per phase remain; no new construction is claimed by this proof-only release.",
+      "Declined and timed-out lower-bound attempts do not invalidate the pre-existing construction certificates."
+    ]
   }
 }

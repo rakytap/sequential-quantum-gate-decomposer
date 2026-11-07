@@ -2,7 +2,7 @@
   "schema": "symbolic-notable-results-v1",
   "archive": {
     "path": "benchmarks/symbolic/synthesis_reference_20261106.json.gz",
-    "sha256": "0bb0da1e6a7fe9d555178ac093275c11b0bbcd580b91d99aef08e4ad5e7a0cec"
+    "sha256": "e4d7c8086e4361b97120819ab7bf42bb5e8fd4c95f5b4c87386063a2dfa1a8e5"
   },
   "sdk_baselines": {
     "path": "benchmarks/symbolic/reference_locals_20261106.json.gz",
