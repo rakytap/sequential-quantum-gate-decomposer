@@ -1,0 +1,64 @@
+{
+  "schema": "symbolic-manuscript-build-v1",
+  "archive": "benchmarks/symbolic/synthesis_reference_20261107_manuscript.json.gz",
+  "archive_sha256": "47d7e2ef23978fcf1544be38878e3df41f0c0784e5465a3cc6f847f258cc99bb",
+  "experiments": "benchmarks/symbolic/manuscript_experiments_20261107.json.gz",
+  "experiments_sha256": "8b0ea014b9c8e41ede9dee078ffc2d9feaed88608cc06de5273fb0f011ecd548",
+  "experiment_source_revision": "b3ba5e26cb75c7d5eb068ead69554dab6f89ca36",
+  "generated_numbers": {
+    "OldSDKWins": 11,
+    "OldSDKTies": 2662,
+    "LocalWins": 553,
+    "LocalTies": 2108,
+    "LocalLosses": 1
+  },
+  "selected_certificate_coverage": {
+    "phase_exact_fixed": 712,
+    "projective_fixed": 959,
+    "phase_exact_uniform": 720,
+    "projective_uniform": 965
+  },
+  "ablations": {
+    "full": {
+      "verified_symbolic": 11,
+      "budget_exhausted": 1
+    },
+    "without_native_charts": {
+      "unresolved": 9,
+      "verified_symbolic": 3
+    },
+    "source_lowering": {
+      "verified_symbolic": 12
+    }
+  },
+  "environment": {
+    "python": "3.9.25",
+    "platform": "Linux-5.14.0-687.36.1.el9_8.x86_64-x86_64-with-glibc2.34",
+    "numpy": "1.26.4",
+    "scipy": "1.13.1",
+    "sympy": "1.14.0",
+    "qiskit": "2.2.3",
+    "cirq-core": "1.3.0"
+  },
+  "source_generator_sha256": "08aa6a9bc10f05f776a73cc38ced761f35e09757a0c8129b94c8d2172fb1bbf8",
+  "limitations": [
+    "20 retained grid secondary scores unresolved",
+    "One full opaque-matrix ablation exhausts its 20-second budget",
+    "No comparison run with UniversalQCompiler, Quartz, or QUESO",
+    "No unrestricted all-grid local-score optimality or literature priority claim"
+  ],
+  "generated_files": {
+    "generated/ablation.csv": "dd604f41bb48d440afeeb8c94f25ab9ed3489332d32ba0e5de11725087bc3117",
+    "generated/ablation.pdf": "e21f8c8a187c21693d5f1191f09fdbf78b5d5dbed8ac92da3f54b56117d0cbc0",
+    "generated/ablation.tex": "deac2f8ffeb723eff6896db2a46bb77509c90f80224e6a846f273ceb64ccd169",
+    "generated/ablation_detail.tex": "6f44212d4aeddc388cd1c5b8f3f4b6d89d2494c16dd33dcaca64e5a7cf83ef6f",
+    "generated/application.pdf": "7779e0b181d431b19588ea2e19e2a1e9429bd7339d6b86b2fbddb5cce3e20d5d",
+    "generated/application.tex": "15e382dbf00f93740a4d79f65698f3859984d12fe49d8d01bbc22dc59ca4e8ed",
+    "generated/coverage.tex": "5fec16798b4bc70b9bf5c11bb42479af777417ca213121ca7ef416d6f9d94889",
+    "generated/environment.tex": "342053985d3221bc76c4c4ed0c364fd2709bc1340d7578deedc402b8947b944f",
+    "generated/ffredkin_circuit.tex": "f5723276a0f40b46f546f8490e02c189999a43019d257531f7af50ad24cef61c",
+    "generated/numbers.tex": "a2fc8c3e8f2992e0971c6ca09155ccff2e0b68430d31f31bdf77b46b4065cfe0",
+    "generated/presets.tex": "d179fdfdd0c332c00c49e84807a2ebb9e709d4adadf6fa8600b17f05e27d6a73",
+    "generated/sdk.tex": "decbf4c11355822b0d4e14ed8205025c583d3bf2f1dab5e7ee3fe76c57b7c465"
+  }
+}

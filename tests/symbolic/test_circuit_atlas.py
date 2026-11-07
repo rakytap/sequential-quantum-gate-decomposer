@@ -126,3 +126,18 @@ def test_shared_angles_have_scoped_definitions_and_no_invented_score(tmp_path):
     assert (tmp_path/'programs/program-1.json').exists()
     assert 'score unresolved' in atlas.cost_line(result)
     assert str(angle) not in (tmp_path/next(iter(store.paths.values()))[0]).read_text()
+
+
+def test_long_native_program_outputs_keep_exact_scoped_glossary_definitions(tmp_path):
+    from symbolic_expression_program import ExpressionProgram
+    x=sp.Symbol('x',real=True)
+    program=ExpressionProgram((x,))
+    angle=program.bind(sp.atan2(sp.sin(x),sp.cos(x)))
+    value=str(sp.sin(angle)+sp.cos(angle)+sp.atan2(angle+1,angle-1)+sp.sqrt(angle**2+2))
+    store=atlas.CircuitStore(tmp_path)
+    compact=store.program_expression(value,program.encode())
+    assert compact==r'\upsilon_{1,0}'
+    assert store.program_outputs[1][value]==compact
+    full=store.program_expression(value,program.encode(),compact=False)
+    assert r'\xi_{1,0}' in full and compact not in full
+    assert len(full)>100

@@ -6,8 +6,8 @@
 \title{Symbolic decomposition: notable results and comparison evidence}
 \author{SQUANDER symbolic decomposition project}
 \date{7 November 2026}
-\newcommand{\UniformExactGaps}{10}
-\newcommand{\UniformProjectiveGaps}{10}
+\newcommand{\UniformExactGaps}{0}
+\newcommand{\UniformProjectiveGaps}{0}
 \begin{document}\maketitle
 \noindent Evidence ledger for a future appendix, not a completed optimality or novelty claim.
 All counts preserve the recorded native basis, use no ancillas, and fix input/output wires.
@@ -76,18 +76,18 @@ the latter's lower bounds is made. Existence of this operation in the literature
 does not settle optimal decomposition cost~\cite{fermionic}.
 \begin{center}\begin{tabular}{llll}\toprule
 Target & Basis & E ours/SDK & L ours/SDK \\\midrule
-fFredkin & cx\_rz\_ry & 5/7 & 44/39 \\
-fFredkin & cx\_u & 5/7 & 22/17 \\
-fFredkin & cz\_rz\_rx & 5/7 & 42/19 \\
-fFredkin & cz\_u & 5/7 & 28/16 \\
-fFredkin & ibm\_cx & 5/7 & 37/33 \\
-fFredkin & ibm\_cz & 5/7 & 54/29 \\
-fFredkin & ibm\_ecr & 5/7 & 53/35 \\
+fFredkin & cx\_rz\_ry & 4/7 & 11/51 \\
+fFredkin & cx\_u & 4/7 & 10/17 \\
+fFredkin & cz\_rz\_rx & 4/7 & 40/19 \\
+fFredkin & cz\_u & 4/7 & 18/16 \\
+fFredkin & ibm\_cx & 4/7 & 26/33 \\
+fFredkin & ibm\_cz & 4/7 & 48/29 \\
+fFredkin & ibm\_ecr & 4/7 & 41/35 \\
 fFredkin & iswap\_u & 6/8 & 26/16 \\
-fFredkin & xx\_rz\_ry & 5/7 & 77/35 \\
-fFredkin & zx\_u & 5/7 & 32/16 \\
-fFredkin & zz\_u & 5/7 & 37/15 \\\bottomrule\end{tabular}\end{center}\section{Local-gate audit beyond Sycamore}
-Across 2673 eligible fixed-target/basis comparisons, there are 184 lower local counts, 2477 ties and 1 higher local counts at equal E. Aliases and related basis presets are counted separately. Native one-qubit SDK
+fFredkin & xx\_rz\_ry & 4/7 & 39/51 \\
+fFredkin & zx\_u & 4/7 & 18/16 \\
+fFredkin & zz\_u & 4/7 & 22/15 \\\bottomrule\end{tabular}\end{center}\section{Local-gate audit beyond Sycamore}
+Across 2673 eligible fixed-target/basis comparisons, there are 553 lower local counts, 2108 ties and 1 higher local counts at equal E. Aliases and related basis presets are counted separately. Native one-qubit SDK
 cleanup removes identity rotations introduced by the manual U-to-ZYZ adapter
 before counting; savings from that adapter artifact are not credited.
 These are SDK comparisons,
@@ -101,31 +101,31 @@ Where an exact shorter alternative is present in the archive's history, the CSV
 records its score and whether the retained circuit has a strictly lower score.
 \begin{center}\begin{longtable}{llll}\toprule
 Target & Basis & E ours/SDK & L ours/SDK \\\midrule\endhead
+C4X & cx\_rz\_ry & 36/36 & 54/123 \\
+C3SX & cx\_rz\_ry & 20/20 & 24/66 \\
+C3X & cx\_rz\_ry & 14/14 & 19/57 \\
 C4X & iswap\_u & 54/54 & 78/113 \\
+C4X & xx\_rz\_ry & 27/27 & 147/174 \\
 C3SX & iswap\_u & 26/26 & 40/56 \\
+CSWAP & cx\_rz\_ry & 7/7 & 14/30 \\
+CT & cx\_rz\_ry & 2/2 & 3/18 \\
+CTdg & cx\_rz\_ry & 2/2 & 3/18 \\
+C3SX & xx\_rz\_ry & 13/13 & 67/81 \\
 C3X & iswap\_u & 26/26 & 42/56 \\
+CCX & cx\_rz\_ry & 6/6 & 10/24 \\
+CCZ & cx\_rz\_ry & 6/6 & 7/21 \\
+Peres & cx\_rz\_ry & 5/5 & 10/24 \\
+Toffoli & cx\_rz\_ry & 6/6 & 10/24 \\
 C4X & ibm\_cz & 36/36 & 130/143 \\
+CCY & cx\_rz\_ry & 6/6 & 11/24 \\
+RC3X & xx\_rz\_ry & 6/6 & 35/48 \\
+CSXdg & cx\_rz\_ry & 2/2 & 6/18 \\
 XX90 & xx\_rz\_ry & 1/1 & 0/12 \\
 Peres & ibm\_ecr & 5/5 & 31/42 \\
 ACX & ibm\_cx & 1/1 & 2/12 \\
-CT & cx\_rz\_ry & 2/2 & 3/13 \\
-CTdg & cx\_rz\_ry & 2/2 & 3/13 \\
-XX90 & ibm\_ecr & 1/1 & 6/16 \\
-C3X & cx\_rz\_ry & 14/14 & 19/28 \\
-RC3X & iswap\_u & 12/12 & 19/28 \\
-CNOT & ibm\_ecr & 1/1 & 4/12 \\
-CSXdg & cx\_rz\_ry & 2/2 & 6/14 \\
-DB & cx\_rz\_ry & 2/2 & 8/16 \\
-SiSWAP & cx\_rz\_ry & 2/2 & 8/16 \\
-XX90 & ibm\_cx & 1/1 & 7/15 \\
-CCX & iswap\_u & 10/10 & 16/23 \\
-CCY & iswap\_u & 10/10 & 16/23 \\
-CCZ & iswap\_u & 10/10 & 16/23 \\
-CSWAP & iswap\_u & 12/12 & 20/27 \\
-Peres & iswap\_u & 10/10 & 16/23 \\
-Toffoli & ibm\_ecr & 6/6 & 30/37 \\
-Toffoli & iswap\_u & 10/10 & 16/23 \\
-ACX & cx\_rz\_ry & 1/1 & 4/10 \\\bottomrule\end{longtable}\end{center}
+B & cx\_rz\_ry & 2/2 & 8/18 \\
+C3X & xx\_rz\_ry & 13/13 & 80/90 \\
+CSWAP & xx\_rz\_ry & 6/6 & 35/45 \\\bottomrule\end{longtable}\end{center}
 \section{Other useful reference results}
 The separate Clifford atlas contains all 192 phase-resolved one-qubit Clifford
 targets for each supported local alphabet. H/S has a global shortest-path
@@ -161,7 +161,7 @@ CZS & sqrt\_iswap\_u & 2/6 & 2/6 \\
 CZS & google\_sqrt\_iswap & 2/6 & 2/6 \\
 CZS & berkeley\_b & 2/6 & 2/6 \\
 IonQMS & sqrt\_iswap\_u & 2/16 & 2/15 \\\bottomrule\end{tabular}\end{center}
-The SDK regression count is not the full local optimization work list. The separate native local-layer CSV records 685 phase modes above a local-block count cap, including parameterized families and bases without SDK support. That cap alone does not certify a smaller parameter-sensitive score.
+The SDK regression count is not the full local optimization work list. The separate native local-layer CSV records 665 phase modes above a local-block count cap, including parameterized families and bases without SDK support. That cap alone does not certify a smaller parameter-sensitive score.
 \section{Outstanding optimization and comparison work}
 Classification covers all $327\times32$ cells in both phase modes. This means a
 verified construction or a scoped obstruction, not global optimality.

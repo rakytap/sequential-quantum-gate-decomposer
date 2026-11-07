@@ -1,0 +1,19 @@
+{
+  "full_suite": {
+    "status": "passed",
+    "passed": 1152,
+    "warnings": 1,
+    "seconds": 1056.69,
+    "source_revision": "b3ba5e26",
+    "command": "OPENBLAS_NUM_THREADS=1 python3 -m pytest tests/symbolic -q",
+    "scope": "Before the final atlas renderer output-alias correction; followed by the focused suite on that correction"
+  },
+  "focused_suite": {
+    "status": "passed",
+    "passed": 34,
+    "seconds": 23.69,
+    "command": "python3 -m pytest tests/symbolic/test_circuit_atlas.py tests/symbolic/test_atlas_pdf_build.py tests/symbolic/test_partial_costs.py tests/symbolic/test_controlled_rank_bound.py tests/symbolic/test_manuscript_experiments.py -q",
+    "scope": "Final atlas renderer, partial costs, four-Ising proof components and independent experiment inputs"
+  },
+  "warning": "Qiskit 2.2.3 deprecates Python 3.9; no failing tests"
+}

@@ -1,6 +1,29 @@
 # Symbolic gate reference comparisons
 
-## Current motif/OSR reference edition
+## Current referee manuscript edition
+
+The authoritative new merged archive is
+[`synthesis_reference_20261107_manuscript.json.gz`](synthesis_reference_20261107_manuscript.json.gz).
+It integrates twenty three-SQiSW family results and four-CNOT fFredkin
+constructions, retaining earlier attempts and source hashes. Classification
+counts are unchanged. Twenty secondary scores remain unresolved; unknown
+angles are never scored through temporary aliases. The audited uniform-cap
+gap count is zero. This does not prove global local optimality.
+
+The [referee package](../../docs/symbolic_manuscript/README.md) contains the
+manuscript, generated tables/figures, independent SDK comparisons, bounded
+ablations, application demonstration and new lower-bound proof.
+`manuscript_experiments_20261107.json.gz` records all outcomes, including one
+full-method budget exhaustion at 20 seconds. The release verifier distinguishes
+unchanged payloads from new exact replays and resolves old content hashes
+where an exploratory run preceded its source commit.
+
+New raw grid supplements: `synthesis_integrated_sqrt_iswap_20261107.json.gz`
+and `synthesis_ffredkin_four_20261107.json.gz`.
+`synthesis_reference_20261107_manuscript_base.json.gz` preserves the exact
+pre-manuscript input. Earlier archives remain immutable.
+
+## Previous motif/OSR edition (historical counts below)
 
 [`synthesis_reference_20261106.json.gz`](synthesis_reference_20261106.json.gz)
 merges all 327 × 32 cells and both phase policies across 35 source snapshots.

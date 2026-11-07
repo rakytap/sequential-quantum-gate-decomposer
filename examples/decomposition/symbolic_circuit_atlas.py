@@ -140,6 +140,7 @@ class CircuitStore:
         self.paths = {}
         self.aliases = {}
         self.programs = {}
+        self.program_outputs = defaultdict(dict)
 
     def register_program(self, program):
         digest=hashlib.sha256(json.dumps(program,sort_keys=True).encode()).hexdigest()
@@ -151,7 +152,7 @@ class CircuitStore:
             (directory/f'program-{index}.json').write_text(json.dumps(program,indent=2)+'\n')
         return self.programs[digest][0]
 
-    def program_expression(self, value, program):
+    def program_expression(self, value, program, compact=True):
         index=self.register_program(program)
         environment=dict(parameter_symbols())
         names={}
@@ -159,7 +160,17 @@ class CircuitStore:
             symbol=sp.Symbol(row['symbol'],**({'real':True} if row['real'] else {}))
             environment[row['symbol']]=symbol
             names[symbol]=r'\xi_{'+str(index)+','+str(j)+'}'
-        return sp.latex(sp.sympify(value,locals=environment),symbol_names=names)
+        expression=sp.sympify(value,locals=environment)
+        formula=sp.latex(expression,symbol_names=names)
+        if compact and len(formula)>100:
+            # Native PhasedXZ lowering can repeat rational angle expressions.
+            # Keep the exact output in a separate scoped glossary instead of
+            # overflowing XeTeX's maximum box dimension inside Qcircuit.
+            outputs=self.program_outputs[index]
+            if value not in outputs:
+                outputs[value]=r'\upsilon_{'+str(index)+','+str(len(outputs))+'}'
+            return outputs[value]
+        return formula
 
     def expression(self,value):
         formula=parameter_latex(value)
@@ -397,9 +408,18 @@ def gate_volume(report, output, store, names, archive_digest):
             source.append(r'\small Evaluate definitions in order. Piecewise expressions select the first satisfied case; unused singular branches are not evaluated. The source bundle also includes the machine-readable program.\par')
             source.append(r'\fitcontent{\dimexpr\textheight-53mm\relax}{\begin{multicols}{2}')
             for j,row in enumerate(bindings[start:start+36],start):
-                formula=store.program_expression(row['expression'],program)
+                formula=store.program_expression(row['expression'],program,compact=False)
                 source.append(r'\par\vspace{2mm}\circuit{$\xi_{'+str(index)+','+str(j)+'}='+formula+r'$}\par')
             source.append(r'\end{multicols}}\newpage')
+        outputs=list(store.program_outputs[index].items())
+        for start in range(0,len(outputs),18):
+            source.append(r'\pagehead{Derived parameters for program '+str(index)+
+                          r'}{Exact output expressions used by the native gate labels.}{Output definitions}')
+            source.append(r'\fitcontent{\dimexpr\textheight-36mm\relax}{')
+            for value,symbol in outputs[start:start+18]:
+                source.append(r'\par\vspace{3mm}\circuit{$'+symbol+'='+
+                              store.program_expression(value,program,compact=False)+r'$}\par')
+            source.append(r'}\newpage')
     source.append(r"\end{document}")
     (output / "gates.tex").write_text("\n".join(source))
     return manifest
@@ -528,7 +548,8 @@ def main():
                     basis_count=32, circuits_per_gate_page=32, circuits_per_clifford_page=24,
                     expression_aliases={symbol:value for value,symbol in store.aliases.items()},
                     expression_programs=[dict(index=index,bindings=len(program['bindings']),
-                                              path=f'programs/program-{index}.json')
+                                              path=f'programs/program-{index}.json',
+                                              derived_output_definitions=store.program_outputs[index])
                                          for index,program in store.programs.values()],
                     note="Exact symbolic proof statuses and certificate scopes are preserved; this atlas does not assert every target is solved.")
     with gzip.open(args.output_dir / "manifest.json.gz", "wt") as stream:

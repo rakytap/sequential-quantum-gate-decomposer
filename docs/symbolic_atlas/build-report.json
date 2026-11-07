@@ -1,33 +1,12 @@
 {
   "gates": {
-    "pages": 383,
-    "repaired_index_links": 327,
-    "pdf_sha256": "20c3760414f1cdf806ea88a0b8ac10664864ba25669914ecef53e93ce91cc6e3",
-    "bytes": 24817381
+    "pages": 556,
+    "repaired_index_links": 347,
+    "pdf_sha256": "514ddf6dcc3064d2b36f120aaf5a8eda40566d6b646b97a97cf2ba5f882d7d14"
   },
   "cliffords": {
     "pages": 98,
     "repaired_index_links": 13,
-    "pdf_sha256": "e256d9103311ff5e7b49719c9930d2bcc77afd109a20e61285f59c53f09f52ce",
-    "bytes": 1894011
-  },
-  "preview-gates": {
-    "pages": 24,
-    "repaired_index_links": 10,
-    "pdf_sha256": "c95b1f5ec615d541e8e4f84ae54170ea2aaa107f4a7ed93908071429c8be3f4b",
-    "bytes": 4015273
-  },
-  "preview-cliffords": {
-    "pages": 10,
-    "repaired_index_links": 2,
-    "pdf_sha256": "b24b28b63ef43cab92d605b11764172c052ac6bc06978e57ccbc60d8ea027eb9",
-    "bytes": 255734
-  },
-  "provenance": {
-    "archive_sha256": "e4d7c8086e4361b97120819ab7bf42bb5e8fd4c95f5b4c87386063a2dfa1a8e5",
-    "renderer_sha256": "24ac3b435bab81fcd149267dc66ef64a3b98ab3e9628bb41034231342b31cb0b",
-    "builder_sha256": "c4ac303a412007f92dfd21835f16546bce1151b9982b76cc24091486c032b09e",
-    "tectonic_version": "0.17.0",
-    "pypdf_version": "6.21.4"
+    "pdf_sha256": "e256d9103311ff5e7b49719c9930d2bcc77afd109a20e61285f59c53f09f52ce"
   }
 }

@@ -1,0 +1,16 @@
+\begin{center}\small\begin{tabular}{llllrr}\toprule
+Target & Tool & Input & Basis & $E$ & $L$\\\midrule
+SYC & cirq & library\_source & cz & 3 & 8\\
+SYC & qiskit & library\_source & cx & 3 & 8\\
+SYC & qiskit & library\_source & cz & 3 & 8\\
+SYC & qiskit & matrix & cx & 3 & 8\\
+SYC & qiskit & matrix & cz & 3 & 8\\
+fFredkin & cirq & library\_source & cz & 17 & 43\\
+fFredkin & qiskit & library\_source & cx & 13 & 17\\
+fFredkin & qiskit & library\_source & cz & 13 & 19\\
+fFredkin & qiskit & matrix & cx & 7 & 17\\
+fFredkin & qiskit & matrix & cz & 7 & 16\\
+SYC & This work & exact identity & CX/U & 3 & 3\\
+fFredkin & This work & exact identity & CX/U & 4 & 10\\
+\bottomrule\end{tabular}\end{center}
+Both Qiskit seeds give the same displayed counts. Cirq uses projective replay; Qiskit replay includes its scalar. Raw operations, actual optimization levels and residual errors are archived.

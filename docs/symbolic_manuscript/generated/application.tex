@@ -1,0 +1,6 @@
+\begin{center}\small\begin{tabular}{lrrrrr}\toprule
+Route & $E$ & $L$ & Depth & SDK compile (s) & 1,000 binds (s)\\\midrule
+SDK source & 36 & 66 & 55 & 0.0508 & 0.1143\\
+Symbolic source & 18 & 42 & 31 & 0.0071 & 0.0521\\
+\bottomrule\end{tabular}\end{center}
+Cold symbolic chart synthesis takes 5.628 seconds in this run, in addition to the symbolic route's SDK compile time. Consequently the cold symbolic workflow is slower here despite its smaller circuit; amortized timing depends on reuse. The largest of the ten full-matrix replay errors is $1.6\times10^{-14}$.
