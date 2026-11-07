@@ -112,8 +112,9 @@ def synthesize_fixed_native(target,basis,*,phase_exact):
 
 def verify_fixed_native_certificate(target,result,basis):
     if result.get("verification")!="composition_of_exact_fixed_native_identities":return False
+    if not isinstance(result.get("phase_exact"),bool):return False
     try:expected=synthesize_fixed_native(target,basis,phase_exact=result["phase_exact"])
     except (ValueError,KeyError,TypeError):return False
     return expected is not None and all(result.get(key)==expected.get(key) for key in
         ("status","operations","cost","virtual_gp","fixed_native_certificate",
-         "entangler_optimal","entangler_optimality_certificate","native_invariant_lower_bound"))
+         "entangler_optimal","entangler_optimality_certificate","native_invariant_lower_bound","local_cost_optimal"))

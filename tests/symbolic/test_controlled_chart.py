@@ -27,6 +27,9 @@ def test_controlled_su2_chart_keeps_a_full_cu_family_and_phase_contract(basis_na
     previous=changed["operations"][0]["parameters"][0]
     changed["operations"][0]["parameters"][0]="("+previous+")+pi"
     assert not verify_controlled_chart_certificate(target,changed,basis)
+    changed=copy.deepcopy(result)
+    changed["local_cost_optimal"]=True
+    assert not verify_controlled_chart_certificate(target,changed,basis)
     symbols=dict(zip(map(str,parameters),parameters))
     for values in ((0,0,0,0),(0,sp.pi,sp.pi,0),(sp.pi,0,0,0),
                    (sp.pi/3,-sp.pi/5,sp.pi/7,sp.pi/11),

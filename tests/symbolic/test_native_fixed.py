@@ -26,6 +26,12 @@ def test_fixed_sqi_swap_motif_has_exact_components_and_replay(name,count,locals,
     if changed["operations"]==result["operations"]:
         changed["operations"][0]["parameters"][0]="1"
     assert not verify_fixed_native_certificate(target,changed,basis)
+    changed=copy.deepcopy(result)
+    changed["local_cost_optimal"]=True
+    assert not verify_fixed_native_certificate(target,changed,basis)
+    changed=copy.deepcopy(result)
+    changed["phase_exact"]=int(exact)
+    assert not verify_fixed_native_certificate(target,changed,basis)
 
 
 def test_fixed_motif_does_not_generalize_a_fixed_point_to_a_free_family():

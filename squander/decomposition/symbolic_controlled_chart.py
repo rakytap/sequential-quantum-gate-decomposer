@@ -285,6 +285,7 @@ def synthesize_controlled_chart(target,basis,*,phase_exact,additional_frames=())
 
 def verify_controlled_chart_certificate(target,result,basis):
     if result.get("verification")!="exact_controlled_SU2_chart_and_native_phase_lemma":return False
+    if not isinstance(result.get("phase_exact"),bool):return False
     target=sp.ImmutableMatrix(target)
     symbols={str(symbol):symbol for symbol in target.free_symbols}
     try:
@@ -298,4 +299,4 @@ def verify_controlled_chart_certificate(target,result,basis):
     return (certificate==expected["controlled_chart_certificate"] and
         all(result.get(key)==expected.get(key) for key in
             ("status","operations","cost","virtual_gp","entangler_optimal",
-             "entangler_optimality_certificate","conditional_entangler_optimality")))
+             "entangler_optimality_certificate","conditional_entangler_optimality","local_cost_optimal")))
