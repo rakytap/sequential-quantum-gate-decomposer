@@ -44,10 +44,10 @@
     "The primary scored archive and existing full atlases are unchanged."
   ],
   "artifacts": {
-    "docs/symbolic_optimality/sqrt_iswap_cartan.pdf": "c048abb01b2c16d6d6c7dc3f14e628f8c84c77708f9f0faf5731de9e58b8da65",
+    "docs/symbolic_optimality/sqrt_iswap_cartan.pdf": "331c2a7122f85690a6566521a9b22f28ad33da2b1d5b50a330ddd2edfca285af",
     "docs/symbolic_optimality/sqrt_iswap_cartan.tex": "8e94b42a0a9b24a1a4624e05831f1afe3973a1f8e1463a2d152a2ed7cea2b2d8",
-    "docs/symbolic_optimality/sqrt_iswap_cartan_circuit.tex": "063e87c54c0724235822c37ee12d0b67e215fdfe70e644db40baf525e4fe14b9",
-    "docs/symbolic_optimality/sqrt_iswap_cartan_sources.zip": "4468b9164022d11b44caf0fc8b40304b50a8d77f16b0fd91d20c2b28c6e2bb3c",
-    "docs/symbolic_notable_results/sqrt_iswap_frontier.csv": "4cc7405cbe4e57d82e3c862693ebcfe05d72fdbde67052e10141b30d006d7ab4"
+    "docs/symbolic_optimality/sqrt_iswap_cartan_circuit.tex": "25f9a54952924acdfb60575b91f70a112d4d3e2bbc89f653caf278efd4e4417d",
+    "docs/symbolic_optimality/sqrt_iswap_cartan_sources.zip": "9563bc80268c084bcf35f34d70689b214fa2d2946789c7fdd539c5920db5625c",
+    "docs/symbolic_notable_results/sqrt_iswap_frontier.csv": "ac52a200292f2b5eaa007475465efe64c2d5e7af811f50e485f3de8cc1aa9766"
   }
 }
