@@ -100,6 +100,24 @@ def test_targeted_reruns_preserve_each_source_revision_and_failed_attempt():
         analysis.merge_synthesis_runs([base,changed])
 
 
+def test_shorter_rerun_with_higher_score_is_preserved_as_a_raw_attempt():
+    def row(score,locals_):
+        result=dict(status="verified_symbolic",cost=dict(entanglers=1,parameter_score=str(score),single_qubit_gates=locals_))
+        return dict(gate="CX",basis="cx_u",parameters=[],target_scope="fixed_gate",
+            phase_exact=result,projective=None,projective_omitted_as_no_better=True,
+            phase_statuses=dict(phase_exact="verified_symbolic",projective="verified_symbolic"))
+    base=dict(rows=[row(10,4)],comparison_contract={})
+    new=dict(rows=[row(11,2)],comparison_contract={})
+    merged=analysis.merge_synthesis_runs([base,new])
+    result=merged["rows"][0]
+    assert result["phase_exact"]["cost"]["single_qubit_gates"]==4
+    assert result["mode_source_run_indices"]["phase_exact"]==0
+    assert result["raw_attempt"]["phase_exact"]["cost"]["single_qubit_gates"]==2
+    assert result["raw_attempt"]["synthesis_run_index"]==1
+    outer=analysis.merge_synthesis_runs([base,merged])["rows"][0]
+    assert outer["raw_attempt"]["synthesis_run_index"]==2
+
+
 def test_time_limited_rerun_keeps_a_verified_incumbent_and_its_source():
     good=dict(status="verified_symbolic",cost=dict(entanglers=2,parameter_score="8",single_qubit_gates=0))
     old=dict(gate="SWAP",basis="cx_u",phase_exact=good,projective=None,

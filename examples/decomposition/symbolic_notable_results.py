@@ -46,6 +46,7 @@ def historical_results(row):
         result=row.get(mode)
         if result and result.get("status")=="verified_symbolic":yield result
     for previous in row.get("previous_attempts",[]):yield from historical_results(previous)
+    if row.get("raw_attempt"):yield from historical_results(row["raw_attempt"])
 
 
 def local_audit(archive, baselines):

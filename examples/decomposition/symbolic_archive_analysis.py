@@ -98,6 +98,8 @@ def retain_incumbents(previous,replacement):
         selected[mode]=copy.deepcopy(result)
         provenance[mode]=run
     row=copy.deepcopy(replacement)
+    row["raw_attempt"]=copy.deepcopy(replacement.get("raw_attempt") or
+        {key:value for key,value in replacement.items() if key not in {"previous_attempts","raw_attempt"}})
     row["last_attempt_phase_statuses"]=copy.deepcopy(replacement["phase_statuses"])
     row["phase_statuses"]={mode:result["status"] for mode,result in selected.items()}
     row.update(retain_phase_results(selected["phase_exact"],selected["projective"]))
@@ -125,6 +127,7 @@ def merge_synthesis_runs(reports):
                     raise ValueError("Invalid phase-policy source run index")
                 row["mode_source_run_indices"]={mode:offset+value for mode,value in row["mode_source_run_indices"].items()}
             if "previous_attempts" in row:row["previous_attempts"]=[remap(old) for old in row["previous_attempts"]]
+            if "raw_attempt" in row:row["raw_attempt"]=remap(row["raw_attempt"])
             return row
         normalized.append([remap(row) for row in report["rows"]])
     index={(row["gate"],row["basis"]):row for row in normalized[0]}
