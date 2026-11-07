@@ -1,10 +1,10 @@
 {
   "schema": "symbolic-manuscript-release-verification-v1",
-  "archive_sha256": "47d7e2ef23978fcf1544be38878e3df41f0c0784e5465a3cc6f847f258cc99bb",
-  "preserved_base_sha256": "e4d7c8086e4361b97120819ab7bf42bb5e8fd4c95f5b4c87386063a2dfa1a8e5",
+  "archive_sha256": "999edc10380127d23a7659c4b4a56c6434ca9210dd319a87bea88f89e7069588",
+  "preserved_base_sha256": "4f5220708caaf639b7b1759b0157102564bd564d6294addf83d8985a2e0e6e8f",
   "phase_modes": 20928,
-  "unchanged_construction_modes": 20855,
-  "changed_construction_modes": 73,
+  "unchanged_construction_modes": 20875,
+  "changed_construction_modes": 53,
   "source_checks": [
     {
       "run": 0,
@@ -190,9 +190,14 @@
       "run": 36,
       "revision": "448852e0c2f09bf211a957b64026b006cd1428c5",
       "source_blobs": 47
+    },
+    {
+      "run": 37,
+      "revision": "8fc3924837234d079d88aba68688dbbb535893c3",
+      "source_blobs": 48
     }
   ],
-  "distinct_revision_source_pairs": 907,
+  "distinct_revision_source_pairs": 955,
   "all_source_checks_passed": true,
   "source_policy": "Verify recorded revision where possible; otherwise resolve exact recorded source hash from Git history and list the exception",
   "recorded_revision_exceptions": [
@@ -291,60 +296,12 @@
   "retained_unresolved_scores": 20,
   "replays": [
     {
-      "gate": "fSim",
-      "basis": "sqrt_iswap_u",
-      "mode": "phase_exact",
-      "status": "replayed",
-      "method": "exact_three_SQiSW_Pauli_tensor_chart",
-      "wall_seconds": 15.398788341321051
-    },
-    {
-      "gate": "fSim",
-      "basis": "google_sqrt_iswap",
-      "mode": "phase_exact",
-      "status": "replayed",
-      "method": "exact_three_SQiSW_Pauli_tensor_chart",
-      "wall_seconds": 15.42678514495492
-    },
-    {
-      "gate": "fSim",
-      "basis": "sqrt_iswap_u",
-      "mode": "projective",
-      "status": "replayed",
-      "method": "exact_three_SQiSW_Pauli_tensor_chart",
-      "wall_seconds": 15.426668253727257
-    },
-    {
-      "gate": "fSim",
-      "basis": "google_sqrt_iswap",
-      "mode": "projective",
-      "status": "replayed",
-      "method": "exact_three_SQiSW_Pauli_tensor_chart",
-      "wall_seconds": 15.45820963010192
-    },
-    {
-      "gate": "fFredkin",
-      "basis": "cx_u",
-      "mode": "phase_exact",
-      "status": "replayed",
-      "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.19117724895477295
-    },
-    {
       "gate": "fFredkin",
       "basis": "cx_rz_ry",
       "mode": "phase_exact",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.18597996793687344
-    },
-    {
-      "gate": "fFredkin",
-      "basis": "cx_u",
-      "mode": "projective",
-      "status": "replayed",
-      "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.18963778391480446
+      "wall_seconds": 0.32529759127646685
     },
     {
       "gate": "fFredkin",
@@ -352,7 +309,23 @@
       "mode": "projective",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.18335880804806948
+      "wall_seconds": 0.3255624631419778
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "cx_u",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.32913397904485464
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "cx_u",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.32987135276198387
     },
     {
       "gate": "fFredkin",
@@ -360,15 +333,7 @@
       "mode": "phase_exact",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.10738817229866982
-    },
-    {
-      "gate": "fFredkin",
-      "basis": "ibm_cx",
-      "mode": "phase_exact",
-      "status": "replayed",
-      "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.1057222867384553
+      "wall_seconds": 0.09882117435336113
     },
     {
       "gate": "fFredkin",
@@ -376,7 +341,7 @@
       "mode": "projective",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.10988833196461201
+      "wall_seconds": 0.09967522788792849
     },
     {
       "gate": "fFredkin",
@@ -384,31 +349,15 @@
       "mode": "projective",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.1065181689336896
+      "wall_seconds": 0.10131654608994722
     },
     {
       "gate": "fFredkin",
-      "basis": "ibm_ecr",
+      "basis": "ibm_cx",
       "mode": "phase_exact",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.20917603094130754
-    },
-    {
-      "gate": "fFredkin",
-      "basis": "ibm_ecr",
-      "mode": "projective",
-      "status": "replayed",
-      "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.19678972195833921
-    },
-    {
-      "gate": "fFredkin",
-      "basis": "ibm_cz",
-      "mode": "phase_exact",
-      "status": "replayed",
-      "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.1968243820592761
+      "wall_seconds": 0.10652843862771988
     },
     {
       "gate": "fFredkin",
@@ -416,7 +365,31 @@
       "mode": "projective",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.19042365718632936
+      "wall_seconds": 0.16532859299331903
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "ibm_cz",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.17090012785047293
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "ibm_ecr",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.1968278745189309
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "ibm_ecr",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.20263624005019665
     },
     {
       "gate": "fFredkin",
@@ -424,7 +397,7 @@
       "mode": "phase_exact",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.11587738618254662
+      "wall_seconds": 0.08631141763180494
     },
     {
       "gate": "fFredkin",
@@ -432,7 +405,7 @@
       "mode": "projective",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.11695437040179968
+      "wall_seconds": 0.08676468953490257
     },
     {
       "gate": "fFredkin",
@@ -440,7 +413,7 @@
       "mode": "phase_exact",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.17182062193751335
+      "wall_seconds": 0.1670996407046914
     },
     {
       "gate": "fFredkin",
@@ -448,15 +421,7 @@
       "mode": "projective",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.17206265311688185
-    },
-    {
-      "gate": "fFredkin",
-      "basis": "sqrt_swap_u",
-      "mode": "phase_exact",
-      "status": "replayed",
-      "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.21150282118469477
+      "wall_seconds": 0.16572828497737646
     },
     {
       "gate": "fFredkin",
@@ -464,7 +429,23 @@
       "mode": "projective",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.21232986450195312
+      "wall_seconds": 0.18654039781540632
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "sqrt_swap_u",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.1937331110239029
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "xx90_u",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.2163963532075286
     },
     {
       "gate": "fFredkin",
@@ -472,15 +453,7 @@
       "mode": "phase_exact",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.25226982589811087
-    },
-    {
-      "gate": "fFredkin",
-      "basis": "xx90_u",
-      "mode": "projective",
-      "status": "replayed",
-      "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.2548531461507082
+      "wall_seconds": 0.22194517776370049
     },
     {
       "gate": "fFredkin",
@@ -488,7 +461,7 @@
       "mode": "phase_exact",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.5497016636654735
+      "wall_seconds": 0.5134045369923115
     },
     {
       "gate": "fFredkin",
@@ -496,7 +469,7 @@
       "mode": "projective",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.5479802554473281
+      "wall_seconds": 0.510596415027976
     },
     {
       "gate": "fFredkin",
@@ -504,7 +477,7 @@
       "mode": "phase_exact",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.5543315811082721
+      "wall_seconds": 0.532545774243772
     },
     {
       "gate": "fFredkin",
@@ -512,7 +485,7 @@
       "mode": "projective",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.5524018937721848
+      "wall_seconds": 0.5325072035193443
     },
     {
       "gate": "fFredkin",
@@ -520,7 +493,7 @@
       "mode": "phase_exact",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.10310125444084406
+      "wall_seconds": 0.09257092606276274
     },
     {
       "gate": "fFredkin",
@@ -528,15 +501,7 @@
       "mode": "projective",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.103803307749331
-    },
-    {
-      "gate": "fFredkin",
-      "basis": "zx_u",
-      "mode": "phase_exact",
-      "status": "replayed",
-      "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.3599843792617321
+      "wall_seconds": 0.09477337636053562
     },
     {
       "gate": "fFredkin",
@@ -544,7 +509,15 @@
       "mode": "projective",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.35737658850848675
+      "wall_seconds": 0.3416360467672348
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "zx_u",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.34506718162447214
     },
     {
       "gate": "fFredkin",
@@ -552,7 +525,7 @@
       "mode": "phase_exact",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.2835575006902218
+      "wall_seconds": 0.25691366475075483
     },
     {
       "gate": "fFredkin",
@@ -560,7 +533,7 @@
       "mode": "projective",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.28552346862852573
+      "wall_seconds": 0.2573202671483159
     },
     {
       "gate": "fFredkin",
@@ -568,7 +541,7 @@
       "mode": "phase_exact",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.4426542716100812
+      "wall_seconds": 0.3710435479879379
     },
     {
       "gate": "fFredkin",
@@ -576,7 +549,7 @@
       "mode": "projective",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.44265447184443474
+      "wall_seconds": 0.37545749731361866
     },
     {
       "gate": "fFredkin",
@@ -584,7 +557,7 @@
       "mode": "phase_exact",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.5191346183419228
+      "wall_seconds": 0.5025833090767264
     },
     {
       "gate": "fFredkin",
@@ -592,7 +565,7 @@
       "mode": "projective",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.5280620250850916
+      "wall_seconds": 0.5049476092681289
     },
     {
       "gate": "fFredkin",
@@ -600,7 +573,7 @@
       "mode": "phase_exact",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 1.3352329339832067
+      "wall_seconds": 1.3142444863915443
     },
     {
       "gate": "fFredkin",
@@ -608,7 +581,7 @@
       "mode": "projective",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 1.347528813406825
+      "wall_seconds": 1.3215185403823853
     },
     {
       "gate": "fFredkin",
@@ -616,7 +589,7 @@
       "mode": "phase_exact",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.29585517942905426
+      "wall_seconds": 0.2676701433956623
     },
     {
       "gate": "fFredkin",
@@ -624,7 +597,7 @@
       "mode": "projective",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.28646732307970524
+      "wall_seconds": 0.26884767785668373
     },
     {
       "gate": "fFredkin",
@@ -632,7 +605,7 @@
       "mode": "phase_exact",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 2.044600917957723
+      "wall_seconds": 2.0342206032946706
     },
     {
       "gate": "fFredkin",
@@ -640,7 +613,7 @@
       "mode": "projective",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 2.0662598945200443
+      "wall_seconds": 2.0386260226368904
     },
     {
       "gate": "fFredkin",
@@ -648,7 +621,7 @@
       "mode": "phase_exact",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.18097748886793852
+      "wall_seconds": 0.1695217303931713
     },
     {
       "gate": "fFredkin",
@@ -656,7 +629,7 @@
       "mode": "phase_exact",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.2514370623975992
+      "wall_seconds": 0.21847960259765387
     },
     {
       "gate": "fFredkin",
@@ -664,7 +637,7 @@
       "mode": "projective",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.18072344828397036
+      "wall_seconds": 0.1585344821214676
     },
     {
       "gate": "fFredkin",
@@ -672,7 +645,7 @@
       "mode": "phase_exact",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.36876604333519936
+      "wall_seconds": 0.337673457339406
     },
     {
       "gate": "fFredkin",
@@ -680,7 +653,7 @@
       "mode": "phase_exact",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.1394466208294034
+      "wall_seconds": 0.10661496873944998
     },
     {
       "gate": "fFredkin",
@@ -688,23 +661,7 @@
       "mode": "projective",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.3715625759214163
-    },
-    {
-      "gate": "fFredkin",
-      "basis": "quantinuum_zzphase",
-      "mode": "phase_exact",
-      "status": "replayed",
-      "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 1.7763632293790579
-    },
-    {
-      "gate": "fFredkin",
-      "basis": "quantinuum_zzphase",
-      "mode": "projective",
-      "status": "replayed",
-      "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 1.7790638599544764
+      "wall_seconds": 0.3424323992803693
     },
     {
       "gate": "fFredkin",
@@ -712,7 +669,15 @@
       "mode": "projective",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.13810130581259727
+      "wall_seconds": 0.10563710518181324
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "quantinuum_zzphase",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 1.753742071799934
     },
     {
       "gate": "fFredkin",
@@ -720,7 +685,15 @@
       "mode": "phase_exact",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.11831540614366531
+      "wall_seconds": 0.10619740840047598
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "quantinuum_zzphase",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 1.756945176050067
     },
     {
       "gate": "fFredkin",
@@ -728,7 +701,7 @@
       "mode": "projective",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.12468095123767853
+      "wall_seconds": 0.10510284174233675
     },
     {
       "gate": "fFredkin",
@@ -736,7 +709,7 @@
       "mode": "phase_exact",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.18077522795647383
+      "wall_seconds": 0.14580535516142845
     },
     {
       "gate": "fFredkin",
@@ -744,140 +717,11 @@
       "mode": "projective",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.1689318297430873
-    },
-    {
-      "gate": "Canonical",
-      "basis": "sqrt_iswap_u",
-      "mode": "phase_exact",
-      "status": "replayed",
-      "method": "exact_three_SQiSW_Pauli_tensor_chart",
-      "wall_seconds": 1.0027809757739305
-    },
-    {
-      "gate": "Canonical",
-      "basis": "sqrt_iswap_u",
-      "mode": "projective",
-      "status": "replayed",
-      "method": "exact_three_SQiSW_Pauli_tensor_chart",
-      "wall_seconds": 1.016953312791884
-    },
-    {
-      "gate": "Canonical",
-      "basis": "google_sqrt_iswap",
-      "mode": "phase_exact",
-      "status": "replayed",
-      "method": "exact_three_SQiSW_Pauli_tensor_chart",
-      "wall_seconds": 1.03472744487226
-    },
-    {
-      "gate": "Canonical",
-      "basis": "google_sqrt_iswap",
-      "mode": "projective",
-      "status": "replayed",
-      "method": "exact_three_SQiSW_Pauli_tensor_chart",
-      "wall_seconds": 1.0257924376055598
-    },
-    {
-      "gate": "TK2",
-      "basis": "sqrt_iswap_u",
-      "mode": "phase_exact",
-      "status": "replayed",
-      "method": "exact_three_SQiSW_Pauli_tensor_chart",
-      "wall_seconds": 0.9814116097986698
-    },
-    {
-      "gate": "TK2",
-      "basis": "sqrt_iswap_u",
-      "mode": "projective",
-      "status": "replayed",
-      "method": "exact_three_SQiSW_Pauli_tensor_chart",
-      "wall_seconds": 0.9855860257521272
-    },
-    {
-      "gate": "TK2",
-      "basis": "google_sqrt_iswap",
-      "mode": "phase_exact",
-      "status": "replayed",
-      "method": "exact_three_SQiSW_Pauli_tensor_chart",
-      "wall_seconds": 0.9958158880472183
-    },
-    {
-      "gate": "TK2",
-      "basis": "google_sqrt_iswap",
-      "mode": "projective",
-      "status": "replayed",
-      "method": "exact_three_SQiSW_Pauli_tensor_chart",
-      "wall_seconds": 0.9948261836543679
-    },
-    {
-      "gate": "PhasedFSim",
-      "basis": "sqrt_iswap_u",
-      "mode": "phase_exact",
-      "status": "replayed",
-      "method": "exact_three_SQiSW_Pauli_tensor_chart",
-      "wall_seconds": 1.3293844796717167
-    },
-    {
-      "gate": "PhasedFSim",
-      "basis": "google_sqrt_iswap",
-      "mode": "projective",
-      "status": "replayed",
-      "method": "exact_three_SQiSW_Pauli_tensor_chart",
-      "wall_seconds": 1.346457438543439
-    },
-    {
-      "gate": "PhasedFSim",
-      "basis": "sqrt_iswap_u",
-      "mode": "projective",
-      "status": "replayed",
-      "method": "exact_three_SQiSW_Pauli_tensor_chart",
-      "wall_seconds": 1.4964640233665705
-    },
-    {
-      "gate": "PhasedFSim",
-      "basis": "google_sqrt_iswap",
-      "mode": "phase_exact",
-      "status": "replayed",
-      "method": "exact_three_SQiSW_Pauli_tensor_chart",
-      "wall_seconds": 1.5120147643610835
-    },
-    {
-      "gate": "SWAPPow",
-      "basis": "sqrt_iswap_u",
-      "mode": "phase_exact",
-      "status": "replayed",
-      "method": "exact_three_SQiSW_Pauli_tensor_chart",
-      "wall_seconds": 0.9344506300985813
-    },
-    {
-      "gate": "SWAPPow",
-      "basis": "sqrt_iswap_u",
-      "mode": "projective",
-      "status": "replayed",
-      "method": "exact_three_SQiSW_Pauli_tensor_chart",
-      "wall_seconds": 0.9458449669182301
-    },
-    {
-      "gate": "SWAPPow",
-      "basis": "google_sqrt_iswap",
-      "mode": "phase_exact",
-      "status": "replayed",
-      "method": "exact_three_SQiSW_Pauli_tensor_chart",
-      "wall_seconds": 0.9462280878797174
-    },
-    {
-      "gate": "SWAPPow",
-      "basis": "google_sqrt_iswap",
-      "mode": "projective",
-      "status": "replayed",
-      "method": "exact_three_SQiSW_Pauli_tensor_chart",
-      "wall_seconds": 0.9435691079124808
+      "wall_seconds": 0.1417415076866746
     }
   ],
   "all_changed_constructions_replayed": true,
   "replay_methods": {
-    "exact_three_SQiSW_Pauli_tensor_chart": 20,
     "exact_exponential_polynomial_identity": 53
   },
   "limits": [

@@ -1,0 +1,732 @@
+{
+  "schema": "symbolic-manuscript-release-verification-v1",
+  "archive_sha256": "999edc10380127d23a7659c4b4a56c6434ca9210dd319a87bea88f89e7069588",
+  "preserved_base_sha256": "4f5220708caaf639b7b1759b0157102564bd564d6294addf83d8985a2e0e6e8f",
+  "phase_modes": 20928,
+  "unchanged_construction_modes": 20875,
+  "changed_construction_modes": 53,
+  "source_checks": [
+    {
+      "run": 0,
+      "revision": "02645e1331c22686dc8e5cf807eac3749db54961",
+      "source_blobs": 20
+    },
+    {
+      "run": 1,
+      "revision": "924f395834ca5b9d3f846b198bd3006b86c6bfe9",
+      "source_blobs": 20
+    },
+    {
+      "run": 2,
+      "revision": "1076988fc4221f3de40dd47b4a793d862941dbc3",
+      "source_blobs": 24
+    },
+    {
+      "run": 3,
+      "revision": "1076988fc4221f3de40dd47b4a793d862941dbc3",
+      "source_blobs": 24
+    },
+    {
+      "run": 4,
+      "revision": "b391dd113d39c4a4bc40e86ce9d666981934bb9c",
+      "source_blobs": 24
+    },
+    {
+      "run": 5,
+      "revision": "c21e04944dc3e0f9745c07ae52ce21b027dc658d",
+      "source_blobs": 25
+    },
+    {
+      "run": 6,
+      "revision": "62b44f6588ceecd3d1793313f4e847985f9e6923",
+      "source_blobs": 25
+    },
+    {
+      "run": 7,
+      "revision": "d3d3c4b8402ad577dcaec57356d6fba1dae96c15",
+      "source_blobs": 25
+    },
+    {
+      "run": 8,
+      "revision": "2c39f362145638de4726344fbf34678125e1fc30",
+      "source_blobs": 26
+    },
+    {
+      "run": 9,
+      "revision": "2c39f362145638de4726344fbf34678125e1fc30",
+      "source_blobs": 26
+    },
+    {
+      "run": 10,
+      "revision": "0bdf752f9c80f90285a77b11029d968ed0dcc325",
+      "source_blobs": 26
+    },
+    {
+      "run": 11,
+      "revision": "5f2c8f6b78b74629796eb2de13d182aefef5bebd",
+      "source_blobs": 26
+    },
+    {
+      "run": 12,
+      "revision": "c5e84e602cf93d021fb220596915edcc2c9e0ef5",
+      "source_blobs": 28
+    },
+    {
+      "run": 13,
+      "revision": "0d4979ac433ccbdb90758614d4a4e20a2ebb6d43",
+      "source_blobs": 30
+    },
+    {
+      "run": 14,
+      "revision": "928fcf7cea46b77c0d4612bd1ca8bfdbe63cbaed",
+      "source_blobs": 31
+    },
+    {
+      "run": 15,
+      "revision": "40f98fe37eda63d4afaf89f9bf8f4ede1da736f4",
+      "source_blobs": 31
+    },
+    {
+      "run": 16,
+      "revision": "603df966096fae448d45914cb3883fe30d50972f",
+      "source_blobs": 33
+    },
+    {
+      "run": 17,
+      "revision": "603df966096fae448d45914cb3883fe30d50972f",
+      "source_blobs": 34
+    },
+    {
+      "run": 18,
+      "revision": "ba8e01b48f6f9e196022f653518f20282e922109",
+      "source_blobs": 33
+    },
+    {
+      "run": 19,
+      "revision": "ba8e01b48f6f9e196022f653518f20282e922109",
+      "source_blobs": 34
+    },
+    {
+      "run": 20,
+      "revision": "66f807ca18444576a89d7ceee703d57894122a23",
+      "source_blobs": 34
+    },
+    {
+      "run": 21,
+      "revision": "9b1542a2ebc0af6a5270ae919e7bd0ed7d8c4b8d",
+      "source_blobs": 34
+    },
+    {
+      "run": 22,
+      "revision": "f03198c2a9f69a3cd85abe02ee93b09b9d8679e7",
+      "source_blobs": 33
+    },
+    {
+      "run": 23,
+      "revision": "bba8ccc758c03f6758fb504a46fff54aae015c0b",
+      "source_blobs": 34
+    },
+    {
+      "run": 24,
+      "revision": "c5640588b25871b8bfb850132cf1779258e17de4",
+      "source_blobs": 34
+    },
+    {
+      "run": 25,
+      "revision": "24dcf58b63e3f6ffb88087f20ac61b5a19661eab",
+      "source_blobs": 34
+    },
+    {
+      "run": 26,
+      "revision": "6beb0a60e17d10c7bfc5d52f1145aee29dd19ed1",
+      "source_blobs": 34
+    },
+    {
+      "run": 27,
+      "revision": "cbc150cf230ffecee581fd8b0b6653207bf4fa16",
+      "source_blobs": 36
+    },
+    {
+      "run": 28,
+      "revision": "c6bf1ffd6ed5f91eec2843fcb5ce3ae92e6562e6",
+      "source_blobs": 37
+    },
+    {
+      "run": 29,
+      "revision": "35d9c593a7553da11c8cd984151d1d21155251d5",
+      "source_blobs": 39
+    },
+    {
+      "run": 30,
+      "revision": "35d9c593a7553da11c8cd984151d1d21155251d5",
+      "source_blobs": 39
+    },
+    {
+      "run": 31,
+      "revision": "9385be3c75bdc2468684979ff5432a0e1342aabf",
+      "source_blobs": 40
+    },
+    {
+      "run": 32,
+      "revision": "e388bba07f8b0a292b78ae71a06de88191aca766",
+      "source_blobs": 42
+    },
+    {
+      "run": 33,
+      "revision": "e388bba07f8b0a292b78ae71a06de88191aca766",
+      "source_blobs": 42
+    },
+    {
+      "run": 34,
+      "revision": "e388bba07f8b0a292b78ae71a06de88191aca766",
+      "source_blobs": 42
+    },
+    {
+      "run": 35,
+      "revision": "448852e0c2f09bf211a957b64026b006cd1428c5",
+      "source_blobs": 47
+    },
+    {
+      "run": 36,
+      "revision": "448852e0c2f09bf211a957b64026b006cd1428c5",
+      "source_blobs": 47
+    },
+    {
+      "run": 37,
+      "revision": "8fc3924837234d079d88aba68688dbbb535893c3",
+      "source_blobs": 48
+    }
+  ],
+  "distinct_revision_source_pairs": 955,
+  "all_source_checks_passed": true,
+  "source_policy": "Verify recorded revision where possible; otherwise resolve exact recorded source hash from Git history and list the exception",
+  "recorded_revision_exceptions": [
+    {
+      "run": 0,
+      "path": "examples/decomposition/symbolic_synthesis_archive.py",
+      "recorded_revision": "02645e1331c22686dc8e5cf807eac3749db54961",
+      "content_sha256": "8a4595506f54e439ec0da32a9cd48078d7f70ba638c65d34d5737a4b8e362d86",
+      "resolved_content_revision": "924f395834ca5b9d3f846b198bd3006b86c6bfe9"
+    },
+    {
+      "run": 0,
+      "path": "squander/decomposition/symbolic_archive.py",
+      "recorded_revision": "02645e1331c22686dc8e5cf807eac3749db54961",
+      "content_sha256": "ede1efdad7dbdcbae2f2da03fde11cb1ddcff68f6048f21b864512a518a67863",
+      "resolved_content_revision": "924f395834ca5b9d3f846b198bd3006b86c6bfe9"
+    },
+    {
+      "run": 0,
+      "path": "squander/decomposition/symbolic_clifford_search.py",
+      "recorded_revision": "02645e1331c22686dc8e5cf807eac3749db54961",
+      "content_sha256": "e44e43c4197b6a2d14b10cd27129900dfe8f76b504e47ab3a8bb17961bc1c1bf",
+      "resolved_content_revision": "924f395834ca5b9d3f846b198bd3006b86c6bfe9"
+    },
+    {
+      "run": 0,
+      "path": "squander/decomposition/symbolic_contract.py",
+      "recorded_revision": "02645e1331c22686dc8e5cf807eac3749db54961",
+      "content_sha256": "00c749a92ef842b66f0d9ce33a408cdac933dd0360d862b1c18c9effceb3bf78",
+      "resolved_content_revision": "924f395834ca5b9d3f846b198bd3006b86c6bfe9"
+    },
+    {
+      "run": 0,
+      "path": "squander/decomposition/symbolic_feasibility.py",
+      "recorded_revision": "02645e1331c22686dc8e5cf807eac3749db54961",
+      "content_sha256": "6ed91e5ef6132309a39c16447e6c91307bc368acc70ec88f9407834729aa344a",
+      "resolved_content_revision": "924f395834ca5b9d3f846b198bd3006b86c6bfe9"
+    },
+    {
+      "run": 0,
+      "path": "squander/decomposition/symbolic_identity.py",
+      "recorded_revision": "02645e1331c22686dc8e5cf807eac3749db54961",
+      "content_sha256": "b32ad51e31beecb2895dd06c7fd04ce279b3b5802e79fba3c6cb62f34819baed",
+      "resolved_content_revision": "924f395834ca5b9d3f846b198bd3006b86c6bfe9"
+    },
+    {
+      "run": 0,
+      "path": "squander/decomposition/symbolic_qiskit_source.py",
+      "recorded_revision": "02645e1331c22686dc8e5cf807eac3749db54961",
+      "content_sha256": "1306e87e996cdd7b1b6e44f47820a056260dde32dda7c07374ac63af69603da5",
+      "resolved_content_revision": "924f395834ca5b9d3f846b198bd3006b86c6bfe9"
+    },
+    {
+      "run": 0,
+      "path": "squander/decomposition/symbolic_rules.py",
+      "recorded_revision": "02645e1331c22686dc8e5cf807eac3749db54961",
+      "content_sha256": "7ad8afaa2369f163d0172708d4083b5a6533075fa7a9f31debbbe5f14d6ebb79",
+      "resolved_content_revision": "924f395834ca5b9d3f846b198bd3006b86c6bfe9"
+    },
+    {
+      "run": 0,
+      "path": "squander/decomposition/symbolic_synthesis.py",
+      "recorded_revision": "02645e1331c22686dc8e5cf807eac3749db54961",
+      "content_sha256": "d51013c8e724ee21d8485795324a3db57b817a92fe2e0d645d93088ad01270da",
+      "resolved_content_revision": "924f395834ca5b9d3f846b198bd3006b86c6bfe9"
+    },
+    {
+      "run": 0,
+      "path": "squander/decomposition/symbolic_uqc.py",
+      "recorded_revision": "02645e1331c22686dc8e5cf807eac3749db54961",
+      "content_sha256": "3037fdd48c088c602363555c1e1ee17fbc813ec4850ccddf5f0534d7845e5968",
+      "resolved_content_revision": "924f395834ca5b9d3f846b198bd3006b86c6bfe9"
+    },
+    {
+      "run": 0,
+      "path": "squander/decomposition/symbolic_clifford_group.json",
+      "recorded_revision": "02645e1331c22686dc8e5cf807eac3749db54961",
+      "content_sha256": "605c562d4680f1bd2bd1269c312c135b5159636a2919da153846f3d52e271967",
+      "resolved_content_revision": "924f395834ca5b9d3f846b198bd3006b86c6bfe9"
+    },
+    {
+      "run": 0,
+      "path": "squander/decomposition/symbolic_cx_frames.json",
+      "recorded_revision": "02645e1331c22686dc8e5cf807eac3749db54961",
+      "content_sha256": "ce55d5d70730bb71035cc8ee12f7f82e7c0ab92266b25118aef7026ccb957b73",
+      "resolved_content_revision": "924f395834ca5b9d3f846b198bd3006b86c6bfe9"
+    },
+    {
+      "run": 1,
+      "path": "squander/decomposition/symbolic_qiskit_source.py",
+      "recorded_revision": "924f395834ca5b9d3f846b198bd3006b86c6bfe9",
+      "content_sha256": "d8cdcbb0dbf7b96d5f806e9a535dd66bf289ae77dbf1c975d209f067436485cf",
+      "resolved_content_revision": "953df13dd18316160eec7db3a5537e952ce9babb"
+    }
+  ],
+  "retained_unresolved_scores": 20,
+  "replays": [
+    {
+      "gate": "fFredkin",
+      "basis": "cx_rz_ry",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.32529759127646685
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "cx_rz_ry",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.3255624631419778
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "cx_u",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.32913397904485464
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "cx_u",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.32987135276198387
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "cx_h_phase",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.09882117435336113
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "cx_h_phase",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.09967522788792849
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "ibm_cx",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.10131654608994722
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "ibm_cx",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.10652843862771988
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "ibm_cz",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.16532859299331903
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "ibm_cz",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.17090012785047293
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "ibm_ecr",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.1968278745189309
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "ibm_ecr",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.20263624005019665
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "cz_u",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.08631141763180494
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "cz_u",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.08676468953490257
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "cz_rz_rx",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.1670996407046914
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "cz_rz_rx",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.16572828497737646
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "sqrt_swap_u",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.18654039781540632
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "sqrt_swap_u",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.1937331110239029
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "xx90_u",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.2163963532075286
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "xx90_u",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.22194517776370049
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "xx_rz_ry",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.5134045369923115
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "xx_rz_ry",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.510596415027976
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "zz_u",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.532545774243772
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "zz_u",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.5325072035193443
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "google_cz",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.09257092606276274
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "google_cz",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.09477337636053562
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "zx_u",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.3416360467672348
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "zx_u",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.34506718162447214
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "berkeley_b",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.25691366475075483
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "berkeley_b",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.2573202671483159
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.3710435479879379
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.37545749731361866
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "ionq_aria_full",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.5025833090767264
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "ionq_aria_full",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.5049476092681289
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "ionq_aria",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 1.3142444863915443
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "ionq_aria",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 1.3215185403823853
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "quantinuum_zzmax",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.2676701433956623
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "quantinuum_zzmax",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.26884767785668373
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "ionq_forte",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 2.0342206032946706
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "ionq_forte",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 2.0386260226368904
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "rigetti_cz",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.1695217303931713
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "tket_tk2",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.21847960259765387
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "rigetti_cz",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.1585344821214676
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "aqt_rxx",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.337673457339406
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "iqm_cz",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.10661496873944998
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "aqt_rxx",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.3424323992803693
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "iqm_cz",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.10563710518181324
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "quantinuum_zzphase",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 1.753742071799934
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.10619740840047598
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "quantinuum_zzphase",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 1.756945176050067
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.10510284174233675
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.14580535516142845
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.1417415076866746
+    }
+  ],
+  "all_changed_constructions_replayed": true,
+  "replay_methods": {
+    "exact_exponential_polynomial_identity": 53
+  },
+  "limits": [
+    "Unchanged modes are payload comparisons, not new identity replays",
+    "Old native/exchange reports retain their immutable input and proof-attempt timeouts",
+    "Four-Ising theorem is analytical, with algebraic components checked by this release"
+  ]
+}

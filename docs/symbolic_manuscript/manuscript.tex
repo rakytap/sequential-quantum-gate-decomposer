@@ -15,286 +15,117 @@
 \newcommand{\Sqi}{\mathrm{SQiSW}}
 \newcommand{\A}{\mathcal A}
 \newcommand{\Id}{\mathbb I}
-\input{generated/numbers.tex}
-\title{Phase-aware symbolic quantum-gate synthesis\ with operator-Schmidt certificates}
-\author{Anonymous referee draft}
+\title{CNOT costs of controlled balanced involutions\\and an invariant two-SQiSW criterion}
+\author{Gregory Morse \and Peter Rakyta}
 \date{7 November 2026}
 \begin{document}
 \maketitle
 \begin{abstract}
-We study exact symbolic synthesis of small quantum operators into supplied
-native gate alphabets, distinguishing literal matrix equality from equality
-up to a recorded scalar. Operator-Schmidt ranks guide factorization and
-interaction search; native analytical charts and exact local rewrites supply
-candidate circuits; separate certificates establish the scope of optimality.
-The released reference grid contains 327 catalog entries and 32 presets,
-or 10,464 target--basis cells under two phase policies. Each phase mode has
-an exact construction or an obstruction to representing the requested target
-or full parameter family. We give a four-CNOT circuit for controlled fermionic
-SWAP and a matching lower bound for arbitrary Ising-class interactions with
-unrestricted local gates and no ancillas. Explicit, branch-complete symbolic
-charts attain the known two-B and three-SQiSW uniform bounds. A four-qubit
-parameter-reuse experiment reduces 36 CNOTs to 18 relative to the tested
-compile-once Qiskit route. The accompanying atlases and archives retain
-expressions, scalar conventions, proof scopes, and implementation provenance.
-The finite grid is classified completely; unrestricted local-cost optimality
-and superiority to every compiler or published circuit are not established.
+We classify the ancilla-free CNOT cost of controlling a traceless Hermitian
+involution on two qubits, allowing arbitrary one-qubit unitaries. The cost is
+four at operator-Schmidt rank four, three at rank two, and one or two for
+rank-one operators according to their local support. With unrestricted
+two-qubit gates these costs are respectively three, three, one, and two.
+The rank-four lower bound holds for arbitrary Ising-class interactions,
+including variable interaction angles. Controlled fermionic SWAP illustrates
+the distinction: a literal four-CNOT, six-rotation circuit attains its Ising
+minimum, while three unrestricted interactions suffice. We also express the
+known two-SQiSW Weyl-chamber region as a necessary-and-sufficient test on
+scalar-independent polynomial invariants, avoiding Weyl canonicalization
+when deciding membership. Exact symbolic constructions, explicit phase
+contracts, and row-resolved certificates accompany these results in a
+reference library. Comparisons with Qiskit, tket, BQSKit, Quartz, and QUESO
+separate construction quality from lower bounds; in particular, BQSKit also
+finds four-CNOT, six-local-gate circuits. The reference grid and Clifford
+atlas are reproducibility resources, rather than evidence of all-grid
+optimality or compiler dominance.
 \end{abstract}
 
-\section{Introduction}
-Parameterized quantum subroutines must often be expressed using a different
-entangling primitive while preserving their parameters and their behavior
-inside a larger computation. Three distinct tasks arise: obtaining a valid
-identity, finding an economical circuit in the selected alphabet, and proving
-that no cheaper circuit exists. A small numerical error in a bound instance
-does not certify a free-parameter identity. Conversely, a symbolic identity
-does not certify a minimum. Global phase adds a further resource distinction:
-a scalar that is harmless for an isolated operator becomes a relative phase
-when that operator is controlled.
+\section{Introduction and related work}
+Controlling an operator preserves more structure than its ordinary two-qubit
+local-equivalence class. In particular, local factors in a target block become
+conditional operations. We exploit this observation to classify a continuous
+class of three-qubit gates: $C(V)=\operatorname{diag}(I_4,V)$, where
+$V=V^\dagger$, $V^2=I_4$, and $\operatorname{tr}V=0$. A two-angle normal
+form gives matching constructions on every operator-Schmidt-rank stratum.
+A separate control-space argument excludes three Ising interactions on the
+rank-four stratum. The resulting classification is the main contribution.
 
-This work develops an auditable synthesis and reference workflow for these
-tasks. It combines exact operator-Schmidt analysis with native constructions
-and local circuit transformations. The output includes a circuit, its phase
-convention, a parameter-sensitive score when evaluated, and explicitly scoped
-lower bounds. The target is a reusable library of exact small-block
-identities, rather than a claim to solve arbitrary continuous circuit
-optimization.
+Gate-count lower bounds based on operator-Schmidt strength originate in
+work including Nielsen et al.\ \cite{nielsen}. Yu, Duan and Ying proved that
+Toffoli requires five unrestricted two-qubit gates \cite{yuduan}; Yu and Ying
+classified controlled-controlled gates and proved the five-gate unrestricted
+Fredkin bound \cite{yuying}. Their controlled-product arguments are directly
+relevant here. Shende and Markov studied block-diagonal three-qubit circuits
+with fewer than six CNOTs and proved Toffoli's six-CNOT minimum
+\cite{toffolicnot}. Our Ising proof uses the same general principle of
+restricting intermediate control frames, with an explicit Schmidt-space
+rigidity lemma. Balanced involutions exclude the nonbalanced relative
+blocks of ordinary Fredkin and Toffoli; our smaller counts concern a
+different class.
 
-\paragraph{Results and assumptions.}
-The reference grid has 327 catalog entries and 32 mathematical presets.
-All 20,928 phase modes are classified as a verified symbolic construction
-or a proved obstruction. The latter can exclude representation of an entire
-continuous family without excluding every special parameter value. The grid
-contains aliases and fixed-width register fixtures; it is not a collection
-of 327 independent gate families or 32 calibrated processors. We preserve
-the supplied alphabets, use no ancillas, allow arbitrary input states and
-all-to-all coupling, and fix input and output wire order. No physical global
-phase gate is permitted. Our principal concrete results are:
-\begin{itemize}
-\item a literal four-CNOT controlled-fermionic-SWAP construction with a
-matching four-Ising lower bound, including arbitrary interaction angles;
-\item explicit symbolic local frames and degeneracy branches implementing
-the known two-B and three-SQiSW uniform two-qubit bounds;
-\item exact-phase Clifford shortest-path certificates and separately scoped
-native entangler and secondary-score certificates;
-\item independent Qiskit/Cirq comparisons, bounded component ablations, an
-application with reusable parameters, and editable circuit atlases.
-\end{itemize}
-We distinguish improvements over a particular SDK output, attainment of a
-known analytical bound, and a proved optimum. None alone establishes
-publication priority. In particular, the four-Ising theorem is presented as
-an explicit result to scrutinize, without a claim that no equivalent result
-appears elsewhere.
+Two-qubit invariant and Cartan methods are established \cite{makhlin,shende}.
+The universal two-B construction is due to Zhang et al.\ \cite{bgate}.
+Huang et al.\ give analytical SQiSW synthesis, its two-pulse Weyl region,
+and its universal three-pulse bound \cite{sqisw}. Our second result is an
+invariant reformulation of that known region, with an exact algebraic proof
+and implementation. Our symbolic charts implement these established pulse
+counts with scalar tracking and explicit degeneracy branches; the counts
+and the existence of analytical local frames are prior results.
 
-\section{Related work and positioning}
-Two-qubit local invariants and Cartan decompositions provide established
-tools for recognizing and constructing economical circuits
-\cite{makhlin,shende}. The B gate admits a universal two-pulse construction
-\cite{bgate}. Huang et al. characterize SQiSW instruction sets and give the
-three-pulse universal bound and the two-pulse region \cite{sqisw}. Those
-counts are prior results. Our implementation contribution is a collection
-of explicit symbolic outer frames, scalar handling, degeneracy branches,
-and replayable certificates integrated into a larger catalog workflow.
+The accompanying software joins OSR factorization, native analytical charts,
+and exact local rewrites. Quartz \cite{quartz} and QUESO \cite{queso} already
+synthesize verified, gate-set-dependent optimizations. UniversalQCompiler
+provides analytical synthesis in Mathematica \cite{universalqcompiler}.
+Single-qubit exact Clifford+T synthesis and normal forms have an extensive
+literature \cite{matsumoto,kmm,giles,gilesma}; the 192 phase-resolved
+one-qubit Clifford circuits in our atlas are a small reference and regression
+suite. Neither their number nor an easily reproducible shortest-path search
+is presented as a major synthesis advance. Earlier numerical OSR partition
+resynthesis \cite{partition} is a separate project and supplies no numerical
+evidence for the identities proved here.
 
-Symbolic circuit optimization also predates this work. Quartz generates
-and verifies gate-set-dependent transformations and applies cost-based
-search \cite{quartz}. QUESO synthesizes symbolic rewrite rules using
-polynomial identity filtering and applies them through beam search
-\cite{queso}. These systems address a substantial part of the motivation
-for reusable parameterized transformations. We do not claim that symbolic
-motif discovery, heterogeneous instruction sets, or compiler-generated
-rewrite rules are new concepts. Our emphasis is the combination of exact
-phase policies, OSR-guided decomposition, native analytical charts, scoped
-minimum certificates, and a directly inspectable reference atlas.
+\section{Resources, phase, and operator-Schmidt rank}
+All gate-count theorems use arbitrary one-qubit unitaries, all-to-all
+connectivity, fixed input/output wires, arbitrary input states, and no
+ancillas. An Ising interaction is locally equivalent to $e^{itZZ}$;
+its angle may vary between uses. CNOT is one member of this class.
+An unrestricted two-qubit gate is a different, strictly larger resource.
+For supplied hardware alphabets, the archive counts the declared primitive;
+a theorem in the relaxed model transfers as a lower bound, and requires a
+separate native construction to prove a matching optimum.
 
-UniversalQCompiler is an analytical Mathematica synthesis package, with
-unitary, isometry, and channel compilation and LaTeX circuit export
-\cite{universalqcompiler}. It is relevant analytical prior art. No runtime
-or circuit-quality experiment against it is reported here because a
-licensed kernel was unavailable. Quartz and QUESO were not executed either;
-we claim no measured dominance over those tools. Our SDK experiments are
-restricted to the versions and routes recorded below.
+Literal synthesis requires $U=C$. Projective synthesis requires
+\begin{equation} U=e^{i\gamma}C,\qquad |e^{i\gamma}|=1,\label{eq:phase}\end{equation}
+with the scalar recorded at zero physical cost. A physical GP gate is never
+inserted. At equal declared cost we prefer literal equality. Controlling a
+projective word requires $P(\gamma)$ on the added control, since
+$C(U)=P_c(\gamma)C(C)$. The release proves a concrete controlled-Sycamore
+substitution both with and without this correction. This illustrates the
+contract; SDKs that track global phase can already implement this rule.
 
-Qiskit already represents symbolic parameters and supports compile-once
-parameter binding \cite{qiskitparameter}. The use case here is reducing
-the symbolic native circuit before repeated binding, not introducing
-parameter reuse. Earlier OSR-based partition resynthesis \cite{partition}
-concerns numerical block optimization and globally optimal selection over
-enumerated partition candidates. Its numerical sample is not reused as
-evidence for the symbolic identities in this work.
-
-\section{Problem, resources, and phase}
-Let $U(\vec\theta)$ be an exact $2^n\times2^n$ unitary matrix over
-real symbolic parameters and let $\mathcal B$ be a supplied gate alphabet.
-An output word $C$ consists only of gates in $\mathcal B$, on distinct
-valid wires, with exact expressions and no floating constants. Literal mode
-requires $U=C$. Projective mode requires
+For a cut $A|B$, realign $U_{ab,a'b'}$ with row $(a,a')$ and column $(b,b')$.
+The rank is $r_{A|B}(U)=\OSR_{A|B}(U)$. It obeys
 \begin{equation}
- U=e^{i\gamma(\vec\theta)}C,\qquad |e^{i\gamma}|=1,
- \label{eq:phase}
-\end{equation}
-with the scalar stored as metadata at zero physical cost. A literal circuit
-is preferred when the two costs agree. If the projective word is strictly
-cheaper, both are retained; unresolved score comparisons also retain both.
-Literal scalar absorption, when possible, uses allowed local gates.
-
-We order resources lexicographically as $(E,S,L)$: number of native
-two-wire operations, parameter-sensitive score, then number of one-wire
-operations. For an operation $g$ acting on $k_g$ wires with explicit
-parameters $p_j$, objective version 2 uses
-\begin{equation}
- S(C)=\sum_{g\in C}\left[2^{k_g}+\frac15\sum_j
- \left(\log_2\max\{1,|\operatorname{den}(\operatorname{simplify}p_j)|\}
- +\frac1{100}\right)\right].\label{eq:cost}
-\end{equation}
-A fixed named S or T has no explicit angle surcharge; a U3 has three.
-This is a symbolic-description preference, not a calibrated pulse model.
-The normal form chosen by the simplifier is part of the scoring contract.
-Denominator complexity is not invariant under all mathematical expression
-representations. Candidate ordering uses numeric evaluations of recorded
-exact score expressions; exact identity acceptance is independent of that
-ordering.
-
-The nonnegative clamp is necessary. In the historical unclamped objective,
-put $d=\log(2049/2048)$ and $a=1/d$. The exact identity word
-$U_3(-a,0,0)U_3(a,0,0)$ has negative score
-$1003/250+(2/5)\log_2d$. Repeating it makes unrestricted minimization
-unbounded below. The revised objective removes this obstruction; an exact
-migration audit preserved all scores for 1,390 distinct retained angle
-expressions. Nonnegativity gives finite word-length bounds below an
-incumbent score, but does not by itself solve continuous angle minimization.
-
-Some shared-expression charts are too large for full score evaluation
-within the recorded budget. Their count $E$ remains exact, and a strict
-improvement in $E$ decides the lexicographic order. At equal $E$, an unknown
-score is incomparable. We never score a temporary alias as if it were the
-underlying angle, set an unknown score to zero, or use $L$ to break an
-unresolved secondary comparison.
-
-\section{OSR-guided symbolic synthesis}
-\subsection{Exact cuts, factors, and lower bounds}
-For a bipartition $A|B$, realign $U_{ab,a'b'}$ into a matrix with row
-index $(a,a')$ and column index $(b,b')$. Its rank is the operator-Schmidt
-rank $r_{A|B}(U)$. The implementation works over exact exponential rational
-functions; it does not threshold numerical singular values. Rank-one
-realignment gives a tensor factorization. All nontrivial bipartitions are
-considered once, choosing the side containing local wire zero as the
-canonical representative. This cut enumeration is exponential in width;
-we make no polynomial scaling claim for unbounded $n$.
-
-The basic inequalities are
-\begin{equation}
- r_{A|B}(UV)\leq r_{A|B}(U)r_{A|B}(V),\qquad
+ r_{A|B}(UV)\le r_{A|B}(U)r_{A|B}(V),\qquad
  r_{A|B}(L_A\otimes L_B)=1.\label{eq:cut}
 \end{equation}
-If every native interaction crossing a cut has rank at most $\rho$, at
-least $\lceil\log_\rho r_{A|B}(U)\rceil$ crossings are necessary. A
-nonzero exact minor records the rank witness and, for a family, the
-condition under which it is nonzero. An exact hard specialization can prove
-a necessary uniform budget for the entire family. It cannot prove that
-every parameter value needs that budget.
+For a controlled operator, its \emph{control OSR} means this rank on
+$c|ab$. If its two target branches are linearly independent it is two,
+and its control-side Schmidt space is the full diagonal space
+$\mathcal D=\operatorname{span}\{|0\rangle\langle0|,|1\rangle\langle1|\}$.
+For a target cut, the $V$ block is a submatrix of the realignment of $C(V)$.
+Thus $\OSR(V)=4$ forces ranks $(2,4,4)$ on the three singleton cuts.
+Every crossing Ising interaction has rank at most two, so Eq.~\eqref{eq:cut}
+constrains the number and placement of interactions.
 
-\subsection{Candidate construction and acceptance}
-The constructor first checks resource obstructions and elementary/native
-matches, then exposes independent factors or controlled structure where
-possible. Residual search peels candidate interactions, evaluates the OSR
-profile of the residual, and explores small interaction patterns. Catalog
-identities, controlled blocks, exchange structures, Clifford frames, and
-analytical native charts supply complementary candidates. Local gates are
-fused, lowered to the exact supplied alphabet, and simplified using
-independently proved identities. The final selection compares only
-accepted candidates under the declared resource order.
-
-Search is not an exhaustive enumeration of all continuous circuits.
-Numerical optimization may propose a fixed circuit or an angle relation;
-it is retained only after exact lifting and an exact identity proof.
-Genetic programming is not required for the released certificates.
-Catalog-specific dispatch and opaque-matrix synthesis are distinguished in
-the experiments, since success on named templates alone would be weak
-evidence of generalization.
-
-Acceptance uses exact matrix identities, reductions to polynomial/trigonometric
-identities, or a compositional certificate consisting of a proved parent
-and proved replacements. Algebraic roots and branch choices carry explicit
-conditions. A failure to decide an identity is unresolved, not false or
-proved impossible. Time limits are reported independently from feasibility.
-
-\subsection{Native charts and shared expressions}
-We use $\A(x,y,z)=\exp[i(xXX+yYY+zZZ)]$. The B chart constructs two
-$B=\A(\pi/4,\pi/8,0)$ pulses with explicit U3 frames, folds, corner
-branches, and scalar absorption. Its full-family matrix identity reduces
-to exact Pauli coefficients and normalization polynomials.
-
-For $\Sqi=\A(\pi/8,\pi/8,0)$, the two-pulse middle chart lies in the
-known region $x\geq y+|z|$ of the Weyl chamber \cite{sqisw}. The constructor
-recovers its outer frames symbolically using the real and imaginary Pauli
-tensors of the spin-flip matrix. Known symbolic eigenvalues yield spectral
-projectors of a real $3\times3$ tensor; explicit pivot choices handle
-degenerate subspaces. Periodic-angle folding and a third pulse cover the
-remaining chamber. Euler and scalar absorption charts complete native
-lowering. The detailed equations and branch certificates are supplied in
-the separate SQiSW proof supplement.
-
-Five broad families---Canonical, fSim, PhasedFSim, SWAPPow, and TK2---now
-use three SQiSW interactions in each of two presets and both phase modes,
-replacing six-interaction incumbents. Each family contains a SWAP-class
-specialization outside the two-pulse region, so three is the minimum
-\emph{uniform} budget. The exact circuits use nine local gates and the
-projective circuits eight; these are counts, not minimum-local-cost claims.
-The approximately 600 scalar definitions per chart are stored as a scoped
-acyclic expression program. Expanding repeated subexpressions can produce
-hundreds of millions of expression-tree occurrences. A diagram label is
-therefore linked to its exact program and glossary. The retained 20 phase
-results have unresolved secondary scores.
-
-\section{A four-Ising optimum for controlled fermionic SWAP}
-Let $F$ act on two qubits by
-\begin{equation}
- F|00\rangle=|00\rangle,\quad F|01\rangle=|10\rangle,\quad
- F|10\rangle=|01\rangle,\quad F|11\rangle=-|11\rangle.
-\end{equation}
-Define $U_F=|0\rangle\langle0|_c\otimes\Id+
-|1\rangle\langle1|_c\otimes F$. This is controlled fermionic SWAP,
-not ordinary Fredkin. The extra sign changes its synthesis problem.
-In our little-endian indexing the control is wire zero, with basis states
-3 and 5 interchanged and basis state 7 negated.
-
+\section{A rank-four controlled-block lower bound}
 \begin{theorem}\label{thm:four}
-The operator $U_F$ requires exactly four CNOTs with arbitrary one-qubit
-unitaries, no ancillas, and all-to-all connectivity. More generally, any
-controlled two-qubit unitary $\operatorname{diag}(\Id,V)$ with
-$\OSR(V)=4$ requires at least four Ising-class two-qubit interactions,
-even allowing different interaction angles, arbitrary local unitaries,
-and an arbitrary scalar.
+If $\OSR(V)=4$, then $C(V)$ requires at least four Ising-class interactions,
+even with arbitrary interaction angles, arbitrary one-qubit unitaries, and
+an arbitrary scalar. Controlled fermionic SWAP attains this bound with
+four CNOTs.
 \end{theorem}
-Here an Ising-class interaction is any unitary locally equivalent to
-$\exp(itZ\otimes Z)$, including CNOT, CZ, ECR and tunable XX, ZZ, or ZX
-interactions at entangling angles. The lower bound concerns that relaxed
-class; a fixed basis needs its own matching upper construction.
-
-\subsection{Upper construction}
-The following word, read in time order, is literally $U_F$:
-\begin{center}\small
-\begin{tabular}{rlrl}\toprule
-1&$R_y(\pi/2)_1$&8&$\CNOT_{0,2}$\\
-2&$R_z(\pi)_2$&9&$R_y(-\pi/4)_2$\\
-3&$\CNOT_{1,2}$&10&$\CNOT_{1,2}$\\
-4&$R_y(\pi/4)_1$&11&$R_y(\pi/2)_1$\\
-5&$R_y(-3\pi/4)_2$&12&$R_z(\pi)_0$\\
-6&$\CNOT_{0,1}$&13&$R_z(\pi)_1$\\
-7&$R_y(-\pi/4)_1$&14&$R_x(-\pi)_2$\\\bottomrule
-\end{tabular}
-\end{center}
-Exact matrix multiplication proves the identity with no GP gate or
-unrecorded scalar. The native lowering pipeline also produces a CX/U3
-word with $E=4,L=10$. The latter is a local-count upper bound. The raw
-archive preserves the literal word and independent rank witnesses.
-\begin{figure}[ht]
-\centering\resizebox{\linewidth}{!}{\input{generated/ffredkin_circuit.tex}}
-\caption{The literal four-CNOT construction. Wire zero is the control;
-the final local gates implement the exact phase convention.}
-\end{figure}
-
 \subsection{Control-space rigidity}
 \begin{lemma}\label{lem:rigidity}
 If invertible one-qubit matrices $P,Q$ map the full diagonal matrix space
@@ -325,8 +156,7 @@ target cut has maximum rank four. Each crossing Ising interaction has
 rank at most two. Consequently $a$ and $b$ each have degree at least two
 and $c$ at least one in an interaction graph. Two interactions cannot
 satisfy these demands. With three, the only edge multisets are a triangle
-$ca,cb,ab$, or two $ab$ edges and one control edge. There are six time
-orders in each class, twelve in total.
+$ca,cb,ab$, or two $ab$ edges and one control edge. The triangle has six time orders. The doubled-target-edge case has three placements of the control edge for each of its two possible targets, also six. These are the twelve surviving edge words.
 
 First consider one control crossing and two internal target interactions.
 Absorb local frames into adjacent gates and put the single crossing in
@@ -337,10 +167,13 @@ Lemma~\ref{lem:rigidity}, choose a local branch as the first one
 (inverting $Q$ if the branches are exchanged). If both internal interactions
 lie on one side, the corresponding product must be local, so the relative
 branch is local. If one lies on each side, the relative branch is
-$W_-^\dagger QW_-$ with $W_-$ locally Ising. Conjugation of a one-wire
-operator by $e^{itZZ}$ has support on the other wire in
-$\operatorname{span}\{\Id,Z\}$, hence OSR at most two. Local frames do
-not change this bound. In neither case can the relative block have rank four.
+$W_-^\dagger QW_-$ with $W_-$ locally Ising. To make the conjugation bound explicit, write the one-wire operator as
+$q_0I+q_xX+q_yY+q_zZ$. Conjugating by $e^{itZZ}$ leaves $I$ and $Z$
+unchanged, sends $X\otimes I$ to a combination of $X\otimes I$ and
+$Y\otimes Z$, and sends $Y\otimes I$ to a combination of $Y\otimes I$
+and $X\otimes Z$. Consequently the result is
+$M_0\otimes I+M_1\otimes Z$ and has OSR at most two. Outer local frames
+preserve that rank. In neither case can the relative block have rank four.
 
 Now consider the triangle. Put each control interaction in controlled
 form and combine all operations on the control between them into a
@@ -365,8 +198,7 @@ $A\in\operatorname{span}\{\Id,B\}$. The transformed controlled gates
 then act only on $c,b$. Apart from local factors the whole circuit is
 $(\Id_c\otimes K_{ab})W_{cb}$. Its $a|cb$ rank is at most
 $\OSR(K)=2$, again a contradiction. These cases exclude every
-three-interaction word. The explicit four-CNOT identity attains the bound
-for $U_F$.
+three-interaction word. The four-CNOT identity in Sec.~\ref{sec:fermionic} attains the bound for $U_F$.
 \end{proof}
 The supplied checker verifies the exact matrix identity, cut minors,
 three-edge enumeration, Ising conjugation identities, and native-class
@@ -374,224 +206,417 @@ identifications. The argument above is an analytical proof with checked
 algebraic components, not a proof-assistant formalization or a conclusion
 from failed numerical optimization.
 
-\section{Other minimum and obstruction certificates}
-\subsection{Two-qubit nonlocal invariants}
-Write $\Gamma=U(YY)U^T(YY)$ and $\Delta=\det U$. The normalized invariants
+
+\section{Complete classification for balanced involutions}
+\begin{theorem}\label{thm:balanced}
+Let $V=V^\dagger$, $V^2=I_4$, and $\operatorname{tr}V=0$. The minimum
+CNOT and unrestricted two-qubit-gate counts of $C(V)$ are:
+\begin{center}\begin{tabular}{lrr}\toprule
+Relative block & CNOT & Unrestricted\\\midrule
+$\OSR(V)=4$ &4&3\\
+$\OSR(V)=2$ &3&3\\
+$\OSR(V)=1$, one-body Pauli up to local conjugacy &1&1\\
+$\OSR(V)=1$, two-body Pauli product up to local conjugacy &2&2\\
+\bottomrule\end{tabular}\end{center}
+There is no rank-three stratum. Multiplying $V$ by an arbitrary scalar phase
+does not change these interaction counts when arbitrary $U(2)$ locals are
+available: the scalar is supplied by a physical one-qubit phase on $c$.
+\end{theorem}
+
+\subsection{Two-angle normal form, including degeneracies}
+Expand a traceless Hermitian $V$ in the real Pauli basis:
+\begin{equation}
+ V=\vec a\cdot\vec\sigma\otimes I+I\otimes\vec b\cdot\vec\sigma
+       +\sum_{ij}T_{ij}\sigma_i\otimes\sigma_j.
+\end{equation}
+Multiplying Pauli matrices and setting $V^2=I$ gives exactly
+\begin{equation}\label{eq:involution}
+ |a|^2+|b|^2+\|T\|_F^2=1,\quad Tb=0,\quad T^Ta=0,
+ \quad\operatorname{cof}(T)=ab^T.
+\end{equation}
+The scalar, one-body, and two-body coefficients of $V^2$ independently
+verify these equations. The supplied checker expands every coefficient.
+
+If $a,b$ are nonzero, rotate them to the $X$ and $Z$ axes respectively.
+Then the $X$ row and $Z$ column of $T$ vanish. Its remaining real $2\times2$
+block has a signed singular-value decomposition under the remaining rotations
+in the two perpendicular planes. Signs are retained, so only proper rotations,
+implemented by local unitaries, are needed. This gives
+\begin{equation}\label{eq:fourterm}
+ V_0=A X_a+B Z_b+C Y_aY_b+D Z_aX_b,\quad
+ A^2+B^2+C^2+D^2=1,\quad AB+CD=0.
+\end{equation}
+For completeness, if only $a$ is nonzero, $\operatorname{cof}(T)=0$ forces
+$\operatorname{rank}T\le1$ and $T^Ta=0$ makes its nonzero left singular
+axis perpendicular to $a$. The two remaining terms are put into
+Eq.~\eqref{eq:fourterm} by local rotations. The case with only $b$ is
+symmetric. If both vanish, $T$ has rank one and unit norm, giving a Pauli
+product. If $T=0$, exactly one of $a,b$ is nonzero and has unit norm.
+Thus the same normal form covers every degenerate case.
+
+The matrix $\left(\begin{smallmatrix}A&-C\\D&B\end{smallmatrix}\right)$
+has rank one and Frobenius norm one, so it is an outer product of two real
+unit vectors. Write these as $(\sin\alpha,\cos\alpha)^T$ and
+$(\sin\beta,\cos\beta)$. With $K=\CNOT_{a,b}$ and
+$Q(t)=R_y(t)ZR_y(-t)$ this proves
+\begin{equation}\label{eq:normalform}
+ V_0=K\,[Q(\alpha)_aQ(\beta)_b]\,K,
+\end{equation}
+with coefficients
+$(A,B,C,D)=(\sin\alpha\sin\beta,\cos\alpha\cos\beta,
+-\sin\alpha\cos\beta,\cos\alpha\sin\beta)$.
+In the Pauli coefficient matrix the four coefficients occupy different rows
+and columns. Hence OSR is their number of nonzero entries, which is one,
+two, or four. The relation $AB+CD=0$ excludes three.
+
+\subsection{Matching constructions and two-gate exclusions}
+Controlling Eq.~\eqref{eq:normalform} uses two outer $K$ gates and one
+controlled $Q$ on each target. Since every $Q$ is a one-qubit Pauli axis,
+its controlled gate is locally CZ and costs one CNOT. This proves the
+four-CNOT upper bound throughout the class. Local conjugating frames for
+$V$ add only one-qubit gates to $C(V)$.
+
+On rank-two boundaries there is a stronger form $V_0=K'Q_jK'^\dagger$
+with $K'$ containing one CNOT. Representative edges are shown below;
+$S=\operatorname{diag}(1,i)$ and $t$ is the remaining angle.
+\begin{center}\small\begin{tabular}{lll}\toprule
+Edge & $K'$ & $Q_j$\\\midrule
+$\alpha=0$ & $H_b\CNOT_{a,b}$ & $\cos t X_b+\sin t Z_b$\\
+$\alpha=\pi/2$ & $H_aS_b\CNOT_{a,b}$ & $\sin t Z_a+\cos t Y_a$\\
+$\beta=0$ & $S_a^\dagger\CNOT_{b,a}$ & $\cos t Z_b+\sin t Y_b$\\
+$\beta=\pi/2$ & $H_a\CNOT_{a,b}$ & $\sin t Z_a+\cos t X_a$\\
+\bottomrule\end{tabular}\end{center}
+Other edges follow by angle periodicity and local Pauli conjugations.
+Controlling $Q_j$ between $K'^\dagger$ and $K'$ costs three CNOTs.
+The checker proves all four identities with $t$ free, including the corners.
+
+To exclude two unrestricted interactions for nonlocal $V$, their edges must
+cover all three wires. If both edges meet $c$, the controlled-product
+argument of Yu and Ying \cite[Proposition 2]{yuying} says that the
+conditional branches are target-local; their relative product cannot be
+nonlocal. If the edges are $ca,ab$, there is a single crossing of the
+control cut. Its OSR must be two. A two-qubit unitary of OSR two is locally
+controlled: in its Cartan expansion, rank two leaves only one nonzero
+interaction coordinate. Put this gate into controlled form. With the
+$ab$ interaction entirely on one side of the crossing, the local-branch
+argument of Lemma~\ref{lem:rigidity} makes the relative target branch local.
+The reversed order and exchanged targets give the same conclusion.
+Two gates therefore cannot implement any nonlocal relative $V$.
+
+For any balanced $V$, its $+1$ and $-1$ eigenspaces both have dimension two.
+An unrestricted two-qubit change of basis $J$ satisfies
+$V=JZ_aJ^\dagger$. The circuit $J^\dagger,CZ_{ca},J$, in time order,
+uses three unrestricted interactions. Together with the preceding exclusion
+and Theorem~\ref{thm:four}, this proves both nonlocal rows of
+Theorem~\ref{thm:balanced}. In the rank-one cases, local Hermitian unitary
+factors reduce to identities or Pauli axes. One-body control costs one CX;
+a two-body Pauli product costs two. One gate cannot cover its three
+nontrivial singleton cuts, proving the latter minimum.
+
+The theorem depends on more than Weyl class. The relative blocks $I$,
+$Z_a$, and $Z_aZ_b$ all have the local Weyl class, whereas their controlled
+costs are zero, one, and two. A classification of arbitrary controlled-$V$
+by the Weyl class of $V$ alone is therefore impossible. The present theorem
+classifies balanced involutions, not all controlled unitaries.
+
+\subsection{Controlled fermionic SWAP}\label{sec:fermionic}
+Let $F|00\rangle=|00\rangle$, $F|01\rangle=|10\rangle$,
+$F|10\rangle=|01\rangle$, and $F|11\rangle=-|11\rangle$.
+Then $F=(Z_a+Z_b+X_aX_b+Y_aY_b)/2$, so its four independent Pauli
+Schmidt coefficients give $\OSR(F)=4$. Equivalently,
+$F=(S^\dagger\otimes S^\dagger)\mathrm{iSWAP}$.
+It is Hermitian, squares to identity, and has trace zero. Ordinary SWAP
+has trace two and belongs to a different class.
+
+Figure~\ref{fig:fermionic} is a literal identity with four CNOTs and six
+$R_y$ rotations. In time order its rotations and interactions are
+\begin{align*}
+ &R_y(-\pi/2)_a,\ \CNOT_{a,b},\ R_y(-\pi/4)_a,\ R_y(-3\pi/4)_b,\\
+ &\CNOT_{c,a},\ \CNOT_{c,b},\ R_y(\pi/4)_a,\ R_y(3\pi/4)_b,
+ \ \CNOT_{a,b},\ R_y(\pi/2)_a.
+\end{align*}
+Exact multiplication gives $C(F)$ with no leftover scalar. Six is a
+local-count upper bound, not a proved local minimum. An independently
+constructed two-qubit $J$, rotating the odd-parity subspace by a real
+$\pi/4$ rotation, also gives $F=J^\dagger Z_aJ$; its exact three-interaction
+controlled circuit is checked separately.
+\begin{figure}[ht]
+\centering\resizebox{\linewidth}{!}{\input{generated/ffredkin_circuit.tex}}
+\caption{Literal controlled fermionic SWAP. Wire zero is $c$, and wires
+one and two are $a,b$. The interaction count is optimal in the Ising model.}
+\label{fig:fermionic}
+\end{figure}
+
+\section{An invariant characterization of the two-SQiSW region}
+Let $\Gamma=U(YY)U^T(YY)$ and $\Delta=\det U$. Define the scalar-independent
+Makhlin invariants \cite{makhlin}
 \begin{equation}
  g_1=\frac{(\operatorname{tr}\Gamma)^2}{16\Delta},\qquad
- g_2=\frac{(\operatorname{tr}\Gamma)^2-\operatorname{tr}(\Gamma^2)}{4\Delta}
+ g_2=\frac{(\operatorname{tr}\Gamma)^2-\operatorname{tr}(\Gamma^2)}{4\Delta}.
 \end{equation}
-are unchanged by local gates and scalar phase \cite{makhlin}. Their
-one-native-pulse values exclude that pulse class when unequal. Additional
-two-pulse constraints for Ising, iSWAP, SQiSW and square-root-SWAP supply
-lower bounds. For example, two SQiSW pulses require
-\begin{equation}
- W=g_2+1\geq0,\qquad W^2\geq8(|g_1|+\Re g_1).
+Use $\A(x,y,z)=\exp[i(xXX+yYY+zZZ)]$, with chamber
+$\pi/4\ge x\ge y\ge|z|$, and $\Sqi=\A(\pi/8,\pi/8,0)$.
+\begin{theorem}\label{thm:sqisw}
+A two-qubit unitary has a projective realization with at most two SQiSW
+pulses and arbitrary local unitaries if and only if
+\begin{equation}\label{eq:iff}
+ W=g_2+1\ge0,\qquad W^2\ge8(|g_1|+\Re g_1).
 \end{equation}
-An exact violation excludes two pulses; a matching three-pulse chart gives
-an optimum. The proof supplement derives the polynomial identities and
-separately excludes zero/one-pulse cases where needed. We do not transfer a
-fixed primitive's lower bound to an arbitrary tunable gate without proving
-the larger class condition.
+This is an invariant rewriting of Huang et al.'s region $x\ge y+|z|$
+\cite{sqisw}, including its boundary.
+\end{theorem}
+\begin{proof}
+In the chamber, $g_1=(u+iv)^2$ up to the immaterial sign of $v$, where
+$u=\cos2x\cos2y\cos2z\ge0$, and
+$g_2=\cos4x+\cos4y+\cos4z$. Thus
+$|g_1|+\Re g_1=2u^2$, and Eq.~\eqref{eq:iff} is equivalent to $W\ge4u$.
+Put $X=\cos2x$, $Y=\cos2y$, $Z=\cos2|z|$. Direct factorization gives
+\begin{align}
+ W-4u&=2(X^2+Y^2+Z^2-2XYZ-1)\nonumber\\
+ &=2[X-\cos2(y+|z|)][X-\cos2(y-|z|)].\label{eq:factor}
+\end{align}
+When $|z|>0$, the second factor is negative: $x\ge y>y-|z|$ and
+cosine decreases on the relevant interval. The first factor is nonpositive
+exactly when $x\ge y+|z|$. When $z=0$, the product becomes
+$(X-Y)^2\ge0$ and the chamber already satisfies $x\ge y$.
+Huang et al.'s necessary-and-sufficient chamber characterization now proves
+both directions. Exact polynomial checks establish Eq.~\eqref{eq:factor}
+and the identity for $(u+iv)^2$, independently of random sampling.
+\end{proof}
+The test decides zero/one/two-pulse-region membership, not the exact minimum
+within that region. A separate zero/one-pulse class test is needed to assert
+that two pulses are necessary. No new universal three-pulse bound is claimed.
 
-\subsection{Clifford phases and secondary floors}
-The atlas includes 24 projective single-qubit Cliffords and their eight
-scalar phases, giving 192 literal matrices. Finite-alphabet graph searches
-store exact matrices and shortest-path certificates. In the
-$\{H,S,T,T^\dagger\}$ alphabet, a radius-seven exact search reaches 628
-matrices, including non-Clifford intermediates. Meet-in-the-middle lookup
-proves all 192 word minima with maximum length fourteen: every shorter word
-splits into two radius-seven halves. Eighth-root phase completeness follows
-from the coefficient field $\mathbb Q(\sqrt2,i)$, excluding missing
-sixteenth-root corrections. Continuous alphabets are outside this finite
-proof; their atlas circuits are not all claimed globally local-optimal.
+\section{Symbolic constructions and reference resources}
+The implementation accepts exact matrices and named symbolic families.
+It enumerates all distinct nontrivial cuts, factors rank-one realignments,
+and peels candidate interactions in a bounded residual search. Exact
+exponential-polynomial arithmetic supplies rank witnesses rather than
+numerically thresholded SVDs. Native controlled, exchange, B, and SQiSW
+charts supply complementary candidates. Every accepted candidate is checked
+by an exact identity or a compositional certificate of proved replacements.
+A failed search remains unresolved, and a search deadline is not an
+impossibility argument.
 
-Under Eq.~\eqref{eq:cost}, every local costs at least two. Nonzero
-commutators with embedded X or Z witness wires on which a zero-entangler
-target acts nontrivially. Combining support bounds with mandatory parameter
-surcharges certifies a secondary minimum when a construction meets that
-floor. These give 372 literal and 1,144 projective global lexicographic
-certificates in the preserved floor audit, with overlaps with other proofs.
-We report these separately from the entangler-only coverage.
+The B and SQiSW charts include folded-angle and degenerate branches.
+Long expressions are stored as a scalar directed acyclic program with scoped
+aliases. The canonical three-SQiSW projective chart has 585 scalar bindings
+and 11 physical gates. This is a machine-inspectable exact expression
+program, not a short human-readable formula. Numerical evaluation compiles
+the shared dependencies once and evaluates only the branches required for
+a binding; the exact family verifier remains the acceptance criterion.
+The numerical binding experiment below measures this implementation without
+claiming that symbolic synthesis is always faster than numerical synthesis.
 
-\subsection{Feasibility obstructions}
-A finite discrete alphabet cannot represent a nonconstant continuous
-family by a single unrestricted exact-family construction. Determinants
-of allowed circuits lie in a generated subgroup; violation of its
-necessary root condition excludes literal equality. Clifford normalization
-and the field $\mathbb Q(\sqrt2,i)$ give further necessary conditions for
-Clifford and Clifford+T alphabets. Projective tests remove arbitrary scalar
-where appropriate. The archive records a witness and scope. A failed
-search is never converted into an impossibility record, and a generic-family
-obstruction permits exactly representable specializations.
+The grid contains 327 catalog entries crossed with 32 supplied alphabets.
+There are 217 named one-qubit entries, including 192 matrices obtained from
+24 Clifford representatives and eight phases; the remaining named widths
+are 72 two-qubit, 14 three-qubit, three four-qubit, and one five-qubit entry.
+Twenty register fixtures use specified widths. Their physical widths produce
+218, 79, 26, 3, and 1 entries at widths one through five. Aliases and phase
+multiples are included explicitly and are not independent families.
+In literal mode, 222 entries admit zero-entangler constructions in every preset
+where they are representable; zero-cost nonlocal synthesis is not inferred
+from the size of the headline grid.
+
+The Clifford reference includes finite-alphabet shortest-path proofs for
+$\{H,S,T,T^\dagger\}$: a radius-seven search reaches 628 matrices, and
+meet-in-the-middle splitting proves word minima for all 192 targets, with
+maximum length fourteen. Continuous-alphabet circuits have no corresponding
+unrestricted local-optimality claim. The result is a useful explicit phase
+reference alongside established Clifford+T synthesis theory
+\cite{matsumoto,kmm,giles,gilesma}. The actual gate and Clifford PDFs, their
+editable LaTeX, alphabetical index, and exact expression glossaries are
+included in the full review package.
 
 \section{Evaluation}
-\subsection{Frozen grid and certificate scope}
-\input{generated/coverage.tex}
-The grid comprises 243 fixed entries, 64 free-real-parameter families,
-and 20 register fixtures, each crossed with 32 presets. The archive records
-per-mode source-run indices because successive refinements use different
-implementations. A complete classification means that the requested
-catalog/family contract is decided; it does not establish a complete
-classification of every exceptional parameter specialization.
-Some early runs recorded a Git HEAD preceding uncommitted source edits.
-The verifier resolves their recorded source-content hashes from Git history
-and lists the differing content revisions explicitly; the original recorded
-HEAD is not silently relabeled as containing those edits.
+\subsection{Coverage by width and proof scope}
+The following tables classify every effective cell, including a literal
+circuit reused as its projective construction. ``Fixed min.'' and ``Family
+min.'' are a disjoint union of matching explicit lower-bound payloads. The
+latter certifies a necessary uniform family budget, not the minimum at every
+parameter specialization. ``Unproved'' means that a positive-entangler
+construction lacks a matched certificate in this union. Legacy Boolean
+optimality flags alone are not counted as proof payloads. Zero-entangler
+constructions and obstructions appear separately.
+\paragraph{Literal equality.}\input{generated/coverage_phase_exact.tex}
+\paragraph{Projective equality.}\input{generated/coverage_projective.tex}
+The row ledger lists gate, alphabet, phase policy, width, interaction count,
+proof scope, and every matched proof source. This resolves the earlier
+inconsistency between per-result flags and separate audit totals. In the
+pre-revision archive the raw positive-entangler flags were 694 literal and
+423 explicitly stored projective results. Its 1,916 explicitly stored
+positive-entangler projective results omitted 1,141 positive-entangler
+literal circuits reused projectively. The denominator for the complete
+projective grid is therefore 3,057, not 1,916. Neither the flags nor an
+uncorrected sum of overlapping audits is our reported optimality total.
 
-The new release replaces the twenty SQiSW frontier results and the
-fFredkin rows while preserving earlier raw attempts and source snapshots.
-Old independent proof reports remain tied to their immutable input;
-their statements transfer only for the same target, basis, phase policy,
-and matching count. The release verification report checks these conditions.
-Lower-bound timeouts are recorded in the older proof audit even though no
-retained synthesis mode is a timeout. Thus ``no unresolved synthesis cells''
-is narrower than ``all research questions are solved.''
+The obstruction breakdown is as follows.
+\input{generated/obstructions.tex}
+These are standard necessary conditions, used to describe feasibility.
+In particular, 2,601 literal obstructions are determinant-group tests, and
+all 268 projective obstructions occur in the three discrete Clifford or
+Clifford+T presets. A nonconstant continuous family cannot be covered by a
+countable discrete alphabet, although special parameter values can be
+representable. We do not present these simple feasibility checks as new
+lower-bound theorems.
 
-\subsection{Independent fixed-target baselines}
-Qiskit is run on two independently constructed inputs: an exact target
-matrix converted numerically, and a library source word. Neither input is
-our optimized circuit. We use CX/U and CZ/U bases, optimization level three,
-approximation degree one, seeds 7 and 219, arbitrary inputs and no ancillas.
-Output permutations are checked; if a virtual permutation is introduced,
-the wrapper reruns level one and records the actual level. Full numerical
-matrix replay includes Qiskit's scalar. Cirq uses its full-CZ target
-gateset and independent library sources, with explicit little-endian
-conversion for fFredkin. Cirq replay is projective. Numerical SDK circuits
-are comparison upper bounds, not symbolic proofs.
-\input{generated/sdk.tex}
-The earlier broad comparison contains 2,673 fixed-target/basis pairs on
-supported Qiskit routes, with \OldSDKWins{} lower entangler counts and
-\OldSDKTies{} ties in this release. Some of its inputs were source-fed
-constructions, so those ties are not independent discoveries. The focused
-experiment above addresses this limitation for its two targets. A tested
-route is not the best result obtainable with every SDK pass manager.
+\subsection{Independent compiler comparisons}
+Eight fixed targets are constructed independently from library gates.
+Qiskit 2.6.2, pytket 2.18.5, and BQSKit 1.2.1 receive these source words;
+for targets on at most three qubits they also receive the target matrix.
+The table selects the smallest verified $(E,L)$ pair over those recorded
+routes. The source is never our optimized output. Qiskit uses optimization
+level three and seed 219; tket uses full peephole optimization with implicit
+swaps disabled; BQSKit uses level three, maximum synthesis size three, and
+a 120-second process budget. All inputs are arbitrary states, ancilla-free,
+with fixed output wires and all-to-all connectivity. Full-matrix projective
+replay requires maximum entry error below $10^{-8}$.
 
-At equal entangler count, the broader local-count audit has
-\LocalWins{} reductions, \LocalTies{} ties and \LocalLosses{} higher
-local counts. In particular, C3X/ZZ/U3 retains 28 locals with score 115.594
-while an available 24-local alternative scores 116.37. This is a tradeoff
-between two verified witnesses under the declared secondary objective,
-not a proof that no unknown circuit improves both. We make no blanket
-local-count dominance claim.
+Quartz and the original Java-17 QUESO implementation receive the same
+independent sources in the NAM alphabet $\{H,R_z,X,\CNOT\}$. Each has a
+10-second search budget and optimizes total native gate count. Quartz uses
+its supplied NAM equivalence set; QUESO rules are generated with three wires
+and length six. Rule files, repository revisions, the Quartz harness patch,
+and output QASM are archived. Their displayed local counts use one-qubit
+fusion into U3, preserving the entangling skeleton; these settings do not
+constitute an exhaustive search for each tool's best possible result.
+\input{generated/strong_sdks.tex}
+Entries show $E/L$; ``--'' means no output passed the declared replay
+threshold on the recorded route. BQSKit has one runtime error, one
+120-second exhaustion, and an unverified 30-CX C4X output. Quartz's SSWAP
+output has error about $6.9\times10^{-7}$ and is excluded. Every failure and
+its settings remain in the raw record.
 
-\subsection{A scoped Sycamore comparison}
-For $\mathrm{SYC}=\mathrm{fSim}(\pi/2,\pi/6)$ the projective Rz/CX
-word has three locals and three CNOTs. Its tracked factor in
-Eq.~\eqref{eq:phase} is $e^{-7\pi i/24}$. Figure 3 of
-AbuGhanem and Eleuch \cite{syctomography} displays three CNOTs and
-27 local boxes (15 Rz and 12 SX). The 27-to-3 comparison is against that
-specific displayed circuit, under projective equivalence. It is not a
-claim to improve every published Sycamore decomposition. The independent
-SDK experiment yields three entanglers and eight locals for the tested
-routes. Abstract local boxes are not microwave layers: virtual Z rotations
-can have zero duration \cite{virtualz}. No latency, fidelity, or error
-reduction is inferred from these counts.
+BQSKit independently matches our fFredkin count of four CNOTs and six
+locals. A separate enumeration of all 27 three-edge and 81 four-edge layouts,
+with three BQSKit starts per layout, also finds a four-CNOT fit in about six
+seconds overall. Failed numerical three-CNOT fits are not the lower-bound
+proof. The eleven older SDK entangler wins were all fFredkin in different
+presets; they were not eleven distinct gate discoveries. The current data
+also contain genuine losses: Quartz reaches 30 CNOTs for C4X while this
+atlas entry has 36; tket and BQSKit use fewer C3X locals; BQSKit uses fewer
+SSWAP locals. Consequently we claim neither compiler dominance nor that
+all atlas cells attain the best known upper bound.
 
-\subsection{Bounded opaque-family ablations}
-Six structurally perturbed two-qubit families, absent as named catalog
-entries, are tested in SQiSW/U3 and B/U3 presets. They include X/Y-controlled
-rotations, unequal controlled SU(2) branches, phase-gauged number-conserving
-blocks, an affine Cartan family, and unequal commuting exchanges. The full
-and chart-disabled methods receive opaque exact matrices; no template name
-is supplied. A third route receives an independent exact source word and
-only lowers that word. Each method/case/preset has a 20-second budget.
-The OSR residual-search budget is 0.2 seconds; identity certification and
-native lowering share the outer deadline. All source words are independently
-proved equal to their matrices.
-\input{generated/ablation.tex}
+For context, the identified ancilla-free published CX constructions include
+14 for C3X and 36 for C4X \cite{maslov,qiskitsynthesis}, and seven for
+ordinary Fredkin \cite{fredkinshallow}. These are published upper bounds,
+not general optimality theorems. Quartz's measured 30-CX C4X result is
+reported alongside the older 36-CX construction. Toffoli's six-CX minimum
+is proved \cite{toffolicnot}; the five-unrestricted-gate Fredkin result
+\cite{yuying} uses a different primitive. UniversalQCompiler is the only
+listed analytical package without a run here, because its licensed Wolfram
+kernel was unavailable.
+
+\subsection{Component ablations}
+Six opaque two-qubit families are tested in B/U3 and SQiSW/U3: X/Y-controlled
+rotations, unequal controlled SU(2) branches, a phase-gauged exchange block,
+a gauged affine Cartan family, and unequal commuting exchanges. An earlier
+chart-disabled experiment verifies 3/12, compared with 11/12 for the full
+method. This establishes that native charts account for much of this
+workload's success.
+
+We now separately disable OSR factor construction and residual interaction
+peeling, retaining the native charts, Clifford and commuting-Pauli
+constructors, and posthoc identity/lower-bound checks. Both methods receive
+opaque matrices and a 20-second outer deadline, with a 0.2-second residual
+search budget where enabled. The additional three- and four-qubit probes
+are explicitly defined independent-product circuits, not catalog names.
+\input{generated/osr_ablation.tex}
+Figure~\ref{fig:ablation} displays these results. OSR construction does not
+increase the success count on the two-qubit chart workload, and neither
+method resolves the wider probes within this configuration. This experiment
+does not support attributing the chart successes to OSR search. OSR's role
+in the mathematical lower bounds is established analytically, independently
+of the ablation. The title accordingly identifies the actual theorems.
 \begin{figure}[ht]
-\centering\includegraphics[width=\linewidth]{generated/ablation.pdf}
-\caption{Bounded component ablation. Verified counts, unresolved searches,
-and exhausted budgets are kept distinct. Resource summaries include only
-verified outputs; missing results are not zero-cost circuits.}
+\centering\includegraphics[width=.9\linewidth]{generated/referee_ablation.pdf}
+\caption{The full constructor and the constructor with OSR factorization and
+residual search disabled. The two-qubit workload is dominated by native
+charts. Wider unresolved probes are retained.}\label{fig:ablation}
 \end{figure}
-Disabling native charts leaves the other search machinery intact, including
-OSR and local lowering. This is a native-chart ablation, not a clean
-``OSR off'' experiment. The examples are deliberately related structural
-perturbations, not a blind random distribution or an independent benchmark
-of all possible symbolic operators. Their result supports the role of the
-charts in this bounded workload, not universality of the automatic search.
 
-\subsection{Reusable parameters in a four-qubit circuit}
-We compose six fSim blocks on $(0,1),(2,3),(1,2)$ repeated twice, with
-twelve independent real parameters. The baseline source uses the exact
-identity $\mathrm{fSim}(\theta,\phi)=
-R_{xx}(\theta)R_{yy}(\theta)\mathrm{CP}(-\phi)$.
-Both methods use the same compile-once Qiskit settings. Our method first
-replaces each block by its literal three-CNOT symbolic chart. No known
-input state, output permutation, or approximate synthesis is used.
-\input{generated/application.tex}
-\begin{figure}[ht]
-\centering\includegraphics[width=.86\linewidth]{generated/application.pdf}
-\caption{Counts after the same SDK optimization of the baseline source and
-the symbolically lowered source. This is one synthetic parameter-reuse
-example; hardware runtime and fidelity were not measured.}
-\end{figure}
-We time cold symbolic chart construction, SDK compilation, and 1,000
-parameter assignments separately. Ten sampled assignments also receive full
-16-by-16 matrix replay, and are independently numerically recompiled as a
-separate diagnostic. The family identity is proved compositionally before
-those samples; the samples are regression checks. This is a single run of
-a small synthetic workload, so timings are descriptive and not a robust
-end-to-end speedup estimate.
+\subsection{Parameter reuse and binding cost}
+The four-qubit example composes six fSim blocks on $(0,1),(2,3),(1,2)$
+repeated twice, with twelve independent parameters. A gatewise source
+$R_{xx}(\theta)R_{yy}(\theta)CP(-\phi)$ is compared with a three-CX
+analytical source, using the same Qiskit 2.2.3 optimization. Three-CX fSim synthesis
+is established analytical knowledge, not a new resource bound.
+\input{generated/application_revised.tex}
+The numerical row is the mean compilation time over ten independently
+bound instances; all ten give $18/40/25$. It beats the symbolic circuit in
+locals and depth. The weak gatewise $36/66/55$ row is retained for context
+and is not evidence of improvement over the known three-CX construction.
+Using that known analytical source as a compile-once control gives the same
+interaction budget as the symbolic route. Qiskit already supports parameter
+reuse \cite{qiskitparameter}. Cold symbolic chart synthesis took 5.63 seconds
+in this run; the displayed SDK time excludes that cost. Ten complete
+16-by-16 numerical replays check the composed family, whose constituent
+identities are separately proved exactly.
 
-\subsection{Controlled embedding audit}
-For the three-Rz Sycamore circuit $C$, the exact identity is
-$\mathrm{SYC}=e^{-7\pi i/24}C$. Controlling $C$ alone fails literal
-equality to controlled Sycamore. Adding
-$P_c(-7\pi/24)=\operatorname{diag}(1,e^{-7\pi i/24})$
-on the new control restores the identity exactly. The audit stores a
-nonzero matrix-entry witness for the uncorrected substitution and proves
-the corrected identity. It demonstrates why the phase contract matters;
-it is not evidence that SDKs with existing global-phase tracking handle
-control incorrectly.
+For the larger 585-binding scalar DAG, compilation took about 1.36 seconds
+and 1,000 warm evaluations about 0.97 seconds. Full two-qubit matrix replay
+passed for 64 parameter assignments, including the identity, an Ising corner,
+the SWAP-class corner, and 60 seeded points spanning multiple angle folds.
+These are numerical regression tests of an exactly certified chart. They
+show that a large symbolic program can be reused without repeated symbolic
+substitution; they do not establish a speed advantage over bind-time KAK
+on arbitrary workloads. Symbolic outputs are valuable when a free-parameter
+identity, phase contract, or reusable expression is needed; specialization
+and numerical optimization remain useful alternatives.
 
-\section{Artifacts, limitations, and conclusions}
+\subsection{A benchmark-suite peephole check}
+We apply a deliberately simple atlas peephole pass to every existing
+IBMEagle and QASMBenchmarks QASM source with two to eight declared qubits
+and fewer than 500 semicolons, yielding eight circuits. Numerical
+fingerprints propose contiguous windows of at most eight operations on two
+wires; exact identities accept matches. The control is gatewise atlas
+lowering into B/U3 or SQiSW/U3, with the same lowering on unmatched gates.
+Every substitution is therefore compositionally exact. The materialized native words also pass 32 seeded statevector replays. Source hashes,
+selection rules, counts, and attempted-match timing are archived.
+\input{generated/peephole.tex}
+The pass finds no improving windows on this suite. A separate positive
+control replaces the standard three-CX SWAP word by its archived native
+construction and verifies the expected interaction reduction. This checks the exact SWAP identity and native resource accounting, but does not turn the
+negative suite result into an application speedup. Wider windows, commutation
+search, and richer parameterized matching are future optimizer work. The
+present evidence supports the reference library and theory, not an
+end-to-end peephole performance claim.
+
+\section{Artifacts and limitations}
 The repository is
 \url{https://github.com/rakytap/sequential-quantum-gate-decomposer}.
-This referee package includes the source-pinned result archives, build
-commands, environment versions, exact proof payloads, comparison circuits,
-and editable LaTeX. It also includes a catalog atlas with 32 preset cells
-per gate page, exact-expression glossaries, an alphabetical index, and an
-all-phase Clifford atlas with 24 circuits per page. Aliases are labeled,
-both phase policies are retained when needed, and each shared-expression
-label resolves to its full definition. The release manifest records hashes
-of the frozen inputs and generated artifacts. No permanent archival DOI
-has yet been assigned; a tagged archival deposit is a publication-stage
-task rather than an existing reproducibility claim.
+The review bundle contains the manuscript, its LaTeX, both complete atlas
+PDFs and editable sources, theorem component checks, a row-resolved
+optimality ledger, full comparison circuits and failures, rules, versions,
+and content hashes. A scientific archive view removes coordination metadata
+and separates current constructions from historical attempts; original
+immutable archives remain in the repository. Exact source-content hashes
+and Git revisions identify implementations even where an exploratory run
+preceded its source commit. No archival DOI is claimed before deposition.
 
-The most important limits are mathematical and experimental. General
-continuous local-cost optimality is open. A lower bound can match a
-uniform family budget without matching every specialization. Twenty
-shared-expression secondary scores remain unevaluated. Finite alphabet
-proofs do not imply continuous alphabet minima. Preset counts do not
-include calibration, scheduling, connectivity overhead, or restricted
-hardware angle domains beyond the specified mathematical model. The
-focused independent comparison and six-family ablation do not establish
-dominance over all pass managers, UniversalQCompiler, Quartz, QUESO, or all
-literature. The lower-bound argument in Theorem~\ref{thm:four} warrants
-independent mathematical scrutiny; its component checker does not replace
-that scrutiny.
+The classification concerns balanced involutions and arbitrary local
+unitaries, not every controlled gate or every restricted local alphabet.
+The Ising lower bound is broader than a fixed primitive, but does not
+cover arbitrary two-qubit interactions. General continuous local-cost
+minima, all-grid entangler optimality, and comparison with every publication
+remain open. Twenty retained shared-expression scores are unevaluated.
+Finite-alphabet shortest paths do not prove continuous-alphabet minima.
+The finite experiments have fixed budgets and include failures and losses;
+we infer no pulse latency or fidelity gain from abstract local-box counts.
+The new normal-form classification and expanded lower proof are analytical
+arguments with exact checked components, rather than proof-assistant
+formalizations, and warrant independent mathematical review.
 
-Within these limits, the workflow produces a complete classified reference
-grid, a four-Ising optimum for controlled fermionic SWAP, explicit native
-symbolic charts attaining known bounds, and a reproducible parameterized
-application improvement. Keeping construction, score, phase, and proof
-scope separate makes the resulting circuit library useful even where an
-unrestricted optimum remains unproved.
-
-\paragraph{Author contributions and use of AI.}
-Author names, affiliations, and the allocation of human contributions are
-withheld in this anonymous referee draft and must be supplied and approved
-by the authors before submission. An OpenAI Codex coding assistant was used
-for software implementation, experiment orchestration, calculations,
-bibliographic research, and manuscript drafting. The accompanying exact
-checks and raw records are provided for independent review; they do not
-assign authorship or responsibility to an AI system. All named authors
-must verify and take responsibility for the submitted work.
-
+\paragraph{Use of AI and authorship.}
+An OpenAI Codex assistant supported implementation, calculations, experiments,
+source research, and drafting. The named authors are Gregory Morse and Peter
+Rakyta; affiliations and individual contribution statements will be supplied
+by the authors for submission. The authors remain responsible for checking
+the mathematics, software, data, and final text.
 \begin{thebibliography}{99}
+\raggedright
 \bibitem{makhlin} Y. Makhlin, Nonlocal properties of two-qubit gates and
 mixed states and optimization of quantum computations, Quantum Information
 Processing 1, 243--252 (2002), \href{https://arxiv.org/abs/quant-ph/0002045}{arXiv:quant-ph/0002045}.
@@ -620,10 +645,6 @@ Introduction to UniversalQCompiler,
 \bibitem{qiskitparameter} IBM Quantum, Qiskit Parameter documentation,
 \url{https://quantum.cloud.ibm.com/docs/en/api/qiskit/qiskit.circuit.Parameter},
 accessed 7 November 2026; executed versions are in the experiment manifest.
-\bibitem{syctomography} M. AbuGhanem and H. Eleuch, Full quantum tomography
-study of Google's Sycamore gate on IBM's quantum computers, EPJ Quantum
-Technology 11, 36 (2024),
-\href{https://doi.org/10.1140/epjqt/s40507-024-00248-8}{doi:10.1140/epjqt/s40507-024-00248-8}.
 \bibitem{virtualz} D. C. McKay, C. J. Wood, S. Sheldon, J. M. Chow, and
 J. M. Gambetta, Efficient Z gates for quantum computing, Physical Review A
 96, 022330 (2017), \href{https://arxiv.org/abs/1612.00858}{arXiv:1612.00858}.
@@ -631,35 +652,86 @@ J. M. Gambetta, Efficient Z gates for quantum computing, Physical Review A
 T. Kozsik, and P. Rakyta, Entanglement-aware quantum circuit optimization
 through globally optimal partitioning,
 \href{https://arxiv.org/abs/2611.03845}{arXiv:2611.03845} (2026).
+
+\bibitem{nielsen} M. A. Nielsen, C. M. Dawson, J. L. Dodd, A. Gilchrist,
+D. Mortimer, T. J. Osborne, M. J. Bremner, A. W. Harrow, and A. Hines,
+Quantum dynamics as a physical resource, Physical Review A 67, 052301 (2003),
+\href{https://arxiv.org/abs/quant-ph/0208077}{arXiv:quant-ph/0208077}.
+\bibitem{yuduan} N. Yu, R. Duan, and M. Ying, Five two-qubit gates are
+necessary for implementing Toffoli gate, Physical Review A 88, 010304(R)
+(2013), \href{https://arxiv.org/abs/1301.3372}{arXiv:1301.3372}.
+\bibitem{yuying} N. Yu and M. Ying, Optimal simulation of three-qubit gates
+(2013), \href{https://arxiv.org/abs/1301.3727}{arXiv:1301.3727}.
+\bibitem{toffolicnot} V. V. Shende and I. L. Markov, On the CNOT-cost of
+TOFFOLI gates, Quantum Information and Computation 9, 461--486 (2009),
+\href{https://arxiv.org/abs/0803.2316}{arXiv:0803.2316}.
+\bibitem{matsumoto} K. Matsumoto and K. Amano, Representation of quantum
+circuits with Clifford and $\pi/8$ gates (2008),
+\href{https://arxiv.org/abs/0806.3834}{arXiv:0806.3834}.
+\bibitem{kmm} V. Kliuchnikov, D. Maslov, and M. Mosca, Fast and efficient
+exact synthesis of single-qubit unitaries generated by Clifford and T gates,
+Quantum Information and Computation 13, 607--630 (2013),
+\href{https://arxiv.org/abs/1206.5236}{arXiv:1206.5236}.
+\bibitem{giles} B. Giles and P. Selinger, Exact synthesis of multiqubit
+Clifford+T circuits, Physical Review A 87, 032332 (2013),
+\href{https://arxiv.org/abs/1212.0506}{arXiv:1212.0506}.
+\bibitem{gilesma} B. Giles and P. Selinger, Remarks on Matsumoto and Amano's
+normal form for single-qubit Clifford+T operators (2013),
+\href{https://arxiv.org/abs/1312.6584}{arXiv:1312.6584}.
+\bibitem{maslov} D. Maslov, Advantages of using relative-phase Toffoli gates
+with an application to multiple control Toffoli optimization, Physical Review
+A 93, 022311 (2016), \href{https://arxiv.org/abs/1508.03273}{arXiv:1508.03273}.
+\bibitem{qiskitsynthesis} IBM Quantum, Qiskit synthesis API,
+\url{https://quantum.cloud.ibm.com/docs/en/api/qiskit/synthesis},
+accessed 7 November 2026.
+\bibitem{fredkinshallow} P. Cruz and B. Murta, Shallow unitary decompositions
+of quantum Fredkin and Toffoli gates for connectivity-aware equivalent circuit
+averaging, APL Quantum 1, 016105 (2024),
+\href{https://arxiv.org/abs/2305.18128}{arXiv:2305.18128}.
 \end{thebibliography}
-
 \appendix
-\section{Preset definitions and interpretation}
-\input{generated/presets.tex}
-Each primitive name denotes the exact catalog convention. ``U'' denotes
-the U3 local chart; XX/ZZ/ZX angles use the catalog's half-angle convention
-where specified. TK2 is counted as one supplied macro primitive, not
-silently equated with a single calibrated pulse. Fixed discrete alphabets
-are preserved even when they obstruct the requested continuous family.
-Single-entangler-type presets are distinct from requiring only one
-entangler in a circuit.
+\section{Secondary objective and interpretation}
+The implementation orders candidate resources as $(E,S,L)$, where $E$ is
+native entanglers, $L$ is local gates, and the optional description score is
+\begin{equation}
+ S(C)=\sum_g\left[2^{k_g}+\frac15\sum_{p\in\operatorname{params}(g)}
+ \left(\log_2\max\{1,|\operatorname{den}(\operatorname{simplify}p)|\}
+ +\frac1{100}\right)\right].
+\end{equation}
+This heuristic prefers shorter parameter descriptions and named gates over
+unnecessary Euler parameters. It depends on the simplifier and has no
+calibrated pulse-error interpretation. The theorems optimize $E$ alone.
+Our compiler table compares $(E,L)$ explicitly, independently of this score;
+more locals can occasionally score better under the archive's objective.
+Unknown equal-$E$ scores remain incomparable, not zero. A historical
+unclamped denominator penalty admitted negative-cost identity cycles; the
+nonnegative version removes that pathology. That repair is software history,
+not a scientific optimality result. The preserved migration audit checked
+that 1,390 retained angle expressions kept their scores.
 
-\section{Experiment detail and reproduction}
-\input{generated/environment.tex}
-From the pinned repository revision, the bounded experiments are reproduced
-with:
+\section{Preset definitions}
+\input{generated/presets.tex}
+The presets specify mathematical gate alphabets, not calibrated processors.
+A TK2 macro is one supplied primitive, and fixed discrete local alphabets
+are preserved even when they obstruct a continuous target family.
+
+\section{Reproduction}
+The source bundle includes the pinned environment manifests, current scripts,
+raw outputs, exact proof programs, and build inputs. The primary commands are:
 \begin{verbatim}
-OPENBLAS_NUM_THREADS=1 python3 \
- examples/decomposition/symbolic_manuscript_experiments.py \
- --output /tmp/manuscript-experiments.json.gz \
- --workers 4 --seconds 20 --bindings 1000
+python3 -m pytest tests/symbolic -q
+python3 examples/decomposition/symbolic_referee_components.py \
+ --output /tmp/components.json.gz
+python3 examples/decomposition/symbolic_referee_peephole.py
+python3 examples/decomposition/symbolic_referee_sdks.py \
+ --output /tmp/sdks.json.gz
+python3 examples/decomposition/symbolic_referee_rules.py \
+ --output /tmp/rules.json.gz
 \end{verbatim}
-Tables and plots are regenerated by
-\texttt{examples/decomposition/build\_symbolic\_manuscript.py}; its
-default inputs are the frozen archives. Timings depend on the machine;
-resource counts and exact identities are the portable claims. The
-release verification script checks source snapshots, changed identities,
-partial score policy and artifact integrity. The full symbolic test suite
-is \texttt{python3 -m pytest tests/symbolic -q}.
-\input{generated/ablation_detail.tex}
+SDK comparisons use the separate Python-3.12 environment. Rule optimizers
+require the recorded Quartz build and Java-17 QUESO artifact; complete rule
+files, commands, and the harness patch are included. The builder regenerates
+coverage and comparison tables from the frozen records. Compilation of the
+paper needs \texttt{manuscript.tex} and \texttt{generated/}; the atlas sources
+retain their own relative \texttt{circuits/} and \texttt{programs/} paths.
 \end{document}

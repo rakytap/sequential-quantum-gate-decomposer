@@ -1,83 +1,66 @@
 {
-  "schema": "symbolic-referee-package-v1",
+  "schema": "symbolic-referee-package-v2",
   "manuscript_pages": 15,
+  "response_pages": 4,
   "atlas_pages": {
     "gates": 556,
     "cliffords": 98
   },
-  "tests": {
+  "validation": {
     "full_suite": {
       "status": "passed",
-      "passed": 1152,
+      "passed": 1178,
       "warnings": 1,
-      "seconds": 1056.69,
-      "source_revision": "b3ba5e26",
-      "command": "OPENBLAS_NUM_THREADS=1 python3 -m pytest tests/symbolic -q",
-      "scope": "Before the final atlas renderer output-alias correction; followed by the focused suite on that correction"
+      "seconds": 1063.91,
+      "log_sha256": "248795be652fecb34590e96dfe67e38c7e30f81b5d102624fb1176e0a497aba7"
     },
     "focused_suite": {
       "status": "passed",
-      "passed": 34,
-      "seconds": 23.69,
-      "command": "python3 -m pytest tests/symbolic/test_circuit_atlas.py tests/symbolic/test_atlas_pdf_build.py tests/symbolic/test_partial_costs.py tests/symbolic/test_controlled_rank_bound.py tests/symbolic/test_manuscript_experiments.py -q",
-      "scope": "Final atlas renderer, partial costs, four-Ising proof components and independent experiment inputs"
+      "passed": 39,
+      "warnings": 0,
+      "seconds": 9.88,
+      "log_sha256": "c69fc1ba175b798cb89050b2a653a76d31010797bb23f00e4975693628dc63b0"
     },
-    "warning": "Qiskit 2.2.3 deprecates Python 3.9; no failing tests"
+    "scope": "The full suite was collected before six additional hypothesis/parser regressions; all six pass in the subsequent 39-test focused run."
   },
-  "all_changed_constructions_replayed": true,
-  "provenance_content_blobs": 111,
+  "exact_changed_replays": 53,
+  "unchanged_payload_comparisons": 20875,
   "artifacts": {
     "docs/symbolic_manuscript/manuscript.pdf": {
-      "sha256": "e5c0bd4c7d39e183629bae2eb5528d1c24a81a0cc526cd69ae8bb8e9bc8753bc",
-      "bytes": 149319
+      "sha256": "6d364651607546b288b3aedc06fff68f7f14aff6f39bf93635a89024ca3e76fc",
+      "bytes": 141023
     },
-    "docs/symbolic_manuscript/manuscript.tex": {
-      "sha256": "a4d3f81f997fb8d67d871918f53c0202adda5ed3fa2700f9acb93aabfc881210",
-      "bytes": 37934
+    "docs/symbolic_manuscript/referee-response.pdf": {
+      "sha256": "4845e20acd3fc4499c69e7c8964b2081d5bc8fd24d8fc614a0c132f5a7f72a45",
+      "bytes": 43332
     },
     "docs/symbolic_manuscript/sources.zip": {
-      "sha256": "a8a269085d52e536306519d62e9eba6c10440793c462961cea24f2e1ae6ad47d",
-      "bytes": 6299731
+      "sha256": "001bb6c776bc377b61436c6d9ccd6f9a908ad14b171e80cbdaf4d888df0dd501",
+      "bytes": 4205621
     },
-    "docs/symbolic_manuscript/release-verification.json": {
-      "sha256": "df054b87d17f5da94ca788c2845ace367f9a0bc7a5a859b4f1d50640e6b110d0",
-      "bytes": 26032
-    },
-    "docs/symbolic_manuscript/build-manifest.json": {
-      "sha256": "7682d7f7012e7eaeb0d0b6f69fa17599f59cf96c0f75a1242f4dee698b80a68e",
-      "bytes": 2878
+    "docs/symbolic_manuscript/review-package.zip": {
+      "sha256": "f4db355547ddb076879af876c7094d5d6059a81a2e92207ce79a6285aa3a7d99",
+      "bytes": 27204295
     },
     "docs/symbolic_atlas/gates.pdf": {
-      "sha256": "514ddf6dcc3064d2b36f120aaf5a8eda40566d6b646b97a97cf2ba5f882d7d14",
-      "bytes": 26190199
+      "sha256": "9059df4defeaa6fdadb6defa1f5b14c0f93cea17639f2df643ded2ada17dcbb6",
+      "bytes": 26169389
     },
     "docs/symbolic_atlas/cliffords.pdf": {
       "sha256": "e256d9103311ff5e7b49719c9930d2bcc77afd109a20e61285f59c53f09f52ce",
       "bytes": 1894011
     },
-    "docs/symbolic_atlas/preview-gates.pdf": {
-      "sha256": "6e524000af205f38ca57076120b80b7aea5cfd5276390065db3427a234e079ca",
-      "bytes": 6522103
-    },
-    "docs/symbolic_atlas/preview-cliffords.pdf": {
-      "sha256": "fbec0576a5391e8720f5ca77438573e0a313ea6943211f65b314a6f95af9bcf3",
-      "bytes": 460523
-    },
     "docs/symbolic_atlas/sources.zip": {
-      "sha256": "4db1b2c152bf2a825f3da7fbdf73541e71d21c50745eef21c254a8a0908fc394",
-      "bytes": 3457471
+      "sha256": "1e848d5be12e1416993d60b682b2ed6fa1d71553f5b5f84ecd226d49ff47da73",
+      "bytes": 3457825
     },
     "docs/symbolic_notable_results/notable_results.pdf": {
-      "sha256": "4f1f3c32b17b484a5225abfc7358e0d1ef3667f3aad1b724a0e108293cba9d22",
-      "bytes": 65344
+      "sha256": "6993cfeb159c5c2f8af1cb5a833c058a08e19bb6cce19ec7fce1727fa4c0233a",
+      "bytes": 48843
     },
-    "docs/symbolic_notable_results/sources.zip": {
-      "sha256": "a1d4c51034e86f93e7f93c708fe0cd8e84880c109c11df510ac3199c59d7e6c5",
-      "bytes": 66528
-    },
-    "benchmarks/symbolic/synthesis_reference_20261107_manuscript.json.gz": {
-      "sha256": "47d7e2ef23978fcf1544be38878e3df41f0c0784e5465a3cc6f847f258cc99bb",
-      "bytes": 2571322
+    "benchmarks/symbolic/synthesis_reference_20261107_referee.json.gz": {
+      "sha256": "999edc10380127d23a7659c4b4a56c6434ca9210dd319a87bea88f89e7069588",
+      "bytes": 1541754
     }
   }
 }

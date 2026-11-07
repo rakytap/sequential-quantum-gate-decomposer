@@ -1,64 +1,104 @@
 {
-  "schema": "symbolic-manuscript-build-v1",
-  "archive": "benchmarks/symbolic/synthesis_reference_20261107_manuscript.json.gz",
-  "archive_sha256": "47d7e2ef23978fcf1544be38878e3df41f0c0784e5465a3cc6f847f258cc99bb",
-  "experiments": "benchmarks/symbolic/manuscript_experiments_20261107.json.gz",
-  "experiments_sha256": "8b0ea014b9c8e41ede9dee078ffc2d9feaed88608cc06de5273fb0f011ecd548",
-  "experiment_source_revision": "b3ba5e26cb75c7d5eb068ead69554dab6f89ca36",
-  "generated_numbers": {
-    "OldSDKWins": 11,
-    "OldSDKTies": 2662,
-    "LocalWins": 553,
-    "LocalTies": 2108,
-    "LocalLosses": 1
-  },
-  "selected_certificate_coverage": {
-    "phase_exact_fixed": 712,
-    "projective_fixed": 959,
-    "phase_exact_uniform": 720,
-    "projective_uniform": 965
-  },
-  "ablations": {
-    "full": {
-      "verified_symbolic": 11,
-      "budget_exhausted": 1
+  "schema": "symbolic-referee-build-v2",
+  "archive_sha256": "999edc10380127d23a7659c4b4a56c6434ca9210dd319a87bea88f89e7069588",
+  "tables": {
+    "phase_exact": {
+      "1": {
+        "cells": 6976,
+        "constructed": 5210,
+        "zero": 5210,
+        "obstruction": 1766
+      },
+      "2": {
+        "cells": 2528,
+        "constructed": 1871,
+        "positive": 1754,
+        "raw_flag": 588,
+        "fixed": 689,
+        "obstruction": 657,
+        "unproved": 355,
+        "uniform": 710,
+        "zero": 117
+      },
+      "3": {
+        "cells": 832,
+        "constructed": 548,
+        "positive": 468,
+        "raw_flag": 106,
+        "unproved": 425,
+        "obstruction": 284,
+        "fixed": 43,
+        "zero": 80
+      },
+      "4": {
+        "cells": 96,
+        "constructed": 59,
+        "positive": 59,
+        "unproved": 59,
+        "obstruction": 37
+      },
+      "5": {
+        "cells": 32,
+        "constructed": 14,
+        "positive": 14,
+        "unproved": 14,
+        "obstruction": 18
+      }
     },
-    "without_native_charts": {
-      "unresolved": 9,
-      "verified_symbolic": 3
-    },
-    "source_lowering": {
-      "verified_symbolic": 12
+    "projective": {
+      "1": {
+        "cells": 6976,
+        "constructed": 6915,
+        "zero": 6915,
+        "obstruction": 61
+      },
+      "2": {
+        "cells": 2528,
+        "constructed": 2375,
+        "positive": 2247,
+        "fixed": 936,
+        "raw_flag": 349,
+        "unproved": 356,
+        "uniform": 955,
+        "obstruction": 153,
+        "zero": 128
+      },
+      "3": {
+        "cells": 832,
+        "constructed": 788,
+        "positive": 692,
+        "unproved": 644,
+        "raw_flag": 72,
+        "obstruction": 44,
+        "fixed": 48,
+        "zero": 96
+      },
+      "4": {
+        "cells": 96,
+        "constructed": 89,
+        "positive": 89,
+        "unproved": 89,
+        "obstruction": 7
+      },
+      "5": {
+        "cells": 32,
+        "constructed": 29,
+        "positive": 29,
+        "unproved": 29,
+        "obstruction": 3
+      }
     }
   },
-  "environment": {
-    "python": "3.9.25",
-    "platform": "Linux-5.14.0-687.36.1.el9_8.x86_64-x86_64-with-glibc2.34",
-    "numpy": "1.26.4",
-    "scipy": "1.13.1",
-    "sympy": "1.14.0",
-    "qiskit": "2.2.3",
-    "cirq-core": "1.3.0"
-  },
-  "source_generator_sha256": "08aa6a9bc10f05f776a73cc38ced761f35e09757a0c8129b94c8d2172fb1bbf8",
-  "limitations": [
-    "20 retained grid secondary scores unresolved",
-    "One full opaque-matrix ablation exhausts its 20-second budget",
-    "No comparison run with UniversalQCompiler, Quartz, or QUESO",
-    "No unrestricted all-grid local-score optimality or literature priority claim"
-  ],
   "generated_files": {
-    "generated/ablation.csv": "dd604f41bb48d440afeeb8c94f25ab9ed3489332d32ba0e5de11725087bc3117",
-    "generated/ablation.pdf": "e21f8c8a187c21693d5f1191f09fdbf78b5d5dbed8ac92da3f54b56117d0cbc0",
-    "generated/ablation.tex": "deac2f8ffeb723eff6896db2a46bb77509c90f80224e6a846f273ceb64ccd169",
-    "generated/ablation_detail.tex": "6f44212d4aeddc388cd1c5b8f3f4b6d89d2494c16dd33dcaca64e5a7cf83ef6f",
-    "generated/application.pdf": "7779e0b181d431b19588ea2e19e2a1e9429bd7339d6b86b2fbddb5cce3e20d5d",
-    "generated/application.tex": "15e382dbf00f93740a4d79f65698f3859984d12fe49d8d01bbc22dc59ca4e8ed",
-    "generated/coverage.tex": "5fec16798b4bc70b9bf5c11bb42479af777417ca213121ca7ef416d6f9d94889",
-    "generated/environment.tex": "342053985d3221bc76c4c4ed0c364fd2709bc1340d7578deedc402b8947b944f",
-    "generated/ffredkin_circuit.tex": "f5723276a0f40b46f546f8490e02c189999a43019d257531f7af50ad24cef61c",
-    "generated/numbers.tex": "a2fc8c3e8f2992e0971c6ca09155ccff2e0b68430d31f31bdf77b46b4065cfe0",
-    "generated/presets.tex": "d179fdfdd0c332c00c49e84807a2ebb9e709d4adadf6fa8600b17f05e27d6a73",
-    "generated/sdk.tex": "decbf4c11355822b0d4e14ed8205025c583d3bf2f1dab5e7ee3fe76c57b7c465"
+    "generated/application_revised.tex": "590c53a8f9eeefb4b0fec44205621db872e919644f4259c29b48b15d1bbdbd3a",
+    "generated/coverage_phase_exact.tex": "e9372b418c46946eb5e89d3b9a0704daa8f1ff1dc8667c09e101606f5b4bb5e9",
+    "generated/coverage_projective.tex": "6d9be0c730a7428e4cff11f5f3ad16677a22ea17d9e529f9afc23235ee72958b",
+    "generated/ffredkin_circuit.tex": "3deadb81ce5589cf23b5678fbf87b7b9401ca6bdc79b1dd08dae0870443b25fa",
+    "generated/obstructions.tex": "68f79a31dd5e2c4b446b40ab8c55778a7171ba9bd2836d46a51cdde8ce36c5f1",
+    "generated/osr_ablation.tex": "b17a077c9c355f025ae31ee127217193697bf27388e611b7444499ee1454fef1",
+    "generated/peephole.tex": "0d672f08a344568a96d88bd257a3793732962cfc517eb3cce30fa40fec30da00",
+    "generated/presets.tex": "b2090f3783d8d0af617036f1264893a48c6d884ba5e16799923b02c051973f00",
+    "generated/referee_ablation.pdf": "3e1a9859b2c52520693308110a12a0afa2681159393f09adc8b1c5c826386d04",
+    "generated/strong_sdks.tex": "33a5f5c5b0b5ed536eff95685d628959a2cae5c0dc7d314a3c90a98b195bb577"
   }
 }

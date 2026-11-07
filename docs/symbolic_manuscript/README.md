@@ -1,62 +1,56 @@
-# Symbolic synthesis: referee package
+# Revised theory manuscript and review package
 
-[Manuscript PDF](manuscript.pdf) · [Editable LaTeX](manuscript.tex) ·
-[Complete source bundle](sources.zip) · [Build/data manifest](build-manifest.json) ·
-[Release verification](release-verification.json)
+[Manuscript](manuscript.pdf) · [Point-by-point response](referee-response.pdf) ·
+[Editable LaTeX](manuscript.tex) · [Paper sources](sources.zip) ·
+[Full review package](review-package.zip) · [Coverage and experiments](referee-revision.json) ·
+[Exact replays](referee-verification.json) · [Release manifest](release-manifest.json)
 
-This is an anonymous draft for scientific review, not a journal submission.
-Names, affiliations and human contribution allocations need author approval
-before submission; the draft already discloses AI use.
+Authors: Gregory Morse and Peter Rakyta. Affiliations and individual contribution
+statements remain for the authors to supply before submission. This is a review
+draft; it has not been submitted to a journal.
 
-The main new mathematical result is a literal four-CNOT controlled fermionic
-SWAP construction with a matching four-Ising lower bound. The proof permits
-arbitrary local unitaries and interaction angles, no ancillas, all-to-all
-coupling, and arbitrary scalar phase. It is an analytical proof with checked
-algebraic components, not a proof-assistant formalization. Ordinary Fredkin
-is a different operator.
+The paper now leads with a complete CNOT-cost classification for controlled
+balanced two-qubit involutions and the invariant iff rewriting of the known
+two-SQiSW region. The literal four-CNOT fermionic-SWAP circuit now uses six Ry
+rotations. The one-qubit Clifford atlas and full grid are reference resources.
 
-The grid classifies all 327 × 32 cells under both phase policies: 7,702
-literal constructions / 2,762 obstructions and 10,196 projective constructions
-/ 268 obstructions. Family obstructions and minimum uniform budgets retain
-their specialization caveats. Twenty new three-SQiSW circuit scores remain
-unresolved; their counts, identities and uniform budgets are certified. The
-paper does not claim unrestricted global local-score optimality or superiority
-to every published circuit.
+The revision executes BQSKit, tket, Quartz, and QUESO as well as Qiskit. It reports
+BQSKit's matching fFredkin circuit, the atlas's C4X/C3X/SSWAP losses, failed
+baselines, the negative peephole-suite result, and the chart-dominated ablation.
+The numerical 18-CX/40-local/depth-25 application circuit beats the symbolic
+18/42/31 result in locals and depth. No all-grid optimality or universal compiler
+dominance is claimed.
 
-The bounded 36-job opaque-family experiment retains one full-method timeout
-at 20 seconds: 11/12 full-method successes, 3/12 with native charts disabled,
-12/12 source-lowering successes. The latter receives a source word and is
-not the same input problem. The six-block four-qubit application uses 18
-instead of 36 CNOTs, 42 instead of 66 locals, and depth 31 instead of 55
-after the same SDK pass. Cold symbolic synthesis takes 5.628 seconds here;
-it does not give a cold compilation speedup.
+`generated/optimality_ledger.csv` resolves every positive-entangler effective
+cell to its matched proof sources. Zero-entangler cells, fixed-target minima,
+uniform-family minima, unproved constructions, and obstruction types are
+reported separately by physical width. Boolean flags alone do not count as
+proof payloads.
 
-Independent Qiskit/Cirq inputs and raw operations are archived. Quartz,
-QUESO and UniversalQCompiler are discussed as prior art but were not run.
-The Sycamore 27-to-3 local comparison concerns one cited figure, not every
-publication. Counts are not hardware latency or fidelity measurements.
+For Prism, copy **`manuscript.tex` and the entire `generated/` directory** from
+`sources.zip`, preserving their relative paths. Compile with
+`tectonic manuscript.tex`. The response uses its own standalone
+`referee-response.tex`. The full review ZIP also contains both complete atlas
+PDFs and `atlas-sources.zip`, with `gates.tex`, `cliffords.tex`, `circuits/`, and
+`programs/`.
 
-For Prism, extract `sources.zip` and copy `manuscript.tex` plus the entire
-`generated/` directory, preserving relative paths. Those files suffice to
-compile the paper using `tectonic manuscript.tex`. Other bundle files support
-reproduction and review. The [atlas bundle](../symbolic_atlas/sources.zip)
-separately contains `gates.tex`, `cliffords.tex`, `circuits/` and `programs/`.
-The dated [older proof ledgers](../symbolic_optimality) remain supporting
-artifacts; this manuscript supersedes their old construction-gap status.
+The active scientific archive is
+`benchmarks/symbolic/synthesis_reference_20261107_referee.json.gz`.
+Historical archives remain immutable. The scientific view removes coordination
+metadata while preserving exact constructions, source hashes, and proof scopes;
+its fFredkin updates come from the separately archived 32-preset rerun.
+
+Current reproduction scripts:
 
 ```bash
-OPENBLAS_NUM_THREADS=1 python3 examples/decomposition/symbolic_manuscript_experiments.py \
-  --output /tmp/manuscript-experiments.json.gz --workers 4 --seconds 20 --bindings 1000
-python3 examples/decomposition/build_symbolic_manuscript.py
-OPENBLAS_NUM_THREADS=1 python3 examples/decomposition/verify_symbolic_manuscript_release.py
 python3 -m pytest tests/symbolic -q
+python3 examples/decomposition/symbolic_referee_components.py --output /tmp/components.json.gz
+python3 examples/decomposition/symbolic_referee_peephole.py
+python3 examples/decomposition/build_symbolic_referee_revision.py
 ```
 
-The authoritative new archive is
-`benchmarks/symbolic/synthesis_reference_20261107_manuscript.json.gz`.
-The older `synthesis_reference_20261106.json.gz` remains immutable.
-Some early raw Git revisions precede uncommitted source edits. The verifier
-resolves the recorded content hashes from Git history and lists each
-exception; it does not pretend those bytes were in the recorded old HEAD.
-Unchanged payload comparisons and newly replayed identities are counted
-separately in the release report.
+The stronger SDK harness uses a separate Python 3.12 environment. Quartz/QUESO
+require the recorded external builds; their raw records include commands,
+revisions, rules, and the Quartz harness patch. UniversalQCompiler remains unrun
+because a licensed Wolfram kernel was unavailable. Exact identity checks,
+numerical regression replays, and analytical proof components are distinguished.

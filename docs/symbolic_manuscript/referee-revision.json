@@ -1,0 +1,660 @@
+{
+  "by_width": {
+    "phase_exact": {
+      "1": {
+        "cells": 6976,
+        "constructed": 5210,
+        "zero": 5210,
+        "obstruction": 1766
+      },
+      "2": {
+        "cells": 2528,
+        "constructed": 1871,
+        "positive": 1754,
+        "raw_flag": 588,
+        "fixed": 689,
+        "obstruction": 657,
+        "unproved": 355,
+        "uniform": 710,
+        "zero": 117
+      },
+      "3": {
+        "cells": 832,
+        "constructed": 548,
+        "positive": 468,
+        "raw_flag": 106,
+        "unproved": 425,
+        "obstruction": 284,
+        "fixed": 43,
+        "zero": 80
+      },
+      "4": {
+        "cells": 96,
+        "constructed": 59,
+        "positive": 59,
+        "unproved": 59,
+        "obstruction": 37
+      },
+      "5": {
+        "cells": 32,
+        "constructed": 14,
+        "positive": 14,
+        "unproved": 14,
+        "obstruction": 18
+      }
+    },
+    "projective": {
+      "1": {
+        "cells": 6976,
+        "constructed": 6915,
+        "zero": 6915,
+        "obstruction": 61
+      },
+      "2": {
+        "cells": 2528,
+        "constructed": 2375,
+        "positive": 2247,
+        "fixed": 936,
+        "raw_flag": 349,
+        "unproved": 356,
+        "uniform": 955,
+        "obstruction": 153,
+        "zero": 128
+      },
+      "3": {
+        "cells": 832,
+        "constructed": 788,
+        "positive": 692,
+        "unproved": 644,
+        "raw_flag": 72,
+        "obstruction": 44,
+        "fixed": 48,
+        "zero": 96
+      },
+      "4": {
+        "cells": 96,
+        "constructed": 89,
+        "positive": 89,
+        "unproved": 89,
+        "obstruction": 7
+      },
+      "5": {
+        "cells": 32,
+        "constructed": 29,
+        "positive": 29,
+        "unproved": 29,
+        "obstruction": 3
+      }
+    }
+  },
+  "obstructions": {
+    "phase_exact": {
+      "determinant_group": 2601,
+      "discrete_alphabet_nonconstant_family": 142,
+      "not_a_clifford": 13,
+      "outside_clifford_t_number_field": 6
+    },
+    "projective": {
+      "not_a_clifford": 38,
+      "discrete_alphabet_nonconstant_family": 210,
+      "outside_clifford_t_number_field": 4,
+      "determinant_and_clifford_t_field": 16
+    }
+  },
+  "row_ledger_sha256": "ced3de475a5b3ae4d038286dff5a3b82c7bbaafeb9bf75ecf9a93f69d5da6624",
+  "schema": "symbolic-referee-revision-v1",
+  "archive": "benchmarks/symbolic/synthesis_reference_20261107_referee.json.gz",
+  "archive_sha256": "999edc10380127d23a7659c4b4a56c6434ca9210dd319a87bea88f89e7069588",
+  "sdk_statuses": {
+    "qiskit": {
+      "verified_numeric": 14
+    },
+    "pytket": {
+      "verified_numeric": 14
+    },
+    "bqskit": {
+      "verified_numeric": 11,
+      "error": 1,
+      "budget_exhausted": 1,
+      "unverified_numeric": 1
+    },
+    "quartz": {
+      "verified_numeric": 7,
+      "unverified_numeric": 1
+    },
+    "queso": {
+      "verified_numeric": 8
+    }
+  },
+  "dag_binding": {
+    "binding_nodes": 585,
+    "operations": 11,
+    "compile_seconds": 1.362838656641543,
+    "bindings": 1000,
+    "binding_seconds": 0.9650688236579299,
+    "exact_chart_verifier": "exact_three_SQiSW_Pauli_tensor_chart",
+    "numerical_replays": [
+      {
+        "parameters": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "maximum_entry_error": 2.662188235665713e-16
+      },
+      {
+        "parameters": [
+          0.7853981633974483,
+          0.0,
+          0.0
+        ],
+        "maximum_entry_error": 4.293931970953253e-16
+      },
+      {
+        "parameters": [
+          0.7853981633974483,
+          0.7853981633974483,
+          0.7853981633974483
+        ],
+        "maximum_entry_error": 7.825109459832305e-09
+      },
+      {
+        "parameters": [
+          0.1,
+          0.04,
+          0.02
+        ],
+        "maximum_entry_error": 9.639819490876587e-16
+      },
+      {
+        "parameters": [
+          1.18182425002178,
+          -1.297664531853219,
+          1.9626877933010736
+        ],
+        "maximum_entry_error": 1.5096583914879816e-14
+      },
+      {
+        "parameters": [
+          3.0628652555662015,
+          -1.7338061138577872,
+          1.9858220503143338
+        ],
+        "maximum_entry_error": 7.482753390844705e-16
+      },
+      {
+        "parameters": [
+          -2.8849333591067907,
+          -2.0638061246241266,
+          1.382780121475002
+        ],
+        "maximum_entry_error": 6.666762596885755e-16
+      },
+      {
+        "parameters": [
+          -1.53024693211927,
+          -0.08322526443720157,
+          -2.990282858139336
+        ],
+        "maximum_entry_error": 1.5151595604785607e-15
+      },
+      {
+        "parameters": [
+          -0.18547602482141246,
+          2.168439927095263,
+          -2.7549836816082602
+        ],
+        "maximum_entry_error": 1.7422013638940487e-15
+      },
+      {
+        "parameters": [
+          -1.9330660094164078,
+          -2.234560486117243,
+          -2.829797134855446
+        ],
+        "maximum_entry_error": 7.249732973174092e-16
+      },
+      {
+        "parameters": [
+          -3.0366975887235457,
+          -0.3499951760946116,
+          2.673270256751226
+        ],
+        "maximum_entry_error": 7.879091875948514e-15
+      },
+      {
+        "parameters": [
+          -1.7559843510249729,
+          1.8962419888142126,
+          0.891354553915015
+        ],
+        "maximum_entry_error": 1.0134586520138417e-15
+      },
+      {
+        "parameters": [
+          2.3724222877021246,
+          -1.9373507616816215,
+          -2.4486896020930473
+        ],
+        "maximum_entry_error": 1.848052953416242e-15
+      },
+      {
+        "parameters": [
+          1.699929661085399,
+          -1.6120860673457036,
+          -2.533220377775499
+        ],
+        "maximum_entry_error": 2.0471501066083613e-15
+      },
+      {
+        "parameters": [
+          1.0122268714618743,
+          -2.286722497924272,
+          2.5322856525319146
+        ],
+        "maximum_entry_error": 7.447602459741819e-16
+      },
+      {
+        "parameters": [
+          2.725041876140387,
+          1.7774492928657457,
+          -0.6237303291603071
+        ],
+        "maximum_entry_error": 1.344427481423755e-15
+      },
+      {
+        "parameters": [
+          1.1454886131496727,
+          -1.3238178765252249,
+          -1.079860832507003
+        ],
+        "maximum_entry_error": 2.058011624472692e-15
+      },
+      {
+        "parameters": [
+          -0.016409288264746635,
+          -1.3334417364982378,
+          1.7779552606518196
+        ],
+        "maximum_entry_error": 2.9157311448010334e-15
+      },
+      {
+        "parameters": [
+          0.9790469227835477,
+          -1.052223009863106,
+          -2.8009441355307154
+        ],
+        "maximum_entry_error": 3.4777636565401973e-15
+      },
+      {
+        "parameters": [
+          1.3265986332612005,
+          2.3547422582400355,
+          2.7328134383459695
+        ],
+        "maximum_entry_error": 1.4271872719387392e-15
+      },
+      {
+        "parameters": [
+          2.1583454438580123,
+          -0.23108090928919234,
+          0.9058348972248034
+        ],
+        "maximum_entry_error": 7.200419022730858e-16
+      },
+      {
+        "parameters": [
+          0.16187617998452897,
+          -0.0155308935065821,
+          -2.2443832856286816
+        ],
+        "maximum_entry_error": 5.620075719058478e-16
+      },
+      {
+        "parameters": [
+          -2.385870619586862,
+          -2.883828213236446,
+          -2.3195183332316294
+        ],
+        "maximum_entry_error": 2.1210781103223385e-15
+      },
+      {
+        "parameters": [
+          0.7785606875455202,
+          -2.582697214601816,
+          2.3002716264684224
+        ],
+        "maximum_entry_error": 5.661048867003677e-16
+      },
+      {
+        "parameters": [
+          1.9765761081012627,
+          -1.6451237722148397,
+          -0.04387624873614682
+        ],
+        "maximum_entry_error": 1.700029006457271e-15
+      },
+      {
+        "parameters": [
+          -1.6654367187666903,
+          1.633567589498326,
+          2.4350084770755416
+        ],
+        "maximum_entry_error": 9.550499576785472e-16
+      },
+      {
+        "parameters": [
+          2.0685175040237,
+          -1.5147869420555995,
+          1.4225608062522435
+        ],
+        "maximum_entry_error": 8.886119947416683e-16
+      },
+      {
+        "parameters": [
+          3.0452477269253873,
+          0.16884250958218594,
+          0.38630275893739974
+        ],
+        "maximum_entry_error": 1.847779371410367e-15
+      },
+      {
+        "parameters": [
+          0.7412236875558889,
+          -2.478801328422258,
+          0.9007497434739262
+        ],
+        "maximum_entry_error": 4.167243419281536e-15
+      },
+      {
+        "parameters": [
+          0.8022824913308959,
+          -2.9945091273598634,
+          1.8474855478480663
+        ],
+        "maximum_entry_error": 9.777686967753793e-16
+      },
+      {
+        "parameters": [
+          2.3481108512890057,
+          2.465949453038034,
+          0.036906349663332616
+        ],
+        "maximum_entry_error": 4.535829210951031e-16
+      },
+      {
+        "parameters": [
+          -1.2660796689075933,
+          0.5283751905512903,
+          2.3132835235226663
+        ],
+        "maximum_entry_error": 1.047382306668854e-15
+      },
+      {
+        "parameters": [
+          -2.942392202054147,
+          0.6826143685767883,
+          -1.355992508992368
+        ],
+        "maximum_entry_error": 1.2959208739370123e-15
+      },
+      {
+        "parameters": [
+          -1.826942733460867,
+          -1.9220453745949484,
+          -0.5903862857206961
+        ],
+        "maximum_entry_error": 2.9893669801409083e-16
+      },
+      {
+        "parameters": [
+          2.545733792601495,
+          3.059047092126594,
+          -1.1796807795926305
+        ],
+        "maximum_entry_error": 2.2349702243570795e-14
+      },
+      {
+        "parameters": [
+          -2.6377279081510476,
+          -2.544756187281987,
+          0.5700343647240858
+        ],
+        "maximum_entry_error": 4.996003610813204e-16
+      },
+      {
+        "parameters": [
+          -3.0887431924090554,
+          -1.9772992750761769,
+          -1.996410832962083
+        ],
+        "maximum_entry_error": 2.7307875685720004e-15
+      },
+      {
+        "parameters": [
+          2.2837053135757968,
+          0.8955104769039339,
+          0.9889015593600172
+        ],
+        "maximum_entry_error": 1.2008898127460164e-15
+      },
+      {
+        "parameters": [
+          0.5867372380232632,
+          -1.5240116540592483,
+          1.618020307108491
+        ],
+        "maximum_entry_error": 6.82167738032638e-16
+      },
+      {
+        "parameters": [
+          -1.4042231369737685,
+          2.1892220126729107,
+          -0.8423278628888751
+        ],
+        "maximum_entry_error": 8.170572528259088e-14
+      },
+      {
+        "parameters": [
+          2.685125271373093,
+          0.4540574213727355,
+          -1.355755594057349
+        ],
+        "maximum_entry_error": 9.32603861714756e-16
+      },
+      {
+        "parameters": [
+          0.9550759376388491,
+          0.13072351966599705,
+          1.7170301385995383
+        ],
+        "maximum_entry_error": 4.577566798522237e-16
+      },
+      {
+        "parameters": [
+          1.1179272761630097,
+          -0.6673046866911045,
+          2.053265634806932
+        ],
+        "maximum_entry_error": 1.0948510389028342e-15
+      },
+      {
+        "parameters": [
+          -2.1718812233588594,
+          1.605938296724684,
+          -0.10696568624214864
+        ],
+        "maximum_entry_error": 5.705526346009214e-16
+      },
+      {
+        "parameters": [
+          0.4727309827076649,
+          -3.012709786351304,
+          2.665031808848677
+        ],
+        "maximum_entry_error": 4.126162952233366e-16
+      },
+      {
+        "parameters": [
+          -2.048571763092104,
+          1.9714675187410329,
+          -1.4378660630504536
+        ],
+        "maximum_entry_error": 2.213725344528419e-15
+      },
+      {
+        "parameters": [
+          2.077666795286474,
+          2.721128993581101,
+          0.5907462256668614
+        ],
+        "maximum_entry_error": 9.682764004677873e-15
+      },
+      {
+        "parameters": [
+          3.0076977660115247,
+          -2.8923256841390215,
+          2.6625974553352645
+        ],
+        "maximum_entry_error": 4.697913025025045e-15
+      },
+      {
+        "parameters": [
+          -2.4827464693630588,
+          2.9199256313948716,
+          -2.5762701324631063
+        ],
+        "maximum_entry_error": 3.0676582343073227e-15
+      },
+      {
+        "parameters": [
+          -3.104615103627877,
+          1.6775898269028637,
+          2.6603013505326087
+        ],
+        "maximum_entry_error": 1.5803902114927098e-15
+      },
+      {
+        "parameters": [
+          1.67208758876024,
+          -2.0510953986095632,
+          1.583764357908346
+        ],
+        "maximum_entry_error": 3.915500400837824e-15
+      },
+      {
+        "parameters": [
+          -3.0124520241152153,
+          2.520874781505867,
+          2.6812648747874883
+        ],
+        "maximum_entry_error": 7.575797802392804e-16
+      },
+      {
+        "parameters": [
+          2.9832165859999717,
+          2.731898891856839,
+          -0.9582145285684516
+        ],
+        "maximum_entry_error": 1.072098405376252e-15
+      },
+      {
+        "parameters": [
+          -0.9687752091645283,
+          1.2183734814845435,
+          1.4214843437495288
+        ],
+        "maximum_entry_error": 2.1256585432582754e-15
+      },
+      {
+        "parameters": [
+          2.386873824082974,
+          -2.0755437524646556,
+          1.8611827719682132
+        ],
+        "maximum_entry_error": 3.4510796536867514e-15
+      },
+      {
+        "parameters": [
+          -0.48970549355120996,
+          -3.021818363339202,
+          2.141004335563381
+        ],
+        "maximum_entry_error": 6.753223014464258e-16
+      },
+      {
+        "parameters": [
+          -2.9339221848646355,
+          -0.8842521724626025,
+          -1.0544318606558885
+        ],
+        "maximum_entry_error": 2.375981029593432e-15
+      },
+      {
+        "parameters": [
+          -1.8570358461707754,
+          0.6733598056308634,
+          -1.9121306452286875
+        ],
+        "maximum_entry_error": 1.0934428697813141e-15
+      },
+      {
+        "parameters": [
+          0.22785009574737103,
+          1.5998240801400287,
+          -1.064287087133295
+        ],
+        "maximum_entry_error": 6.662427907670241e-15
+      },
+      {
+        "parameters": [
+          -1.1057643383110265,
+          0.8056772126021441,
+          -2.5818017255692824
+        ],
+        "maximum_entry_error": 6.473657049138937e-16
+      },
+      {
+        "parameters": [
+          1.4916739733411912,
+          -1.5966975768215435,
+          0.3449568365411273
+        ],
+        "maximum_entry_error": 1.2008898127460164e-15
+      },
+      {
+        "parameters": [
+          -2.5371527100633697,
+          0.05776371990368423,
+          1.2067506074942473
+        ],
+        "maximum_entry_error": 4.3335582931674505e-14
+      },
+      {
+        "parameters": [
+          -1.544299868376995,
+          -0.48899941911846945,
+          -1.7579944797969478
+        ],
+        "maximum_entry_error": 6.148085217546721e-16
+      },
+      {
+        "parameters": [
+          1.9068485081070152,
+          1.7558512773179515,
+          2.4552928387129294
+        ],
+        "maximum_entry_error": 1.0235750533041806e-15
+      }
+    ],
+    "scope": "Numerical evaluation of an already certified symbolic DAG; no new numerical identity acceptance"
+  },
+  "peephole_circuits": 8,
+  "experiments": {
+    "referee_peephole_20261107.json.gz": "fe0162884578ff0611f906159bb83d665ac09996dc4d935336b5ceb1e0f6b8d2",
+    "referee_rules_20261107.json.gz": "c592ca4cb6f5cc73b9abcb22490adc9c5629d641f6e70532f6ce6bb770a39f6f",
+    "referee_components_20261107.json.gz": "cfc9d06a577d8169242b351c0e794cdeb5c253d95bee1be91587274574e865c3",
+    "referee_strong_sdks_final_20261107.json.gz": "2f9cf897649511fc652525c4220090ae49c8dfc50f2bed9b20fdf63966fe7152",
+    "referee_bqskit_layouts_20261107.json.gz": "952f4562816d6e837f9461b0d15bc07ff37986fd95c47bbc5a3bbf6585671d8f"
+  }
+}

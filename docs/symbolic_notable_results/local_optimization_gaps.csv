@@ -1,2 +1,2 @@
 gate,basis,phase_policy,entanglers,local_gates,exact_parameter_score,sdk_entanglers,sdk_local_gates,delta_entanglers,delta_local_gates,status,sdk_input,sdk_parameter_score,shorter_verified_alternative_score,smaller_local_count_has_higher_verified_score,score_comparison,novelty_claim
-C3X,zz_u,projective,13,28,57797/500,13,24,0,4,equal_E_more_locals,C3XGate,,11637/100,True,not_certified_from_floating_SDK_angles,False
+C3X,zz_u,projective,13,28,57797/500,13,24,0,4,equal_E_more_locals,C3XGate,,,False,not_certified_from_floating_SDK_angles,False
