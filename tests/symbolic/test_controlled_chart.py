@@ -45,3 +45,16 @@ def test_nonunitary_controlled_blocks_and_osr_four_target_are_not_certified():
     target=sp.Matrix(gates.make_gate("CP",sp.pi/7));target[0,0]+=sp.Rational(1,10**20)
     assert synthesize_controlled_chart(target,basis,phase_exact=False) is None
     assert synthesize_controlled_chart(gates.make_gate("SWAP"),basis,phase_exact=False) is None
+
+
+def test_continuous_native_ms_control_axis_is_proved_before_it_is_used():
+    phi0,phi1,theta=sp.symbols("phi0 phi1 theta",real=True)
+    target=gates.make_gate("IonQMS",phi0,phi1,theta)
+    basis=get_basis("sqrt_iswap_u")
+    frames=((("H",),("Rz",2*sp.pi*phi0)),)
+    result=synthesize_controlled_chart(target,basis,phase_exact=False,additional_frames=frames)
+    assert result["cost"]["entanglers"]==2
+    assert verify_controlled_chart_certificate(target,result,basis)
+    changed=copy.deepcopy(result)
+    changed["controlled_chart_certificate"]["additional_frames"][0][1][1]="pi/7"
+    assert not verify_controlled_chart_certificate(target,changed,basis)

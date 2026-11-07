@@ -189,11 +189,16 @@ def _lower_locals(source,phase,basis,phase_exact):
 
 
 @lru_cache(maxsize=512)
-def _controlled_blocks(target):
+def _controlled_blocks(target,additional_frames=()):
     if target.shape!=(4,4):return None
     # Local Clifford changes of the control axis cover product-Pauli
     # rotations as well as ordinary computational-basis controlled gates.
-    frames=((),(("H",),),(("H",),("S",)))
+    frames=((),(("H",),),(("H",),("S",)))+additional_frames
+    for frame in additional_frames:
+        for op in frame:
+            if op[0] not in {"H","S","Rz"}:raise ValueError("Unsupported control-axis frame")
+            if op[0]=="Rz" and (len(op)!=2 or op[1].is_real is not True):
+                raise ValueError("Control-axis frame must have a real angle")
     for control in (0,1):
         for frame in frames:
             word=tuple((*op,(control,)) for op in frame)
@@ -208,11 +213,11 @@ def _controlled_blocks(target):
     return None
 
 
-def synthesize_controlled_chart(target,basis,*,phase_exact):
+def synthesize_controlled_chart(target,basis,*,phase_exact,additional_frames=()):
     if basis.entangler not in {"B","SiSWAP"}:return None
     if not ({"U3","PhasedXZ"}&set(basis.single_qubit_gates)):return None
     target=sp.ImmutableMatrix(target)
-    blocks=_controlled_blocks(target)
+    blocks=_controlled_blocks(target,additional_frames)
     if blocks is None:return None
     if not verify_controlled_chart_lemma():raise ArithmeticError("Controlled SU(2) chart lemma failed")
     control,frame,((m0,a0),(m1,a1))=blocks
@@ -225,7 +230,8 @@ def synthesize_controlled_chart(target,basis,*,phase_exact):
     alpha=sp.Piecewise((0,sp.Eq(xy,0)),(sp.atan2(y,x),True))
     beta=sp.Piecewise((0,sp.Eq(radius,0)),(sp.atan2(xy,z),True))
     omega=sp.atan2(radius,w)
-    inverse=tuple(("H" if op[0]=="H" else "Sdg",op[-1]) for op in reversed(frame))
+    inverse=tuple(("Rz",-op[1],op[-1]) if op[0]=="Rz" else
+                  ("H" if op[0]=="H" else "Sdg",op[-1]) for op in reversed(frame))
     source=inverse+(("_matrix",m0,a0,(other,)),("Rz",-alpha,(other,)),("Ry",-beta,(other,)))
     if basis.entangler=="SiSWAP":
         if not verify_phase_chart_lemma():raise ArithmeticError("SQiSW phase chart lemma failed")
@@ -259,6 +265,7 @@ def synthesize_controlled_chart(target,basis,*,phase_exact):
         verification="exact_controlled_SU2_chart_and_native_phase_lemma",
         construction_method="OSR_two_controlled_blocks_to_two_native_pulses",
         controlled_chart_certificate=dict(control=control,frame=encode_sequence(frame),
+            additional_frames=[[[op[0],*map(str,op[1:])] for op in word] for word in additional_frames],
             blocks=[dict(quaternion=list(map(str,p)),phase=str(a)) for p,a in ((m0,a0),(m1,a1))],
             axis=[str(alpha),str(beta)],eigenangle=str(omega),
             lemmas=["exact_SU2_product_and_polar_charts","spherical_axis_including_poles",
@@ -278,7 +285,12 @@ def synthesize_controlled_chart(target,basis,*,phase_exact):
 
 def verify_controlled_chart_certificate(target,result,basis):
     if result.get("verification")!="exact_controlled_SU2_chart_and_native_phase_lemma":return False
-    try:expected=synthesize_controlled_chart(target,basis,phase_exact=result["phase_exact"])
+    target=sp.ImmutableMatrix(target)
+    symbols={str(symbol):symbol for symbol in target.free_symbols}
+    try:
+        additional=tuple(tuple((op[0],*(sp.sympify(p,locals=symbols) for p in op[1:])) for op in word)
+                         for word in result["controlled_chart_certificate"].get("additional_frames",[]))
+        expected=synthesize_controlled_chart(target,basis,phase_exact=result["phase_exact"],additional_frames=additional)
     except (ValueError,KeyError,TypeError):return False
     return expected is not None and all(result.get(key)==expected.get(key) for key in
         ("status","operations","cost","virtual_gp","controlled_chart_certificate",

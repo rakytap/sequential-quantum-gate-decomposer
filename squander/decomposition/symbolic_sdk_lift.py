@@ -107,9 +107,14 @@ def lift_sdk_candidate(target, baseline, basis, *, phase_exact=False):
     if angle is None:
         return dict(declined, reason="Scalar outside the proposal alphabet")
     factor = sp.exp(sp.I * angle)
-    proof = verify_circuit(target, sequence, selected, phase_exact=False, scalar_factor=factor)
+    # Gauge changes can change a scalar even when all nonlocal content is
+    # preserved. Infer that scalar from exact matrices and prove every entry.
+    proof = verify_circuit(target, sequence, selected, phase_exact=False,
+                           scalar_factor=None if gauge_fixed else factor)
     if proof["status"] != "verified_symbolic":
         return dict(declined, reason="Exact target identity failed")
+    if gauge_fixed:
+        factor=sp.sympify(proof["virtual_gp"]["factor"])
     if phase_exact:
         try:
             if simplify_exact(factor-1) != 0:

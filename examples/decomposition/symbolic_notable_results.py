@@ -179,7 +179,12 @@ This does not assert that the displayed circuit is the best published local cons
 \begin{center}\begin{tabular}{lllll}\toprule
 Construction & Alphabet & E & L & Phase contract \\\midrule
 """
-    text = preamble+"\n".join(table)+r"\bottomrule\end{tabular}\end{center}"+"\n"+"\n".join(drawings)
+    bounds=archive.get("literature_uniform_bound_summary",{})
+    exact_gaps=bounds.get("phase_exact_exceeds_published_uniform_bound",0)
+    projective_gaps=bounds.get("projective_exceeds_published_uniform_bound",0)
+    macros=(r"\newcommand{\UniformExactGaps}{"+str(exact_gaps)+"}\n"+
+            r"\newcommand{\UniformProjectiveGaps}{"+str(projective_gaps)+"}\n")
+    text = preamble+macros+"\n".join(table)+r"\bottomrule\end{tabular}\end{center}"+"\n"+"\n".join(drawings)
     lifted = next(row["exact_lift"] for row in sdk if row["basis"] == "ibm_cx")
     ours = effective_projective(syc["ibm_cx"])
     if lifted["status"] == "verified_symbolic":
@@ -251,8 +256,9 @@ not claims of priority over the literature.
 \section{Outstanding optimization and comparison work}
 Classification covers all $327\times32$ cells in both phase modes. This means a
 verified construction or a scoped obstruction, not global optimality.
-The two-B~\cite{b} and three-SQiSW~\cite{sq} bounds still identify 158 over-cap
-constructions per phase mode in the current archive. These are distinct from
+The two-B~\cite{b} and three-SQiSW~\cite{sq} bounds identify
+\UniformExactGaps{} literal-phase and \UniformProjectiveGaps{} projective over-cap
+constructions in the current archive. These are distinct from
 the local-count gaps above. Further minimum proofs and score optimization are
 needed even for many circuits below those caps. No competitor-wide dominance
 or exhaustive novelty claim is justified.
@@ -298,6 +304,7 @@ def main():
         sdk_baselines=dict(path=str(args.baselines), sha256=hashlib.sha256(args.baselines.read_bytes()).hexdigest()),
         generator_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
         comparison_summary=counts, comparisons=rows,
+        literature_uniform_bound_summary=archive.get("literature_uniform_bound_summary",{}),
         sycamore=dict(published=PAPER, independent_sdk=sdk,
             archived_constructions=[dict(basis=row["basis"], phase_exact=row.get("phase_exact"),
                 projective=effective_projective(row)) for row in archive["rows"]

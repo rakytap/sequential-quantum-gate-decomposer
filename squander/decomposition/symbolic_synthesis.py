@@ -800,7 +800,11 @@ def synthesize(name,parameters=(),basis="cx_u",*,phase_exact=True,osr_seconds=2.
                 if angle is not None and angle.is_real is True:
                     incumbent=synthesize_controlled_phase(angle,selected,phase_exact=phase_exact)
             if incumbent is None:
-                incumbent=synthesize_controlled_chart(target,selected,phase_exact=phase_exact)
+                additional=()
+                if gates.gate_definition(name).name in {"IonQMS","IonQMSMax"}:
+                    additional=((("H",),("Rz",2*sp.pi*sp.sympify(parameters[0]))),)
+                incumbent=synthesize_controlled_chart(target,selected,phase_exact=phase_exact,
+                                                       additional_frames=additional)
     if __package__:
         from .symbolic_archive import SymbolicDeadline
     else:
