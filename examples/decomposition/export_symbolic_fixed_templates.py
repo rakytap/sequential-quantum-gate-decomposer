@@ -44,6 +44,11 @@ def main():
         for mode in ("phase_exact","projective"):
             result=effective(row,mode)
             if key(result)>=key(effective(old[row["gate"],row["basis"]],mode)):continue
+            # These constructors already replay their exact component
+            # certificates through _native_chart_incumbent. Flattening them
+            # into the full-matrix template registry discards that proof
+            # structure and can make an otherwise fast replay expensive.
+            if result.get("verification")=="composition_of_exact_fixed_native_identities":continue
             if not any(len(op["wires"])==2 for op in result["operations"]):continue
             entry=entries.setdefault((row["gate"],row["basis"]),dict(gate=row["gate"],basis=row["basis"],candidates=[]))
             candidate=dict(operations=result["operations"],
