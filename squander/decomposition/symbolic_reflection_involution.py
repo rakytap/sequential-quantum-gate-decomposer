@@ -29,6 +29,35 @@ def controlled_reflection_source(theta,negative=False):
     return J_inverse+flips+ccz+flips+J+((('Z',(0,)),) if negative else ())
 
 
+def seven_cnot_source(theta, negative=False):
+    """Literal seven-CX word; only two U3 polar angles depend on theta.
+
+    Wire order is c=0, a=1, b=2, as in make_controlled. All constants are
+    rational multiples of pi; the fixed scalar is absorbed in physical U3s.
+    The old eight-CX constructor remains for archive provenance.
+    """
+    p = sp.pi
+    word = (
+        ('U3', p, 0, 0, (0,)), ('U3', p, -p/2, 3*p/4, (0,)),
+        ('U3', -2*p, p/4, -3*p/4, (1,)), ('U3', -2*p, p/4, -p/4, (2,)),
+        ('CX', (0, 1)),
+        ('U3', -2*p, p/4, -p/2, (0,)), ('U3', p, -p/4, -p/2, (1,)),
+        ('CX', (1, 2)),
+        ('U3', p-2*theta, -3*p/4, -3*p/4, (1,)), ('U3', p, -p/4, 0, (2,)),
+        ('CX', (0, 1)),
+        ('U3', p, -p/2, -3*p/4, (0,)), ('U3', 0, 3*p/4, -p/2, (1,)),
+        ('CX', (1, 2)),
+        ('U3', p, p/4, -p/4, (1,)), ('U3', p, 0, 3*p/4, (2,)),
+        ('CX', (0, 2)),
+        ('U3', p, 3*p/4, p/4, (0,)), ('U3', 0, p/2, -p/4, (2,)),
+        ('CX', (1, 2)),
+        ('U3', 2*p-2*theta, -p, 0, (1,)), ('U3', p, 3*p/4, -p/2, (2,)),
+        ('CX', (1, 2)),
+        ('U3', p, -p/4, 3*p/4, (1,)), ('U3', p, 0, 0, (2,)),
+    )
+    return word + ((('Z', (0,)),) if negative else ())
+
+
 def six_arbitrary_matrices(theta):
     """Six unrestricted two-wire gates, in time order, with explicit matrices."""
     X=gates.make_gate('X');XX=sp.kronecker_product(X,X)

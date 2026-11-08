@@ -5,6 +5,19 @@ from symbolic_controlled_chart import _zero
 import pytest
 
 
+@pytest.mark.parametrize('negative', [False, True])
+def test_seven_cnot_reflection_word_is_literal_with_angle_free(negative):
+    from symbolic_reflection_involution import seven_cnot_source
+    from symbolic_gates import compile_gates
+    theta = sp.Symbol('reflection_angle', real=True)
+    word = seven_cnot_source(theta, negative)
+    assert sum(g[0] == 'CX' for g in word) == 7
+    assert not any(g[0] == 'GP' for g in word)
+    assert sum(bool(sp.sympify(p).free_symbols) for g in word for p in g[1:-1]) == 2
+    target = make_controlled((-1 if negative else 1)*reflection(theta), 2)
+    assert _zero(compile_gates(3, word) - target)
+
+
 def test_five_unrestricted_reflection_word_with_angle_free():
     theta=sp.Symbol('reflection_angle',real=True)
     word=five_arbitrary_matrices(theta)
