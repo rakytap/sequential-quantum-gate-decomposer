@@ -5,11 +5,16 @@
 [Editable main LaTeX](manuscript.tex) · [Paper sources](sources.zip) ·
 [Full review package](review-package.zip) · [Release manifest](release-manifest.json) · [Research reproduction map](REPRODUCE.md)
 
-Authors: Gregory Morse and Péter Rakyta. Affiliations and contributions are
-confirmed in [editorial status](editorial-status.json) and the main manuscript.
+Authors: Gregory Morse and Péter Rakyta. Affiliations, completed work, and planned
+contributions are recorded in [editorial status](editorial-status.json) and the main manuscript.
 Gregory carried out the research, software, analysis, validation, experiments,
-data, visualization, and original draft. Péter contributes scientific
-discussions, drafting, reviewing, and editing. No external submission has been performed.
+data, visualization, and original draft, leading the computer-science work.
+Péter's planned contributions include physics review and interpretation of the
+results, scientific discussions, drafting, reviewing, and editing.
+The manuscript's arXiv license is CC BY 4.0. Its visible AI disclosure identifies
+OpenAI GPT-6.1 Sol (`xhigh`) for the research and drafting, and Anthropic Claude
+Opus 5.5 (`high`) for simulated referee reports, as reported by Gregory.
+No external submission has been performed.
 
 The paper classifies controlled balanced-involution interaction costs and
 extends the normal forms to all spectral strata. Trace-±2 reflections now

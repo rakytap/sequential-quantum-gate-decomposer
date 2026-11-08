@@ -181,12 +181,12 @@
   "unchanged_payload_comparisons": 20784,
   "artifacts": {
     "docs/symbolic_manuscript/manuscript.pdf": {
-      "sha256": "a4f3c5cff605212cf5403e1173cc78d157d92270c70f5260d82c2f2af0dae467",
-      "bytes": 347489
+      "sha256": "b4b80dd89a33dfaa1ac47b9db81fd67bd78a263f4bf9703a9c3eea35e61b706d",
+      "bytes": 347728
     },
     "docs/symbolic_manuscript/quantum-submission.pdf": {
-      "sha256": "6417b72470e4b4fb79d5b66caf5a14b1484e44302339103d40f0358f908440aa",
-      "bytes": 345636
+      "sha256": "08985517c63a6552d0bd64b21b36b911307e0887d7cacfd3148f2462a77d1992",
+      "bytes": 345902
     },
     "docs/symbolic_manuscript/supplement.pdf": {
       "sha256": "5705954b85add5b68d8eb174270b1e6294e6100f5016069a65ecdc96b1606cd5",
@@ -197,12 +197,12 @@
       "bytes": 147845
     },
     "docs/symbolic_manuscript/sources.zip": {
-      "sha256": "3e04fcec9be04f432abe722989ff6fd94ca3d30f991841a69480287440fecda1",
-      "bytes": 4445053
+      "sha256": "84f4cc545abf50cb79c4b07cee8b13bacac04e16b80ebd4eec32342123481acc",
+      "bytes": 4445838
     },
     "docs/symbolic_manuscript/review-package.zip": {
-      "sha256": "5253287c005323e244315cb8658650c6535c7d48ec898074bb2738a31edd6a57",
-      "bytes": 29015441
+      "sha256": "92c54e4ffa79df162ab3dda667d0e8e9476ee6808da1c5394ed3609e1068b5a8",
+      "bytes": 29016928
     },
     "docs/symbolic_atlas/gates.pdf": {
       "sha256": "ac8822f5036ddb10b0cc828663db879d3101fdf8aabcacfdb5229320bcae2192",
@@ -213,7 +213,7 @@
       "bytes": 1894011
     },
     "docs/symbolic_atlas/sources.zip": {
-      "sha256": "a8ba2b5a298dc7b504f03efd735dcd6858224eec74da45b6548538396a75feeb",
+      "sha256": "2ef9b90de935a402f482796ca951fe474268570428c7c4b8b2e98e4da3b34261",
       "bytes": 3481978
     },
     "docs/symbolic_notable_results/notable_results.pdf": {
