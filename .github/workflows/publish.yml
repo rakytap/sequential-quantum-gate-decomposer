@@ -280,6 +280,23 @@ jobs:
           Write-Host "Repair complete. Wheels in dist/:"
           Get-ChildItem dist/*.whl | ForEach-Object { Write-Host "  $($_.Name)" }
 
+      - name: Check repaired Windows wheel
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $wheel = Get-ChildItem dist/*.whl | Select-Object -First 1
+          python -m pip install --force-reinstall $wheel.FullName qiskit
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          # Import the installed wheel, not native binaries in the checkout.
+          $check = Join-Path $PWD 'tests/check_windows_wheel.py'
+          Push-Location $env:RUNNER_TEMP
+          try {
+            python $check
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          } finally {
+            Pop-Location
+          }
+
       - name: Upload wheel artifacts
         uses: actions/upload-artifact@v4
         with:
