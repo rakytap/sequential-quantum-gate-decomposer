@@ -39,6 +39,22 @@ def six_arbitrary_matrices(theta):
             (CS,(0,2)),(J*XX,(1,2)))
 
 
+def five_arbitrary_matrices(theta):
+    """Five unrestricted gates, exactly, for every real Schmidt angle.
+
+    With X on the first target, B R(theta) X B.H = Z tensor S
+    (little-endian). B is an explicitly unitary eigenframe; no eigenvalue
+    fitting or numerical local equivalence is used.
+    """
+    r=sp.sqrt(2)/2
+    B0=r*sp.Matrix([[0,0,1,1],[0,0,-1,1],[-sp.I,1,0,0],[sp.I,1,0,0]])
+    J=gates.apply_to(sp.eye(4),2,gates.make_gate('Ry',2*theta),(1,))
+    J=gates.apply_to(J,2,gates.make_gate('CX'),(1,0))
+    B=sp.ImmutableMatrix(B0*J.H)
+    return ((gates.make_gate('CX'),(0,1)),(B,(1,2)),
+            (gates.make_gate('CS'),(0,2)),(gates.make_gate('CZ'),(0,1)),(B.H,(1,2)))
+
+
 def reflection_schmidt_minor(theta):
     """Exact OSR determinant; nonzero throughout 0<theta<=pi/4."""
     if __package__:
