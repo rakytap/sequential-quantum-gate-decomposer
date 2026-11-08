@@ -1,6 +1,11 @@
 \ifdefined\QuantumSubmission
 \documentclass[a4paper,onecolumn,11pt,unpublished]{quantumarticle}
 \ifdefined\XeTeXversion\else\pdfoutput=1\fi
+% Quantum 6.1 uses standard caption defaults; declare the same fallback
+% explicitly for caption 3.6, whose automatic class detection omits Quantum.
+\makeatletter
+\providecommand\caption@documentclass{standard}
+\makeatother
 \else
 \documentclass[11pt]{article}
 \usepackage[margin=25mm]{geometry}
@@ -8,7 +13,9 @@
 \usepackage[T1]{fontenc}
 \ifdefined\QuantumSubmission\else\usepackage{lmodern}\fi
 \usepackage{amsmath,amssymb,booktabs,array,graphicx}
+\usepackage[numbers]{natbib}
 \usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\usepackage{xurl}
 \usepackage[braket,qm]{qcircuit}
 \newtheorem{theorem}{Theorem}
 \newtheorem{lemma}{Lemma}
@@ -32,7 +39,26 @@
 \author{Gregory Morse$^{1}$ \and P\'eter Rakyta$^{2,3}$}
 \fi
 \date{8 November 2026}
+\iffalse
+ARXIV-METADATA-BEGIN
+Title: Controlling two-qubit involutions: CNOT costs and symbolic invariants
+Authors: Gregory Morse (E\"otv\"os Lor\'and University), P\'eter Rakyta (E\"otv\"os Lor\'and University; HUN-REN Wigner Research Centre for Physics)
+Abstract source: copy abstract environment verbatim
+Comments: 11 pages, 1 figure, 2 tables. Supporting code, data, and certificates: https://github.com/rakytap/sequential-quantum-gate-decomposer . Supplement supplied separately.
+Subjects: Quantum Physics (quant-ph)
+MSC classes: 81P68 (Primary)
+ACM classes: N/A -- leave blank
+Report number: N/A -- leave blank
+Journal reference: N/A -- leave blank
+DOI: N/A -- leave blank
+License: PENDING -- author selection required
+Submitter is author: Yes
+External artifacts: GitHub https://github.com/rakytap/sequential-quantum-gate-decomposer ; release/tag symbolic-involutions-research-20261108; commit 26912300eef3ea11fe94eea05e5b23f5b8180d98; locally verified 2026-11-08; public pin verification pending author push
+AI disclosure: Use of AI -- An OpenAI Codex assistant supported implementation, calculations, experiments, source research, and drafting. The authors are responsible for the mathematics, software, data, and final text.
+ARXIV-METADATA-END
+\fi
 \begin{document}
+\normalfont
 \maketitle
 \ifdefined\QuantumSubmission\else
 \begin{center}\small
@@ -51,7 +77,7 @@ Controlled fermionic SWAP attains this bound with a literal four-CNOT,
 six-rotation circuit, whereas three unrestricted two-qubit gates suffice.
 We extend the normal-form analysis to every spectral stratum of two-qubit
 involutions. Trace-\(\pm2\) reflections form a one-Schmidt-angle family
-joining controlled-controlled-Z and Fredkin: we give exact eight-CNOT and
+joining controlled-controlled-Z and Fredkin: we give exact seven-CNOT and
 five-unrestricted-gate upper bounds and partial lower bounds in its interior.
 Finally, we reformulate the known two-SQiSW region as a necessary-and-sufficient
 real polynomial test in matrix entries, suitable for symbolic families.
@@ -403,9 +429,9 @@ where
  \quad0\le\theta\le\pi/4.
 \end{equation}
 Every $C(\pm R_\theta)$ has an ancilla-free literal construction with at most
-eight CNOTs, or five unrestricted two-qubit gates. For $0<\theta<\pi/4$,
+seven CNOTs, or five unrestricted two-qubit gates. For $0<\theta<\pi/4$,
 \begin{equation}
- 4\le E_{\CNOT}(C(R_\theta))\le8,\qquad
+ 4\le E_{\CNOT}(C(R_\theta))\le7,\qquad
  3\le E_{\mathrm{arb}}(C(R_\theta))\le5.
 \end{equation}
 At $\theta=0$ the respective exact minima are six and five. At
@@ -423,8 +449,21 @@ $J_\theta|00\rangle=|\psi_\theta\rangle$,
 \begin{equation}\label{eq:reflectionword}
  C(R_\theta)=J_\theta(X_aX_b)\,CCZ_{c,a,b}\,(X_aX_b)J_\theta^\dagger.
 \end{equation}
-A six-CNOT $CCZ$ word plus the two outer target CNOTs gives eight;
-all identities are literal. For the improved unrestricted count put
+A six-CNOT $CCZ$ word plus the two outer target CNOTs gives an initial
+bound of eight. The improved seven-CNOT word is given, in full time order,
+in the supplement. Its only varying local angles are $\pi-2\theta$ and
+$2\pi-2\theta$ in two $U_3$ gates; all constants are rational multiples of
+$\pi$. With $U_3(\delta,\phi,\lambda)=P(\phi)R_y(\delta)P(\lambda)$,
+direct multiplication yields $\operatorname{diag}(I_4,R_\theta)$, with
+\[
+ R_\theta=\begin{pmatrix}
+ -\cos2\theta&0&0&-\sin2\theta\\
+ 0&1&0&0\\0&0&1&0\\
+ -\sin2\theta&0&0&\cos2\theta
+ \end{pmatrix}.
+\]
+The circuit uses seven CNOTs and eighteen physical $U_3$ gates, without a
+GP gate or residual scalar. For the improved unrestricted count put
 \[
  B_0=\frac1{\sqrt2}\begin{pmatrix}
  0&0&1&1\\0&0&-1&1\\-i&1&0&0\\i&1&0&0
@@ -549,10 +588,18 @@ parameter-reuse timings, and negative peephole experiment are in the supplement.
 They measure the supplied implementation and do not establish compiler
 dominance or a general runtime advantage.
 
-Sources, exact words, proof-component checks, audit circuits, the ledger,
-and both complete atlas PDFs with editable LaTeX are included in the review
-bundle. Content hashes and Git revisions identify every recorded source.
-The repository is \url{https://github.com/rakytap/sequential-quantum-gate-decomposer}.
+The supporting software, exact words, proof-component checks, audit circuits,
+and ledger are supplied at
+\url{https://github.com/rakytap/sequential-quantum-gate-decomposer}, with
+research sources pinned to tag
+\texttt{symbolic-involutions-research-20261108}, commit
+\texttt{26912300eef3ea11fe94eea05e5b23f5b8180d98}.
+The exact matrix checks support the analytical proofs. The row-specific
+rational certificates are logically required for the enumerated native-count
+claims; numerical compiler runs are supporting experiments and regression
+evidence, not proof premises.
+Separate atlas and scientific-data archives retain editable LaTeX, complete
+records, and content-hash manifests.
 
 \section{Scope and open questions}
 The balanced classification allows arbitrary one-qubit unitaries, all-to-all
@@ -560,11 +607,11 @@ connectivity, and no ancillas. A restricted local alphabet needs its own
 native construction. The Ising lower bound permits arbitrary interaction
 angles but does not apply to unrestricted two-qubit gates. The trace-$\pm2$
 interior has partial bounds; determining its exact costs is open.
-We conjecture five unrestricted gates and seven CNOTs for every
-$0<\theta\le\pi/4$. The five-gate unrestricted upper bound is proved.
-The supplement records seven-CNOT numerical witnesses at ten angle values,
-including $\pi/8$ and $3/10$, with literal matrix replays. These samples
-supply neither a seven-CNOT family identity nor the missing lower bounds.
+We conjecture that the proved upper bounds, five unrestricted gates and
+seven CNOTs, are both attained as minima for every $0<\theta\le\pi/4$.
+Both upper constructions now have literal free-angle identities; the missing
+interior lower bounds remain open. Earlier numerical witnesses are retained
+for provenance and are not used as lower-bound evidence.
 The Fredkin endpoint likewise has a best known seven-CNOT word, with no
 seven-CNOT minimum claimed here.
 Continuous local-cost minima and all-grid interaction optimality are also
@@ -583,5 +630,6 @@ P\'eter Rakyta: scientific discussions, drafting, reviewing, and editing.
 An OpenAI Codex assistant supported implementation, calculations, experiments,
 source research, and drafting. The authors are responsible for the mathematics,
 software, data, and final text.
-\input{references.tex}
+\bibliographystyle{unsrtnat}
+\bibliography{references}
 \end{document}

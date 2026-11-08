@@ -3,7 +3,9 @@
 \usepackage[T1]{fontenc}
 \usepackage{lmodern}
 \usepackage{amsmath,amssymb,booktabs,array,graphicx}
+\usepackage[numbers]{natbib}
 \usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\usepackage{xurl}
 \usepackage[braket,qm]{qcircuit}
 \newtheorem{theorem}{Theorem}
 \newtheorem{lemma}{Lemma}
@@ -306,6 +308,11 @@ proved records concern explicit parameter samples. Thirty proof deadlines
 and eight uncertified coordinate conversions remain recorded as inconclusive.
 Examples include three square-root-SWAPs for CS and B, four for CT and iSWAP,
 and two SYCs for B. In particular, three square-root-SWAPs are not universal.
+The two-SYC B certificate is also an illustration of the distinction between
+optimization and reachability: failure of a numerical local-frame fit does
+not contradict an exact feasible invariant/polytope certificate. The count
+proof supplies an existence statement even when an explicit frame search
+has not succeeded. This does not treat failed fits as exclusion evidence.
 
 The result is an existence/count certificate, not an explicit symbolic
 local-frame construction or a local-gate optimum. For the supplied U3 and
@@ -318,15 +325,28 @@ minimum. The exact count files and separate numerical witnesses are both
 included, and atlas panels retain any gap in the displayed word.
 
 \subsection{Reflection search and the remaining conjecture}
-The main paper proves a literal five-unrestricted-gate word with the Schmidt
-angle free. We also searched seven-CNOT layouts numerically with BQSKit 1.2.1,
+The main paper proves literal five-unrestricted-gate and seven-CNOT words
+with the Schmidt angle free. The latter was obtained by fine-step numerical
+continuation with a fixed local-gate gauge, followed by rational-angle
+reconstruction and exact symbolic acceptance. The complete word is below.
+Use $U_3(\delta,\phi,\lambda)=P(\phi)R_y(\delta)P(\lambda)$, control $c$,
+and targets $a,b$. Rows are applied from top to bottom; a two-wire row lists
+control then target. Only rows 9 and 21 depend on $\theta$. There are seven
+CNOTs and eighteen $U_3$ gates, with no GP gate. Direct multiplication gives
+the literal controlled reflection for every real $\theta$; a control Z
+adds the negative-reflection variant.
+\input{generated/reflection_seven_word.tex}
+The exact JSON word and independent sign-variant regression tests accompany
+the scientific archive. The discovery fit supplies no proof premise.
+
+The earlier audit searched seven-CNOT layouts numerically with BQSKit 1.2.1,
 found one, and refined that fixed layout with least squares at ten values
 between zero and $\pi/4$. All local operations are U3; scalar phase is
 absorbed through actual local gates. Full literal $8\times8$ replays pass,
 including $\theta=\pi/8$ and $\theta=3/10$, with maximum entry error below
 $10^{-12}$. The archive contains every resulting word, seed, layout, angles,
-versions, and a reproduction harness. The examples support the conjecture
-but do not supply a free-angle identity or a lower bound.
+versions, and a reproduction harness. Those examples remain numerical records; the new exact word supplies the
+free-angle upper bound, while the lower bounds are still conjectural.
 
 A useful partial obstruction is that $R_\theta(A\otimes I)$ cannot have
 only two eigenvalues, each twice, for any one-qubit unitary $A$.
@@ -335,12 +355,30 @@ eigenspaces contains a vector orthogonal to $\psi_\theta$. These supply
 unchanged eigenvalues $\lambda_\pm$ after multiplication by the reflection.
 A doubled spectrum would then force determinant $(\det A)^2$, whereas the
 actual determinant is $-(\det A)^2$. A scalar $A$ instead leaves multiplicities
-three and one. This obstruction excludes corresponding controlled-product
-forms; it is not an exclusion of every four-gate layout.
+three and one. More precisely, it excludes the time-ordered edge words
+$(ca,ab,ca,ab)$ and $(ab,ca,ab,ca)$, and their $a\leftrightarrow b$
+counterparts $(cb,ab,cb,ab)$ and $(ab,cb,ab,cb)$, when the two control-edge
+gates are individually controlled on $c$ in its computational basis.
+For the first word, write its branch as
+\[
+ U_j=V_{ab}(Q_j\otimes I_b)W_{ab}(P_j\otimes I_b),\quad j=0,1.
+\]
+The requirement $U_0=I$ gives
+\[
+ R_\theta(P_1^\dagger P_0\otimes I_b)
+ = (P_0^\dagger\otimes I_b)W_{ab}^\dagger
+   (Q_0^\dagger Q_1\otimes I_b)W_{ab}(P_0\otimes I_b),
+\]
+which has a doubled spectrum and is impossible. Taking adjoints gives the
+reverse word because $R_\theta$ is Hermitian; exchanging targets gives the
+other two. Local target gates can be absorbed in these factors. This is a
+conditional exclusion of these controlled-edge realizations, not an exclusion
+of arbitrary two-qubit gates on the same edges, nor of the other four-gate
+edge words. No general control-basis normalization is assumed here.
 The Fredkin proof cannot simply be imported by relabelling: some of its
 layout reductions use the fact that the relative operator is a literal
 wire SWAP. An interior reflection is not a wire permutation. We consequently
-retain explicit partial bounds and state the full five/seven claim as a conjecture.
+retain partial lower bounds and state five/seven minimality as a conjecture.
 
 \subsection{Exact two-SYC controlled-phase chart}
 Put $S=\mathrm{SYC}$, $w=e^{-i\pi/6}$, $C=\cos(\pi/12)$ and
@@ -420,8 +458,10 @@ SDK comparisons use the separate Python-3.12 environment. Rule optimizers
 require the recorded Quartz build and Java-17 QUESO artifact; complete rule
 files, commands, and the harness patch are included. The builder regenerates
 coverage and comparison tables from the frozen records. Compilation of the
-paper needs \texttt{manuscript.tex} and \texttt{generated/}; the atlas sources
-retain their own relative \texttt{circuits/} and \texttt{programs/} paths.
+paper needs \texttt{manuscript.tex}, \texttt{generated/}, and the supplied
+\texttt{references.bib} and matching \texttt{.bbl}. The atlas sources retain
+their own relative \texttt{circuits/} and \texttt{programs/} paths.
 
-\input{references.tex}
+\bibliographystyle{unsrtnat}
+\bibliography{references}
 \end{document}

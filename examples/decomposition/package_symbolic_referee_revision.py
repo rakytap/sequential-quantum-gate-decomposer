@@ -31,8 +31,8 @@ def main():
     template=json.loads((DOC/'quantum-template-provenance.json').read_text())
     assert sha(DOC/'quantumarticle.cls')==template['class_sha256']
     shutil.copy2(DOC/'referee-verification.json',DOC/'release-verification.json')
-    logs={'full_suite':Path('/tmp/third_referee_full_tests.log'),
-          'new_theory_suite':Path('/tmp/third_referee_new_tests.log')}
+    logs={'full_suite':Path('/tmp/fourth_referee_full_tests.log'),
+          'new_theory_suite':Path('/tmp/fourth_referee_new_tests.log')}
     validation={}
     for key,path in logs.items():
         text=path.read_text();matches=re.findall(r'(\d+) passed(?:, (\d+) warning)? in ([\d.]+)s',text)
@@ -42,10 +42,10 @@ def main():
         count,warnings,seconds=matches[-1]
         validation[key]=dict(status='passed',passed=int(count),warnings=int(warnings or 0),
                             seconds=float(seconds),log_sha256=sha(path))
-    assert validation['new_theory_suite']['passed']==15
+    assert validation['new_theory_suite']['passed']==17
     validation['overall_status']='passed'
     validation['covered_tests']=validation['full_suite']['passed']
-    validation['scope']='Fresh full pure-symbolic collection, plus the fifteen third-report tests. No core synthesis/proof source changed after collection. Exact certificate replays and numerical witness checks are separately reported.'
+    validation['scope']='Fresh full pure-symbolic collection, including both signs of the free-angle seven-CNOT word and the native monodromy checks. No core synthesis/proof source changed after collection. Exact certificate replays and numerical witness checks are separately reported.'
     (DOC/'test-results.json').write_text(json.dumps(validation,indent=2)+'\n')
     source=Path('/tmp/symbolic-atlas-full');atlas=ROOT/'docs/symbolic_atlas'
     atlas_manifest=json.load(gzip.open(source/'manifest.json.gz','rt'))
@@ -69,8 +69,10 @@ def main():
     texts='\n'.join((DOC/n).read_text() for n in ('manuscript.tex','supplement.tex'))
     used=re.findall(r'\\input\{(generated/[^}]+)\}',texts)
     used+=re.findall(r'\\includegraphics(?:\[[^]]*\])?\{(generated/[^}]+)\}',texts)
-    members={n:DOC/n for n in ('manuscript.tex','supplement.tex','references.tex','referee-response.tex',
-               'first-referee-response.tex','second-referee-response.tex','README.md','referee-revision.json','referee-verification.json',
+    members={n:DOC/n for n in ('manuscript.tex','supplement.tex','references.bib',
+               'manuscript.bbl','supplement.bbl','quantum-submission.bbl','referee-response.tex',
+               'first-referee-response.tex','second-referee-response.tex','third-referee-response.tex',
+               'README.md','REPRODUCE.md','referee-revision.json','referee-verification.json',
                'native-gap-verification.json','monodromy-verification.json','reflection-verification.json',
                'quantum-submission.tex','quantumarticle.cls','quantum-template-provenance.json',
                'editorial-status.json','test-results.json','claims-review.json')}
@@ -83,7 +85,8 @@ def main():
            'manuscript_experiments_20261107.json.gz','synthesis_native_second_referee_20261107.json.gz',
            'synthesis_tk2_second_referee_20261107.json.gz','native_column_gap_audit_20261107.json.gz',
            'c4x_published_routes_20261107.json.gz','native_monodromy_20261108.json.gz',
-           'native_monodromy_deep_20261108.json.gz','reflection_seven_numeric_20261108.json.gz']
+           'native_monodromy_deep_20261108.json.gz','reflection_seven_numeric_20261108.json.gz',
+           'reflection_seven_exact_20261108.json.gz']
     for n in files:members['data/'+n]=DATA/n
     for pattern in ('symbolic_*.py','symbolic_*.json','symbolic_*LICENSE.txt','sympy_gen.py'):
         for p in (ROOT/'squander/decomposition').glob(pattern):members['repository/'+str(p.relative_to(ROOT))]=p
@@ -95,9 +98,9 @@ def main():
     members['requirements-symbolic.txt']=requirements.encode()
     sdk=json.load(gzip.open(DATA/'referee_strong_sdks_final_20261107.json.gz','rt'))
     members['requirements-sdk-python312.txt']=('\n'.join(n+'=='+v for n,v in sdk['versions'].items())+'\n').encode()
-    members['BUILD.txt']=b'Paper: tectonic manuscript.tex. Quantum format: tectonic quantum-submission.tex (same manuscript body; official quantumarticle.cls included). Supplement: tectonic supplement.tex. Prism: copy manuscript.tex, supplement.tex, references.tex and generated/; also quantum-submission.tex and quantumarticle.cls for the Quantum format. Response: tectonic referee-response.tex. The full review ZIP includes both atlas PDFs and atlas-sources.zip. Current pure-symbolic sources and scientific records are in repository/ and data/. Exact monodromy count proofs are existence results; missing short local-frame words remain flagged. Numerical reflection/native witnesses are separate from exact identities; family samples are not uniform bounds. Reconstruct historical implementations using source-content hashes/Git revisions. SDK experiments, numerical reflection fitting, and the C4X harness use the pinned Python-3.12 environment. Quartz/QUESO need their recorded builds; rules and harness patch are in the raw record.\n'
+    members['BUILD.txt']=b'Full-source build: pdflatex STEM.tex; bibtex STEM; pdflatex STEM.tex twice (STEM = manuscript, quantum-submission, or supplement). Matching .bbl files are included for LaTeX-only builds. The official quantumarticle.cls is included. Prism: copy manuscript.tex, supplement.tex, references.bib, matching .bbl files and generated/; also quantum-submission.tex and quantumarticle.cls for Quantum format. Tectonic is an alternative preview engine. The full review ZIP is an author/reviewer handoff, not the arXiv upload. Current pure-symbolic sources and scientific records are in repository/ and data/. The exact seven-CNOT reflection word is separate from its numerical discovery witnesses. Monodromy count proofs are existence results; missing short local-frame words remain flagged. Family samples are not pointwise uniform bounds. Reconstruct historical implementations using source-content hashes/Git revisions. SDK experiments and numerical reflection fitting use the pinned Python-3.12 environment. Quartz/QUESO need their recorded builds.\n'
     for name,path in logs.items():members['validation/'+name+'.log']=path
-    members['validation/third_report_replays.log']=Path('/tmp/third_referee_added_verification.log')
+    members['validation/final_replays.log']=Path('/tmp/fourth_referee_replays.log')
     for record in monodromy['artifacts'].values():
         for source in record['sources']:
             if source['resolution']=='historical_source':
@@ -111,6 +114,7 @@ def main():
     package={'manuscript.pdf':DOC/'manuscript.pdf','quantum-submission.pdf':DOC/'quantum-submission.pdf','supplement.pdf':DOC/'supplement.pdf',
              'referee-response.pdf':DOC/'referee-response.pdf','first-referee-response.pdf':DOC/'first-referee-response.pdf',
              'second-referee-response.pdf':DOC/'second-referee-response.pdf',
+             'third-referee-response.pdf':DOC/'third-referee-response.pdf',
              'paper-sources.zip':DOC/'sources.zip','gate-atlas.pdf':atlas/'gates.pdf','clifford-atlas.pdf':atlas/'cliffords.pdf',
              'atlas-sources.zip':atlas/'sources.zip','selected-identities.pdf':notable/'notable_results.pdf',
              'selected-identities-sources.zip':notable/'sources.zip','README.md':DOC/'README.md'}

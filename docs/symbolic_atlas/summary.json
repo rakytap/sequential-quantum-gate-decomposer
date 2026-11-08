@@ -97,21 +97,21 @@
   "tests": {
     "full_suite": {
       "status": "passed",
-      "passed": 1214,
+      "passed": 1216,
       "warnings": 1,
-      "seconds": 1139.95,
-      "log_sha256": "7a19075b6a9d559c47368468f7c048a58a5d970c457df1beb7cee7e049d606e8"
+      "seconds": 1154.17,
+      "log_sha256": "62ac0f3e592e79f45b4944ac4dd6a9463b0484cf2e3424478994a53632b93738"
     },
     "new_theory_suite": {
       "status": "passed",
-      "passed": 15,
+      "passed": 17,
       "warnings": 0,
-      "seconds": 2.46,
-      "log_sha256": "c477153249bf6a363c78d4f95df36dc4ec1e050c783b6070402c77862be9ad2b"
+      "seconds": 4.43,
+      "log_sha256": "adf11588ef1c5a4b9ca8bf37c93c9a5312ce0483fc5f4cfa4746994054b28364"
     },
     "overall_status": "passed",
-    "covered_tests": 1214,
-    "scope": "Fresh full pure-symbolic collection, plus the fifteen third-report tests. No core synthesis/proof source changed after collection. Exact certificate replays and numerical witness checks are separately reported."
+    "covered_tests": 1216,
+    "scope": "Fresh full pure-symbolic collection, including both signs of the free-angle seven-CNOT word and the native monodromy checks. No core synthesis/proof source changed after collection. Exact certificate replays and numerical witness checks are separately reported."
   },
   "limits": [
     "Not all-grid optimality",

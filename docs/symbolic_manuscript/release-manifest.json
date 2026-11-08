@@ -2,7 +2,7 @@
   "schema": "symbolic-referee-package-v3",
   "manuscript_pages": 11,
   "quantum_template_pages": 11,
-  "response_pages": 2,
+  "response_pages": 1,
   "atlas_pages": {
     "gates": 569,
     "cliffords": 98
@@ -50,7 +50,8 @@
           {
             "path": "squander/decomposition/symbolic_reflection_involution.py",
             "sha256": "534e119df082dfbe9845fbc5e2846179b6db488b4b358180b5754fb6e83b1088",
-            "resolution": "included_current_source"
+            "resolution": "historical_source",
+            "revision": "5987b7e1cbdff67e1aa8f701f47645c19838dd60"
           }
         ]
       },
@@ -79,7 +80,8 @@
           {
             "path": "squander/decomposition/symbolic_reflection_involution.py",
             "sha256": "534e119df082dfbe9845fbc5e2846179b6db488b4b358180b5754fb6e83b1088",
-            "resolution": "included_current_source"
+            "resolution": "historical_source",
+            "revision": "5987b7e1cbdff67e1aa8f701f47645c19838dd60"
           }
         ]
       }
@@ -141,53 +143,66 @@
         "literal_maximum_entry_error": 4.037621774323881e-14
       }
     ],
-    "scope": "Ten numerical seven-CX witnesses only. The exact free-angle five-unrestricted-gate identity is separately checked by test_five_unrestricted_reflection_word_with_angle_free. Neither is an interior lower bound."
+    "scope": "Ten numerical seven-CX witnesses only. The exact free-angle five-unrestricted-gate identity is separately checked by test_five_unrestricted_reflection_word_with_angle_free. Neither is an interior lower bound.",
+    "exact_family": {
+      "archive_sha256": "001a5e63ab8e0fd85567f1993e361fa55b5247935f6d269d9484d2ba58753d88",
+      "entanglers": 7,
+      "local_gates": 18,
+      "phase_contract": "literal; no GP",
+      "real_angle_free": true,
+      "negative_variant_verified": true,
+      "source": {
+        "path": "squander/decomposition/symbolic_reflection_involution.py",
+        "sha256": "6242eee03c5f5645ac707f39b3e52ab2af21b52a33035e28ec3f59f441b8f268",
+        "resolution": "included_current_source"
+      }
+    }
   },
   "validation": {
     "full_suite": {
       "status": "passed",
-      "passed": 1214,
+      "passed": 1216,
       "warnings": 1,
-      "seconds": 1139.95,
-      "log_sha256": "7a19075b6a9d559c47368468f7c048a58a5d970c457df1beb7cee7e049d606e8"
+      "seconds": 1154.17,
+      "log_sha256": "62ac0f3e592e79f45b4944ac4dd6a9463b0484cf2e3424478994a53632b93738"
     },
     "new_theory_suite": {
       "status": "passed",
-      "passed": 15,
+      "passed": 17,
       "warnings": 0,
-      "seconds": 2.46,
-      "log_sha256": "c477153249bf6a363c78d4f95df36dc4ec1e050c783b6070402c77862be9ad2b"
+      "seconds": 4.43,
+      "log_sha256": "adf11588ef1c5a4b9ca8bf37c93c9a5312ce0483fc5f4cfa4746994054b28364"
     },
     "overall_status": "passed",
-    "covered_tests": 1214,
-    "scope": "Fresh full pure-symbolic collection, plus the fifteen third-report tests. No core synthesis/proof source changed after collection. Exact certificate replays and numerical witness checks are separately reported."
+    "covered_tests": 1216,
+    "scope": "Fresh full pure-symbolic collection, including both signs of the free-angle seven-CNOT word and the native monodromy checks. No core synthesis/proof source changed after collection. Exact certificate replays and numerical witness checks are separately reported."
   },
   "exact_changed_replays": 144,
   "unchanged_payload_comparisons": 20784,
   "artifacts": {
     "docs/symbolic_manuscript/manuscript.pdf": {
-      "sha256": "f8b210b3906da51f3f1498baad9a0d491924f6db8970791238b478304f0a3905",
-      "bytes": 120551
+      "sha256": "a4f3c5cff605212cf5403e1173cc78d157d92270c70f5260d82c2f2af0dae467",
+      "bytes": 347489
     },
     "docs/symbolic_manuscript/quantum-submission.pdf": {
-      "sha256": "beb19e23d32c7b760ba21e782c76924543fb2682f38b5e5973a5067af6213e3a",
-      "bytes": 122977
+      "sha256": "6417b72470e4b4fb79d5b66caf5a14b1484e44302339103d40f0358f908440aa",
+      "bytes": 345636
     },
     "docs/symbolic_manuscript/supplement.pdf": {
-      "sha256": "6d305e7e04abdaed6d90ebf74681b6ad6d47f26e146d9946659874a2bf930914",
-      "bytes": 108639
+      "sha256": "5705954b85add5b68d8eb174270b1e6294e6100f5016069a65ecdc96b1606cd5",
+      "bytes": 336686
     },
     "docs/symbolic_manuscript/referee-response.pdf": {
-      "sha256": "c8fc1d8ce57b007989b0cb3294a2a1ab5da3feda4aeca448fed77df43de561f8",
-      "bytes": 37014
+      "sha256": "7f9eb028bbec2dcc0d6d85633ed22b94b5b9a9fe993a88a46f74a2190e50bd29",
+      "bytes": 147845
     },
     "docs/symbolic_manuscript/sources.zip": {
-      "sha256": "9d0fa62a3ee9ff17ca4df84ba513005c1ebfabcc53a918feff54769af8131e43",
-      "bytes": 4427755
+      "sha256": "3e04fcec9be04f432abe722989ff6fd94ca3d30f991841a69480287440fecda1",
+      "bytes": 4445053
     },
     "docs/symbolic_manuscript/review-package.zip": {
-      "sha256": "1f1f72a1e55f9b2bdeb92d113da05501d391ba33d8c7939bd4aedaa52127d462",
-      "bytes": 28194139
+      "sha256": "5253287c005323e244315cb8658650c6535c7d48ec898074bb2738a31edd6a57",
+      "bytes": 29015441
     },
     "docs/symbolic_atlas/gates.pdf": {
       "sha256": "ac8822f5036ddb10b0cc828663db879d3101fdf8aabcacfdb5229320bcae2192",
@@ -198,12 +213,12 @@
       "bytes": 1894011
     },
     "docs/symbolic_atlas/sources.zip": {
-      "sha256": "d2ee2d342bc5e31bd98fb8904d169b736d452e926a5d4607e04f01ad65a86f1c",
+      "sha256": "a8ba2b5a298dc7b504f03efd735dcd6858224eec74da45b6548538396a75feeb",
       "bytes": 3481978
     },
     "docs/symbolic_notable_results/notable_results.pdf": {
-      "sha256": "e7733c2016c5f7c5c938597bd28b022edc7f28edc6ae6900bf1632c703ac88f1",
-      "bytes": 50592
+      "sha256": "a21bf7fd1de55b56f83e30096369a68a0418e57c51fff4e3a9b342ea8df5b2aa",
+      "bytes": 50580
     },
     "benchmarks/symbolic/synthesis_reference_20261107_referee.json.gz": {
       "sha256": "f0e67c123e43d26c999cc39ef5865d153ceb7f9ad5742b5d9be35f76b8492495",

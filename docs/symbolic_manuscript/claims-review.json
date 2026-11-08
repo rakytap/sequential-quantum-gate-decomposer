@@ -7,7 +7,8 @@
     "All-involution spectral normal forms with explicit partial trace-plus/minus-two bounds; no interior optimum claim",
     "Real polynomial SQiSW region test for symbolic families",
     "Exact five-unrestricted-gate free-angle trace-plus/minus-two reflection construction",
-    "Exact monodromy minimum-count certificates for all 64 fixed-target/native pairs in the audited SYC/square-root-SWAP subset"
+    "Exact monodromy minimum-count certificates for all 64 fixed-target/native pairs in the audited SYC/square-root-SWAP subset",
+    "Literal seven-CNOT free-angle reflection word with eighteen U3 gates and no GP"
   ],
   "withdrawn_claims": [
     "Grid size as evidence of mathematical novelty",
@@ -29,7 +30,7 @@
     "New analytical classification requires independent mathematical scrutiny",
     "Other TK2 cells remain above known one-macro capacity and are flagged",
     "Exact interior reflection costs remain open",
-    "Seven-CNOT reflection circuits verified numerically at ten angles; no free-angle seven-CNOT identity or interior five-gate lower bound",
+    "Interior lower bounds remain unproved; seven-CNOT and five-unrestricted-gate free-angle upper words are exact",
     "Monodromy existence/count certificates do not supply explicit shortest local-frame words; family samples are not pointwise family minimum proofs",
     "Thirty monodromy proof deadlines and eight uncertified coordinate conversions remain inconclusive"
   ],
