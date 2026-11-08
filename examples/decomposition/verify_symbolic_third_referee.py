@@ -92,6 +92,22 @@ def main():
         maximum_literal_entry_error=max(row['literal_maximum_entry_error'] for row in rows),
         no_physical_GP=True, rows=rows,
         scope='Ten numerical seven-CX witnesses only. The exact free-angle five-unrestricted-gate identity is separately checked by test_five_unrestricted_reflection_word_with_angle_free. Neither is an interior lower bound.')
+    import sympy as sp
+    from symbolic_gates import compile_gates, make_controlled
+    from symbolic_reflection_involution import reflection
+    from symbolic_controlled_chart import _zero
+    exact_path = data / 'reflection_seven_exact_20261108.json.gz'
+    with gzip.open(exact_path, 'rt') as stream:
+        exact = json.load(stream)
+    theta = sp.Symbol('theta', real=True)
+    word = tuple((o['gate'], *(sp.sympify(v, locals={'theta': theta}) for v in o['parameters']),
+                  tuple(o['wires'])) for o in exact['operations'])
+    assert sum(o[0] == 'CX' for o in word) == 7 and not any(o[0] == 'GP' for o in word)
+    assert _zero(compile_gates(3, word) - make_controlled(reflection(theta), 2))
+    assert _zero(compile_gates(3, word + (('Z', (0,)),)) - make_controlled(-reflection(theta), 2))
+    result['exact_family'] = dict(archive_sha256=sha(exact_path), entanglers=7, local_gates=18,
+        phase_contract='literal; no GP', real_angle_free=True, negative_variant_verified=True,
+        source=source_record('squander/decomposition/symbolic_reflection_involution.py', exact['source_sha256']))
     (doc / 'reflection-verification.json').write_text(json.dumps(result, indent=2) + '\n')
     print(json.dumps(dict(fixed_target_minima=fixed, unique_minimum_records=len(counts),
                          reflection_numeric_replays=len(rows),

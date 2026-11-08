@@ -30,7 +30,8 @@
         {
           "path": "squander/decomposition/symbolic_reflection_involution.py",
           "sha256": "534e119df082dfbe9845fbc5e2846179b6db488b4b358180b5754fb6e83b1088",
-          "resolution": "included_current_source"
+          "resolution": "historical_source",
+          "revision": "5987b7e1cbdff67e1aa8f701f47645c19838dd60"
         }
       ]
     },
@@ -59,7 +60,8 @@
         {
           "path": "squander/decomposition/symbolic_reflection_involution.py",
           "sha256": "534e119df082dfbe9845fbc5e2846179b6db488b4b358180b5754fb6e83b1088",
-          "resolution": "included_current_source"
+          "resolution": "historical_source",
+          "revision": "5987b7e1cbdff67e1aa8f701f47645c19838dd60"
         }
       ]
     }

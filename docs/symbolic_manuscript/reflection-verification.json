@@ -51,5 +51,18 @@
       "literal_maximum_entry_error": 4.037621774323881e-14
     }
   ],
-  "scope": "Ten numerical seven-CX witnesses only. The exact free-angle five-unrestricted-gate identity is separately checked by test_five_unrestricted_reflection_word_with_angle_free. Neither is an interior lower bound."
+  "scope": "Ten numerical seven-CX witnesses only. The exact free-angle five-unrestricted-gate identity is separately checked by test_five_unrestricted_reflection_word_with_angle_free. Neither is an interior lower bound.",
+  "exact_family": {
+    "archive_sha256": "001a5e63ab8e0fd85567f1993e361fa55b5247935f6d269d9484d2ba58753d88",
+    "entanglers": 7,
+    "local_gates": 18,
+    "phase_contract": "literal; no GP",
+    "real_angle_free": true,
+    "negative_variant_verified": true,
+    "source": {
+      "path": "squander/decomposition/symbolic_reflection_involution.py",
+      "sha256": "6242eee03c5f5645ac707f39b3e52ab2af21b52a33035e28ec3f59f441b8f268",
+      "resolution": "included_current_source"
+    }
+  }
 }
