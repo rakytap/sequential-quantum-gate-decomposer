@@ -51,6 +51,22 @@ def sqrt_iswap_two_pulse_condition(g1,g2):
     return sp.And(sp.Ge(W,0),sp.Ge(gap,0))
 
 
+def sqrt_iswap_two_pulse_polynomial_condition(g1,g2):
+    """Equivalent real polynomial inequalities in the scalar invariants.
+
+    For a unitary input, inverse(det(U)) = conjugate(det(U)), so the
+    normalized spin invariants are polynomials in real/imaginary matrix
+    entries with constant denominators. No square roots or absolute values
+    occur here. The same arbitrary-local/projective scope as above applies.
+    """
+    g1,g2=map(sp.sympify,(g1,g2))
+    a,b=sp.re(g1),sp.im(g1)
+    W=sp.re(g2)+1
+    A=sp.expand(W**2-8*a)
+    B=sp.expand(W**4-16*a*W**2-64*b**2)
+    return sp.And(sp.Ge(W,0),sp.Ge(A,0),sp.Ge(B,0))
+
+
 @lru_cache(maxsize=1)
 def verify_exchange_obstruction_lemmas():
     # General SU(2) middle gates, with real quaternion coordinates.

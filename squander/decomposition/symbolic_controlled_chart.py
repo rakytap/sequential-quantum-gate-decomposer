@@ -214,7 +214,7 @@ def _controlled_blocks(target,additional_frames=()):
 
 
 def synthesize_controlled_chart(target,basis,*,phase_exact,additional_frames=()):
-    if basis.entangler not in {"B","SiSWAP"}:return None
+    if basis.entangler not in {"B","SiSWAP","SYC"}:return None
     if not ({"U3","PhasedXZ"}&set(basis.single_qubit_gates)):return None
     target=sp.ImmutableMatrix(target)
     blocks=_controlled_blocks(target,additional_frames)
@@ -247,6 +247,14 @@ def synthesize_controlled_chart(target,basis,*,phase_exact,additional_frames=())
         xi=2*sp.atan2(v,u+root)
         native=_u3_word(q,phi,xi)
         phase=-q/4
+    elif basis.entangler=="SYC":
+        if __package__:
+            from .symbolic_sycamore_phase import sycamore_phase_source,verify_sycamore_phase_lemma
+        else:
+            from symbolic_sycamore_phase import sycamore_phase_source,verify_sycamore_phase_lemma
+        if not verify_sycamore_phase_lemma():raise ArithmeticError('Sycamore phase polynomial lemma failed')
+        native,scalar=((),sp.S.One) if radius==0 else sycamore_phase_source(2*omega)
+        phase=sp.S.Zero
     else:
         if __package__:
             from .symbolic_native_echoes import b_pauli_echo

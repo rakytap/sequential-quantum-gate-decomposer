@@ -343,7 +343,7 @@ def _native_candidates(name,parameters,basis,*,even=False,source_operations=None
             else:
                 from symbolic_controlled_rank_bound import four_cnot_source
             result.extend(_native_candidates('Identity',(3,),basis,source_operations=four_cnot_source()))
-        if name=="DCX" and not parameters and basis.entangler in {"B","SiSWAP"}:
+        if name=="DCX" and not parameters and basis.entangler in {"B","SiSWAP","TK2"}:
             if __package__:
                 from .symbolic_native_echoes import native_dcx_source
                 from .symbolic_local_rewrite import optimize_local_word
@@ -490,6 +490,13 @@ def _scalar_gadgets_three(basis):
 
 def _matrix_sources(target,basis,seconds):
     target=sp.ImmutableMatrix(target)
+    if basis.entangler=='TK2' and target==gates.make_gate('DCX'):
+        if __package__:
+            from .symbolic_native_echoes import native_dcx_source
+        else:
+            from symbolic_native_echoes import native_dcx_source
+        word,factor=native_dcx_source('TK2')
+        return [dict(sequence=word,factor=factor,method='exact_DCX_iSWAP_TK2_local_equivalence')],dict(termination='one_native_TK2')
     if __package__:
         from .symbolic_osr_search import osr_source_candidates
         from .symbolic_clifford_two_qubit import clifford_source_candidate
@@ -822,7 +829,7 @@ def _synthesize_existing(name, parameters=(), basis="cx_u", *, phase_exact=True,
 
 def _native_chart_incumbent(target,selected,phase_exact,additional=()):
     incumbent=None
-    if selected.entangler in {"B","SiSWAP"}:
+    if selected.entangler in {"B","SiSWAP","SYC"}:
         if target.shape==(4,4) and not feasibility_obstruction(target,selected,phase_exact=phase_exact):
             if __package__:
                 from .symbolic_native_fixed import synthesize_fixed_native
@@ -890,7 +897,9 @@ def synthesize(name,parameters=(),basis="cx_u",*,phase_exact=True,osr_seconds=2.
     if gates.gate_definition(name).name in {"IonQMS","IonQMSMax"}:
         additional=((("H",),("Rz",2*sp.pi*sp.sympify(parameters[0]))),)
     incumbent=(_native_chart_incumbent(gates.make_gate(name,*parameters),selected,phase_exact,additional)
-               if selected.entangler in {"B","SiSWAP"} else None)
+               if selected.entangler in {"B","SiSWAP","SYC"} else None)
+    if selected.entangler=='SYC' and incumbent is not None:
+        return incumbent
     if not parameters and gates.gate_definition(name).name=="C4X" and selected.entangler=="CZ" and not phase_exact:
         if __package__:
             from .symbolic_basis_transfer import synthesize_template_transfer
@@ -914,6 +923,8 @@ def synthesize_matrix(matrix,basis="cx_u",*,phase_exact=True,seconds=2.0):
     selected=get_basis(basis) if isinstance(basis,str) else basis
     target=sp.ImmutableMatrix(matrix)
     incumbent=_native_chart_incumbent(target,selected,phase_exact)
+    if selected.entangler=='SYC' and incumbent is not None:
+        return incumbent
     return _with_chart_incumbent(incumbent,lambda:_synthesize_matrix_existing(
         target,selected,phase_exact=phase_exact,seconds=seconds))
 

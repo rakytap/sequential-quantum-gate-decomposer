@@ -50,9 +50,13 @@ def native_cx(entangler):
                  "TK2":("XX90",("TK2",sp.Rational(1,2),0,0)),
                  "fSim":("CZ",("fSim",0,sp.pi))}
     if entangler=="SYC":
-        # SYC**6 = Z0 Z1 CZ. This is a constructive fallback, not the known
-        # two-SYC optimum; the result is deliberately labelled an upper bound.
-        return (("H",(1,)),)+(("SYC",(0,1)),)*6+(("Z",(0,)),("Z",(1,)),("H",(1,))),sp.S.One
+        if __package__:
+            from .symbolic_sycamore_phase import sycamore_phase_source,verify_sycamore_phase_lemma
+        else:
+            from symbolic_sycamore_phase import sycamore_phase_source,verify_sycamore_phase_lemma
+        if not verify_sycamore_phase_lemma():raise ArithmeticError('Sycamore phase polynomial lemma failed')
+        word,factor=sycamore_phase_source(sp.pi)
+        return (("H",(1,)),)+word+(("H",(1,)),),factor
     key,replacement=equivalents.get(entangler,(entangler,None))
     frame=cx_frames()[key]
     sequence=[]

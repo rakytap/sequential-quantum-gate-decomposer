@@ -107,6 +107,7 @@ def native_dcx_source(entangler):
     after=(("U3",-sp.pi/2,0,-sp.pi/2,(1,)),("U3",0,0,sp.pi,(0,)))
     if entangler=="SiSWAP":middle=(("SiSWAP",(0,1)),)*2
     elif entangler=="B":middle=b_cartan_source((sp.pi/4,sp.pi/4,0))[0]
+    elif entangler=="TK2":middle=(("TK2",-sp.Rational(1,2),-sp.Rational(1,2),0,(0,1)),)
     else:return None
     return before+middle+after,sp.S.One
 
