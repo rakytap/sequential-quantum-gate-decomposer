@@ -1,192 +1,124 @@
 \documentclass[11pt]{article}
-\usepackage[margin=25mm]{geometry}\usepackage[T1]{fontenc}\usepackage{lmodern}
-\usepackage{amsmath,amssymb,booktabs,hyperref}
-\setlength{\emergencystretch}{3em}
-\title{Response to scientific review}
+\usepackage[margin=25mm]{geometry}
+\usepackage[T1]{fontenc}\usepackage{lmodern,amsmath,amssymb,booktabs,hyperref}
+\title{Response to the second referee report}
 \author{Gregory Morse \and Peter Rakyta}\date{7 November 2026}
 \begin{document}\maketitle
-We thank the reviewer for independently checking the identities, finite-alphabet
-search, invariant inequality, and lower-bound argument. The revision follows
-the theory-paper direction. Its title is now \emph{CNOT costs of controlled
-balanced involutions and an invariant two-SQiSW criterion}. The atlas is an
-accompanying reference resource. All seven numbered concerns have prompted
-changes to the text, data presentation, experiments, or claim scope.
+We have reorganized the manuscript as a theory paper, extended the analysis
+to the remaining involution strata, corrected native constructions, and
+made the remaining atlas gaps visible. The complete compiler evaluation is
+preserved in a standalone supplement. The response to the first report is
+retained separately as \texttt{first-referee-response.pdf}.
 
-\section*{1. Grid size, obstruction types, and optimality denominators}
-We agree that the headline grid size hid the distribution of difficulty.
-The manuscript now reports the named targets and fixtures separately and
-gives one complete table per phase policy, broken down by physical width.
-The 217 named one-qubit entries, 192 phased Cliffords, and standard determinant
-and discrete-alphabet obstructions are explicitly identified. Zero-entangler
-constructions are separated from positive-entangler constructions.
+\section*{1. SYC, square-root-SWAP, and TK2 columns}
+We agree that a verified long word alone is insufficient for a reliable
+reference when a much shorter implementation is known.
 
-A new row-resolved CSV reconciles every retained cell with its explicit
-matched proof sources. We take a union rather than adding overlapping audits;
-fixed-target minima and minimum uniform family budgets are disjoint columns.
-Legacy Boolean optimality flags alone are not counted as certificates.
-Among 2,295 positive-entangler literal constructions, the union contains
-732 fixed-target minima and 710 uniform family minima; 853 remain unproved
-under this accounting. Among 3,057 effective positive-entangler projective
-constructions, it contains 984 fixed-target minima and 955 uniform family
-minima; 1,118 remain unproved. These are entangler certificates, not local-cost
-optimality claims.
+The previous SYC fallback used six pulses for CNOT. We derived and checked
+an exact two-SYC controlled-phase chart with explicit local angles, all real
+angle branches, and literal scalar closure. It supplies the native
+controlled-block constructor and the CNOT fallback. The supplement gives
+the algebra and time-ordered circuit. The identity is accepted by a
+compositional polynomial certificate, not by a numerical fit. Cirq's prior
+analytical native decompositions are now cited; the two-pulse count is not
+claimed as new. DCX also has a checked literal one-TK2 word.
 
-The reported 1,916 projective denominator counts explicitly stored projective
-results. A further 1,141 positive-entangler literal circuits were reused
-projectively, giving the complete-grid denominator 3,057. The old raw flags
-694/423 and selected-audit counts were different sets and were inadequately
-explained; neither is presented as the new union. The new CSV records both
-the raw flag and the matched proof sources so this distinction can be checked.
+We have not completed exact short charts for the entire SYC and
+square-root-SWAP columns. Instead, as the report recommends, the atlas now
+annotates every remaining count gap against the independently recorded
+numerical witness. The separate audit covers 75 nonlocal two-qubit entries
+per column, finding verified witnesses for all 75 SYC entries and 24
+square-root-SWAP entries. The other 51 searches are explicitly inconclusive.
+All 99 witnesses were independently replayed using the catalog matrices
+and the actual local alphabets; the largest literal entry error is about
+$1.1\times10^{-11}$. No GP gate is used. For a symbolic family a witness
+is one named parameter sample and is labelled accordingly, not a uniform
+family bound or an exact symbolic identity. The operations, substitutions,
+errors, failures, and versions are included in the package.
 
-The obstruction table identifies all 2,601 literal determinant-group cases.
-All 268 projective obstructions occur in the three discrete presets. These
-are described as standard feasibility tests, with exceptional parameter
-specializations distinguished from whole-family representation.
+The unrestricted TK2 one-macro Cartan cap is also displayed on every
+remaining two-qubit TK2 cell that exceeds it. Literal determinant
+obstructions remain separate. Thus the one-DCX correction does not hide
+other unfinished local-frame constructions. The CSV
+\texttt{native\_column\_gaps.csv} records all audited cells and phase modes.
+The displayed atlas words remain exact upper bounds; none of these
+numerical fits or capacity annotations is relabelled as an exact word.
 
-\section*{2. Clifford reference and missing atlases}
-We removed any framing of the 192 one-qubit targets as a major unexplored
-synthesis class. Matsumoto--Amano, Kliuchnikov--Maslov--Mosca, and
-Giles--Selinger are now cited. The finite-alphabet shortest-path result is
-presented as an explicit reference and regression certificate, with no
-continuous-alphabet global-local-optimality extrapolation. We did not add a
-two-qubit Clifford classification or imply that it has been completed.
+\section*{2. Motivation and extension beyond trace zero}
+The introduction now motivates controlled observables through Hadamard tests,
+controlled Pauli products, and reflection/oracle use in qubitization. The
+claim concerns exact small-block interaction cost, without asserting a
+measured algorithmic speedup.
 
-The complete gate and Clifford PDFs and their editable sources are now
-included in the full review ZIP, rather than only pointed to elsewhere.
-The manuscript's coverage tables carry the main quantitative evidence;
-atlas page count is not used as evidence of algorithmic novelty.
-
-\section*{3. Prior art, generalization, and proof detail}
-We added Yu--Duan--Ying, Yu--Ying, Shende--Markov, and Nielsen et al., and
-explain how their lower-bound and controlled-product arguments relate to
-ours. Ordinary Fredkin, Toffoli, and controlled fermionic SWAP have different
-relative blocks and resource counts. Unrestricted two-qubit gates are kept
-separate from Ising-class interactions.
-
-The main new generalization classifies every controlled balanced two-qubit
-involution: $V=V^\dagger$, $V^2=I$, $\operatorname{tr}V=0$. A Pauli-coefficient
-normal form proves costs four at OSR four, three at OSR two, and one or two
-for local products according to support. It includes the zero-vector and
-rank-deficient degeneracies and gives exact symbolic boundary constructions.
-There is no rank-three stratum. We separately prove that nonlocal balanced
-relative blocks need three unrestricted two-qubit gates and provide a
-three-gate upper construction. The fermionic SWAP example therefore costs
-four Ising interactions but only three unrestricted interactions.
-
-We do not assert the suggested classification of arbitrary controlled-$V$
-by $V$'s Weyl class alone: $I$, $Z_a$, and $Z_aZ_b$ have the same local Weyl
-class but controlled costs zero, one, and two. The corrected generalization
-uses the additional involution and support structure explicitly.
-
-The four-Ising proof now defines control OSR, derives the target cut ranks,
-counts all twelve surviving interaction words, and expands the conjugation
-bound into $M_0\otimes I+M_1\otimes Z$. Fermionic SWAP's Pauli expansion
-shows OSR four directly and its local equivalence to iSWAP is stated.
-The improved literal witness has four CNOTs and six Ry rotations, replacing
-the former ten-local-gate witness. Exact tests cover the free two-angle
-normal form and every rank-two boundary, not only numerical samples.
-
-\section*{4. Baselines and application comparison}
-We executed Qiskit 2.6.2, pytket 2.18.5, and BQSKit 1.2.1 on eight independent
-fixed targets, using both library-source and matrix routes where supported.
-There are 42 SDK attempts. We additionally executed Quartz and QUESO on the
-eight source circuits each, preserving raw outputs, revisions, equivalence
-rules, harness changes, budgets, and fixed-wire full-matrix replay. Their
-objective is total NAM gates; only one-qubit fusion changes their reported
-local alphabet. UniversalQCompiler remains unrun because its licensed kernel
-is unavailable; that explanation is not applied to the open-source tools.
-
-BQSKit matches four CNOTs and six locals for fFredkin. Our separate 108-layout
-BQSKit experiment finds a four-CNOT fit in about six seconds. These numerical
-findings support the reviewer's observation that the upper bound is easy;
-the lower proof and generalized classification carry the mathematical
-contribution. All eleven older SDK entangler wins are now explicitly
-identified as fFredkin across different presets. Compiler losses are also
-reported, including Quartz's verified 30-CNOT C4X result versus the current
-36-CNOT atlas entry, and smaller C3X/SSWAP local counts from other tools.
-No claim of universal dominance remains.
-
-The tomography-figure 27-to-3 comparison is removed from the active manuscript
-and evidence appendix. The latter's incomplete reference is replaced with
-Warren et al.'s full title, authors, venue, year, and DOI. Published C3X/C4X
-and ordinary Fredkin constructions are discussed with matching ancilla and
-resource assumptions and are identified as upper bounds, not automatically
-global minima.
-
-The parameter-reuse table now prominently includes independent numerical
-recompilation: all ten bound instances give 18 CNOTs, 40 locals, depth 25,
-at a mean of about 7.68 ms. This beats the symbolic 18/42/31 circuit in local
-count and depth. The older 36-CX gatewise lowering is explicitly a weak
-contextual control, and the known three-CX fSim source is acknowledged.
-We withdraw the inference of a new 36-to-18 resource advance over analytical
-fSim synthesis. Cold synthesis, SDK compile time, and parameter binding are
-separated.
-
-\section*{5. OSR ablation and practical utility}
-We added a construction ablation disabling OSR factorization and residual
-peeling while retaining native charts, Clifford/Pauli construction, and
-posthoc verification. It gives the same two-qubit success count as the full
-method, 11/12, with one deadline each. The prior chart-disabled result is
-3/12. The added opaque three- and four-qubit product probes remain unresolved
-for both methods in this configuration. These outcomes are retained and
-reported; they do not demonstrate an OSR-search advantage on this workload.
-The title no longer attributes these chart successes to OSR-guided search.
-OSR's role in the theorems is established by proof instead.
-
-We also implemented a bounded atlas peephole pass on eight existing benchmark
-sources in two native presets. Every proposed replacement requires exact
-identity acceptance; the control is the same gatewise native lowering.
-The pass finds no improving windows on the suite. A separately labeled
-three-CX SWAP positive control checks its exact identity and native count
-accounting. We report this negative suite outcome and make no general
-peephole speedup claim. This is evidence about the current optimizer's limits,
-not hidden or counted as successful application improvement.
-
-\section*{6. Secondary score and symbolic-expression cost}
-The parameter-description score and its dependence on simplification are
-moved to an appendix. It is not a calibrated pulse model and does not enter
-the main entangler theorems. The historical negative-cycle repair is no longer
-part of the scientific contribution. Unknown equal-entangler scores remain
-incomparable.
-
-The long SQiSW chart is now called a machine-inspectable scalar DAG, not a
-short directly readable expression. A new optional compiled numerical
-evaluator shares dependencies and preserves lazy degeneracy branches.
-For the 585-binding chart, compilation takes about 1.36 s and 1,000 warm
-bindings about 0.97 s in the recorded run. Full matrix replay passes at 64
-points, including singular corners and angle folds. This checks practical
-reuse of an already exactly certified family, without claiming that it always
-beats numerical KAK or that sampling proves an identity. The text explains
-when symbolic identity and phase contracts are useful and explicitly retains
-numerical specialization as a competitive alternative.
-
-\section*{7. Presentation and editorial cleanup}
-The manuscript is theory-first, with contributions stated directly and
-scope limits consolidated. It names Gregory Morse and Peter Rakyta, removes
-anonymous-review labeling, cites every displayed figure in the text, and
-expands the control-rank argument. Affiliations and individual human
-contribution statements remain for the authors to supply before submission;
-none has been invented.
-
-We removed coordination prose from the proof supplement and scientific
-archive view. Original historical records remain immutable in the repository;
-the current review package uses the cleaned scientific view and current
-sources. The new response, evidence appendix, source bundles, complete
-atlases, and verification manifests describe the revised claims consistently.
-AI assistance is disclosed as assistance, not authorship or proof authority.
-
-\section*{Additional SQiSW result}
-We proved the iff statement suggested by the review. For chamber coordinates,
-write $g_1=(u+iv)^2$ with $u\ge0$; then $|g_1|+\Re g_1=2u^2$. The two
-invariant inequalities are equivalent to $W\ge4u$. Their difference factors
-as
+A new proposition covers traces $\pm2$ and $\pm4$. Every trace-$\pm2$
+involution is locally conjugate to $\pm R_\theta$, where
 \[
- W-4u=2[\cos2x-\cos2(y+|z|)]
-          [\cos2x-\cos2(y-|z|)].
+ R_\theta=I-2|\psi_\theta\rangle\langle\psi_\theta|,\qquad
+ |\psi_\theta\rangle=\cos\theta|00\rangle+\sin\theta|11\rangle,
+ \quad0\le\theta\le\pi/4.
 \]
-The chamber orders fix the sign of the second factor; $z=0$ is handled
-separately. This proves equivalence to $x\ge y+|z|$, including the closed
-boundary, and Huang et al.'s known region gives necessity and sufficiency.
-We credit the region to Huang et al. and claim the invariant reformulation
-and checked implementation, not a new pulse-cap theorem.
+Explicit words give eight CNOTs or six unrestricted two-qubit gates across
+the family. Exact realignment gives
+\[
+ \det\mathcal R(R_\theta)=-\sin^2(2\theta)\,[2-\sin^2(2\theta)].
+\]
+Therefore the four-Ising theorem gives the interior CNOT lower bound four,
+and the general two-gate exclusion gives unrestricted lower bound three.
+Both upper words are checked with the Schmidt angle free.
+
+At the product endpoint the controlled gate is locally CCZ, with minima
+six CNOTs and five unrestricted gates. At the maximally entangled endpoint
+it is locally Fredkin, with unrestricted minimum five and CNOT bounds
+five to seven. The sign of the reflection adds only a local control Z.
+Trace $\pm4$ gives zero interactions. This supplies normal forms and bounds
+for every spectral stratum, while explicitly leaving the trace-$\pm2$
+interior optimum open. It is not presented as a complete extension of the
+balanced cost classification.
+
+\section*{3. SQiSW positioning}
+The invariant result is now a proposition. We cite Peterson--Crooks--Smith's
+monodromy-polytope treatment (including its corrected version) and identify
+Shende--Bullock--Markov's trace-invariant tests as the closest analogue.
+Huang et al.\ retain credit for the known two-pulse chamber region.
+
+The main paper now gives the square-root-free version. With
+$a=\Re g_1$, $b=\Im g_1$, and $W=g_2+1$, membership is equivalent to
+\[
+ W\ge0,\quad W^2-8a\ge0,\quad W^4-16aW^2-64b^2\ge0.
+\]
+For unitary inputs, $1/\det U=\overline{\det U}$, so these are real
+polynomial inequalities on matrix entries. The purpose is symbolic-family
+reasoning. We explicitly acknowledge that numerical canonicalization is
+already a small eigenvalue problem.
+
+\section*{4. Theory-paper organization}
+The main paper now has one short software-and-data section. All width- and
+scope-resolved tables, SDK/Quartz/QUESO comparisons, OSR and chart ablations,
+reuse timings, scalar-program measurements, and the negative peephole
+experiment are in the standalone supplement. The numerical application's
+better local count and depth remain reported there. No negative result was
+removed from the data or replaced by an advantage claim. The full atlases,
+editable sources, exact checks, and numerical witnesses are bundled.
+
+\section*{Minor points}
+We cite Yu--Ying's published Physical Review A 91, 032302 (2015) version;
+the controlled-product statement is its Proposition 2.
+The edge table now explicitly sets $t=\beta$ on the two fixed-$\alpha$
+edges and $t=\alpha$ on the two fixed-$\beta$ edges. It states
+$V_0=K'QK'^\dagger$ and time order $K'^\dagger,C(Q),K'$.
+The balanced-cost table identifies its lower-bound dependencies: the
+four-Ising theorem at rank four and the unrestricted two-gate exclusion
+at rank two.
+
+The C4X discussion no longer describes 36 CX as best known. It reports
+Quartz's verified 30-CX output and checks recent Huang--Palsberg and Vale
+no-helper-qubit routes through their recorded SDK implementations. Their
+measured C4X counts do not beat 30; this bounded check is not an exhaustive
+literature optimum. Full output circuits and literal replays are archived.
+
+The author line names Gregory Morse and Peter Rakyta. Affiliations and the
+individual contribution allocation require author-supplied information;
+we have removed placeholder prose from the scientific manuscript and
+track these outstanding editorial fields separately. They must be settled
+before an external submission. No submission has been performed.
 \end{document}

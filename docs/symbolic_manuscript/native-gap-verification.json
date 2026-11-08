@@ -1,0 +1,10 @@
+{
+  "schema": "native-column-numerical-replay-v1",
+  "archive_sha256": "d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f",
+  "statuses": {
+    "verified_numerical_witness": 99,
+    "no_fit_within_budget": 51
+  },
+  "maximum_literal_entry_error": 1.026974074957431e-11,
+  "acceptance": "All witness operations use their declared alphabet and actual catalog matrices; no GP. Numerical only, not exact or minimum proofs."
+}

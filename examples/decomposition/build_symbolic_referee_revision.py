@@ -27,8 +27,11 @@ def table(name,header,rows,columns=None):
 
 def archive_view():
     original=load('synthesis_reference_20261107_manuscript.json.gz')
-    new=load('synthesis_ffredkin_referee_20261107.json.gz')
-    merged=merge_synthesis_runs([original,new]);index={(r['gate'],r['basis']):r for r in original['rows']}
+    supplements=['synthesis_ffredkin_referee_20261107.json.gz',
+                 'synthesis_native_second_referee_20261107.json.gz',
+                 'synthesis_tk2_second_referee_20261107.json.gz']
+    merged=merge_synthesis_runs([original,*[load(n) for n in supplements]])
+    index={(r['gate'],r['basis']):r for r in original['rows']}
     for row in merged['rows']:
         old=index[row['gate'],row['basis']]
         for field in ('independent_entangler_certificates','exchange_entangler_lower_bound_certificates','secondary_cost_floor_certificates'):
@@ -56,14 +59,68 @@ def archive_view():
          policy='Metadata-only scientific view; construction signatures unchanged')
     dump_frozen(DATA/'synthesis_reference_20261107_referee_base.json.gz',base)
     merged['scientific_view']=dict(original_archive_sha256=sha(DATA/'synthesis_reference_20261107_manuscript.json.gz'),
-         supplement_sha256=sha(DATA/'synthesis_ffredkin_referee_20261107.json.gz'),
+         supplements_sha256={n:sha(DATA/n) for n in supplements},
          editorial_metadata_replacements=dict(unexecuted_comparator_status_fields=edits['deferred_by_user'],
                                                license_availability_descriptions=edits['user declined purchase']),
          omitted_fields=['previous_attempts','raw_attempt'],
-         policy='Construction payloads are unchanged except for cost-selected, exactly verified fFredkin replacements; historical attempts remain in immutable source archives')
+         policy='Cost-selected exactly verified replacements; numerical reachability annotations are not constructions. Historical attempts remain in immutable source archives')
+    attach_native_annotations(merged)
     path=DATA/'synthesis_reference_20261107_referee.json.gz'
     dump_frozen(path,merged)
     return merged,path
+
+
+def attach_native_annotations(archive):
+    """Keep numeric witnesses separate from accepted exact circuits/proofs."""
+    filename='native_column_gap_audit_20261107.json.gz'
+    audit=load(filename);digest=sha(DATA/filename)
+    rows={(r['gate'],r['basis']):(i,r) for i,r in enumerate(audit['rows'])}
+    two_qubit={n for n,p,_ in symbolic_cases() if make_gate(n,*p).rows==4}
+    for row in archive['rows']:
+        found=rows.get((row['gate'],row['basis']))
+        if found:
+            i,r=found
+            annotation={k:r[k] for k in ('status','witness_scope','substitutions','entanglers',
+                         'literal_maximum_entry_error','numerical_only') if k in r}
+            annotation.update(artifact=filename,artifact_sha256=digest,row_index=i,
+                              construction_claim=False,minimum_claim=False)
+            row['native_reachability_annotation']=annotation
+        elif row['basis']=='tket_tk2' and row['gate'] in two_qubit:
+            row['native_reachability_annotation']=dict(status='known_analytic_capacity',
+                witness_scope='uniform_two_qubit_Cartan_capacity',substitutions={},entanglers=1,
+                numerical_only=False,construction_claim=False,minimum_claim=False,
+                source='Unrestricted-angle TK2 Cartan form and arbitrary SU(2) locals; literal cap applies to determinant-one targets',
+                artifact='mathematical_Cartan_capacity',artifact_sha256='',row_index='')
+    archive['native_reachability_audit']=dict(artifact=filename,sha256=digest,
+         scope='Numerical literal witnesses at fixed targets or explicitly named parameter samples; not exact identities or minimum-count proofs')
+
+
+def native_gaps(archive):
+    rows=[];counts=defaultdict(Counter)
+    for row in archive['rows']:
+        annotation=row.get('native_reachability_annotation')
+        if not annotation:continue
+        for mode in ('phase_exact','projective'):
+            value=effective(row,mode)
+            exact_E=value.get('cost',{}).get('entanglers')
+            reachable=annotation.get('entanglers') if exact_E is not None else None
+            gap=max(0,exact_E-reachable) if exact_E is not None and reachable is not None else ''
+            r=dict(gate=row['gate'],basis=row['basis'],mode=mode,exact_entanglers=exact_E,
+                 reachable_entanglers=reachable,gap=gap,scope=annotation['witness_scope'],
+                 substitutions=json.dumps(annotation['substitutions'],sort_keys=True),
+                 status=annotation['status'],error=annotation.get('literal_maximum_entry_error',''),
+                 audit_sha256=annotation['artifact_sha256'],audit_row=annotation['row_index'])
+            rows.append(r);counter=counts[row['basis']];counter['modes']+=1
+            counter['witnesses']+=reachable is not None
+            counter['positive_gap']+=isinstance(gap,int) and gap>0
+            counter['fixed_gap']+=isinstance(gap,int) and gap>0 and annotation['witness_scope']=='fixed_target_numerical'
+            counter['sample_gap']+=isinstance(gap,int) and gap>0 and annotation['witness_scope']=='one_named_parameter_sample_only'
+            counter['analytic_gap']+=isinstance(gap,int) and gap>0 and annotation['witness_scope']=='uniform_two_qubit_Cartan_capacity'
+    with (OUT/'native_column_gaps.csv').open('w') as f:
+        writer=csv.DictWriter(f,fieldnames=list(rows[0]),lineterminator='\n');writer.writeheader();writer.writerows(rows)
+    table('native_column_gaps',['Preset','Modes','Count leads','Fixed gaps','Sample gaps','Analytic gaps'],
+          [[esc(b),c['modes'],c['witnesses'],c['fixed_gap'],c['sample_gap'],c['analytic_gap']] for b,c in sorted(counts.items())])
+    return {b:dict(c) for b,c in counts.items()}
 
 def coverage(a):
     widths={n:int(make_gate(n,*p).rows).bit_length()-1 for n,p,_ in symbolic_cases()}
@@ -94,6 +151,9 @@ def coverage(a):
                 scope=cert.get('scope','')
                 if scope=='fixed_target_global_entangler_lower_bound':scopes.append('fixed');sources.append(key)
                 elif key=='uniform_entangler_budget_certificate':scopes.append('uniform');sources.append(key)
+                elif (cert.get('method')=='controlled_blocks_OSR_two_excludes_one_native_OSR_four_pulse'
+                      and r['target_scope']=='fixed_gate' and v.get('entangler_optimal') is True):
+                    scopes.append('fixed');sources.append(key)
             osr=v.get('osr_certificate',{})
             if osr.get('lower_bound')==E and osr.get('condition')=='True' or v.get('cnot_invariant_lower_bound')==E:
                 scopes.append('uniform' if r['target_scope']=='free_real_family' else 'fixed');sources.append('phase_independent_exact_lower_bound')
@@ -119,6 +179,7 @@ def coverage(a):
 
 def main():
     OUT.mkdir(exist_ok=True);a,path=archive_view();report=coverage(a)
+    report['native_gap_annotations']=native_gaps(a)
     sdks=load('referee_strong_sdks_final_20261107.json.gz');rules=load('referee_rules_20261107.json.gz')
     rows=[]
     for name in ('SYC','iSWAP','SSWAP','fFredkin','CCX','CSWAP','C3X','C4X'):

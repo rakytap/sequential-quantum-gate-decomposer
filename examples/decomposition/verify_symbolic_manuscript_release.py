@@ -20,12 +20,13 @@ import time
 ROOT=Path(__file__).resolve().parents[2]
 sys.path.insert(0,str(ROOT/'squander/decomposition'))
 import sympy as sp
-from symbolic_archive import symbolic_cases,wall_time_limit
+from symbolic_archive import symbolic_cases,wall_time_limit,SymbolicDeadline
 from symbolic_bases import get_basis
 from symbolic_gates import make_gate
 from symbolic_contract import verify_circuit
 from symbolic_sqrt_iswap_cartan import verify_sqrt_iswap_cartan_certificate
 from symbolic_controlled_rank_bound import controlled_full_rank_lower_bound
+from symbolic_controlled_chart import verify_controlled_chart_certificate
 
 
 def load(path):
@@ -50,6 +51,13 @@ def signature(result):
 
 
 def replay(job):
+    try:return _replay(job)
+    except SymbolicDeadline as error:
+        # multiprocessing.Pool transports Exception, not BaseException.
+        raise TimeoutError('Changed-construction proof deadline: '+str(job[:3])) from error
+
+
+def _replay(job):
     name,basis_name,mode,result,seconds=job
     start=time.perf_counter()
     with wall_time_limit(seconds):
@@ -57,6 +65,8 @@ def replay(job):
         target=make_gate(name,*parameters);basis=get_basis(basis_name)
         if result['verification']=='exact_three_SQiSW_Pauli_tensor_chart':
             valid=verify_sqrt_iswap_cartan_certificate(target,result,basis)
+        elif result['verification']=='exact_controlled_SU2_chart_and_native_phase_lemma':
+            valid=verify_controlled_chart_certificate(target,result,basis)
         else:
             symbols={str(x):x for x in target.free_symbols}
             operations=tuple((op['gate'],*(sp.sympify(p,locals=symbols) for p in op['parameters']),tuple(op['wires']))

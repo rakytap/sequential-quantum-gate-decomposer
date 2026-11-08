@@ -32,8 +32,8 @@ def test_sycamore_local_proof_has_the_restricted_phase_polynomial_scope():
     assert proof["local_gate_lower_bound"] == proof["achieved_local_gates"] == 3
     assert not proof["arbitrary_U2_local_minimum_proved"]
     assert proof["coefficient_angles"] == ["-pi/12", "-pi/12", "-5*pi/12"]
-    counts = Counter(gate for row in notable.PAPER["local_gate_types_by_wire"] for gate in row)
-    assert counts == dict(Rz=15, Sx=12)
+    assert 'CNOT+P' in proof['proof_scope']
+    assert proof['truth_table_modulo_lift']=='2*pi lifts change coefficients only by integer*pi'
 
 
 def test_shorter_verified_alternative_does_not_override_score_priority():

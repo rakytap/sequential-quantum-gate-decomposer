@@ -328,6 +328,16 @@ def gate_panel(store, basis, row, width):
         upper=min(result["uniform_upper_bound"] for result in gaps)
         bodies.append(r"\par{\scriptsize\color{projective}Published uniform cap: $E\leq "+str(upper)+
                       r"$. Current construction exceeds it; optimization remains.}")
+    witness=row.get('native_reachability_annotation',{})
+    if witness.get('entanglers') is not None:
+        count=witness['entanglers']
+        fixed=witness['witness_scope']=='fixed_target_numerical'
+        analytic=witness['witness_scope']=='uniform_two_qubit_Cartan_capacity'
+        if any(result['cost']['entanglers']>count for mode,result in variants):
+            label='Known Cartan capacity' if analytic else 'Numerical fixed-target witness' if fixed else 'One numerical parameter sample'
+            tail='Exact local frames remain to be constructed.' if analytic else 'Not an exact circuit or optimality proof.'
+            bodies.append(r'\par{\scriptsize\color{projective}'+label+r': $N\leq '+str(count)+
+                          r'$. Displayed exact word has a count gap. '+tail+'}')
     return panel(header + "\n".join(bodies), "62mm")
 
 
@@ -343,6 +353,8 @@ def gate_volume(report, output, store, names, archive_digest):
                   r"Only an explicit matching certificate establishes a minimum entangler count. A verified upper bound does not establish minimum local cost. "
                   r"A minimum uniform E budget concerns a circuit for the whole parameterized family: a certified hard member forces that budget, while special parameter values can require fewer pulses. "
                   r"Published-cap notes identify constructions above known universal two-qubit bounds; these remain optimization gaps. "
+                  r"Numerical $N$ annotations flag shorter replayed witnesses in the SYC and square-root-SWAP columns. A sampled family annotation applies only to its archived parameter binding, not the entire family. The displayed circuits remain exact; numerical witnesses are stored separately and prove no optimum. "
+                  r"TK2 capacity notes identify cells above its known one-macro Cartan cap; exact local frames remain an implementation gap. "
                   r"Proof conditions and source hashes remain in the scientific archive; attempt histories remain in the dated source archives.\par "
                   r"Open cases are shown as open. Proved obstructions preserve the supplied basis and may be conditional for parameterized families. "
                   r"Register constructors use the recorded integer-width or matrix fixtures. These pages do not claim a solution for every register size.\par "

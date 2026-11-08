@@ -1,10 +1,10 @@
 {
   "schema": "symbolic-manuscript-release-verification-v1",
-  "archive_sha256": "999edc10380127d23a7659c4b4a56c6434ca9210dd319a87bea88f89e7069588",
+  "archive_sha256": "22dee9b1b6fc30c27c1e54ac623bb77a8a1881b1937013f2ab192121cbb62252",
   "preserved_base_sha256": "4f5220708caaf639b7b1759b0157102564bd564d6294addf83d8985a2e0e6e8f",
   "phase_modes": 20928,
-  "unchanged_construction_modes": 20875,
-  "changed_construction_modes": 53,
+  "unchanged_construction_modes": 20784,
+  "changed_construction_modes": 144,
   "source_checks": [
     {
       "run": 0,
@@ -195,9 +195,19 @@
       "run": 37,
       "revision": "8fc3924837234d079d88aba68688dbbb535893c3",
       "source_blobs": 48
+    },
+    {
+      "run": 38,
+      "revision": "543590cb7659f13f165c6342c29b17cb1a8dc929",
+      "source_blobs": 50
+    },
+    {
+      "run": 39,
+      "revision": "543590cb7659f13f165c6342c29b17cb1a8dc929",
+      "source_blobs": 50
     }
   ],
-  "distinct_revision_source_pairs": 955,
+  "distinct_revision_source_pairs": 1005,
   "all_source_checks_passed": true,
   "source_policy": "Verify recorded revision where possible; otherwise resolve exact recorded source hash from Git history and list the exception",
   "recorded_revision_exceptions": [
@@ -296,20 +306,268 @@
   "retained_unresolved_scores": 20,
   "replays": [
     {
-      "gate": "fFredkin",
-      "basis": "cx_rz_ry",
-      "mode": "phase_exact",
-      "status": "replayed",
-      "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.32529759127646685
-    },
-    {
-      "gate": "fFredkin",
-      "basis": "cx_rz_ry",
+      "gate": "CX",
+      "basis": "google_syc",
       "mode": "projective",
       "status": "replayed",
-      "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.3255624631419778
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 14.660054541192949
+    },
+    {
+      "gate": "CY",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.007665729150176048
+    },
+    {
+      "gate": "CY",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.0047171274200081825
+    },
+    {
+      "gate": "CX",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 14.678658870980144
+    },
+    {
+      "gate": "CZ",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.0067312950268387794
+    },
+    {
+      "gate": "CNOT",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 14.681039799004793
+    },
+    {
+      "gate": "CZ",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.0069338055327534676
+    },
+    {
+      "gate": "CNOT",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 14.810825652442873
+    },
+    {
+      "gate": "CRX",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 11.092857024632394
+    },
+    {
+      "gate": "CRY",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 11.208486454561353
+    },
+    {
+      "gate": "CRZ",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.12065573874861002
+    },
+    {
+      "gate": "CSX",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.27770395390689373
+    },
+    {
+      "gate": "CSX",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.005799002014100552
+    },
+    {
+      "gate": "CS",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.028052695095539093
+    },
+    {
+      "gate": "CS",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.005537949502468109
+    },
+    {
+      "gate": "CH",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.014539623633027077
+    },
+    {
+      "gate": "CH",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.004584676586091518
+    },
+    {
+      "gate": "CRX",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 13.050336775369942
+    },
+    {
+      "gate": "CRY",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 13.209950080141425
+    },
+    {
+      "gate": "CRZ",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 2.698468701913953
+    },
+    {
+      "gate": "CU1",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.13978571072220802
+    },
+    {
+      "gate": "CU1",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 2.868162321858108
+    },
+    {
+      "gate": "CP",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 10.975207507610321
+    },
+    {
+      "gate": "CP",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 13.815162635408342
+    },
+    {
+      "gate": "CR",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 13.99718150217086
+    },
+    {
+      "gate": "CR",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 11.958814799785614
+    },
+    {
+      "gate": "Rxx",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 8.004793863743544
+    },
+    {
+      "gate": "CROT",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 11.071413136087358
+    },
+    {
+      "gate": "Rxx",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 9.700922791846097
+    },
+    {
+      "gate": "Ryy",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 2.524590873159468
+    },
+    {
+      "gate": "CROT",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 14.59171481616795
+    },
+    {
+      "gate": "Rzz",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.23885170929133892
+    },
+    {
+      "gate": "Rzz",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 1.6878869971260428
     },
     {
       "gate": "fFredkin",
@@ -317,7 +575,7 @@
       "mode": "phase_exact",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.32913397904485464
+      "wall_seconds": 0.17773334216326475
     },
     {
       "gate": "fFredkin",
@@ -325,7 +583,23 @@
       "mode": "projective",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.32987135276198387
+      "wall_seconds": 0.051813182421028614
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "cx_rz_ry",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.04795519821345806
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "cx_rz_ry",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.046811873093247414
     },
     {
       "gate": "fFredkin",
@@ -333,7 +607,7 @@
       "mode": "phase_exact",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.09882117435336113
+      "wall_seconds": 0.09355141967535019
     },
     {
       "gate": "fFredkin",
@@ -341,15 +615,7 @@
       "mode": "projective",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.09967522788792849
-    },
-    {
-      "gate": "fFredkin",
-      "basis": "ibm_cx",
-      "mode": "projective",
-      "status": "replayed",
-      "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.10131654608994722
+      "wall_seconds": 0.09104388859122992
     },
     {
       "gate": "fFredkin",
@@ -357,31 +623,15 @@
       "mode": "phase_exact",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.10652843862771988
+      "wall_seconds": 0.09700702130794525
     },
     {
       "gate": "fFredkin",
-      "basis": "ibm_cz",
+      "basis": "ibm_cx",
       "mode": "projective",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.16532859299331903
-    },
-    {
-      "gate": "fFredkin",
-      "basis": "ibm_cz",
-      "mode": "phase_exact",
-      "status": "replayed",
-      "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.17090012785047293
-    },
-    {
-      "gate": "fFredkin",
-      "basis": "ibm_ecr",
-      "mode": "projective",
-      "status": "replayed",
-      "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.1968278745189309
+      "wall_seconds": 0.08416842389851809
     },
     {
       "gate": "fFredkin",
@@ -389,7 +639,31 @@
       "mode": "phase_exact",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.20263624005019665
+      "wall_seconds": 0.1842355765402317
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "ibm_ecr",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.1310105985030532
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "ibm_cz",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.16569855622947216
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "ibm_cz",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.1600387766957283
     },
     {
       "gate": "fFredkin",
@@ -397,7 +671,7 @@
       "mode": "phase_exact",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.08631141763180494
+      "wall_seconds": 0.08469473663717508
     },
     {
       "gate": "fFredkin",
@@ -405,7 +679,7 @@
       "mode": "projective",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.08676468953490257
+      "wall_seconds": 0.08458553534001112
     },
     {
       "gate": "fFredkin",
@@ -413,7 +687,7 @@
       "mode": "phase_exact",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.1670996407046914
+      "wall_seconds": 0.15560765005648136
     },
     {
       "gate": "fFredkin",
@@ -421,15 +695,7 @@
       "mode": "projective",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.16572828497737646
-    },
-    {
-      "gate": "fFredkin",
-      "basis": "sqrt_swap_u",
-      "mode": "projective",
-      "status": "replayed",
-      "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.18654039781540632
+      "wall_seconds": 0.15400707349181175
     },
     {
       "gate": "fFredkin",
@@ -437,7 +703,23 @@
       "mode": "phase_exact",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.1937331110239029
+      "wall_seconds": 0.18661180511116982
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "sqrt_swap_u",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.18465177714824677
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "xx90_u",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.20953177008777857
     },
     {
       "gate": "fFredkin",
@@ -445,15 +727,7 @@
       "mode": "projective",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.2163963532075286
-    },
-    {
-      "gate": "fFredkin",
-      "basis": "xx90_u",
-      "mode": "phase_exact",
-      "status": "replayed",
-      "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.22194517776370049
+      "wall_seconds": 0.17034597508609295
     },
     {
       "gate": "fFredkin",
@@ -461,7 +735,7 @@
       "mode": "phase_exact",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.5134045369923115
+      "wall_seconds": 0.5100512001663446
     },
     {
       "gate": "fFredkin",
@@ -469,7 +743,7 @@
       "mode": "projective",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.510596415027976
+      "wall_seconds": 0.23860330879688263
     },
     {
       "gate": "fFredkin",
@@ -477,7 +751,7 @@
       "mode": "phase_exact",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.532545774243772
+      "wall_seconds": 0.394923010841012
     },
     {
       "gate": "fFredkin",
@@ -485,31 +759,7 @@
       "mode": "projective",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.5325072035193443
-    },
-    {
-      "gate": "fFredkin",
-      "basis": "google_cz",
-      "mode": "phase_exact",
-      "status": "replayed",
-      "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.09257092606276274
-    },
-    {
-      "gate": "fFredkin",
-      "basis": "google_cz",
-      "mode": "projective",
-      "status": "replayed",
-      "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.09477337636053562
-    },
-    {
-      "gate": "fFredkin",
-      "basis": "zx_u",
-      "mode": "projective",
-      "status": "replayed",
-      "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.3416360467672348
+      "wall_seconds": 0.11389579344540834
     },
     {
       "gate": "fFredkin",
@@ -517,23 +767,31 @@
       "mode": "phase_exact",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.34506718162447214
+      "wall_seconds": 0.35695335920900106
     },
     {
       "gate": "fFredkin",
-      "basis": "berkeley_b",
-      "mode": "phase_exact",
-      "status": "replayed",
-      "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.25691366475075483
-    },
-    {
-      "gate": "fFredkin",
-      "basis": "berkeley_b",
+      "basis": "zx_u",
       "mode": "projective",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.2573202671483159
+      "wall_seconds": 0.10392675641924143
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "google_cz",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.09073028806596994
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "google_cz",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.076500553637743
     },
     {
       "gate": "fFredkin",
@@ -541,7 +799,7 @@
       "mode": "phase_exact",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.3710435479879379
+      "wall_seconds": 0.36975350696593523
     },
     {
       "gate": "fFredkin",
@@ -549,23 +807,31 @@
       "mode": "projective",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.37545749731361866
+      "wall_seconds": 0.36324474308639765
+    },
+    {
+      "gate": "Ryy",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 7.855934438295662
     },
     {
       "gate": "fFredkin",
-      "basis": "ionq_aria_full",
+      "basis": "berkeley_b",
       "mode": "phase_exact",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.5025833090767264
+      "wall_seconds": 0.2520201178267598
     },
     {
       "gate": "fFredkin",
-      "basis": "ionq_aria_full",
+      "basis": "berkeley_b",
       "mode": "projective",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.5049476092681289
+      "wall_seconds": 0.2747351033613086
     },
     {
       "gate": "fFredkin",
@@ -573,7 +839,7 @@
       "mode": "phase_exact",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 1.3142444863915443
+      "wall_seconds": 1.3212617710232735
     },
     {
       "gate": "fFredkin",
@@ -581,23 +847,23 @@
       "mode": "projective",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 1.3215185403823853
+      "wall_seconds": 1.4304383471608162
     },
     {
       "gate": "fFredkin",
-      "basis": "quantinuum_zzmax",
+      "basis": "ionq_aria_full",
       "mode": "phase_exact",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.2676701433956623
+      "wall_seconds": 0.4459434514865279
     },
     {
       "gate": "fFredkin",
-      "basis": "quantinuum_zzmax",
+      "basis": "ionq_aria_full",
       "mode": "projective",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.26884767785668373
+      "wall_seconds": 0.45701117161661386
     },
     {
       "gate": "fFredkin",
@@ -605,7 +871,7 @@
       "mode": "phase_exact",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 2.0342206032946706
+      "wall_seconds": 2.020629985257983
     },
     {
       "gate": "fFredkin",
@@ -613,15 +879,31 @@
       "mode": "projective",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 2.0386260226368904
+      "wall_seconds": 2.037849779240787
     },
     {
       "gate": "fFredkin",
-      "basis": "rigetti_cz",
+      "basis": "quantinuum_zzmax",
       "mode": "phase_exact",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.1695217303931713
+      "wall_seconds": 0.2801330229267478
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "quantinuum_zzmax",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.28283820301294327
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "quantinuum_zzphase",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 1.7426506001502275
     },
     {
       "gate": "fFredkin",
@@ -629,7 +911,23 @@
       "mode": "phase_exact",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.21847960259765387
+      "wall_seconds": 0.22065048199146986
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "quantinuum_zzphase",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 1.7998801125213504
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "rigetti_cz",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.16048960760235786
     },
     {
       "gate": "fFredkin",
@@ -637,7 +935,7 @@
       "mode": "projective",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.1585344821214676
+      "wall_seconds": 0.18799802009016275
     },
     {
       "gate": "fFredkin",
@@ -645,7 +943,7 @@
       "mode": "phase_exact",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.337673457339406
+      "wall_seconds": 0.19990764558315277
     },
     {
       "gate": "fFredkin",
@@ -653,7 +951,23 @@
       "mode": "phase_exact",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.10661496873944998
+      "wall_seconds": 0.1063183955848217
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "iqm_cz",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.10586782451719046
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.10435386840254068
     },
     {
       "gate": "fFredkin",
@@ -661,39 +975,7 @@
       "mode": "projective",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.3424323992803693
-    },
-    {
-      "gate": "fFredkin",
-      "basis": "iqm_cz",
-      "mode": "projective",
-      "status": "replayed",
-      "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.10563710518181324
-    },
-    {
-      "gate": "fFredkin",
-      "basis": "quantinuum_zzphase",
-      "mode": "phase_exact",
-      "status": "replayed",
-      "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 1.753742071799934
-    },
-    {
-      "gate": "fFredkin",
-      "basis": "clifford_t_cx",
-      "mode": "phase_exact",
-      "status": "replayed",
-      "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.10619740840047598
-    },
-    {
-      "gate": "fFredkin",
-      "basis": "quantinuum_zzphase",
-      "mode": "projective",
-      "status": "replayed",
-      "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 1.756945176050067
+      "wall_seconds": 0.4804582791402936
     },
     {
       "gate": "fFredkin",
@@ -701,7 +983,7 @@
       "mode": "projective",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.10510284174233675
+      "wall_seconds": 0.10436137951910496
     },
     {
       "gate": "fFredkin",
@@ -709,7 +991,23 @@
       "mode": "phase_exact",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.14580535516142845
+      "wall_seconds": 0.1428119521588087
+    },
+    {
+      "gate": "CSdg",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.04767522867769003
+    },
+    {
+      "gate": "CSdg",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.005872022360563278
     },
     {
       "gate": "fFredkin",
@@ -717,12 +1015,453 @@
       "mode": "projective",
       "status": "replayed",
       "method": "exact_exponential_polynomial_identity",
-      "wall_seconds": 0.1417415076866746
+      "wall_seconds": 0.13980485126376152
+    },
+    {
+      "gate": "CSXdg",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.057313503697514534
+    },
+    {
+      "gate": "CSXdg",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.2780569763854146
+    },
+    {
+      "gate": "CZPowGate",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 14.21200512163341
+    },
+    {
+      "gate": "CT",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 2.057307591661811
+    },
+    {
+      "gate": "CTdg",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.1521644163876772
+    },
+    {
+      "gate": "ACX",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.014184252358973026
+    },
+    {
+      "gate": "ACX",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.004763267934322357
+    },
+    {
+      "gate": "DCX",
+      "basis": "tket_tk2",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.01835549809038639
+    },
+    {
+      "gate": "DCX",
+      "basis": "tket_tk2",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.012792067602276802
+    },
+    {
+      "gate": "CT",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 2.0449817962944508
+    },
+    {
+      "gate": "ECR",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.2769516622647643
+    },
+    {
+      "gate": "ECR",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.2757459972053766
+    },
+    {
+      "gate": "Rzx",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.07825290039181709
+    },
+    {
+      "gate": "CTdg",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 1.9367144536226988
+    },
+    {
+      "gate": "Rxz",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.20450596045702696
+    },
+    {
+      "gate": "Rxz",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 1.7466932348906994
+    },
+    {
+      "gate": "CZPowGate",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 17.55504948273301
+    },
+    {
+      "gate": "XX90",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.1999105755239725
+    },
+    {
+      "gate": "XX90",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.006456013768911362
+    },
+    {
+      "gate": "YY90",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.20932372007519007
+    },
+    {
+      "gate": "YY90",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.007148156873881817
+    },
+    {
+      "gate": "ZZ90",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.020484265871345997
+    },
+    {
+      "gate": "ZZ90",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.006101012229919434
+    },
+    {
+      "gate": "Rzx",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 3.6317371567711234
+    },
+    {
+      "gate": "Barenco",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 7.441195693798363
+    },
+    {
+      "gate": "Barenco",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 6.606128863990307
+    },
+    {
+      "gate": "IonQMSMax",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 4.515627828426659
+    },
+    {
+      "gate": "IonQMSMax",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 4.9525793343782425
+    },
+    {
+      "gate": "IonQMS",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 30.193750246427953
+    },
+    {
+      "gate": "IonQZZ",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 20.81263971608132
+    },
+    {
+      "gate": "IonQMS",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 34.62172810733318
+    },
+    {
+      "gate": "ZZMax",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.008974762633442879
+    },
+    {
+      "gate": "ZZMax",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.005532019771635532
+    },
+    {
+      "gate": "IonQZZ",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 24.4205339634791
+    },
+    {
+      "gate": "CXPow",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 4.640675473958254
+    },
+    {
+      "gate": "CZPow",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 3.7893937220796943
+    },
+    {
+      "gate": "CZPow",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.07561754155904055
+    },
+    {
+      "gate": "ZZPhase",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 15.31819917075336
+    },
+    {
+      "gate": "ZZPhase",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 17.798364117741585
+    },
+    {
+      "gate": "CXPow",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 15.502310656011105
+    },
+    {
+      "gate": "XXPow",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 21.66236495040357
+    },
+    {
+      "gate": "XXPow",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 17.82999710831791
+    },
+    {
+      "gate": "ZZPow",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.9984566895291209
+    },
+    {
+      "gate": "LinearFunction",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.12192973401397467
+    },
+    {
+      "gate": "LinearFunction",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.006543414667248726
+    },
+    {
+      "gate": "UC",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.3959058756008744
+    },
+    {
+      "gate": "UC",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.04129920341074467
+    },
+    {
+      "gate": "YYPow",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 17.773511248640716
+    },
+    {
+      "gate": "ZZPow",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 4.1268398920074105
+    },
+    {
+      "gate": "YYPow",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 21.680060987360775
+    },
+    {
+      "gate": "UCRX",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 36.58334791380912
+    },
+    {
+      "gate": "UCRZ",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.49124516919255257
+    },
+    {
+      "gate": "UCRY",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 36.79197066091001
+    },
+    {
+      "gate": "UCRY",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 43.20777043607086
+    },
+    {
+      "gate": "UCRZ",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 42.88500775396824
     }
   ],
   "all_changed_constructions_replayed": true,
   "replay_methods": {
-    "exact_exponential_polynomial_identity": 53
+    "exact_controlled_SU2_chart_and_native_phase_lemma": 89,
+    "exact_exponential_polynomial_identity": 55
   },
   "limits": [
     "Unchanged modes are payload comparisons, not new identity replays",

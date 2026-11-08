@@ -1,6 +1,6 @@
 {
   "schema": "symbolic-referee-build-v2",
-  "archive_sha256": "999edc10380127d23a7659c4b4a56c6434ca9210dd319a87bea88f89e7069588",
+  "archive_sha256": "22dee9b1b6fc30c27c1e54ac623bb77a8a1881b1937013f2ab192121cbb62252",
   "tables": {
     "phase_exact": {
       "1": {
@@ -13,11 +13,11 @@
         "cells": 2528,
         "constructed": 1871,
         "positive": 1754,
-        "raw_flag": 588,
-        "fixed": 689,
+        "raw_flag": 608,
+        "fixed": 707,
         "obstruction": 657,
-        "unproved": 355,
         "uniform": 710,
+        "unproved": 337,
         "zero": 117
       },
       "3": {
@@ -56,10 +56,10 @@
         "cells": 2528,
         "constructed": 2375,
         "positive": 2247,
-        "fixed": 936,
-        "raw_flag": 349,
-        "unproved": 356,
+        "fixed": 954,
+        "raw_flag": 356,
         "uniform": 955,
+        "unproved": 338,
         "obstruction": 153,
         "zero": 128
       },
@@ -91,14 +91,15 @@
   },
   "generated_files": {
     "generated/application_revised.tex": "590c53a8f9eeefb4b0fec44205621db872e919644f4259c29b48b15d1bbdbd3a",
-    "generated/coverage_phase_exact.tex": "e9372b418c46946eb5e89d3b9a0704daa8f1ff1dc8667c09e101606f5b4bb5e9",
-    "generated/coverage_projective.tex": "6d9be0c730a7428e4cff11f5f3ad16677a22ea17d9e529f9afc23235ee72958b",
+    "generated/coverage_phase_exact.tex": "33f735c148135ccecc6b578928ddd08a15e0717a021178469d967ab84826c12d",
+    "generated/coverage_projective.tex": "f6b2dbf856e95c391f44df9cbd3ea35d64ee9d23fc9514bf916d6b6a5de292b1",
     "generated/ffredkin_circuit.tex": "3deadb81ce5589cf23b5678fbf87b7b9401ca6bdc79b1dd08dae0870443b25fa",
+    "generated/native_column_gaps.tex": "8d95781d56d61305711ed189fe690d74cc213e6e31d83550883c173b25b89276",
     "generated/obstructions.tex": "68f79a31dd5e2c4b446b40ab8c55778a7171ba9bd2836d46a51cdde8ce36c5f1",
     "generated/osr_ablation.tex": "b17a077c9c355f025ae31ee127217193697bf27388e611b7444499ee1454fef1",
     "generated/peephole.tex": "0d672f08a344568a96d88bd257a3793732962cfc517eb3cce30fa40fec30da00",
     "generated/presets.tex": "b2090f3783d8d0af617036f1264893a48c6d884ba5e16799923b02c051973f00",
-    "generated/referee_ablation.pdf": "3e1a9859b2c52520693308110a12a0afa2681159393f09adc8b1c5c826386d04",
+    "generated/referee_ablation.pdf": "551be99eee7810adf63b4cd95b6ae37c82ee939f5524b7d8af6606a28f5cac1a",
     "generated/strong_sdks.tex": "33a5f5c5b0b5ed536eff95685d628959a2cae5c0dc7d314a3c90a98b195bb577"
   }
 }

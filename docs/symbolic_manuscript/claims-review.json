@@ -1,9 +1,11 @@
 {
-  "schema": "symbolic-claims-referee-v2",
+  "schema": "symbolic-claims-second-referee-v3",
   "main_contributions": [
     "Controlled balanced-involution CNOT-cost classification with explicit hypotheses and exact normal-form/boundary checks",
     "Four-Ising lower bound for controlled rank-four relative blocks",
-    "Invariant iff reformulation of Huang et al.'s known two-SQiSW region"
+    "Invariant iff reformulation of Huang et al.'s known two-SQiSW region",
+    "All-involution spectral normal forms with explicit partial trace-plus/minus-two bounds; no interior optimum claim",
+    "Real polynomial SQiSW region test for symbolic families"
   ],
   "withdrawn_claims": [
     "Grid size as evidence of mathematical novelty",
@@ -22,7 +24,10 @@
     "Numerical application recompilation has fewer locals and smaller depth",
     "BQSKit matches the fFredkin upper counts; Quartz beats the C4X atlas count",
     "UniversalQCompiler not executed: licensed kernel unavailable",
-    "New analytical classification requires independent mathematical scrutiny"
+    "New analytical classification requires independent mathematical scrutiny",
+    "SYC and square-root-SWAP numerical witnesses are separate from exact circuits and minimum certificates",
+    "Other TK2 cells remain above known one-macro capacity and are flagged",
+    "Exact interior reflection costs remain open"
   ],
   "publication_state": "Review draft; no submission performed; affiliations and individual human contributions remain to be supplied by the authors"
 }

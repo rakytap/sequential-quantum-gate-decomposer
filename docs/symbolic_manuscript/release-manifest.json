@@ -1,66 +1,103 @@
 {
   "schema": "symbolic-referee-package-v2",
-  "manuscript_pages": 15,
-  "response_pages": 4,
+  "manuscript_pages": 11,
+  "response_pages": 3,
   "atlas_pages": {
-    "gates": 556,
+    "gates": 569,
     "cliffords": 98
+  },
+  "supplement_pages": 11,
+  "native_numerical_replays": {
+    "schema": "native-column-numerical-replay-v1",
+    "archive_sha256": "d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f",
+    "statuses": {
+      "verified_numerical_witness": 99,
+      "no_fit_within_budget": 51
+    },
+    "maximum_literal_entry_error": 1.026974074957431e-11,
+    "acceptance": "All witness operations use their declared alphabet and actual catalog matrices; no GP. Numerical only, not exact or minimum proofs."
   },
   "validation": {
     "full_suite": {
-      "status": "passed",
-      "passed": 1178,
+      "status": "stale_assertion_repaired_and_rerun",
+      "passed": 1198,
+      "initial_failed_tests": [
+        "tests/symbolic/test_notable_results.py::test_sycamore_local_proof_has_the_restricted_phase_polynomial_scope"
+      ],
       "warnings": 1,
-      "seconds": 1063.91,
-      "log_sha256": "248795be652fecb34590e96dfe67e38c7e30f81b5d102624fb1176e0a497aba7"
+      "seconds": 1129.68,
+      "log_sha256": "2a83d8441bd36b626537617d8daeed908b712a9114cb80218d2ead037e277545"
     },
     "focused_suite": {
       "status": "passed",
-      "passed": 39,
+      "passed": 73,
+      "initial_failed_tests": [],
       "warnings": 0,
-      "seconds": 9.88,
-      "log_sha256": "c69fc1ba175b798cb89050b2a653a76d31010797bb23f00e4975693628dc63b0"
+      "seconds": 132.55,
+      "log_sha256": "4f29129401e5a6ad42859f48fd873ae433a05908427c7f14960c2eff45e18bb7"
     },
-    "scope": "The full suite was collected before six additional hypothesis/parser regressions; all six pass in the subsequent 39-test focused run."
+    "new_theory_suite": {
+      "status": "passed",
+      "passed": 15,
+      "initial_failed_tests": [],
+      "warnings": 0,
+      "seconds": 17.56,
+      "log_sha256": "e244f8205c5db71e1ecd7882d693b236db0e025608ad740ac2636ec92fdf156a"
+    },
+    "repaired_suite": {
+      "status": "passed",
+      "passed": 19,
+      "initial_failed_tests": [],
+      "warnings": 0,
+      "seconds": 17.31,
+      "log_sha256": "a14bb93eacaef22c18109a164b0b7020085f96b3bfe912312ddca2f1149eccf4"
+    },
+    "overall_status": "passed_after_targeted_test_repair",
+    "covered_tests": 1199,
+    "scope": "The full collection ran once. Its sole failure referenced the withdrawn tomography-comparison constant; that stale test was corrected and rerun with all four notable-result tests and fifteen new theorem/native tests. Both unedited logs are included. No synthesis source changed after full-suite collection."
   },
-  "exact_changed_replays": 53,
-  "unchanged_payload_comparisons": 20875,
+  "exact_changed_replays": 144,
+  "unchanged_payload_comparisons": 20784,
   "artifacts": {
     "docs/symbolic_manuscript/manuscript.pdf": {
-      "sha256": "6d364651607546b288b3aedc06fff68f7f14aff6f39bf93635a89024ca3e76fc",
-      "bytes": 141023
+      "sha256": "fdc78e951fb00aaac9da1b9fadfb3fc00aa91ab8296b3bb84a5c6b44a156f6ab",
+      "bytes": 116664
+    },
+    "docs/symbolic_manuscript/supplement.pdf": {
+      "sha256": "a5dc0b7ed84f49601b2aa94e8c342b11efbe127610b9be9bd78600d0f7a8b199",
+      "bytes": 100166
     },
     "docs/symbolic_manuscript/referee-response.pdf": {
-      "sha256": "4845e20acd3fc4499c69e7c8964b2081d5bc8fd24d8fc614a0c132f5a7f72a45",
-      "bytes": 43332
+      "sha256": "1f50b5fcef38366b301fef922cbbf2b6bf339f1a31b255c561590475bf64a2a1",
+      "bytes": 39961
     },
     "docs/symbolic_manuscript/sources.zip": {
-      "sha256": "001bb6c776bc377b61436c6d9ccd6f9a908ad14b171e80cbdaf4d888df0dd501",
-      "bytes": 4205621
+      "sha256": "2a1be9a292dc5955be28a9a258e47103582fa08b64ca15833c50707537d10bdf",
+      "bytes": 4360854
     },
     "docs/symbolic_manuscript/review-package.zip": {
-      "sha256": "f4db355547ddb076879af876c7094d5d6059a81a2e92207ce79a6285aa3a7d99",
-      "bytes": 27204295
+      "sha256": "02cfef63cfc758c6035b069b571ae7b59e628e616c757fc9b31280cf0c016520",
+      "bytes": 27942695
     },
     "docs/symbolic_atlas/gates.pdf": {
-      "sha256": "9059df4defeaa6fdadb6defa1f5b14c0f93cea17639f2df643ded2ada17dcbb6",
-      "bytes": 26169389
+      "sha256": "15d42b253719f2fe91aea216ffc3f1b833cdb66810abe4f1155662902b11dbce",
+      "bytes": 26737164
     },
     "docs/symbolic_atlas/cliffords.pdf": {
       "sha256": "e256d9103311ff5e7b49719c9930d2bcc77afd109a20e61285f59c53f09f52ce",
       "bytes": 1894011
     },
     "docs/symbolic_atlas/sources.zip": {
-      "sha256": "1e848d5be12e1416993d60b682b2ed6fa1d71553f5b5f84ecd226d49ff47da73",
-      "bytes": 3457825
+      "sha256": "6344a8abb915c25733cc3f057d52824347b4299012f0560c596cc6b60f75db1e",
+      "bytes": 3481443
     },
     "docs/symbolic_notable_results/notable_results.pdf": {
-      "sha256": "6993cfeb159c5c2f8af1cb5a833c058a08e19bb6cce19ec7fce1727fa4c0233a",
-      "bytes": 48843
+      "sha256": "00c42101aa4fa75f89df7d9e1dbbea0c6f9fb7198e4c2f70c3b49f40e267544a",
+      "bytes": 50133
     },
     "benchmarks/symbolic/synthesis_reference_20261107_referee.json.gz": {
-      "sha256": "999edc10380127d23a7659c4b4a56c6434ca9210dd319a87bea88f89e7069588",
-      "bytes": 1541754
+      "sha256": "22dee9b1b6fc30c27c1e54ac623bb77a8a1881b1937013f2ab192121cbb62252",
+      "bytes": 1611194
     }
   }
 }
