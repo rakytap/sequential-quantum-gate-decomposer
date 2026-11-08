@@ -42,11 +42,17 @@ ZIP includes the actual current gate and Clifford PDFs and their source ZIP.
 [Verification](../symbolic_manuscript/referee-verification.json) separates
 changed exact identity/certificate replays from unchanged payload comparisons.
 
-The second review edition replaces the long SYC controlled-phase fallback
+The revised edition replaces the long SYC controlled-phase fallback
 with an exact two-pulse chart and gives DCX a one-TK2 word. Remaining
-SYC/√SWAP count gaps are annotated on their panels against separate
-numerical witnesses. A family sample is explicitly labelled and proves
-neither a free-parameter identity nor a minimum. Remaining TK2 gaps are
+SYC/√SWAP count gaps are annotated on their panels. The exact monodromy
+audit now proves minimum counts for all 64 fixed-target/native pairs in
+this subset; its 112 proved records also include named family samples.
+Thirty proof deadlines and eight uncertified coordinate conversions remain
+inconclusive. A proved count with arbitrary local frames does not supply
+an explicit shortest symbolic word or a local-gate minimum. The displayed
+six-√SWAP circuit for SYC retains its gap against the proved minimum five.
+Family samples and minimum uniform family budgets have separate labels.
+Remaining numerical witnesses retain their numerical status. TK2 gaps are
 flagged against its known one-macro Cartan capacity. The numerical words,
 errors, parameter substitutions, failures, and full gap ledger accompany the
 [standalone supplement](../symbolic_manuscript/supplement.pdf).

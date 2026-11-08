@@ -1,39 +1,19 @@
 {
   "full_suite": {
-    "status": "stale_assertion_repaired_and_rerun",
-    "passed": 1198,
-    "initial_failed_tests": [
-      "tests/symbolic/test_notable_results.py::test_sycamore_local_proof_has_the_restricted_phase_polynomial_scope"
-    ],
-    "warnings": 1,
-    "seconds": 1129.68,
-    "log_sha256": "2a83d8441bd36b626537617d8daeed908b712a9114cb80218d2ead037e277545"
-  },
-  "focused_suite": {
     "status": "passed",
-    "passed": 73,
-    "initial_failed_tests": [],
-    "warnings": 0,
-    "seconds": 132.55,
-    "log_sha256": "4f29129401e5a6ad42859f48fd873ae433a05908427c7f14960c2eff45e18bb7"
+    "passed": 1214,
+    "warnings": 1,
+    "seconds": 1139.95,
+    "log_sha256": "7a19075b6a9d559c47368468f7c048a58a5d970c457df1beb7cee7e049d606e8"
   },
   "new_theory_suite": {
     "status": "passed",
     "passed": 15,
-    "initial_failed_tests": [],
     "warnings": 0,
-    "seconds": 17.56,
-    "log_sha256": "e244f8205c5db71e1ecd7882d693b236db0e025608ad740ac2636ec92fdf156a"
+    "seconds": 2.46,
+    "log_sha256": "c477153249bf6a363c78d4f95df36dc4ec1e050c783b6070402c77862be9ad2b"
   },
-  "repaired_suite": {
-    "status": "passed",
-    "passed": 19,
-    "initial_failed_tests": [],
-    "warnings": 0,
-    "seconds": 17.31,
-    "log_sha256": "a14bb93eacaef22c18109a164b0b7020085f96b3bfe912312ddca2f1149eccf4"
-  },
-  "overall_status": "passed_after_targeted_test_repair",
-  "covered_tests": 1199,
-  "scope": "The full collection ran once. Its sole failure referenced the withdrawn tomography-comparison constant; that stale test was corrected and rerun with all four notable-result tests and fifteen new theorem/native tests. Both unedited logs are included. No synthesis source changed after full-suite collection."
+  "overall_status": "passed",
+  "covered_tests": 1214,
+  "scope": "Fresh full pure-symbolic collection, plus the fifteen third-report tests. No core synthesis/proof source changed after collection. Exact certificate replays and numerical witness checks are separately reported."
 }

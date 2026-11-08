@@ -61,13 +61,15 @@ def verify(row):
 def main():
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('--output',type=Path,required=True)
     p.add_argument('--workers',type=int,default=4);p.add_argument('--max-count',type=int,default=4)
-    p.add_argument('--seconds',type=float,default=25);p.add_argument('--verify',action='store_true');a=p.parse_args()
+    p.add_argument('--seconds',type=float,default=25);p.add_argument('--verify',action='store_true')
+    p.add_argument('--gate',action='append',default=[]);p.add_argument('--basis',action='append',default=[]);a=p.parse_args()
     if a.verify:
         report=json.load(gzip.open(a.output,'rt'));verified=sum(verify(r) for r in report['rows'])
         print(json.dumps(dict(verified_records=verified,statuses=dict(Counter(r['status'] for r in report['rows'])))));return
     source=ROOT/'benchmarks/symbolic/native_column_gap_audit_20261107.json.gz'
     proposals=json.load(gzip.open(source,'rt'))
-    with mp.get_context('fork').Pool(a.workers) as pool:rows=list(pool.imap_unordered(run,[(r,a.max_count,a.seconds) for r in proposals['rows']]))
+    selected=[r for r in proposals['rows'] if (not a.gate or r['gate'] in a.gate) and (not a.basis or r['basis'] in a.basis)]
+    with mp.get_context('fork').Pool(a.workers) as pool:rows=list(pool.imap_unordered(run,[(r,a.max_count,a.seconds) for r in selected]))
     rows.sort(key=lambda r:(r['gate'],r['basis']))
     paths=[Path(__file__),ROOT/'squander/decomposition/symbolic_monodromy.py',ROOT/'squander/decomposition/symbolic_monodromy_qlr.json',ROOT/'squander/decomposition/symbolic_reflection_involution.py']
     report=dict(schema='native-monodromy-exact-count-audit-v1',rows=rows,

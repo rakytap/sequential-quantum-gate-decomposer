@@ -311,7 +311,7 @@ def gate_panel(store, basis, row, width):
     bodies = []
     for mode, result in variants:
         color, label = ("exact", "EXACT PHASE") if mode == "phase_exact" else ("projective", "PROJECTIVE")
-        independent = row.get('independent_entangler_certificates',{}).get(mode)
+        independent = row.get('monodromy_entangler_certificates',{}).get(mode) or row.get('independent_entangler_certificates',{}).get(mode)
         bodies.append(r"{\scriptsize\color{" + color + r"}\bfseries " + label + r"}\quad{\scriptsize " + cost_line(result, independent) + r"}\par")
         bodies.append(drawing(store, width, result, "18mm" if len(variants) == 2 else "39mm") + r"\par\vspace{.8mm}")
         if mode == "projective":
@@ -331,13 +331,15 @@ def gate_panel(store, basis, row, width):
     witness=row.get('native_reachability_annotation',{})
     if witness.get('entanglers') is not None:
         count=witness['entanglers']
-        fixed=witness['witness_scope']=='fixed_target_numerical'
+        fixed=witness['witness_scope'].startswith('fixed_target')
         analytic=witness['witness_scope']=='uniform_two_qubit_Cartan_capacity'
+        proved=witness['status']=='proved_native_class_minimum'
         if any(result['cost']['entanglers']>count for mode,result in variants):
-            label='Known Cartan capacity' if analytic else 'Numerical fixed-target witness' if fixed else 'One numerical parameter sample'
-            tail='Exact local frames remain to be constructed.' if analytic else 'Not an exact circuit or optimality proof.'
-            bodies.append(r'\par{\scriptsize\color{projective}'+label+r': $N\leq '+str(count)+
-                          r'$. Displayed exact word has a count gap. '+tail+'}')
+            label=('Proved fixed-target minimum' if fixed else 'Proved minimum at one parameter sample') if proved else 'Known Cartan capacity' if analytic else 'Numerical fixed-target witness' if fixed else 'One numerical parameter sample'
+            tail='Exact local frames remain to be constructed.' if analytic or proved else 'Not an exact circuit or optimality proof.'
+            relation=r'E_*=' if proved else r'N\leq '
+            bodies.append(r'\par{\scriptsize\color{projective}'+label+r': $'+relation+str(count)+
+                          r'$. Displayed word has a count gap. '+tail+'}')
     return panel(header + "\n".join(bodies), "62mm")
 
 
@@ -355,6 +357,7 @@ def gate_volume(report, output, store, names, archive_digest):
                   r"Published-cap notes identify constructions above known universal two-qubit bounds; these remain optimization gaps. "
                   r"Numerical $N$ annotations flag shorter replayed witnesses in the SYC and square-root-SWAP columns. A sampled family annotation applies only to its archived parameter binding, not the entire family. The displayed circuits remain exact; numerical witnesses are stored separately and prove no optimum. "
                   r"TK2 capacity notes identify cells above its known one-macro Cartan cap; exact local frames remain an implementation gap. "
+                  r"Proved $E_*$ notes use exact monodromy feasibility/exclusion certificates, with exact invariant checks for coordinates. They establish a count with arbitrary U(2) locals, not a stored symbolic circuit or minimum local cost. Parameter-sample proofs apply only at that binding unless a matching uniform-family budget is separately certified. "
                   r"Proof conditions and source hashes remain in the scientific archive; attempt histories remain in the dated source archives.\par "
                   r"Open cases are shown as open. Proved obstructions preserve the supplied basis and may be conditional for parameterized families. "
                   r"Register constructors use the recorded integer-width or matrix fixtures. These pages do not claim a solution for every register size.\par "

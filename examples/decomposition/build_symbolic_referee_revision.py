@@ -91,6 +91,36 @@ def attach_native_annotations(archive):
                 numerical_only=False,construction_claim=False,minimum_claim=False,
                 source='Unrestricted-angle TK2 Cartan form and arbitrary SU(2) locals; literal cap applies to determinant-one targets',
                 artifact='mathematical_Cartan_capacity',artifact_sha256='',row_index='')
+    monodromy={}
+    filenames=['native_monodromy_20261108.json.gz','native_monodromy_deep_20261108.json.gz']
+    for name in filenames:
+        data=load(name)
+        for i,record in enumerate(data['rows']):
+            if record['status'] in ('proved_native_class_minimum','proved_lower_bound'):
+                monodromy[record['gate'],record['basis']]=(name,i,record)
+    for row in archive['rows']:
+        found=monodromy.get((row['gate'],row['basis']))
+        if not found:continue
+        name,index,record=found;minimum=record.get('minimum');lower=record.get('lower_bound',minimum)
+        scope='one_named_parameter_sample_only_proved' if record['substitutions'] else 'fixed_target_proved_minimum'
+        annotation=dict(status=record['status'],witness_scope=scope,substitutions=record['substitutions'],
+              entanglers=minimum,lower_bound=lower,numerical_only=False,construction_claim=False,
+              minimum_claim=minimum is not None,artifact=name,artifact_sha256=sha(DATA/name),row_index=index)
+        row['native_reachability_annotation']=annotation
+        certificates={}
+        for mode in ('phase_exact','projective'):
+            result=effective(row,mode);cost=result.get('cost',{}).get('entanglers')
+            if cost is not None and lower>cost:raise ArithmeticError('Monodromy lower bound contradicts exact incumbent')
+            if cost is not None and lower==cost:
+                certificates[mode]=dict(lower_bound=lower,matched_construction_entanglers=cost,
+                     scope='minimum_uniform_family_budget' if record['substitutions'] else 'fixed_target_minimum',
+                     method='exact_SU4_monodromy_primal_and_Farkas_certificates',hard_member=record['substitutions'],
+                     artifact=name,artifact_sha256=sha(DATA/name),row_index=index,
+                     local_scope='arbitrary U(2), exact native local-alphabet phase absorption')
+        if certificates:row['monodromy_entangler_certificates']=certificates
+    archive['native_monodromy_audit']=dict(artifacts={n:sha(DATA/n) for n in filenames},
+        source='Peterson-Crooks-Smith monodromy theorem; exact rational primal/Farkas witnesses; Makhlin invariants certify coordinate proposals',
+        scope='Fixed targets or named exact parameter substitutions; no missing local frames are supplied by a count certificate')
     archive['native_reachability_audit']=dict(artifact=filename,sha256=digest,
          scope='Numerical literal witnesses at fixed targets or explicitly named parameter samples; not exact identities or minimum-count proofs')
 
@@ -108,18 +138,19 @@ def native_gaps(archive):
             r=dict(gate=row['gate'],basis=row['basis'],mode=mode,exact_entanglers=exact_E,
                  reachable_entanglers=reachable,gap=gap,scope=annotation['witness_scope'],
                  substitutions=json.dumps(annotation['substitutions'],sort_keys=True),
-                 status=annotation['status'],error=annotation.get('literal_maximum_entry_error',''),
+                 status=annotation['status'],lower_bound=annotation.get('lower_bound',''),error=annotation.get('literal_maximum_entry_error',''),
                  audit_sha256=annotation['artifact_sha256'],audit_row=annotation['row_index'])
             rows.append(r);counter=counts[row['basis']];counter['modes']+=1
             counter['witnesses']+=reachable is not None
             counter['positive_gap']+=isinstance(gap,int) and gap>0
-            counter['fixed_gap']+=isinstance(gap,int) and gap>0 and annotation['witness_scope']=='fixed_target_numerical'
-            counter['sample_gap']+=isinstance(gap,int) and gap>0 and annotation['witness_scope']=='one_named_parameter_sample_only'
+            counter['fixed_gap']+=isinstance(gap,int) and gap>0 and annotation['witness_scope'].startswith('fixed_target')
+            counter['sample_gap']+=isinstance(gap,int) and gap>0 and annotation['witness_scope'].startswith('one_named_parameter_sample')
             counter['analytic_gap']+=isinstance(gap,int) and gap>0 and annotation['witness_scope']=='uniform_two_qubit_Cartan_capacity'
+            counter['proved_minima']+=annotation['status']=='proved_native_class_minimum'
     with (OUT/'native_column_gaps.csv').open('w') as f:
         writer=csv.DictWriter(f,fieldnames=list(rows[0]),lineterminator='\n');writer.writeheader();writer.writerows(rows)
-    table('native_column_gaps',['Preset','Modes','Count leads','Fixed gaps','Sample gaps','Analytic gaps'],
-          [[esc(b),c['modes'],c['witnesses'],c['fixed_gap'],c['sample_gap'],c['analytic_gap']] for b,c in sorted(counts.items())])
+    table('native_column_gaps',['Preset','Modes','Leads','Proved','Fixed gaps','Sample gaps','TK2 gaps'],
+          [[esc(b),c['modes'],c['witnesses'],c['proved_minima'],c['fixed_gap'],c['sample_gap'],c['analytic_gap']] for b,c in sorted(counts.items())])
     return {b:dict(c) for b,c in counts.items()}
 
 def coverage(a):
@@ -137,7 +168,7 @@ def coverage(a):
             flag=raw.get('entangler_optimal') is True
             if flag:
                 c['raw_flag']+=1
-            for field in ('independent_entangler_certificates','exchange_entangler_lower_bound_certificates'):
+            for field in ('independent_entangler_certificates','exchange_entangler_lower_bound_certificates','monodromy_entangler_certificates'):
                 certificate=r.get(field,{}).get(mode,{})
                 if certificate.get('lower_bound')==E and certificate.get('matched_construction_entanglers',E)==E:
                     scope=certificate.get('scope','')

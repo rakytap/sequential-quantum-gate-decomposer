@@ -2,11 +2,13 @@
   "gates": {
     "pages": 569,
     "repaired_index_links": 347,
-    "pdf_sha256": "15d42b253719f2fe91aea216ffc3f1b833cdb66810abe4f1155662902b11dbce"
+    "pdf_sha256": "ac8822f5036ddb10b0cc828663db879d3101fdf8aabcacfdb5229320bcae2192",
+    "source_sha256": "bb436229ef2a3ccfc44440a2c0c686478d290a53fbd6b638ed52181e5b93e23d"
   },
   "cliffords": {
     "pages": 98,
     "repaired_index_links": 13,
-    "pdf_sha256": "e256d9103311ff5e7b49719c9930d2bcc77afd109a20e61285f59c53f09f52ce"
+    "pdf_sha256": "e256d9103311ff5e7b49719c9930d2bcc77afd109a20e61285f59c53f09f52ce",
+    "source_sha256": "8f916683303a04dcb459a14333759b7991be05f9229e86d2b0634fbaf0c3d805"
   }
 }

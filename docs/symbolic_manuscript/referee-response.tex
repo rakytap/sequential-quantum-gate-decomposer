@@ -1,124 +1,107 @@
 \documentclass[11pt]{article}
 \usepackage[margin=25mm]{geometry}
 \usepackage[T1]{fontenc}\usepackage{lmodern,amsmath,amssymb,booktabs,hyperref}
-\title{Response to the second referee report}
-\author{Gregory Morse \and Peter Rakyta}\date{7 November 2026}
+\setlength{\emergencystretch}{3em}
+\title{Response to the third referee report}
+\author{Gregory Morse \and P\'eter Rakyta}\date{8 November 2026}
 \begin{document}\maketitle
-We have reorganized the manuscript as a theory paper, extended the analysis
-to the remaining involution strata, corrected native constructions, and
-made the remaining atlas gaps visible. The complete compiler evaluation is
-preserved in a standalone supplement. The response to the first report is
-retained separately as \texttt{first-referee-response.pdf}.
+The revision improves the free-angle reflection construction from six to
+five unrestricted two-qubit gates and adds exact native-count certificates
+to the atlas. The seven-CNOT reflection identity and the interior lower
+bounds remain open; we now state the five/seven claim as a conjecture.
+Earlier responses are preserved separately.
 
-\section*{1. SYC, square-root-SWAP, and TK2 columns}
-We agree that a verified long word alone is insufficient for a reliable
-reference when a much shorter implementation is known.
-
-The previous SYC fallback used six pulses for CNOT. We derived and checked
-an exact two-SYC controlled-phase chart with explicit local angles, all real
-angle branches, and literal scalar closure. It supplies the native
-controlled-block constructor and the CNOT fallback. The supplement gives
-the algebra and time-ordered circuit. The identity is accepted by a
-compositional polynomial certificate, not by a numerical fit. Cirq's prior
-analytical native decompositions are now cited; the two-pulse count is not
-claimed as new. DCX also has a checked literal one-TK2 word.
-
-We have not completed exact short charts for the entire SYC and
-square-root-SWAP columns. Instead, as the report recommends, the atlas now
-annotates every remaining count gap against the independently recorded
-numerical witness. The separate audit covers 75 nonlocal two-qubit entries
-per column, finding verified witnesses for all 75 SYC entries and 24
-square-root-SWAP entries. The other 51 searches are explicitly inconclusive.
-All 99 witnesses were independently replayed using the catalog matrices
-and the actual local alphabets; the largest literal entry error is about
-$1.1\times10^{-11}$. No GP gate is used. For a symbolic family a witness
-is one named parameter sample and is labelled accordingly, not a uniform
-family bound or an exact symbolic identity. The operations, substitutions,
-errors, failures, and versions are included in the package.
-
-The unrestricted TK2 one-macro Cartan cap is also displayed on every
-remaining two-qubit TK2 cell that exceeds it. Literal determinant
-obstructions remain separate. Thus the one-DCX correction does not hide
-other unfinished local-frame constructions. The CSV
-\texttt{native\_column\_gaps.csv} records all audited cells and phase modes.
-The displayed atlas words remain exact upper bounds; none of these
-numerical fits or capacity annotations is relabelled as an exact word.
-
-\section*{2. Motivation and extension beyond trace zero}
-The introduction now motivates controlled observables through Hadamard tests,
-controlled Pauli products, and reflection/oracle use in qubitization. The
-claim concerns exact small-block interaction cost, without asserting a
-measured algorithmic speedup.
-
-A new proposition covers traces $\pm2$ and $\pm4$. Every trace-$\pm2$
-involution is locally conjugate to $\pm R_\theta$, where
+\section*{1. Trace-$\pm2$ reflection family}
+For $R_\theta=I-2|\psi_\theta\rangle\langle\psi_\theta|$, with
+$|\psi_\theta\rangle=\cos\theta|00\rangle+\sin\theta|11\rangle$,
+we give an explicit unitary $B_\theta$ satisfying
 \[
- R_\theta=I-2|\psi_\theta\rangle\langle\psi_\theta|,\qquad
- |\psi_\theta\rangle=\cos\theta|00\rangle+\sin\theta|11\rangle,
- \quad0\le\theta\le\pi/4.
+ B_\theta R_\theta X_a B_\theta^\dagger=Z_aS_b.
 \]
-Explicit words give eight CNOTs or six unrestricted two-qubit gates across
-the family. Exact realignment gives
+The five gates in time order are
 \[
- \det\mathcal R(R_\theta)=-\sin^2(2\theta)\,[2-\sin^2(2\theta)].
+ \mathrm{CX}_{c,a},\quad B_{\theta,ab},\quad CS_{c,b},\quad
+ CZ_{c,a},\quad B_{\theta,ab}^\dagger.
 \]
-Therefore the four-Ising theorem gives the interior CNOT lower bound four,
-and the general two-gate exclusion gives unrestricted lower bound three.
-Both upper words are checked with the Schmidt angle free.
-
-At the product endpoint the controlled gate is locally CCZ, with minima
-six CNOTs and five unrestricted gates. At the maximally entangled endpoint
-it is locally Fredkin, with unrestricted minimum five and CNOT bounds
-five to seven. The sign of the reflection adds only a local control Z.
-Trace $\pm4$ gives zero interactions. This supplies normal forms and bounds
-for every spectral stratum, while explicitly leaving the trace-$\pm2$
-interior optimum open. It is not presented as a complete extension of the
-balanced cost classification.
-
-\section*{3. SQiSW positioning}
-The invariant result is now a proposition. We cite Peterson--Crooks--Smith's
-monodromy-polytope treatment (including its corrected version) and identify
-Shende--Bullock--Markov's trace-invariant tests as the closest analogue.
-Huang et al.\ retain credit for the known two-pulse chamber region.
-
-The main paper now gives the square-root-free version. With
-$a=\Re g_1$, $b=\Im g_1$, and $W=g_2+1$, membership is equivalent to
+The zero-control branch is identity and the one-control branch is
+$B_\theta^\dagger Z_aS_bB_\theta X_a=R_\theta$.
+The manuscript supplies the matrix and basis convention. Exact symbolic
+multiplication verifies unitarity and the full literal identity with
+$\theta$ free. The sign change adds a local control Z.
+The proved interior bounds are consequently
 \[
- W\ge0,\quad W^2-8a\ge0,\quad W^4-16aW^2-64b^2\ge0.
+ 4\le E_{\mathrm{CX}}\le8,\qquad
+ 3\le E_{\mathrm{arb}}\le5.
 \]
-For unitary inputs, $1/\det U=\overline{\det U}$, so these are real
-polynomial inequalities on matrix entries. The purpose is symbolic-family
-reasoning. We explicitly acknowledge that numerical canonicalization is
-already a small eigenvalue problem.
 
-\section*{4. Theory-paper organization}
-The main paper now has one short software-and-data section. All width- and
-scope-resolved tables, SDK/Quartz/QUESO comparisons, OSR and chart ablations,
-reuse timings, scalar-program measurements, and the negative peephole
-experiment are in the standalone supplement. The numerical application's
-better local count and depth remain reported there. No negative result was
-removed from the data or replaced by an advantage claim. The full atlases,
-editable sources, exact checks, and numerical witnesses are bundled.
+We independently found a seven-CNOT layout with BQSKit and refined its
+local gates at ten angle values, including $\pi/8$ and $0.3$. The archived
+words use seven CXs and physical U3 locals, with no GP gate. Independent
+Qiskit matrix replays have maximum literal entry error below $10^{-12}$.
+These are numerical witnesses, not a free-angle upper-bound proof.
+The seeds, layout, complete words, versions, replay report, and reproduction
+harness are included.
 
-\section*{Minor points}
-We cite Yu--Ying's published Physical Review A 91, 032302 (2015) version;
-the controlled-product statement is its Proposition 2.
-The edge table now explicitly sets $t=\beta$ on the two fixed-$\alpha$
-edges and $t=\alpha$ on the two fixed-$\beta$ edges. It states
-$V_0=K'QK'^\dagger$ and time order $K'^\dagger,C(Q),K'$.
-The balanced-cost table identifies its lower-bound dependencies: the
-four-Ising theorem at rank four and the unrestricted two-gate exclusion
-at rank two.
+We also prove a partial doubled-spectrum obstruction for
+$R_\theta(A\otimes I)$, for any one-qubit unitary $A$; the supplement gives
+the determinant argument and its limited layout scope. We have not extended
+Yu--Ying's exclusion to every four-gate layout. Their Fredkin reductions
+use literal wire-SWAP identities that do not automatically apply to the
+interior reflections. The main paper therefore states the conjecture
+$E_{\mathrm{arb}}=5$ and $E_{\mathrm{CX}}=7$ for $0<\theta\le\pi/4$
+explicitly, without claiming that numerical failures prove a lower bound.
 
-The C4X discussion no longer describes 36 CX as best known. It reports
-Quartz's verified 30-CX output and checks recent Huang--Palsberg and Vale
-no-helper-qubit routes through their recorded SDK implementations. Their
-measured C4X counts do not beat 30; this bounded check is not an exhaustive
-literature optimum. Full output circuits and literal replays are archived.
+\section*{2. Monodromy-polytope certificates for native columns}
+We implemented exact count certificates from the corrected
+Peterson--Crooks--Smith inequalities. The quantum Littlewood--Richardson
+data retain their authors' source revision, hash, attribution, and license.
+The implementation includes both projective-alcove branches at every
+composition. Numerical eigenangles and linear programming propose candidates
+only: exact complete Makhlin invariants accept target coordinates, rational
+primal points prove reachability, and rational Farkas multipliers exclude
+all branches at smaller depths.
 
-The author line names Gregory Morse and Peter Rakyta. Affiliations and the
-individual contribution allocation require author-supplied information;
-we have removed placeholder prose from the scientific manuscript and
-track these outstanding editorial fields separately. They must be settled
-before an external submission. No submission has been performed.
+The original numerical audit contained 150 target/native pairs in the SYC
+and square-root-SWAP columns. The first exact pass proves 111 minimum
+counts and one lower bound. A deeper query resolves that last record:
+SYC needs exactly five square-root-SWAP pulses with arbitrary local gates;
+the displayed atlas word still uses six. All 64 fixed-target/native pairs
+in this subset now have exact minimum-count certificates. The other proved
+records concern named parameter substitutions. Thirty proof deadlines and
+eight uncertified coordinate conversions remain explicitly inconclusive.
+
+Examples include three square-root-SWAPs for CS and B, four for CT and
+iSWAP, and two SYCs for B. Thus the audit also certifies that three
+square-root-SWAPs are not universal. An independent rational checker
+reconstructs every accepted feasibility and exclusion certificate.
+
+These results prove counts with arbitrary local $U(2)$ frames. The supplied
+U3 and PhasedXZ alphabets generate those frames without a GP gate through
+the checked phase-absorption identities. They do not give explicit shortest
+symbolic frame words or local-count minima. Atlas panels and the CSV now
+distinguish proved fixed-target minima, proved counts at one family sample,
+and remaining numerical leads. A hard sampled member plus a matching
+full-family construction can separately certify a minimum uniform family
+budget, which is labelled as such. Displayed long constructions retain
+their visible gaps; no circuit is silently replaced by an existence proof.
+
+\section*{3. Supplement layout and editorial fields}
+The empty implementation-objective heading has been removed. The substantive
+objective and reproducibility material remains with its explanatory text.
+The main manuscript now has the author-supplied affiliations for Gregory
+Morse and P\'eter Rakyta. Gregory is credited with the research, software,
+mathematical analysis, validation, experiments, data, visualization, and
+original draft; P\'eter with scientific discussions, drafting, reviewing,
+and editing.
+
+We also supply an unpublished-review version using the official
+\texttt{quantumarticle} class. Its wrapper inputs the same main manuscript;
+the class, license header, and provenance are included with the editable
+sources. No external submission has been performed.
+
+\section*{4. Fredkin endpoint wording}
+The paper now says plainly that seven CNOTs is the best known construction
+count in our literature audit, not a proved minimum. The proved Fredkin
+unrestricted minimum is five; its displayed CNOT bounds remain five to
+seven. The interior conjecture is separate from both endpoint facts.
 \end{document}

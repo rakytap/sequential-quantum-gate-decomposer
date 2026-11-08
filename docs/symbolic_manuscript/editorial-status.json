@@ -1,9 +1,21 @@
 {
   "authors": [
     "Gregory Morse",
-    "Peter Rakyta"
+    "Péter Rakyta"
   ],
-  "affiliations": "awaiting author confirmation",
-  "individual_contributions": "awaiting author confirmation",
-  "publication_state": "Internal review draft; no external submission performed"
+  "affiliations": {
+    "Gregory Morse": [
+      "Department of Programming Languages and Compilers, Eötvös Loránd University, Hungary"
+    ],
+    "Péter Rakyta": [
+      "Department of Physics of Complex Systems, Eötvös Loránd University, Hungary",
+      "Computational Sciences Department, HUN-REN Wigner Research Centre for Physics, Hungary"
+    ]
+  },
+  "individual_contributions": {
+    "Gregory Morse": "All research, software, mathematical analysis, validation, experiments, data, visualization, and original draft",
+    "Péter Rakyta": "Scientific discussions, drafting, reviewing, and editing"
+  },
+  "publication_state": "Internal review draft; no external submission performed",
+  "confirmed_by_author": true
 }

@@ -1,0 +1,124 @@
+\documentclass[11pt]{article}
+\usepackage[margin=25mm]{geometry}
+\usepackage[T1]{fontenc}\usepackage{lmodern,amsmath,amssymb,booktabs,hyperref}
+\title{Response to the second referee report}
+\author{Gregory Morse \and Peter Rakyta}\date{7 November 2026}
+\begin{document}\maketitle
+We have reorganized the manuscript as a theory paper, extended the analysis
+to the remaining involution strata, corrected native constructions, and
+made the remaining atlas gaps visible. The complete compiler evaluation is
+preserved in a standalone supplement. The response to the first report is
+retained separately as \texttt{first-referee-response.pdf}.
+
+\section*{1. SYC, square-root-SWAP, and TK2 columns}
+We agree that a verified long word alone is insufficient for a reliable
+reference when a much shorter implementation is known.
+
+The previous SYC fallback used six pulses for CNOT. We derived and checked
+an exact two-SYC controlled-phase chart with explicit local angles, all real
+angle branches, and literal scalar closure. It supplies the native
+controlled-block constructor and the CNOT fallback. The supplement gives
+the algebra and time-ordered circuit. The identity is accepted by a
+compositional polynomial certificate, not by a numerical fit. Cirq's prior
+analytical native decompositions are now cited; the two-pulse count is not
+claimed as new. DCX also has a checked literal one-TK2 word.
+
+We have not completed exact short charts for the entire SYC and
+square-root-SWAP columns. Instead, as the report recommends, the atlas now
+annotates every remaining count gap against the independently recorded
+numerical witness. The separate audit covers 75 nonlocal two-qubit entries
+per column, finding verified witnesses for all 75 SYC entries and 24
+square-root-SWAP entries. The other 51 searches are explicitly inconclusive.
+All 99 witnesses were independently replayed using the catalog matrices
+and the actual local alphabets; the largest literal entry error is about
+$1.1\times10^{-11}$. No GP gate is used. For a symbolic family a witness
+is one named parameter sample and is labelled accordingly, not a uniform
+family bound or an exact symbolic identity. The operations, substitutions,
+errors, failures, and versions are included in the package.
+
+The unrestricted TK2 one-macro Cartan cap is also displayed on every
+remaining two-qubit TK2 cell that exceeds it. Literal determinant
+obstructions remain separate. Thus the one-DCX correction does not hide
+other unfinished local-frame constructions. The CSV
+\texttt{native\_column\_gaps.csv} records all audited cells and phase modes.
+The displayed atlas words remain exact upper bounds; none of these
+numerical fits or capacity annotations is relabelled as an exact word.
+
+\section*{2. Motivation and extension beyond trace zero}
+The introduction now motivates controlled observables through Hadamard tests,
+controlled Pauli products, and reflection/oracle use in qubitization. The
+claim concerns exact small-block interaction cost, without asserting a
+measured algorithmic speedup.
+
+A new proposition covers traces $\pm2$ and $\pm4$. Every trace-$\pm2$
+involution is locally conjugate to $\pm R_\theta$, where
+\[
+ R_\theta=I-2|\psi_\theta\rangle\langle\psi_\theta|,\qquad
+ |\psi_\theta\rangle=\cos\theta|00\rangle+\sin\theta|11\rangle,
+ \quad0\le\theta\le\pi/4.
+\]
+Explicit words give eight CNOTs or six unrestricted two-qubit gates across
+the family. Exact realignment gives
+\[
+ \det\mathcal R(R_\theta)=-\sin^2(2\theta)\,[2-\sin^2(2\theta)].
+\]
+Therefore the four-Ising theorem gives the interior CNOT lower bound four,
+and the general two-gate exclusion gives unrestricted lower bound three.
+Both upper words are checked with the Schmidt angle free.
+
+At the product endpoint the controlled gate is locally CCZ, with minima
+six CNOTs and five unrestricted gates. At the maximally entangled endpoint
+it is locally Fredkin, with unrestricted minimum five and CNOT bounds
+five to seven. The sign of the reflection adds only a local control Z.
+Trace $\pm4$ gives zero interactions. This supplies normal forms and bounds
+for every spectral stratum, while explicitly leaving the trace-$\pm2$
+interior optimum open. It is not presented as a complete extension of the
+balanced cost classification.
+
+\section*{3. SQiSW positioning}
+The invariant result is now a proposition. We cite Peterson--Crooks--Smith's
+monodromy-polytope treatment (including its corrected version) and identify
+Shende--Bullock--Markov's trace-invariant tests as the closest analogue.
+Huang et al.\ retain credit for the known two-pulse chamber region.
+
+The main paper now gives the square-root-free version. With
+$a=\Re g_1$, $b=\Im g_1$, and $W=g_2+1$, membership is equivalent to
+\[
+ W\ge0,\quad W^2-8a\ge0,\quad W^4-16aW^2-64b^2\ge0.
+\]
+For unitary inputs, $1/\det U=\overline{\det U}$, so these are real
+polynomial inequalities on matrix entries. The purpose is symbolic-family
+reasoning. We explicitly acknowledge that numerical canonicalization is
+already a small eigenvalue problem.
+
+\section*{4. Theory-paper organization}
+The main paper now has one short software-and-data section. All width- and
+scope-resolved tables, SDK/Quartz/QUESO comparisons, OSR and chart ablations,
+reuse timings, scalar-program measurements, and the negative peephole
+experiment are in the standalone supplement. The numerical application's
+better local count and depth remain reported there. No negative result was
+removed from the data or replaced by an advantage claim. The full atlases,
+editable sources, exact checks, and numerical witnesses are bundled.
+
+\section*{Minor points}
+We cite Yu--Ying's published Physical Review A 91, 032302 (2015) version;
+the controlled-product statement is its Proposition 2.
+The edge table now explicitly sets $t=\beta$ on the two fixed-$\alpha$
+edges and $t=\alpha$ on the two fixed-$\beta$ edges. It states
+$V_0=K'QK'^\dagger$ and time order $K'^\dagger,C(Q),K'$.
+The balanced-cost table identifies its lower-bound dependencies: the
+four-Ising theorem at rank four and the unrestricted two-gate exclusion
+at rank two.
+
+The C4X discussion no longer describes 36 CX as best known. It reports
+Quartz's verified 30-CX output and checks recent Huang--Palsberg and Vale
+no-helper-qubit routes through their recorded SDK implementations. Their
+measured C4X counts do not beat 30; this bounded check is not an exhaustive
+literature optimum. Full output circuits and literal replays are archived.
+
+The author line names Gregory Morse and Peter Rakyta. Affiliations and the
+individual contribution allocation require author-supplied information;
+we have removed placeholder prose from the scientific manuscript and
+track these outstanding editorial fields separately. They must be settled
+before an external submission. No submission has been performed.
+\end{document}

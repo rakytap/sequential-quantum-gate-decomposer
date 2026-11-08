@@ -17,9 +17,14 @@
 \newcommand{\A}{\mathcal A}
 \newcommand{\Id}{\mathbb I}
 \title{Supplement: constructions, reference data, and experiments}
-\author{Gregory Morse \and Peter Rakyta}
-\date{7 November 2026}
+\author{Gregory Morse$^{1}$ \and P\'eter Rakyta$^{2,3}$}
+\date{8 November 2026}
 \begin{document}\maketitle
+\begin{center}\small
+$^1$Department of Programming Languages and Compilers, E\"otv\"os Lor\'and University, Hungary\\
+$^2$Department of Physics of Complex Systems, E\"otv\"os Lor\'and University, Hungary\\
+$^3$Computational Sciences Department, HUN-REN Wigner Research Centre for Physics, Hungary
+\end{center}
 This supplement accompanies \emph{Controlling two-qubit involutions:
 CNOT costs and symbolic invariants}. It contains the reference resource,
 all measured compiler comparisons and negative results, native-column gap
@@ -247,14 +252,14 @@ capacity does not remove a determinant obstruction. This capacity statement
 does not supply missing exact local frames in the implementation.
 
 \input{generated/native_column_gaps.tex}
-Each mode above is a literal or projective cell. A shorter numerical witness
-is annotated directly on the atlas panel and recorded in
-\texttt{native\_column\_gaps.csv}. For a fixed target, it is a numerical
-construction at that target; for a free family, it applies only to the
-explicit parameter substitution in the record. It is neither an exact
-symbolic construction nor a minimum proof. Counts already matched by an
-exact construction have no remaining gap. Searches that find no witness
-remain inconclusive.
+Each mode above is a literal or projective cell. Atlas panels and
+\texttt{native\_column\_gaps.csv} distinguish proved minimum counts from
+numerical witnesses. A count certificate does not replace a longer displayed
+word with an explicit shorter construction. A numerical witness applies to
+its fixed target or named parameter substitution; it is neither an exact
+symbolic word nor a minimum proof. A proved count at one family sample is
+also labelled as a sample. Counts already matched by an exact construction
+have no remaining gap. Failed searches remain inconclusive.
 
 The numerical audit uses the actual catalog SYC and square-root-SWAP matrices,
 including the latter's exchange-phase convention. It groups proposals by
@@ -270,6 +275,72 @@ The audit finds witnesses for all 75 nonlocal two-qubit SYC entries and
 sample. Failure on the other square-root-SWAP entries supplies no lower bound.
 Cirq already provides efficient native SYC decompositions for several of
 these classes \cite{cirqsyc}; improved counts are not claimed as discoveries.
+
+\subsection{Exact monodromy count certificates}
+The second audit applies the Peterson--Crooks--Smith monodromy inequalities
+\cite{peterson} to the actual fixed SYC and square-root-SWAP classes.
+The quantum Littlewood--Richardson table is taken from the authors'
+\texttt{monodromy} repository at revision
+\texttt{65a064f8fdc1a45327523642d83979776e6bb828}, with its license,
+source hash, and attribution retained. We use its corrected alcove and
+both $\rho$ branches at every composition. No numerical rationalization
+is itself accepted as a certificate.
+
+Numerical eigenangles only propose rational coordinates. Equality of the
+complete Makhlin invariants, checked exactly against the original target,
+accepts a proposal. A depth-$k$ query has $3(k-2)$ intermediate coordinates
+and $2^{k-1}$ branch words. Every feasible branch must have a rational point
+satisfying all inequalities exactly. Every excluded branch must have
+nonnegative rational Farkas multipliers whose weighted variable coefficients
+vanish and whose constant term is strictly negative. Exclusion at every
+smaller depth plus a feasible branch proves the minimum. The standalone
+checker reconstructs the inequalities and checks every certificate with
+rational arithmetic, independently of floating LP status codes.
+
+Across the 150 target/native records, 111 minimum-count records and one
+lower-bound record are certified within depth four. A deeper query settles
+the latter: SYC needs exactly five square-root-SWAP pulses with arbitrary
+local $U(2)$ gates, whereas its stored word uses six. Thus all 64 fixed-target
+pairs in this audited subset have exact minimum counts. The remaining
+proved records concern explicit parameter samples. Thirty proof deadlines
+and eight uncertified coordinate conversions remain recorded as inconclusive.
+Examples include three square-root-SWAPs for CS and B, four for CT and iSWAP,
+and two SYCs for B. In particular, three square-root-SWAPs are not universal.
+
+The result is an existence/count certificate, not an explicit symbolic
+local-frame construction or a local-gate optimum. For the supplied U3 and
+PhasedXZ alphabets, the previously checked phase-absorption identities realize
+arbitrary $U(2)$ local frames without a GP gate. The counts therefore transfer
+to both phase policies, at possible additional local cost. A matching
+full-family construction and a hard sampled member separately certify a
+minimum \emph{uniform} family budget. This does not assert a pointwise family
+minimum. The exact count files and separate numerical witnesses are both
+included, and atlas panels retain any gap in the displayed word.
+
+\subsection{Reflection search and the remaining conjecture}
+The main paper proves a literal five-unrestricted-gate word with the Schmidt
+angle free. We also searched seven-CNOT layouts numerically with BQSKit 1.2.1,
+found one, and refined that fixed layout with least squares at ten values
+between zero and $\pi/4$. All local operations are U3; scalar phase is
+absorbed through actual local gates. Full literal $8\times8$ replays pass,
+including $\theta=\pi/8$ and $\theta=3/10$, with maximum entry error below
+$10^{-12}$. The archive contains every resulting word, seed, layout, angles,
+versions, and a reproduction harness. The examples support the conjecture
+but do not supply a free-angle identity or a lower bound.
+
+A useful partial obstruction is that $R_\theta(A\otimes I)$ cannot have
+only two eigenvalues, each twice, for any one-qubit unitary $A$.
+If $A$ has distinct eigenvalues $\lambda_\pm$, each of its two-dimensional
+eigenspaces contains a vector orthogonal to $\psi_\theta$. These supply
+unchanged eigenvalues $\lambda_\pm$ after multiplication by the reflection.
+A doubled spectrum would then force determinant $(\det A)^2$, whereas the
+actual determinant is $-(\det A)^2$. A scalar $A$ instead leaves multiplicities
+three and one. This obstruction excludes corresponding controlled-product
+forms; it is not an exclusion of every four-gate layout.
+The Fredkin proof cannot simply be imported by relabelling: some of its
+layout reductions use the fact that the relative operator is a literal
+wire SWAP. An interior reflection is not a wire permutation. We consequently
+retain explicit partial bounds and state the full five/seven claim as a conjecture.
 
 \subsection{Exact two-SYC controlled-phase chart}
 Put $S=\mathrm{SYC}$, $w=e^{-i\pi/6}$, $C=\cos(\pi/12)$ and
@@ -310,7 +381,6 @@ This gives all signs and periods without a scalar operation.
 The exchange echo is consistent with Cirq's known analytical construction
 \cite{cirqsyc}; the supplied chart makes its local frames exact and explicit.
 
-\section{Implementation objective and reproducibility}
 \section{Secondary objective and interpretation}
 The implementation orders candidate resources as $(E,S,L)$, where $E$ is
 native entanglers, $L$ is local gates, and the optional description score is

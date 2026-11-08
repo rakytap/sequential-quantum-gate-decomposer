@@ -168,7 +168,10 @@ def main():
         directory.mkdir(exist_ok=True)
         circuits=directory/"circuits"
         if not circuits.exists():circuits.symlink_to(root/"circuits",target_is_directory=True)
-        pages, destinations = split_document((root/(volume+".tex")).read_text())
+        volume_source = root/(volume+".tex")
+        source_bytes = volume_source.read_bytes()
+        source_sha256 = hashlib.sha256(source_bytes).hexdigest()
+        pages, destinations = split_document(source_bytes.decode())
         paths = [None]*len(pages)
         jobs = [(args.compiler, root, volume, index, page, args.seconds_per_page)
                 for index, page in enumerate(pages)]
@@ -180,6 +183,9 @@ def main():
                 if completed % 25 == 0:
                     print(f"Compiled {volume}: {completed}/{len(pages)} sheets", flush=True)
         report[volume] = assemble(paths, pages, destinations, root/(volume+".pdf"))
+        if hashlib.sha256(volume_source.read_bytes()).hexdigest() != source_sha256:
+            raise RuntimeError("Atlas source changed during compilation; finish rendering before building")
+        report[volume]["source_sha256"] = source_sha256
         print(json.dumps({volume: report[volume]}, sort_keys=True), flush=True)
     (root/"build-report.json").write_text(json.dumps(report, indent=2)+"\n")
     return 0

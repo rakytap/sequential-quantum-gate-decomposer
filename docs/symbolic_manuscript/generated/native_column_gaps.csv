@@ -1,459 +1,459 @@
-gate,basis,mode,exact_entanglers,reachable_entanglers,gap,scope,substitutions,status,error,audit_sha256,audit_row
-CX,sqrt_swap_u,phase_exact,2,2,0,fixed_target_numerical,{},verified_numerical_witness,2.755125490222192e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,1
-CX,sqrt_swap_u,projective,2,2,0,fixed_target_numerical,{},verified_numerical_witness,2.755125490222192e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,1
-CX,google_syc,phase_exact,2,2,0,fixed_target_numerical,{},verified_numerical_witness,2.5731925824501433e-12,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,0
-CX,google_syc,projective,2,2,0,fixed_target_numerical,{},verified_numerical_witness,2.5731925824501433e-12,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,0
-CX,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-CX,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-CNOT,sqrt_swap_u,phase_exact,2,2,0,fixed_target_numerical,{},verified_numerical_witness,2.755125490222192e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,3
-CNOT,sqrt_swap_u,projective,2,2,0,fixed_target_numerical,{},verified_numerical_witness,2.755125490222192e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,3
-CNOT,google_syc,phase_exact,2,2,0,fixed_target_numerical,{},verified_numerical_witness,2.5731925824501433e-12,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,2
-CNOT,google_syc,projective,2,2,0,fixed_target_numerical,{},verified_numerical_witness,2.5731925824501433e-12,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,2
-CNOT,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-CNOT,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-CY,sqrt_swap_u,phase_exact,2,2,0,fixed_target_numerical,{},verified_numerical_witness,2.747765076088199e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,5
-CY,sqrt_swap_u,projective,2,2,0,fixed_target_numerical,{},verified_numerical_witness,2.747765076088199e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,5
-CY,google_syc,phase_exact,2,2,0,fixed_target_numerical,{},verified_numerical_witness,2.5732997745598375e-12,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,4
-CY,google_syc,projective,2,2,0,fixed_target_numerical,{},verified_numerical_witness,2.5732997745598375e-12,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,4
-CY,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-CY,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-CZ,sqrt_swap_u,phase_exact,2,2,0,fixed_target_numerical,{},verified_numerical_witness,2.3972856832234284e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,7
-CZ,sqrt_swap_u,projective,2,2,0,fixed_target_numerical,{},verified_numerical_witness,2.3972856832234284e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,7
-CZ,google_syc,phase_exact,2,2,0,fixed_target_numerical,{},verified_numerical_witness,2.5814675374314596e-12,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,6
-CZ,google_syc,projective,2,2,0,fixed_target_numerical,{},verified_numerical_witness,2.5814675374314596e-12,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,6
-CZ,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-CZ,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-CRX,sqrt_swap_u,phase_exact,4,,,one_named_parameter_sample_only,"{""theta"": ""pi/7""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,9
-CRX,sqrt_swap_u,projective,4,,,one_named_parameter_sample_only,"{""theta"": ""pi/7""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,9
-CRX,google_syc,phase_exact,2,2,0,one_named_parameter_sample_only,"{""theta"": ""pi/7""}",verified_numerical_witness,1.0452243417170193e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,8
-CRX,google_syc,projective,2,2,0,one_named_parameter_sample_only,"{""theta"": ""pi/7""}",verified_numerical_witness,1.0452243417170193e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,8
-CRX,tket_tk2,phase_exact,5,1,4,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-CRX,tket_tk2,projective,2,1,1,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-CRY,sqrt_swap_u,phase_exact,4,,,one_named_parameter_sample_only,"{""theta"": ""pi/7""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,11
-CRY,sqrt_swap_u,projective,4,,,one_named_parameter_sample_only,"{""theta"": ""pi/7""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,11
-CRY,google_syc,phase_exact,2,2,0,one_named_parameter_sample_only,"{""theta"": ""pi/7""}",verified_numerical_witness,1.0587178588158367e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,10
-CRY,google_syc,projective,2,2,0,one_named_parameter_sample_only,"{""theta"": ""pi/7""}",verified_numerical_witness,1.0587178588158367e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,10
-CRY,tket_tk2,phase_exact,5,1,4,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-CRY,tket_tk2,projective,2,1,1,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-CRZ,sqrt_swap_u,phase_exact,4,,,one_named_parameter_sample_only,"{""theta"": ""pi/7""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,13
-CRZ,sqrt_swap_u,projective,4,,,one_named_parameter_sample_only,"{""theta"": ""pi/7""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,13
-CRZ,google_syc,phase_exact,2,2,0,one_named_parameter_sample_only,"{""theta"": ""pi/7""}",verified_numerical_witness,1.0169196399342544e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,12
-CRZ,google_syc,projective,2,2,0,one_named_parameter_sample_only,"{""theta"": ""pi/7""}",verified_numerical_witness,1.0169196399342544e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,12
-CRZ,tket_tk2,phase_exact,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-CRZ,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-CSX,sqrt_swap_u,phase_exact,4,3,1,fixed_target_numerical,{},verified_numerical_witness,1.3168252518783713e-12,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,15
-CSX,sqrt_swap_u,projective,4,3,1,fixed_target_numerical,{},verified_numerical_witness,1.3168252518783713e-12,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,15
-CSX,google_syc,phase_exact,2,2,0,fixed_target_numerical,{},verified_numerical_witness,3.580361673049448e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,14
-CSX,google_syc,projective,2,2,0,fixed_target_numerical,{},verified_numerical_witness,3.580361673049448e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,14
-CSX,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-CSX,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-CS,sqrt_swap_u,phase_exact,4,3,1,fixed_target_numerical,{},verified_numerical_witness,1.8026136447028357e-12,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,17
-CS,sqrt_swap_u,projective,4,3,1,fixed_target_numerical,{},verified_numerical_witness,1.8026136447028357e-12,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,17
-CS,google_syc,phase_exact,2,2,0,fixed_target_numerical,{},verified_numerical_witness,3.2215603803613454e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,16
-CS,google_syc,projective,2,2,0,fixed_target_numerical,{},verified_numerical_witness,3.2215603803613454e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,16
-CS,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-CS,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-CH,sqrt_swap_u,phase_exact,2,2,0,fixed_target_numerical,{},verified_numerical_witness,2.7644986024956774e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,19
-CH,sqrt_swap_u,projective,2,2,0,fixed_target_numerical,{},verified_numerical_witness,2.7644986024956774e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,19
-CH,google_syc,phase_exact,2,2,0,fixed_target_numerical,{},verified_numerical_witness,2.573568811356921e-12,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,18
-CH,google_syc,projective,2,2,0,fixed_target_numerical,{},verified_numerical_witness,2.573568811356921e-12,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,18
-CH,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-CH,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-CP,sqrt_swap_u,phase_exact,4,,,one_named_parameter_sample_only,"{""phi"": ""pi/7""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,21
-CP,sqrt_swap_u,projective,4,,,one_named_parameter_sample_only,"{""phi"": ""pi/7""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,21
-CP,google_syc,phase_exact,2,2,0,one_named_parameter_sample_only,"{""phi"": ""pi/7""}",verified_numerical_witness,1.1102230246251565e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,20
-CP,google_syc,projective,2,2,0,one_named_parameter_sample_only,"{""phi"": ""pi/7""}",verified_numerical_witness,1.1102230246251565e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,20
-CP,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-CP,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-CU1,sqrt_swap_u,phase_exact,4,,,one_named_parameter_sample_only,"{""theta"": ""pi/7""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,23
-CU1,sqrt_swap_u,projective,4,,,one_named_parameter_sample_only,"{""theta"": ""pi/7""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,23
-CU1,google_syc,phase_exact,2,2,0,one_named_parameter_sample_only,"{""theta"": ""pi/7""}",verified_numerical_witness,1.1102230246251565e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,22
-CU1,google_syc,projective,2,2,0,one_named_parameter_sample_only,"{""theta"": ""pi/7""}",verified_numerical_witness,1.1102230246251565e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,22
-CU1,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-CU1,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-CU,sqrt_swap_u,phase_exact,4,,,one_named_parameter_sample_only,"{""gamma"": ""pi/7"", ""lbda"": ""2*pi/9"", ""phi"": ""3*pi/11"", ""theta"": ""4*pi/13""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,25
-CU,sqrt_swap_u,projective,4,,,one_named_parameter_sample_only,"{""gamma"": ""pi/7"", ""lbda"": ""2*pi/9"", ""phi"": ""3*pi/11"", ""theta"": ""4*pi/13""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,25
-CU,google_syc,phase_exact,12,2,10,one_named_parameter_sample_only,"{""gamma"": ""pi/7"", ""lbda"": ""2*pi/9"", ""phi"": ""3*pi/11"", ""theta"": ""4*pi/13""}",verified_numerical_witness,3.742987305959159e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,24
-CU,google_syc,projective,12,2,10,one_named_parameter_sample_only,"{""gamma"": ""pi/7"", ""lbda"": ""2*pi/9"", ""phi"": ""3*pi/11"", ""theta"": ""4*pi/13""}",verified_numerical_witness,3.742987305959159e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,24
-CU,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-CU,tket_tk2,projective,2,1,1,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-CU3,sqrt_swap_u,phase_exact,4,,,one_named_parameter_sample_only,"{""lbda"": ""pi/7"", ""phi"": ""2*pi/9"", ""theta"": ""3*pi/11""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,27
-CU3,sqrt_swap_u,projective,4,,,one_named_parameter_sample_only,"{""lbda"": ""pi/7"", ""phi"": ""2*pi/9"", ""theta"": ""3*pi/11""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,27
-CU3,google_syc,phase_exact,12,2,10,one_named_parameter_sample_only,"{""lbda"": ""pi/7"", ""phi"": ""2*pi/9"", ""theta"": ""3*pi/11""}",verified_numerical_witness,3.065200913594196e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,26
-CU3,google_syc,projective,12,2,10,one_named_parameter_sample_only,"{""lbda"": ""pi/7"", ""phi"": ""2*pi/9"", ""theta"": ""3*pi/11""}",verified_numerical_witness,3.065200913594196e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,26
-CU3,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-CU3,tket_tk2,projective,2,1,1,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-CR,sqrt_swap_u,phase_exact,4,,,one_named_parameter_sample_only,"{""phi"": ""pi/7"", ""theta"": ""2*pi/9""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,29
-CR,sqrt_swap_u,projective,4,,,one_named_parameter_sample_only,"{""phi"": ""pi/7"", ""theta"": ""2*pi/9""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,29
-CR,google_syc,phase_exact,2,2,0,one_named_parameter_sample_only,"{""phi"": ""pi/7"", ""theta"": ""2*pi/9""}",verified_numerical_witness,1.325064780995644e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,28
-CR,google_syc,projective,2,2,0,one_named_parameter_sample_only,"{""phi"": ""pi/7"", ""theta"": ""2*pi/9""}",verified_numerical_witness,1.325064780995644e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,28
-CR,tket_tk2,phase_exact,5,1,4,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-CR,tket_tk2,projective,2,1,1,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-CROT,sqrt_swap_u,phase_exact,4,,,one_named_parameter_sample_only,"{""phi"": ""pi/7"", ""theta"": ""2*pi/9""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,31
-CROT,sqrt_swap_u,projective,4,,,one_named_parameter_sample_only,"{""phi"": ""pi/7"", ""theta"": ""2*pi/9""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,31
-CROT,google_syc,phase_exact,2,2,0,one_named_parameter_sample_only,"{""phi"": ""pi/7"", ""theta"": ""2*pi/9""}",verified_numerical_witness,7.690097845434379e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,30
-CROT,google_syc,projective,2,2,0,one_named_parameter_sample_only,"{""phi"": ""pi/7"", ""theta"": ""2*pi/9""}",verified_numerical_witness,7.690097845434379e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,30
-CROT,tket_tk2,phase_exact,5,1,4,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-CROT,tket_tk2,projective,2,1,1,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-Rxx,sqrt_swap_u,phase_exact,4,,,one_named_parameter_sample_only,"{""theta"": ""pi/7""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,33
-Rxx,sqrt_swap_u,projective,4,,,one_named_parameter_sample_only,"{""theta"": ""pi/7""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,33
-Rxx,google_syc,phase_exact,2,2,0,one_named_parameter_sample_only,"{""theta"": ""pi/7""}",verified_numerical_witness,2.4272825920465498e-12,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,32
-Rxx,google_syc,projective,2,2,0,one_named_parameter_sample_only,"{""theta"": ""pi/7""}",verified_numerical_witness,2.4272825920465498e-12,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,32
-Rxx,tket_tk2,phase_exact,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-Rxx,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-Ryy,sqrt_swap_u,phase_exact,4,,,one_named_parameter_sample_only,"{""theta"": ""pi/7""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,35
-Ryy,sqrt_swap_u,projective,4,,,one_named_parameter_sample_only,"{""theta"": ""pi/7""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,35
-Ryy,google_syc,phase_exact,2,2,0,one_named_parameter_sample_only,"{""theta"": ""pi/7""}",verified_numerical_witness,2.427865372031881e-12,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,34
-Ryy,google_syc,projective,2,2,0,one_named_parameter_sample_only,"{""theta"": ""pi/7""}",verified_numerical_witness,2.427865372031881e-12,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,34
-Ryy,tket_tk2,phase_exact,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-Ryy,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-Rzz,sqrt_swap_u,phase_exact,4,,,one_named_parameter_sample_only,"{""theta"": ""pi/7""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,37
-Rzz,sqrt_swap_u,projective,4,,,one_named_parameter_sample_only,"{""theta"": ""pi/7""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,37
-Rzz,google_syc,phase_exact,2,2,0,one_named_parameter_sample_only,"{""theta"": ""pi/7""}",verified_numerical_witness,2.8882697742849396e-12,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,36
-Rzz,google_syc,projective,2,2,0,one_named_parameter_sample_only,"{""theta"": ""pi/7""}",verified_numerical_witness,2.8882697742849396e-12,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,36
-Rzz,tket_tk2,phase_exact,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-Rzz,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-Rxy,sqrt_swap_u,phase_exact,4,,,one_named_parameter_sample_only,"{""phi"": ""pi/7""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,39
-Rxy,sqrt_swap_u,projective,4,,,one_named_parameter_sample_only,"{""phi"": ""pi/7""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,39
-Rxy,google_syc,phase_exact,12,2,10,one_named_parameter_sample_only,"{""phi"": ""pi/7""}",verified_numerical_witness,1.58111373102026e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,38
-Rxy,google_syc,projective,12,2,10,one_named_parameter_sample_only,"{""phi"": ""pi/7""}",verified_numerical_witness,1.58111373102026e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,38
-Rxy,tket_tk2,phase_exact,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-Rxy,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-Rxmy,sqrt_swap_u,phase_exact,4,,,one_named_parameter_sample_only,"{""phi"": ""pi/7""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,41
-Rxmy,sqrt_swap_u,projective,4,,,one_named_parameter_sample_only,"{""phi"": ""pi/7""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,41
-Rxmy,google_syc,phase_exact,12,2,10,one_named_parameter_sample_only,"{""phi"": ""pi/7""}",verified_numerical_witness,1.574921557667519e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,40
-Rxmy,google_syc,projective,12,2,10,one_named_parameter_sample_only,"{""phi"": ""pi/7""}",verified_numerical_witness,1.574921557667519e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,40
-Rxmy,tket_tk2,phase_exact,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-Rxmy,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-xx_plus_yy,sqrt_swap_u,phase_exact,4,,,one_named_parameter_sample_only,"{""beta"": ""pi/7"", ""phi"": ""2*pi/9""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,43
-xx_plus_yy,sqrt_swap_u,projective,4,,,one_named_parameter_sample_only,"{""beta"": ""pi/7"", ""phi"": ""2*pi/9""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,43
-xx_plus_yy,google_syc,phase_exact,12,2,10,one_named_parameter_sample_only,"{""beta"": ""pi/7"", ""phi"": ""2*pi/9""}",verified_numerical_witness,1.7627353500855752e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,42
-xx_plus_yy,google_syc,projective,12,2,10,one_named_parameter_sample_only,"{""beta"": ""pi/7"", ""phi"": ""2*pi/9""}",verified_numerical_witness,1.7627353500855752e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,42
-xx_plus_yy,tket_tk2,phase_exact,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-xx_plus_yy,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-xx_minus_yy,sqrt_swap_u,phase_exact,4,,,one_named_parameter_sample_only,"{""beta"": ""pi/7"", ""phi"": ""2*pi/9""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,45
-xx_minus_yy,sqrt_swap_u,projective,4,,,one_named_parameter_sample_only,"{""beta"": ""pi/7"", ""phi"": ""2*pi/9""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,45
-xx_minus_yy,google_syc,phase_exact,12,2,10,one_named_parameter_sample_only,"{""beta"": ""pi/7"", ""phi"": ""2*pi/9""}",verified_numerical_witness,1.3489958927779455e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,44
-xx_minus_yy,google_syc,projective,12,2,10,one_named_parameter_sample_only,"{""beta"": ""pi/7"", ""phi"": ""2*pi/9""}",verified_numerical_witness,1.3489958927779455e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,44
-xx_minus_yy,tket_tk2,phase_exact,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-xx_minus_yy,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-iSWAP_pow,sqrt_swap_u,phase_exact,4,,,one_named_parameter_sample_only,"{""alpha"": ""pi/7""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,47
-iSWAP_pow,sqrt_swap_u,projective,4,,,one_named_parameter_sample_only,"{""alpha"": ""pi/7""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,47
-iSWAP_pow,google_syc,phase_exact,12,2,10,one_named_parameter_sample_only,"{""alpha"": ""pi/7""}",verified_numerical_witness,1.4113405002813692e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,46
-iSWAP_pow,google_syc,projective,12,2,10,one_named_parameter_sample_only,"{""alpha"": ""pi/7""}",verified_numerical_witness,1.4113405002813692e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,46
-iSWAP_pow,tket_tk2,phase_exact,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-iSWAP_pow,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-SYC,sqrt_swap_u,phase_exact,6,,,fixed_target_numerical,{},no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,49
-SYC,sqrt_swap_u,projective,6,,,fixed_target_numerical,{},no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,49
-SYC,google_syc,phase_exact,1,1,0,fixed_target_numerical,{},verified_numerical_witness,6.106226635438361e-16,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,48
-SYC,google_syc,projective,1,1,0,fixed_target_numerical,{},verified_numerical_witness,6.106226635438361e-16,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,48
-SYC,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-SYC,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-SWAP,sqrt_swap_u,phase_exact,2,2,0,fixed_target_numerical,{},verified_numerical_witness,5.389157964038492e-16,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,51
-SWAP,sqrt_swap_u,projective,2,2,0,fixed_target_numerical,{},verified_numerical_witness,5.389157964038492e-16,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,51
-SWAP,google_syc,phase_exact,18,3,15,fixed_target_numerical,{},verified_numerical_witness,1.4198814970921197e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,50
-SWAP,google_syc,projective,18,3,15,fixed_target_numerical,{},verified_numerical_witness,1.4198814970921197e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,50
-SWAP,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-SWAP,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-SSWAP,sqrt_swap_u,phase_exact,1,1,0,fixed_target_numerical,{},verified_numerical_witness,3.554447978966673e-16,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,53
-SSWAP,sqrt_swap_u,projective,1,1,0,fixed_target_numerical,{},verified_numerical_witness,3.554447978966673e-16,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,53
-SSWAP,google_syc,phase_exact,18,3,15,fixed_target_numerical,{},verified_numerical_witness,8.722139794326117e-12,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,52
-SSWAP,google_syc,projective,18,3,15,fixed_target_numerical,{},verified_numerical_witness,8.722139794326117e-12,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,52
-SSWAP,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-SSWAP,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-iSWAP,sqrt_swap_u,phase_exact,4,,,fixed_target_numerical,{},no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,55
-iSWAP,sqrt_swap_u,projective,4,,,fixed_target_numerical,{},no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,55
-iSWAP,google_syc,phase_exact,12,3,9,fixed_target_numerical,{},verified_numerical_witness,2.3797328676681967e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,54
-iSWAP,google_syc,projective,12,3,9,fixed_target_numerical,{},verified_numerical_witness,2.3797328676681967e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,54
-iSWAP,tket_tk2,phase_exact,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-iSWAP,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-SiSWAP,sqrt_swap_u,phase_exact,4,,,fixed_target_numerical,{},no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,57
-SiSWAP,sqrt_swap_u,projective,4,,,fixed_target_numerical,{},no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,57
-SiSWAP,google_syc,phase_exact,12,2,10,fixed_target_numerical,{},verified_numerical_witness,1.1224373765301648e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,56
-SiSWAP,google_syc,projective,12,2,10,fixed_target_numerical,{},verified_numerical_witness,1.1224373765301648e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,56
-SiSWAP,tket_tk2,phase_exact,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-SiSWAP,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-CZPowGate,sqrt_swap_u,phase_exact,4,,,one_named_parameter_sample_only,"{""t"": ""pi/7""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,59
-CZPowGate,sqrt_swap_u,projective,4,,,one_named_parameter_sample_only,"{""t"": ""pi/7""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,59
-CZPowGate,google_syc,phase_exact,2,2,0,one_named_parameter_sample_only,"{""t"": ""pi/7""}",verified_numerical_witness,1.3972010377463624e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,58
-CZPowGate,google_syc,projective,2,2,0,one_named_parameter_sample_only,"{""t"": ""pi/7""}",verified_numerical_witness,1.3972010377463624e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,58
-CZPowGate,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-CZPowGate,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-fSim,sqrt_swap_u,phase_exact,6,,,one_named_parameter_sample_only,"{""phi"": ""pi/7"", ""theta"": ""2*pi/9""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,61
-fSim,sqrt_swap_u,projective,6,,,one_named_parameter_sample_only,"{""phi"": ""pi/7"", ""theta"": ""2*pi/9""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,61
-fSim,google_syc,phase_exact,18,3,15,one_named_parameter_sample_only,"{""phi"": ""pi/7"", ""theta"": ""2*pi/9""}",verified_numerical_witness,3.5065521839544505e-12,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,60
-fSim,google_syc,projective,18,3,15,one_named_parameter_sample_only,"{""phi"": ""pi/7"", ""theta"": ""2*pi/9""}",verified_numerical_witness,3.5065521839544505e-12,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,60
-fSim,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-fSim,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-CSdg,sqrt_swap_u,phase_exact,4,3,1,fixed_target_numerical,{},verified_numerical_witness,1.0269736415166061e-11,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,63
-CSdg,sqrt_swap_u,projective,4,3,1,fixed_target_numerical,{},verified_numerical_witness,1.0269736415166061e-11,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,63
-CSdg,google_syc,phase_exact,2,2,0,fixed_target_numerical,{},verified_numerical_witness,1.7235296186091125e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,62
-CSdg,google_syc,projective,2,2,0,fixed_target_numerical,{},verified_numerical_witness,1.7235296186091125e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,62
-CSdg,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-CSdg,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-CSXdg,sqrt_swap_u,phase_exact,4,3,1,fixed_target_numerical,{},verified_numerical_witness,8.02483804693863e-12,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,65
-CSXdg,sqrt_swap_u,projective,4,3,1,fixed_target_numerical,{},verified_numerical_witness,8.02483804693863e-12,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,65
-CSXdg,google_syc,phase_exact,2,2,0,fixed_target_numerical,{},verified_numerical_witness,1.0245154072492242e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,64
-CSXdg,google_syc,projective,2,2,0,fixed_target_numerical,{},verified_numerical_witness,1.0245154072492242e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,64
-CSXdg,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-CSXdg,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-CT,sqrt_swap_u,phase_exact,4,,,fixed_target_numerical,{},no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,67
-CT,sqrt_swap_u,projective,4,,,fixed_target_numerical,{},no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,67
-CT,google_syc,phase_exact,2,2,0,fixed_target_numerical,{},verified_numerical_witness,3.692239928188761e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,66
-CT,google_syc,projective,2,2,0,fixed_target_numerical,{},verified_numerical_witness,3.692239928188761e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,66
-CT,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-CT,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-CTdg,sqrt_swap_u,phase_exact,4,,,fixed_target_numerical,{},no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,69
-CTdg,sqrt_swap_u,projective,4,,,fixed_target_numerical,{},no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,69
-CTdg,google_syc,phase_exact,2,2,0,fixed_target_numerical,{},verified_numerical_witness,3.726542968229503e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,68
-CTdg,google_syc,projective,2,2,0,fixed_target_numerical,{},verified_numerical_witness,3.726542968229503e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,68
-CTdg,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-CTdg,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-ACX,sqrt_swap_u,phase_exact,2,2,0,fixed_target_numerical,{},verified_numerical_witness,2.6606901229717857e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,71
-ACX,sqrt_swap_u,projective,2,2,0,fixed_target_numerical,{},verified_numerical_witness,2.6606901229717857e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,71
-ACX,google_syc,phase_exact,2,2,0,fixed_target_numerical,{},verified_numerical_witness,2.574574510556005e-12,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,70
-ACX,google_syc,projective,2,2,0,fixed_target_numerical,{},verified_numerical_witness,2.574574510556005e-12,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,70
-ACX,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-ACX,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-DCX,sqrt_swap_u,phase_exact,4,,,fixed_target_numerical,{},no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,73
-DCX,sqrt_swap_u,projective,4,,,fixed_target_numerical,{},no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,73
-DCX,google_syc,phase_exact,12,3,9,fixed_target_numerical,{},verified_numerical_witness,1.2365864682125108e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,72
-DCX,google_syc,projective,12,3,9,fixed_target_numerical,{},verified_numerical_witness,1.2365864682125108e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,72
-DCX,tket_tk2,phase_exact,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-DCX,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-ECR,sqrt_swap_u,phase_exact,2,2,0,fixed_target_numerical,{},verified_numerical_witness,2.6996760046448302e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,75
-ECR,sqrt_swap_u,projective,2,2,0,fixed_target_numerical,{},verified_numerical_witness,2.6996760046448302e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,75
-ECR,google_syc,phase_exact,2,2,0,fixed_target_numerical,{},verified_numerical_witness,1.825829071503087e-12,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,74
-ECR,google_syc,projective,2,2,0,fixed_target_numerical,{},verified_numerical_witness,1.825829071503087e-12,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,74
-ECR,tket_tk2,phase_exact,4,1,3,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-ECR,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-Rzx,sqrt_swap_u,phase_exact,4,,,one_named_parameter_sample_only,"{""theta"": ""pi/7""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,77
-Rzx,sqrt_swap_u,projective,4,,,one_named_parameter_sample_only,"{""theta"": ""pi/7""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,77
-Rzx,google_syc,phase_exact,2,2,0,one_named_parameter_sample_only,"{""theta"": ""pi/7""}",verified_numerical_witness,1.8787008024411148e-13,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,76
-Rzx,google_syc,projective,2,2,0,one_named_parameter_sample_only,"{""theta"": ""pi/7""}",verified_numerical_witness,1.8787008024411148e-13,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,76
-Rzx,tket_tk2,phase_exact,5,1,4,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-Rzx,tket_tk2,projective,2,1,1,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-Rxz,sqrt_swap_u,phase_exact,4,,,one_named_parameter_sample_only,"{""theta"": ""pi/7""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,79
-Rxz,sqrt_swap_u,projective,4,,,one_named_parameter_sample_only,"{""theta"": ""pi/7""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,79
-Rxz,google_syc,phase_exact,2,2,0,one_named_parameter_sample_only,"{""theta"": ""pi/7""}",verified_numerical_witness,2.811114835846131e-12,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,78
-Rxz,google_syc,projective,2,2,0,one_named_parameter_sample_only,"{""theta"": ""pi/7""}",verified_numerical_witness,2.811114835846131e-12,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,78
-Rxz,tket_tk2,phase_exact,5,1,4,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-Rxz,tket_tk2,projective,2,1,1,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-FSWAP,sqrt_swap_u,phase_exact,4,,,fixed_target_numerical,{},no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,81
-FSWAP,sqrt_swap_u,projective,4,,,fixed_target_numerical,{},no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,81
-FSWAP,google_syc,phase_exact,12,3,9,fixed_target_numerical,{},verified_numerical_witness,2.3912761364347628e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,80
-FSWAP,google_syc,projective,12,3,9,fixed_target_numerical,{},verified_numerical_witness,2.3912761364347628e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,80
-FSWAP,tket_tk2,phase_exact,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-FSWAP,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-SSWAPdg,sqrt_swap_u,phase_exact,3,3,0,fixed_target_numerical,{},verified_numerical_witness,8.025154038416283e-16,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,83
-SSWAPdg,sqrt_swap_u,projective,3,3,0,fixed_target_numerical,{},verified_numerical_witness,8.025154038416283e-16,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,83
-SSWAPdg,google_syc,phase_exact,18,3,15,fixed_target_numerical,{},verified_numerical_witness,3.1798746478263734e-12,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,82
-SSWAPdg,google_syc,projective,18,3,15,fixed_target_numerical,{},verified_numerical_witness,3.1798746478263734e-12,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,82
-SSWAPdg,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-SSWAPdg,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-SiSWAPdg,sqrt_swap_u,phase_exact,4,,,fixed_target_numerical,{},no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,85
-SiSWAPdg,sqrt_swap_u,projective,4,,,fixed_target_numerical,{},no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,85
-SiSWAPdg,google_syc,phase_exact,12,2,10,fixed_target_numerical,{},verified_numerical_witness,8.25232590446673e-16,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,84
-SiSWAPdg,google_syc,projective,12,2,10,fixed_target_numerical,{},verified_numerical_witness,8.25232590446673e-16,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,84
-SiSWAPdg,tket_tk2,phase_exact,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-SiSWAPdg,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-Canonical,sqrt_swap_u,phase_exact,6,,,one_named_parameter_sample_only,"{""a"": ""pi/7"", ""b"": ""2*pi/9"", ""c"": ""3*pi/11""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,87
-Canonical,sqrt_swap_u,projective,6,,,one_named_parameter_sample_only,"{""a"": ""pi/7"", ""b"": ""2*pi/9"", ""c"": ""3*pi/11""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,87
-Canonical,google_syc,phase_exact,18,3,15,one_named_parameter_sample_only,"{""a"": ""pi/7"", ""b"": ""2*pi/9"", ""c"": ""3*pi/11""}",verified_numerical_witness,6.28376071157338e-13,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,86
-Canonical,google_syc,projective,18,3,15,one_named_parameter_sample_only,"{""a"": ""pi/7"", ""b"": ""2*pi/9"", ""c"": ""3*pi/11""}",verified_numerical_witness,6.28376071157338e-13,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,86
-Canonical,tket_tk2,phase_exact,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-Canonical,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-B,sqrt_swap_u,phase_exact,4,3,1,fixed_target_numerical,{},verified_numerical_witness,2.2065682614424986e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,89
-B,sqrt_swap_u,projective,4,3,1,fixed_target_numerical,{},verified_numerical_witness,2.2065682614424986e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,89
-B,google_syc,phase_exact,12,2,10,fixed_target_numerical,{},verified_numerical_witness,3.2429603651601017e-13,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,88
-B,google_syc,projective,12,2,10,fixed_target_numerical,{},verified_numerical_witness,3.2429603651601017e-13,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,88
-B,tket_tk2,phase_exact,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-B,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-DB,sqrt_swap_u,phase_exact,4,3,1,fixed_target_numerical,{},verified_numerical_witness,5.411467360944844e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,91
-DB,sqrt_swap_u,projective,4,3,1,fixed_target_numerical,{},verified_numerical_witness,5.411467360944844e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,91
-DB,google_syc,phase_exact,12,2,10,fixed_target_numerical,{},verified_numerical_witness,4.750517088693478e-13,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,90
-DB,google_syc,projective,12,2,10,fixed_target_numerical,{},verified_numerical_witness,4.750517088693478e-13,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,90
-DB,tket_tk2,phase_exact,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-DB,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-Barenco,sqrt_swap_u,phase_exact,4,,,one_named_parameter_sample_only,"{""alpha"": ""pi/7"", ""phi"": ""2*pi/9"", ""theta"": ""3*pi/11""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,93
-Barenco,sqrt_swap_u,projective,4,,,one_named_parameter_sample_only,"{""alpha"": ""pi/7"", ""phi"": ""2*pi/9"", ""theta"": ""3*pi/11""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,93
-Barenco,google_syc,phase_exact,2,2,0,one_named_parameter_sample_only,"{""alpha"": ""pi/7"", ""phi"": ""2*pi/9"", ""theta"": ""3*pi/11""}",verified_numerical_witness,1.0104127647309991e-12,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,92
-Barenco,google_syc,projective,2,2,0,one_named_parameter_sample_only,"{""alpha"": ""pi/7"", ""phi"": ""2*pi/9"", ""theta"": ""3*pi/11""}",verified_numerical_witness,1.0104127647309991e-12,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,92
-Barenco,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-Barenco,tket_tk2,projective,2,1,1,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-Magic,sqrt_swap_u,phase_exact,2,2,0,fixed_target_numerical,{},verified_numerical_witness,2.1469082004024453e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,95
-Magic,sqrt_swap_u,projective,2,2,0,fixed_target_numerical,{},verified_numerical_witness,2.1469082004024453e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,95
-Magic,google_syc,phase_exact,6,2,4,fixed_target_numerical,{},verified_numerical_witness,1.870261155753525e-12,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,94
-Magic,google_syc,projective,6,2,4,fixed_target_numerical,{},verified_numerical_witness,1.870261155753525e-12,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,94
-Magic,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-Magic,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-Givens,sqrt_swap_u,phase_exact,4,,,one_named_parameter_sample_only,"{""theta"": ""pi/7""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,97
-Givens,sqrt_swap_u,projective,4,,,one_named_parameter_sample_only,"{""theta"": ""pi/7""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,97
-Givens,google_syc,phase_exact,12,2,10,one_named_parameter_sample_only,"{""theta"": ""pi/7""}",verified_numerical_witness,5.73350209501634e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,96
-Givens,google_syc,projective,12,2,10,one_named_parameter_sample_only,"{""theta"": ""pi/7""}",verified_numerical_witness,5.73350209501634e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,96
-Givens,tket_tk2,phase_exact,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-Givens,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-CZS,sqrt_swap_u,phase_exact,8,,,one_named_parameter_sample_only,"{""gamma"": ""pi/7"", ""phi"": ""2*pi/9"", ""theta"": ""3*pi/11""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,99
-CZS,sqrt_swap_u,projective,8,,,one_named_parameter_sample_only,"{""gamma"": ""pi/7"", ""phi"": ""2*pi/9"", ""theta"": ""3*pi/11""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,99
-CZS,google_syc,phase_exact,24,2,22,one_named_parameter_sample_only,"{""gamma"": ""pi/7"", ""phi"": ""2*pi/9"", ""theta"": ""3*pi/11""}",verified_numerical_witness,1.5882407806437113e-13,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,98
-CZS,google_syc,projective,24,2,22,one_named_parameter_sample_only,"{""gamma"": ""pi/7"", ""phi"": ""2*pi/9"", ""theta"": ""3*pi/11""}",verified_numerical_witness,1.5882407806437113e-13,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,98
-CZS,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-CZS,tket_tk2,projective,2,1,1,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-XX90,sqrt_swap_u,phase_exact,2,2,0,fixed_target_numerical,{},verified_numerical_witness,2.932247100919671e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,101
-XX90,sqrt_swap_u,projective,2,2,0,fixed_target_numerical,{},verified_numerical_witness,2.932247100919671e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,101
-XX90,google_syc,phase_exact,2,2,0,fixed_target_numerical,{},verified_numerical_witness,1.8188017542578703e-12,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,100
-XX90,google_syc,projective,2,2,0,fixed_target_numerical,{},verified_numerical_witness,1.8188017542578703e-12,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,100
-XX90,tket_tk2,phase_exact,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-XX90,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-YY90,sqrt_swap_u,phase_exact,2,2,0,fixed_target_numerical,{},verified_numerical_witness,2.9328728447795866e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,103
-YY90,sqrt_swap_u,projective,2,2,0,fixed_target_numerical,{},verified_numerical_witness,2.9328728447795866e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,103
-YY90,google_syc,phase_exact,2,2,0,fixed_target_numerical,{},verified_numerical_witness,1.8187465006828793e-12,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,102
-YY90,google_syc,projective,2,2,0,fixed_target_numerical,{},verified_numerical_witness,1.8187465006828793e-12,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,102
-YY90,tket_tk2,phase_exact,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-YY90,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-ZZ90,sqrt_swap_u,phase_exact,2,2,0,fixed_target_numerical,{},verified_numerical_witness,2.3956169050954717e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,105
-ZZ90,sqrt_swap_u,projective,2,2,0,fixed_target_numerical,{},verified_numerical_witness,2.3956169050954717e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,105
-ZZ90,google_syc,phase_exact,2,2,0,fixed_target_numerical,{},verified_numerical_witness,2.5828021136240798e-12,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,104
-ZZ90,google_syc,projective,2,2,0,fixed_target_numerical,{},verified_numerical_witness,2.5828021136240798e-12,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,104
-ZZ90,tket_tk2,phase_exact,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-ZZ90,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-IonQMS,sqrt_swap_u,phase_exact,4,,,one_named_parameter_sample_only,"{""phi0"": ""pi/7"", ""phi1"": ""2*pi/9"", ""theta"": ""3*pi/11""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,107
-IonQMS,sqrt_swap_u,projective,4,,,one_named_parameter_sample_only,"{""phi0"": ""pi/7"", ""phi1"": ""2*pi/9"", ""theta"": ""3*pi/11""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,107
-IonQMS,google_syc,phase_exact,2,2,0,one_named_parameter_sample_only,"{""phi0"": ""pi/7"", ""phi1"": ""2*pi/9"", ""theta"": ""3*pi/11""}",verified_numerical_witness,3.5197090468214064e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,106
-IonQMS,google_syc,projective,2,2,0,one_named_parameter_sample_only,"{""phi0"": ""pi/7"", ""phi1"": ""2*pi/9"", ""theta"": ""3*pi/11""}",verified_numerical_witness,3.5197090468214064e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,106
-IonQMS,tket_tk2,phase_exact,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-IonQMS,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-IonQMSMax,sqrt_swap_u,phase_exact,4,2,2,one_named_parameter_sample_only,"{""phi0"": ""pi/7"", ""phi1"": ""2*pi/9""}",verified_numerical_witness,2.2740880088047374e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,109
-IonQMSMax,sqrt_swap_u,projective,4,2,2,one_named_parameter_sample_only,"{""phi0"": ""pi/7"", ""phi1"": ""2*pi/9""}",verified_numerical_witness,2.2740880088047374e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,109
-IonQMSMax,google_syc,phase_exact,2,2,0,one_named_parameter_sample_only,"{""phi0"": ""pi/7"", ""phi1"": ""2*pi/9""}",verified_numerical_witness,1.8838270784495693e-12,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,108
-IonQMSMax,google_syc,projective,2,2,0,one_named_parameter_sample_only,"{""phi0"": ""pi/7"", ""phi1"": ""2*pi/9""}",verified_numerical_witness,1.8838270784495693e-12,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,108
-IonQMSMax,tket_tk2,phase_exact,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-IonQMSMax,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-IonQZZ,sqrt_swap_u,phase_exact,4,,,one_named_parameter_sample_only,"{""theta"": ""pi/7""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,111
-IonQZZ,sqrt_swap_u,projective,4,,,one_named_parameter_sample_only,"{""theta"": ""pi/7""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,111
-IonQZZ,google_syc,phase_exact,2,2,0,one_named_parameter_sample_only,"{""theta"": ""pi/7""}",verified_numerical_witness,5.658141389512453e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,110
-IonQZZ,google_syc,projective,2,2,0,one_named_parameter_sample_only,"{""theta"": ""pi/7""}",verified_numerical_witness,5.658141389512453e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,110
-IonQZZ,tket_tk2,phase_exact,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-IonQZZ,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-ZZPhase,sqrt_swap_u,phase_exact,4,,,one_named_parameter_sample_only,"{""alpha"": ""pi/7""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,113
-ZZPhase,sqrt_swap_u,projective,4,,,one_named_parameter_sample_only,"{""alpha"": ""pi/7""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,113
-ZZPhase,google_syc,phase_exact,2,2,0,one_named_parameter_sample_only,"{""alpha"": ""pi/7""}",verified_numerical_witness,1.1186059178113276e-12,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,112
-ZZPhase,google_syc,projective,2,2,0,one_named_parameter_sample_only,"{""alpha"": ""pi/7""}",verified_numerical_witness,1.1186059178113276e-12,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,112
-ZZPhase,tket_tk2,phase_exact,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-ZZPhase,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-ZZMax,sqrt_swap_u,phase_exact,2,2,0,fixed_target_numerical,{},verified_numerical_witness,2.3956169050954717e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,115
-ZZMax,sqrt_swap_u,projective,2,2,0,fixed_target_numerical,{},verified_numerical_witness,2.3956169050954717e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,115
-ZZMax,google_syc,phase_exact,2,2,0,fixed_target_numerical,{},verified_numerical_witness,2.5828021136240798e-12,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,114
-ZZMax,google_syc,projective,2,2,0,fixed_target_numerical,{},verified_numerical_witness,2.5828021136240798e-12,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,114
-ZZMax,tket_tk2,phase_exact,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-ZZMax,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-TK2,sqrt_swap_u,phase_exact,6,,,one_named_parameter_sample_only,"{""a"": ""pi/7"", ""b"": ""2*pi/9"", ""c"": ""3*pi/11""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,117
-TK2,sqrt_swap_u,projective,6,,,one_named_parameter_sample_only,"{""a"": ""pi/7"", ""b"": ""2*pi/9"", ""c"": ""3*pi/11""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,117
-TK2,google_syc,phase_exact,18,3,15,one_named_parameter_sample_only,"{""a"": ""pi/7"", ""b"": ""2*pi/9"", ""c"": ""3*pi/11""}",verified_numerical_witness,1.0444930166586065e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,116
-TK2,google_syc,projective,18,3,15,one_named_parameter_sample_only,"{""a"": ""pi/7"", ""b"": ""2*pi/9"", ""c"": ""3*pi/11""}",verified_numerical_witness,1.0444930166586065e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,116
-TK2,tket_tk2,phase_exact,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-TK2,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-XX,tket_tk2,phase_exact,0,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-XX,tket_tk2,projective,0,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-YY,tket_tk2,phase_exact,0,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-YY,tket_tk2,projective,0,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-ZZ,tket_tk2,phase_exact,0,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-ZZ,tket_tk2,projective,0,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-PhasedFSim,sqrt_swap_u,phase_exact,6,,,one_named_parameter_sample_only,"{""chi"": ""pi/7"", ""gamma"": ""2*pi/9"", ""phi"": ""3*pi/11"", ""theta"": ""4*pi/13"", ""zeta"": ""pi/3""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,119
-PhasedFSim,sqrt_swap_u,projective,6,,,one_named_parameter_sample_only,"{""chi"": ""pi/7"", ""gamma"": ""2*pi/9"", ""phi"": ""3*pi/11"", ""theta"": ""4*pi/13"", ""zeta"": ""pi/3""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,119
-PhasedFSim,google_syc,phase_exact,18,3,15,one_named_parameter_sample_only,"{""chi"": ""pi/7"", ""gamma"": ""2*pi/9"", ""phi"": ""3*pi/11"", ""theta"": ""4*pi/13"", ""zeta"": ""pi/3""}",verified_numerical_witness,2.758042097565431e-12,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,118
-PhasedFSim,google_syc,projective,18,3,15,one_named_parameter_sample_only,"{""chi"": ""pi/7"", ""gamma"": ""2*pi/9"", ""phi"": ""3*pi/11"", ""theta"": ""4*pi/13"", ""zeta"": ""pi/3""}",verified_numerical_witness,2.758042097565431e-12,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,118
-PhasedFSim,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-PhasedFSim,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-CXPow,sqrt_swap_u,phase_exact,4,,,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""t"": ""2*pi/9""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,121
-CXPow,sqrt_swap_u,projective,4,,,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""t"": ""2*pi/9""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,121
-CXPow,google_syc,phase_exact,2,2,0,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""t"": ""2*pi/9""}",verified_numerical_witness,2.646881076441054e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,120
-CXPow,google_syc,projective,2,2,0,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""t"": ""2*pi/9""}",verified_numerical_witness,2.646881076441054e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,120
-CXPow,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-CXPow,tket_tk2,projective,2,1,1,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-CZPow,sqrt_swap_u,phase_exact,4,,,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""t"": ""2*pi/9""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,123
-CZPow,sqrt_swap_u,projective,4,,,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""t"": ""2*pi/9""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,123
-CZPow,google_syc,phase_exact,2,2,0,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""t"": ""2*pi/9""}",verified_numerical_witness,3.462222981534574e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,122
-CZPow,google_syc,projective,2,2,0,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""t"": ""2*pi/9""}",verified_numerical_witness,3.462222981534574e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,122
-CZPow,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-CZPow,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-SWAPPow,sqrt_swap_u,phase_exact,6,,,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""t"": ""2*pi/9""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,125
-SWAPPow,sqrt_swap_u,projective,6,,,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""t"": ""2*pi/9""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,125
-SWAPPow,google_syc,phase_exact,18,3,15,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""t"": ""2*pi/9""}",verified_numerical_witness,1.2269879532935529e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,124
-SWAPPow,google_syc,projective,18,3,15,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""t"": ""2*pi/9""}",verified_numerical_witness,1.2269879532935529e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,124
-SWAPPow,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-SWAPPow,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-FSWAPPow,sqrt_swap_u,phase_exact,4,,,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""t"": ""2*pi/9""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,127
-FSWAPPow,sqrt_swap_u,projective,4,,,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""t"": ""2*pi/9""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,127
-FSWAPPow,google_syc,phase_exact,12,2,10,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""t"": ""2*pi/9""}",verified_numerical_witness,2.8102517030222117e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,126
-FSWAPPow,google_syc,projective,12,2,10,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""t"": ""2*pi/9""}",verified_numerical_witness,2.8102517030222117e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,126
-FSWAPPow,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-FSWAPPow,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-XXPow,sqrt_swap_u,phase_exact,4,,,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""t"": ""2*pi/9""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,129
-XXPow,sqrt_swap_u,projective,4,,,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""t"": ""2*pi/9""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,129
-XXPow,google_syc,phase_exact,2,2,0,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""t"": ""2*pi/9""}",verified_numerical_witness,1.0753939692159249e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,128
-XXPow,google_syc,projective,2,2,0,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""t"": ""2*pi/9""}",verified_numerical_witness,1.0753939692159249e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,128
-XXPow,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-XXPow,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-YYPow,sqrt_swap_u,phase_exact,4,,,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""t"": ""2*pi/9""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,131
-YYPow,sqrt_swap_u,projective,4,,,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""t"": ""2*pi/9""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,131
-YYPow,google_syc,phase_exact,2,2,0,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""t"": ""2*pi/9""}",verified_numerical_witness,1.1427884281743525e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,130
-YYPow,google_syc,projective,2,2,0,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""t"": ""2*pi/9""}",verified_numerical_witness,1.1427884281743525e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,130
-YYPow,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-YYPow,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-ZZPow,sqrt_swap_u,phase_exact,4,,,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""t"": ""2*pi/9""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,133
-ZZPow,sqrt_swap_u,projective,4,,,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""t"": ""2*pi/9""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,133
-ZZPow,google_syc,phase_exact,2,2,0,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""t"": ""2*pi/9""}",verified_numerical_witness,1.8087182314373716e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,132
-ZZPow,google_syc,projective,2,2,0,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""t"": ""2*pi/9""}",verified_numerical_witness,1.8087182314373716e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,132
-ZZPow,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-ZZPow,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-ISWAPPow,sqrt_swap_u,phase_exact,4,,,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""t"": ""2*pi/9""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,135
-ISWAPPow,sqrt_swap_u,projective,4,,,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""t"": ""2*pi/9""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,135
-ISWAPPow,google_syc,phase_exact,12,2,10,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""t"": ""2*pi/9""}",verified_numerical_witness,1.056171682913856e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,134
-ISWAPPow,google_syc,projective,12,2,10,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""t"": ""2*pi/9""}",verified_numerical_witness,1.056171682913856e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,134
-ISWAPPow,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-ISWAPPow,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-PhasedISWAPPow,sqrt_swap_u,phase_exact,4,,,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""phase_exponent"": ""2*pi/9"", ""t"": ""3*pi/11""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,137
-PhasedISWAPPow,sqrt_swap_u,projective,4,,,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""phase_exponent"": ""2*pi/9"", ""t"": ""3*pi/11""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,137
-PhasedISWAPPow,google_syc,phase_exact,12,3,9,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""phase_exponent"": ""2*pi/9"", ""t"": ""3*pi/11""}",verified_numerical_witness,8.671119018262734e-16,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,136
-PhasedISWAPPow,google_syc,projective,12,3,9,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""phase_exponent"": ""2*pi/9"", ""t"": ""3*pi/11""}",verified_numerical_witness,8.671119018262734e-16,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,136
-PhasedISWAPPow,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-PhasedISWAPPow,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-Diagonal,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-Diagonal,tket_tk2,projective,0,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-Unitary,sqrt_swap_u,phase_exact,4,3,1,fixed_target_numerical,{},verified_numerical_witness,2.2065682614424986e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,139
-Unitary,sqrt_swap_u,projective,4,3,1,fixed_target_numerical,{},verified_numerical_witness,2.2065682614424986e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,139
-Unitary,google_syc,phase_exact,12,2,10,fixed_target_numerical,{},verified_numerical_witness,3.2429603651601017e-13,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,138
-Unitary,google_syc,projective,12,2,10,fixed_target_numerical,{},verified_numerical_witness,3.2429603651601017e-13,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,138
-Unitary,tket_tk2,phase_exact,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-Unitary,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-LinearFunction,sqrt_swap_u,phase_exact,2,2,0,fixed_target_numerical,{},verified_numerical_witness,2.3342940299049172e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,141
-LinearFunction,sqrt_swap_u,projective,2,2,0,fixed_target_numerical,{},verified_numerical_witness,2.3342940299049172e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,141
-LinearFunction,google_syc,phase_exact,2,2,0,fixed_target_numerical,{},verified_numerical_witness,2.6329494515011794e-12,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,140
-LinearFunction,google_syc,projective,2,2,0,fixed_target_numerical,{},verified_numerical_witness,2.6329494515011794e-12,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,140
-LinearFunction,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-LinearFunction,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-UC,sqrt_swap_u,phase_exact,4,,,fixed_target_numerical,{},no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,143
-UC,sqrt_swap_u,projective,4,,,fixed_target_numerical,{},no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,143
-UC,google_syc,phase_exact,2,2,0,fixed_target_numerical,{},verified_numerical_witness,1.987299698638601e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,142
-UC,google_syc,projective,2,2,0,fixed_target_numerical,{},verified_numerical_witness,1.987299698638601e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,142
-UC,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-UC,tket_tk2,projective,2,1,1,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-UCRX,sqrt_swap_u,phase_exact,4,,,one_named_parameter_sample_only,"{""alpha"": ""pi/7"", ""beta"": ""2*pi/9""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,145
-UCRX,sqrt_swap_u,projective,4,,,one_named_parameter_sample_only,"{""alpha"": ""pi/7"", ""beta"": ""2*pi/9""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,145
-UCRX,google_syc,phase_exact,12,2,10,one_named_parameter_sample_only,"{""alpha"": ""pi/7"", ""beta"": ""2*pi/9""}",verified_numerical_witness,1.042687287661249e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,144
-UCRX,google_syc,projective,2,2,0,one_named_parameter_sample_only,"{""alpha"": ""pi/7"", ""beta"": ""2*pi/9""}",verified_numerical_witness,1.042687287661249e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,144
-UCRX,tket_tk2,phase_exact,5,1,4,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-UCRX,tket_tk2,projective,2,1,1,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-UCRY,sqrt_swap_u,phase_exact,4,,,one_named_parameter_sample_only,"{""alpha"": ""pi/7"", ""beta"": ""2*pi/9""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,147
-UCRY,sqrt_swap_u,projective,4,,,one_named_parameter_sample_only,"{""alpha"": ""pi/7"", ""beta"": ""2*pi/9""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,147
-UCRY,google_syc,phase_exact,2,2,0,one_named_parameter_sample_only,"{""alpha"": ""pi/7"", ""beta"": ""2*pi/9""}",verified_numerical_witness,1.4461487605627605e-12,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,146
-UCRY,google_syc,projective,2,2,0,one_named_parameter_sample_only,"{""alpha"": ""pi/7"", ""beta"": ""2*pi/9""}",verified_numerical_witness,1.4461487605627605e-12,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,146
-UCRY,tket_tk2,phase_exact,5,1,4,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-UCRY,tket_tk2,projective,2,1,1,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-UCRZ,sqrt_swap_u,phase_exact,4,,,one_named_parameter_sample_only,"{""alpha"": ""pi/7"", ""beta"": ""2*pi/9""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,149
-UCRZ,sqrt_swap_u,projective,4,,,one_named_parameter_sample_only,"{""alpha"": ""pi/7"", ""beta"": ""2*pi/9""}",no_fit_within_budget,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,149
-UCRZ,google_syc,phase_exact,2,2,0,one_named_parameter_sample_only,"{""alpha"": ""pi/7"", ""beta"": ""2*pi/9""}",verified_numerical_witness,1.0915283732621828e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,148
-UCRZ,google_syc,projective,2,2,0,one_named_parameter_sample_only,"{""alpha"": ""pi/7"", ""beta"": ""2*pi/9""}",verified_numerical_witness,1.0915283732621828e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,148
-UCRZ,tket_tk2,phase_exact,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
-UCRZ,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,
+gate,basis,mode,exact_entanglers,reachable_entanglers,gap,scope,substitutions,status,lower_bound,error,audit_sha256,audit_row
+CX,sqrt_swap_u,phase_exact,2,2,0,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,41
+CX,sqrt_swap_u,projective,2,2,0,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,41
+CX,google_syc,phase_exact,2,2,0,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,40
+CX,google_syc,projective,2,2,0,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,40
+CX,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+CX,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+CNOT,sqrt_swap_u,phase_exact,2,2,0,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,9
+CNOT,sqrt_swap_u,projective,2,2,0,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,9
+CNOT,google_syc,phase_exact,2,2,0,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,8
+CNOT,google_syc,projective,2,2,0,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,8
+CNOT,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+CNOT,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+CY,sqrt_swap_u,phase_exact,2,2,0,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,45
+CY,sqrt_swap_u,projective,2,2,0,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,45
+CY,google_syc,phase_exact,2,2,0,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,44
+CY,google_syc,projective,2,2,0,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,44
+CY,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+CY,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+CZ,sqrt_swap_u,phase_exact,2,2,0,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,47
+CZ,sqrt_swap_u,projective,2,2,0,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,47
+CZ,google_syc,phase_exact,2,2,0,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,46
+CZ,google_syc,projective,2,2,0,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,46
+CZ,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+CZ,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+CRX,sqrt_swap_u,phase_exact,4,4,0,one_named_parameter_sample_only_proved,"{""theta"": ""pi/7""}",proved_native_class_minimum,4,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,17
+CRX,sqrt_swap_u,projective,4,4,0,one_named_parameter_sample_only_proved,"{""theta"": ""pi/7""}",proved_native_class_minimum,4,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,17
+CRX,google_syc,phase_exact,2,2,0,one_named_parameter_sample_only_proved,"{""theta"": ""pi/7""}",proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,16
+CRX,google_syc,projective,2,2,0,one_named_parameter_sample_only_proved,"{""theta"": ""pi/7""}",proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,16
+CRX,tket_tk2,phase_exact,5,1,4,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+CRX,tket_tk2,projective,2,1,1,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+CRY,sqrt_swap_u,phase_exact,4,4,0,one_named_parameter_sample_only_proved,"{""theta"": ""pi/7""}",proved_native_class_minimum,4,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,19
+CRY,sqrt_swap_u,projective,4,4,0,one_named_parameter_sample_only_proved,"{""theta"": ""pi/7""}",proved_native_class_minimum,4,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,19
+CRY,google_syc,phase_exact,2,2,0,one_named_parameter_sample_only_proved,"{""theta"": ""pi/7""}",proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,18
+CRY,google_syc,projective,2,2,0,one_named_parameter_sample_only_proved,"{""theta"": ""pi/7""}",proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,18
+CRY,tket_tk2,phase_exact,5,1,4,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+CRY,tket_tk2,projective,2,1,1,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+CRZ,sqrt_swap_u,phase_exact,4,4,0,one_named_parameter_sample_only_proved,"{""theta"": ""pi/7""}",proved_native_class_minimum,4,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,21
+CRZ,sqrt_swap_u,projective,4,4,0,one_named_parameter_sample_only_proved,"{""theta"": ""pi/7""}",proved_native_class_minimum,4,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,21
+CRZ,google_syc,phase_exact,2,2,0,one_named_parameter_sample_only_proved,"{""theta"": ""pi/7""}",proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,20
+CRZ,google_syc,projective,2,2,0,one_named_parameter_sample_only_proved,"{""theta"": ""pi/7""}",proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,20
+CRZ,tket_tk2,phase_exact,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+CRZ,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+CSX,sqrt_swap_u,phase_exact,4,3,1,fixed_target_proved_minimum,{},proved_native_class_minimum,3,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,25
+CSX,sqrt_swap_u,projective,4,3,1,fixed_target_proved_minimum,{},proved_native_class_minimum,3,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,25
+CSX,google_syc,phase_exact,2,2,0,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,24
+CSX,google_syc,projective,2,2,0,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,24
+CSX,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+CSX,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+CS,sqrt_swap_u,phase_exact,4,3,1,fixed_target_proved_minimum,{},proved_native_class_minimum,3,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,23
+CS,sqrt_swap_u,projective,4,3,1,fixed_target_proved_minimum,{},proved_native_class_minimum,3,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,23
+CS,google_syc,phase_exact,2,2,0,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,22
+CS,google_syc,projective,2,2,0,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,22
+CS,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+CS,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+CH,sqrt_swap_u,phase_exact,2,2,0,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,7
+CH,sqrt_swap_u,projective,2,2,0,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,7
+CH,google_syc,phase_exact,2,2,0,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,6
+CH,google_syc,projective,2,2,0,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,6
+CH,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+CH,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+CP,sqrt_swap_u,phase_exact,4,4,0,one_named_parameter_sample_only_proved,"{""phi"": ""pi/7""}",proved_native_class_minimum,4,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,11
+CP,sqrt_swap_u,projective,4,4,0,one_named_parameter_sample_only_proved,"{""phi"": ""pi/7""}",proved_native_class_minimum,4,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,11
+CP,google_syc,phase_exact,2,2,0,one_named_parameter_sample_only_proved,"{""phi"": ""pi/7""}",proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,10
+CP,google_syc,projective,2,2,0,one_named_parameter_sample_only_proved,"{""phi"": ""pi/7""}",proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,10
+CP,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+CP,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+CU1,sqrt_swap_u,phase_exact,4,4,0,one_named_parameter_sample_only_proved,"{""theta"": ""pi/7""}",proved_native_class_minimum,4,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,37
+CU1,sqrt_swap_u,projective,4,4,0,one_named_parameter_sample_only_proved,"{""theta"": ""pi/7""}",proved_native_class_minimum,4,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,37
+CU1,google_syc,phase_exact,2,2,0,one_named_parameter_sample_only_proved,"{""theta"": ""pi/7""}",proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,36
+CU1,google_syc,projective,2,2,0,one_named_parameter_sample_only_proved,"{""theta"": ""pi/7""}",proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,36
+CU1,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+CU1,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+CU,sqrt_swap_u,phase_exact,4,,,one_named_parameter_sample_only,"{""gamma"": ""pi/7"", ""lbda"": ""2*pi/9"", ""phi"": ""3*pi/11"", ""theta"": ""4*pi/13""}",no_fit_within_budget,,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,25
+CU,sqrt_swap_u,projective,4,,,one_named_parameter_sample_only,"{""gamma"": ""pi/7"", ""lbda"": ""2*pi/9"", ""phi"": ""3*pi/11"", ""theta"": ""4*pi/13""}",no_fit_within_budget,,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,25
+CU,google_syc,phase_exact,12,2,10,one_named_parameter_sample_only,"{""gamma"": ""pi/7"", ""lbda"": ""2*pi/9"", ""phi"": ""3*pi/11"", ""theta"": ""4*pi/13""}",verified_numerical_witness,,3.742987305959159e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,24
+CU,google_syc,projective,12,2,10,one_named_parameter_sample_only,"{""gamma"": ""pi/7"", ""lbda"": ""2*pi/9"", ""phi"": ""3*pi/11"", ""theta"": ""4*pi/13""}",verified_numerical_witness,,3.742987305959159e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,24
+CU,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+CU,tket_tk2,projective,2,1,1,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+CU3,sqrt_swap_u,phase_exact,4,,,one_named_parameter_sample_only,"{""lbda"": ""pi/7"", ""phi"": ""2*pi/9"", ""theta"": ""3*pi/11""}",no_fit_within_budget,,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,27
+CU3,sqrt_swap_u,projective,4,,,one_named_parameter_sample_only,"{""lbda"": ""pi/7"", ""phi"": ""2*pi/9"", ""theta"": ""3*pi/11""}",no_fit_within_budget,,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,27
+CU3,google_syc,phase_exact,12,2,10,one_named_parameter_sample_only,"{""lbda"": ""pi/7"", ""phi"": ""2*pi/9"", ""theta"": ""3*pi/11""}",verified_numerical_witness,,3.065200913594196e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,26
+CU3,google_syc,projective,12,2,10,one_named_parameter_sample_only,"{""lbda"": ""pi/7"", ""phi"": ""2*pi/9"", ""theta"": ""3*pi/11""}",verified_numerical_witness,,3.065200913594196e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,26
+CU3,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+CU3,tket_tk2,projective,2,1,1,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+CR,sqrt_swap_u,phase_exact,4,4,0,one_named_parameter_sample_only_proved,"{""phi"": ""pi/7"", ""theta"": ""2*pi/9""}",proved_native_class_minimum,4,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,13
+CR,sqrt_swap_u,projective,4,4,0,one_named_parameter_sample_only_proved,"{""phi"": ""pi/7"", ""theta"": ""2*pi/9""}",proved_native_class_minimum,4,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,13
+CR,google_syc,phase_exact,2,2,0,one_named_parameter_sample_only_proved,"{""phi"": ""pi/7"", ""theta"": ""2*pi/9""}",proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,12
+CR,google_syc,projective,2,2,0,one_named_parameter_sample_only_proved,"{""phi"": ""pi/7"", ""theta"": ""2*pi/9""}",proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,12
+CR,tket_tk2,phase_exact,5,1,4,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+CR,tket_tk2,projective,2,1,1,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+CROT,sqrt_swap_u,phase_exact,4,4,0,one_named_parameter_sample_only_proved,"{""phi"": ""pi/7"", ""theta"": ""2*pi/9""}",proved_native_class_minimum,4,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,15
+CROT,sqrt_swap_u,projective,4,4,0,one_named_parameter_sample_only_proved,"{""phi"": ""pi/7"", ""theta"": ""2*pi/9""}",proved_native_class_minimum,4,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,15
+CROT,google_syc,phase_exact,2,2,0,one_named_parameter_sample_only_proved,"{""phi"": ""pi/7"", ""theta"": ""2*pi/9""}",proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,14
+CROT,google_syc,projective,2,2,0,one_named_parameter_sample_only_proved,"{""phi"": ""pi/7"", ""theta"": ""2*pi/9""}",proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,14
+CROT,tket_tk2,phase_exact,5,1,4,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+CROT,tket_tk2,projective,2,1,1,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+Rxx,sqrt_swap_u,phase_exact,4,4,0,one_named_parameter_sample_only_proved,"{""theta"": ""pi/7""}",proved_native_class_minimum,4,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,87
+Rxx,sqrt_swap_u,projective,4,4,0,one_named_parameter_sample_only_proved,"{""theta"": ""pi/7""}",proved_native_class_minimum,4,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,87
+Rxx,google_syc,phase_exact,2,2,0,one_named_parameter_sample_only_proved,"{""theta"": ""pi/7""}",proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,86
+Rxx,google_syc,projective,2,2,0,one_named_parameter_sample_only_proved,"{""theta"": ""pi/7""}",proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,86
+Rxx,tket_tk2,phase_exact,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+Rxx,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+Ryy,sqrt_swap_u,phase_exact,4,4,0,one_named_parameter_sample_only_proved,"{""theta"": ""pi/7""}",proved_native_class_minimum,4,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,93
+Ryy,sqrt_swap_u,projective,4,4,0,one_named_parameter_sample_only_proved,"{""theta"": ""pi/7""}",proved_native_class_minimum,4,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,93
+Ryy,google_syc,phase_exact,2,2,0,one_named_parameter_sample_only_proved,"{""theta"": ""pi/7""}",proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,92
+Ryy,google_syc,projective,2,2,0,one_named_parameter_sample_only_proved,"{""theta"": ""pi/7""}",proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,92
+Ryy,tket_tk2,phase_exact,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+Ryy,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+Rzz,sqrt_swap_u,phase_exact,4,4,0,one_named_parameter_sample_only_proved,"{""theta"": ""pi/7""}",proved_native_class_minimum,4,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,97
+Rzz,sqrt_swap_u,projective,4,4,0,one_named_parameter_sample_only_proved,"{""theta"": ""pi/7""}",proved_native_class_minimum,4,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,97
+Rzz,google_syc,phase_exact,2,2,0,one_named_parameter_sample_only_proved,"{""theta"": ""pi/7""}",proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,96
+Rzz,google_syc,projective,2,2,0,one_named_parameter_sample_only_proved,"{""theta"": ""pi/7""}",proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,96
+Rzz,tket_tk2,phase_exact,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+Rzz,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+Rxy,sqrt_swap_u,phase_exact,4,4,0,one_named_parameter_sample_only_proved,"{""phi"": ""pi/7""}",proved_native_class_minimum,4,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,89
+Rxy,sqrt_swap_u,projective,4,4,0,one_named_parameter_sample_only_proved,"{""phi"": ""pi/7""}",proved_native_class_minimum,4,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,89
+Rxy,google_syc,phase_exact,12,2,10,one_named_parameter_sample_only_proved,"{""phi"": ""pi/7""}",proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,88
+Rxy,google_syc,projective,12,2,10,one_named_parameter_sample_only_proved,"{""phi"": ""pi/7""}",proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,88
+Rxy,tket_tk2,phase_exact,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+Rxy,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+Rxmy,sqrt_swap_u,phase_exact,4,4,0,one_named_parameter_sample_only_proved,"{""phi"": ""pi/7""}",proved_native_class_minimum,4,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,85
+Rxmy,sqrt_swap_u,projective,4,4,0,one_named_parameter_sample_only_proved,"{""phi"": ""pi/7""}",proved_native_class_minimum,4,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,85
+Rxmy,google_syc,phase_exact,12,2,10,one_named_parameter_sample_only_proved,"{""phi"": ""pi/7""}",proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,84
+Rxmy,google_syc,projective,12,2,10,one_named_parameter_sample_only_proved,"{""phi"": ""pi/7""}",proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,84
+Rxmy,tket_tk2,phase_exact,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+Rxmy,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+xx_plus_yy,sqrt_swap_u,phase_exact,4,4,0,one_named_parameter_sample_only_proved,"{""beta"": ""pi/7"", ""phi"": ""2*pi/9""}",proved_native_class_minimum,4,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,149
+xx_plus_yy,sqrt_swap_u,projective,4,4,0,one_named_parameter_sample_only_proved,"{""beta"": ""pi/7"", ""phi"": ""2*pi/9""}",proved_native_class_minimum,4,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,149
+xx_plus_yy,google_syc,phase_exact,12,2,10,one_named_parameter_sample_only_proved,"{""beta"": ""pi/7"", ""phi"": ""2*pi/9""}",proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,148
+xx_plus_yy,google_syc,projective,12,2,10,one_named_parameter_sample_only_proved,"{""beta"": ""pi/7"", ""phi"": ""2*pi/9""}",proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,148
+xx_plus_yy,tket_tk2,phase_exact,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+xx_plus_yy,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+xx_minus_yy,sqrt_swap_u,phase_exact,4,4,0,one_named_parameter_sample_only_proved,"{""beta"": ""pi/7"", ""phi"": ""2*pi/9""}",proved_native_class_minimum,4,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,147
+xx_minus_yy,sqrt_swap_u,projective,4,4,0,one_named_parameter_sample_only_proved,"{""beta"": ""pi/7"", ""phi"": ""2*pi/9""}",proved_native_class_minimum,4,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,147
+xx_minus_yy,google_syc,phase_exact,12,2,10,one_named_parameter_sample_only_proved,"{""beta"": ""pi/7"", ""phi"": ""2*pi/9""}",proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,146
+xx_minus_yy,google_syc,projective,12,2,10,one_named_parameter_sample_only_proved,"{""beta"": ""pi/7"", ""phi"": ""2*pi/9""}",proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,146
+xx_minus_yy,tket_tk2,phase_exact,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+xx_minus_yy,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+iSWAP_pow,sqrt_swap_u,phase_exact,4,,,one_named_parameter_sample_only,"{""alpha"": ""pi/7""}",no_fit_within_budget,,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,47
+iSWAP_pow,sqrt_swap_u,projective,4,,,one_named_parameter_sample_only,"{""alpha"": ""pi/7""}",no_fit_within_budget,,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,47
+iSWAP_pow,google_syc,phase_exact,12,2,10,one_named_parameter_sample_only,"{""alpha"": ""pi/7""}",verified_numerical_witness,,1.4113405002813692e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,46
+iSWAP_pow,google_syc,projective,12,2,10,one_named_parameter_sample_only,"{""alpha"": ""pi/7""}",verified_numerical_witness,,1.4113405002813692e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,46
+iSWAP_pow,tket_tk2,phase_exact,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+iSWAP_pow,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+SYC,sqrt_swap_u,phase_exact,6,5,1,fixed_target_proved_minimum,{},proved_native_class_minimum,5,,521d648e18a24534f93b4a2522e1bdfdfd18f009a1a7961983acaa789611e41e,0
+SYC,sqrt_swap_u,projective,6,5,1,fixed_target_proved_minimum,{},proved_native_class_minimum,5,,521d648e18a24534f93b4a2522e1bdfdfd18f009a1a7961983acaa789611e41e,0
+SYC,google_syc,phase_exact,1,1,0,fixed_target_proved_minimum,{},proved_native_class_minimum,1,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,106
+SYC,google_syc,projective,1,1,0,fixed_target_proved_minimum,{},proved_native_class_minimum,1,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,106
+SYC,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+SYC,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+SWAP,sqrt_swap_u,phase_exact,2,2,0,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,103
+SWAP,sqrt_swap_u,projective,2,2,0,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,103
+SWAP,google_syc,phase_exact,18,3,15,fixed_target_proved_minimum,{},proved_native_class_minimum,3,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,102
+SWAP,google_syc,projective,18,3,15,fixed_target_proved_minimum,{},proved_native_class_minimum,3,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,102
+SWAP,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+SWAP,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+SSWAP,sqrt_swap_u,phase_exact,1,1,0,fixed_target_proved_minimum,{},proved_native_class_minimum,1,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,99
+SSWAP,sqrt_swap_u,projective,1,1,0,fixed_target_proved_minimum,{},proved_native_class_minimum,1,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,99
+SSWAP,google_syc,phase_exact,18,3,15,fixed_target_proved_minimum,{},proved_native_class_minimum,3,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,98
+SSWAP,google_syc,projective,18,3,15,fixed_target_proved_minimum,{},proved_native_class_minimum,3,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,98
+SSWAP,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+SSWAP,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+iSWAP,sqrt_swap_u,phase_exact,4,4,0,fixed_target_proved_minimum,{},proved_native_class_minimum,4,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,143
+iSWAP,sqrt_swap_u,projective,4,4,0,fixed_target_proved_minimum,{},proved_native_class_minimum,4,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,143
+iSWAP,google_syc,phase_exact,12,3,9,fixed_target_proved_minimum,{},proved_native_class_minimum,3,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,142
+iSWAP,google_syc,projective,12,3,9,fixed_target_proved_minimum,{},proved_native_class_minimum,3,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,142
+iSWAP,tket_tk2,phase_exact,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+iSWAP,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+SiSWAP,sqrt_swap_u,phase_exact,4,4,0,fixed_target_proved_minimum,{},proved_native_class_minimum,4,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,109
+SiSWAP,sqrt_swap_u,projective,4,4,0,fixed_target_proved_minimum,{},proved_native_class_minimum,4,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,109
+SiSWAP,google_syc,phase_exact,12,2,10,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,108
+SiSWAP,google_syc,projective,12,2,10,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,108
+SiSWAP,tket_tk2,phase_exact,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+SiSWAP,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+CZPowGate,sqrt_swap_u,phase_exact,4,,,one_named_parameter_sample_only,"{""t"": ""pi/7""}",no_fit_within_budget,,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,59
+CZPowGate,sqrt_swap_u,projective,4,,,one_named_parameter_sample_only,"{""t"": ""pi/7""}",no_fit_within_budget,,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,59
+CZPowGate,google_syc,phase_exact,2,2,0,one_named_parameter_sample_only,"{""t"": ""pi/7""}",verified_numerical_witness,,1.3972010377463624e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,58
+CZPowGate,google_syc,projective,2,2,0,one_named_parameter_sample_only,"{""t"": ""pi/7""}",verified_numerical_witness,,1.3972010377463624e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,58
+CZPowGate,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+CZPowGate,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+fSim,sqrt_swap_u,phase_exact,6,4,2,one_named_parameter_sample_only_proved,"{""phi"": ""pi/7"", ""theta"": ""2*pi/9""}",proved_native_class_minimum,4,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,141
+fSim,sqrt_swap_u,projective,6,4,2,one_named_parameter_sample_only_proved,"{""phi"": ""pi/7"", ""theta"": ""2*pi/9""}",proved_native_class_minimum,4,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,141
+fSim,google_syc,phase_exact,18,3,15,one_named_parameter_sample_only_proved,"{""phi"": ""pi/7"", ""theta"": ""2*pi/9""}",proved_native_class_minimum,3,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,140
+fSim,google_syc,projective,18,3,15,one_named_parameter_sample_only_proved,"{""phi"": ""pi/7"", ""theta"": ""2*pi/9""}",proved_native_class_minimum,3,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,140
+fSim,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+fSim,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+CSdg,sqrt_swap_u,phase_exact,4,3,1,fixed_target_proved_minimum,{},proved_native_class_minimum,3,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,29
+CSdg,sqrt_swap_u,projective,4,3,1,fixed_target_proved_minimum,{},proved_native_class_minimum,3,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,29
+CSdg,google_syc,phase_exact,2,2,0,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,28
+CSdg,google_syc,projective,2,2,0,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,28
+CSdg,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+CSdg,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+CSXdg,sqrt_swap_u,phase_exact,4,3,1,fixed_target_proved_minimum,{},proved_native_class_minimum,3,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,27
+CSXdg,sqrt_swap_u,projective,4,3,1,fixed_target_proved_minimum,{},proved_native_class_minimum,3,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,27
+CSXdg,google_syc,phase_exact,2,2,0,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,26
+CSXdg,google_syc,projective,2,2,0,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,26
+CSXdg,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+CSXdg,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+CT,sqrt_swap_u,phase_exact,4,4,0,fixed_target_proved_minimum,{},proved_native_class_minimum,4,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,31
+CT,sqrt_swap_u,projective,4,4,0,fixed_target_proved_minimum,{},proved_native_class_minimum,4,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,31
+CT,google_syc,phase_exact,2,2,0,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,30
+CT,google_syc,projective,2,2,0,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,30
+CT,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+CT,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+CTdg,sqrt_swap_u,phase_exact,4,4,0,fixed_target_proved_minimum,{},proved_native_class_minimum,4,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,33
+CTdg,sqrt_swap_u,projective,4,4,0,fixed_target_proved_minimum,{},proved_native_class_minimum,4,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,33
+CTdg,google_syc,phase_exact,2,2,0,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,32
+CTdg,google_syc,projective,2,2,0,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,32
+CTdg,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+CTdg,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+ACX,sqrt_swap_u,phase_exact,2,2,0,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,1
+ACX,sqrt_swap_u,projective,2,2,0,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,1
+ACX,google_syc,phase_exact,2,2,0,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,0
+ACX,google_syc,projective,2,2,0,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,0
+ACX,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+ACX,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+DCX,sqrt_swap_u,phase_exact,4,4,0,fixed_target_proved_minimum,{},proved_native_class_minimum,4,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,59
+DCX,sqrt_swap_u,projective,4,4,0,fixed_target_proved_minimum,{},proved_native_class_minimum,4,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,59
+DCX,google_syc,phase_exact,12,3,9,fixed_target_proved_minimum,{},proved_native_class_minimum,3,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,58
+DCX,google_syc,projective,12,3,9,fixed_target_proved_minimum,{},proved_native_class_minimum,3,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,58
+DCX,tket_tk2,phase_exact,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+DCX,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+ECR,sqrt_swap_u,phase_exact,2,2,0,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,61
+ECR,sqrt_swap_u,projective,2,2,0,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,61
+ECR,google_syc,phase_exact,2,2,0,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,60
+ECR,google_syc,projective,2,2,0,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,60
+ECR,tket_tk2,phase_exact,4,1,3,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+ECR,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+Rzx,sqrt_swap_u,phase_exact,4,4,0,one_named_parameter_sample_only_proved,"{""theta"": ""pi/7""}",proved_native_class_minimum,4,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,95
+Rzx,sqrt_swap_u,projective,4,4,0,one_named_parameter_sample_only_proved,"{""theta"": ""pi/7""}",proved_native_class_minimum,4,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,95
+Rzx,google_syc,phase_exact,2,2,0,one_named_parameter_sample_only_proved,"{""theta"": ""pi/7""}",proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,94
+Rzx,google_syc,projective,2,2,0,one_named_parameter_sample_only_proved,"{""theta"": ""pi/7""}",proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,94
+Rzx,tket_tk2,phase_exact,5,1,4,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+Rzx,tket_tk2,projective,2,1,1,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+Rxz,sqrt_swap_u,phase_exact,4,4,0,one_named_parameter_sample_only_proved,"{""theta"": ""pi/7""}",proved_native_class_minimum,4,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,91
+Rxz,sqrt_swap_u,projective,4,4,0,one_named_parameter_sample_only_proved,"{""theta"": ""pi/7""}",proved_native_class_minimum,4,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,91
+Rxz,google_syc,phase_exact,2,2,0,one_named_parameter_sample_only_proved,"{""theta"": ""pi/7""}",proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,90
+Rxz,google_syc,projective,2,2,0,one_named_parameter_sample_only_proved,"{""theta"": ""pi/7""}",proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,90
+Rxz,tket_tk2,phase_exact,5,1,4,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+Rxz,tket_tk2,projective,2,1,1,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+FSWAP,sqrt_swap_u,phase_exact,4,4,0,fixed_target_proved_minimum,{},proved_native_class_minimum,4,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,63
+FSWAP,sqrt_swap_u,projective,4,4,0,fixed_target_proved_minimum,{},proved_native_class_minimum,4,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,63
+FSWAP,google_syc,phase_exact,12,3,9,fixed_target_proved_minimum,{},proved_native_class_minimum,3,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,62
+FSWAP,google_syc,projective,12,3,9,fixed_target_proved_minimum,{},proved_native_class_minimum,3,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,62
+FSWAP,tket_tk2,phase_exact,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+FSWAP,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+SSWAPdg,sqrt_swap_u,phase_exact,3,3,0,fixed_target_proved_minimum,{},proved_native_class_minimum,3,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,101
+SSWAPdg,sqrt_swap_u,projective,3,3,0,fixed_target_proved_minimum,{},proved_native_class_minimum,3,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,101
+SSWAPdg,google_syc,phase_exact,18,3,15,fixed_target_proved_minimum,{},proved_native_class_minimum,3,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,100
+SSWAPdg,google_syc,projective,18,3,15,fixed_target_proved_minimum,{},proved_native_class_minimum,3,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,100
+SSWAPdg,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+SSWAPdg,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+SiSWAPdg,sqrt_swap_u,phase_exact,4,4,0,fixed_target_proved_minimum,{},proved_native_class_minimum,4,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,111
+SiSWAPdg,sqrt_swap_u,projective,4,4,0,fixed_target_proved_minimum,{},proved_native_class_minimum,4,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,111
+SiSWAPdg,google_syc,phase_exact,12,2,10,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,110
+SiSWAPdg,google_syc,projective,12,2,10,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,110
+SiSWAPdg,tket_tk2,phase_exact,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+SiSWAPdg,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+Canonical,sqrt_swap_u,phase_exact,6,,,one_named_parameter_sample_only,"{""a"": ""pi/7"", ""b"": ""2*pi/9"", ""c"": ""3*pi/11""}",no_fit_within_budget,,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,87
+Canonical,sqrt_swap_u,projective,6,,,one_named_parameter_sample_only,"{""a"": ""pi/7"", ""b"": ""2*pi/9"", ""c"": ""3*pi/11""}",no_fit_within_budget,,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,87
+Canonical,google_syc,phase_exact,18,3,15,one_named_parameter_sample_only,"{""a"": ""pi/7"", ""b"": ""2*pi/9"", ""c"": ""3*pi/11""}",verified_numerical_witness,,6.28376071157338e-13,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,86
+Canonical,google_syc,projective,18,3,15,one_named_parameter_sample_only,"{""a"": ""pi/7"", ""b"": ""2*pi/9"", ""c"": ""3*pi/11""}",verified_numerical_witness,,6.28376071157338e-13,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,86
+Canonical,tket_tk2,phase_exact,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+Canonical,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+B,sqrt_swap_u,phase_exact,4,3,1,fixed_target_proved_minimum,{},proved_native_class_minimum,3,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,3
+B,sqrt_swap_u,projective,4,3,1,fixed_target_proved_minimum,{},proved_native_class_minimum,3,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,3
+B,google_syc,phase_exact,12,2,10,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,2
+B,google_syc,projective,12,2,10,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,2
+B,tket_tk2,phase_exact,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+B,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+DB,sqrt_swap_u,phase_exact,4,3,1,fixed_target_proved_minimum,{},proved_native_class_minimum,3,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,57
+DB,sqrt_swap_u,projective,4,3,1,fixed_target_proved_minimum,{},proved_native_class_minimum,3,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,57
+DB,google_syc,phase_exact,12,2,10,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,56
+DB,google_syc,projective,12,2,10,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,56
+DB,tket_tk2,phase_exact,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+DB,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+Barenco,sqrt_swap_u,phase_exact,4,4,0,one_named_parameter_sample_only_proved,"{""alpha"": ""pi/7"", ""phi"": ""2*pi/9"", ""theta"": ""3*pi/11""}",proved_native_class_minimum,4,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,5
+Barenco,sqrt_swap_u,projective,4,4,0,one_named_parameter_sample_only_proved,"{""alpha"": ""pi/7"", ""phi"": ""2*pi/9"", ""theta"": ""3*pi/11""}",proved_native_class_minimum,4,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,5
+Barenco,google_syc,phase_exact,2,2,0,one_named_parameter_sample_only_proved,"{""alpha"": ""pi/7"", ""phi"": ""2*pi/9"", ""theta"": ""3*pi/11""}",proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,4
+Barenco,google_syc,projective,2,2,0,one_named_parameter_sample_only_proved,"{""alpha"": ""pi/7"", ""phi"": ""2*pi/9"", ""theta"": ""3*pi/11""}",proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,4
+Barenco,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+Barenco,tket_tk2,projective,2,1,1,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+Magic,sqrt_swap_u,phase_exact,2,2,0,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,79
+Magic,sqrt_swap_u,projective,2,2,0,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,79
+Magic,google_syc,phase_exact,6,2,4,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,78
+Magic,google_syc,projective,6,2,4,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,78
+Magic,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+Magic,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+Givens,sqrt_swap_u,phase_exact,4,4,0,one_named_parameter_sample_only_proved,"{""theta"": ""pi/7""}",proved_native_class_minimum,4,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,67
+Givens,sqrt_swap_u,projective,4,4,0,one_named_parameter_sample_only_proved,"{""theta"": ""pi/7""}",proved_native_class_minimum,4,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,67
+Givens,google_syc,phase_exact,12,2,10,one_named_parameter_sample_only_proved,"{""theta"": ""pi/7""}",proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,66
+Givens,google_syc,projective,12,2,10,one_named_parameter_sample_only_proved,"{""theta"": ""pi/7""}",proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,66
+Givens,tket_tk2,phase_exact,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+Givens,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+CZS,sqrt_swap_u,phase_exact,8,,,one_named_parameter_sample_only,"{""gamma"": ""pi/7"", ""phi"": ""2*pi/9"", ""theta"": ""3*pi/11""}",no_fit_within_budget,,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,99
+CZS,sqrt_swap_u,projective,8,,,one_named_parameter_sample_only,"{""gamma"": ""pi/7"", ""phi"": ""2*pi/9"", ""theta"": ""3*pi/11""}",no_fit_within_budget,,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,99
+CZS,google_syc,phase_exact,24,2,22,one_named_parameter_sample_only,"{""gamma"": ""pi/7"", ""phi"": ""2*pi/9"", ""theta"": ""3*pi/11""}",verified_numerical_witness,,1.5882407806437113e-13,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,98
+CZS,google_syc,projective,24,2,22,one_named_parameter_sample_only,"{""gamma"": ""pi/7"", ""phi"": ""2*pi/9"", ""theta"": ""3*pi/11""}",verified_numerical_witness,,1.5882407806437113e-13,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,98
+CZS,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+CZS,tket_tk2,projective,2,1,1,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+XX90,sqrt_swap_u,phase_exact,2,2,0,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,125
+XX90,sqrt_swap_u,projective,2,2,0,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,125
+XX90,google_syc,phase_exact,2,2,0,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,124
+XX90,google_syc,projective,2,2,0,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,124
+XX90,tket_tk2,phase_exact,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+XX90,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+YY90,sqrt_swap_u,phase_exact,2,2,0,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,129
+YY90,sqrt_swap_u,projective,2,2,0,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,129
+YY90,google_syc,phase_exact,2,2,0,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,128
+YY90,google_syc,projective,2,2,0,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,128
+YY90,tket_tk2,phase_exact,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+YY90,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+ZZ90,sqrt_swap_u,phase_exact,2,2,0,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,133
+ZZ90,sqrt_swap_u,projective,2,2,0,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,133
+ZZ90,google_syc,phase_exact,2,2,0,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,132
+ZZ90,google_syc,projective,2,2,0,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,132
+ZZ90,tket_tk2,phase_exact,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+ZZ90,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+IonQMS,sqrt_swap_u,phase_exact,4,,,one_named_parameter_sample_only,"{""phi0"": ""pi/7"", ""phi1"": ""2*pi/9"", ""theta"": ""3*pi/11""}",no_fit_within_budget,,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,107
+IonQMS,sqrt_swap_u,projective,4,,,one_named_parameter_sample_only,"{""phi0"": ""pi/7"", ""phi1"": ""2*pi/9"", ""theta"": ""3*pi/11""}",no_fit_within_budget,,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,107
+IonQMS,google_syc,phase_exact,2,2,0,one_named_parameter_sample_only,"{""phi0"": ""pi/7"", ""phi1"": ""2*pi/9"", ""theta"": ""3*pi/11""}",verified_numerical_witness,,3.5197090468214064e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,106
+IonQMS,google_syc,projective,2,2,0,one_named_parameter_sample_only,"{""phi0"": ""pi/7"", ""phi1"": ""2*pi/9"", ""theta"": ""3*pi/11""}",verified_numerical_witness,,3.5197090468214064e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,106
+IonQMS,tket_tk2,phase_exact,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+IonQMS,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+IonQMSMax,sqrt_swap_u,phase_exact,4,2,2,one_named_parameter_sample_only_proved,"{""phi0"": ""pi/7"", ""phi1"": ""2*pi/9""}",proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,73
+IonQMSMax,sqrt_swap_u,projective,4,2,2,one_named_parameter_sample_only_proved,"{""phi0"": ""pi/7"", ""phi1"": ""2*pi/9""}",proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,73
+IonQMSMax,google_syc,phase_exact,2,2,0,one_named_parameter_sample_only_proved,"{""phi0"": ""pi/7"", ""phi1"": ""2*pi/9""}",proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,72
+IonQMSMax,google_syc,projective,2,2,0,one_named_parameter_sample_only_proved,"{""phi0"": ""pi/7"", ""phi1"": ""2*pi/9""}",proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,72
+IonQMSMax,tket_tk2,phase_exact,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+IonQMSMax,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+IonQZZ,sqrt_swap_u,phase_exact,4,,,one_named_parameter_sample_only,"{""theta"": ""pi/7""}",no_fit_within_budget,,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,111
+IonQZZ,sqrt_swap_u,projective,4,,,one_named_parameter_sample_only,"{""theta"": ""pi/7""}",no_fit_within_budget,,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,111
+IonQZZ,google_syc,phase_exact,2,2,0,one_named_parameter_sample_only,"{""theta"": ""pi/7""}",verified_numerical_witness,,5.658141389512453e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,110
+IonQZZ,google_syc,projective,2,2,0,one_named_parameter_sample_only,"{""theta"": ""pi/7""}",verified_numerical_witness,,5.658141389512453e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,110
+IonQZZ,tket_tk2,phase_exact,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+IonQZZ,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+ZZPhase,sqrt_swap_u,phase_exact,4,,,one_named_parameter_sample_only,"{""alpha"": ""pi/7""}",no_fit_within_budget,,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,113
+ZZPhase,sqrt_swap_u,projective,4,,,one_named_parameter_sample_only,"{""alpha"": ""pi/7""}",no_fit_within_budget,,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,113
+ZZPhase,google_syc,phase_exact,2,2,0,one_named_parameter_sample_only,"{""alpha"": ""pi/7""}",verified_numerical_witness,,1.1186059178113276e-12,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,112
+ZZPhase,google_syc,projective,2,2,0,one_named_parameter_sample_only,"{""alpha"": ""pi/7""}",verified_numerical_witness,,1.1186059178113276e-12,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,112
+ZZPhase,tket_tk2,phase_exact,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+ZZPhase,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+ZZMax,sqrt_swap_u,phase_exact,2,2,0,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,135
+ZZMax,sqrt_swap_u,projective,2,2,0,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,135
+ZZMax,google_syc,phase_exact,2,2,0,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,134
+ZZMax,google_syc,projective,2,2,0,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,134
+ZZMax,tket_tk2,phase_exact,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+ZZMax,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+TK2,sqrt_swap_u,phase_exact,6,,,one_named_parameter_sample_only,"{""a"": ""pi/7"", ""b"": ""2*pi/9"", ""c"": ""3*pi/11""}",no_fit_within_budget,,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,117
+TK2,sqrt_swap_u,projective,6,,,one_named_parameter_sample_only,"{""a"": ""pi/7"", ""b"": ""2*pi/9"", ""c"": ""3*pi/11""}",no_fit_within_budget,,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,117
+TK2,google_syc,phase_exact,18,3,15,one_named_parameter_sample_only,"{""a"": ""pi/7"", ""b"": ""2*pi/9"", ""c"": ""3*pi/11""}",verified_numerical_witness,,1.0444930166586065e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,116
+TK2,google_syc,projective,18,3,15,one_named_parameter_sample_only,"{""a"": ""pi/7"", ""b"": ""2*pi/9"", ""c"": ""3*pi/11""}",verified_numerical_witness,,1.0444930166586065e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,116
+TK2,tket_tk2,phase_exact,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+TK2,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+XX,tket_tk2,phase_exact,0,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+XX,tket_tk2,projective,0,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+YY,tket_tk2,phase_exact,0,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+YY,tket_tk2,projective,0,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+ZZ,tket_tk2,phase_exact,0,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+ZZ,tket_tk2,projective,0,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+PhasedFSim,sqrt_swap_u,phase_exact,6,4,2,one_named_parameter_sample_only_proved,"{""chi"": ""pi/7"", ""gamma"": ""2*pi/9"", ""phi"": ""3*pi/11"", ""theta"": ""4*pi/13"", ""zeta"": ""pi/3""}",proved_native_class_minimum,4,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,81
+PhasedFSim,sqrt_swap_u,projective,6,4,2,one_named_parameter_sample_only_proved,"{""chi"": ""pi/7"", ""gamma"": ""2*pi/9"", ""phi"": ""3*pi/11"", ""theta"": ""4*pi/13"", ""zeta"": ""pi/3""}",proved_native_class_minimum,4,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,81
+PhasedFSim,google_syc,phase_exact,18,3,15,one_named_parameter_sample_only_proved,"{""chi"": ""pi/7"", ""gamma"": ""2*pi/9"", ""phi"": ""3*pi/11"", ""theta"": ""4*pi/13"", ""zeta"": ""pi/3""}",proved_native_class_minimum,3,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,80
+PhasedFSim,google_syc,projective,18,3,15,one_named_parameter_sample_only_proved,"{""chi"": ""pi/7"", ""gamma"": ""2*pi/9"", ""phi"": ""3*pi/11"", ""theta"": ""4*pi/13"", ""zeta"": ""pi/3""}",proved_native_class_minimum,3,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,80
+PhasedFSim,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+PhasedFSim,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+CXPow,sqrt_swap_u,phase_exact,4,,,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""t"": ""2*pi/9""}",no_fit_within_budget,,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,121
+CXPow,sqrt_swap_u,projective,4,,,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""t"": ""2*pi/9""}",no_fit_within_budget,,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,121
+CXPow,google_syc,phase_exact,2,2,0,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""t"": ""2*pi/9""}",verified_numerical_witness,,2.646881076441054e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,120
+CXPow,google_syc,projective,2,2,0,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""t"": ""2*pi/9""}",verified_numerical_witness,,2.646881076441054e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,120
+CXPow,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+CXPow,tket_tk2,projective,2,1,1,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+CZPow,sqrt_swap_u,phase_exact,4,,,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""t"": ""2*pi/9""}",no_fit_within_budget,,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,123
+CZPow,sqrt_swap_u,projective,4,,,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""t"": ""2*pi/9""}",no_fit_within_budget,,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,123
+CZPow,google_syc,phase_exact,2,2,0,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""t"": ""2*pi/9""}",verified_numerical_witness,,3.462222981534574e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,122
+CZPow,google_syc,projective,2,2,0,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""t"": ""2*pi/9""}",verified_numerical_witness,,3.462222981534574e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,122
+CZPow,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+CZPow,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+SWAPPow,sqrt_swap_u,phase_exact,6,,,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""t"": ""2*pi/9""}",no_fit_within_budget,,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,125
+SWAPPow,sqrt_swap_u,projective,6,,,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""t"": ""2*pi/9""}",no_fit_within_budget,,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,125
+SWAPPow,google_syc,phase_exact,18,3,15,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""t"": ""2*pi/9""}",verified_numerical_witness,,1.2269879532935529e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,124
+SWAPPow,google_syc,projective,18,3,15,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""t"": ""2*pi/9""}",verified_numerical_witness,,1.2269879532935529e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,124
+SWAPPow,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+SWAPPow,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+FSWAPPow,sqrt_swap_u,phase_exact,4,,,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""t"": ""2*pi/9""}",no_fit_within_budget,,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,127
+FSWAPPow,sqrt_swap_u,projective,4,,,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""t"": ""2*pi/9""}",no_fit_within_budget,,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,127
+FSWAPPow,google_syc,phase_exact,12,2,10,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""t"": ""2*pi/9""}",verified_numerical_witness,,2.8102517030222117e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,126
+FSWAPPow,google_syc,projective,12,2,10,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""t"": ""2*pi/9""}",verified_numerical_witness,,2.8102517030222117e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,126
+FSWAPPow,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+FSWAPPow,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+XXPow,sqrt_swap_u,phase_exact,4,,,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""t"": ""2*pi/9""}",no_fit_within_budget,,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,129
+XXPow,sqrt_swap_u,projective,4,,,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""t"": ""2*pi/9""}",no_fit_within_budget,,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,129
+XXPow,google_syc,phase_exact,2,2,0,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""t"": ""2*pi/9""}",verified_numerical_witness,,1.0753939692159249e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,128
+XXPow,google_syc,projective,2,2,0,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""t"": ""2*pi/9""}",verified_numerical_witness,,1.0753939692159249e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,128
+XXPow,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+XXPow,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+YYPow,sqrt_swap_u,phase_exact,4,,,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""t"": ""2*pi/9""}",no_fit_within_budget,,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,131
+YYPow,sqrt_swap_u,projective,4,,,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""t"": ""2*pi/9""}",no_fit_within_budget,,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,131
+YYPow,google_syc,phase_exact,2,2,0,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""t"": ""2*pi/9""}",verified_numerical_witness,,1.1427884281743525e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,130
+YYPow,google_syc,projective,2,2,0,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""t"": ""2*pi/9""}",verified_numerical_witness,,1.1427884281743525e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,130
+YYPow,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+YYPow,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+ZZPow,sqrt_swap_u,phase_exact,4,,,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""t"": ""2*pi/9""}",no_fit_within_budget,,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,133
+ZZPow,sqrt_swap_u,projective,4,,,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""t"": ""2*pi/9""}",no_fit_within_budget,,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,133
+ZZPow,google_syc,phase_exact,2,2,0,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""t"": ""2*pi/9""}",verified_numerical_witness,,1.8087182314373716e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,132
+ZZPow,google_syc,projective,2,2,0,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""t"": ""2*pi/9""}",verified_numerical_witness,,1.8087182314373716e-14,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,132
+ZZPow,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+ZZPow,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+ISWAPPow,sqrt_swap_u,phase_exact,4,,,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""t"": ""2*pi/9""}",no_fit_within_budget,,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,135
+ISWAPPow,sqrt_swap_u,projective,4,,,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""t"": ""2*pi/9""}",no_fit_within_budget,,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,135
+ISWAPPow,google_syc,phase_exact,12,2,10,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""t"": ""2*pi/9""}",verified_numerical_witness,,1.056171682913856e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,134
+ISWAPPow,google_syc,projective,12,2,10,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""t"": ""2*pi/9""}",verified_numerical_witness,,1.056171682913856e-15,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,134
+ISWAPPow,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+ISWAPPow,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+PhasedISWAPPow,sqrt_swap_u,phase_exact,4,,,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""phase_exponent"": ""2*pi/9"", ""t"": ""3*pi/11""}",no_fit_within_budget,,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,137
+PhasedISWAPPow,sqrt_swap_u,projective,4,,,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""phase_exponent"": ""2*pi/9"", ""t"": ""3*pi/11""}",no_fit_within_budget,,,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,137
+PhasedISWAPPow,google_syc,phase_exact,12,3,9,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""phase_exponent"": ""2*pi/9"", ""t"": ""3*pi/11""}",verified_numerical_witness,,8.671119018262734e-16,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,136
+PhasedISWAPPow,google_syc,projective,12,3,9,one_named_parameter_sample_only,"{""global_shift"": ""pi/7"", ""phase_exponent"": ""2*pi/9"", ""t"": ""3*pi/11""}",verified_numerical_witness,,8.671119018262734e-16,d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f,136
+PhasedISWAPPow,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+PhasedISWAPPow,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+Diagonal,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+Diagonal,tket_tk2,projective,0,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+Unitary,sqrt_swap_u,phase_exact,4,3,1,fixed_target_proved_minimum,{},proved_native_class_minimum,3,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,123
+Unitary,sqrt_swap_u,projective,4,3,1,fixed_target_proved_minimum,{},proved_native_class_minimum,3,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,123
+Unitary,google_syc,phase_exact,12,2,10,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,122
+Unitary,google_syc,projective,12,2,10,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,122
+Unitary,tket_tk2,phase_exact,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+Unitary,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+LinearFunction,sqrt_swap_u,phase_exact,2,2,0,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,77
+LinearFunction,sqrt_swap_u,projective,2,2,0,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,77
+LinearFunction,google_syc,phase_exact,2,2,0,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,76
+LinearFunction,google_syc,projective,2,2,0,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,76
+LinearFunction,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+LinearFunction,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+UC,sqrt_swap_u,phase_exact,4,4,0,fixed_target_proved_minimum,{},proved_native_class_minimum,4,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,115
+UC,sqrt_swap_u,projective,4,4,0,fixed_target_proved_minimum,{},proved_native_class_minimum,4,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,115
+UC,google_syc,phase_exact,2,2,0,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,114
+UC,google_syc,projective,2,2,0,fixed_target_proved_minimum,{},proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,114
+UC,tket_tk2,phase_exact,,,,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+UC,tket_tk2,projective,2,1,1,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+UCRX,sqrt_swap_u,phase_exact,4,4,0,one_named_parameter_sample_only_proved,"{""alpha"": ""pi/7"", ""beta"": ""2*pi/9""}",proved_native_class_minimum,4,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,117
+UCRX,sqrt_swap_u,projective,4,4,0,one_named_parameter_sample_only_proved,"{""alpha"": ""pi/7"", ""beta"": ""2*pi/9""}",proved_native_class_minimum,4,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,117
+UCRX,google_syc,phase_exact,12,2,10,one_named_parameter_sample_only_proved,"{""alpha"": ""pi/7"", ""beta"": ""2*pi/9""}",proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,116
+UCRX,google_syc,projective,2,2,0,one_named_parameter_sample_only_proved,"{""alpha"": ""pi/7"", ""beta"": ""2*pi/9""}",proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,116
+UCRX,tket_tk2,phase_exact,5,1,4,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+UCRX,tket_tk2,projective,2,1,1,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+UCRY,sqrt_swap_u,phase_exact,4,4,0,one_named_parameter_sample_only_proved,"{""alpha"": ""pi/7"", ""beta"": ""2*pi/9""}",proved_native_class_minimum,4,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,119
+UCRY,sqrt_swap_u,projective,4,4,0,one_named_parameter_sample_only_proved,"{""alpha"": ""pi/7"", ""beta"": ""2*pi/9""}",proved_native_class_minimum,4,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,119
+UCRY,google_syc,phase_exact,2,2,0,one_named_parameter_sample_only_proved,"{""alpha"": ""pi/7"", ""beta"": ""2*pi/9""}",proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,118
+UCRY,google_syc,projective,2,2,0,one_named_parameter_sample_only_proved,"{""alpha"": ""pi/7"", ""beta"": ""2*pi/9""}",proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,118
+UCRY,tket_tk2,phase_exact,5,1,4,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+UCRY,tket_tk2,projective,2,1,1,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+UCRZ,sqrt_swap_u,phase_exact,4,4,0,one_named_parameter_sample_only_proved,"{""alpha"": ""pi/7"", ""beta"": ""2*pi/9""}",proved_native_class_minimum,4,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,121
+UCRZ,sqrt_swap_u,projective,4,4,0,one_named_parameter_sample_only_proved,"{""alpha"": ""pi/7"", ""beta"": ""2*pi/9""}",proved_native_class_minimum,4,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,121
+UCRZ,google_syc,phase_exact,2,2,0,one_named_parameter_sample_only_proved,"{""alpha"": ""pi/7"", ""beta"": ""2*pi/9""}",proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,120
+UCRZ,google_syc,projective,2,2,0,one_named_parameter_sample_only_proved,"{""alpha"": ""pi/7"", ""beta"": ""2*pi/9""}",proved_native_class_minimum,2,,ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d,120
+UCRZ,tket_tk2,phase_exact,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,
+UCRZ,tket_tk2,projective,1,1,0,uniform_two_qubit_Cartan_capacity,{},known_analytic_capacity,,,,

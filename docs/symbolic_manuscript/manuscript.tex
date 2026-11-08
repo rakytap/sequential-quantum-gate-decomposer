@@ -1,7 +1,12 @@
+\ifdefined\QuantumSubmission
+\documentclass[a4paper,onecolumn,11pt,unpublished]{quantumarticle}
+\ifdefined\XeTeXversion\else\pdfoutput=1\fi
+\else
 \documentclass[11pt]{article}
 \usepackage[margin=25mm]{geometry}
+\fi
 \usepackage[T1]{fontenc}
-\usepackage{lmodern}
+\ifdefined\QuantumSubmission\else\usepackage{lmodern}\fi
 \usepackage{amsmath,amssymb,booktabs,array,graphicx}
 \usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
 \usepackage[braket,qm]{qcircuit}
@@ -16,11 +21,26 @@
 \newcommand{\Sqi}{\mathrm{SQiSW}}
 \newcommand{\A}{\mathcal A}
 \newcommand{\Id}{\mathbb I}
-\title{Controlling two-qubit involutions:\\CNOT costs and symbolic invariants}
-\author{Gregory Morse \and Peter Rakyta}
-\date{7 November 2026}
+\title{Controlling two-qubit involutions: CNOT costs and symbolic invariants}
+\ifdefined\QuantumSubmission
+\author{Gregory Morse}
+\affiliation{Department of Programming Languages and Compilers, E\"otv\"os Lor\'and University, Hungary}
+\author{P\'eter Rakyta}
+\affiliation{Department of Physics of Complex Systems, E\"otv\"os Lor\'and University, Hungary}
+\affiliation{Computational Sciences Department, HUN-REN Wigner Research Centre for Physics, Hungary}
+\else
+\author{Gregory Morse$^{1}$ \and P\'eter Rakyta$^{2,3}$}
+\fi
+\date{8 November 2026}
 \begin{document}
 \maketitle
+\ifdefined\QuantumSubmission\else
+\begin{center}\small
+$^1$Department of Programming Languages and Compilers, E\"otv\"os Lor\'and University, Hungary\\
+$^2$Department of Physics of Complex Systems, E\"otv\"os Lor\'and University, Hungary\\
+$^3$Computational Sciences Department, HUN-REN Wigner Research Centre for Physics, Hungary
+\end{center}
+\fi
 \begin{abstract}
 We classify the ancilla-free CNOT cost of controlling a traceless Hermitian
 involution on two qubits, allowing arbitrary one-qubit unitaries. The minimum
@@ -32,7 +52,7 @@ six-rotation circuit, whereas three unrestricted two-qubit gates suffice.
 We extend the normal-form analysis to every spectral stratum of two-qubit
 involutions. Trace-\(\pm2\) reflections form a one-Schmidt-angle family
 joining controlled-controlled-Z and Fredkin: we give exact eight-CNOT and
-six-unrestricted-gate upper bounds and partial lower bounds in its interior.
+five-unrestricted-gate upper bounds and partial lower bounds in its interior.
 Finally, we reformulate the known two-SQiSW region as a necessary-and-sufficient
 real polynomial test in matrix entries, suitable for symbolic families.
 The accompanying symbolic library, phase-resolved circuits, and row-level
@@ -383,10 +403,10 @@ where
  \quad0\le\theta\le\pi/4.
 \end{equation}
 Every $C(\pm R_\theta)$ has an ancilla-free literal construction with at most
-eight CNOTs, or six unrestricted two-qubit gates. For $0<\theta<\pi/4$,
+eight CNOTs, or five unrestricted two-qubit gates. For $0<\theta<\pi/4$,
 \begin{equation}
  4\le E_{\CNOT}(C(R_\theta))\le8,\qquad
- 3\le E_{\mathrm{arb}}(C(R_\theta))\le6.
+ 3\le E_{\mathrm{arb}}(C(R_\theta))\le5.
 \end{equation}
 At $\theta=0$ the respective exact minima are six and five. At
 $\theta=\pi/4$ the unrestricted minimum is five, and the CNOT bounds are
@@ -404,15 +424,29 @@ $J_\theta|00\rangle=|\psi_\theta\rangle$,
  C(R_\theta)=J_\theta(X_aX_b)\,CCZ_{c,a,b}\,(X_aX_b)J_\theta^\dagger.
 \end{equation}
 A six-CNOT $CCZ$ word plus the two outer target CNOTs gives eight;
-all identities are literal. For the unrestricted count use the five-gate
-$CCZ$ word, in time order,
+all identities are literal. For the improved unrestricted count put
 \[
- CS_{a,b},\quad\CNOT_{c,a},\quad CS_{a,b}^\dagger,\quad
- \CNOT_{c,a},\quad CS_{c,b}.
+ B_0=\frac1{\sqrt2}\begin{pmatrix}
+ 0&0&1&1\\0&0&-1&1\\-i&1&0&0\\i&1&0&0
+ \end{pmatrix},\quad
+ \widetilde J_\theta=\CNOT_{b,a}R_y(2\theta)_b,\quad
+ B_\theta=B_0\widetilde J_\theta^\dagger.
 \]
-Absorb the preceding $(X_aX_b)J_\theta^\dagger$ into its first $ab$ gate.
-The final $J_\theta(X_aX_b)$ is one further unrestricted $ab$ gate,
-so six suffice. The release checks both words for a free real $\theta$.
+The matrix basis is $|ba\rangle$, with $a$ the least significant target wire.
+All factors are explicitly unitary. Since $X_a$ commutes with
+$\widetilde J_\theta$,
+\[
+ B_\theta R_\theta X_aB_\theta^\dagger=Z_aS_b
+       =\operatorname{diag}(1,-1,i,-i).
+\]
+Consequently the following five gates, in time order, implement $C(R_\theta)$:
+\begin{equation}\label{eq:five-reflection}
+ \CNOT_{c,a},\quad B_{\theta,ab},\quad CS_{c,b},\quad
+ CZ_{c,a},\quad B_{\theta,ab}^\dagger.
+\end{equation}
+The zero-control branch is $B_\theta^\dagger B_\theta=I$, and the one-control
+branch is $B_\theta^\dagger Z_aS_bB_\theta X_a=R_\theta$.
+The release proves this literal identity with $\theta$ free.
 
 Direct realignment of $R_\theta$ gives
 \begin{equation}\label{eq:reflectionminor}
@@ -426,13 +460,14 @@ CCZ. Shende--Markov's six-CNOT and Yu--Duan--Ying's five-unrestricted-gate
 bounds apply \cite{toffolicnot,yuduan}. At $\pi/4$, a local Pauli frame maps
 $|\psi_\theta\rangle$ to the singlet. Reflection about the singlet is SWAP,
 so this endpoint is locally Fredkin. Yu--Ying gives its unrestricted
-minimum five \cite{yuying}; the known seven-CNOT construction supplies the
-stated upper bound \cite{fredkinshallow}. No seven-CNOT lower bound is used.
+minimum five \cite{yuying}; seven CNOTs is the best known construction count in our literature
+audit, and supplies the stated upper bound \cite{fredkinshallow}. Seven is not asserted to be a proved minimum.
 \end{proof}
 Thus all spectral strata have explicit normal forms and constructions.
 Only the balanced stratum has a complete interaction-cost classification;
-the interpolation between the Toffoli and Fredkin endpoints is a concrete
-remaining optimization problem.
+the interpolation between the Toffoli and Fredkin endpoints remains a concrete
+optimization problem. In particular, the five-gate word proves a uniform
+upper bound, not a five-gate lower bound in the interior.
 
 \section{An invariant characterization of the two-SQiSW region}
 Let $\Gamma=U(YY)U^T(YY)$ and $\Delta=\det U$. Define the scalar-independent
@@ -498,6 +533,13 @@ obstruction type, and matched proof scope, with a row-level optimality ledger.
 The finite Clifford+T shortest-word certificates are a regression/reference
 resource alongside established synthesis theory \cite{matsumoto,kmm,giles,gilesma}.
 
+An exact monodromy audit now certifies the minimum pulse counts of all
+64 fixed-target/native pairs in the audited SYC and square-root-SWAP columns.
+Other records certify named parameter samples. Exact rational primal and
+Farkas certificates decide membership and exclusion; exact complete invariants
+certify the coordinate conversion \cite{peterson,makhlin}. A count theorem
+can establish existence of a shorter word while its explicit symbolic local
+frames remain unfinished. Those two facts are displayed separately in the atlas.
 The exact controlled-phase SYC chart now uses two native pulses, and DCX
 has an explicit one-TK2 word. The atlas also flags remaining shorter
 \emph{numerical} witnesses in the SYC and $\sqrt{\mathrm{SWAP}}$ columns,
@@ -518,12 +560,24 @@ connectivity, and no ancillas. A restricted local alphabet needs its own
 native construction. The Ising lower bound permits arbitrary interaction
 angles but does not apply to unrestricted two-qubit gates. The trace-$\pm2$
 interior has partial bounds; determining its exact costs is open.
+We conjecture five unrestricted gates and seven CNOTs for every
+$0<\theta\le\pi/4$. The five-gate unrestricted upper bound is proved.
+The supplement records seven-CNOT numerical witnesses at ten angle values,
+including $\pi/8$ and $3/10$, with literal matrix replays. These samples
+supply neither a seven-CNOT family identity nor the missing lower bounds.
+The Fredkin endpoint likewise has a best known seven-CNOT word, with no
+seven-CNOT minimum claimed here.
 Continuous local-cost minima and all-grid interaction optimality are also
 open, and twenty shared-expression scores remain unevaluated. Numerical
 witnesses supply optimization leads, not exact identities or impossibility
 proofs. We infer no calibrated pulse latency or fidelity gain from local-box
 counts. The analytical proofs have exact checked components rather than
 proof-assistant formalizations.
+
+\paragraph{Author contributions.}
+Gregory Morse: conceptualization, methodology, software, mathematical analysis,
+validation, experiments, data curation, visualization, and original draft.
+P\'eter Rakyta: scientific discussions, drafting, reviewing, and editing.
 
 \paragraph{Use of AI.}
 An OpenAI Codex assistant supported implementation, calculations, experiments,

@@ -12,10 +12,10 @@
         "constructed": 1871,
         "positive": 1754,
         "raw_flag": 608,
-        "fixed": 707,
+        "fixed": 717,
         "obstruction": 657,
-        "uniform": 710,
-        "unproved": 337,
+        "uniform": 747,
+        "unproved": 290,
         "zero": 117
       },
       "3": {
@@ -54,10 +54,10 @@
         "cells": 2528,
         "constructed": 2375,
         "positive": 2247,
-        "fixed": 954,
+        "fixed": 964,
         "raw_flag": 356,
-        "uniform": 955,
-        "unproved": 338,
+        "uniform": 993,
+        "unproved": 290,
         "obstruction": 153,
         "zero": 128
       },
@@ -101,15 +101,16 @@
       "determinant_and_clifford_t_field": 16
     }
   },
-  "row_ledger_sha256": "f272e97c4766a6b2b8726ca65c5d9ba32b116d93b75eac5fea9e3deacea41693",
+  "row_ledger_sha256": "f7fa9ba645ddddefde55d6a572ed4d4d49ea03d4fff120d391d7482c3f1a03b9",
   "native_gap_annotations": {
     "sqrt_swap_u": {
       "modes": 150,
-      "witnesses": 48,
-      "positive_gap": 16,
-      "fixed_gap": 14,
-      "sample_gap": 2,
-      "analytic_gap": 0
+      "witnesses": 112,
+      "positive_gap": 22,
+      "fixed_gap": 16,
+      "sample_gap": 6,
+      "analytic_gap": 0,
+      "proved_minima": 112
     },
     "google_syc": {
       "modes": 150,
@@ -117,7 +118,8 @@
       "positive_gap": 59,
       "fixed_gap": 24,
       "sample_gap": 35,
-      "analytic_gap": 0
+      "analytic_gap": 0,
+      "proved_minima": 112
     },
     "tket_tk2": {
       "modes": 158,
@@ -125,12 +127,13 @@
       "positive_gap": 23,
       "fixed_gap": 0,
       "sample_gap": 0,
-      "analytic_gap": 23
+      "analytic_gap": 23,
+      "proved_minima": 0
     }
   },
   "schema": "symbolic-referee-revision-v1",
   "archive": "benchmarks/symbolic/synthesis_reference_20261107_referee.json.gz",
-  "archive_sha256": "22dee9b1b6fc30c27c1e54ac623bb77a8a1881b1937013f2ab192121cbb62252",
+  "archive_sha256": "f0e67c123e43d26c999cc39ef5865d153ceb7f9ad5742b5d9be35f76b8492495",
   "sdk_statuses": {
     "qiskit": {
       "verified_numeric": 14

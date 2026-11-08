@@ -1,0 +1,70 @@
+{
+  "schema": "native-monodromy-verification-v1",
+  "artifacts": {
+    "native_monodromy_20261108.json.gz": {
+      "sha256": "ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d",
+      "verified_records": 112,
+      "statuses": {
+        "proved_native_class_minimum": 111,
+        "proof_deadline": 30,
+        "coordinate_not_certified": 8,
+        "proved_lower_bound": 1
+      },
+      "sources": [
+        {
+          "path": "examples/decomposition/symbolic_monodromy_audit.py",
+          "sha256": "d146043ca41a77f043f0e46c57633a9ac4331f6493d9ed7c85fa393663e368e0",
+          "resolution": "historical_source",
+          "revision": "0e626c78f89413201ae6f45ba5df3384e92496fa"
+        },
+        {
+          "path": "squander/decomposition/symbolic_monodromy.py",
+          "sha256": "305d98c1f0da88247d6977f6a2441261a2305d3d961b6a0ae2bf06303cf77596",
+          "resolution": "included_current_source"
+        },
+        {
+          "path": "squander/decomposition/symbolic_monodromy_qlr.json",
+          "sha256": "918877b18f43379f967c972571391434ee7e926cdd41a5ecb696c1c202fc2771",
+          "resolution": "included_current_source"
+        },
+        {
+          "path": "squander/decomposition/symbolic_reflection_involution.py",
+          "sha256": "534e119df082dfbe9845fbc5e2846179b6db488b4b358180b5754fb6e83b1088",
+          "resolution": "included_current_source"
+        }
+      ]
+    },
+    "native_monodromy_deep_20261108.json.gz": {
+      "sha256": "521d648e18a24534f93b4a2522e1bdfdfd18f009a1a7961983acaa789611e41e",
+      "verified_records": 1,
+      "statuses": {
+        "proved_native_class_minimum": 1
+      },
+      "sources": [
+        {
+          "path": "examples/decomposition/symbolic_monodromy_audit.py",
+          "sha256": "8265c72d0b5db2513657991b65ceabb9a36f0a8f517a5f9a9fb2e53ea9b9ceda",
+          "resolution": "included_current_source"
+        },
+        {
+          "path": "squander/decomposition/symbolic_monodromy.py",
+          "sha256": "305d98c1f0da88247d6977f6a2441261a2305d3d961b6a0ae2bf06303cf77596",
+          "resolution": "included_current_source"
+        },
+        {
+          "path": "squander/decomposition/symbolic_monodromy_qlr.json",
+          "sha256": "918877b18f43379f967c972571391434ee7e926cdd41a5ecb696c1c202fc2771",
+          "resolution": "included_current_source"
+        },
+        {
+          "path": "squander/decomposition/symbolic_reflection_involution.py",
+          "sha256": "534e119df082dfbe9845fbc5e2846179b6db488b4b358180b5754fb6e83b1088",
+          "resolution": "included_current_source"
+        }
+      ]
+    }
+  },
+  "unique_minimum_records": 112,
+  "fixed_target_native_pairs": 64,
+  "scope": "Exact native-class E minima with arbitrary U(2) locals. Family rows apply only to named substitutions. No short local-frame word or local minimum is implied."
+}
