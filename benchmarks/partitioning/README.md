@@ -1,6 +1,23 @@
 # Wide-circuit benchmark datasets
 
-The wide-circuit optimization example reads the two source datasets here and
+For a short API demonstration, run
+`python examples/decomposition/wide_circuit_optimization.py` or
+`python examples/partitioning/example_partition.py` from the repository root.
+The first optimizes one three-qubit circuit; the second partitions one with ILP.
+
+Run the resumable dataset benchmark from its benchmark location:
+
+```bash
+python benchmarks/partitioning/wide_circuit_optimization.py --help
+python benchmarks/partitioning/wide_circuit_optimization.py \
+  --circuit QASMBenchmarks/adder_n4.qasm --partition-size 3 \
+  --output-root benchmarks/partitioning/local_runs
+```
+
+Moving the driver leaves dataset/result paths and the frozen archives unchanged.
+Its source fingerprint records the driver's current location for new runs.
+
+The wide-circuit optimization benchmark reads the two source datasets here and
 writes optimized OpenQASM 2 circuits with identical filenames into
 `<dataset>_results_<width>qbit_<strategy>/`, with metadata in each directory's
 `results.json`. The datasets are `IBMEagle` and `QASMBenchmarks`, the maximum
@@ -23,7 +40,7 @@ A2A/final partition widths are 3 and 4, and the archived strategies are
 
 The two input directories contain 77 circuits in total. The eight current
 result directories are populated by
-`examples/decomposition/wide_circuit_optimization.py` and the BQSKit comparison
+`benchmarks/partitioning/wide_circuit_optimization.py` and the BQSKit comparison
 workflow. Directories with `_old` suffixes and scratch experiments are not part
 of the archived comparison.
 

@@ -26,8 +26,8 @@ backend = importlib.import_module(
 
 
 def load_exporter():
-    # Load only the helper, without starting the example's benchmark driver.
-    source = ROOT / "examples/decomposition/wide_circuit_optimization.py"
+    # Load only the helper, without starting the dataset benchmark driver.
+    source = ROOT / "benchmarks/partitioning/wide_circuit_optimization.py"
     tree = ast.parse(source.read_text())
     function = next(node for node in tree.body
                     if isinstance(node, ast.FunctionDef) and node.name == "save_qasm2")
