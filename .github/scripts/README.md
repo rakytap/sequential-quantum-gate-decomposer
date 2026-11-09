@@ -21,6 +21,13 @@ macOS repair edits binaries and adds bundled libraries. It must finish with
 hashes. See the [wheel pack documentation](https://wheel.readthedocs.io/en/stable/reference/wheel_pack.html)
 and the [wheel file specification](https://packaging.python.org/en/latest/specifications/binary-distribution-format/).
 
+On Linux, native extensions must retain an install RPATH to the bundled
+`squander/libqgd.so` (for modules in a child directory, `$ORIGIN/..`). The
+packaging tests build and install a small module with the production density
+matrix CMake rules, repair its wheel with auditwheel, and load the relocated
+module without `LD_LIBRARY_PATH`. The manylinux job stops on repair failure and
+only replaces original wheels after the repaired RECORDs pass verification.
+
 ## build_wheel.sh
 
 Creates a minimal conda environment, builds a wheel, and fixes it with auditwheel (Linux only).

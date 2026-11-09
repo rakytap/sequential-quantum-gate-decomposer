@@ -330,9 +330,10 @@ jobs:
         run: |
           docker run --rm -v ${{ github.workspace }}:/io \
             quay.io/pypa/${{ matrix.image }} \
-            /bin/bash -c "
+            /bin/bash -e -c "
               yum install -y cmake tbb-devel openblas-devel lapack-devel
               PYTHON_TAG=$(echo '${{ matrix.python-version }}' | tr -d '.')
+              export PATH=/opt/python/cp\${PYTHON_TAG}-cp\${PYTHON_TAG}/bin:\${PATH}
               /opt/python/cp\${PYTHON_TAG}-cp\${PYTHON_TAG}/bin/pip install --upgrade pip
               /opt/python/cp\${PYTHON_TAG}-cp\${PYTHON_TAG}/bin/pip install --upgrade build setuptools wheel scikit-build ninja numpy auditwheel
               
@@ -375,8 +376,11 @@ jobs:
               /opt/python/cp\${PYTHON_TAG}-cp\${PYTHON_TAG}/bin/python -m build --wheel
               
               # Repair wheel - auditwheel should now find TBB in /usr/lib64
-              /opt/python/cp\${PYTHON_TAG}-cp\${PYTHON_TAG}/bin/auditwheel repair dist/*.whl -w dist/
+              /opt/python/cp\${PYTHON_TAG}-cp\${PYTHON_TAG}/bin/auditwheel repair dist/*.whl -w wheelhouse/
+              /opt/python/cp\${PYTHON_TAG}-cp\${PYTHON_TAG}/bin/python .github/scripts/check_wheel_records.py 'wheelhouse/*.whl'
+              # Keep the original until repair and RECORD verification succeed.
               rm -f dist/*linux_x86_64.whl
+              mv wheelhouse/*.whl dist/
             "
 
       - name: Verify repaired wheel RECORDs
