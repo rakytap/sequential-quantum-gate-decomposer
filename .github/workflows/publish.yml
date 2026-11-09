@@ -285,13 +285,21 @@ jobs:
         shell: pwsh
         run: |
           $wheel = Get-ChildItem dist/*.whl | Select-Object -First 1
-          python -m pip install --force-reinstall $wheel.FullName qiskit
+          # Use an empty environment so build-time SDK installations cannot
+          # hide missing runtime dependencies in the wheel metadata.
+          $venv = Join-Path $env:RUNNER_TEMP 'squander-wheel-check'
+          python -m venv --clear $venv
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $wheelPython = Join-Path $venv 'Scripts/python.exe'
+          & $wheelPython -m pip install $wheel.FullName
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & $wheelPython -m pip check
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           # Import the installed wheel, not native binaries in the checkout.
           $check = Join-Path $PWD 'tests/check_windows_wheel.py'
           Push-Location $env:RUNNER_TEMP
           try {
-            python $check
+            & $wheelPython $check --require-venv
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           } finally {
             Pop-Location
