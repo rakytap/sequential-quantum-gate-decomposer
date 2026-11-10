@@ -1,0 +1,45 @@
+name: symbolic
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+    inputs:
+      suite:
+        description: 'Symbolic checks to run'
+        type: choice
+        options: [regression, full]
+        default: regression
+
+jobs:
+  test-symbolic:
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ inputs.suite == 'full' && 60 || 15 }}
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+      SYMBOLIC_SUITE: ${{ inputs.suite || 'regression' }}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.13'
+        cache: 'pip'
+
+    - name: Install symbolic test dependencies
+      # The symbolic modules and their tests do not need the C++ backend.
+      run: python -m pip install pytest sympy deap qiskit pylatexenc pypdf
+
+    - name: Test
+      run: |
+        selection=()
+        if [[ "$SYMBOLIC_SUITE" != full ]]; then
+          selection=(-m 'not slow')
+        fi
+        python -m pytest tests/symbolic "${selection[@]}" -x -v --tb=short --durations=25 --durations-min=0.1

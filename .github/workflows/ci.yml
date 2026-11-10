@@ -69,7 +69,8 @@ jobs:
         OMP_NUM_THREADS: '1'
         MKL_NUM_THREADS: '1'
       run: |
-        pytest tests/ -x -v --tb=line --durations=25 --durations-min=0.1
+        # Pure Python symbolic checks run independently in symbolic.yml.
+        pytest tests/ --ignore=tests/symbolic -x -v --tb=line --durations=25 --durations-min=0.1
 
   build-and-test-windows:
     runs-on: windows-latest

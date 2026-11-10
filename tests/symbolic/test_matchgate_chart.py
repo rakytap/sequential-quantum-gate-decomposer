@@ -9,6 +9,7 @@ from symbolic_bases import get_basis
 from symbolic_matchgate_chart import synthesize_matchgate_chart, verify_matchgate_certificate, verify_matchgate_chart_lemma
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize("basis_name",["berkeley_b","sqrt_iswap_u","google_sqrt_iswap"])
 @pytest.mark.parametrize("exact",[False,True])
 def test_free_czs_matchgate_chart_has_six_locals_and_replay(basis_name,exact):

@@ -80,6 +80,7 @@ def test_controlled_matrix_motif_survives_process_transport_normalization():
     assert result["cost"]["entanglers"]==6
 
 
+@pytest.mark.slow
 def test_symbolic_exchange_frontier_finishes_within_its_archive_budget():
     from symbolic_archive import bounded_synthesis
     parameters=sp.symbols("theta phi gamma",real=True)

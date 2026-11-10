@@ -570,9 +570,24 @@ python examples/decomposition/symbolic_synthesis_archive.py \
 Both phase modes are rerun for each selected cell. The selection's input hash
 is recorded, and a resume requires the same selection and implementation.
 
+Routine symbolic regression checks run in their own Python-only CI job, in
+parallel with the native build and tests. Run the same selection locally with:
+
+```bash
+python -m pytest tests/symbolic -m "not slow" -q
+```
+
+Expensive proof replays and synthesis sweeps carry `@pytest.mark.slow`.
+They remain part of the full local suite:
+
 ```bash
 python -m pytest tests/symbolic -q
 ```
+
+To run that full suite on GitHub, dispatch the **symbolic** workflow and select
+`suite: full`. The full run has a 60-minute limit; automatic PR checks retain
+the 15-minute limit. New broad proof sweeps should use the slow marker while
+keeping focused correctness and rejection regressions in the routine suite.
 
 Checks include exact identities in the free parameters, numerical unitarity for
 every fixed-width definition, independent Qiskit/Cirq matrix comparisons with

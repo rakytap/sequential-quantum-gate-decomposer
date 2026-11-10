@@ -25,6 +25,7 @@ def _evaluate(result, substitutions):
     return actual
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize('exact', [False, True])
 def test_full_b_chart_exact_lemma_replay_and_fold_boundaries(exact):
     x, y, z = sp.symbols('x y z', real=True)
@@ -50,6 +51,7 @@ def test_full_b_chart_exact_lemma_replay_and_fold_boundaries(exact):
         assert not verify_b_cartan_certificate(target, changed, basis)
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize('name', ['Canonical', 'fSim', 'PhasedFSim', 'SWAPPow', 'TK2'])
 def test_all_five_free_families_and_diagonal_gauges(name):
     parameters = next(parameters for gate, parameters, _ in symbolic_cases() if gate == name)

@@ -10,6 +10,7 @@ from symbolic_controlled_chart import (synthesize_controlled_chart,
     verify_controlled_chart_certificate,verify_controlled_chart_lemma)
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize("basis_name",["berkeley_b","sqrt_iswap_u","google_sqrt_iswap"])
 @pytest.mark.parametrize("exact",[False,True])
 def test_controlled_su2_chart_keeps_a_full_cu_family_and_phase_contract(basis_name,exact):

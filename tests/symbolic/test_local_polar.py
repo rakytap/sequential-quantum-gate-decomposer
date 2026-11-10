@@ -40,6 +40,7 @@ def test_peres_native_two_axis_lowering_matches_the_sdk_local_count():
     assert np.max(np.abs(phase*actual-np.asarray(target,complex)))<5e-14
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize('name,basis,count',[('C3SX','iswap_u',40),('C4X','iswap_u',78)])
 @pytest.mark.parametrize('exact',[False,True])
 def test_complete_parent_and_component_proofs_replay_with_both_phase_policies(name,basis,count,exact):

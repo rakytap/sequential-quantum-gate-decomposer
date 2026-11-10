@@ -35,6 +35,7 @@ def matrix(result, parameters, values):
     return np.asarray((phase*actual).evalf(25), complex)
 
 
+@pytest.mark.slow
 def test_exact_component_proof_and_full_certificate_tamper_detection():
     target, _, result = construction()
     basis = get_basis('sqrt_iswap_u')
@@ -53,6 +54,7 @@ def test_exact_component_proof_and_full_certificate_tamper_detection():
         assert not verify_sqrt_iswap_cartan_certificate(target, changed, basis)
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize('values', [
     (0, 0, 0), (sp.pi/4, 0, 0), (sp.pi/4, sp.pi/4, sp.pi/4),
     (sp.pi/8, sp.pi/8, sp.pi/8), (sp.pi/8, sp.pi/8, 0),
@@ -66,6 +68,7 @@ def test_full_phase_exact_matrix_including_repeated_spectrum_and_all_fold_bounda
     assert np.max(np.abs(matrix(result, parameters, values)-expected)) < 2e-14
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize('name', ['Canonical', 'fSim', 'PhasedFSim', 'SWAPPow', 'TK2'])
 @pytest.mark.parametrize('basis_name', ['sqrt_iswap_u', 'google_sqrt_iswap'])
 @pytest.mark.parametrize('exact', [False, True])
@@ -93,6 +96,7 @@ def test_exact_constant_axis_frames_reconstruct_original_cartan_coordinates():
                -gates.make_gate('Canonical', *values))
 
 
+@pytest.mark.slow
 def test_cnot_pole_two_pulse_outer_frames_as_exact_algebraic_matrices():
     p = ExpressionProgram()
     with wall_time_limit(35):

@@ -58,3 +58,8 @@ dev = [
     "qiskit",
     "pylatexenc>=2.10",
 ]
+
+[tool.pytest.ini_options]
+markers = [
+    "slow: expensive symbolic proof replays and synthesis sweeps (included in the full symbolic suite)",
+]
