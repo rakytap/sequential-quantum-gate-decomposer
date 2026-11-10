@@ -55,4 +55,6 @@ symbolic = [
 dev = [
     "pytest",
     "sympy>=1.12",
+    "qiskit",
+    "pylatexenc>=2.10",
 ]

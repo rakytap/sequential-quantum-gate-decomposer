@@ -31,7 +31,7 @@ jobs:
     - name: Install Python Dependencies
       run: |
         python -m pip install --upgrade pip
-        python -m pip install -q numpy scipy scikit-build pybind11 qiskit qiskit-aer pytest sympy deap
+        python -m pip install -q numpy scipy scikit-build pybind11 qiskit qiskit-aer pylatexenc pytest sympy deap
         python -m pip install -e . -q
 
     - name: Build
@@ -147,7 +147,7 @@ jobs:
     - name: Install Python Dependencies
       run: |
         python -m pip install --upgrade pip
-        python -m pip install -q numpy scipy scikit-build pybind11 qiskit qiskit-aer pytest sympy deap
+        python -m pip install -q numpy scipy scikit-build pybind11 qiskit qiskit-aer pylatexenc pytest sympy deap
 
     - name: Build and Install
       env:
@@ -193,7 +193,7 @@ jobs:
     - name: Install Python Dependencies
       run: |
         python -m pip install --upgrade pip
-        python -m pip install -q numpy scipy scikit-build pybind11 qiskit qiskit-aer pytest sympy deap
+        python -m pip install -q numpy scipy scikit-build pybind11 qiskit qiskit-aer pylatexenc pytest sympy deap
         python -m pip install -e . -q
 
     - name: Build
