@@ -1,0 +1,328 @@
+\documentclass[11pt]{article}
+\usepackage[margin=25mm]{geometry}
+\usepackage{amsmath,amssymb,hyperref,booktabs}
+\usepackage[T1]{fontenc}
+\title{Symbolic synthesis: global minimum certificates and an objective obstruction}
+\author{Computational proof ledger}
+\date{7 November 2026}
+\begin{document}\maketitle
+\noindent The certificates below distinguish exact circuit identities, global
+entangler minima, and global minima of the parameter-sensitive objective.
+These are separate statements. They do not establish optimality throughout
+all $327\times32$ target/basis cells.
+
+\section{An obstruction in the unrestricted historical objective}
+For an operation with $k$ wires and parameters $p_j$, the historical score is
+\[
+ 2^k+\frac15\sum_j\left(\log_2|\operatorname{den}(p_j)|+\frac1{100}\right),
+\]
+where numerator and denominator are taken after symbolic simplification.
+This expression need not be nonnegative for unrestricted real expressions.
+Let $d=\log(2049/2048)$ and $a=1/d$. The native one-qubit word
+\[
+ U_3(-a,0,0)U_3(a,0,0)=I
+\]
+is an exact matrix identity, not merely equality up to scalar. Its score is
+\[
+ C=\frac{1003}{250}+\frac25\log_2 d < -\frac{97}{250}<0.
+\]
+Indeed $0<\log(1+x)<x$ for $x>0$, since
+$[\log(1+x)-x]'=-x/(1+x)<0$, and here $x=2^{-11}$.
+Appending arbitrarily many copies of the word preserves the target, phase,
+and entangler count, while its score tends to $-\infty$. Consequently there
+is \emph{no unrestricted global minimum} of the secondary historical score
+in bases admitting these U3 words. No amount of additional search proves a
+minimum that does not exist.
+
+One concrete repair is to replace the denominator term by
+$\log_2\max(1,|\operatorname{den}(p_j)|)$. An exact compatibility audit of the
+1,339 distinct retained parameter expressions in the pre-refinement archive
+found no changed scores and no undecided denominator comparisons.
+The compiler uses the nonnegative objective version 2.
+The expanded audit covered 1,390 distinct retained expressions, with zero changed or undecided scores. The archive was migrated after this check; historical source snapshots retain their original contracts.
+Alternatively the admissible expression language can be explicitly restricted;
+any resulting minimum claim must name that restriction.
+Under version 2 every local costs at least two and every entangler at least four.
+An incumbent score $C$ at fixed entangler count $E$ therefore bounds every potentially cheaper word to at most $\lfloor(C-4E)/2\rfloor$ locals. This bounds word length; continuous angle optimality still needs a separate proof.
+The historical obstruction does not affect entangler-count lower bounds or the finite
+alphabet proof in the next section.
+
+\section{Global phase-resolved Clifford minima in Clifford+T}
+The supplied alphabet is exactly $\{H,S,T,T^\dagger\}$. Each fixed gate has
+historical score two, so minimum score is equivalent to minimum word length.
+Every matrix is stored exactly in $\mathbb Z[\sqrt2,i]/2^k$, with common powers
+of two removed from its integer representation. Thus hashing and equality
+use integer arithmetic; floating comparisons play no role.
+
+Breadth-first search through radius seven reaches 628 distinct matrices,
+including non-Clifford intermediate states. For each of the 192 exact-phase
+Clifford targets $G$, enumerate each first half $A$ in that ball and look up
+$GA^{-1}$ in the same ball. The resulting witnesses have maximum length 14.
+Every shorter word can be split into two halves of length at most seven;
+therefore the lookup excludes every cheaper word in the supplied alphabet.
+The proof covers all 192 literal phases, and taking the minimum over the eight
+phases of each representative proves the corresponding projective minima.
+It extends the H/S proof without assuming that intermediate gates are Clifford.
+
+For projective completeness, every H/S/T/Tdg matrix has entries in
+$K=\mathbb Q(\sqrt2,i)=\mathbb Q(\zeta_8)$, of degree four. The determinant
+of any word is an eighth root; the determinant of a Clifford target is a
+fourth root. If a word is $\lambda C$, then $\lambda\in K$ and
+$\lambda^2$ is an eighth root. An odd sixteenth root has degree eight,
+so cannot lie in $K$. Thus $\lambda$ is one of the eight phases already
+enumerated. This excludes additional scalar phases from the projective
+search, including words with non-Clifford intermediates.
+
+
+The canonical ball SHA256 is
+\begin{quote}\small\ttfamily
+ e7c7e0492f5ee55d0b80adacc65331c9dc0c2230cd04e2b1b53c58441e7462af.
+\end{quote}
+The implementation replays all target witnesses and checks their distances
+against the Clifford shortest-path certificate. Altered proof radii,
+distances, alphabets, and missing global certificates are rejected.
+Continuous alphabets remain outside this finite-word proof.
+
+\section{Two B gates for the full Cartan family}
+Use the convention
+\[
+ A(x,y,z)=\exp\{i(xXX+yYY+zZZ)\},\qquad B=A(\pi/4,\pi/8,0).
+\]
+The two-B upper bound is established in the literature~\cite{b}. The new
+implementation supplies explicit symbolic outer frames, all real-angle
+branches, native U3 lowering, and physical scalar absorption.
+Fold $y,z$ into $[-\pi/4,\pi/4)$ using $\pi/2$ shifts. Put
+\[
+ u=\sqrt2\sin y\cos z,\quad v=\sqrt2\cos y\sin z,\quad
+ w=\sqrt{\cos2y\cos2z}.
+\]
+Then $u^2+v^2+w^2=1$. On the regular chart choose
+\[
+ 2p_- =\operatorname{atan2}(-w,\sin(y-z)),\quad
+ 2p_+ =\operatorname{atan2}(-w,\sin(y+z)),
+\]
+\[
+ \beta=\operatorname{atan2}(w,u),\qquad
+ a=2\operatorname{atan2}(v,\sqrt{u^2+w^2}),\quad
+ \chi=-p_--p_+-\pi.
+\]
+The circuit in time order has local layers
+\[
+\begin{array}{c|cc}
+ &q_0&q_1\\\hline
+\text{before first B}&U_3(\pi/2,\chi,0)&U_3(\pi+p_--p_+,-\pi/2,-\pi/2)\\
+\text{between B gates}&U_3(-2x,0,0)&U_3(-a,-\beta,-\beta)\\
+\text{after second B}&U_3(-\pi/2,0,\chi-\pi)&U_3(\pi-p_-+p_+,-\pi/2,\pi/2)
+\end{array}
+\]
+and scalar $\exp\{i(\beta+p_-+p_+)\}$ on the folded chart.
+An extra native U3 absorbs this scalar for literal equality. No GP primitive
+is introduced. Local Y/Z frames restore the folds; the implementation also
+absorbs the input/output Z gauges of PhasedFSim and its scalar.
+
+The full matrix identity reduces six nonzero Pauli coefficients modulo
+$c_y^2+s_y^2=1$, $c_z^2+s_z^2=1$ and
+$w^2=(c_y^2-s_y^2)(c_z^2-s_z^2)$. The four chart corners and the zero-radius
+branch are treated explicitly. Arbitrary $x$ follows from exact Pauli transport
+through B. Parameter substitutions are regression checks, not family proofs.
+
+For the lower bound, the phase-normalized spin-flip invariants~\cite{makhlin}
+are
+\begin{align*}
+ I_1&=16(\cos2x\cos2y\cos2z+i\sin2x\sin2y\sin2z)^2,\\
+ I_2&=4(\cos4x\cos4y\cos4z+i\sin4x\sin4y\sin4z).
+\end{align*}
+Local products have $I_1=16$; one B pulse has $I_1=I_2=0$.
+Consequently the construction is globally minimum in entangler count whenever
+\[
+ I_1\ne16\quad\text{and}\quad(I_1\ne0\ \text{or}\ I_2\ne0).
+\]
+The certificate records this condition rather than claiming every specialization
+needs two pulses. Scalar relaxation in the lower bound makes it valid for
+both phase policies. No minimum local score is claimed for these charts.
+
+
+\section{Additional analytic score floors and local transfers}
+At zero entanglers, each wire on which the target acts nontrivially requires
+at least one one-wire gate. An exact nonzero commutator with an embedded X
+or Z proves such support. For a family, a nonzero exact specialization is a
+witness that the entire family cannot omit that wire; cheaper exceptional
+specializations remain possible. Literal nonidentity scalar targets also need
+at least one physical operation. Combining these support bounds with the
+nonnegative primitive floors certifies a secondary minimum whenever the
+constructed score meets the bound. Optional default parameters are excluded
+from the minimum mandatory-arity surcharge.
+
+The current archive records 372 literal and 1,144 projective global
+lexicographic minimum certificates from this floor argument. There are also
+24 literal and 31 projective matches of the secondary floor at a fixed
+entangler count whose entangler minimum is not established by this argument.
+These counts can overlap existing Clifford and entangler certificates.
+
+The C4X native-CZ transfer first proves the complete 36-CZ, 46-U3 parent,
+then proves every distinct local replacement as a two-by-two identity.
+The free-angle identity that Rz commutes with CZ on either wire justifies
+collecting diagonal phases across interactions. This yields 69 locals in
+the CZ/Rz/Rx basis, compared with the stored SDK's 72, and 130 locals in the
+IBM CZ basis, compared with 143. The IBM construction searches exact native
+Euler variants while carrying diagonal phases through CZ gates; each variant
+and every removed full turn have their own exact identity.
+Both transfers preserve 36 entanglers and a recorded projective scalar;
+these are constructive improvements, not minimum-count proofs for C4X.
+
+
+\section{Exact local polar fusion}
+For a constant one-qubit unitary $M=\left(\begin{smallmatrix}A&B\\C&D\end{smallmatrix}\right)$,
+put $r=|A|$, $s=|C|$. If $A,C\ne0$, define
+\[
+ \delta=\arg A,\quad \vartheta=2\operatorname{atan2}(s,r),\quad
+ \varphi=\arg C-\delta,\quad \lambda=\arg(-B)-\delta.
+\]
+Then $M=e^{i\delta}U_3(\vartheta,\varphi,\lambda)$. Unitarity gives
+$r^2+s^2=1$, $|B|=s$, and $\bar A B+\bar C D=0$.
+The defining polar identities reproduce the first three entries; the last
+is fixed by column orthogonality. If $A=0$, use
+$\vartheta=\pi$, $\varphi=\arg C$, $\lambda=\arg(-B)$ and $\delta=0$.
+If $C=0$, use $\vartheta=\varphi=0$ and
+$\lambda=\arg D-\arg A$. Scalar blocks need no physical local operation.
+These explicit charts avoid undefined arguments at zero.
+
+The implementation proves primitive unitarity for arbitrary real arguments,
+then uses closure under multiplication for every source block. Exact zero
+predicates and algebraic minimal polynomials select the constant charts.
+The complete parent circuit is proved separately. The local proof therefore
+does not rely on numerical fidelities or a general simplifier rediscovering
+polar branch identities. Rz/Ry lowering and literal U3 phase absorption have
+independent free-angle matrix identities.
+
+This reduces C3SX/iSWAP to 40 locals projectively and 41 literally, compared
+with the SDK's projective 56. C4X/iSWAP uses 78 and 79, compared with SDK 113.
+Their entangler counts remain 26 and 54. Peres/Rxx/Rz/Ry now matches the
+SDK's 35 locals at five entanglers. These are upper bounds, not unrestricted
+local-minimum claims. Only C3X/Rzz/U3 retains a higher local count in the
+matched SDK audit: 28 locals score 115.594, whereas its available proved
+24-local alternative scores 116.37. This establishes a tradeoff between
+those two witnesses, not the impossibility of a better unknown circuit.
+
+\section{Independent native lower bounds}
+For a two-qubit unitary $U$, write $\Gamma=U(YY)U^T(YY)$ and $\Delta=\det U$.
+The scalar-normalized local invariants used here are~\cite{makhlin}
+\[
+ g_1=\frac{(\operatorname{tr}\Gamma)^2}{16\Delta},\qquad
+ g_2=\frac{(\operatorname{tr}\Gamma)^2-\operatorname{tr}(\Gamma^2)}{4\Delta}.
+\]
+They require no choice of a fourth root of $\det U$. An exact nonzero
+realignment minor excludes a local product. Unequal invariants or unequal
+fixed operator-Schmidt ranks exclude one fixed native pulse. For a variable
+Ising interaction, every pulse has crossing Schmidt rank at most two;
+a target of rank four therefore needs at least two pulses.
+
+In the magic basis, arbitrary determinant-one local frames are real matrices
+$O\in SO(4)$. Partition $O$ into four $2\times2$ blocks. Their squared
+Frobenius norms are $X,Y,Y,X$, by subtracting the block row and column norm
+equations. For two Ising pulses, with possibly different interaction angles,
+\[
+ \operatorname{tr}(D_1^2 O^T D_2^2 O)
+ =2\cos(a+b)X+2\cos(a-b)Y\in\mathbb R.
+\]
+For the iSWAP edge the second sign becomes negative and the trace is again
+real. Thus two such pulses require $g_1\geq0$ and real. Two square-root-SWAP
+pulses instead have purely imaginary normalized spin trace, requiring
+$g_1\leq0$ and real. The native zero- and one-pulse classes are excluded
+separately before a three-pulse lower bound is asserted. This distinction is
+necessary: a single SYC or square-root-SWAP need not be cancellable by a
+second identical native pulse.
+
+A single fSim has a monic cubic annihilator for its spin matrix,
+\[
+ (\Gamma-e^{-i\phi}I)(\Gamma^2-2\cos(2\theta)\Gamma+I)=0.
+\]
+The identity is checked for free real parameters, including degeneracies.
+A target with four linearly independent vectorized powers
+$I,\Gamma,\Gamma^2,\Gamma^3$ cannot be locally equivalent to one fSim.
+One exact nonzero $4\times4$ Krylov minor certifies that independence.
+
+For square-root-SWAP there is a stronger two-pulse relation. Its normalized
+spin spectrum is a scalar multiple of a real reflection. A product of two
+such reflections gives $g_1=-\rho^2$, $g_2=1-4\rho$, $0\leq\rho\leq1$.
+Consequently
+\[
+ 16g_1+(g_2-1)^2=0
+\]
+is necessary for two pulses. The implementation proves the reflection traces
+by polynomial reduction modulo the unit-vector norm equation.
+
+\section{An algebraic SQiSW two-pulse exclusion}
+Let $V$ be a two-SQiSW circuit in the magic basis, with arbitrary real
+quaternion middle factors
+$aI+i(bX+cY+dZ)$ and $eI+i(fX+hY+kZ)$, each of unit norm.
+Put $A=\det\operatorname{Re}V$, $C=\det\operatorname{Im}V$. Direct exact
+polynomial identities give
+\[
+ C=\tfrac14\big[(a^2+d^2)(f^2+h^2)-(b^2+c^2)(e^2+k^2)\big]^2\geq0,
+\]
+\[
+ \tfrac14\operatorname{Re}\operatorname{tr}(V^TV)
+ =(ak-de)^2+(bh-cf)^2\geq0.
+\]
+For an SU(4) unitary, the latter trace is $A-C$ and
+$A+C=(g_2+1)/4$; these relations are proved on a free Cartan diagonal and
+transported through the real determinant-one KAK frames. Hence $A,C\geq0$.
+Writing $g_1=(u+iv)^2$ gives
+$u^2=(|g_1|+\operatorname{Re}g_1)/2$. Therefore two SQiSW pulses necessarily obey
+\[
+ W=g_2+1\geq0,\qquad W^2\geq8(|g_1|+\operatorname{Re}g_1).
+\]
+These are scalar-invariant tests; multiplication by $i$ merely interchanges
+$A$ and $C$. The local and one-SQiSW classes also obey both inequalities.
+An exact negative $W$ or negative squared gap therefore proves a three-pulse
+lower bound directly, without numerical Weyl canonicalization. This section
+does not supply a missing three-pulse construction; the uniform upper bound
+comes from the published SQiSW compilation scheme~\cite{sqisw}.
+
+For a parameterized target, one exact hard specialization proves a necessary
+\emph{uniform family budget}. A matching circuit for the entire family proves
+that budget optimal. Other parameter values can have smaller minima.
+The archive stores this scope separately from fixed-target minima and leaves
+the original construction operations, scores, and source indices unchanged.
+No minimum local score follows from these native-count certificates.
+
+The independent native audit matches 3,274 archived phase modes: 681 literal
+and 928 projective fixed-target minima, and 710 literal and 955 projective
+minimum uniform family budgets. Of these, 1,224 previously had neither a
+minimum-count flag nor a conditional minimum-count certificate. The separate
+exchange audit supplies 18 matched fixed-target certificates and 132 further
+lower bounds without matching constructions; these counts can overlap the
+native audit. The reports retain unsuccessful proof attempts separately.
+
+\section{Reproduction}
+Run \nolinkurl{pytest tests/symbolic/test_b_cartan.py}
+and \nolinkurl{pytest tests/symbolic/test_clifford_t_global.py}.
+The counterexample is regenerated by
+\nolinkurl{symbolic_cost_proof.negative_identity_certificate()}.
+Raw source-pinned archive refinements retain their exact implementation hashes
+and separate phase policies. A verified circuit is an upper bound until its
+matching lower bound and assumptions are recorded.
+The independent audit is generated, replayed, and attached with
+\nolinkurl{examples/decomposition/symbolic_entangler_audit.py}.
+Its source-pinned report records successful certificates, declined cases,
+and proof timeouts separately. These timeouts concern new lower-bound
+searches; they do not undo the existing exact construction proofs.
+\nolinkurl{examples/decomposition/symbolic_exchange_audit.py} adds the
+separately replayed exchange witnesses. The original 790 construction and
+Clifford certificate replays remain in \nolinkurl{verification.json}.
+
+\begin{thebibliography}{9}
+\bibitem{b} J. Zhang, J. Vala, S. Sastry, K. B. Whaley,
+Minimum construction of two-qubit quantum operations,
+Phys. Rev. Lett. 93, 020502 (2004),
+\url{https://arxiv.org/abs/quant-ph/0312193}.
+\bibitem{makhlin} Y. Makhlin, Nonlocal properties of two-qubit gates and mixed
+states and optimization of quantum computations,
+Quantum Information Processing 1, 243--252 (2002),
+\url{https://arxiv.org/abs/quant-ph/0002045}.
+\bibitem{sqisw} C. Huang et al., Quantum Instruction Set Design for Performance,
+Phys. Rev. Lett. 130, 070601 (2023),
+\url{https://arxiv.org/abs/2105.06074}.
+\end{thebibliography}
+\end{document}

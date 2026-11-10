@@ -1,0 +1,7 @@
+{
+  "source": "https://github.com/quantum-journal/quantum-journal",
+  "revision": "30146606c364feb70ed2d4c267e5c75ee2db44a4",
+  "class_sha256": "3559fdcf5c7d0a3194d80bb5a7b1e9051643ef875f74087b8892a2f691f7b41d",
+  "license": "LaTeX Project Public License 1.3c or later; retained in class header",
+  "format": "One column, unpublished; no external submission performed. XeTeX preview disables only the pdfoutput engine check; pdfLaTeX sets pdfoutput=1."
+}

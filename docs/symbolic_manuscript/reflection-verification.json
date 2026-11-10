@@ -1,0 +1,68 @@
+{
+  "schema": "reflection-seven-numerical-verification-v1",
+  "archive_sha256": "a08e460ceb901e61c379e92e315839cdd3b9bae47271df293f5dc2a07253ac17",
+  "independent_replay": "Qiskit QuantumCircuit and Operator",
+  "source": {
+    "path": "examples/decomposition/symbolic_reflection_numeric_audit.py",
+    "sha256": "c25461e1e5266c6646c8494651af08e054a1e1ced080ea317afb4efae8e4b79f",
+    "resolution": "included_current_source"
+  },
+  "maximum_literal_entry_error": 4.037621774323881e-14,
+  "no_physical_GP": true,
+  "rows": [
+    {
+      "angle_source": "pi/8",
+      "literal_maximum_entry_error": 4.543408799789508e-15
+    },
+    {
+      "angle_source": "0.3",
+      "literal_maximum_entry_error": 7.861460760820296e-16
+    },
+    {
+      "angle_source": "0",
+      "literal_maximum_entry_error": 6.545141402252904e-15
+    },
+    {
+      "angle_source": "0.1",
+      "literal_maximum_entry_error": 1.6537036554692385e-14
+    },
+    {
+      "angle_source": "0.2",
+      "literal_maximum_entry_error": 1.2156942119645464e-14
+    },
+    {
+      "angle_source": "0.4",
+      "literal_maximum_entry_error": 1.589806445095398e-14
+    },
+    {
+      "angle_source": "0.5",
+      "literal_maximum_entry_error": 1.772337691111416e-14
+    },
+    {
+      "angle_source": "0.6",
+      "literal_maximum_entry_error": 2.8061765448406604e-14
+    },
+    {
+      "angle_source": "0.7",
+      "literal_maximum_entry_error": 2.4987708289935304e-14
+    },
+    {
+      "angle_source": "pi/4",
+      "literal_maximum_entry_error": 4.037621774323881e-14
+    }
+  ],
+  "scope": "Ten numerical seven-CX witnesses only. The exact free-angle five-unrestricted-gate identity is separately checked by test_five_unrestricted_reflection_word_with_angle_free. Neither is an interior lower bound.",
+  "exact_family": {
+    "archive_sha256": "001a5e63ab8e0fd85567f1993e361fa55b5247935f6d269d9484d2ba58753d88",
+    "entanglers": 7,
+    "local_gates": 18,
+    "phase_contract": "literal; no GP",
+    "real_angle_free": true,
+    "negative_variant_verified": true,
+    "source": {
+      "path": "squander/decomposition/symbolic_reflection_involution.py",
+      "sha256": "6242eee03c5f5645ac707f39b3e52ab2af21b52a33035e28ec3f59f441b8f268",
+      "resolution": "included_current_source"
+    }
+  }
+}

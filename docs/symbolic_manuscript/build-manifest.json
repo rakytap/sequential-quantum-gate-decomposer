@@ -1,0 +1,106 @@
+{
+  "schema": "symbolic-referee-build-v2",
+  "archive_sha256": "f0e67c123e43d26c999cc39ef5865d153ceb7f9ad5742b5d9be35f76b8492495",
+  "tables": {
+    "phase_exact": {
+      "1": {
+        "cells": 6976,
+        "constructed": 5210,
+        "zero": 5210,
+        "obstruction": 1766
+      },
+      "2": {
+        "cells": 2528,
+        "constructed": 1871,
+        "positive": 1754,
+        "raw_flag": 608,
+        "fixed": 717,
+        "obstruction": 657,
+        "uniform": 747,
+        "unproved": 290,
+        "zero": 117
+      },
+      "3": {
+        "cells": 832,
+        "constructed": 548,
+        "positive": 468,
+        "raw_flag": 106,
+        "unproved": 425,
+        "obstruction": 284,
+        "fixed": 43,
+        "zero": 80
+      },
+      "4": {
+        "cells": 96,
+        "constructed": 59,
+        "positive": 59,
+        "unproved": 59,
+        "obstruction": 37
+      },
+      "5": {
+        "cells": 32,
+        "constructed": 14,
+        "positive": 14,
+        "unproved": 14,
+        "obstruction": 18
+      }
+    },
+    "projective": {
+      "1": {
+        "cells": 6976,
+        "constructed": 6915,
+        "zero": 6915,
+        "obstruction": 61
+      },
+      "2": {
+        "cells": 2528,
+        "constructed": 2375,
+        "positive": 2247,
+        "fixed": 964,
+        "raw_flag": 356,
+        "uniform": 993,
+        "unproved": 290,
+        "obstruction": 153,
+        "zero": 128
+      },
+      "3": {
+        "cells": 832,
+        "constructed": 788,
+        "positive": 692,
+        "unproved": 644,
+        "raw_flag": 72,
+        "obstruction": 44,
+        "fixed": 48,
+        "zero": 96
+      },
+      "4": {
+        "cells": 96,
+        "constructed": 89,
+        "positive": 89,
+        "unproved": 89,
+        "obstruction": 7
+      },
+      "5": {
+        "cells": 32,
+        "constructed": 29,
+        "positive": 29,
+        "unproved": 29,
+        "obstruction": 3
+      }
+    }
+  },
+  "generated_files": {
+    "generated/application_revised.tex": "590c53a8f9eeefb4b0fec44205621db872e919644f4259c29b48b15d1bbdbd3a",
+    "generated/coverage_phase_exact.tex": "cc3302f26d9117c721e74516c587742360cc0b9d7978c95603bd289b773375d6",
+    "generated/coverage_projective.tex": "7258cc81fe079bf0ecd10123318c4ac5a58d2e6dc62b97ddbdd3688ef23bf52c",
+    "generated/ffredkin_circuit.tex": "3deadb81ce5589cf23b5678fbf87b7b9401ca6bdc79b1dd08dae0870443b25fa",
+    "generated/native_column_gaps.tex": "7f4c4b581af2686d93039b229c417be6f41886ca69383316057bdcfb5e1df88a",
+    "generated/obstructions.tex": "68f79a31dd5e2c4b446b40ab8c55778a7171ba9bd2836d46a51cdde8ce36c5f1",
+    "generated/osr_ablation.tex": "b17a077c9c355f025ae31ee127217193697bf27388e611b7444499ee1454fef1",
+    "generated/peephole.tex": "0d672f08a344568a96d88bd257a3793732962cfc517eb3cce30fa40fec30da00",
+    "generated/presets.tex": "b2090f3783d8d0af617036f1264893a48c6d884ba5e16799923b02c051973f00",
+    "generated/referee_ablation.pdf": "4958d60c0b729aa39972c5939ed9e461213a585ea4d5f493070beb62268f5642",
+    "generated/reflection_seven_word.tex": "192bb35bc4ec6a83d02daf06b63387995316ef97fb930446b7d73f0944206923",
+    "generated/strong_sdks.tex": "33a5f5c5b0b5ed536eff95685d628959a2cae5c0dc7d314a3c90a98b195bb577"
+  }
+}

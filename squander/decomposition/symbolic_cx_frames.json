@@ -1,0 +1,392 @@
+{
+  "CX": {
+    "operations": [
+      {
+        "gate": "CX",
+        "parameters": [],
+        "wires": [
+          0,
+          1
+        ]
+      }
+    ],
+    "factor": "1",
+    "entanglers": 1,
+    "verification": "exact_matrix_identity",
+    "provenance": "exhaustive local Clifford frame search; numerical indexing followed by exact symbolic validation"
+  },
+  "CZ": {
+    "operations": [
+      {
+        "gate": "H",
+        "parameters": [],
+        "wires": [
+          1
+        ]
+      },
+      {
+        "gate": "CZ",
+        "parameters": [],
+        "wires": [
+          0,
+          1
+        ]
+      },
+      {
+        "gate": "H",
+        "parameters": [],
+        "wires": [
+          1
+        ]
+      }
+    ],
+    "factor": "1",
+    "entanglers": 1,
+    "verification": "exact_matrix_identity",
+    "provenance": "exhaustive local Clifford frame search; numerical indexing followed by exact symbolic validation"
+  },
+  "ECR": {
+    "operations": [
+      {
+        "gate": "ECR",
+        "parameters": [],
+        "wires": [
+          0,
+          1
+        ]
+      },
+      {
+        "gate": "Sxdg",
+        "parameters": [],
+        "wires": [
+          1
+        ]
+      },
+      {
+        "gate": "SX_q3",
+        "parameters": [],
+        "wires": [
+          0
+        ]
+      }
+    ],
+    "factor": "-1",
+    "entanglers": 1,
+    "verification": "exact_matrix_identity",
+    "provenance": "exhaustive local Clifford frame search; numerical indexing followed by exact symbolic validation"
+  },
+  "XX90": {
+    "operations": [
+      {
+        "gate": "H",
+        "parameters": [],
+        "wires": [
+          0
+        ]
+      },
+      {
+        "gate": "XX90",
+        "parameters": [],
+        "wires": [
+          0,
+          1
+        ]
+      },
+      {
+        "gate": "Sxdg",
+        "parameters": [],
+        "wires": [
+          1
+        ]
+      },
+      {
+        "gate": "HSdg",
+        "parameters": [],
+        "wires": [
+          0
+        ]
+      }
+    ],
+    "factor": "sqrt(2)*(1 + I)/2",
+    "entanglers": 1,
+    "verification": "exact_matrix_identity",
+    "provenance": "exhaustive local Clifford frame search; numerical indexing followed by exact symbolic validation"
+  },
+  "ZZ90": {
+    "operations": [
+      {
+        "gate": "H",
+        "parameters": [],
+        "wires": [
+          1
+        ]
+      },
+      {
+        "gate": "ZZ90",
+        "parameters": [],
+        "wires": [
+          0,
+          1
+        ]
+      },
+      {
+        "gate": "SHX",
+        "parameters": [],
+        "wires": [
+          1
+        ]
+      },
+      {
+        "gate": "Sdg",
+        "parameters": [],
+        "wires": [
+          0
+        ]
+      }
+    ],
+    "factor": "sqrt(2)*(1 + I)/2",
+    "entanglers": 1,
+    "verification": "exact_matrix_identity",
+    "provenance": "exhaustive local Clifford frame search; numerical indexing followed by exact symbolic validation"
+  },
+  "Rzx": {
+    "operations": [
+      {
+        "gate": "Rzx",
+        "parameters": [
+          "pi/2"
+        ],
+        "wires": [
+          0,
+          1
+        ]
+      },
+      {
+        "gate": "Sxdg",
+        "parameters": [],
+        "wires": [
+          1
+        ]
+      },
+      {
+        "gate": "Sdg",
+        "parameters": [],
+        "wires": [
+          0
+        ]
+      }
+    ],
+    "factor": "sqrt(2)*(1 + I)/2",
+    "entanglers": 1,
+    "verification": "exact_matrix_identity",
+    "provenance": "exhaustive local Clifford frame search; numerical indexing followed by exact symbolic validation"
+  },
+  "SiSWAP": {
+    "operations": [
+      {
+        "gate": "H",
+        "parameters": [],
+        "wires": [
+          0
+        ]
+      },
+      {
+        "gate": "SiSWAP",
+        "parameters": [],
+        "wires": [
+          0,
+          1
+        ]
+      },
+      {
+        "gate": "X",
+        "parameters": [],
+        "wires": [
+          0
+        ]
+      },
+      {
+        "gate": "SiSWAP",
+        "parameters": [],
+        "wires": [
+          0,
+          1
+        ]
+      },
+      {
+        "gate": "Sx",
+        "parameters": [],
+        "wires": [
+          1
+        ]
+      },
+      {
+        "gate": "HSdg",
+        "parameters": [],
+        "wires": [
+          0
+        ]
+      }
+    ],
+    "factor": "sqrt(2)*(1 - I)/2",
+    "entanglers": 2,
+    "verification": "exact_matrix_identity",
+    "provenance": "exhaustive local Clifford frame search; numerical indexing followed by exact symbolic validation"
+  },
+  "SSWAP": {
+    "operations": [
+      {
+        "gate": "H",
+        "parameters": [],
+        "wires": [
+          0
+        ]
+      },
+      {
+        "gate": "SSWAP",
+        "parameters": [],
+        "wires": [
+          0,
+          1
+        ]
+      },
+      {
+        "gate": "X",
+        "parameters": [],
+        "wires": [
+          0
+        ]
+      },
+      {
+        "gate": "SSWAP",
+        "parameters": [],
+        "wires": [
+          0,
+          1
+        ]
+      },
+      {
+        "gate": "Sxdg",
+        "parameters": [],
+        "wires": [
+          1
+        ]
+      },
+      {
+        "gate": "HS",
+        "parameters": [],
+        "wires": [
+          0
+        ]
+      }
+    ],
+    "factor": "1",
+    "entanglers": 2,
+    "verification": "exact_matrix_identity",
+    "provenance": "exhaustive local Clifford frame search; numerical indexing followed by exact symbolic validation"
+  },
+  "B": {
+    "operations": [
+      {
+        "gate": "S",
+        "parameters": [],
+        "wires": [
+          1
+        ]
+      },
+      {
+        "gate": "Sx",
+        "parameters": [],
+        "wires": [
+          0
+        ]
+      },
+      {
+        "gate": "B",
+        "parameters": [],
+        "wires": [
+          0,
+          1
+        ]
+      },
+      {
+        "gate": "B",
+        "parameters": [],
+        "wires": [
+          0,
+          1
+        ]
+      },
+      {
+        "gate": "HSdg",
+        "parameters": [],
+        "wires": [
+          1
+        ]
+      },
+      {
+        "gate": "SHY_q2",
+        "parameters": [],
+        "wires": [
+          0
+        ]
+      }
+    ],
+    "factor": "sqrt(2)*(1 - I)/2",
+    "entanglers": 2,
+    "verification": "exact_matrix_identity",
+    "provenance": "exhaustive local Clifford frame search; numerical indexing followed by exact symbolic validation"
+  },
+  "iSWAP": {
+    "operations": [
+      {
+        "gate": "S",
+        "parameters": [],
+        "wires": [
+          1
+        ]
+      },
+      {
+        "gate": "iSWAP",
+        "parameters": [],
+        "wires": [
+          0,
+          1
+        ]
+      },
+      {
+        "gate": "Sx",
+        "parameters": [],
+        "wires": [
+          0
+        ]
+      },
+      {
+        "gate": "iSWAP",
+        "parameters": [],
+        "wires": [
+          0,
+          1
+        ]
+      },
+      {
+        "gate": "HSdg",
+        "parameters": [],
+        "wires": [
+          1
+        ]
+      },
+      {
+        "gate": "Sdg",
+        "parameters": [],
+        "wires": [
+          0
+        ]
+      }
+    ],
+    "factor": "sqrt(2)*(1 - I)/2",
+    "entanglers": 2,
+    "verification": "exact_matrix_identity",
+    "provenance": "exhaustive local Clifford frame search; numerical indexing followed by exact symbolic validation"
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "schema": "symbolic-claims-third-referee-v1",
+  "main_contributions": [
+    "Controlled balanced-involution CNOT-cost classification with explicit hypotheses and exact normal-form/boundary checks",
+    "Four-Ising lower bound for controlled rank-four relative blocks",
+    "Invariant iff reformulation of Huang et al.'s known two-SQiSW region",
+    "All-involution spectral normal forms with explicit partial trace-plus/minus-two bounds; no interior optimum claim",
+    "Real polynomial SQiSW region test for symbolic families",
+    "Exact five-unrestricted-gate free-angle trace-plus/minus-two reflection construction",
+    "Exact monodromy minimum-count certificates for all 64 fixed-target/native pairs in the audited SYC/square-root-SWAP subset",
+    "Literal seven-CNOT free-angle reflection word with eighteen U3 gates and no GP"
+  ],
+  "withdrawn_claims": [
+    "Grid size as evidence of mathematical novelty",
+    "27-to-3 tomography-figure comparison",
+    "Universal compiler or literature dominance",
+    "36-to-18 fSim example as an advance over known analytical synthesis",
+    "OSR search explains the chart workload's successes"
+  ],
+  "retained_limits": [
+    "Many positive-entangler cells lack matching lower bounds",
+    "No unrestricted all-grid local optimality",
+    "Twenty scalar-program scores unresolved",
+    "Native charts dominate the bounded two-qubit ablation",
+    "Wider opaque probes remain unresolved",
+    "Eight-circuit peephole suite has no improvements",
+    "Numerical application recompilation has fewer locals and smaller depth",
+    "BQSKit matches the fFredkin upper counts; Quartz beats the C4X atlas count",
+    "UniversalQCompiler not executed: licensed kernel unavailable",
+    "New analytical classification requires independent mathematical scrutiny",
+    "Other TK2 cells remain above known one-macro capacity and are flagged",
+    "Exact interior reflection costs remain open",
+    "Interior lower bounds remain unproved; seven-CNOT and five-unrestricted-gate free-angle upper words are exact",
+    "Monodromy existence/count certificates do not supply explicit shortest local-frame words; family samples are not pointwise family minimum proofs",
+    "Thirty monodromy proof deadlines and eight uncertified coordinate conversions remain inconclusive"
+  ],
+  "publication_state": "Author affiliations and contributions confirmed; review and official Quantum-template drafts prepared; no external submission performed"
+}

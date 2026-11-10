@@ -1,0 +1,57 @@
+{
+  "authors": [
+    "Gregory Morse",
+    "Péter Rakyta"
+  ],
+  "affiliations": {
+    "Gregory Morse": [
+      "Department of Programming Languages and Compilers, Eötvös Loránd University, Hungary"
+    ],
+    "Péter Rakyta": [
+      "Department of Physics of Complex Systems, Eötvös Loránd University, Hungary",
+      "Computational Sciences Department, HUN-REN Wigner Research Centre for Physics, Hungary"
+    ]
+  },
+  "individual_contributions": {
+    "Gregory Morse": "Conceptualization, computer-science methodology and analysis, software, mathematical analysis, validation, experiments, data curation, visualization, and original draft",
+    "Péter Rakyta": "Planned: physics review and interpretation of results, scientific discussions, and manuscript drafting, reviewing, and editing"
+  },
+  "publication_state": "Internal review draft; no external submission performed",
+  "confirmed_by_author": true,
+  "contribution_status": {
+    "Gregory Morse": "completed work recorded; computer-science lead",
+    "Péter Rakyta": "planned contributions confirmed by Gregory; physics review not yet recorded as completed"
+  },
+  "arxiv_manuscript_license": {
+    "spdx": "CC-BY-4.0",
+    "name": "Creative Commons Attribution 4.0 International",
+    "url": "https://creativecommons.org/licenses/by/4.0/",
+    "confirmed_by_author": true
+  },
+  "AI_use": [
+    {
+      "provider": "OpenAI",
+      "model": "GPT-6.1 Sol",
+      "reasoning_setting": "xhigh",
+      "roles": [
+        "research",
+        "proof development and checking",
+        "calculations",
+        "software implementation",
+        "experiments",
+        "literature and citation research",
+        "manuscript drafting and revision"
+      ],
+      "provenance": "Author-reported model and mode, 2026-11-08"
+    },
+    {
+      "provider": "Anthropic",
+      "model": "Claude Opus 5.5",
+      "reasoning_setting": "high",
+      "roles": [
+        "iterative simulated referee reports"
+      ],
+      "provenance": "Author-reported model and mode, 2026-11-08"
+    }
+  ]
+}
