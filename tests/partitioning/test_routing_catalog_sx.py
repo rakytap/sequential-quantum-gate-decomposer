@@ -1,5 +1,8 @@
 import numpy as np
 import pytest
+import gzip
+import hashlib
+import json
 from qiskit import QuantumCircuit
 
 from squander import Qiskit_IO
@@ -13,10 +16,12 @@ from squander.partitioning.routing import (
 
 
 @pytest.mark.parametrize("compact", [False, True])
-def test_catalog_round_trip_with_native_sx(tmp_path, compact):
+@pytest.mark.parametrize("legacy_phase", [False, True])
+def test_catalog_round_trip_with_native_sx(tmp_path, compact, legacy_phase):
     qiskit_circuit = QuantumCircuit(2)
     qiskit_circuit.sx(0)
     qiskit_circuit.cx(0, 1)
+    qiskit_circuit.rz(0.37, 1)
     circuit, parameters = Qiskit_IO.convert_Qiskit_to_Squander(qiskit_circuit)
     topology = ((0, 1),)
     alternatives = []
@@ -67,6 +72,17 @@ def test_catalog_round_trip_with_native_sx(tmp_path, compact):
         osr_synthesized_partitions={0},
     )
 
+    if legacy_phase:
+        with gzip.open(path, "rt") as stream:
+            legacy = json.load(stream)
+        for record in [legacy, *legacy["payloads"]]:
+            for key in ("source_qasm", "qasm"):
+                if key in record:
+                    record[key] = record[key].replace("\nrz(", "\np(")
+        assert "\np(" in legacy["source_qasm"]
+        legacy["source_qasm_sha256"] = hashlib.sha256(legacy["source_qasm"].encode()).hexdigest()
+        with gzip.open(path, "wt") as stream:
+            json.dump(legacy, stream)
     archive = load_routing_osr_catalog(path)
     assert "sx " in archive["source_qasm"]
     reconstructed = reconstruct_routing_osr_catalog(path, compact_path=compact)
@@ -98,9 +114,6 @@ def test_catalog_round_trip_with_native_sx(tmp_path, compact):
                 alternative.input_physical[payload.input_assignment[payload.output_assignment.index(q)]]
                 for q in range(2))
     assert reconstructed.circuit.get_Gate_Nums().get("SX") == 1
-    assert np.allclose(
-        reconstructed.circuit.get_Matrix(
-            reconstructed.parameters, is_f32=False
-        ),
-        circuit.get_Matrix(parameters, is_f32=False),
-    )
+    actual = reconstructed.circuit.get_Matrix(reconstructed.parameters, is_f32=False)
+    expected = circuit.get_Matrix(parameters, is_f32=False)
+    np.testing.assert_allclose(actual * np.exp(-1j * np.angle(np.vdot(expected, actual))), expected, atol=1e-12)

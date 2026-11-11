@@ -2589,10 +2589,12 @@ def reconstruct_routing_osr_catalog(path, expected_sha256=None, *, compact_path=
         archive = load_compact_path_archive(path, expected_sha256)
     else:
         archive = load_routing_osr_catalog(path, expected_sha256)
-    custom_instructions = (
+    custom_instructions = {instruction.name: instruction
+                           for instruction in qasm2.LEGACY_CUSTOM_INSTRUCTIONS}
+    custom_instructions.update({instruction.name: instruction for instruction in (
         qasm2.CustomInstruction("sx", 0, 1, SXGate, builtin=True),
         qasm2.CustomInstruction("sxdg", 0, 1, SXdgGate, builtin=True),
-    )
+    )})
 
     def decode(qasm):
         qasm = qasm.replace("\nu(", "\nu3(")
@@ -2606,7 +2608,7 @@ def reconstruct_routing_osr_catalog(path, expected_sha256=None, *, compact_path=
             qasm,
         )
         return Qiskit_IO.convert_Qiskit_to_Squander(
-            qasm2.loads(qasm, custom_instructions=custom_instructions)
+            qasm2.loads(qasm, custom_instructions=tuple(custom_instructions.values()))
         )
 
     circuit, parameters = decode(archive["source_qasm"])
