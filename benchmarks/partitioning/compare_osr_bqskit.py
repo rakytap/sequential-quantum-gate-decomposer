@@ -436,11 +436,8 @@ def provenance_caption_suffix(rows: Iterable[tuple]) -> str:
         )
     if any(row[1].get("routing_replay") for row in rows):
         suffix += (
-            " OSR reuses the archived A2A and permutation libraries. Times charge "
-            "the original complete run plus the measured routing replay and any "
-            "new final synthesis; they are cumulative experiment costs, not "
-            "fresh-run timings. Routed and final counts retain their respective "
-            "best verified candidates, including the original complete pipeline."
+            " OSR retains the best verified candidate at each stage. Its cumulative "
+            "times include the archived run plus new routing and final synthesis."
         )
     return suffix
 
