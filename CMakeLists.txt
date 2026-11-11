@@ -853,7 +853,6 @@ list(APPEND qgd_files
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/decomposition/N_Qubit_Decomposition_adaptive.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/decomposition/N_Qubit_Decomposition_custom.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/decomposition/N_Qubit_Decomposition_Cost_Function.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/decomposition/OSR_Eigen_SVD.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/decomposition/Sub_Matrix_Decomposition_Cost_Function.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/decomposition/Sub_Matrix_Decomposition.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/decomposition/N_Qubit_Decomposition_Tree_Search.cpp
@@ -1146,11 +1145,38 @@ install(TARGETS qgd
 
 # Matrix-derived logical factors keep Eigen code out of Tree Search rebuilds.
 target_sources(qgd PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/squander/src-cpp/decomposition/OSR_Logical_Factor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/squander/src-cpp/decomposition/OSR_Logical_Factor_Tree.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/squander/src-cpp/decomposition/OSR_Logical_Phase_Factor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/squander/src-cpp/decomposition/OSR_Logical_Phase_Clifford.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/squander/src-cpp/decomposition/OSR_Parity_Network.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/squander/src-cpp/decomposition/OSR_Phase_Parity_Network.cpp
+)
+
+set(qgd_osr_eigen_sources
+    ${CMAKE_CURRENT_SOURCE_DIR}/squander/src-cpp/decomposition/OSR_Eigen_SVD.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/squander/src-cpp/decomposition/OSR_Logical_Factor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/squander/src-cpp/decomposition/OSR_Logical_Phase_Factor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/squander/src-cpp/decomposition/OSR_Phase_Polynomial.cpp
 )
+
+if(MSVC)
+  # Auto-exporting Eigen's template instantiations creates more than 65535
+  # members in qgd.lib (LNK1189). CMake scans qgd's own objects, not private
+  # static libraries, so keep these implementation details in an archive.
+  add_library(qgd_osr_eigen STATIC ${qgd_osr_eigen_sources})
+  set_target_properties(qgd_osr_eigen PROPERTIES
+      WINDOWS_EXPORT_ALL_SYMBOLS OFF
+      POSITION_INDEPENDENT_CODE ON)
+  target_include_directories(qgd_osr_eigen PRIVATE
+      $<TARGET_PROPERTY:qgd,INCLUDE_DIRECTORIES>)
+  target_compile_options(qgd_osr_eigen PRIVATE
+      $<TARGET_PROPERTY:qgd,COMPILE_OPTIONS>)
+  # These objects still implement qgd.dll, including its explicit C exports.
+  target_compile_definitions(qgd_osr_eigen PRIVATE qgd_EXPORTS)
+  target_link_libraries(qgd_osr_eigen PRIVATE Eigen3::Eigen)
+  target_link_libraries(qgd PRIVATE qgd_osr_eigen)
+  # The logical-factor ABI already has dllexport; preserve the unannotated
+  # phase-polynomial ABI explicitly when it moves out of qgd's own objects.
+  target_sources(qgd PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/cmake/qgd_osr.def)
+else()
+  target_sources(qgd PRIVATE ${qgd_osr_eigen_sources})
+endif()

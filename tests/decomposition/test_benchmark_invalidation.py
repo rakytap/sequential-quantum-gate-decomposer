@@ -1,4 +1,4 @@
-from examples.decomposition.wide_circuit_optimization import (
+from benchmarks.partitioning.wide_circuit_optimization import (
     clear_invalidated_result_artifacts,
 )
 

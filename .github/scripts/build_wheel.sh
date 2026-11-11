@@ -92,11 +92,11 @@ fi
 # Install Python build dependencies
 log_info "Installing Python build dependencies..."
 pip install --upgrade pip
-pip install build setuptools wheel scikit-build
+pip install --upgrade build setuptools wheel scikit-build
 
 # Install auditwheel
 log_info "Installing auditwheel..."
-pip install auditwheel
+pip install --upgrade auditwheel
 
 # Set environment variables for build
 export TBB_LIB_DIR="${CONDA_PREFIX}/lib"
@@ -135,6 +135,10 @@ log_info "Wheel created: ${WHEEL_FILE}"
 # Fix wheel with auditwheel
 log_info "Fixing wheel with auditwheel..."
 auditwheel repair "${WHEEL_FILE}" -w dist/
+
+# Verify both the original and repaired archives before reporting success.
+log_info "Verifying wheel RECORDs..."
+python "${SCRIPT_DIR}/check_wheel_records.py" "dist/*.whl"
 
 # List repaired wheels
 log_info "Repaired wheels:"

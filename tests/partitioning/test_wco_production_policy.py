@@ -55,7 +55,7 @@ def test_wco_respects_explicit_replay_overrides():
 
 
 def test_production_metadata_records_the_actual_policy():
-    path = Path(__file__).resolve().parents[2] / "examples/decomposition/wide_circuit_optimization.py"
+    path = Path(__file__).resolve().parents[2] / "benchmarks/partitioning/wide_circuit_optimization.py"
     spec = importlib.util.spec_from_file_location("wco_policy_reporting", path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
@@ -176,7 +176,7 @@ def test_global_search_rejects_ambiguous_nonboolean_settings():
     ({"exact_routing_mapping_aware_seeds": False}, False),
 ])
 def test_metadata_records_catalog_guidance_default_and_overrides(overrides, expected):
-    path = Path(__file__).resolve().parents[2] / "examples/decomposition/wide_circuit_optimization.py"
+    path = Path(__file__).resolve().parents[2] / "benchmarks/partitioning/wide_circuit_optimization.py"
     spec = importlib.util.spec_from_file_location("wco_catalog_policy_reporting", path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
