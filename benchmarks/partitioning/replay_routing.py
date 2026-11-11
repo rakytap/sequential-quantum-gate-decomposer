@@ -123,9 +123,10 @@ def cached_portfolio(catalog, archived_route, progress):
     best = None
     best_count = archived_route["cnot_count"]
 
-    def remember(candidate, label, elapsed):
+    def remember(candidate, label, elapsed, timed_out=False):
         nonlocal best, best_count
         variants.append(dict(label=label, seconds=round(elapsed, 6),
+                             timed_out=timed_out,
                              cnots=None if candidate is None else candidate.cnot_count))
         if candidate is not None and candidate.cnot_count < best_count:
             best, best_count = candidate, candidate.cnot_count
@@ -168,13 +169,17 @@ def cached_portfolio(catalog, archived_route, progress):
             for weight in WEIGHTS:
                 begin = time.monotonic()
                 label = f"pam-{name}-{layout_name}-{weight:g}"
-                candidate = routing._precomputed_osr_pam_warm_start(
-                    selected_partitions=cover, gate_predecessors=predecessors,
-                    partitions=catalog.partitions, alternatives=catalog.alternatives,
-                    logical_qubit_count=n, topology=catalog.topology, path=path,
-                    layout_passes=3, swap_cnot_cost=weight, initial_mapping=layout,
-                    master_backend=label, deadline=begin + 60)
-                remember(candidate, label, time.monotonic() - begin)
+                expired = False
+                try:
+                    candidate = routing._precomputed_osr_pam_warm_start(
+                        selected_partitions=cover, gate_predecessors=predecessors,
+                        partitions=catalog.partitions, alternatives=catalog.alternatives,
+                        logical_qubit_count=n, topology=catalog.topology, path=path,
+                        layout_passes=3, swap_cnot_cost=weight, initial_mapping=layout,
+                        master_backend=label, deadline=begin + 300)
+                except routing.ExactRoutingLimitExceeded:
+                    candidate, expired = None, True
+                remember(candidate, label, time.monotonic() - begin, expired)
     # Reference trajectory -> additive gathering/permutation price -> cover
     # -> executable route; repeat once around the produced trajectory.
     begin = time.monotonic()
@@ -363,7 +368,8 @@ def worker(args):
                     if hasattr(routing, name):
                         original_synthesis[name] = getattr(routing, name)
                         setattr(routing, name, forbidden)
-                with deterministic_cover_solver():
+                from squander.partitioning._pam_circuit_cache import pam_circuit_conversion_cache
+                with deterministic_cover_solver(), pam_circuit_conversion_cache():
                     catalog, exact, variants = cached_portfolio(catalog, route, progress)
             finally:
                 for name, function in original_synthesis.items():

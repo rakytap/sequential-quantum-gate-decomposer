@@ -66,8 +66,8 @@ def test_catalog_round_trip_with_native_sx(tmp_path, compact, legacy_phase):
         parameters=parameters,
         topology=topology,
         config={"strategy": "TreeSearch"},
-        candidate_gate_sets=((0, 1),),
-        candidate_gate_orders=((0, 1),),
+        candidate_gate_sets=((0, 1, 2),),
+        candidate_gate_orders=((0, 1, 2),),
         feasible_alternatives={0: tuple(alternatives)},
         osr_synthesized_partitions={0},
     )
