@@ -352,6 +352,13 @@ def worker(args):
             catalog_info = old["routing_osr_catalog"]
             catalog = routing.reconstruct_routing_osr_catalog(
                 source_root / catalog_info["file"], catalog_info["sha256"], compact_path=True)
+            from squander.partitioning._routing_catalog_replay import bind_catalog_source
+            precise_circuit, precise_parameters = decode(backend, route["input"])
+            precise_representation = backend._squander_audit_representation(
+                precise_circuit, precise_parameters, range(precise_circuit.get_Qbit_Num()))
+            if backend._exact_state_sha256(backend._qasm_exact_state(precise_representation)) != route["input_sha256"]:
+                raise ValueError("Lossless archived A2A source did not round-trip exactly.")
+            catalog = bind_catalog_source(catalog, precise_circuit, precise_parameters)
             original_synthesis = {}
 
             def forbidden(*_args, **_kwargs):

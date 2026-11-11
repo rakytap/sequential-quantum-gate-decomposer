@@ -12,6 +12,53 @@ from pathlib import Path
 from squander.decomposition._rewrite_audit_stream import _JSONReader
 
 
+def bind_catalog_source(catalog, circuit, parameters, *, max_parameter_drift=1e-12):
+    """Restore lossless audit angles after an older QASM cache rounded them.
+
+    Cached implementations and all their prices are unchanged. The selected
+    programs must still pass the ordinary local-unitary and exact-cover proof
+    against this exact source; a rounded cache never becomes the authority for
+    the experiment's input gate stream.
+    """
+    import numpy as np
+    from squander.gates.qgd_Circuit import qgd_Circuit
+
+    gates = circuit.get_Gates()
+    def structure(value):
+        return tuple((g.get_Name(), tuple(g.get_Involved_Qbits()), g.get_Parameter_Num())
+                     for g in value.get_Gates())
+    if circuit.get_Qbit_Num() != catalog.circuit.get_Qbit_Num() or structure(circuit) != structure(catalog.circuit):
+        raise ValueError("Archived audit and routing catalogue have different gate structures.")
+    parameters = np.asarray(parameters, dtype=np.float64)
+    cached = np.asarray(catalog.parameters, dtype=np.float64)
+    if (parameters.shape != cached.shape or not np.all(np.isfinite(parameters))
+            or not np.all(np.isfinite(cached))
+            or np.any(np.abs(parameters - cached) > max_parameter_drift)):
+        raise ValueError("Routing catalogue differs from the audited source beyond export roundoff.")
+    alternatives = {}
+    for partition, values in catalog.alternatives.items():
+        logicals = values[0].logical_qubits
+        source = qgd_Circuit(circuit.get_Qbit_Num())
+        blocks = []
+        for gate_id in catalog.gate_orders[partition]:
+            gate = gates[gate_id]
+            start = gate.get_Parameter_Start_Index()
+            blocks.append(parameters[start:start + gate.get_Parameter_Num()])
+            source.add_Gate(gate)
+        source = source.Remap_Qbits({q: i for i, q in enumerate(logicals)}, len(logicals)).get_Flat_Circuit()
+        source_parameters = np.concatenate(blocks) if blocks else np.empty(0)
+        payloads = {}
+        rebound = []
+        for alternative in values:
+            key = id(alternative.payload)
+            if key not in payloads:
+                payloads[key] = replace(alternative.payload, source_circuit=source,
+                                        source_parameters=source_parameters)
+            rebound.append(replace(alternative, payload=payloads[key]))
+        alternatives[partition] = tuple(rebound)
+    return replace(catalog, circuit=circuit, parameters=parameters, alternatives=alternatives)
+
+
 def load_compact_path_archive(path, expected_sha256=None):
     from . import routing
 

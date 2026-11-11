@@ -67,3 +67,44 @@ def test_optional_pam_limit_preserves_best_but_corruption_fails(monkeypatch, cor
         _, result, variants = cached_portfolio(catalog, archived, lambda *a: None)
         assert result.solution.cnot_count == 3
         assert any(v.get("timed_out") for v in variants)
+
+
+def test_catalogue_export_roundoff_restores_exact_audited_source():
+    from qiskit import QuantumCircuit
+    from squander import Qiskit_IO
+    from squander.partitioning import routing
+    from squander.partitioning._routing_catalog_replay import bind_catalog_source
+
+    qiskit = QuantumCircuit(2)
+    qiskit.u(0.3, 0.2, 0.1, 0)
+    qiskit.cx(0, 1)
+    circuit, cached_parameters = Qiskit_IO.convert_Qiskit_to_Squander(qiskit)
+    cached_parameters = np.asarray(cached_parameters)
+    exact_parameters = cached_parameters.copy()
+    exact_parameters[1] += 1e-15
+    payload = routing.SynthesizedRoutingPayload(
+        circuit=circuit, parameters=cached_parameters, topology=((0, 1),),
+        input_assignment=(0, 1), output_assignment=(0, 1),
+        source_circuit=circuit, source_parameters=cached_parameters)
+    alternative = routing.RoutingAlternative(
+        0, (0, 1), (0, 1), (0, 1), 1, payload=payload)
+    catalog = routing.LoadedRoutingOSRCatalog(
+        circuit, cached_parameters, ((0, 1),), (frozenset((0, 1)),),
+        ((0, 1),), {0: (alternative,)}, {})
+    starts = tuple(g.get_Parameter_Start_Index() for g in circuit.get_Gates())
+    restored = bind_catalog_source(catalog, circuit, exact_parameters)
+    selected = restored.alternatives[0][0]
+    assert selected.payload.circuit is payload.circuit
+    np.testing.assert_array_equal(selected.payload.parameters, cached_parameters)
+    np.testing.assert_array_equal(selected.payload.source_parameters, exact_parameters)
+    assert selected.payload.source_parameters[1] != payload.source_parameters[1]
+    expected = circuit.get_Matrix(exact_parameters, is_f32=False)
+    np.testing.assert_array_equal(selected.payload.source_circuit.get_Matrix(
+        selected.payload.source_parameters, is_f32=False), expected)
+    assert starts == tuple(g.get_Parameter_Start_Index() for g in circuit.get_Gates())
+    assert routing._process_infidelity(expected, payload.circuit.get_Matrix(
+        payload.parameters, is_f32=False)) < 1e-10
+    wrong = exact_parameters.copy()
+    wrong[1] += 1e-3
+    with pytest.raises(ValueError, match="beyond export roundoff"):
+        bind_catalog_source(catalog, circuit, wrong)
