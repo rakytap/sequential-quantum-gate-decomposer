@@ -306,6 +306,7 @@ def _cover_graph(monkeypatch, successors, starts, costs, fail_first=False):
     catalog = Catalog()
     catalog.circuit = Circuit()
     catalog.parameters = ()
+    catalog.implicit_path_frames = False
     catalog.topology = ((0, 1), (1, 2))
     catalog.partitions = (frozenset([0]), frozenset([1]), frozenset([2]))
     catalog.alternatives = {0: (SimpleNamespace(logical_qubits=(0, 1)),)}

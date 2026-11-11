@@ -2396,6 +2396,7 @@ class LoadedRoutingOSRCatalog:
     gate_orders: tuple[tuple[int, ...], ...]
     alternatives: Mapping[int, tuple[RoutingAlternative, ...]]
     configuration: Mapping[str, Any]
+    implicit_path_frames: bool = False
 
 
 def _catalog_qasm(circuit, parameters):
@@ -2577,13 +2578,17 @@ def load_routing_osr_catalog(path, expected_sha256=None):
     return archive
 
 
-def reconstruct_routing_osr_catalog(path, expected_sha256=None):
+def reconstruct_routing_osr_catalog(path, expected_sha256=None, *, compact_path=False):
     """Reconstruct native alternatives from a catalog, never calling OSR."""
     from qiskit import qasm2
     from qiskit.circuit.library import SXGate, SXdgGate
     from squander import Qiskit_IO
 
-    archive = load_routing_osr_catalog(path, expected_sha256)
+    if compact_path:
+        from ._routing_catalog_replay import load_compact_path_archive
+        archive = load_compact_path_archive(path, expected_sha256)
+    else:
+        archive = load_routing_osr_catalog(path, expected_sha256)
     custom_instructions = (
         qasm2.CustomInstruction("sx", 0, 1, SXGate, builtin=True),
         qasm2.CustomInstruction("sxdg", 0, 1, SXdgGate, builtin=True),
@@ -2651,21 +2656,20 @@ def reconstruct_routing_osr_catalog(path, expected_sha256=None):
             )
             for alternative in record["alternatives"]
         )
-        expected_transitions = _expected_boundary_transition_keys(
-            archived_topology,
-            physical_qubit_count,
-            len(logical_qubits),
-        )
-        archived_transitions = {
-            (alternative.input_physical, alternative.output_physical)
-            for alternative in alternatives[partition]
-        }
-        if expected_transitions - archived_transitions:
-            raise ValueError(
-                "Routing OSR catalog is missing deterministic fallback "
-                f"coverage for partition {partition}."
+        if not compact_path:
+            expected_transitions = _expected_boundary_transition_keys(
+                archived_topology, physical_qubit_count, len(logical_qubits),
             )
-    return _close_loaded_catalog_under_boundary_swaps(LoadedRoutingOSRCatalog(
+            archived_transitions = {
+                (alternative.input_physical, alternative.output_physical)
+                for alternative in alternatives[partition]
+            }
+            if expected_transitions - archived_transitions:
+                raise ValueError(
+                    "Routing OSR catalog is missing deterministic fallback "
+                    f"coverage for partition {partition}."
+                )
+    loaded = LoadedRoutingOSRCatalog(
         circuit=circuit.get_Flat_Circuit(),
         parameters=np.asarray(parameters, dtype=np.float64),
         topology=tuple(tuple(map(int, edge)) for edge in archive["topology"]),
@@ -2673,7 +2677,15 @@ def reconstruct_routing_osr_catalog(path, expected_sha256=None):
         gate_orders=tuple(gate_orders),
         alternatives=alternatives,
         configuration=archive.get("configuration", {}),
-    ))
+    )
+    if compact_path:
+        # Close local permutation orbits once, without copying every program
+        # along the full device. Physical frames are materialized per cover.
+        local_width = min(3, loaded.circuit.get_Qbit_Num())
+        local = replace(loaded, topology=tuple((i, i + 1) for i in range(local_width - 1)))
+        closed = _close_loaded_catalog_under_boundary_swaps(local)
+        return replace(closed, topology=loaded.topology, implicit_path_frames=True)
+    return _close_loaded_catalog_under_boundary_swaps(loaded)
 
 
 def _close_loaded_catalog_under_boundary_swaps(catalog):
@@ -3149,6 +3161,7 @@ def augment_catalog_with_recombined_covers(
         gate_orders=tuple(gate_orders),
         alternatives=alternatives,
         configuration=catalog.configuration,
+        implicit_path_frames=catalog.implicit_path_frames,
     )
 
 
@@ -7426,6 +7439,7 @@ def mapping_aware_partition_weights(
     gate_after_mapping,
     path,
     swap_cnot_cost=3.0,
+    implicit_path_frames=False,
 ):
     """Price each cover column by marginal CNOT cost on one mapping trajectory.
 
@@ -7463,7 +7477,7 @@ def mapping_aware_partition_weights(
                         + ((outgoing[i] < outgoing[j]) != (after_positions[i] < after_positions[j]))
                         for i in range(width) for j in range(i + 1, width)
                     )
-                marginal_swaps = external[window] + internal_costs[key]
+                marginal_swaps = (min(external) if implicit_path_frames else external[window]) + internal_costs[key]
                 score = float(alternative.cnot_count) + float(swap_cnot_cost) * marginal_swaps
                 best = score if best is None else min(best, score)
                 continue
@@ -7516,6 +7530,7 @@ def mapping_aware_catalog_seeds(
     swap_cnot_cost=3.0, weight_swap_cnot_cost=None,
     fixed_cover_refine_seconds=None, fixed_cover_beam_width=64,
     use_packing_bound=True, initial_mapping=None, recombine_covers=True,
+    on_candidate=None,
 ):
     """Keep local-cost anchor routes and add geometry-guided feasible routes.
 
@@ -7547,7 +7562,8 @@ def mapping_aware_catalog_seeds(
         weights = mapping_aware_partition_weights(
             partitions=catalog.partitions, alternatives=catalog.alternatives,
             gate_before_mapping=before, gate_after_mapping=after, path=path,
-            swap_cnot_cost=weight_swap_cnot_cost)
+            swap_cnot_cost=weight_swap_cnot_cost,
+            implicit_path_frames=catalog.implicit_path_frames)
         return _minimum_partition_cover_selection(
             gate_predecessors=gate_predecessors, partitions=catalog.partitions,
             weights=weights, weight_partition_tiebreak=1)
@@ -7569,10 +7585,15 @@ def mapping_aware_catalog_seeds(
             key = (cover, packing)
             candidate = routes_by_cover.get(key)
             if candidate is None:
+                if catalog.implicit_path_frames:
+                    from ._routing_catalog_replay import expand_path_cover
+                    cover_alternatives = expand_path_cover(catalog, cover).alternatives
+                else:
+                    cover_alternatives = catalog.alternatives
                 suffix = "-packing" if packing else ""
                 candidate = _cover_selection_warm_start(
                     selected_partitions=cover, gate_predecessors=gate_predecessors,
-                    partitions=catalog.partitions, alternatives=catalog.alternatives,
+                    partitions=catalog.partitions, alternatives=cover_alternatives,
                     logical_qubit_count=catalog.circuit.get_Qbit_Num(), path=path,
                     initial_mapping=initial_mapping,
                     master_backend=f"mapping-aware-catalog-seed-{seed}-round-{refinement}{suffix}",
@@ -7584,6 +7605,8 @@ def mapping_aware_catalog_seeds(
                     break
                 routes_by_cover[key] = candidate
                 candidates.append(candidate)
+                if on_candidate is not None:
+                    on_candidate(candidate)
             if refinement + 1 == rounds:
                 break
             trajectory = _catalog_route_trajectory_key(candidate)

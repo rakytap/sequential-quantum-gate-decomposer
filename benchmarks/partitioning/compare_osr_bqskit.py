@@ -427,12 +427,22 @@ def display_name(filename: str) -> str:
 
 
 def provenance_caption_suffix(rows: Iterable[tuple]) -> str:
+    rows = list(rows)
+    suffix = ""
     if any(row[0] == "tfim.qasm" for row in rows):
-        return (
+        suffix = (
             " The tfim row is the QFAST/QSearch tfim-4-60 benchmark; "
             "it is not an original QASMBenchmarks circuit."
         )
-    return ""
+    if any(row[1].get("routing_replay") for row in rows):
+        suffix += (
+            " OSR reuses the archived A2A and permutation libraries. Times charge "
+            "the original complete run plus the measured routing replay and any "
+            "new final synthesis; they are cumulative experiment costs, not "
+            "fresh-run timings. Routed and final counts retain their respective "
+            "best verified candidates, including the original complete pipeline."
+        )
+    return suffix
 
 
 def display_count(value: Optional[int]) -> str:

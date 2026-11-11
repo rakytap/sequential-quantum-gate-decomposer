@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 from qiskit import QuantumCircuit
 
 from squander import Qiskit_IO
@@ -11,7 +12,8 @@ from squander.partitioning.routing import (
 )
 
 
-def test_catalog_round_trip_with_native_sx(tmp_path):
+@pytest.mark.parametrize("compact", [False, True])
+def test_catalog_round_trip_with_native_sx(tmp_path, compact):
     qiskit_circuit = QuantumCircuit(2)
     qiskit_circuit.sx(0)
     qiskit_circuit.cx(0, 1)
@@ -67,7 +69,34 @@ def test_catalog_round_trip_with_native_sx(tmp_path):
 
     archive = load_routing_osr_catalog(path)
     assert "sx " in archive["source_qasm"]
-    reconstructed = reconstruct_routing_osr_catalog(path)
+    reconstructed = reconstruct_routing_osr_catalog(path, compact_path=compact)
+    if compact:
+        from squander.partitioning._routing_catalog_replay import expand_path_cover
+        from squander.partitioning.routing import augment_catalog_with_recombined_covers
+        reconstructed = augment_catalog_with_recombined_covers(reconstructed, strategies=("kahn",))
+        assert reconstructed.implicit_path_frames
+        reconstructed = expand_path_cover(reconstructed, (0,))
+        full = reconstruct_routing_osr_catalog(path)
+        def costs(catalog):
+            return {(a.input_physical, a.output_physical): a.cnot_count
+                    for a in catalog.alternatives[0]}
+        original_costs, replay_costs = costs(full), costs(reconstructed)
+        assert set(original_costs) == set(replay_costs)
+        # Reflections can expose a cheaper valid realization at a boundary
+        # that the old full table represented by a different local program.
+        assert all(replay_costs[key] <= value for key, value in original_costs.items())
+        from squander.partitioning.routing import permuted_partition_target
+        for alternative in reconstructed.alternatives[0]:
+            payload = alternative.payload
+            target = permuted_partition_target(
+                payload.source_circuit.get_Matrix(payload.source_parameters, is_f32=False),
+                payload.input_assignment, payload.output_assignment)
+            actual = payload.circuit.get_Matrix(payload.parameters, is_f32=False)
+            overlap = np.vdot(target, actual)
+            np.testing.assert_allclose(actual * np.exp(-1j * np.angle(overlap)), target, atol=1e-12)
+            assert alternative.output_physical == tuple(
+                alternative.input_physical[payload.input_assignment[payload.output_assignment.index(q)]]
+                for q in range(2))
     assert reconstructed.circuit.get_Gate_Nums().get("SX") == 1
     assert np.allclose(
         reconstructed.circuit.get_Matrix(

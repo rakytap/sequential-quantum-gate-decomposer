@@ -183,6 +183,18 @@ def prepare(root, output, release_tag):
                         if len(expected) != 64 or any(c not in "0123456789abcdef" for c in expected):
                             raise ValueError(f"Invalid SHA-256 for {path}")
                         evidence[path] = (role, expected)
+                    replay = row.get("routing_replay", {})
+                    candidate_audit = replay.get("candidate_audit")
+                    if candidate_audit:
+                        path = safe_path(root, candidate_audit["file"])
+                        if path.parent != folder:
+                            raise ValueError(f"Replay proof does not belong to its result group: {path}")
+                        evidence[path] = ("routing_replay_audit", candidate_audit["sha256"])
+                        candidate_qasm = safe_path(root, replay["candidate_qasm"])
+                        if candidate_qasm.parent != folder:
+                            raise ValueError(f"Replay QASM does not belong to its result group: {candidate_qasm}")
+                        item, _ = copy_snapshot(candidate_qasm, root, snapshot, "routing_replay_qasm")
+                        manifest["files"].append(item)
                 chunks = [[]]
                 chunk_size = 10240
                 for path, (role, expected) in sorted(evidence.items()):

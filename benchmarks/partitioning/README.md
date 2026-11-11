@@ -17,6 +17,45 @@ python benchmarks/partitioning/wide_circuit_optimization.py \
 Moving the driver leaves dataset/result paths and the frozen archives unchanged.
 Its source fingerprint records the driver's current location for new runs.
 
+## Continue a completed run at routing
+
+`replay_routing.py` reads an immutable source checkout and replaces the current
+checkout's results after every completed case has passed verification:
+
+```bash
+PYTHONPATH=. python benchmarks/partitioning/replay_routing.py \
+  --source-root /path/to/original/checkout --jobs 8
+```
+
+The source must contain its recorded audit and routing-catalogue release assets.
+Both 3q and 4q configurations are processed, including results without a BQSKit
+counterpart. Failed, timed-out and unrun inputs remain recorded separately.
+Already topology-valid cases have no routing stage. The checkpoint directory
+`.routing-refresh/` records each phase and permits restarting the same command.
+
+The same portfolio is applied to each catalogue: the existing cover strategies,
+four PAM SWAP weights, reference-trajectory cover refinement, and native beam
+search with both original and gathering-aware priorities. It retains the
+archived routed circuit. Translated local programs are materialized per cover
+to keep memory bounded; no A2A or permutation synthesis is repeated.
+
+Final topology synthesis is reused only when the exact ordered gate/parameter
+stream and both boundary mappings match. Every changed selected route receives
+the ordinary topology synthesis pass and a new replay certificate. The old
+verified final circuit remains a complete-pipeline candidate. The routed and
+final columns therefore report their respective best verified candidates;
+`routing_replay.candidate_audit` binds the new raw route to its own final output
+even when the old complete pipeline wins the final comparison.
+
+The old routing measurement includes catalogue construction and cannot be
+separated exactly from its PAM work. Consequently, the refreshed timing columns
+charge the original complete experiment plus the measured extension. Per-case
+metadata preserves the old times, new routing and final-synthesis times,
+digests, shortcuts and branch selection. These cumulative costs do not claim
+to measure a fresh execution of the revised algorithm. New table captions
+state this accounting explicitly. Audit export/verification is separate from
+the optimization-stage costs, as in the original benchmark.
+
 The wide-circuit optimization benchmark reads the two source datasets here and
 writes optimized OpenQASM 2 circuits with identical filenames into
 `<dataset>_results_<width>qbit_<strategy>/`, with metadata in each directory's
