@@ -56,6 +56,11 @@ to measure a fresh execution of the revised algorithm. New table captions
 state this accounting explicitly. Audit export/verification is separate from
 the optimization-stage costs, as in the original benchmark.
 
+`configuration` retains the archived synthesis settings; `routing_replay`
+identifies the replacement routing policy and its implementation digests.
+When older cache exports rounded angles, the loader restores the exact source
+from its audit and checks the selected programs against that source.
+
 The wide-circuit optimization benchmark reads the two source datasets here and
 writes optimized OpenQASM 2 circuits with identical filenames into
 `<dataset>_results_<width>qbit_<strategy>/`, with metadata in each directory's
