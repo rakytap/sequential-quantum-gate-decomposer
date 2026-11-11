@@ -188,7 +188,7 @@ def cached_portfolio(catalog, archived_route, progress):
         observed_geometry.append(candidate)
         remember(candidate, f"geometry-{len(observed_geometry) - 1}", time.monotonic() - begin)
     try:
-        with search_budget(300):
+        with search_budget(max(300, 15 * n)):
             geometry = routing.mapping_aware_catalog_seeds(
                 catalog, reference_seed_count=1, refinement_rounds=2, layout_passes=1,
                 swap_cnot_cost=1.5, weight_swap_cnot_cost=1.5,
@@ -218,7 +218,7 @@ def cached_portfolio(catalog, archived_route, progress):
                 beam_initial_mappings=(None, *geometry_layouts, initial, final),
                 master_backend=label, lookahead=True,
                 exact_refine_timeout_seconds=None, beam_width=width,
-                translation_limit=8, deadline=begin + 180,
+                translation_limit=8, deadline=begin + max(180, 5 * n),
                 layout_seed_count=0, layout_total_passes=3,
                 layout_candidate_limit=2, use_packing_bound=packing)
             remember(candidate, label, time.monotonic() - begin)
