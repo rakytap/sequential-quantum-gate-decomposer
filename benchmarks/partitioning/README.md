@@ -27,7 +27,9 @@ PYTHONPATH=. python benchmarks/partitioning/replay_routing.py \
   --source-root /path/to/original/checkout --jobs 1
 ```
 
-The default is one concurrent case. On a shared Linux server, enforce a combined
+The default is one concurrent case. With the default OSR restart policy,
+topology optimization runs sequentially within each circuit; `--jobs` controls
+concurrency across circuits. On a shared Linux server, enforce a combined
 memory budget for Python and its solver children, for example:
 
 ```bash
