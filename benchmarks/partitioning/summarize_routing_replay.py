@@ -97,7 +97,8 @@ def summarize(state_dir, output_dir):
         bq = json.loads(bq_path.read_text()).get(row["file"], {})
         key = f"{row['size']}q-{row['dataset']}"
         group = groups.setdefault(key, dict(completed=0, routing_changed=0, routing_unchanged=0,
-                                           already_valid=0, routed=dict(win=0, tie=0, loss=0),
+                                           already_valid=0, all_to_all=dict(win=0, tie=0, loss=0),
+                                           routed=dict(win=0, tie=0, loss=0),
                                            final=dict(win=0, tie=0, loss=0)))
         group["completed"] += 1
         group["routing_unchanged" if replay.get("route_bit_identical") else
@@ -116,7 +117,7 @@ def summarize(state_dir, output_dir):
                 raise AssertionError(f"Unmatched source circuit in case {index}.")
             if synthesis_process_tolerance(entry) != synthesis_process_tolerance(bq):
                 raise AssertionError(f"Unmatched synthesis tolerances in case {index}.")
-            for stage in ("routed", "final"):
+            for stage in ("all_to_all", "routed", "final"):
                 if stage in entry and stage in bq:
                     result = outcome(entry[stage]["cnot_equiv"], bq[stage]["cnot_equiv"])
                     group[stage][result] += 1
