@@ -117,6 +117,16 @@ result directories are populated by
 workflow. Directories with `_old` suffixes and scratch experiments are not part
 of the archived comparison.
 
+## Routing refresh: November 2026
+
+The current 3q/4q results, paired outcomes, timing basis, and evidence-upload
+instructions are recorded in
+[`results_archive_20261111/README.md`](results_archive_20261111/README.md).
+Its comparison tables and manifest refer to the refreshed current results.
+The historical commands below target the original October snapshot and must
+be run from its original archive revision; its manifest does not describe the
+refreshed files.
+
 ## Frozen result archive: 28 October 2026
 
 The Git archive contains the eight current `results.json` files and the final

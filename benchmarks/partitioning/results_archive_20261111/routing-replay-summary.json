@@ -1,0 +1,95 @@
+{
+  "policy": "cached-pam-cover-and-packing-v1",
+  "completed": 118,
+  "skipped_incomplete": 36,
+  "groups": {
+    "3q-IBMEagle": {
+      "completed": 35,
+      "routing_changed": 28,
+      "routing_unchanged": 7,
+      "already_valid": 0,
+      "all_to_all": {
+        "win": 26,
+        "tie": 9,
+        "loss": 0
+      },
+      "routed": {
+        "win": 35,
+        "tie": 0,
+        "loss": 0
+      },
+      "final": {
+        "win": 35,
+        "tie": 0,
+        "loss": 0
+      }
+    },
+    "3q-QASMBenchmarks": {
+      "completed": 24,
+      "routing_changed": 15,
+      "routing_unchanged": 3,
+      "already_valid": 6,
+      "all_to_all": {
+        "win": 10,
+        "tie": 8,
+        "loss": 0
+      },
+      "routed": {
+        "win": 17,
+        "tie": 1,
+        "loss": 0
+      },
+      "final": {
+        "win": 19,
+        "tie": 5,
+        "loss": 0
+      }
+    },
+    "4q-IBMEagle": {
+      "completed": 35,
+      "routing_changed": 27,
+      "routing_unchanged": 8,
+      "already_valid": 0,
+      "all_to_all": {
+        "win": 18,
+        "tie": 1,
+        "loss": 1
+      },
+      "routed": {
+        "win": 20,
+        "tie": 0,
+        "loss": 0
+      },
+      "final": {
+        "win": 18,
+        "tie": 0,
+        "loss": 2
+      }
+    },
+    "4q-QASMBenchmarks": {
+      "completed": 24,
+      "routing_changed": 13,
+      "routing_unchanged": 5,
+      "already_valid": 6,
+      "all_to_all": {
+        "win": 7,
+        "tie": 5,
+        "loss": 0
+      },
+      "routed": {
+        "win": 11,
+        "tie": 1,
+        "loss": 0
+      },
+      "final": {
+        "win": 12,
+        "tie": 6,
+        "loss": 0
+      }
+    }
+  },
+  "cnot_regressions": 0,
+  "timing_basis": "archived-complete-run-plus-measured-extension",
+  "all_a2a_counts_unchanged": true,
+  "all_final_files_bound_to_verified_audits": true
+}

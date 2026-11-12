@@ -1,0 +1,520 @@
+\begin{table}[p]
+\centering
+\scriptsize
+\begin{tabular}{lrr|rrr|rrr}
+\hline
+Circuit & Qubits & Initial CNOTs & \multicolumn{3}{c|}{OSR CNOTs} & \multicolumn{3}{c}{BQSKit CNOTs} \\
+ & & & A2A & Routed & Final & A2A & Routed & Final \\
+\hline
+\texttt{tof\_3} & 5 & 18 & \textbf{14} & \textbf{17} & \textbf{17} & 18 & 21 & 19 \\
+\texttt{barenco\_tof\_3} & 5 & 24 & \textbf{18} & \textbf{23} & \textbf{23} & 22 & 26 & 26 \\
+\texttt{mod5\_4} & 5 & 28 & \textbf{20} & \textbf{27} & \textbf{25} & 22 & 30 & 29 \\
+\texttt{tof\_4} & 7 & 30 & \textbf{22} & \textbf{29} & \textbf{29} & 28 & 34 & 32 \\
+\texttt{tof\_5} & 9 & 42 & \textbf{30} & \textbf{41} & \textbf{41} & 40 & 49 & 46 \\
+\texttt{barenco\_tof\_4} & 7 & 48 & \textbf{34} & \textbf{46} & \textbf{46} & 42 & 52 & 48 \\
+\texttt{mod\_mult\_55} & 9 & 48 & \textbf{40} & \textbf{70} & \textbf{67} & 48 & 82 & 79 \\
+\texttt{QFT8} & 8 & 56 & \textbf{52} & \textbf{73} & \textbf{72} & 56 & 85 & 77 \\
+\texttt{vbe\_adder\_3} & 10 & 70 & \textbf{46} & \textbf{64} & \textbf{61} & 47 & 77 & 68 \\
+\texttt{barenco\_tof\_5} & 9 & 72 & \textbf{50} & \textbf{68} & \textbf{68} & 70 & 83 & 79 \\
+\texttt{csla\_mux\_3\_original} & 15 & 80 & \textbf{71} & \textbf{151} & \textbf{144} & \textbf{71} & 171 & 160 \\
+\texttt{rc\_adder\_6} & 14 & 93 & \textbf{71} & \textbf{102} & \textbf{102} & 81 & 119 & 119 \\
+\texttt{gf2\textasciicircum{}E4\_mult} & 12 & 99 & \textbf{99} & \textbf{228} & \textbf{202} & \textbf{99} & 241 & 228 \\
+\texttt{tof\_10} & 19 & 102 & \textbf{70} & \textbf{101} & \textbf{101} & 90 & 107 & 105 \\
+\texttt{mod\_red\_21} & 11 & 105 & \textbf{81} & \textbf{153} & \textbf{149} & 99 & 208 & 198 \\
+\texttt{gf2\textasciicircum{}E5\_mult} & 15 & 154 & \textbf{154} & \textbf{400} & \textbf{355} & \textbf{154} & 441 & 431 \\
+\texttt{csum\_mux\_9\_corrected} & 30 & 168 & \textbf{140} & \textbf{342} & \textbf{318} & 164 & 392 & 375 \\
+\texttt{QFTAdd8} & 16 & 184 & \textbf{176} & \textbf{363} & \textbf{342} & 183 & 477 & 435 \\
+\texttt{qcla\_com\_7} & 24 & 186 & \textbf{143} & \textbf{321} & \textbf{301} & 156 & 334 & 328 \\
+\texttt{barenco\_tof\_10} & 19 & 192 & \textbf{130} & \textbf{178} & \textbf{178} & 182 & 216 & 187 \\
+\texttt{gf2\textasciicircum{}E6\_mult} & 18 & 221 & \textbf{221} & \textbf{580} & \textbf{531} & \textbf{221} & 665 & 628 \\
+\texttt{QFT16} & 16 & 228 & \textbf{220} & \textbf{356} & \textbf{341} & 228 & 449 & 392 \\
+\texttt{qcla\_adder\_10} & 36 & 233 & \textbf{209} & \textbf{456} & \textbf{429} & 211 & 470 & 445 \\
+\texttt{gf2\textasciicircum{}E7\_mult} & 21 & 300 & \textbf{300} & \textbf{863} & \textbf{772} & \textbf{300} & 936 & 875 \\
+\texttt{qcla\_mod\_7} & 26 & 382 & \textbf{350} & \textbf{907} & \textbf{857} & 352 & 1054 & 998 \\
+\texttt{gf2\textasciicircum{}E8\_mult} & 24 & 405 & \textbf{405} & \textbf{1236} & \textbf{1106} & \textbf{405} & 1387 & 1316 \\
+\texttt{adder\_8} & 24 & 409 & \textbf{298} & \textbf{639} & \textbf{588} & 377 & 653 & 606 \\
+\texttt{gf2\textasciicircum{}E9\_mult} & 27 & 494 & \textbf{494} & \textbf{1499} & \textbf{1354} & \textbf{494} & 1956 & 1878 \\
+\texttt{gf2\textasciicircum{}E10\_mult} & 30 & 609 & \textbf{609} & \textbf{1985} & \textbf{1787} & \textbf{609} & 2846 & 2720 \\
+\texttt{QFT32} & 32 & 612 & \textbf{596} & \textbf{1484} & \textbf{1465} & 612 & 1827 & 1721 \\
+\texttt{QFTAdd16} & 32 & 716 & \textbf{700} & \textbf{1602} & \textbf{1507} & 716 & 2102 & 1897 \\
+\texttt{QFT64} & 64 & 1380 & \textbf{1346} & \textbf{3718} & \textbf{3568} & 1380 & 7570 & 7241 \\
+\texttt{gf2\textasciicircum{}E16\_mult} & 48 & 1581 & \textbf{1581} & \textbf{6234} & \textbf{5787} & \textbf{1581} & 6867 & 6597 \\
+\texttt{mod\_adder\_1024} & 28 & 1720 & \textbf{1236} & \textbf{2110} & \textbf{2040} & 1611 & 2446 & 2229 \\
+\texttt{QFTAdd32} & 64 & 1900 & \textbf{1868} & \textbf{7477} & \textbf{7002} & 1899 & 8680 & 8136 \\
+\hline
+Total & -- & 12989 & \textbf{11894} & \textbf{33943} & \textbf{31775} & 12668 & 43153 & 40748 \\
+\hline
+\end{tabular}
+\caption{IBM Eagle three-qubit partition CNOT counts for OSR and BQSKit at matched block process-infidelity tolerance. Bold values are best within each paired stage. OSR retains the best verified candidate at each stage. Its cumulative optimization times include the archived run plus new routing and final synthesis.}
+\label{tab:osr-bqskit-three-qubit-ibm-eagle-counts}
+\end{table}
+% Compared 35 circuits completed by both methods.
+% Count all_to_all totals include 35 circuits with counts from both methods.
+% Count routed totals include 35 circuits with counts from both methods.
+% Count final totals include 35 circuits with counts from both methods.
+
+\begin{table}[p]
+\centering
+\scriptsize
+\begin{tabular}{l|rrr|rrr}
+\hline
+Circuit & \multicolumn{3}{c|}{OSR time (min)} & \multicolumn{3}{c}{BQSKit time (min)} \\
+ & A2A & Routing & Final & A2A & Routing & Final \\
+\hline
+\texttt{tof\_3} & \textbf{0.05} & 0.84 & \textbf{0.04} & 0.84 & \textbf{0.52} & 0.47 \\
+\texttt{barenco\_tof\_3} & \textbf{0.05} & 0.82 & \textbf{0.06} & 1.08 & \textbf{0.57} & 0.43 \\
+\texttt{mod5\_4} & \textbf{0.11} & 0.92 & \textbf{0.07} & 1.11 & \textbf{0.51} & 0.79 \\
+\texttt{tof\_4} & \textbf{0.04} & 0.96 & \textbf{0.18} & 1.08 & \textbf{0.59} & 0.55 \\
+\texttt{tof\_5} & \textbf{0.05} & 1.25 & \textbf{0.22} & 1.07 & \textbf{0.71} & 0.61 \\
+\texttt{barenco\_tof\_4} & \textbf{0.11} & 1.38 & \textbf{0.16} & 1.07 & \textbf{0.66} & 0.69 \\
+\texttt{mod\_mult\_55} & \textbf{0.14} & 2.03 & \textbf{0.55} & 0.80 & \textbf{0.76} & 1.02 \\
+\texttt{QFT8} & \textbf{0.31} & 2.59 & \textbf{0.56} & 0.59 & \textbf{0.89} & 1.28 \\
+\texttt{vbe\_adder\_3} & \textbf{0.35} & 2.20 & \textbf{0.24} & 0.74 & \textbf{0.37} & 0.43 \\
+\texttt{barenco\_tof\_5} & \textbf{0.24} & 1.94 & \textbf{0.22} & 1.14 & \textbf{0.99} & 0.90 \\
+\texttt{csla\_mux\_3\_original} & \textbf{0.25} & 3.99 & 1.89 & 1.10 & \textbf{1.67} & \textbf{1.07} \\
+\texttt{rc\_adder\_6} & \textbf{0.10} & 4.27 & \textbf{0.24} & 0.76 & \textbf{0.97} & 0.71 \\
+\texttt{gf2\textasciicircum{}E4\_mult} & \textbf{0.04} & 4.11 & 2.55 & 0.87 & \textbf{1.35} & \textbf{1.25} \\
+\texttt{tof\_10} & \textbf{0.08} & 3.14 & \textbf{0.23} & 1.12 & \textbf{1.07} & 0.59 \\
+\texttt{mod\_red\_21} & \textbf{0.11} & 4.02 & 1.47 & 1.49 & \textbf{1.23} & \textbf{1.43} \\
+\texttt{gf2\textasciicircum{}E5\_mult} & \textbf{0.04} & 8.07 & 4.70 & 0.96 & \textbf{1.94} & \textbf{1.32} \\
+\texttt{csum\_mux\_9\_corrected} & \textbf{0.15} & 12.29 & 2.99 & 1.35 & \textbf{2.00} & \textbf{1.90} \\
+\texttt{QFTAdd8} & \textbf{0.73} & 10.62 & 3.32 & 1.19 & \textbf{2.09} & \textbf{2.25} \\
+\texttt{qcla\_com\_7} & \textbf{0.25} & 9.89 & 2.17 & 1.53 & \textbf{1.65} & \textbf{1.09} \\
+\texttt{barenco\_tof\_10} & \textbf{0.17} & 5.54 & \textbf{0.18} & 1.79 & \textbf{2.12} & 0.91 \\
+\texttt{gf2\textasciicircum{}E6\_mult} & \textbf{0.05} & 10.35 & 8.19 & 1.11 & \textbf{2.75} & \textbf{2.10} \\
+\texttt{QFT16} & \textbf{0.58} & 13.15 & 4.43 & 0.81 & \textbf{2.18} & \textbf{2.39} \\
+\texttt{qcla\_adder\_10} & \textbf{0.26} & 18.92 & 4.94 & 0.96 & \textbf{2.33} & \textbf{1.57} \\
+\texttt{gf2\textasciicircum{}E7\_mult} & \textbf{0.06} & 14.84 & 16.90 & 1.31 & \textbf{3.66} & \textbf{2.70} \\
+\texttt{qcla\_mod\_7} & \textbf{0.44} & 23.98 & 12.58 & 1.27 & \textbf{3.74} & \textbf{3.12} \\
+\texttt{gf2\textasciicircum{}E8\_mult} & \textbf{0.06} & 21.21 & 19.19 & 1.63 & \textbf{4.80} & \textbf{3.16} \\
+\texttt{adder\_8} & \textbf{0.70} & 19.04 & 6.46 & 1.70 & \textbf{3.75} & \textbf{2.18} \\
+\texttt{gf2\textasciicircum{}E9\_mult} & \textbf{0.07} & 30.77 & 25.20 & 1.98 & \textbf{5.92} & \textbf{5.94} \\
+\texttt{gf2\textasciicircum{}E10\_mult} & \textbf{0.08} & 45.74 & 94.74 & 2.35 & \textbf{7.31} & \textbf{8.83} \\
+\texttt{QFT32} & \textbf{1.02} & 39.78 & 29.81 & 1.52 & \textbf{5.77} & \textbf{7.91} \\
+\texttt{QFTAdd16} & 2.11 & 46.14 & 886.98 & \textbf{1.67} & \textbf{6.92} & \textbf{9.52} \\
+\texttt{QFT64} & 3.10 & 130.78 & 1204.49 & \textbf{2.66} & \textbf{12.76} & \textbf{28.04} \\
+\texttt{gf2\textasciicircum{}E16\_mult} & \textbf{0.17} & 108.57 & 1611.62 & 5.99 & \textbf{19.38} & \textbf{19.04} \\
+\texttt{mod\_adder\_1024} & \textbf{8.48} & 895.67 & 57.95 & 8.51 & \textbf{17.15} & \textbf{6.55} \\
+\texttt{QFTAdd32} & \textbf{4.81} & 196.14 & 1932.09 & 5.79 & \textbf{17.53} & \textbf{48.43} \\
+\hline
+Total & \textbf{25.38} & 1695.94 & 5937.59 & 60.95 & \textbf{138.61} & \textbf{171.19} \\
+\hline
+\end{tabular}
+\caption{IBM Eagle three-qubit partition stage runtimes for OSR and BQSKit at matched block process-infidelity tolerance, in minutes. Bold values are best within each paired stage. OSR retains the best verified candidate at each stage. Its cumulative optimization times include the archived run plus new routing and final synthesis.}
+\label{tab:osr-bqskit-three-qubit-ibm-eagle-times}
+\end{table}
+% Final time is timing.optimization: the post-routing final optimization stage.
+% Runtime a2a totals include 35 circuits with times from both methods.
+% Runtime routing totals include 35 circuits with times from both methods.
+% Runtime optimization totals include 35 circuits with times from both methods.
+
+\begin{table}[p]
+\centering
+\scriptsize
+\begin{tabular}{lrr|rrr|rrr}
+\hline
+Circuit & Qubits & Initial CNOTs & \multicolumn{3}{c|}{OSR CNOTs} & \multicolumn{3}{c}{BQSKit CNOTs} \\
+ & & & A2A & Routed & Final & A2A & Routed & Final \\
+\hline
+\texttt{adder\_n4} & 4 & 10 & \textbf{10} & \textbf{12} & \textbf{10} & \textbf{10} & 16 & 16 \\
+\texttt{bv\_n14} & 14 & 13 & \textbf{13} & \textbf{24} & \textbf{24} & \textbf{13} & 27 & \textbf{24} \\
+\texttt{cat\_state\_n22} & 22 & 21 & -- & -- & \textbf{21} & -- & -- & \textbf{21} \\
+\texttt{ghz\_state\_n23} & 23 & 22 & -- & -- & \textbf{22} & -- & -- & \textbf{22} \\
+\texttt{multiply\_n13} & 13 & 40 & \textbf{40} & \textbf{79} & \textbf{77} & \textbf{40} & 80 & 78 \\
+\texttt{tfim} & 4 & 60 & -- & -- & \textbf{29} & -- & -- & 56 \\
+\texttt{bv\_n140} & 140 & 72 & \textbf{72} & \textbf{142} & \textbf{142} & \textbf{72} & 348 & 334 \\
+\texttt{swap\_test\_n25} & 25 & 84 & \textbf{84} & \textbf{106} & \textbf{106} & \textbf{84} & \textbf{106} & \textbf{106} \\
+\texttt{ising\_n10} & 10 & 90 & -- & -- & \textbf{50} & -- & -- & 76 \\
+\texttt{dnn\_n8} & 8 & 192 & \textbf{64} & \textbf{108} & \textbf{98} & \textbf{64} & 134 & 126 \\
+\texttt{grover\_19} & 19 & 192 & \textbf{124} & \textbf{182} & \textbf{179} & 165 & 204 & 198 \\
+\texttt{ising\_n98} & 98 & 194 & -- & -- & \textbf{194} & -- & -- & \textbf{194} \\
+\texttt{hhl\_n7} & 7 & 196 & \textbf{86} & \textbf{158} & \textbf{149} & 89 & 197 & 192 \\
+\texttt{grover\_23} & 23 & 240 & \textbf{154} & \textbf{229} & \textbf{225} & 218 & 262 & 244 \\
+\texttt{multiplier\_n15} & 15 & 246 & \textbf{184} & \textbf{387} & \textbf{348} & 210 & 450 & 418 \\
+\texttt{heisenberg-16-20} & 16 & 360 & -- & -- & \textbf{193} & -- & -- & 204 \\
+\texttt{grover\_33} & 33 & 360 & \textbf{229} & \textbf{345} & \textbf{333} & 322 & 389 & 371 \\
+\texttt{dnn\_n16} & 16 & 384 & \textbf{128} & \textbf{233} & \textbf{224} & \textbf{128} & 314 & 276 \\
+\texttt{qft\_20} & 20 & 410 & \textbf{387} & \textbf{854} & \textbf{809} & 389 & 992 & 908 \\
+\texttt{adder\_n64} & 64 & 455 & \textbf{287} & \textbf{345} & \textbf{345} & 343 & 2400 & 2366 \\
+\texttt{grover\_45} & 45 & 504 & \textbf{319} & \textbf{462} & \textbf{460} & 429 & 530 & 510 \\
+\texttt{grover\_61} & 61 & 696 & \textbf{439} & \textbf{635} & \textbf{633} & 613 & 744 & 705 \\
+\texttt{grover\_81} & 81 & 936 & \textbf{589} & \textbf{859} & \textbf{857} & 824 & 999 & 955 \\
+\texttt{quantum\_volume\_n40\_d20\_i0} & 40 & 1200 & \textbf{1170} & \textbf{9264} & \textbf{8076} & \textbf{1170} & 11797 & 11070 \\
+\hline
+Total & -- & 6977 & \textbf{4379} & \textbf{14424} & \textbf{13604} & 5183 & 19989 & 19470 \\
+\hline
+\end{tabular}
+\caption{QASMBenchmarks three-qubit partition CNOT counts for OSR and BQSKit at matched block process-infidelity tolerance. Bold values are best within each paired stage. The tfim row is the QFAST/QSearch tfim-4-60 benchmark; it is not an original QASMBenchmarks circuit. OSR retains the best verified candidate at each stage. Its cumulative optimization times include the archived run plus new routing and final synthesis.}
+\label{tab:osr-bqskit-three-qubit-qasm-benchmarks-counts}
+\end{table}
+% Compared 24 circuits completed by both methods.
+% Count all_to_all totals include 18 circuits with counts from both methods.
+% Count routed totals include 18 circuits with counts from both methods.
+% Count final totals include 24 circuits with counts from both methods.
+
+\begin{table}[p]
+\centering
+\scriptsize
+\begin{tabular}{l|rrr|rrr}
+\hline
+Circuit & \multicolumn{3}{c|}{OSR time (min)} & \multicolumn{3}{c}{BQSKit time (min)} \\
+ & A2A & Routing & Final & A2A & Routing & Final \\
+\hline
+\texttt{adder\_n4} & \textbf{0.02} & 0.58 & \textbf{0.04} & 0.14 & \textbf{0.14} & 0.39 \\
+\texttt{bv\_n14} & \textbf{0.00} & 0.95 & \textbf{0.00} & 0.12 & \textbf{0.22} & 0.21 \\
+\texttt{cat\_state\_n22} & -- & -- & \textbf{0.00} & -- & -- & 0.11 \\
+\texttt{ghz\_state\_n23} & -- & -- & \textbf{0.00} & -- & -- & 0.12 \\
+\texttt{multiply\_n13} & \textbf{0.04} & 2.12 & \textbf{0.89} & 0.81 & \textbf{0.70} & 1.10 \\
+\texttt{tfim} & -- & -- & 3.84 & -- & -- & \textbf{0.57} \\
+\texttt{bv\_n140} & \textbf{0.01} & 17.78 & 1.90 & 0.18 & \textbf{0.72} & \textbf{0.71} \\
+\texttt{swap\_test\_n25} & \textbf{0.10} & 4.65 & 2.13 & 1.21 & \textbf{4.05} & \textbf{0.95} \\
+\texttt{ising\_n10} & -- & -- & 1.03 & -- & -- & \textbf{0.39} \\
+\texttt{dnn\_n8} & 5.05 & 4.86 & 1.52 & \textbf{0.87} & \textbf{3.41} & \textbf{1.16} \\
+\texttt{grover\_19} & \textbf{0.36} & 7.80 & 1.35 & 2.01 & \textbf{2.25} & \textbf{1.11} \\
+\texttt{ising\_n98} & -- & -- & \textbf{0.17} & -- & -- & 0.29 \\
+\texttt{hhl\_n7} & 1.53 & 4.18 & 1.57 & \textbf{1.19} & \textbf{0.94} & \textbf{0.75} \\
+\texttt{grover\_23} & \textbf{0.46} & 9.92 & 1.52 & 1.90 & \textbf{2.39} & \textbf{1.23} \\
+\texttt{multiplier\_n15} & \textbf{0.34} & 10.35 & 3.26 & 1.78 & \textbf{2.13} & \textbf{2.02} \\
+\texttt{heisenberg-16-20} & -- & -- & 1.49 & -- & -- & \textbf{1.17} \\
+\texttt{grover\_33} & \textbf{0.80} & 16.17 & 2.27 & 2.79 & \textbf{3.94} & \textbf{0.81} \\
+\texttt{dnn\_n16} & 6.92 & 8.81 & \textbf{0.61} & \textbf{0.93} & \textbf{5.06} & 6.61 \\
+\texttt{qft\_20} & 1.58 & 26.17 & 11.31 & \textbf{1.15} & \textbf{3.37} & \textbf{3.75} \\
+\texttt{adder\_n64} & 1.75 & 27.28 & 4.30 & \textbf{1.58} & \textbf{3.58} & \textbf{3.48} \\
+\texttt{grover\_45} & \textbf{1.41} & 24.25 & 2.92 & 4.02 & \textbf{4.39} & \textbf{1.44} \\
+\texttt{grover\_61} & \textbf{2.56} & 38.92 & 4.39 & 5.45 & \textbf{6.00} & \textbf{1.86} \\
+\texttt{grover\_81} & \textbf{4.57} & 66.90 & 6.97 & 7.05 & \textbf{7.81} & \textbf{2.11} \\
+\texttt{quantum\_volume\_n40\_d20\_i0} & 70.15 & 226.52 & 602.62 & \textbf{2.38} & \textbf{92.26} & \textbf{50.72} \\
+\hline
+Total & 97.64 & 498.20 & 656.10 & \textbf{35.57} & \textbf{143.34} & \textbf{83.05} \\
+\hline
+\end{tabular}
+\caption{QASMBenchmarks three-qubit partition stage runtimes for OSR and BQSKit at matched block process-infidelity tolerance, in minutes. Bold values are best within each paired stage. The tfim row is the QFAST/QSearch tfim-4-60 benchmark; it is not an original QASMBenchmarks circuit. OSR retains the best verified candidate at each stage. Its cumulative optimization times include the archived run plus new routing and final synthesis.}
+\label{tab:osr-bqskit-three-qubit-qasm-benchmarks-times}
+\end{table}
+% Final time is timing.optimization: the post-routing final optimization stage.
+% Runtime a2a totals include 18 circuits with times from both methods.
+% Runtime routing totals include 18 circuits with times from both methods.
+% Runtime optimization totals include 24 circuits with times from both methods.
+
+\begin{table}[p]
+\centering
+\scriptsize
+\begin{tabular}{lrr|rrr|rrr}
+\hline
+Circuit & Qubits & Initial CNOTs & \multicolumn{3}{c|}{OSR CNOTs} & \multicolumn{3}{c}{BQSKit CNOTs} \\
+ & & & A2A & Routed & Final & A2A & Routed & Final \\
+\hline
+\texttt{tof\_3} & 5 & 18 & \textbf{14} & \textbf{17} & \textbf{17} & 18 & 19 & 19 \\
+\texttt{barenco\_tof\_3} & 5 & 24 & \textbf{18} & \textbf{23} & \textbf{23} & 24 & 27 & 27 \\
+\texttt{mod5\_4} & 5 & 28 & 16 & \textbf{20} & \textbf{18} & \textbf{12} & 23 & 19 \\
+\texttt{tof\_4} & 7 & 30 & \textbf{22} & \textbf{29} & \textbf{29} & 30 & 36 & 34 \\
+\texttt{tof\_5} & 9 & 42 & \textbf{30} & \textbf{41} & \textbf{41} & 41 & 53 & 48 \\
+\texttt{barenco\_tof\_4} & 7 & 48 & \textbf{34} & \textbf{46} & \textbf{46} & 44 & 52 & 50 \\
+\texttt{mod\_mult\_55} & 9 & 48 & \textbf{34} & \textbf{81} & 74 & 40 & 95 & \textbf{68} \\
+\texttt{vbe\_adder\_3} & 10 & 70 & \textbf{38} & \textbf{60} & \textbf{52} & \textbf{38} & 75 & 57 \\
+\texttt{barenco\_tof\_5} & 9 & 72 & \textbf{50} & \textbf{68} & \textbf{68} & 65 & 97 & 75 \\
+\texttt{csla\_mux\_3\_original} & 15 & 80 & \textbf{68} & \textbf{155} & \textbf{139} & 70 & 188 & 160 \\
+\texttt{rc\_adder\_6} & 14 & 93 & \textbf{71} & \textbf{102} & 97 & 79 & 117 & \textbf{96} \\
+\texttt{gf2\textasciicircum{}E4\_mult} & 12 & 99 & \textbf{91} & \textbf{248} & \textbf{215} & 99 & 296 & 260 \\
+\texttt{tof\_10} & 19 & 102 & \textbf{70} & \textbf{101} & \textbf{101} & 96 & 123 & 117 \\
+\texttt{gf2\textasciicircum{}E5\_mult} & 15 & 154 & \textbf{149} & \textbf{426} & \textbf{361} & 154 & 583 & 541 \\
+\texttt{csum\_mux\_9\_corrected} & 30 & 168 & \textbf{126} & \textbf{345} & \textbf{289} & 132 & 446 & 417 \\
+\texttt{qcla\_com\_7} & 24 & 186 & \textbf{140} & \textbf{317} & \textbf{280} & 155 & 415 & 347 \\
+\texttt{barenco\_tof\_10} & 19 & 192 & \textbf{130} & \textbf{178} & \textbf{178} & 186 & 263 & 244 \\
+\texttt{gf2\textasciicircum{}E6\_mult} & 18 & 221 & \textbf{203} & \textbf{651} & \textbf{577} & 221 & 733 & 656 \\
+\texttt{qcla\_adder\_10} & 36 & 233 & \textbf{200} & \textbf{465} & \textbf{403} & 205 & 470 & 432 \\
+\texttt{adder\_8} & 24 & 409 & \textbf{243} & \textbf{564} & \textbf{491} & 251 & 650 & 578 \\
+\hline
+Total & -- & 2317 & \textbf{1747} & \textbf{3937} & \textbf{3499} & 1960 & 4761 & 4245 \\
+\hline
+\end{tabular}
+\caption{IBM Eagle four-qubit partition CNOT counts for OSR and BQSKit at matched block process-infidelity tolerance. Bold values are best within each paired stage. OSR retains the best verified candidate at each stage. Its cumulative optimization times include the archived run plus new routing and final synthesis.}
+\label{tab:osr-bqskit-four-qubit-ibm-eagle-counts}
+\end{table}
+% Compared 20 circuits completed by both methods.
+% Count all_to_all totals include 20 circuits with counts from both methods.
+% Count routed totals include 20 circuits with counts from both methods.
+% Count final totals include 20 circuits with counts from both methods.
+
+\begin{table}[p]
+\centering
+\scriptsize
+\begin{tabular}{l|rrr|rrr}
+\hline
+Circuit & \multicolumn{3}{c|}{OSR time (min)} & \multicolumn{3}{c}{BQSKit time (min)} \\
+ & A2A & Routing & Final & A2A & Routing & Final \\
+\hline
+\texttt{tof\_3} & \textbf{0.24} & 0.96 & \textbf{0.38} & 17.67 & \textbf{0.38} & 32.95 \\
+\texttt{barenco\_tof\_3} & \textbf{0.26} & 1.18 & \textbf{0.41} & 28.08 & \textbf{0.50} & 5.94 \\
+\texttt{mod5\_4} & \textbf{0.79} & 1.30 & \textbf{0.27} & 290.28 & \textbf{0.22} & 25.15 \\
+\texttt{tof\_4} & \textbf{0.39} & 1.28 & \textbf{0.82} & 31.02 & \textbf{1.06} & 31.25 \\
+\texttt{tof\_5} & \textbf{0.51} & 1.56 & \textbf{1.17} & 110.37 & \textbf{0.71} & 14.89 \\
+\texttt{barenco\_tof\_4} & \textbf{0.67} & 1.92 & \textbf{0.65} & 22.92 & \textbf{0.68} & 8.37 \\
+\texttt{mod\_mult\_55} & \textbf{1.98} & 2.87 & \textbf{3.49} & 866.15 & \textbf{0.52} & 120.32 \\
+\texttt{vbe\_adder\_3} & \textbf{1.01} & 2.93 & \textbf{2.62} & 387.52 & \textbf{0.43} & 80.95 \\
+\texttt{barenco\_tof\_5} & \textbf{0.88} & 2.56 & \textbf{0.93} & 71.18 & \textbf{0.80} & 79.25 \\
+\texttt{csla\_mux\_3\_original} & \textbf{4.23} & 6.06 & \textbf{14.57} & 69.07 & \textbf{1.55} & 93.58 \\
+\texttt{rc\_adder\_6} & \textbf{0.72} & 5.12 & \textbf{1.79} & 63.24 & \textbf{0.83} & 36.32 \\
+\texttt{gf2\textasciicircum{}E4\_mult} & \textbf{4.26} & 8.04 & \textbf{8.71} & 35.86 & \textbf{1.23} & 190.22 \\
+\texttt{tof\_10} & \textbf{0.47} & 3.55 & \textbf{1.25} & 186.80 & \textbf{1.20} & 35.41 \\
+\texttt{gf2\textasciicircum{}E5\_mult} & \textbf{3.82} & 10.31 & \textbf{26.04} & 160.07 & \textbf{1.72} & 484.14 \\
+\texttt{csum\_mux\_9\_corrected} & \textbf{1.49} & 11.83 & \textbf{17.61} & 423.66 & \textbf{1.37} & 373.43 \\
+\texttt{qcla\_com\_7} & \textbf{2.98} & 11.71 & \textbf{9.77} & 356.93 & \textbf{1.52} & 208.98 \\
+\texttt{barenco\_tof\_10} & \textbf{0.81} & 6.33 & \textbf{0.99} & 39.69 & \textbf{1.98} & 49.16 \\
+\texttt{gf2\textasciicircum{}E6\_mult} & \textbf{4.97} & 16.51 & \textbf{36.79} & 40.22 & \textbf{2.75} & 470.18 \\
+\texttt{qcla\_adder\_10} & \textbf{4.31} & 23.37 & \textbf{28.68} & 220.84 & \textbf{2.20} & 380.15 \\
+\texttt{adder\_8} & \textbf{9.66} & 24.30 & \textbf{32.79} & 353.28 & \textbf{2.48} & 181.86 \\
+\hline
+Total & \textbf{44.44} & 143.69 & \textbf{189.71} & 3774.84 & \textbf{24.12} & 2902.52 \\
+\hline
+\end{tabular}
+\caption{IBM Eagle four-qubit partition stage runtimes for OSR and BQSKit at matched block process-infidelity tolerance, in minutes. Bold values are best within each paired stage. OSR retains the best verified candidate at each stage. Its cumulative optimization times include the archived run plus new routing and final synthesis.}
+\label{tab:osr-bqskit-four-qubit-ibm-eagle-times}
+\end{table}
+% Final time is timing.optimization: the post-routing final optimization stage.
+% Runtime a2a totals include 20 circuits with times from both methods.
+% Runtime routing totals include 20 circuits with times from both methods.
+% Runtime optimization totals include 20 circuits with times from both methods.
+
+\begin{table}[p]
+\centering
+\scriptsize
+\begin{tabular}{lrr|rr|rr|rr}
+\hline
+Circuit & Qubits & Initial CNOTs & \multicolumn{2}{c|}{A2A} & \multicolumn{2}{c|}{Routed} & \multicolumn{2}{c}{Final} \\
+ & & & CNOTs & Time (min) & CNOTs & Time (min) & CNOTs & Time (min) \\
+\hline
+\texttt{gf2\textasciicircum{}E9\_mult} & 27 & 494 & 468 & 6.19 & 1653 & 38.29 & 1373 & 936.74 \\
+\texttt{QFT8} & 8 & 56 & 51 & 15.52 & 73 & 4.49 & 73 & 5.71 \\
+\texttt{mod\_red\_21} & 11 & 105 & 78 & 2.08 & 156 & 5.96 & 148 & 8.09 \\
+\texttt{QFTAdd8} & 16 & 184 & 173 & 39.50 & 377 & 13.92 & 352 & 33.97 \\
+\texttt{QFT16} & 16 & 228 & 220 & 26.85 & 362 & 14.91 & 343 & 40.65 \\
+\texttt{gf2\textasciicircum{}E7\_mult} & 21 & 300 & 279 & 7.25 & 926 & 22.45 & 804 & 49.69 \\
+\texttt{qcla\_mod\_7} & 26 & 382 & 345 & 7.54 & 917 & 29.73 & 809 & 63.10 \\
+\texttt{gf2\textasciicircum{}E8\_mult} & 24 & 405 & 381 & 3.74 & 1292 & 27.27 & 1115 & 72.78 \\
+\texttt{gf2\textasciicircum{}E10\_mult} & 30 & 609 & 577 & 7.80 & 2325 & 108.57 & 1974 & 1005.80 \\
+\texttt{QFT32} & 32 & 612 & 596 & 27.39 & 1467 & 48.14 & 1413 & 151.72 \\
+\texttt{QFTAdd16} & 32 & 716 & 673 & 129.87 & 1957 & 231.79 & 1633 & 1050.47 \\
+\texttt{QFT64} & 64 & 1380 & 1348 & 29.82 & 3645 & 128.86 & 3431 & 1613.74 \\
+\texttt{gf2\textasciicircum{}E16\_mult} & 48 & 1581 & 1492 & 14.41 & 6820 & 123.89 & 5996 & 1665.33 \\
+\texttt{mod\_adder\_1024} & 28 & 1720 & 1124 & 22.93 & 2476 & 73.14 & 2131 & 1041.08 \\
+\texttt{QFTAdd32} & 64 & 1900 & 1787 & 143.74 & 8807 & 178.55 & 7535 & 2062.94 \\
+\hline
+Total & -- & 10672 & 9592 & 484.63 & 33253 & 1049.95 & 29130 & 9801.83 \\
+\hline
+\end{tabular}
+\caption{Completed IBM Eagle four-qubit partition OSR results for circuits without a completed four-qubit partition BQSKit result. Counts and stage runtimes are combined because no paired comparison is available. OSR retains the best verified candidate at each stage. Its cumulative optimization times include the archived run plus new routing and final synthesis.}
+\label{tab:osr-four-qubit-unpaired-ibm-eagle}
+\end{table}
+% Listed 15 completed four-qubit OSR-only circuits.
+
+\begin{table}[p]
+\centering
+\scriptsize
+\begin{tabular}{lrr|rrr|rrr}
+\hline
+Circuit & Qubits & Initial CNOTs & \multicolumn{3}{c|}{OSR CNOTs} & \multicolumn{3}{c}{BQSKit CNOTs} \\
+ & & & A2A & Routed & Final & A2A & Routed & Final \\
+\hline
+\texttt{adder\_n4} & 4 & 10 & \textbf{7} & \textbf{9} & \textbf{9} & \textbf{7} & 14 & 10 \\
+\texttt{bv\_n14} & 14 & 13 & \textbf{13} & \textbf{24} & \textbf{24} & \textbf{13} & 25 & \textbf{24} \\
+\texttt{cat\_state\_n22} & 22 & 21 & -- & -- & \textbf{21} & -- & -- & \textbf{21} \\
+\texttt{ghz\_state\_n23} & 23 & 22 & -- & -- & \textbf{22} & -- & -- & \textbf{22} \\
+\texttt{multiply\_n13} & 13 & 40 & \textbf{40} & \textbf{79} & \textbf{72} & \textbf{40} & 146 & 121 \\
+\texttt{tfim} & 4 & 60 & -- & -- & \textbf{12} & -- & -- & \textbf{12} \\
+\texttt{bv\_n140} & 140 & 72 & \textbf{72} & \textbf{142} & \textbf{142} & \textbf{72} & 345 & 334 \\
+\texttt{swap\_test\_n25} & 25 & 84 & \textbf{84} & \textbf{106} & \textbf{106} & \textbf{84} & \textbf{106} & \textbf{106} \\
+\texttt{ising\_n10} & 10 & 90 & -- & -- & \textbf{44} & -- & -- & 58 \\
+\texttt{grover\_19} & 19 & 192 & \textbf{124} & \textbf{182} & \textbf{179} & 177 & 224 & 201 \\
+\texttt{ising\_n98} & 98 & 194 & -- & -- & \textbf{194} & -- & -- & \textbf{194} \\
+\texttt{hhl\_n7} & 7 & 196 & \textbf{84} & \textbf{158} & \textbf{149} & 87 & 201 & 179 \\
+\texttt{grover\_23} & 23 & 240 & \textbf{154} & \textbf{229} & \textbf{225} & 218 & 286 & 271 \\
+\texttt{multiplier\_n15} & 15 & 246 & \textbf{138} & \textbf{332} & \textbf{267} & 142 & 503 & 396 \\
+\texttt{heisenberg-16-20} & 16 & 360 & -- & -- & \textbf{138} & -- & -- & 157 \\
+\texttt{grover\_33} & 33 & 360 & \textbf{229} & \textbf{345} & \textbf{333} & 336 & 419 & 390 \\
+\texttt{grover\_45} & 45 & 504 & \textbf{319} & \textbf{462} & \textbf{458} & 476 & 789 & 745 \\
+\texttt{grover\_61} & 61 & 696 & \textbf{439} & \textbf{635} & \textbf{631} & 647 & 815 & 768 \\
+\hline
+Total & -- & 3400 & \textbf{1703} & \textbf{2703} & \textbf{3026} & 2299 & 3873 & 4009 \\
+\hline
+\end{tabular}
+\caption{QASMBenchmarks four-qubit partition CNOT counts for OSR and BQSKit at matched block process-infidelity tolerance. Bold values are best within each paired stage. The tfim row is the QFAST/QSearch tfim-4-60 benchmark; it is not an original QASMBenchmarks circuit. OSR retains the best verified candidate at each stage. Its cumulative optimization times include the archived run plus new routing and final synthesis.}
+\label{tab:osr-bqskit-four-qubit-qasm-benchmarks-counts}
+\end{table}
+% Compared 18 circuits completed by both methods.
+% Count all_to_all totals include 12 circuits with counts from both methods.
+% Count routed totals include 12 circuits with counts from both methods.
+% Count final totals include 18 circuits with counts from both methods.
+
+\begin{table}[p]
+\centering
+\scriptsize
+\begin{tabular}{l|rrr|rrr}
+\hline
+Circuit & \multicolumn{3}{c|}{OSR time (min)} & \multicolumn{3}{c}{BQSKit time (min)} \\
+ & A2A & Routing & Final & A2A & Routing & Final \\
+\hline
+\texttt{adder\_n4} & \textbf{0.12} & 0.65 & \textbf{0.09} & 63.37 & \textbf{0.23} & 49.69 \\
+\texttt{bv\_n14} & \textbf{0.01} & 1.02 & \textbf{0.09} & 0.22 & \textbf{0.19} & 1.35 \\
+\texttt{cat\_state\_n22} & -- & -- & \textbf{0.00} & -- & -- & 0.22 \\
+\texttt{ghz\_state\_n23} & -- & -- & \textbf{0.00} & -- & -- & 0.26 \\
+\texttt{multiply\_n13} & \textbf{1.12} & 2.34 & \textbf{5.14} & 39.11 & \textbf{0.45} & 69.80 \\
+\texttt{tfim} & -- & -- & \textbf{5.29} & -- & -- & 366.97 \\
+\texttt{bv\_n140} & \textbf{0.02} & 17.83 & \textbf{2.14} & 0.36 & \textbf{0.72} & 21.10 \\
+\texttt{swap\_test\_n25} & \textbf{1.24} & 5.09 & \textbf{9.93} & 17.38 & \textbf{4.15} & 15.36 \\
+\texttt{ising\_n10} & -- & -- & \textbf{1.80} & -- & -- & 66.07 \\
+\texttt{grover\_19} & \textbf{1.52} & 8.86 & \textbf{6.68} & 320.21 & \textbf{2.17} & 89.68 \\
+\texttt{ising\_n98} & -- & -- & \textbf{1.72} & -- & -- & 4.01 \\
+\texttt{hhl\_n7} & \textbf{6.52} & 7.15 & \textbf{5.14} & 851.19 & \textbf{0.94} & 178.91 \\
+\texttt{grover\_23} & \textbf{1.64} & 11.27 & \textbf{7.69} & 675.88 & \textbf{2.35} & 111.43 \\
+\texttt{multiplier\_n15} & \textbf{3.78} & 12.82 & \textbf{18.14} & 626.61 & \textbf{1.23} & 291.27 \\
+\texttt{heisenberg-16-20} & -- & -- & \textbf{4.41} & -- & -- & 71.58 \\
+\texttt{grover\_33} & \textbf{2.01} & 17.85 & \textbf{9.84} & 294.82 & \textbf{3.56} & 91.16 \\
+\texttt{grover\_45} & \textbf{2.69} & 26.63 & \textbf{7.21} & 359.53 & \textbf{4.41} & 199.25 \\
+\texttt{grover\_61} & \textbf{3.99} & 62.47 & \textbf{9.15} & 570.96 & \textbf{6.34} & 113.37 \\
+\hline
+Total & \textbf{24.66} & 173.98 & \textbf{94.44} & 3819.65 & \textbf{26.74} & 1741.47 \\
+\hline
+\end{tabular}
+\caption{QASMBenchmarks four-qubit partition stage runtimes for OSR and BQSKit at matched block process-infidelity tolerance, in minutes. Bold values are best within each paired stage. The tfim row is the QFAST/QSearch tfim-4-60 benchmark; it is not an original QASMBenchmarks circuit. OSR retains the best verified candidate at each stage. Its cumulative optimization times include the archived run plus new routing and final synthesis.}
+\label{tab:osr-bqskit-four-qubit-qasm-benchmarks-times}
+\end{table}
+% Final time is timing.optimization: the post-routing final optimization stage.
+% Runtime a2a totals include 12 circuits with times from both methods.
+% Runtime routing totals include 12 circuits with times from both methods.
+% Runtime optimization totals include 18 circuits with times from both methods.
+
+\begin{table}[p]
+\centering
+\scriptsize
+\begin{tabular}{lrr|rr|rr|rr}
+\hline
+Circuit & Qubits & Initial CNOTs & \multicolumn{2}{c|}{A2A} & \multicolumn{2}{c|}{Routed} & \multicolumn{2}{c}{Final} \\
+ & & & CNOTs & Time (min) & CNOTs & Time (min) & CNOTs & Time (min) \\
+\hline
+\texttt{qft\_20} & 20 & 410 & 319 & 104.90 & 865 & 32.01 & 815 & 78.84 \\
+\texttt{dnn\_n8} & 8 & 192 & 61 & 12.59 & 105 & 8.19 & 97 & 12.09 \\
+\texttt{dnn\_n16} & 16 & 384 & 122 & 23.07 & 227 & 19.65 & 207 & 10.84 \\
+\texttt{grover\_81} & 81 & 936 & 589 & 6.28 & 859 & 91.54 & 855 & 11.41 \\
+\texttt{quantum\_volume\_n40\_d20\_i0} & 40 & 1200 & 1170 & 233.99 & 9264 & 226.66 & 7914 & 509.09 \\
+\texttt{adder\_n64} & 64 & 455 & 266 & 2.83 & 361 & 20.00 & 328 & 8.09 \\
+\hline
+Total & -- & 3577 & 2527 & 383.67 & 11681 & 398.05 & 10216 & 630.37 \\
+\hline
+\end{tabular}
+\caption{Completed QASMBenchmarks four-qubit partition OSR results for circuits without a completed four-qubit partition BQSKit result. Counts and stage runtimes are combined because no paired comparison is available. OSR retains the best verified candidate at each stage. Its cumulative optimization times include the archived run plus new routing and final synthesis.}
+\label{tab:osr-four-qubit-unpaired-qasm-benchmarks}
+\end{table}
+% Listed 6 completed four-qubit OSR-only circuits.
+
+% BEGIN CNOT REGRESSION AUDIT
+% 4q OSR WORSE THAN 3q OSR: IBMEagle/gf2^E9_mult.qasm stage=routed 4q=1653 3q=1499 delta=+154
+% 4q OSR WORSE THAN 3q OSR: IBMEagle/gf2^E9_mult.qasm stage=final 4q=1373 3q=1354 delta=+19
+% 4q OSR WORSE THAN 3q OSR: IBMEagle/mod_mult_55.qasm stage=routed 4q=81 3q=70 delta=+11
+% 4q OSR WORSE THAN 3q OSR: IBMEagle/mod_mult_55.qasm stage=final 4q=74 3q=67 delta=+7
+% 4q OSR WORSE THAN 3q OSR: IBMEagle/QFT8.qasm stage=final 4q=73 3q=72 delta=+1
+% 4q OSR WORSE THAN 3q OSR: IBMEagle/csla_mux_3_original.qasm stage=routed 4q=155 3q=151 delta=+4
+% 4q OSR WORSE THAN 3q OSR: IBMEagle/gf2^E4_mult.qasm stage=routed 4q=248 3q=228 delta=+20
+% 4q OSR WORSE THAN 3q OSR: IBMEagle/gf2^E4_mult.qasm stage=final 4q=215 3q=202 delta=+13
+% 4q OSR WORSE THAN 3q OSR: IBMEagle/mod_red_21.qasm stage=routed 4q=156 3q=153 delta=+3
+% 4q OSR WORSE THAN 3q OSR: IBMEagle/gf2^E5_mult.qasm stage=routed 4q=426 3q=400 delta=+26
+% 4q OSR WORSE THAN 3q OSR: IBMEagle/gf2^E5_mult.qasm stage=final 4q=361 3q=355 delta=+6
+% 4q OSR WORSE THAN 3q OSR: IBMEagle/csum_mux_9_corrected.qasm stage=routed 4q=345 3q=342 delta=+3
+% 4q OSR WORSE THAN 3q OSR: IBMEagle/QFTAdd8.qasm stage=routed 4q=377 3q=363 delta=+14
+% 4q OSR WORSE THAN 3q OSR: IBMEagle/QFTAdd8.qasm stage=final 4q=352 3q=342 delta=+10
+% 4q OSR WORSE THAN 3q OSR: IBMEagle/gf2^E6_mult.qasm stage=routed 4q=651 3q=580 delta=+71
+% 4q OSR WORSE THAN 3q OSR: IBMEagle/gf2^E6_mult.qasm stage=final 4q=577 3q=531 delta=+46
+% 4q OSR WORSE THAN 3q OSR: IBMEagle/QFT16.qasm stage=routed 4q=362 3q=356 delta=+6
+% 4q OSR WORSE THAN 3q OSR: IBMEagle/QFT16.qasm stage=final 4q=343 3q=341 delta=+2
+% 4q OSR WORSE THAN 3q OSR: IBMEagle/qcla_adder_10.qasm stage=routed 4q=465 3q=456 delta=+9
+% 4q OSR WORSE THAN 3q OSR: IBMEagle/gf2^E7_mult.qasm stage=routed 4q=926 3q=863 delta=+63
+% 4q OSR WORSE THAN 3q OSR: IBMEagle/gf2^E7_mult.qasm stage=final 4q=804 3q=772 delta=+32
+% 4q OSR WORSE THAN 3q OSR: IBMEagle/qcla_mod_7.qasm stage=routed 4q=917 3q=907 delta=+10
+% 4q OSR WORSE THAN 3q OSR: IBMEagle/gf2^E8_mult.qasm stage=routed 4q=1292 3q=1236 delta=+56
+% 4q OSR WORSE THAN 3q OSR: IBMEagle/gf2^E8_mult.qasm stage=final 4q=1115 3q=1106 delta=+9
+% 4q OSR WORSE THAN 3q OSR: IBMEagle/gf2^E10_mult.qasm stage=routed 4q=2325 3q=1985 delta=+340
+% 4q OSR WORSE THAN 3q OSR: IBMEagle/gf2^E10_mult.qasm stage=final 4q=1974 3q=1787 delta=+187
+% 4q OSR WORSE THAN 3q OSR: IBMEagle/QFTAdd16.qasm stage=routed 4q=1957 3q=1602 delta=+355
+% 4q OSR WORSE THAN 3q OSR: IBMEagle/QFTAdd16.qasm stage=final 4q=1633 3q=1507 delta=+126
+% 4q OSR WORSE THAN 3q OSR: IBMEagle/QFT64.qasm stage=all_to_all 4q=1348 3q=1346 delta=+2
+% 4q OSR WORSE THAN 3q OSR: IBMEagle/gf2^E16_mult.qasm stage=routed 4q=6820 3q=6234 delta=+586
+% 4q OSR WORSE THAN 3q OSR: IBMEagle/gf2^E16_mult.qasm stage=final 4q=5996 3q=5787 delta=+209
+% 4q OSR WORSE THAN 3q OSR: IBMEagle/mod_adder_1024.qasm stage=routed 4q=2476 3q=2110 delta=+366
+% 4q OSR WORSE THAN 3q OSR: IBMEagle/mod_adder_1024.qasm stage=final 4q=2131 3q=2040 delta=+91
+% 4q OSR WORSE THAN 3q OSR: IBMEagle/QFTAdd32.qasm stage=routed 4q=8807 3q=7477 delta=+1330
+% 4q OSR WORSE THAN 3q OSR: IBMEagle/QFTAdd32.qasm stage=final 4q=7535 3q=7002 delta=+533
+% 4q OSR WORSE THAN 3q OSR: QASMBenchmarks/qft_20.qasm stage=routed 4q=865 3q=854 delta=+11
+% 4q OSR WORSE THAN 3q OSR: QASMBenchmarks/qft_20.qasm stage=final 4q=815 3q=809 delta=+6
+% 4q OSR WORSE THAN 3q OSR: QASMBenchmarks/adder_n64.qasm stage=routed 4q=361 3q=345 delta=+16
+% OSR WORSE THAN BQSKIT: partition=4q IBMEagle/mod5_4.qasm stage=all_to_all OSR=16 BQSKit=12 delta=+4
+% OSR WORSE THAN BQSKIT: partition=4q IBMEagle/mod_mult_55.qasm stage=final OSR=74 BQSKit=68 delta=+6
+% OSR WORSE THAN BQSKIT: partition=4q IBMEagle/rc_adder_6.qasm stage=final OSR=97 BQSKit=96 delta=+1
+% OSR RUN FAILED: partition=3q IBMEagle/QFT1024.qasm reason=RuntimeError: The strict maximal-partition rewrite was not selected by exact global recombination.
+% OSR RUN TIMEOUT: partition=3q IBMEagle/QFT128.qasm
+% BQSKIT RESULT WITHOUT OSR: partition=3q IBMEagle/QFT128.qasm BQSKit_final=28181 OSR_status=timeout
+% OSR RUN FAILED: partition=3q IBMEagle/QFT2048.qasm reason=Circuit worker exited with code 1 without returning a result.
+% OSR RUN FAILED: partition=3q IBMEagle/QFT256.qasm reason=squander.partitioning.routing.RoutingMemoryPressure: Routing stopped before exhausting its process address-space limit: 63.50 GiB of 64.00 GiB, with less than 512 MiB recovery headroom.
+% BQSKIT RUN TIMEOUT: partition=3q IBMEagle/QFT256.qasm
+% OSR RUN FAILED: partition=3q IBMEagle/QFT512.qasm reason=RuntimeError: The strict maximal-partition rewrite was not selected by exact global recombination.
+% BQSKIT RUN TIMEOUT: partition=3q IBMEagle/QFT512.qasm
+% OSR RUN FAILED: partition=3q IBMEagle/QFTAdd1024.qasm reason=Circuit worker exited with code 1 without returning a result.
+% OSR RUN FAILED: partition=3q IBMEagle/QFTAdd128.qasm reason=squander.partitioning.routing.RoutingMemoryPressure: Routing stopped before exhausting its process address-space limit: 63.50 GiB of 64.00 GiB, with less than 512 MiB recovery headroom.
+% BQSKIT RUN TIMEOUT: partition=3q IBMEagle/QFTAdd128.qasm
+% OSR RUN FAILED: partition=3q IBMEagle/QFTAdd2048.qasm reason=Circuit worker exited with code 1 without returning a result.
+% OSR RUN FAILED: partition=3q IBMEagle/QFTAdd256.qasm reason=RuntimeError: The strict maximal-partition rewrite was not selected by exact global recombination.
+% OSR RUN FAILED: partition=3q IBMEagle/QFTAdd512.qasm reason=Circuit worker exited with code 1 without returning a result.
+% OSR RUN FAILED: partition=3q IBMEagle/QFTAdd64.qasm reason=MemoryError
+% BQSKIT RESULT WITHOUT OSR: partition=3q IBMEagle/QFTAdd64.qasm BQSKit_final=34982 OSR_status=failed
+% OSR RUN FAILED: partition=3q IBMEagle/gf2^E128_mult.qasm reason=Circuit worker exited with code 1 without returning a result.
+% OSR RUN FAILED: partition=3q IBMEagle/gf2^E131_mult.qasm reason=Circuit worker exited with code 1 without returning a result.
+% OSR RUN FAILED: partition=3q IBMEagle/gf2^E163_mult.qasm reason=Circuit worker exited with code 1 without returning a result.
+% OSR RUN FAILED: partition=3q IBMEagle/gf2^E32_mult.qasm reason=MemoryError
+% BQSKIT RESULT WITHOUT OSR: partition=3q IBMEagle/gf2^E32_mult.qasm BQSKit_final=30328 OSR_status=failed
+% OSR RUN FAILED: partition=3q IBMEagle/gf2^E64_mult.qasm reason=squander.partitioning.routing.RoutingMemoryPressure: Routing stopped before exhausting its process address-space limit: 63.50 GiB of 64.00 GiB, with less than 512 MiB recovery headroom.
+% OSR RUN FAILED: partition=3q QASMBenchmarks/multiplier_n400.qasm reason=Circuit worker exited with code 1 without returning a result.
+% OSR RUN FAILED: partition=3q QASMBenchmarks/multiplier_n75.qasm reason=RuntimeError: The strict maximal-partition rewrite was not selected by exact global recombination.
+% BQSKIT RESULT WITHOUT OSR: partition=3q QASMBenchmarks/multiplier_n75.qasm BQSKit_final=51508 OSR_status=failed
+% BQSKIT RUN TIMEOUT: partition=4q IBMEagle/QFT16.qasm
+% OSR RESULT WITHOUT BQSKIT: partition=4q IBMEagle/QFT16.qasm OSR_final=343 BQSKit_status=timeout
+% BQSKIT RUN TIMEOUT: partition=4q IBMEagle/QFT32.qasm
+% OSR RESULT WITHOUT BQSKIT: partition=4q IBMEagle/QFT32.qasm OSR_final=1413 BQSKit_status=timeout
+% OSR RESULT WITHOUT BQSKIT: partition=4q IBMEagle/QFT64.qasm OSR_final=3431 BQSKit_status=missing
+% BQSKIT RUN TIMEOUT: partition=4q IBMEagle/QFT8.qasm
+% OSR RESULT WITHOUT BQSKIT: partition=4q IBMEagle/QFT8.qasm OSR_final=73 BQSKit_status=timeout
+% BQSKIT RUN TIMEOUT: partition=4q IBMEagle/QFTAdd16.qasm
+% OSR RESULT WITHOUT BQSKIT: partition=4q IBMEagle/QFTAdd16.qasm OSR_final=1633 BQSKit_status=timeout
+% OSR RESULT WITHOUT BQSKIT: partition=4q IBMEagle/QFTAdd32.qasm OSR_final=7535 BQSKit_status=missing
+% BQSKIT RUN TIMEOUT: partition=4q IBMEagle/QFTAdd8.qasm
+% OSR RESULT WITHOUT BQSKIT: partition=4q IBMEagle/QFTAdd8.qasm OSR_final=352 BQSKit_status=timeout
+% BQSKIT RUN TIMEOUT: partition=4q IBMEagle/gf2^E10_mult.qasm
+% OSR RESULT WITHOUT BQSKIT: partition=4q IBMEagle/gf2^E10_mult.qasm OSR_final=1974 BQSKit_status=timeout
+% OSR RESULT WITHOUT BQSKIT: partition=4q IBMEagle/gf2^E16_mult.qasm OSR_final=5996 BQSKit_status=missing
+% BQSKIT RUN TIMEOUT: partition=4q IBMEagle/gf2^E7_mult.qasm
+% OSR RESULT WITHOUT BQSKIT: partition=4q IBMEagle/gf2^E7_mult.qasm OSR_final=804 BQSKit_status=timeout
+% BQSKIT RUN TIMEOUT: partition=4q IBMEagle/gf2^E8_mult.qasm
+% OSR RESULT WITHOUT BQSKIT: partition=4q IBMEagle/gf2^E8_mult.qasm OSR_final=1115 BQSKit_status=timeout
+% BQSKIT RUN TIMEOUT: partition=4q IBMEagle/gf2^E9_mult.qasm
+% OSR RESULT WITHOUT BQSKIT: partition=4q IBMEagle/gf2^E9_mult.qasm OSR_final=1373 BQSKit_status=timeout
+% OSR RESULT WITHOUT BQSKIT: partition=4q IBMEagle/mod_adder_1024.qasm OSR_final=2131 BQSKit_status=missing
+% BQSKIT RUN TIMEOUT: partition=4q IBMEagle/mod_red_21.qasm
+% OSR RESULT WITHOUT BQSKIT: partition=4q IBMEagle/mod_red_21.qasm OSR_final=148 BQSKit_status=timeout
+% BQSKIT RUN TIMEOUT: partition=4q IBMEagle/qcla_mod_7.qasm
+% OSR RESULT WITHOUT BQSKIT: partition=4q IBMEagle/qcla_mod_7.qasm OSR_final=809 BQSKit_status=timeout
+% BQSKIT RUN TIMEOUT: partition=4q QASMBenchmarks/adder_n64.qasm
+% OSR RESULT WITHOUT BQSKIT: partition=4q QASMBenchmarks/adder_n64.qasm OSR_final=328 BQSKit_status=timeout
+% BQSKIT RUN TIMEOUT: partition=4q QASMBenchmarks/dnn_n16.qasm
+% OSR RESULT WITHOUT BQSKIT: partition=4q QASMBenchmarks/dnn_n16.qasm OSR_final=207 BQSKit_status=timeout
+% BQSKIT RUN TIMEOUT: partition=4q QASMBenchmarks/dnn_n8.qasm
+% OSR RESULT WITHOUT BQSKIT: partition=4q QASMBenchmarks/dnn_n8.qasm OSR_final=97 BQSKit_status=timeout
+% OSR RESULT WITHOUT BQSKIT: partition=4q QASMBenchmarks/grover_81.qasm OSR_final=855 BQSKit_status=missing
+% BQSKIT RUN TIMEOUT: partition=4q QASMBenchmarks/qft_20.qasm
+% OSR RESULT WITHOUT BQSKIT: partition=4q QASMBenchmarks/qft_20.qasm OSR_final=815 BQSKit_status=timeout
+% OSR RESULT WITHOUT BQSKIT: partition=4q QASMBenchmarks/quantum_volume_n40_d20_i0.qasm OSR_final=7914 BQSKit_status=missing
+% RESULT AVAILABILITY SUMMARY: bqskit_without_osr=4 osr_without_bqskit=21 osr_failed=17 bqskit_failed=0 osr_timeout=1 bqskit_timeout=18
+% CNOT REGRESSION SUMMARY: 4q-vs-3q=38 osr-vs-bqskit=3
+% END CNOT REGRESSION AUDIT
+
+% BEGIN BENCHMARK PROVENANCE
+% QASMBenchmarks/tfim.qasm is the QFAST/QSearch tfim-4-60 benchmark, not an original QASMBenchmarks circuit.
+% Published calibration target: 12 CNOTs from QSearch. This is a best published numerical result, not a proven lower bound.
+% END BENCHMARK PROVENANCE
