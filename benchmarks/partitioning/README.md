@@ -24,8 +24,21 @@ checkout's results after every completed case has passed verification:
 
 ```bash
 PYTHONPATH=. python benchmarks/partitioning/replay_routing.py \
-  --source-root /path/to/original/checkout --jobs 8
+  --source-root /path/to/original/checkout --jobs 1
 ```
+
+The default is one concurrent case. On a shared Linux server, enforce a combined
+memory budget for Python and its solver children, for example:
+
+```bash
+systemd-run --user --scope -p MemoryMax=16G -p MemoryHigh=12G -p MemorySwapMax=0 \
+  env PYTHONPATH=. python benchmarks/partitioning/replay_routing.py \
+  --source-root /path/to/original/checkout --jobs 1
+```
+
+The worker's virtual-address ceiling is not an aggregate RAM limit. A case that
+exceeds the OS budget must resume from its checkpoint after reducing memory
+use or explicitly allocating a larger budget.
 
 The source must contain its recorded audit and routing-catalogue release assets.
 Both 3q and 4q configurations are processed, including results without a BQSKit

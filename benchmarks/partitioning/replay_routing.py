@@ -696,7 +696,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--source-root", type=Path, required=True)
     parser.add_argument("--state-dir", type=Path, default=ROOT / ".routing-refresh")
-    parser.add_argument("--jobs", type=int, default=8)
+    parser.add_argument("--jobs", type=int, default=1,
+                        help="Concurrent cases (default: 1). Use an aggregate OS memory limit when increasing this.")
     parser.add_argument("--case", type=int)
     args = parser.parse_args()
     args.state_dir = args.state_dir.resolve()
