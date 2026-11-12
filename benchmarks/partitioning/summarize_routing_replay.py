@@ -125,8 +125,8 @@ def summarize(state_dir, output_dir):
         rows.append(record)
     output_dir.mkdir(parents=True, exist_ok=True)
     fields = list(dict.fromkeys(key for row in rows for key in row))
-    with (output_dir / "routing-replay.csv").open("w") as destination:
-        writer = csv.DictWriter(destination, fieldnames=fields)
+    with (output_dir / "routing-replay.csv").open("w", newline="") as destination:
+        writer = csv.DictWriter(destination, fieldnames=fields, lineterminator="\n")
         writer.writeheader()
         writer.writerows(rows)
     summary = dict(policy=inventory["policy"], completed=len(rows),
