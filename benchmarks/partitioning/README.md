@@ -73,6 +73,10 @@ digests, shortcuts and branch selection. These cumulative costs do not claim
 to measure a fresh execution of the revised algorithm. New table captions
 state this accounting explicitly. Audit export/verification is separate from
 the optimization-stage costs, as in the original benchmark.
+The archived wall-clock and audit timings are retained under
+`routing_replay.original_timing`; they are omitted from the refreshed `timing`
+object because the extension does not measure all preparation and verification
+costs needed for new wall-clock or audit totals.
 
 Interrupted final-synthesis attempts are charged separately as conservative
 wall-clock upper bounds, with their failures and accounting basis retained in

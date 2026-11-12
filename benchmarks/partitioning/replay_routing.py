@@ -69,6 +69,11 @@ def execution_identity(backend, representation, initial, final):
 
 def cumulative_timing(archived, routing_seconds, final_seconds):
     result = dict(archived)
+    # Only the optimization-phase extension is measured here. The archived
+    # wall/audit measurements remain available in routing_replay.original_timing;
+    # they do not describe this extended experiment's preparation or verification.
+    for field in ("wall_total", "audit_export", "audit_verification", "audit_total"):
+        result.pop(field, None)
     for field, extra in (("routing", routing_seconds), ("optimization", final_seconds),
                          ("total", routing_seconds + final_seconds)):
         if result.get(field) is not None:

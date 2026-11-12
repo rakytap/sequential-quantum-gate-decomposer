@@ -35,6 +35,17 @@ def test_replay_never_relabels_warm_time_as_a_fresh_run():
     assert original["total"] == 155.0
 
 
+def test_extended_phase_totals_do_not_reuse_old_wall_and_audit_measurements():
+    original = dict(a2a=5.0, routing=120.0, optimization=30.0, total=155.0,
+                    wall_total=170.0, audit_export=3.0, audit_verification=12.0,
+                    audit_total=15.0)
+    updated = cumulative_timing(original, 10.0, 40.0)
+    assert updated["total"] == 205.0
+    assert not {"wall_total", "audit_export", "audit_verification", "audit_total"} & updated.keys()
+    assert original["wall_total"] == 170.0
+    assert original["audit_total"] == 15.0
+
+
 def test_interrupted_final_attempt_is_charged_once_across_restarts(tmp_path):
     pending = tmp_path / "final-attempt.json"
     write_json(pending, dict(status="running", started_monotonic=10))
