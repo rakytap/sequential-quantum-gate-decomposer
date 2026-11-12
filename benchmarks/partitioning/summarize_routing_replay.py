@@ -115,7 +115,7 @@ def summarize(state_dir, output_dir):
         if bq.get("status") == "completed":
             if entry["init"]["qubits"] != bq["init"]["qubits"] or entry["init"]["cnot_equiv"] != bq["init"]["cnot_equiv"]:
                 raise AssertionError(f"Unmatched source circuit in case {index}.")
-            if synthesis_process_tolerance(entry) != synthesis_process_tolerance(bq):
+            if synthesis_process_tolerance(entry, "OSR") != synthesis_process_tolerance(bq, "BQSKit"):
                 raise AssertionError(f"Unmatched synthesis tolerances in case {index}.")
             for stage in ("all_to_all", "routed", "final"):
                 if stage in entry and stage in bq:
