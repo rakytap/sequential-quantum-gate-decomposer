@@ -56,6 +56,11 @@ to measure a fresh execution of the revised algorithm. New table captions
 state this accounting explicitly. Audit export/verification is separate from
 the optimization-stage costs, as in the original benchmark.
 
+Interrupted final-synthesis attempts are charged separately as conservative
+wall-clock upper bounds, with their failures and accounting basis retained in
+`routing_replay.failed_final_attempts`. These costs include host stalls and
+recovery delay; they are not estimates of isolated synthesis performance.
+
 `configuration` retains the archived synthesis settings; `routing_replay`
 identifies the replacement routing policy and its implementation digests.
 When older cache exports rounded angles, the loader restores the exact source
