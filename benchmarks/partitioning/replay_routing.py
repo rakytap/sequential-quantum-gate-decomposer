@@ -320,7 +320,7 @@ def worker(args):
     import squander.decomposition.qgd_Wide_Circuit_Optimization as backend
     from squander.decomposition._rewrite_audit_stream import close_audit, iter_audit_events
 
-    resource.setrlimit(resource.RLIMIT_AS, (48 * 1024**3, 48 * 1024**3))
+    resource.setrlimit(resource.RLIMIT_AS, (96 * 1024**3, 96 * 1024**3))
     random.seed(20261111)
     np.random.seed(20261111)
     implementation_digests = {
@@ -446,6 +446,7 @@ def worker(args):
                           routing_seconds=route_seconds, a2a_reused=True, catalogue_synthesis_reused=True,
                           route_bit_identical=unchanged, new_routing_synthesis_calls=0)
         provenance["implementation_sha256"] = routing_implementation_digests
+        provenance["runtime_limits"] = dict(address_space_gib=96)
         entry = deepcopy(old)
         entry["routing_replay"] = provenance
         if unchanged:
