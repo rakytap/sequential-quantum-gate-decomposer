@@ -12,13 +12,16 @@ from pathlib import Path
 from squander.decomposition._rewrite_audit_stream import _JSONReader
 
 
-def bind_catalog_source(catalog, circuit, parameters, *, max_parameter_drift=1e-12):
+def bind_catalog_source(catalog, circuit, parameters, *, max_parameter_drift=4e-12):
     """Restore lossless audit angles after an older QASM cache rounded them.
 
     Cached implementations and all their prices are unchanged. The selected
     programs must still pass the ordinary local-unitary and exact-cover proof
     against this exact source; a rounded cache never becomes the authority for
     the experiment's input gate stream.
+
+    Qiskit's old exporter snaps angle/pi with epsilon 1e-12. Consequently
+    the angle itself can move by pi*1e-12; allow that plus float roundoff.
     """
     import numpy as np
     from squander.gates.qgd_Circuit import qgd_Circuit

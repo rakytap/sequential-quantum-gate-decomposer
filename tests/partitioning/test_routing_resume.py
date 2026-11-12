@@ -135,7 +135,8 @@ def test_optional_pam_limit_preserves_best_but_corruption_fails(monkeypatch, cor
         assert any(v.get("timed_out") for v in variants)
 
 
-def test_catalogue_export_roundoff_restores_exact_audited_source():
+@pytest.mark.parametrize("rounded_pi", [False, True])
+def test_catalogue_export_roundoff_restores_exact_audited_source(rounded_pi):
     from qiskit import QuantumCircuit
     from squander import Qiskit_IO
     from squander.partitioning import routing
@@ -147,7 +148,11 @@ def test_catalogue_export_roundoff_restores_exact_audited_source():
     circuit, cached_parameters = Qiskit_IO.convert_Qiskit_to_Squander(qiskit)
     cached_parameters = np.asarray(cached_parameters)
     exact_parameters = cached_parameters.copy()
-    exact_parameters[1] += 1e-15
+    if rounded_pi:
+        cached_parameters[1] = np.pi
+        exact_parameters[1] = np.pi - 2.87e-12
+    else:
+        exact_parameters[1] += 1e-15
     payload = routing.SynthesizedRoutingPayload(
         circuit=circuit, parameters=cached_parameters, topology=((0, 1),),
         input_assignment=(0, 1), output_assignment=(0, 1),
