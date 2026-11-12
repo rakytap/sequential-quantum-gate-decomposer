@@ -110,6 +110,57 @@ def verify_routing_checkpoint(saved, archived, backend):
     return route
 
 
+def archived_routing_incumbent(old, audit, source_root, backend):
+    """Find the best raw route even when an older complete final pipeline won."""
+    from squander.decomposition._rewrite_audit_stream import close_audit, iter_audit_events
+    routes = list(iter_audit_events(audit["events"], {"exact_osr_routing"}))
+    if not routes:
+        return None, old["rewrite_audit"]["sha256"]
+    if len(routes) != 1:
+        raise ValueError("Expected one archived exact route.")
+    expected = old["routed"]["cnot_equiv"]
+    prior = old.get("routing_replay", {})
+    candidate_info = prior.get("candidate_audit")
+    if candidate_info is None:
+        if routes[0]["cnot_count"] != expected:
+            raise ValueError("Archived routed count has no matching certificate.")
+        return routes[0], old["rewrite_audit"]["sha256"]
+    path = source_root / candidate_info["file"]
+    if sha256(path) != candidate_info["sha256"]:
+        raise ValueError("Archived routing candidate audit digest mismatch.")
+    shared = candidate_info["sha256"] == old["rewrite_audit"]["sha256"]
+    candidate = audit if shared else backend.load_rewrite_audit(path)
+    try:
+        if candidate["run"]["input_circuit_sha256"] != audit["run"]["input_circuit_sha256"]:
+            raise ValueError("Archived raw and final pipelines have different inputs.")
+        selected = list(iter_audit_events(candidate["events"], {"exact_osr_routing"}))
+        if (len(selected) != 1 or selected[0]["cnot_count"] != expected
+                or selected[0]["input_sha256"] != routes[0]["input_sha256"]):
+            raise ValueError("Archived candidate does not certify the best routed result.")
+        if sha256(source_root / prior["candidate_qasm"]) != candidate["run"]["output_file_sha256"]:
+            raise ValueError("Archived candidate QASM digest mismatch.")
+        backend._verify_exact_osr_routing_replay(selected[0])
+        return selected[0], candidate_info["sha256"]
+    finally:
+        if not shared:
+            close_audit(candidate)
+
+
+def retain_prior_candidate(old, source_root, provenance):
+    """Keep the raw-route certificate when its final pass is reused."""
+    prior = old.get("routing_replay", {})
+    if not prior.get("candidate_audit"):
+        return
+    for relative in (prior["candidate_audit"]["file"], prior["candidate_qasm"]):
+        destination = ROOT / relative
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source_root / relative, destination)
+    for key in ("candidate_audit", "candidate_qasm", "candidate_final", "candidate_adopted",
+                "raw_initial_mapping", "raw_final_mapping", "final_implementation_sha256", "final_resume"):
+        if key in prior:
+            provenance[key] = deepcopy(prior[key])
+
+
 def final_prefix_boundary(path, route):
     """Find a completed whole-circuit round, excluding an unfinished tail."""
     boundary, last, rounds, matched_route = 0, None, 0, False
@@ -446,7 +497,8 @@ def worker(args):
         route_seconds = 0.0
         exact = None
         catalog = None
-        route = route_events[0] if route_events else None
+        route, routing_audit_sha256 = archived_routing_incumbent(old, audit, source_root, backend)
+        original_route = route
         if not route_events:
             # Already topology valid: there is no PAM stage to recompute.
             status.update(status="completed", shortcut="input-already-topology-valid",
@@ -458,7 +510,7 @@ def worker(args):
             saved = json.loads(checkpoint.read_text())
             if saved["policy"] != POLICY or saved["old_audit_sha256"] != audit_info["sha256"]:
                 raise ValueError("Routing checkpoint belongs to another experiment.")
-            route = verify_routing_checkpoint(saved, route_events[0], backend)
+            route = verify_routing_checkpoint(saved, original_route, backend)
             route_seconds = saved["seconds"]
             routing_implementation_digests = saved["implementation_sha256"]
             status["variants"] = saved["variants"]
@@ -518,11 +570,11 @@ def worker(args):
                                         implementation_sha256=implementation_digests,
                                         route=route, seconds=route_seconds, variants=variants))
             status["variants"] = variants
-        original_route = route_events[0]
         unchanged = execution_identity(backend, route["output"], route["initial_mapping"], route["final_mapping"]) == \
             execution_identity(backend, original_route["output"], original_route["initial_mapping"], original_route["final_mapping"])
         provenance = dict(policy=POLICY, timing_basis="archived-complete-run-plus-measured-extension",
                           original_timing=old["timing"], archived_audit_sha256=audit_info["sha256"],
+                          archived_routing_audit_sha256=routing_audit_sha256,
                           archived_catalog_sha256=old["routing_osr_catalog"]["sha256"],
                           routing_seconds=route_seconds, a2a_reused=True, catalogue_synthesis_reused=True,
                           route_bit_identical=unchanged, new_routing_synthesis_calls=0)
@@ -532,6 +584,7 @@ def worker(args):
         entry["routing_replay"] = provenance
         if unchanged:
             shutil.copy2(old_audit_path, canonical_audit)
+            retain_prior_candidate(old, source_root, provenance)
             entry["timing"] = cumulative_timing(old["timing"], route_seconds, 0)
             provenance.update(final_reused=True, final_seconds=0.0)
             status.update(status="completed", shortcut="identical-gates-parameters-and-mappings", entry=entry)

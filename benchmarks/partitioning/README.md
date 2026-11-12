@@ -49,6 +49,8 @@ verified final circuit remains a complete-pipeline candidate. The routed and
 final columns therefore report their respective best verified candidates;
 `routing_replay.candidate_audit` binds the new raw route to its own final output
 even when the old complete pipeline wins the final comparison.
+A subsequent refresh retains both certificates and can reuse that raw route's
+completed final pass without losing the better final incumbent.
 
 The old routing measurement includes catalogue construction and cannot be
 separated exactly from its PAM work. Consequently, the refreshed timing columns

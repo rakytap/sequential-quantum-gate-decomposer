@@ -98,6 +98,68 @@ def test_final_resume_rejects_corrupt_complete_ledger_lines(tmp_path):
         final_prefix_boundary(path, {})
 
 
+def _stagewise_source(tmp_path):
+    import hashlib
+    source = tmp_path / "source"
+    source.mkdir()
+    (source / "candidate.audit").write_bytes(b"candidate-proof")
+    (source / "candidate.qasm").write_bytes(b"candidate-circuit")
+    route = dict(kind="exact_osr_routing", event_id="old", input_sha256="a2a", cnot_count=10)
+    candidate_route = dict(route, event_id="best-raw", cnot_count=8)
+    audit = dict(run=dict(input_circuit_sha256="input"), events=[route])
+    candidate = dict(run=dict(input_circuit_sha256="input",
+                             output_file_sha256=hashlib.sha256(b"candidate-circuit").hexdigest()),
+                     events=[candidate_route])
+    old = dict(routed=dict(cnot_equiv=8), rewrite_audit=dict(sha256="canonical-proof"),
+               routing_replay=dict(candidate_audit=dict(file="candidate.audit",
+                    sha256=hashlib.sha256(b"candidate-proof").hexdigest()),
+                    candidate_qasm="candidate.qasm", candidate_final=dict(cnot_equiv=7),
+                    candidate_adopted=False, final_seconds=90))
+    return source, old, audit, candidate, candidate_route
+
+
+def test_cached_resume_keeps_best_raw_route_and_its_separate_final_certificate(tmp_path, monkeypatch):
+    from benchmarks.partitioning import replay_routing as replay
+    source, old, audit, candidate, expected = _stagewise_source(tmp_path)
+    verified = []
+    checker = SimpleNamespace(load_rewrite_audit=lambda path: candidate,
+        _verify_exact_osr_routing_replay=lambda route: verified.append(route))
+    route, digest = replay.archived_routing_incumbent(old, audit, source, checker)
+    assert route is expected and route["cnot_count"] == 8
+    assert verified == [expected]
+    assert digest == old["routing_replay"]["candidate_audit"]["sha256"]
+    destination = tmp_path / "destination"
+    monkeypatch.setattr(replay, "ROOT", destination)
+    provenance = dict(final_seconds=0, final_reused=True)
+    replay.retain_prior_candidate(old, source, provenance)
+    assert (destination / "candidate.audit").read_bytes() == b"candidate-proof"
+    assert (destination / "candidate.qasm").read_bytes() == b"candidate-circuit"
+    assert provenance["candidate_adopted"] is False
+    assert provenance["final_seconds"] == 0
+    assert provenance["candidate_final"] == {"cnot_equiv": 7}
+
+
+@pytest.mark.parametrize("corruption", ["input", "count"])
+def test_cached_resume_rejects_a_mismatched_prior_candidate(tmp_path, corruption):
+    from benchmarks.partitioning import replay_routing as replay
+    source, old, audit, candidate, route = _stagewise_source(tmp_path)
+    if corruption == "input":
+        candidate["run"]["input_circuit_sha256"] = "other-input"
+    else:
+        route["cnot_count"] = 9
+    checker = SimpleNamespace(load_rewrite_audit=lambda path: candidate)
+    with pytest.raises(ValueError):
+        replay.archived_routing_incumbent(old, audit, source, checker)
+
+
+def test_cached_resume_requires_evidence_for_the_recorded_best_raw_count():
+    from benchmarks.partitioning import replay_routing as replay
+    old = dict(routed=dict(cnot_equiv=8), rewrite_audit=dict(sha256="canonical"))
+    audit = dict(events=[dict(kind="exact_osr_routing", cnot_count=10)])
+    with pytest.raises(ValueError, match="no matching certificate"):
+        replay.archived_routing_incumbent(old, audit, None, None)
+
+
 @pytest.mark.parametrize("corrupt", [False, True])
 def test_optional_pam_limit_preserves_best_but_corruption_fails(monkeypatch, corrupt):
     from benchmarks.partitioning.replay_routing import cached_portfolio
