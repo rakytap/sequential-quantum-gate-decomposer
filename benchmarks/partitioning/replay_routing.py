@@ -76,6 +76,40 @@ def cumulative_timing(archived, routing_seconds, final_seconds):
     return result
 
 
+def recover_interrupted_final_attempt(case_dir, now=None):
+    """Charge an abandoned attempt conservatively, without charging it twice."""
+    pending = case_dir / "final-attempt.json"
+    history = case_dir / "failed-attempts.json"
+    attempts = json.loads(history.read_text()) if history.exists() else []
+    if pending.exists():
+        attempt = json.loads(pending.read_text())
+        if attempt.get("status") == "running":
+            now = time.monotonic() if now is None else now
+            attempt_id = str(attempt["started_monotonic"])
+            if not any(a.get("attempt_id") == attempt_id for a in attempts):
+                attempts.append(dict(
+                    attempt_id=attempt_id, stage="final-synthesis",
+                    outcome="interrupted before verification completed",
+                    timing_basis="conservative-wall-clock-upper-bound",
+                    seconds=max(0.0, now - attempt["started_monotonic"]),
+                    includes_preparation_and_recovery_delay=True))
+                write_json(history, attempts)
+            attempt["status"] = "charged"
+            write_json(pending, attempt)
+    return attempts
+
+
+def verify_routing_checkpoint(saved, archived, backend):
+    """Reuse a proved route across code updates, retaining its own provenance."""
+    route = saved["route"]
+    if route["input_sha256"] != archived["input_sha256"]:
+        raise ValueError("Routing checkpoint has a different exact source.")
+    if route["cnot_count"] > archived["cnot_count"]:
+        raise ValueError("Routing checkpoint regresses the archived incumbent.")
+    backend._verify_exact_osr_routing_replay(route)
+    return route
+
+
 @contextmanager
 def deterministic_cover_solver():
     """Pin CBC's seed, threads and limits without changing synthesis settings."""
@@ -326,6 +360,8 @@ def worker(args):
             if not archived_catalog_copy.exists():
                 shutil.copy2(source_root / catalog_file, archived_catalog_copy)
         checkpoint = case_dir / "route.json"
+        routing_implementation_digests = implementation_digests
+        failed_attempts = recover_interrupted_final_attempt(case_dir)
         route_seconds = 0.0
         exact = None
         catalog = None
@@ -341,9 +377,9 @@ def worker(args):
             saved = json.loads(checkpoint.read_text())
             if saved["policy"] != POLICY or saved["old_audit_sha256"] != audit_info["sha256"]:
                 raise ValueError("Routing checkpoint belongs to another experiment.")
-            if saved.get("implementation_sha256") != implementation_digests:
-                raise ValueError("Routing implementation changed after this checkpoint was written.")
-            route, route_seconds = saved["route"], saved["seconds"]
+            route = verify_routing_checkpoint(saved, route_events[0], backend)
+            route_seconds = saved["seconds"]
+            routing_implementation_digests = saved["implementation_sha256"]
             status["variants"] = saved["variants"]
         else:
             started = time.monotonic()
@@ -409,7 +445,7 @@ def worker(args):
                           archived_catalog_sha256=old["routing_osr_catalog"]["sha256"],
                           routing_seconds=route_seconds, a2a_reused=True, catalogue_synthesis_reused=True,
                           route_bit_identical=unchanged, new_routing_synthesis_calls=0)
-        provenance["implementation_sha256"] = implementation_digests
+        provenance["implementation_sha256"] = routing_implementation_digests
         entry = deepcopy(old)
         entry["routing_replay"] = provenance
         if unchanged:
@@ -443,6 +479,12 @@ def worker(args):
         raw, raw_parameters = decode(backend, route["output"])
         os.environ["SQUANDER_REWRITE_AUDIT_JSONL"] = str(ledger)
         begin = time.monotonic()
+        pending_attempt = case_dir / "final-attempt.json"
+        write_json(pending_attempt, dict(status="running", started_monotonic=begin))
+        provenance["final_implementation_sha256"] = {
+            name: sha256(ROOT / name) for name in (
+                "squander/partitioning/ilp.py",
+                "squander/decomposition/qgd_Wide_Circuit_Optimization.py")}
         try:
             fitted, fitted_parameters = optimizer.OptimizeWideCircuit(raw, raw_parameters)
         finally:
@@ -480,7 +522,11 @@ def worker(args):
         # is selected from complete pipelines, including the old verified one.
         # Keep the candidate certificate even if its final count loses.
         entry["routed"] = backend.CircuitGateStats(raw)
-        entry["timing"] = cumulative_timing(old["timing"], route_seconds, final_seconds)
+        failed_seconds = sum(attempt["seconds"] for attempt in failed_attempts)
+        entry["timing"] = cumulative_timing(old["timing"], route_seconds, final_seconds + failed_seconds)
+        if failed_attempts:
+            provenance.update(failed_final_attempts=failed_attempts,
+                              failed_final_attempts_seconds_upper_bound=failed_seconds)
         provenance.update(final_reused=not adopted, final_seconds=final_seconds,
                           candidate_final=candidate_stats, candidate_adopted=adopted,
                           candidate_qasm=str(candidate_qasm.relative_to(ROOT)),
@@ -499,6 +545,7 @@ def worker(args):
             shutil.copy2(old_audit_path, canonical_audit)
         status.update(status="completed", entry=entry)
         write_json(status_path, status)
+        write_json(pending_attempt, dict(status="completed", seconds=final_seconds))
     finally:
         close_audit(audit)
 

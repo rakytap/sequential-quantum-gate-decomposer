@@ -5,7 +5,10 @@ import numpy as np
 import pytest
 
 import squander.decomposition.qgd_Wide_Circuit_Optimization as backend
-from benchmarks.partitioning.replay_routing import cumulative_timing, execution_identity
+from benchmarks.partitioning.replay_routing import (
+    cumulative_timing, execution_identity, recover_interrupted_final_attempt,
+    verify_routing_checkpoint, write_json,
+)
 
 
 def representation(angle):
@@ -30,6 +33,38 @@ def test_replay_never_relabels_warm_time_as_a_fresh_run():
     assert cumulative_timing(original, 2.0, 3.0) == dict(
         a2a=5.0, routing=122.0, optimization=33.0, total=160.0)
     assert original["total"] == 155.0
+
+
+def test_interrupted_final_attempt_is_charged_once_across_restarts(tmp_path):
+    pending = tmp_path / "final-attempt.json"
+    write_json(pending, dict(status="running", started_monotonic=10))
+    assert sum(a["seconds"] for a in recover_interrupted_final_attempt(tmp_path, now=25)) == 15
+    # Simulate interruption between committing history and marking it charged.
+    write_json(pending, dict(status="running", started_monotonic=10))
+    assert sum(a["seconds"] for a in recover_interrupted_final_attempt(tmp_path, now=35)) == 15
+    write_json(pending, dict(status="running", started_monotonic=40))
+    assert sum(a["seconds"] for a in recover_interrupted_final_attempt(tmp_path, now=50)) == 25
+    write_json(pending, dict(status="completed", seconds=4))
+    assert sum(a["seconds"] for a in recover_interrupted_final_attempt(tmp_path, now=99)) == 25
+
+
+def test_checkpoint_code_drift_requires_an_independent_exact_source_proof():
+    verified = []
+    checker = SimpleNamespace(_verify_exact_osr_routing_replay=lambda r: verified.append(r))
+    archived = dict(input_sha256="exact-source", cnot_count=10)
+    route = dict(input_sha256="exact-source", cnot_count=8)
+    saved = dict(route=route, implementation_sha256={"old-router.py": "old-version"})
+    assert verify_routing_checkpoint(saved, archived, checker) is route
+    assert verified == [route]
+    assert saved["implementation_sha256"] == {"old-router.py": "old-version"}
+    for corrupted in (dict(input_sha256="other-source", cnot_count=8),
+                      dict(input_sha256="exact-source", cnot_count=11)):
+        with pytest.raises(ValueError):
+            verify_routing_checkpoint(dict(saved, route=corrupted), archived, checker)
+    def rejected(route):
+        raise ValueError("Invalid permutation certificate")
+    with pytest.raises(ValueError, match="Invalid permutation certificate"):
+        verify_routing_checkpoint(saved, archived, SimpleNamespace(_verify_exact_osr_routing_replay=rejected))
 
 
 @pytest.mark.parametrize("corrupt", [False, True])
