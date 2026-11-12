@@ -110,6 +110,87 @@ def verify_routing_checkpoint(saved, archived, backend):
     return route
 
 
+def final_prefix_boundary(path, route):
+    """Find a completed whole-circuit round, excluding an unfinished tail."""
+    boundary, last, rounds, matched_route = 0, None, 0, False
+    with path.open("rb") as source:
+        while True:
+            line = source.readline()
+            if not line:
+                break
+            if not line.endswith(b"\n"):
+                break
+            event = json.loads(line)
+            if event.get("kind") == "exact_osr_routing":
+                matched_route = (event.get("event_id") == route.get("event_id")
+                                 and event.get("output_sha256") == route.get("output_sha256"))
+            if (matched_route and event.get("stage") == "topology_optimization"
+                    and event.get("kind") in ("round", "squander_basis_conversion")):
+                rounds += event["kind"] == "round"
+                if rounds:
+                    boundary, last = source.tell(), event
+    return (boundary, last, rounds) if last is not None else None
+
+
+def resume_final_prefix(case_dir, ledger, route, audit, backend):
+    """Reverify completed rounds before resuming interrupted final synthesis."""
+    candidates = []
+    seen = set()
+    for path in (case_dir / "candidate.interrupted.jsonl", ledger):
+        if not path.exists():
+            continue
+        signature = (path.stat().st_size, path.stat().st_mtime_ns)
+        if signature in seen:
+            continue
+        seen.add(signature)
+        boundary = final_prefix_boundary(path, route)
+        if boundary is not None:
+            end, event, rounds = boundary
+            counts = event["output"].get("gate_counts", {})
+            cnots = sum(backend.CNOT_COUNT_DICT.get(name, 0) * count
+                        for name, count in counts.items())
+            candidates.append((cnots, -rounds, path, end, event))
+    if not candidates:
+        return None
+    _, negative_rounds, source_path, end, event = min(candidates, key=lambda item: item[:2])
+    prefix = case_dir / "final-prefix.jsonl"
+    with source_path.open("rb") as source, prefix.open("wb") as destination:
+        remaining = end
+        while remaining:
+            chunk = source.read(min(1024 * 1024, remaining))
+            if not chunk:
+                raise ValueError("Interrupted final ledger changed during recovery.")
+            destination.write(chunk)
+            remaining -= len(chunk)
+    circuit, parameters = decode(backend, event["output"])
+    representation = backend._squander_audit_representation(
+        circuit, parameters, range(circuit.get_Qbit_Num()))
+    if backend._exact_state_sha256(backend._qasm_exact_state(representation)) != event["output_sha256"]:
+        raise ValueError("Interrupted final gate stream did not round-trip exactly.")
+    if backend.CNOTGateCount(circuit) > route["cnot_count"]:
+        raise ValueError("Interrupted final prefix regresses its routing input.")
+    from benchmarks.partitioning.wide_circuit_optimization import save_qasm2
+    qasm = case_dir / "final-prefix.qasm"
+    save_qasm2(circuit, parameters, qasm)
+    run = deepcopy(audit["run"])
+    run.update(output_file=str(qasm.relative_to(ROOT)), output_circuit=representation,
+               output_circuit_sha256=event["output_sha256"], output_file_sha256=sha256(qasm),
+               initial_mapping=route["initial_mapping"], final_mapping=route["final_mapping"])
+    run.pop("result_checkpoint", None)
+    proof_path = case_dir / "final-prefix.audit.json.gz"
+    proof, digest = backend.save_rewrite_audit(prefix, proof_path, run)
+    from squander.decomposition._rewrite_audit_stream import close_audit
+    try:
+        verification = backend.verify_rewrite_audit(proof, expected_sha256=digest,
+                                                    audit_path=proof_path)
+    finally:
+        close_audit(proof)
+    shutil.copyfile(prefix, ledger)
+    return circuit, parameters, dict(
+        completed_rounds=-negative_rounds, output_sha256=event["output_sha256"],
+        checkpoint_audit_sha256=digest, verified_rewrites=verification["verified_rewrites"])
+
+
 @contextmanager
 def deterministic_cover_solver():
     """Pin CBC's seed, threads and limits without changing synthesis settings."""
@@ -464,11 +545,17 @@ def worker(args):
         status.update(status="final-synthesis", routed_cnots=route["cnot_count"])
         write_json(status_path, status)
         ledger = case_dir / "candidate.jsonl"
-        with ledger.open("w") as destination:
-            for event in iter_audit_events(audit["events"]):
-                if event.get("stage") == "all_to_all":
-                    destination.write(json.dumps(event, separators=(",", ":")) + "\n")
-            destination.write(json.dumps(route, separators=(",", ":")) + "\n")
+        raw, raw_parameters = decode(backend, route["output"])
+        resumed = resume_final_prefix(case_dir, ledger, route, audit, backend)
+        if resumed is None:
+            optimization_input, optimization_parameters = raw, raw_parameters
+            with ledger.open("w") as destination:
+                for event in iter_audit_events(audit["events"]):
+                    if event.get("stage") == "all_to_all":
+                        destination.write(json.dumps(event, separators=(",", ":")) + "\n")
+                destination.write(json.dumps(route, separators=(",", ":")) + "\n")
+        else:
+            optimization_input, optimization_parameters, provenance["final_resume"] = resumed
         config = deepcopy(old["configuration"])
         config.update(strategy="TreeSearch", topology=route["topology"],
                       **{"pre-opt-strategy": "TreeSearch", "routing-strategy": "exact-osr"},
@@ -477,17 +564,18 @@ def worker(args):
         if row["size"] == 4:
             config.setdefault("osr_adaptive_partition_order", False)
         optimizer = backend.qgd_Wide_Circuit_Optimization(config)
-        raw, raw_parameters = decode(backend, route["output"])
         os.environ["SQUANDER_REWRITE_AUDIT_JSONL"] = str(ledger)
         begin = time.monotonic()
         pending_attempt = case_dir / "final-attempt.json"
         write_json(pending_attempt, dict(status="running", started_monotonic=begin))
         provenance["final_implementation_sha256"] = {
             name: sha256(ROOT / name) for name in (
+                "benchmarks/partitioning/replay_routing.py",
                 "squander/partitioning/ilp.py",
                 "squander/decomposition/qgd_Wide_Circuit_Optimization.py")}
         try:
-            fitted, fitted_parameters = optimizer.OptimizeWideCircuit(raw, raw_parameters)
+            fitted, fitted_parameters = optimizer.OptimizeWideCircuit(
+                optimization_input, optimization_parameters)
         finally:
             os.environ.pop("SQUANDER_REWRITE_AUDIT_JSONL", None)
         final_seconds = time.monotonic() - begin

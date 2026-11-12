@@ -32,6 +32,9 @@ Both 3q and 4q configurations are processed, including results without a BQSKit
 counterpart. Failed, timed-out and unrun inputs remain recorded separately.
 Already topology-valid cases have no routing stage. The checkpoint directory
 `.routing-refresh/` records each phase and permits restarting the same command.
+After an interrupted final pass, completed native rounds are recovered from
+the ledger, checked against the exact routed input, and independently replayed
+before synthesis continues. An unfinished trailing round is excluded.
 
 The same portfolio is applied to each catalogue: the existing cover strategies,
 four PAM SWAP weights, reference-trajectory cover refinement, and native beam

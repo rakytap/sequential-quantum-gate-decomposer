@@ -7,7 +7,7 @@ import pytest
 import squander.decomposition.qgd_Wide_Circuit_Optimization as backend
 from benchmarks.partitioning.replay_routing import (
     cumulative_timing, execution_identity, recover_interrupted_final_attempt,
-    verify_routing_checkpoint, write_json,
+    verify_routing_checkpoint, write_json, final_prefix_boundary,
 )
 
 
@@ -65,6 +65,37 @@ def test_checkpoint_code_drift_requires_an_independent_exact_source_proof():
         raise ValueError("Invalid permutation certificate")
     with pytest.raises(ValueError, match="Invalid permutation certificate"):
         verify_routing_checkpoint(saved, archived, SimpleNamespace(_verify_exact_osr_routing_replay=rejected))
+
+
+def test_final_resume_excludes_uncommitted_rewrites_and_truncated_tail(tmp_path):
+    import json
+    route = dict(kind="exact_osr_routing", event_id="route", output_sha256="raw")
+    complete = dict(kind="round", stage="topology_optimization", output_sha256="fitted")
+    prefix = "".join(json.dumps(event) + "\n" for event in (route, complete))
+    path = tmp_path / "candidate.jsonl"
+    path.write_text(prefix + json.dumps(dict(kind="rewrite", accepted=True)) + "\n" + '{"kind":"round"')
+    boundary, event, rounds = final_prefix_boundary(path, route)
+    assert boundary == len(prefix.encode())
+    assert event == complete
+    assert rounds == 1
+    assert final_prefix_boundary(path, dict(route, event_id="other-route")) is None
+
+
+def test_final_resume_requires_a_completed_topology_round(tmp_path):
+    import json
+    route = dict(kind="exact_osr_routing", event_id="route", output_sha256="raw")
+    events = [dict(kind="round", stage="all_to_all"), route,
+              dict(kind="squander_basis_conversion", stage="topology_optimization")]
+    path = tmp_path / "candidate.jsonl"
+    path.write_text("".join(json.dumps(event) + "\n" for event in events))
+    assert final_prefix_boundary(path, route) is None
+
+
+def test_final_resume_rejects_corrupt_complete_ledger_lines(tmp_path):
+    path = tmp_path / "candidate.jsonl"
+    path.write_text('{not-json}\n')
+    with pytest.raises(ValueError):
+        final_prefix_boundary(path, {})
 
 
 @pytest.mark.parametrize("corrupt", [False, True])
