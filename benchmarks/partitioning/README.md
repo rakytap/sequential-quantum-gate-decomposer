@@ -17,6 +17,79 @@ python benchmarks/partitioning/wide_circuit_optimization.py \
 Moving the driver leaves dataset/result paths and the frozen archives unchanged.
 Its source fingerprint records the driver's current location for new runs.
 
+## Continue a completed run at routing
+
+`replay_routing.py` reads an immutable source checkout and replaces the current
+checkout's results after every completed case has passed verification:
+
+```bash
+PYTHONPATH=. python benchmarks/partitioning/replay_routing.py \
+  --source-root /path/to/original/checkout --jobs 1
+```
+
+The default is one concurrent case. With the default OSR restart policy,
+topology optimization runs sequentially within each circuit; `--jobs` controls
+concurrency across circuits. On a shared Linux server, enforce a combined
+memory budget for Python and its solver children, for example:
+
+```bash
+systemd-run --user --scope -p MemoryMax=16G -p MemoryHigh=12G -p MemorySwapMax=0 \
+  env PYTHONPATH=. python benchmarks/partitioning/replay_routing.py \
+  --source-root /path/to/original/checkout --jobs 1
+```
+
+The worker's virtual-address ceiling is not an aggregate RAM limit. A case that
+exceeds the OS budget must resume from its checkpoint after reducing memory
+use or explicitly allocating a larger budget.
+
+The source must contain its recorded audit and routing-catalogue release assets.
+Both 3q and 4q configurations are processed, including results without a BQSKit
+counterpart. Failed, timed-out and unrun inputs remain recorded separately.
+Already topology-valid cases have no routing stage. The checkpoint directory
+`.routing-refresh/` records each phase and permits restarting the same command.
+After an interrupted final pass, completed native rounds are recovered from
+the ledger, checked against the exact routed input, and independently replayed
+before synthesis continues. An unfinished trailing round is excluded.
+
+The same portfolio is applied to each catalogue: the existing cover strategies,
+four PAM SWAP weights, reference-trajectory cover refinement, and native beam
+search with both original and gathering-aware priorities. It retains the
+archived routed circuit. Translated local programs are materialized per cover
+to keep memory bounded; no A2A or permutation synthesis is repeated.
+
+Final topology synthesis is reused only when the exact ordered gate/parameter
+stream and both boundary mappings match. Every changed selected route receives
+the ordinary topology synthesis pass and a new replay certificate. The old
+verified final circuit remains a complete-pipeline candidate. The routed and
+final columns therefore report their respective best verified candidates;
+`routing_replay.candidate_audit` binds the new raw route to its own final output
+even when the old complete pipeline wins the final comparison.
+A subsequent refresh retains both certificates and can reuse that raw route's
+completed final pass without losing the better final incumbent.
+
+The old routing measurement includes catalogue construction and cannot be
+separated exactly from its PAM work. Consequently, the refreshed timing columns
+charge the original complete experiment plus the measured extension. Per-case
+metadata preserves the old times, new routing and final-synthesis times,
+digests, shortcuts and branch selection. These cumulative costs do not claim
+to measure a fresh execution of the revised algorithm. New table captions
+state this accounting explicitly. Audit export/verification is separate from
+the optimization-stage costs, as in the original benchmark.
+The archived wall-clock and audit timings are retained under
+`routing_replay.original_timing`; they are omitted from the refreshed `timing`
+object because the extension does not measure all preparation and verification
+costs needed for new wall-clock or audit totals.
+
+Interrupted final-synthesis attempts are charged separately as conservative
+wall-clock upper bounds, with their failures and accounting basis retained in
+`routing_replay.failed_final_attempts`. These costs include host stalls and
+recovery delay; they are not estimates of isolated synthesis performance.
+
+`configuration` retains the archived synthesis settings; `routing_replay`
+identifies the replacement routing policy and its implementation digests.
+When older cache exports rounded angles, the loader restores the exact source
+from its audit and checks the selected programs against that source.
+
 The wide-circuit optimization benchmark reads the two source datasets here and
 writes optimized OpenQASM 2 circuits with identical filenames into
 `<dataset>_results_<width>qbit_<strategy>/`, with metadata in each directory's
@@ -43,6 +116,16 @@ result directories are populated by
 `benchmarks/partitioning/wide_circuit_optimization.py` and the BQSKit comparison
 workflow. Directories with `_old` suffixes and scratch experiments are not part
 of the archived comparison.
+
+## Routing refresh: November 2026
+
+The current 3q/4q results, paired outcomes, timing basis, and evidence-upload
+instructions are recorded in
+[`results_archive_20261111/README.md`](results_archive_20261111/README.md).
+Its comparison tables and manifest refer to the refreshed current results.
+The historical commands below target the original October snapshot and must
+be run from its original archive revision; its manifest does not describe the
+refreshed files.
 
 ## Frozen result archive: 28 October 2026
 

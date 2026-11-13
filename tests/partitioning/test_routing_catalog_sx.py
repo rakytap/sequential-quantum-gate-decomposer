@@ -1,4 +1,8 @@
 import numpy as np
+import pytest
+import gzip
+import hashlib
+import json
 from qiskit import QuantumCircuit
 
 from squander import Qiskit_IO
@@ -11,10 +15,13 @@ from squander.partitioning.routing import (
 )
 
 
-def test_catalog_round_trip_with_native_sx(tmp_path):
+@pytest.mark.parametrize("compact", [False, True])
+@pytest.mark.parametrize("legacy_phase", [False, True])
+def test_catalog_round_trip_with_native_sx(tmp_path, compact, legacy_phase):
     qiskit_circuit = QuantumCircuit(2)
     qiskit_circuit.sx(0)
     qiskit_circuit.cx(0, 1)
+    qiskit_circuit.rz(0.37, 1)
     circuit, parameters = Qiskit_IO.convert_Qiskit_to_Squander(qiskit_circuit)
     topology = ((0, 1),)
     alternatives = []
@@ -59,19 +66,54 @@ def test_catalog_round_trip_with_native_sx(tmp_path):
         parameters=parameters,
         topology=topology,
         config={"strategy": "TreeSearch"},
-        candidate_gate_sets=((0, 1),),
-        candidate_gate_orders=((0, 1),),
+        candidate_gate_sets=((0, 1, 2),),
+        candidate_gate_orders=((0, 1, 2),),
         feasible_alternatives={0: tuple(alternatives)},
         osr_synthesized_partitions={0},
     )
 
+    if legacy_phase:
+        with gzip.open(path, "rt") as stream:
+            legacy = json.load(stream)
+        for record in [legacy, *legacy["payloads"]]:
+            for key in ("source_qasm", "qasm"):
+                if key in record:
+                    record[key] = record[key].replace("\nrz(", "\np(")
+        assert "\np(" in legacy["source_qasm"]
+        legacy["source_qasm_sha256"] = hashlib.sha256(legacy["source_qasm"].encode()).hexdigest()
+        with gzip.open(path, "wt") as stream:
+            json.dump(legacy, stream)
     archive = load_routing_osr_catalog(path)
     assert "sx " in archive["source_qasm"]
-    reconstructed = reconstruct_routing_osr_catalog(path)
+    reconstructed = reconstruct_routing_osr_catalog(path, compact_path=compact)
+    if compact:
+        from squander.partitioning._routing_catalog_replay import expand_path_cover
+        from squander.partitioning.routing import augment_catalog_with_recombined_covers
+        reconstructed = augment_catalog_with_recombined_covers(reconstructed, strategies=("kahn",))
+        assert reconstructed.implicit_path_frames
+        reconstructed = expand_path_cover(reconstructed, (0,))
+        full = reconstruct_routing_osr_catalog(path)
+        def costs(catalog):
+            return {(a.input_physical, a.output_physical): a.cnot_count
+                    for a in catalog.alternatives[0]}
+        original_costs, replay_costs = costs(full), costs(reconstructed)
+        assert set(original_costs) == set(replay_costs)
+        # Reflections can expose a cheaper valid realization at a boundary
+        # that the old full table represented by a different local program.
+        assert all(replay_costs[key] <= value for key, value in original_costs.items())
+        from squander.partitioning.routing import permuted_partition_target
+        for alternative in reconstructed.alternatives[0]:
+            payload = alternative.payload
+            target = permuted_partition_target(
+                payload.source_circuit.get_Matrix(payload.source_parameters, is_f32=False),
+                payload.input_assignment, payload.output_assignment)
+            actual = payload.circuit.get_Matrix(payload.parameters, is_f32=False)
+            overlap = np.vdot(target, actual)
+            np.testing.assert_allclose(actual * np.exp(-1j * np.angle(overlap)), target, atol=1e-12)
+            assert alternative.output_physical == tuple(
+                alternative.input_physical[payload.input_assignment[payload.output_assignment.index(q)]]
+                for q in range(2))
     assert reconstructed.circuit.get_Gate_Nums().get("SX") == 1
-    assert np.allclose(
-        reconstructed.circuit.get_Matrix(
-            reconstructed.parameters, is_f32=False
-        ),
-        circuit.get_Matrix(parameters, is_f32=False),
-    )
+    actual = reconstructed.circuit.get_Matrix(reconstructed.parameters, is_f32=False)
+    expected = circuit.get_Matrix(parameters, is_f32=False)
+    np.testing.assert_allclose(actual * np.exp(-1j * np.angle(np.vdot(expected, actual))), expected, atol=1e-12)

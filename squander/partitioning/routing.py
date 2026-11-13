@@ -2396,6 +2396,7 @@ class LoadedRoutingOSRCatalog:
     gate_orders: tuple[tuple[int, ...], ...]
     alternatives: Mapping[int, tuple[RoutingAlternative, ...]]
     configuration: Mapping[str, Any]
+    implicit_path_frames: bool = False
 
 
 def _catalog_qasm(circuit, parameters):
@@ -2577,17 +2578,23 @@ def load_routing_osr_catalog(path, expected_sha256=None):
     return archive
 
 
-def reconstruct_routing_osr_catalog(path, expected_sha256=None):
+def reconstruct_routing_osr_catalog(path, expected_sha256=None, *, compact_path=False):
     """Reconstruct native alternatives from a catalog, never calling OSR."""
     from qiskit import qasm2
     from qiskit.circuit.library import SXGate, SXdgGate
     from squander import Qiskit_IO
 
-    archive = load_routing_osr_catalog(path, expected_sha256)
-    custom_instructions = (
+    if compact_path:
+        from ._routing_catalog_replay import load_compact_path_archive
+        archive = load_compact_path_archive(path, expected_sha256)
+    else:
+        archive = load_routing_osr_catalog(path, expected_sha256)
+    custom_instructions = {instruction.name: instruction
+                           for instruction in qasm2.LEGACY_CUSTOM_INSTRUCTIONS}
+    custom_instructions.update({instruction.name: instruction for instruction in (
         qasm2.CustomInstruction("sx", 0, 1, SXGate, builtin=True),
         qasm2.CustomInstruction("sxdg", 0, 1, SXdgGate, builtin=True),
-    )
+    )})
 
     def decode(qasm):
         qasm = qasm.replace("\nu(", "\nu3(")
@@ -2601,7 +2608,7 @@ def reconstruct_routing_osr_catalog(path, expected_sha256=None):
             qasm,
         )
         return Qiskit_IO.convert_Qiskit_to_Squander(
-            qasm2.loads(qasm, custom_instructions=custom_instructions)
+            qasm2.loads(qasm, custom_instructions=tuple(custom_instructions.values()))
         )
 
     circuit, parameters = decode(archive["source_qasm"])
@@ -2651,21 +2658,20 @@ def reconstruct_routing_osr_catalog(path, expected_sha256=None):
             )
             for alternative in record["alternatives"]
         )
-        expected_transitions = _expected_boundary_transition_keys(
-            archived_topology,
-            physical_qubit_count,
-            len(logical_qubits),
-        )
-        archived_transitions = {
-            (alternative.input_physical, alternative.output_physical)
-            for alternative in alternatives[partition]
-        }
-        if expected_transitions - archived_transitions:
-            raise ValueError(
-                "Routing OSR catalog is missing deterministic fallback "
-                f"coverage for partition {partition}."
+        if not compact_path:
+            expected_transitions = _expected_boundary_transition_keys(
+                archived_topology, physical_qubit_count, len(logical_qubits),
             )
-    return _close_loaded_catalog_under_boundary_swaps(LoadedRoutingOSRCatalog(
+            archived_transitions = {
+                (alternative.input_physical, alternative.output_physical)
+                for alternative in alternatives[partition]
+            }
+            if expected_transitions - archived_transitions:
+                raise ValueError(
+                    "Routing OSR catalog is missing deterministic fallback "
+                    f"coverage for partition {partition}."
+                )
+    loaded = LoadedRoutingOSRCatalog(
         circuit=circuit.get_Flat_Circuit(),
         parameters=np.asarray(parameters, dtype=np.float64),
         topology=tuple(tuple(map(int, edge)) for edge in archive["topology"]),
@@ -2673,7 +2679,15 @@ def reconstruct_routing_osr_catalog(path, expected_sha256=None):
         gate_orders=tuple(gate_orders),
         alternatives=alternatives,
         configuration=archive.get("configuration", {}),
-    ))
+    )
+    if compact_path:
+        # Close local permutation orbits once, without copying every program
+        # along the full device. Physical frames are materialized per cover.
+        local_width = min(3, loaded.circuit.get_Qbit_Num())
+        local = replace(loaded, topology=tuple((i, i + 1) for i in range(local_width - 1)))
+        closed = _close_loaded_catalog_under_boundary_swaps(local)
+        return replace(closed, topology=loaded.topology, implicit_path_frames=True)
+    return _close_loaded_catalog_under_boundary_swaps(loaded)
 
 
 def _close_loaded_catalog_under_boundary_swaps(catalog):
@@ -3149,6 +3163,7 @@ def augment_catalog_with_recombined_covers(
         gate_orders=tuple(gate_orders),
         alternatives=alternatives,
         configuration=catalog.configuration,
+        implicit_path_frames=catalog.implicit_path_frames,
     )
 
 
@@ -7385,6 +7400,39 @@ def _mapping_trajectory_from_solution(solution, partitions):
     return before, after
 
 
+def _path_window_detour_components(before, after, logical_qubits, path):
+    """Factor Kendall detours into window gathering and internal permutations."""
+    position = {physical: index for index, physical in enumerate(path)}
+    before = tuple(position[physical] for physical in before)
+    after = tuple(position[physical] for physical in after)
+    logicals = tuple(logical_qubits)
+    width = len(logicals)
+    remaining = set(range(len(path))) - set(logicals)
+    before_order = tuple(sorted(remaining, key=before.__getitem__))
+    after_order = tuple(sorted(remaining, key=after.__getitem__))
+    after_rank = {logical: rank for rank, logical in enumerate(after_order)}
+    # Only inversions involving a block token depend on its chosen window.
+    order = tuple(after_rank[logical] for logical in before_order)
+    outside_inversions = sum(
+        order[left] > order[right]
+        for left in range(len(order)) for right in range(left + 1, len(order))
+    )
+    base = sum(before[q] + after[q] for q in logicals) - width * (width - 1)
+    external = [float("inf")] * (len(path) - width + 1)
+    for outside_order in (before_order, after_order):
+        prefix = 0
+        for window in range(len(external)):
+            external[window] = min(
+                external[window],
+                outside_inversions + base + 2 * width * window - 2 * prefix,
+            )
+            if window < len(outside_order):
+                token = outside_order[window]
+                prefix += sum(before[q] > before[token] for q in logicals)
+                prefix += sum(after[q] > after[token] for q in logicals)
+    return external, tuple(before[q] for q in logicals), tuple(after[q] for q in logicals)
+
+
 def mapping_aware_partition_weights(
     *,
     partitions,
@@ -7393,6 +7441,7 @@ def mapping_aware_partition_weights(
     gate_after_mapping,
     path,
     swap_cnot_cost=3.0,
+    implicit_path_frames=False,
 ):
     """Price each cover column by marginal CNOT cost on one mapping trajectory.
 
@@ -7401,13 +7450,39 @@ def mapping_aware_partition_weights(
     resolves compatibility between the independently priced alternatives.
     """
     weights = []
+    path_position = {physical: index for index, physical in enumerate(path)}
     for partition, gate_set in enumerate(partitions):
         first_gate = min(map(int, gate_set))
         last_gate = max(map(int, gate_set))
         mapping_before = tuple(gate_before_mapping[int(first_gate)])
         mapping_after = tuple(gate_after_mapping[int(last_gate)])
         best = None
+        window_components = {}
+        internal_costs = {}
         for alternative in alternatives[int(partition)]:
+            logicals = alternative.logical_qubits
+            incoming = tuple(path_position[p] for p in alternative.input_physical)
+            outgoing = tuple(path_position[p] for p in alternative.output_physical)
+            window = min(incoming)
+            width = len(logicals)
+            if tuple(sorted(incoming)) == tuple(range(window, window + width)):
+                if logicals not in window_components:
+                    window_components[logicals] = _path_window_detour_components(
+                        mapping_before, mapping_after, logicals, path,
+                    )
+                external, before_positions, after_positions = window_components[logicals]
+                key = (logicals, tuple(p - window for p in incoming),
+                       tuple(p - window for p in outgoing))
+                if key not in internal_costs:
+                    internal_costs[key] = sum(
+                        ((before_positions[i] < before_positions[j]) != (incoming[i] < incoming[j]))
+                        + ((outgoing[i] < outgoing[j]) != (after_positions[i] < after_positions[j]))
+                        for i in range(width) for j in range(i + 1, width)
+                    )
+                marginal_swaps = (min(external) if implicit_path_frames else external[window]) + internal_costs[key]
+                score = float(alternative.cnot_count) + float(swap_cnot_cost) * marginal_swaps
+                best = score if best is None else min(best, score)
+                continue
             # Either endpoint ordering attains the two-ranking Kendall median;
             # trying both also respects the fixed block placement constraints.
             candidates = []
@@ -7457,6 +7532,7 @@ def mapping_aware_catalog_seeds(
     swap_cnot_cost=3.0, weight_swap_cnot_cost=None,
     fixed_cover_refine_seconds=None, fixed_cover_beam_width=64,
     use_packing_bound=True, initial_mapping=None, recombine_covers=True,
+    on_candidate=None,
 ):
     """Keep local-cost anchor routes and add geometry-guided feasible routes.
 
@@ -7488,7 +7564,8 @@ def mapping_aware_catalog_seeds(
         weights = mapping_aware_partition_weights(
             partitions=catalog.partitions, alternatives=catalog.alternatives,
             gate_before_mapping=before, gate_after_mapping=after, path=path,
-            swap_cnot_cost=weight_swap_cnot_cost)
+            swap_cnot_cost=weight_swap_cnot_cost,
+            implicit_path_frames=catalog.implicit_path_frames)
         return _minimum_partition_cover_selection(
             gate_predecessors=gate_predecessors, partitions=catalog.partitions,
             weights=weights, weight_partition_tiebreak=1)
@@ -7510,10 +7587,15 @@ def mapping_aware_catalog_seeds(
             key = (cover, packing)
             candidate = routes_by_cover.get(key)
             if candidate is None:
+                if catalog.implicit_path_frames:
+                    from ._routing_catalog_replay import expand_path_cover
+                    cover_alternatives = expand_path_cover(catalog, cover).alternatives
+                else:
+                    cover_alternatives = catalog.alternatives
                 suffix = "-packing" if packing else ""
                 candidate = _cover_selection_warm_start(
                     selected_partitions=cover, gate_predecessors=gate_predecessors,
-                    partitions=catalog.partitions, alternatives=catalog.alternatives,
+                    partitions=catalog.partitions, alternatives=cover_alternatives,
                     logical_qubit_count=catalog.circuit.get_Qbit_Num(), path=path,
                     initial_mapping=initial_mapping,
                     master_backend=f"mapping-aware-catalog-seed-{seed}-round-{refinement}{suffix}",
@@ -7525,6 +7607,8 @@ def mapping_aware_catalog_seeds(
                     break
                 routes_by_cover[key] = candidate
                 candidates.append(candidate)
+                if on_candidate is not None:
+                    on_candidate(candidate)
             if refinement + 1 == rounds:
                 break
             trajectory = _catalog_route_trajectory_key(candidate)
@@ -7625,6 +7709,27 @@ def _squander_to_bqskit(circuit, parameters, *, compensate_endianness):
     return converted
 
 
+def _rebind_cached_pam_alternative(
+    template, logical_qubits, input_physical, output_physical, topology,
+):
+    """Embed the exact cached program selected by PAM in a new physical frame."""
+    payload = template.payload
+    pin = payload.input_assignment
+    pout = payload.output_assignment
+    required_output = tuple(
+        input_physical[pin[pout.index(qubit)]] for qubit in range(len(pin))
+    )
+    if output_physical != required_output:
+        raise RuntimeError("Cached PAM program has incompatible boundary permutations.")
+    placement = tuple(input_physical[pin[index]] for index in range(len(pin)))
+    allowed = {frozenset(edge) for edge in topology}
+    if any(frozenset((placement[left], placement[right])) not in allowed
+           for left, right in payload.topology):
+        raise RuntimeError("Cached PAM program is incompatible with physical topology.")
+    return replace(template, logical_qubits=logical_qubits,
+                   input_physical=input_physical, output_physical=output_physical)
+
+
 def _precomputed_osr_pam_warm_start(
     *,
     selected_partitions,
@@ -7639,6 +7744,7 @@ def _precomputed_osr_pam_warm_start(
     master_backend="precomputed-osr-pam-mip-start",
     initial_mapping=None,
     deadline=None,
+    register_alternative=None,
 ):
     """Route one Squander cover with PAM over resolved OSR columns only.
 
@@ -7646,6 +7752,8 @@ def _precomputed_osr_pam_warm_start(
     partition blocks, every permutation circuit, and every objective count are
     taken from the exact router's precomputed Squander catalog.  Consequently
     this helper cannot invoke a BQSKit partitioner or synthesis algorithm.
+    Newly embedded programs are passed to ``register_alternative`` when given,
+    so an exact master can represent every selected warm-start column.
     """
     from bqskit import Circuit as BQSKitCircuit
     from bqskit.ir.point import CircuitPoint
@@ -7662,6 +7770,8 @@ def _precomputed_osr_pam_warm_start(
     table_partition = {}
     transition_lookup = {}
     table_origins = {}
+    canonical_alternatives = {}
+    materialized_ids = set()
 
     for partition in ordered:
         _raise_if_seed_deadline_expired(deadline, "precomputed PAM")
@@ -7699,6 +7809,7 @@ def _precomputed_osr_pam_warm_start(
                 id(alt_payload.parameters),
             )
             canonical_payloads.setdefault(canonical_key, alt_payload)
+            canonical_alternatives[(int(partition), canonical_key)] = alternative
             transition_lookup[
                 (int(partition), alternative.input_physical,
                  alternative.output_physical, canonical_key)
@@ -7774,6 +7885,20 @@ def _precomputed_osr_pam_warm_start(
         num_qudits=int(logical_qubit_count),
     )
     class _NativeRatioPAMMixin:
+        def _get_best_swap(self, circuit, frontier, *args, **kwargs):
+            _raise_if_seed_deadline_expired(deadline, "precomputed PAM SWAP search")
+            signature = frozenset(frontier)
+            if getattr(self, "_osr_stalled_frontier", None) != signature:
+                self._osr_stalled_frontier = signature
+                self._osr_stalled_swaps = 0
+            self._osr_stalled_swaps += 1
+            # BQSKit backtracks after 5*n unsuccessful SWAPs. Repeating the
+            # same frontier through four escape attempts cannot hold up the
+            # rest of the seed portfolio indefinitely.
+            if self._osr_stalled_swaps > 20 * int(logical_qubit_count):
+                raise RuntimeError("Cached PAM made no frontier progress.")
+            return super()._get_best_swap(circuit, frontier, *args, **kwargs)
+
         def _score_perm(self, circuit, frontier, pi, distances, perm, extended):
             _raise_if_seed_deadline_expired(deadline, "precomputed PAM")
             score = super()._score_perm(
@@ -7827,7 +7952,14 @@ def _precomputed_osr_pam_warm_start(
                 table_origins[id(result[1])],
             )
             if key not in transition_lookup:
-                raise RuntimeError("PAM selected a transition absent from OSR catalog.")
+                # The table relabels local programs across topology symmetries.
+                # The chosen program need not be the object retained for this
+                # physical boundary in the deduplicated catalog.
+                transition_lookup[key] = _rebind_cached_pam_alternative(
+                    canonical_alternatives[(partition, key[3])],
+                    tuple(qudits), input_physical, output_physical, topology,
+                )
+                materialized_ids.add(id(transition_lookup[key]))
             self.selected.append((
                 partition,
                 transition_lookup[key],
@@ -7866,6 +7998,8 @@ def _precomputed_osr_pam_warm_start(
         )
         transition_swaps.append(swaps)
         replay_mapping[:] = full_output_mapping
+        if register_alternative is not None and id(alternative) in materialized_ids:
+            register_alternative(alternative)
         selections.append(RoutingSelection(partition, alternative))
         total_cnots += 3 * len(swaps) + alternative.cnot_count
         total_single_qubit += alternative.single_qubit_count
@@ -11490,6 +11624,14 @@ def route_circuit_exact(
                 flush=True,
             )
 
+    def register_pam_alternative(alternative):
+        partition = int(alternative.partition)
+        feasible_alternatives[partition] = (
+            *feasible_alternatives[partition], alternative,
+        )
+        if partition in synthesized_partitions:
+            optimistic_alternatives[partition] = feasible_alternatives[partition]
+
     if pam_osr_only:
         # This is lazy synthesis-aware PAM, not a SABRE portfolio followed by
         # cleanup.  The three covers are produced by Squander's own
@@ -11593,13 +11735,14 @@ def route_circuit_exact(
             newly_priced = 0
             for partition_index, priced, deferred in records:
                 refined = deferred.resolve()
-                current = {
-                    (
-                        alternative.input_physical,
-                        alternative.output_physical,
-                    ): alternative
-                    for alternative in feasible_alternatives[partition_index]
-                }
+                current = {}
+                for alternative in feasible_alternatives[partition_index]:
+                    key = (alternative.input_physical, alternative.output_physical)
+                    previous = current.get(key)
+                    if previous is None or (
+                        alternative.cnot_count, alternative.single_qubit_count
+                    ) < (previous.cnot_count, previous.single_qubit_count):
+                        current[key] = alternative
                 before_best = min(
                     (
                         alternative.cnot_count,
@@ -11710,6 +11853,7 @@ def route_circuit_exact(
             for cover_name, selected_cover in distinct_covers:
                 for pam_swap_cost in pam_swap_costs:
                     candidate = _precomputed_osr_pam_warm_start(
+                        register_alternative=register_pam_alternative,
                         selected_partitions=selected_cover,
                         gate_predecessors=gate_predecessors,
                         partitions=local_candidate_sets,
@@ -11984,6 +12128,7 @@ def route_circuit_exact(
                     for pam_swap_cost in pam_swap_costs:
                         try:
                             candidate = _precomputed_osr_pam_warm_start(
+                                register_alternative=register_pam_alternative,
                                 selected_partitions=selected_cover,
                                 gate_predecessors=gate_predecessors,
                                 partitions=local_candidate_sets,
@@ -12123,6 +12268,7 @@ def route_circuit_exact(
             ),
         )[:rerank_count]:
             candidate = _precomputed_osr_pam_warm_start(
+                register_alternative=register_pam_alternative,
                 selected_partitions=selected_cover,
                 gate_predecessors=gate_predecessors,
                 partitions=local_candidate_sets,

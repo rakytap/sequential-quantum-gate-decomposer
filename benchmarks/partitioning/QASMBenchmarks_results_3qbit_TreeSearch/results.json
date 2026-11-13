@@ -117,9 +117,9 @@
     },
     "timing": {
       "a2a": 1.35,
-      "routing": 20.53,
-      "optimization": 1.84,
-      "total": 23.72
+      "routing": 35.09,
+      "optimization": 2.27,
+      "total": 38.71
     },
     "all_to_all": {
       "cnot_equiv": 10,
@@ -136,16 +136,15 @@
       }
     },
     "routed": {
-      "cnot_equiv": 13,
-      "single_qubit": 28,
-      "total_raw": 41,
+      "cnot_equiv": 12,
+      "single_qubit": 35,
+      "total_raw": 47,
       "qubits": 4,
       "gate_breakdown": {
-        "CNOT": 13,
-        "H": 2,
-        "T": 1,
-        "Tdg": 3,
-        "U3": 22
+        "CNOT": 12,
+        "T": 2,
+        "U3": 31,
+        "X": 2
       }
     },
     "routing_osr_catalog": {
@@ -187,6 +186,86 @@
       "chained_bqskit_events": 0,
       "replayed_whole_circuit_transitions": 15,
       "final_circuit_sha256": "9e4fc9978dcc5cf288876dc3c79a9f38e717edd29b60748d8cb81c4f0dabdf31"
+    },
+    "routing_replay": {
+      "policy": "cached-pam-cover-and-packing-v1",
+      "timing_basis": "archived-complete-run-plus-measured-extension",
+      "original_timing": {
+        "a2a": 1.35,
+        "routing": 20.53,
+        "optimization": 1.84,
+        "total": 23.72
+      },
+      "archived_audit_sha256": "6f82ec81c833450ab1e7d6932afb51f413d4c3c609980f9bfe7c44232f395fb0",
+      "archived_routing_audit_sha256": "6f82ec81c833450ab1e7d6932afb51f413d4c3c609980f9bfe7c44232f395fb0",
+      "archived_catalog_sha256": "9948262956c88771608581d3a954136b2936b46202e5cae9b104db1d5e1a6864",
+      "routing_seconds": 14.56079175695777,
+      "a2a_reused": true,
+      "catalogue_synthesis_reused": true,
+      "route_bit_identical": false,
+      "new_routing_synthesis_calls": 0,
+      "implementation_sha256": {
+        "benchmarks/partitioning/replay_routing.py": "e24581e40f6f7cbd456d81f6fcee715a9abbe4cf3352590e44d533979bb7d0ac",
+        "squander/partitioning/routing.py": "b782cd9ce59e7cc94cd32f1d0adff55fdda560aef29f51c0fb40ac00099390fd",
+        "squander/partitioning/_routing_catalog_replay.py": "d79d687edb00afae2e172d9d5cd4ad742ca8073833a85e75475cb769de9407b7"
+      },
+      "runtime_limits": {
+        "address_space_gib": 96
+      },
+      "final_implementation_sha256": {
+        "benchmarks/partitioning/replay_routing.py": "e24581e40f6f7cbd456d81f6fcee715a9abbe4cf3352590e44d533979bb7d0ac",
+        "squander/partitioning/ilp.py": "899e7c6e4e72379ff8f7b9300baa03b7d135775eb87cf4e3ba5cb43624a1e8ad",
+        "squander/decomposition/qgd_Wide_Circuit_Optimization.py": "3ca9a0bdd9b685cdd74e46ac2644c5817886615d706aa01a6f1a223532f7a280"
+      },
+      "final_reused": true,
+      "final_seconds": 0.4299987982958555,
+      "candidate_final": {
+        "cnot_equiv": 12,
+        "single_qubit": 35,
+        "total_raw": 47,
+        "qubits": 4,
+        "gate_breakdown": {
+          "CNOT": 12,
+          "T": 2,
+          "U3": 31,
+          "X": 2
+        }
+      },
+      "candidate_adopted": false,
+      "candidate_qasm": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_TreeSearch/adder_n4.replay-candidate.qasm",
+      "candidate_audit": {
+        "file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_TreeSearch/adder_n4.replay-candidate.audit.json.gz",
+        "sha256": "2b6d05222a9b74ac15ccebe0406ef1f111f11329abbdae092b58d904f4dcb472",
+        "verified_rewrites": 54,
+        "accepted_rewrites": 54,
+        "worst_process_infidelity": 0.0,
+        "worst_accepted_process_infidelity": 0.0,
+        "candidate_tolerance_misses": 0,
+        "accepted_spectral_error_bound": 0.0,
+        "replayed_native_rounds": 5,
+        "replayed_bqskit_invocations": 0,
+        "replayed_pam_routing_passes": 0,
+        "replayed_placement_passes": 0,
+        "replayed_qiskit_sabre_passes": 0,
+        "replayed_exact_osr_routing_passes": 1,
+        "replayed_squander_sabre_passes": 0,
+        "replayed_bqskit_stages": 0,
+        "chained_bqskit_events": 0,
+        "replayed_whole_circuit_transitions": 11,
+        "final_circuit_sha256": "8abc5b3202d380f1e4f2782769dada4385816b7789d807c59f7525f8b0f58ef4"
+      },
+      "raw_initial_mapping": [
+        0,
+        1,
+        3,
+        2
+      ],
+      "raw_final_mapping": [
+        1,
+        0,
+        3,
+        2
+      ]
     }
   },
   "bv_n14.qasm": {
@@ -303,9 +382,9 @@
     },
     "timing": {
       "a2a": 0.13,
-      "routing": 16.79,
+      "routing": 56.81,
       "optimization": 0.27,
-      "total": 17.19
+      "total": 57.21
     },
     "all_to_all": {
       "cnot_equiv": 13,
@@ -367,6 +446,37 @@
       "chained_bqskit_events": 0,
       "replayed_whole_circuit_transitions": 9,
       "final_circuit_sha256": "fb64950d5710aec293c46f4f19b615cf3a863e87f7c3cb49563bd01e929dc92f"
+    },
+    "routing_replay": {
+      "policy": "cached-pam-cover-and-packing-v1",
+      "timing_basis": "archived-complete-run-plus-measured-extension",
+      "original_timing": {
+        "a2a": 0.13,
+        "routing": 16.79,
+        "optimization": 0.27,
+        "total": 17.19
+      },
+      "archived_audit_sha256": "c6f854b838a98b4cce9b339c5fe7f504e75d83f68267022fdba5f37f8c35eca5",
+      "archived_routing_audit_sha256": "c6f854b838a98b4cce9b339c5fe7f504e75d83f68267022fdba5f37f8c35eca5",
+      "archived_catalog_sha256": "9c68b0d286d33d0c8e3f6dec67a1ec0b86e0d9f5c8736a9bdd54b54cc107dbfb",
+      "routing_seconds": 40.02093533240259,
+      "a2a_reused": true,
+      "catalogue_synthesis_reused": true,
+      "route_bit_identical": true,
+      "new_routing_synthesis_calls": 0,
+      "implementation_sha256": {
+        "benchmarks/partitioning/replay_routing.py": "e24581e40f6f7cbd456d81f6fcee715a9abbe4cf3352590e44d533979bb7d0ac",
+        "squander/partitioning/routing.py": "b782cd9ce59e7cc94cd32f1d0adff55fdda560aef29f51c0fb40ac00099390fd",
+        "squander/partitioning/_routing_catalog_replay.py": "d79d687edb00afae2e172d9d5cd4ad742ca8073833a85e75475cb769de9407b7"
+      },
+      "runtime_limits": {
+        "address_space_gib": 96
+      },
+      "final_reused": true,
+      "final_seconds": 0.0,
+      "final_implementation_sha256": {
+        "squander/partitioning/ilp.py": "899e7c6e4e72379ff8f7b9300baa03b7d135775eb87cf4e3ba5cb43624a1e8ad"
+      }
     }
   },
   "cat_state_n22.qasm": {
@@ -768,20 +878,20 @@
       }
     },
     "final": {
-      "cnot_equiv": 78,
-      "single_qubit": 143,
-      "total_raw": 221,
+      "cnot_equiv": 77,
+      "single_qubit": 136,
+      "total_raw": 213,
       "qubits": 13,
       "gate_breakdown": {
-        "CNOT": 78,
-        "U3": 143
+        "CNOT": 77,
+        "U3": 136
       }
     },
     "timing": {
       "a2a": 2.12,
-      "routing": 33.97,
-      "optimization": 25.9,
-      "total": 61.98
+      "routing": 127.24,
+      "optimization": 53.43,
+      "total": 182.78
     },
     "all_to_all": {
       "cnot_equiv": 40,
@@ -797,13 +907,13 @@
       }
     },
     "routed": {
-      "cnot_equiv": 82,
+      "cnot_equiv": 79,
       "single_qubit": 122,
-      "total_raw": 182,
+      "total_raw": 181,
       "qubits": 13,
       "gate_breakdown": {
         "CNOT": 49,
-        "SWAP": 11,
+        "SWAP": 10,
         "U3": 122
       }
     },
@@ -820,21 +930,21 @@
     "rewrite_audit": {
       "schema_version": 2,
       "file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_TreeSearch/multiply_n13.audit.json.gz",
-      "sha256": "07c3ec32ad9305ce0c2c5c5be60bcde050ed28ad65d2b6437019a574614fdd07",
+      "sha256": "a32ab604944934be1211f1e1196d5b7b66d73a96229ac900dbbc30eb8289208b",
       "summary": {
-        "events": 2079,
-        "rewrites": 1907,
-        "accepted_rewrites": 1106,
-        "failed_synthesis_attempts": 157,
+        "events": 362,
+        "rewrites": 188,
+        "accepted_rewrites": 186,
+        "failed_synthesis_attempts": 159,
         "fallbacks": 0,
         "candidate_tolerance_misses": 0
       },
-      "verified_rewrites": 1907,
-      "accepted_rewrites": 1106,
-      "worst_process_infidelity": 6.789857565081547e-11,
+      "verified_rewrites": 188,
+      "accepted_rewrites": 186,
+      "worst_process_infidelity": 2.6645352591003757e-15,
       "worst_accepted_process_infidelity": 2.6645352591003757e-15,
       "candidate_tolerance_misses": 0,
-      "accepted_spectral_error_bound": 6.009656763909526e-08,
+      "accepted_spectral_error_bound": 6.098740743849606e-08,
       "replayed_native_rounds": 7,
       "replayed_bqskit_invocations": 0,
       "replayed_pam_routing_passes": 0,
@@ -845,7 +955,97 @@
       "replayed_bqskit_stages": 0,
       "chained_bqskit_events": 0,
       "replayed_whole_circuit_transitions": 15,
-      "final_circuit_sha256": "f2b99d894ec90fbdc3ef698dab4e7de6f5e97ff165f6c937d681260150a84fd6"
+      "final_circuit_sha256": "c54819d23b4783541866ef093cb9f50bb2e2d64929266cff293997eb3dee9fba"
+    },
+    "routing_replay": {
+      "policy": "cached-pam-cover-and-packing-v1",
+      "timing_basis": "archived-complete-run-plus-measured-extension",
+      "original_timing": {
+        "a2a": 2.12,
+        "routing": 33.97,
+        "optimization": 25.9,
+        "total": 61.98
+      },
+      "archived_audit_sha256": "07c3ec32ad9305ce0c2c5c5be60bcde050ed28ad65d2b6437019a574614fdd07",
+      "archived_catalog_sha256": "0fbe598c7f608d46737f9bbfdb77e0dee9cca6bbb351edd236649dec92190d31",
+      "routing_seconds": 93.2738783992827,
+      "a2a_reused": true,
+      "catalogue_synthesis_reused": true,
+      "route_bit_identical": false,
+      "new_routing_synthesis_calls": 0,
+      "implementation_sha256": {
+        "benchmarks/partitioning/replay_routing.py": "df65009b025669280b5961ebc38945734c5859ec3c82b7cf031e5d1a278a8a2c",
+        "squander/partitioning/routing.py": "afadc000a7a1629bd423c38f0fdc2a5ed62602d0c5e20267918a2c5701de7d71",
+        "squander/partitioning/_routing_catalog_replay.py": "ec49bc2498734d88cbb1a489431d8e5f5aa4e23c9c278c7d6b7e0c91e0fe6484"
+      },
+      "final_reused": false,
+      "final_seconds": 27.52947117574513,
+      "candidate_final": {
+        "cnot_equiv": 77,
+        "single_qubit": 136,
+        "total_raw": 213,
+        "qubits": 13,
+        "gate_breakdown": {
+          "CNOT": 77,
+          "U3": 136
+        }
+      },
+      "candidate_adopted": true,
+      "candidate_qasm": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_TreeSearch/multiply_n13.replay-candidate.qasm",
+      "candidate_audit": {
+        "file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_TreeSearch/multiply_n13.replay-candidate.audit.json.gz",
+        "sha256": "a32ab604944934be1211f1e1196d5b7b66d73a96229ac900dbbc30eb8289208b",
+        "verified_rewrites": 188,
+        "accepted_rewrites": 186,
+        "worst_process_infidelity": 2.6645352591003757e-15,
+        "worst_accepted_process_infidelity": 2.6645352591003757e-15,
+        "candidate_tolerance_misses": 0,
+        "accepted_spectral_error_bound": 6.098740743849606e-08,
+        "replayed_native_rounds": 7,
+        "replayed_bqskit_invocations": 0,
+        "replayed_pam_routing_passes": 0,
+        "replayed_placement_passes": 0,
+        "replayed_qiskit_sabre_passes": 0,
+        "replayed_exact_osr_routing_passes": 1,
+        "replayed_squander_sabre_passes": 0,
+        "replayed_bqskit_stages": 0,
+        "chained_bqskit_events": 0,
+        "replayed_whole_circuit_transitions": 15,
+        "final_circuit_sha256": "c54819d23b4783541866ef093cb9f50bb2e2d64929266cff293997eb3dee9fba"
+      },
+      "raw_initial_mapping": [
+        3,
+        4,
+        2,
+        7,
+        11,
+        1,
+        0,
+        6,
+        8,
+        10,
+        12,
+        5,
+        9
+      ],
+      "raw_final_mapping": [
+        9,
+        10,
+        1,
+        5,
+        12,
+        0,
+        2,
+        4,
+        6,
+        8,
+        11,
+        3,
+        7
+      ],
+      "final_implementation_sha256": {
+        "squander/partitioning/ilp.py": "bca18fdc6549a1395ca2e06a9e581679eee1d299edf892d668520da36472848e"
+      }
     }
   },
   "tfim.qasm": {
@@ -1102,22 +1302,21 @@
       }
     },
     "final": {
-      "cnot_equiv": 143,
-      "single_qubit": 777,
-      "total_raw": 920,
+      "cnot_equiv": 142,
+      "single_qubit": 526,
+      "total_raw": 668,
       "qubits": 140,
       "gate_breakdown": {
-        "CNOT": 143,
-        "H": 213,
-        "U3": 563,
-        "X": 1
+        "CNOT": 142,
+        "H": 134,
+        "U3": 392
       }
     },
     "timing": {
       "a2a": 0.47,
-      "routing": 629.96,
-      "optimization": 112.65,
-      "total": 743.09
+      "routing": 1066.9,
+      "optimization": 114.0,
+      "total": 1181.38
     },
     "all_to_all": {
       "cnot_equiv": 72,
@@ -1131,14 +1330,14 @@
       }
     },
     "routed": {
-      "cnot_equiv": 282,
-      "single_qubit": 288,
-      "total_raw": 570,
+      "cnot_equiv": 142,
+      "single_qubit": 526,
+      "total_raw": 668,
       "qubits": 140,
       "gate_breakdown": {
-        "CNOT": 282,
-        "H": 287,
-        "X": 1
+        "CNOT": 142,
+        "H": 134,
+        "U3": 392
       }
     },
     "routing_osr_catalog": {
@@ -1154,22 +1353,22 @@
     "rewrite_audit": {
       "schema_version": 2,
       "file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_TreeSearch/bv_n140.audit.json.gz",
-      "sha256": "3ebc1acc06bf5866d26c11947de7c50ba3eaa84914c85ae476862f09bddeded2",
+      "sha256": "578a6cfaa1954a5061b8029d0697311afacd96c3521f8b6d0f0f3cb989ae7cdf",
       "summary": {
-        "events": 65773,
-        "rewrites": 65484,
-        "accepted_rewrites": 65307,
+        "events": 507,
+        "rewrites": 496,
+        "accepted_rewrites": 496,
         "failed_synthesis_attempts": 2,
         "fallbacks": 0,
         "candidate_tolerance_misses": 0
       },
-      "verified_rewrites": 65484,
-      "accepted_rewrites": 65307,
-      "worst_process_infidelity": 9.547918011776346e-15,
+      "verified_rewrites": 496,
+      "accepted_rewrites": 496,
+      "worst_process_infidelity": 0.0,
       "worst_accepted_process_infidelity": 0.0,
       "candidate_tolerance_misses": 0,
-      "accepted_spectral_error_bound": 6.328532550014052e-07,
-      "replayed_native_rounds": 143,
+      "accepted_spectral_error_bound": 0.0,
+      "replayed_native_rounds": 4,
       "replayed_bqskit_invocations": 0,
       "replayed_pam_routing_passes": 0,
       "replayed_placement_passes": 0,
@@ -1178,8 +1377,359 @@
       "replayed_squander_sabre_passes": 0,
       "replayed_bqskit_stages": 0,
       "chained_bqskit_events": 0,
-      "replayed_whole_circuit_transitions": 287,
-      "final_circuit_sha256": "6d4f59ffe5392908e933205de9585a8107cde5f80673659dd30e4cf8f8c4419b"
+      "replayed_whole_circuit_transitions": 9,
+      "final_circuit_sha256": "b0b2ce558daf885a3ef811401c27c7c833da4f6e744533b37a327258eb3cd618"
+    },
+    "routing_replay": {
+      "policy": "cached-pam-cover-and-packing-v1",
+      "timing_basis": "archived-complete-run-plus-measured-extension",
+      "original_timing": {
+        "a2a": 0.47,
+        "routing": 629.96,
+        "optimization": 112.65,
+        "total": 743.09
+      },
+      "archived_audit_sha256": "3ebc1acc06bf5866d26c11947de7c50ba3eaa84914c85ae476862f09bddeded2",
+      "archived_routing_audit_sha256": "3ebc1acc06bf5866d26c11947de7c50ba3eaa84914c85ae476862f09bddeded2",
+      "archived_catalog_sha256": "6145cbbd4ac335c52c5b51c1e6f4e4c3b6314ac52d4a00fd8da9b6145a2ff8b8",
+      "routing_seconds": 436.94209084752947,
+      "a2a_reused": true,
+      "catalogue_synthesis_reused": true,
+      "route_bit_identical": false,
+      "new_routing_synthesis_calls": 0,
+      "implementation_sha256": {
+        "benchmarks/partitioning/replay_routing.py": "3991f2d6ef362d88a3794883c4dfea10b57f35a0777feeea44dac7fc1b0a4126",
+        "squander/partitioning/routing.py": "b782cd9ce59e7cc94cd32f1d0adff55fdda560aef29f51c0fb40ac00099390fd",
+        "squander/partitioning/_routing_catalog_replay.py": "d79d687edb00afae2e172d9d5cd4ad742ca8073833a85e75475cb769de9407b7"
+      },
+      "runtime_limits": {
+        "address_space_gib": 96
+      },
+      "final_implementation_sha256": {
+        "benchmarks/partitioning/replay_routing.py": "3991f2d6ef362d88a3794883c4dfea10b57f35a0777feeea44dac7fc1b0a4126",
+        "squander/partitioning/ilp.py": "899e7c6e4e72379ff8f7b9300baa03b7d135775eb87cf4e3ba5cb43624a1e8ad",
+        "squander/decomposition/qgd_Wide_Circuit_Optimization.py": "3ca9a0bdd9b685cdd74e46ac2644c5817886615d706aa01a6f1a223532f7a280"
+      },
+      "final_reused": false,
+      "final_seconds": 1.3465977674350142,
+      "candidate_final": {
+        "cnot_equiv": 142,
+        "single_qubit": 526,
+        "total_raw": 668,
+        "qubits": 140,
+        "gate_breakdown": {
+          "CNOT": 142,
+          "H": 134,
+          "U3": 392
+        }
+      },
+      "candidate_adopted": true,
+      "candidate_qasm": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_TreeSearch/bv_n140.replay-candidate.qasm",
+      "candidate_audit": {
+        "file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_TreeSearch/bv_n140.replay-candidate.audit.json.gz",
+        "sha256": "578a6cfaa1954a5061b8029d0697311afacd96c3521f8b6d0f0f3cb989ae7cdf",
+        "verified_rewrites": 496,
+        "accepted_rewrites": 496,
+        "worst_process_infidelity": 0.0,
+        "worst_accepted_process_infidelity": 0.0,
+        "candidate_tolerance_misses": 0,
+        "accepted_spectral_error_bound": 0.0,
+        "replayed_native_rounds": 4,
+        "replayed_bqskit_invocations": 0,
+        "replayed_pam_routing_passes": 0,
+        "replayed_placement_passes": 0,
+        "replayed_qiskit_sabre_passes": 0,
+        "replayed_exact_osr_routing_passes": 1,
+        "replayed_squander_sabre_passes": 0,
+        "replayed_bqskit_stages": 0,
+        "chained_bqskit_events": 0,
+        "replayed_whole_circuit_transitions": 9,
+        "final_circuit_sha256": "b0b2ce558daf885a3ef811401c27c7c833da4f6e744533b37a327258eb3cd618"
+      },
+      "raw_initial_mapping": [
+        1,
+        0,
+        73,
+        3,
+        4,
+        74,
+        5,
+        75,
+        76,
+        77,
+        6,
+        7,
+        78,
+        8,
+        9,
+        10,
+        11,
+        79,
+        80,
+        81,
+        12,
+        82,
+        13,
+        83,
+        84,
+        14,
+        85,
+        86,
+        87,
+        15,
+        16,
+        17,
+        88,
+        89,
+        90,
+        91,
+        92,
+        93,
+        18,
+        19,
+        94,
+        20,
+        95,
+        21,
+        22,
+        23,
+        96,
+        97,
+        98,
+        24,
+        25,
+        99,
+        26,
+        27,
+        100,
+        28,
+        101,
+        102,
+        103,
+        104,
+        29,
+        30,
+        31,
+        32,
+        33,
+        105,
+        34,
+        106,
+        107,
+        35,
+        36,
+        108,
+        37,
+        38,
+        39,
+        109,
+        40,
+        41,
+        42,
+        110,
+        43,
+        111,
+        44,
+        45,
+        46,
+        47,
+        112,
+        113,
+        114,
+        48,
+        49,
+        115,
+        50,
+        51,
+        52,
+        116,
+        117,
+        53,
+        54,
+        55,
+        56,
+        57,
+        118,
+        58,
+        119,
+        59,
+        120,
+        121,
+        122,
+        123,
+        124,
+        125,
+        60,
+        61,
+        126,
+        127,
+        128,
+        62,
+        129,
+        130,
+        63,
+        64,
+        65,
+        131,
+        66,
+        132,
+        133,
+        134,
+        135,
+        67,
+        68,
+        69,
+        70,
+        136,
+        71,
+        137,
+        138,
+        139,
+        72,
+        2
+      ],
+      "raw_final_mapping": [
+        1,
+        0,
+        73,
+        2,
+        3,
+        74,
+        4,
+        75,
+        76,
+        77,
+        5,
+        6,
+        78,
+        7,
+        8,
+        9,
+        10,
+        79,
+        80,
+        81,
+        11,
+        82,
+        12,
+        83,
+        84,
+        13,
+        85,
+        86,
+        87,
+        14,
+        15,
+        16,
+        88,
+        89,
+        90,
+        91,
+        92,
+        93,
+        17,
+        18,
+        94,
+        19,
+        95,
+        20,
+        21,
+        22,
+        96,
+        97,
+        98,
+        23,
+        24,
+        99,
+        25,
+        26,
+        100,
+        27,
+        101,
+        102,
+        103,
+        104,
+        28,
+        29,
+        30,
+        31,
+        32,
+        105,
+        33,
+        106,
+        107,
+        34,
+        35,
+        108,
+        36,
+        37,
+        38,
+        109,
+        39,
+        40,
+        41,
+        110,
+        42,
+        111,
+        43,
+        44,
+        45,
+        46,
+        112,
+        113,
+        114,
+        47,
+        48,
+        115,
+        49,
+        50,
+        51,
+        116,
+        117,
+        52,
+        53,
+        54,
+        55,
+        56,
+        118,
+        57,
+        119,
+        58,
+        120,
+        121,
+        122,
+        123,
+        124,
+        125,
+        59,
+        60,
+        126,
+        127,
+        128,
+        61,
+        129,
+        130,
+        62,
+        63,
+        64,
+        131,
+        65,
+        132,
+        133,
+        134,
+        135,
+        66,
+        67,
+        68,
+        69,
+        136,
+        71,
+        137,
+        138,
+        139,
+        72,
+        70
+      ]
     }
   },
   "swap_test_n25.qasm": {
@@ -1285,27 +1835,20 @@
       }
     },
     "final": {
-      "cnot_equiv": 107,
-      "single_qubit": 288,
-      "total_raw": 406,
+      "cnot_equiv": 106,
+      "single_qubit": 248,
+      "total_raw": 354,
       "qubits": 25,
       "gate_breakdown": {
-        "CNOT": 107,
-        "H": 13,
-        "RX": 24,
-        "S": 12,
-        "SDG": 11,
-        "SX": 11,
-        "T": 55,
-        "Tdg": 22,
-        "U3": 151
+        "CNOT": 106,
+        "U3": 248
       }
     },
     "timing": {
       "a2a": 6.19,
-      "routing": 103.99,
-      "optimization": 15.69,
-      "total": 125.87
+      "routing": 278.79,
+      "optimization": 127.56,
+      "total": 412.54
     },
     "all_to_all": {
       "cnot_equiv": 84,
@@ -1324,21 +1867,13 @@
       }
     },
     "routed": {
-      "cnot_equiv": 109,
-      "single_qubit": 278,
-      "total_raw": 397,
+      "cnot_equiv": 106,
+      "single_qubit": 248,
+      "total_raw": 354,
       "qubits": 25,
       "gate_breakdown": {
         "CNOT": 106,
-        "H": 14,
-        "RX": 24,
-        "S": 12,
-        "SDG": 12,
-        "SWAP": 1,
-        "SX": 12,
-        "T": 60,
-        "Tdg": 24,
-        "U3": 132
+        "U3": 248
       }
     },
     "routing_osr_catalog": {
@@ -1354,22 +1889,22 @@
     "rewrite_audit": {
       "schema_version": 2,
       "file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_TreeSearch/swap_test_n25.audit.json.gz",
-      "sha256": "fb526353505eba1efb6070a8d1d272794c101cc94fc74cc82232c1940ed57a1b",
+      "sha256": "9835a16d23f48f694bb11fa13ef341f98297c4fbad75fc87bd75f47215e59559",
       "summary": {
-        "events": 2733,
-        "rewrites": 2651,
-        "accepted_rewrites": 1345,
-        "failed_synthesis_attempts": 71,
+        "events": 670,
+        "rewrites": 436,
+        "accepted_rewrites": 436,
+        "failed_synthesis_attempts": 225,
         "fallbacks": 0,
         "candidate_tolerance_misses": 0
       },
-      "verified_rewrites": 2651,
-      "accepted_rewrites": 1345,
-      "worst_process_infidelity": 7.259970402628824e-12,
+      "verified_rewrites": 436,
+      "accepted_rewrites": 436,
+      "worst_process_infidelity": 2.220446049250313e-16,
       "worst_accepted_process_infidelity": 2.220446049250313e-16,
       "candidate_tolerance_misses": 0,
-      "accepted_spectral_error_bound": 1.0177892561630308e-08,
-      "replayed_native_rounds": 5,
+      "accepted_spectral_error_bound": 0.0,
+      "replayed_native_rounds": 4,
       "replayed_bqskit_invocations": 0,
       "replayed_pam_routing_passes": 0,
       "replayed_placement_passes": 0,
@@ -1378,8 +1913,128 @@
       "replayed_squander_sabre_passes": 0,
       "replayed_bqskit_stages": 0,
       "chained_bqskit_events": 0,
-      "replayed_whole_circuit_transitions": 11,
-      "final_circuit_sha256": "d74801c2e5551f2d7008a85dbb97ad71bf8649e89964fc67d62fe976dfcc4a41"
+      "replayed_whole_circuit_transitions": 9,
+      "final_circuit_sha256": "6f0ac7b6f53fb05b6183d2735ab25d597e054a9d575c91041e267c05b2a8333d"
+    },
+    "routing_replay": {
+      "policy": "cached-pam-cover-and-packing-v1",
+      "timing_basis": "archived-complete-run-plus-measured-extension",
+      "original_timing": {
+        "a2a": 6.19,
+        "routing": 103.99,
+        "optimization": 15.69,
+        "total": 125.87
+      },
+      "archived_audit_sha256": "fb526353505eba1efb6070a8d1d272794c101cc94fc74cc82232c1940ed57a1b",
+      "archived_routing_audit_sha256": "fb526353505eba1efb6070a8d1d272794c101cc94fc74cc82232c1940ed57a1b",
+      "archived_catalog_sha256": "2f5eaa7da97265d8305908b2cd1434d6ddfbbc273b06cd80eec04008d748e901",
+      "routing_seconds": 174.79828506335616,
+      "a2a_reused": true,
+      "catalogue_synthesis_reused": true,
+      "route_bit_identical": false,
+      "new_routing_synthesis_calls": 0,
+      "implementation_sha256": {
+        "benchmarks/partitioning/replay_routing.py": "3991f2d6ef362d88a3794883c4dfea10b57f35a0777feeea44dac7fc1b0a4126",
+        "squander/partitioning/routing.py": "b782cd9ce59e7cc94cd32f1d0adff55fdda560aef29f51c0fb40ac00099390fd",
+        "squander/partitioning/_routing_catalog_replay.py": "d79d687edb00afae2e172d9d5cd4ad742ca8073833a85e75475cb769de9407b7"
+      },
+      "runtime_limits": {
+        "address_space_gib": 96
+      },
+      "final_implementation_sha256": {
+        "benchmarks/partitioning/replay_routing.py": "3991f2d6ef362d88a3794883c4dfea10b57f35a0777feeea44dac7fc1b0a4126",
+        "squander/partitioning/ilp.py": "899e7c6e4e72379ff8f7b9300baa03b7d135775eb87cf4e3ba5cb43624a1e8ad",
+        "squander/decomposition/qgd_Wide_Circuit_Optimization.py": "3ca9a0bdd9b685cdd74e46ac2644c5817886615d706aa01a6f1a223532f7a280"
+      },
+      "final_reused": false,
+      "final_seconds": 111.8719472521916,
+      "candidate_final": {
+        "cnot_equiv": 106,
+        "single_qubit": 248,
+        "total_raw": 354,
+        "qubits": 25,
+        "gate_breakdown": {
+          "CNOT": 106,
+          "U3": 248
+        }
+      },
+      "candidate_adopted": true,
+      "candidate_qasm": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_TreeSearch/swap_test_n25.replay-candidate.qasm",
+      "candidate_audit": {
+        "file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_TreeSearch/swap_test_n25.replay-candidate.audit.json.gz",
+        "sha256": "9835a16d23f48f694bb11fa13ef341f98297c4fbad75fc87bd75f47215e59559",
+        "verified_rewrites": 436,
+        "accepted_rewrites": 436,
+        "worst_process_infidelity": 2.220446049250313e-16,
+        "worst_accepted_process_infidelity": 2.220446049250313e-16,
+        "candidate_tolerance_misses": 0,
+        "accepted_spectral_error_bound": 0.0,
+        "replayed_native_rounds": 4,
+        "replayed_bqskit_invocations": 0,
+        "replayed_pam_routing_passes": 0,
+        "replayed_placement_passes": 0,
+        "replayed_qiskit_sabre_passes": 0,
+        "replayed_exact_osr_routing_passes": 1,
+        "replayed_squander_sabre_passes": 0,
+        "replayed_bqskit_stages": 0,
+        "chained_bqskit_events": 0,
+        "replayed_whole_circuit_transitions": 9,
+        "final_circuit_sha256": "6f0ac7b6f53fb05b6183d2735ab25d597e054a9d575c91041e267c05b2a8333d"
+      },
+      "raw_initial_mapping": [
+        2,
+        1,
+        3,
+        5,
+        7,
+        9,
+        11,
+        13,
+        15,
+        17,
+        19,
+        21,
+        23,
+        0,
+        4,
+        6,
+        8,
+        10,
+        12,
+        14,
+        16,
+        18,
+        20,
+        22,
+        24
+      ],
+      "raw_final_mapping": [
+        22,
+        1,
+        2,
+        4,
+        6,
+        8,
+        10,
+        12,
+        14,
+        16,
+        18,
+        20,
+        23,
+        0,
+        3,
+        5,
+        7,
+        9,
+        11,
+        13,
+        15,
+        17,
+        19,
+        21,
+        24
+      ]
     }
   },
   "ising_n10.qasm": {
@@ -1638,23 +2293,23 @@
       }
     },
     "final": {
-      "cnot_equiv": 101,
-      "single_qubit": 518,
-      "total_raw": 619,
+      "cnot_equiv": 98,
+      "single_qubit": 343,
+      "total_raw": 441,
       "qubits": 8,
       "gate_breakdown": {
-        "CNOT": 101,
-        "RX": 68,
-        "RY": 56,
-        "RZ": 72,
-        "U3": 322
+        "CNOT": 98,
+        "RX": 25,
+        "RY": 19,
+        "RZ": 29,
+        "U3": 270
       }
     },
     "timing": {
       "a2a": 303.01,
-      "routing": 215.82,
-      "optimization": 50.73,
-      "total": 569.56
+      "routing": 291.55,
+      "optimization": 90.93,
+      "total": 685.49
     },
     "all_to_all": {
       "cnot_equiv": 64,
@@ -1670,17 +2325,17 @@
       }
     },
     "routed": {
-      "cnot_equiv": 109,
-      "single_qubit": 588,
-      "total_raw": 667,
+      "cnot_equiv": 108,
+      "single_qubit": 307,
+      "total_raw": 389,
       "qubits": 8,
       "gate_breakdown": {
-        "CNOT": 64,
-        "RX": 88,
-        "RY": 72,
-        "RZ": 96,
-        "SWAP": 15,
-        "U3": 332
+        "CNOT": 69,
+        "RX": 27,
+        "RY": 21,
+        "RZ": 31,
+        "SWAP": 13,
+        "U3": 228
       }
     },
     "routing_osr_catalog": {
@@ -1696,22 +2351,22 @@
     "rewrite_audit": {
       "schema_version": 2,
       "file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_TreeSearch/dnn_n8.audit.json.gz",
-      "sha256": "5bee433ec486c2b6aff9d1757b5854311beef270e128579bc84870a403842cc3",
+      "sha256": "3b18827485ac293d9ee1c7e63d7a6a6d01ad7da543ea60e65a4812bdba6e5ffd",
       "summary": {
-        "events": 27161,
-        "rewrites": 26537,
-        "accepted_rewrites": 18730,
-        "failed_synthesis_attempts": 495,
+        "events": 17961,
+        "rewrites": 17492,
+        "accepted_rewrites": 17475,
+        "failed_synthesis_attempts": 338,
         "fallbacks": 0,
         "candidate_tolerance_misses": 0
       },
-      "verified_rewrites": 26537,
-      "accepted_rewrites": 18730,
-      "worst_process_infidelity": 9.901923725408324e-11,
+      "verified_rewrites": 17492,
+      "accepted_rewrites": 17475,
+      "worst_process_infidelity": 1.7763568394002505e-15,
       "worst_accepted_process_infidelity": 1.7763568394002505e-15,
       "candidate_tolerance_misses": 0,
-      "accepted_spectral_error_bound": 5.982429063929695e-07,
-      "replayed_native_rounds": 64,
+      "accepted_spectral_error_bound": 5.884845128562857e-07,
+      "replayed_native_rounds": 65,
       "replayed_bqskit_invocations": 0,
       "replayed_pam_routing_passes": 0,
       "replayed_placement_passes": 0,
@@ -1720,8 +2375,97 @@
       "replayed_squander_sabre_passes": 0,
       "replayed_bqskit_stages": 0,
       "chained_bqskit_events": 0,
-      "replayed_whole_circuit_transitions": 129,
-      "final_circuit_sha256": "c4a36e0c91477117ddf897b0bad86eeff29e61ed063be6598b1bd6c5f0a84d8e"
+      "replayed_whole_circuit_transitions": 131,
+      "final_circuit_sha256": "ad1be71a47db51b6ec5ee5e0dec876788cfd5188b83434224b6c7e91b4454e28"
+    },
+    "routing_replay": {
+      "policy": "cached-pam-cover-and-packing-v1",
+      "timing_basis": "archived-complete-run-plus-measured-extension",
+      "original_timing": {
+        "a2a": 303.01,
+        "routing": 215.82,
+        "optimization": 50.73,
+        "total": 569.56
+      },
+      "archived_audit_sha256": "5bee433ec486c2b6aff9d1757b5854311beef270e128579bc84870a403842cc3",
+      "archived_routing_audit_sha256": "5bee433ec486c2b6aff9d1757b5854311beef270e128579bc84870a403842cc3",
+      "archived_catalog_sha256": "4eadff576d3f6feefa9cf0c34926e470c4d67384ae6c59bc9e195d0515564d92",
+      "routing_seconds": 75.73119846917689,
+      "a2a_reused": true,
+      "catalogue_synthesis_reused": true,
+      "route_bit_identical": false,
+      "new_routing_synthesis_calls": 0,
+      "implementation_sha256": {
+        "benchmarks/partitioning/replay_routing.py": "3991f2d6ef362d88a3794883c4dfea10b57f35a0777feeea44dac7fc1b0a4126",
+        "squander/partitioning/routing.py": "b782cd9ce59e7cc94cd32f1d0adff55fdda560aef29f51c0fb40ac00099390fd",
+        "squander/partitioning/_routing_catalog_replay.py": "d79d687edb00afae2e172d9d5cd4ad742ca8073833a85e75475cb769de9407b7"
+      },
+      "runtime_limits": {
+        "address_space_gib": 96
+      },
+      "final_implementation_sha256": {
+        "benchmarks/partitioning/replay_routing.py": "3991f2d6ef362d88a3794883c4dfea10b57f35a0777feeea44dac7fc1b0a4126",
+        "squander/partitioning/ilp.py": "899e7c6e4e72379ff8f7b9300baa03b7d135775eb87cf4e3ba5cb43624a1e8ad",
+        "squander/decomposition/qgd_Wide_Circuit_Optimization.py": "3ca9a0bdd9b685cdd74e46ac2644c5817886615d706aa01a6f1a223532f7a280"
+      },
+      "final_reused": false,
+      "final_seconds": 40.200312660075724,
+      "candidate_final": {
+        "cnot_equiv": 98,
+        "single_qubit": 343,
+        "total_raw": 441,
+        "qubits": 8,
+        "gate_breakdown": {
+          "CNOT": 98,
+          "RX": 25,
+          "RY": 19,
+          "RZ": 29,
+          "U3": 270
+        }
+      },
+      "candidate_adopted": true,
+      "candidate_qasm": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_TreeSearch/dnn_n8.replay-candidate.qasm",
+      "candidate_audit": {
+        "file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_TreeSearch/dnn_n8.replay-candidate.audit.json.gz",
+        "sha256": "3b18827485ac293d9ee1c7e63d7a6a6d01ad7da543ea60e65a4812bdba6e5ffd",
+        "verified_rewrites": 17492,
+        "accepted_rewrites": 17475,
+        "worst_process_infidelity": 1.7763568394002505e-15,
+        "worst_accepted_process_infidelity": 1.7763568394002505e-15,
+        "candidate_tolerance_misses": 0,
+        "accepted_spectral_error_bound": 5.884845128562857e-07,
+        "replayed_native_rounds": 65,
+        "replayed_bqskit_invocations": 0,
+        "replayed_pam_routing_passes": 0,
+        "replayed_placement_passes": 0,
+        "replayed_qiskit_sabre_passes": 0,
+        "replayed_exact_osr_routing_passes": 1,
+        "replayed_squander_sabre_passes": 0,
+        "replayed_bqskit_stages": 0,
+        "chained_bqskit_events": 0,
+        "replayed_whole_circuit_transitions": 131,
+        "final_circuit_sha256": "ad1be71a47db51b6ec5ee5e0dec876788cfd5188b83434224b6c7e91b4454e28"
+      },
+      "raw_initial_mapping": [
+        1,
+        0,
+        2,
+        3,
+        6,
+        7,
+        5,
+        4
+      ],
+      "raw_final_mapping": [
+        2,
+        0,
+        1,
+        6,
+        7,
+        4,
+        5,
+        3
+      ]
     }
   },
   "grover_19.qasm": {
@@ -1827,20 +2571,20 @@
       }
     },
     "final": {
-      "cnot_equiv": 181,
-      "single_qubit": 477,
-      "total_raw": 658,
+      "cnot_equiv": 179,
+      "single_qubit": 452,
+      "total_raw": 631,
       "qubits": 19,
       "gate_breakdown": {
-        "CNOT": 181,
-        "U3": 477
+        "CNOT": 179,
+        "U3": 452
       }
     },
     "timing": {
       "a2a": 21.56,
-      "routing": 87.92,
-      "optimization": 53.24,
-      "total": 162.72
+      "routing": 468.07,
+      "optimization": 81.3,
+      "total": 570.94
     },
     "all_to_all": {
       "cnot_equiv": 124,
@@ -1857,14 +2601,14 @@
       }
     },
     "routed": {
-      "cnot_equiv": 190,
-      "single_qubit": 449,
-      "total_raw": 631,
+      "cnot_equiv": 182,
+      "single_qubit": 433,
+      "total_raw": 607,
       "qubits": 19,
       "gate_breakdown": {
-        "CNOT": 178,
+        "CNOT": 170,
         "SWAP": 4,
-        "U3": 449
+        "U3": 433
       }
     },
     "routing_osr_catalog": {
@@ -1880,22 +2624,22 @@
     "rewrite_audit": {
       "schema_version": 2,
       "file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_TreeSearch/grover_19.audit.json.gz",
-      "sha256": "0276c328b4341c5f6908c929457055dfa510cb30aaa2a25fb12550cbcab967b2",
+      "sha256": "0d1ca3834b7d24c3ef1a2bed6cadf7ec59c889ca6b5e0ec926d9831a80c9fff7",
       "summary": {
-        "events": 17714,
-        "rewrites": 17402,
-        "accepted_rewrites": 14559,
-        "failed_synthesis_attempts": 243,
+        "events": 9305,
+        "rewrites": 9069,
+        "accepted_rewrites": 9064,
+        "failed_synthesis_attempts": 179,
         "fallbacks": 0,
         "candidate_tolerance_misses": 0
       },
-      "verified_rewrites": 17402,
-      "accepted_rewrites": 14559,
-      "worst_process_infidelity": 4.59154936294226e-11,
+      "verified_rewrites": 9069,
+      "accepted_rewrites": 9064,
+      "worst_process_infidelity": 5.551115123125783e-15,
       "worst_accepted_process_infidelity": 5.551115123125783e-15,
       "candidate_tolerance_misses": 0,
-      "accepted_spectral_error_bound": 2.783262003545337e-07,
-      "replayed_native_rounds": 34,
+      "accepted_spectral_error_bound": 1.8936007085322128e-07,
+      "replayed_native_rounds": 28,
       "replayed_bqskit_invocations": 0,
       "replayed_pam_routing_passes": 0,
       "replayed_placement_passes": 0,
@@ -1904,8 +2648,116 @@
       "replayed_squander_sabre_passes": 0,
       "replayed_bqskit_stages": 0,
       "chained_bqskit_events": 0,
-      "replayed_whole_circuit_transitions": 69,
-      "final_circuit_sha256": "614ba7ecd424c77139e6dffd4a182075817609d03c67cb1cd5da09c7195a806a"
+      "replayed_whole_circuit_transitions": 57,
+      "final_circuit_sha256": "4bc578769a48651c08c7f668c52e70c0c195301f59ce933e68a7c74cf512dc4c"
+    },
+    "routing_replay": {
+      "policy": "cached-pam-cover-and-packing-v1",
+      "timing_basis": "archived-complete-run-plus-measured-extension",
+      "original_timing": {
+        "a2a": 21.56,
+        "routing": 87.92,
+        "optimization": 53.24,
+        "total": 162.72
+      },
+      "archived_audit_sha256": "0276c328b4341c5f6908c929457055dfa510cb30aaa2a25fb12550cbcab967b2",
+      "archived_routing_audit_sha256": "0276c328b4341c5f6908c929457055dfa510cb30aaa2a25fb12550cbcab967b2",
+      "archived_catalog_sha256": "4cb77818bed55547fed7734f17f4d770cb58fca8e8185a296c11eddf8efbc964",
+      "routing_seconds": 380.15362664684653,
+      "a2a_reused": true,
+      "catalogue_synthesis_reused": true,
+      "route_bit_identical": false,
+      "new_routing_synthesis_calls": 0,
+      "implementation_sha256": {
+        "benchmarks/partitioning/replay_routing.py": "3991f2d6ef362d88a3794883c4dfea10b57f35a0777feeea44dac7fc1b0a4126",
+        "squander/partitioning/routing.py": "b782cd9ce59e7cc94cd32f1d0adff55fdda560aef29f51c0fb40ac00099390fd",
+        "squander/partitioning/_routing_catalog_replay.py": "d79d687edb00afae2e172d9d5cd4ad742ca8073833a85e75475cb769de9407b7"
+      },
+      "runtime_limits": {
+        "address_space_gib": 96
+      },
+      "final_implementation_sha256": {
+        "benchmarks/partitioning/replay_routing.py": "3991f2d6ef362d88a3794883c4dfea10b57f35a0777feeea44dac7fc1b0a4126",
+        "squander/partitioning/ilp.py": "899e7c6e4e72379ff8f7b9300baa03b7d135775eb87cf4e3ba5cb43624a1e8ad",
+        "squander/decomposition/qgd_Wide_Circuit_Optimization.py": "3ca9a0bdd9b685cdd74e46ac2644c5817886615d706aa01a6f1a223532f7a280"
+      },
+      "final_reused": false,
+      "final_seconds": 28.063958070240915,
+      "candidate_final": {
+        "cnot_equiv": 179,
+        "single_qubit": 452,
+        "total_raw": 631,
+        "qubits": 19,
+        "gate_breakdown": {
+          "CNOT": 179,
+          "U3": 452
+        }
+      },
+      "candidate_adopted": true,
+      "candidate_qasm": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_TreeSearch/grover_19.replay-candidate.qasm",
+      "candidate_audit": {
+        "file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_TreeSearch/grover_19.replay-candidate.audit.json.gz",
+        "sha256": "0d1ca3834b7d24c3ef1a2bed6cadf7ec59c889ca6b5e0ec926d9831a80c9fff7",
+        "verified_rewrites": 9069,
+        "accepted_rewrites": 9064,
+        "worst_process_infidelity": 5.551115123125783e-15,
+        "worst_accepted_process_infidelity": 5.551115123125783e-15,
+        "candidate_tolerance_misses": 0,
+        "accepted_spectral_error_bound": 1.8936007085322128e-07,
+        "replayed_native_rounds": 28,
+        "replayed_bqskit_invocations": 0,
+        "replayed_pam_routing_passes": 0,
+        "replayed_placement_passes": 0,
+        "replayed_qiskit_sabre_passes": 0,
+        "replayed_exact_osr_routing_passes": 1,
+        "replayed_squander_sabre_passes": 0,
+        "replayed_bqskit_stages": 0,
+        "chained_bqskit_events": 0,
+        "replayed_whole_circuit_transitions": 57,
+        "final_circuit_sha256": "4bc578769a48651c08c7f668c52e70c0c195301f59ce933e68a7c74cf512dc4c"
+      },
+      "raw_initial_mapping": [
+        0,
+        2,
+        4,
+        6,
+        8,
+        10,
+        12,
+        13,
+        16,
+        15,
+        1,
+        3,
+        5,
+        7,
+        9,
+        11,
+        14,
+        17,
+        18
+      ],
+      "raw_final_mapping": [
+        0,
+        2,
+        3,
+        6,
+        8,
+        10,
+        12,
+        14,
+        16,
+        15,
+        1,
+        4,
+        5,
+        7,
+        9,
+        11,
+        13,
+        17,
+        18
+      ]
     }
   },
   "ising_n98.qasm": {
@@ -2163,23 +3015,23 @@
       }
     },
     "final": {
-      "cnot_equiv": 151,
-      "single_qubit": 385,
-      "total_raw": 536,
+      "cnot_equiv": 149,
+      "single_qubit": 397,
+      "total_raw": 546,
       "qubits": 7,
       "gate_breakdown": {
-        "CNOT": 151,
-        "RX": 1,
-        "RY": 7,
-        "RZ": 6,
-        "U3": 371
+        "CNOT": 149,
+        "H": 1,
+        "RY": 8,
+        "RZ": 10,
+        "U3": 378
       }
     },
     "timing": {
       "a2a": 91.69,
-      "routing": 68.53,
-      "optimization": 67.31,
-      "total": 227.53
+      "routing": 250.77,
+      "optimization": 94.25,
+      "total": 436.71
     },
     "all_to_all": {
       "cnot_equiv": 86,
@@ -2196,17 +3048,17 @@
       }
     },
     "routed": {
-      "cnot_equiv": 163,
-      "single_qubit": 342,
-      "total_raw": 481,
+      "cnot_equiv": 158,
+      "single_qubit": 371,
+      "total_raw": 511,
       "qubits": 7,
       "gate_breakdown": {
-        "CNOT": 127,
-        "RX": 1,
-        "RY": 9,
+        "CNOT": 131,
+        "H": 1,
+        "RY": 8,
         "RZ": 10,
-        "SWAP": 12,
-        "U3": 322
+        "SWAP": 9,
+        "U3": 352
       }
     },
     "routing_osr_catalog": {
@@ -2222,22 +3074,22 @@
     "rewrite_audit": {
       "schema_version": 2,
       "file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_TreeSearch/hhl_n7.audit.json.gz",
-      "sha256": "8dbea945436aa6c1411306ecf21eca5ec4a6c2828df3928ae4ab075eac5f1ebb",
+      "sha256": "4952d3a8c85c8c5e3255e50fd58dbbac5deb1def2782f1e02b875a82a212cd89",
       "summary": {
-        "events": 15989,
-        "rewrites": 15434,
-        "accepted_rewrites": 8149,
-        "failed_synthesis_attempts": 502,
+        "events": 4330,
+        "rewrites": 4012,
+        "accepted_rewrites": 3995,
+        "failed_synthesis_attempts": 273,
         "fallbacks": 0,
         "candidate_tolerance_misses": 0
       },
-      "verified_rewrites": 15434,
-      "accepted_rewrites": 8149,
-      "worst_process_infidelity": 9.959744140530802e-11,
+      "verified_rewrites": 4012,
+      "accepted_rewrites": 3995,
+      "worst_process_infidelity": 5.773159728050814e-15,
       "worst_accepted_process_infidelity": 5.773159728050814e-15,
       "candidate_tolerance_misses": 0,
-      "accepted_spectral_error_bound": 5.749499060088484e-07,
-      "replayed_native_rounds": 26,
+      "accepted_spectral_error_bound": 4.75681158813488e-07,
+      "replayed_native_rounds": 22,
       "replayed_bqskit_invocations": 0,
       "replayed_pam_routing_passes": 0,
       "replayed_placement_passes": 0,
@@ -2246,8 +3098,95 @@
       "replayed_squander_sabre_passes": 0,
       "replayed_bqskit_stages": 0,
       "chained_bqskit_events": 0,
-      "replayed_whole_circuit_transitions": 53,
-      "final_circuit_sha256": "db5e156edb976ba7e742f657538ab38859876b8a8add78e26bf85eef66f93185"
+      "replayed_whole_circuit_transitions": 45,
+      "final_circuit_sha256": "9ae182a0e7e8377600524dd3140f7ab4e439b3c293c333cfbd07e10d5b762160"
+    },
+    "routing_replay": {
+      "policy": "cached-pam-cover-and-packing-v1",
+      "timing_basis": "archived-complete-run-plus-measured-extension",
+      "original_timing": {
+        "a2a": 91.69,
+        "routing": 68.53,
+        "optimization": 67.31,
+        "total": 227.53
+      },
+      "archived_audit_sha256": "8dbea945436aa6c1411306ecf21eca5ec4a6c2828df3928ae4ab075eac5f1ebb",
+      "archived_routing_audit_sha256": "8dbea945436aa6c1411306ecf21eca5ec4a6c2828df3928ae4ab075eac5f1ebb",
+      "archived_catalog_sha256": "cb3e00f4752f0be0ce103100a90cd930af3a4d32d171cefea6de897e6f9b4171",
+      "routing_seconds": 182.2382293008268,
+      "a2a_reused": true,
+      "catalogue_synthesis_reused": true,
+      "route_bit_identical": false,
+      "new_routing_synthesis_calls": 0,
+      "implementation_sha256": {
+        "benchmarks/partitioning/replay_routing.py": "3991f2d6ef362d88a3794883c4dfea10b57f35a0777feeea44dac7fc1b0a4126",
+        "squander/partitioning/routing.py": "b782cd9ce59e7cc94cd32f1d0adff55fdda560aef29f51c0fb40ac00099390fd",
+        "squander/partitioning/_routing_catalog_replay.py": "d79d687edb00afae2e172d9d5cd4ad742ca8073833a85e75475cb769de9407b7"
+      },
+      "runtime_limits": {
+        "address_space_gib": 96
+      },
+      "final_implementation_sha256": {
+        "benchmarks/partitioning/replay_routing.py": "3991f2d6ef362d88a3794883c4dfea10b57f35a0777feeea44dac7fc1b0a4126",
+        "squander/partitioning/ilp.py": "899e7c6e4e72379ff8f7b9300baa03b7d135775eb87cf4e3ba5cb43624a1e8ad",
+        "squander/decomposition/qgd_Wide_Circuit_Optimization.py": "3ca9a0bdd9b685cdd74e46ac2644c5817886615d706aa01a6f1a223532f7a280"
+      },
+      "final_reused": false,
+      "final_seconds": 26.942744101397693,
+      "candidate_final": {
+        "cnot_equiv": 149,
+        "single_qubit": 397,
+        "total_raw": 546,
+        "qubits": 7,
+        "gate_breakdown": {
+          "CNOT": 149,
+          "H": 1,
+          "RY": 8,
+          "RZ": 10,
+          "U3": 378
+        }
+      },
+      "candidate_adopted": true,
+      "candidate_qasm": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_TreeSearch/hhl_n7.replay-candidate.qasm",
+      "candidate_audit": {
+        "file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_TreeSearch/hhl_n7.replay-candidate.audit.json.gz",
+        "sha256": "4952d3a8c85c8c5e3255e50fd58dbbac5deb1def2782f1e02b875a82a212cd89",
+        "verified_rewrites": 4012,
+        "accepted_rewrites": 3995,
+        "worst_process_infidelity": 5.773159728050814e-15,
+        "worst_accepted_process_infidelity": 5.773159728050814e-15,
+        "candidate_tolerance_misses": 0,
+        "accepted_spectral_error_bound": 4.75681158813488e-07,
+        "replayed_native_rounds": 22,
+        "replayed_bqskit_invocations": 0,
+        "replayed_pam_routing_passes": 0,
+        "replayed_placement_passes": 0,
+        "replayed_qiskit_sabre_passes": 0,
+        "replayed_exact_osr_routing_passes": 1,
+        "replayed_squander_sabre_passes": 0,
+        "replayed_bqskit_stages": 0,
+        "chained_bqskit_events": 0,
+        "replayed_whole_circuit_transitions": 45,
+        "final_circuit_sha256": "9ae182a0e7e8377600524dd3140f7ab4e439b3c293c333cfbd07e10d5b762160"
+      },
+      "raw_initial_mapping": [
+        3,
+        2,
+        1,
+        4,
+        6,
+        5,
+        0
+      ],
+      "raw_final_mapping": [
+        2,
+        1,
+        3,
+        4,
+        6,
+        5,
+        0
+      ]
     }
   },
   "grover_23.qasm": {
@@ -2353,20 +3292,20 @@
       }
     },
     "final": {
-      "cnot_equiv": 227,
-      "single_qubit": 603,
-      "total_raw": 830,
+      "cnot_equiv": 225,
+      "single_qubit": 572,
+      "total_raw": 797,
       "qubits": 23,
       "gate_breakdown": {
-        "CNOT": 227,
-        "U3": 603
+        "CNOT": 225,
+        "U3": 572
       }
     },
     "timing": {
       "a2a": 27.86,
-      "routing": 106.53,
-      "optimization": 50.77,
-      "total": 185.16
+      "routing": 594.93,
+      "optimization": 90.92,
+      "total": 713.71
     },
     "all_to_all": {
       "cnot_equiv": 154,
@@ -2383,14 +3322,14 @@
       }
     },
     "routed": {
-      "cnot_equiv": 238,
-      "single_qubit": 575,
-      "total_raw": 807,
+      "cnot_equiv": 229,
+      "single_qubit": 551,
+      "total_raw": 772,
       "qubits": 23,
       "gate_breakdown": {
-        "CNOT": 229,
-        "SWAP": 3,
-        "U3": 575
+        "CNOT": 217,
+        "SWAP": 4,
+        "U3": 551
       }
     },
     "routing_osr_catalog": {
@@ -2406,22 +3345,22 @@
     "rewrite_audit": {
       "schema_version": 2,
       "file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_TreeSearch/grover_23.audit.json.gz",
-      "sha256": "db1c53efa60b79af10a2595ef4e29782ccd3e64aee985620daa800a2179ab439",
+      "sha256": "871e17b88510fed24acc5e7ada815e06d71a34a99427be44ca901b6d4b61d54c",
       "summary": {
-        "events": 25700,
-        "rewrites": 25382,
-        "accepted_rewrites": 22540,
-        "failed_synthesis_attempts": 233,
+        "events": 14471,
+        "rewrites": 14191,
+        "accepted_rewrites": 14185,
+        "failed_synthesis_attempts": 209,
         "fallbacks": 0,
         "candidate_tolerance_misses": 0
       },
-      "verified_rewrites": 25382,
-      "accepted_rewrites": 22540,
-      "worst_process_infidelity": 4.59154936294226e-11,
+      "verified_rewrites": 14191,
+      "accepted_rewrites": 14185,
+      "worst_process_infidelity": 5.551115123125783e-15,
       "worst_accepted_process_infidelity": 5.551115123125783e-15,
       "candidate_tolerance_misses": 0,
-      "accepted_spectral_error_bound": 3.1137761200326176e-07,
-      "replayed_native_rounds": 42,
+      "accepted_spectral_error_bound": 2.209677708077185e-07,
+      "replayed_native_rounds": 35,
       "replayed_bqskit_invocations": 0,
       "replayed_pam_routing_passes": 0,
       "replayed_placement_passes": 0,
@@ -2430,8 +3369,124 @@
       "replayed_squander_sabre_passes": 0,
       "replayed_bqskit_stages": 0,
       "chained_bqskit_events": 0,
-      "replayed_whole_circuit_transitions": 85,
-      "final_circuit_sha256": "b95232631b931b6511f776aebbce66c454d5e648c2951dfbac58770008324df7"
+      "replayed_whole_circuit_transitions": 71,
+      "final_circuit_sha256": "25ba325acb13485e2146f77c71b6a470e7633b52f4df7c8e7b9b259cc6e098b3"
+    },
+    "routing_replay": {
+      "policy": "cached-pam-cover-and-packing-v1",
+      "timing_basis": "archived-complete-run-plus-measured-extension",
+      "original_timing": {
+        "a2a": 27.86,
+        "routing": 106.53,
+        "optimization": 50.77,
+        "total": 185.16
+      },
+      "archived_audit_sha256": "db1c53efa60b79af10a2595ef4e29782ccd3e64aee985620daa800a2179ab439",
+      "archived_routing_audit_sha256": "db1c53efa60b79af10a2595ef4e29782ccd3e64aee985620daa800a2179ab439",
+      "archived_catalog_sha256": "eb5c1adda674d1d02f0245e41554fa66b0c963cb1fe2c8c9243663d04de626dc",
+      "routing_seconds": 488.4010123843327,
+      "a2a_reused": true,
+      "catalogue_synthesis_reused": true,
+      "route_bit_identical": false,
+      "new_routing_synthesis_calls": 0,
+      "implementation_sha256": {
+        "benchmarks/partitioning/replay_routing.py": "3991f2d6ef362d88a3794883c4dfea10b57f35a0777feeea44dac7fc1b0a4126",
+        "squander/partitioning/routing.py": "b782cd9ce59e7cc94cd32f1d0adff55fdda560aef29f51c0fb40ac00099390fd",
+        "squander/partitioning/_routing_catalog_replay.py": "d79d687edb00afae2e172d9d5cd4ad742ca8073833a85e75475cb769de9407b7"
+      },
+      "runtime_limits": {
+        "address_space_gib": 96
+      },
+      "final_implementation_sha256": {
+        "benchmarks/partitioning/replay_routing.py": "3991f2d6ef362d88a3794883c4dfea10b57f35a0777feeea44dac7fc1b0a4126",
+        "squander/partitioning/ilp.py": "899e7c6e4e72379ff8f7b9300baa03b7d135775eb87cf4e3ba5cb43624a1e8ad",
+        "squander/decomposition/qgd_Wide_Circuit_Optimization.py": "3ca9a0bdd9b685cdd74e46ac2644c5817886615d706aa01a6f1a223532f7a280"
+      },
+      "final_reused": false,
+      "final_seconds": 40.14570275414735,
+      "candidate_final": {
+        "cnot_equiv": 225,
+        "single_qubit": 572,
+        "total_raw": 797,
+        "qubits": 23,
+        "gate_breakdown": {
+          "CNOT": 225,
+          "U3": 572
+        }
+      },
+      "candidate_adopted": true,
+      "candidate_qasm": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_TreeSearch/grover_23.replay-candidate.qasm",
+      "candidate_audit": {
+        "file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_TreeSearch/grover_23.replay-candidate.audit.json.gz",
+        "sha256": "871e17b88510fed24acc5e7ada815e06d71a34a99427be44ca901b6d4b61d54c",
+        "verified_rewrites": 14191,
+        "accepted_rewrites": 14185,
+        "worst_process_infidelity": 5.551115123125783e-15,
+        "worst_accepted_process_infidelity": 5.551115123125783e-15,
+        "candidate_tolerance_misses": 0,
+        "accepted_spectral_error_bound": 2.209677708077185e-07,
+        "replayed_native_rounds": 35,
+        "replayed_bqskit_invocations": 0,
+        "replayed_pam_routing_passes": 0,
+        "replayed_placement_passes": 0,
+        "replayed_qiskit_sabre_passes": 0,
+        "replayed_exact_osr_routing_passes": 1,
+        "replayed_squander_sabre_passes": 0,
+        "replayed_bqskit_stages": 0,
+        "chained_bqskit_events": 0,
+        "replayed_whole_circuit_transitions": 71,
+        "final_circuit_sha256": "25ba325acb13485e2146f77c71b6a470e7633b52f4df7c8e7b9b259cc6e098b3"
+      },
+      "raw_initial_mapping": [
+        0,
+        2,
+        4,
+        5,
+        7,
+        9,
+        11,
+        14,
+        16,
+        18,
+        20,
+        19,
+        1,
+        3,
+        6,
+        8,
+        10,
+        12,
+        13,
+        15,
+        17,
+        21,
+        22
+      ],
+      "raw_final_mapping": [
+        0,
+        2,
+        3,
+        6,
+        8,
+        10,
+        12,
+        14,
+        16,
+        18,
+        20,
+        19,
+        1,
+        4,
+        5,
+        7,
+        9,
+        11,
+        13,
+        15,
+        17,
+        21,
+        22
+      ]
     }
   },
   "multiplier_n15.qasm": {
@@ -2537,20 +3592,20 @@
       }
     },
     "final": {
-      "cnot_equiv": 391,
-      "single_qubit": 795,
-      "total_raw": 1186,
+      "cnot_equiv": 348,
+      "single_qubit": 809,
+      "total_raw": 1157,
       "qubits": 15,
       "gate_breakdown": {
-        "CNOT": 391,
-        "U3": 795
+        "CNOT": 348,
+        "U3": 809
       }
     },
     "timing": {
       "a2a": 20.14,
-      "routing": 101.85,
-      "optimization": 101.47,
-      "total": 223.47
+      "routing": 621.21,
+      "optimization": 195.7,
+      "total": 837.06
     },
     "all_to_all": {
       "cnot_equiv": 184,
@@ -2567,14 +3622,14 @@
       }
     },
     "routed": {
-      "cnot_equiv": 428,
-      "single_qubit": 590,
-      "total_raw": 886,
+      "cnot_equiv": 387,
+      "single_qubit": 592,
+      "total_raw": 875,
       "qubits": 15,
       "gate_breakdown": {
-        "CNOT": 230,
-        "SWAP": 66,
-        "U3": 590
+        "CNOT": 231,
+        "SWAP": 52,
+        "U3": 592
       }
     },
     "routing_osr_catalog": {
@@ -2590,22 +3645,22 @@
     "rewrite_audit": {
       "schema_version": 2,
       "file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_TreeSearch/multiplier_n15.audit.json.gz",
-      "sha256": "9d62b90a797c4c1419e35ac3b38e2e8da3ccbbd4fe954bce773905b158c9b4d6",
+      "sha256": "bd1b777c5d030e994f886dfc547f94e2139c5e6b3bf3ae9564fdddd704ab3539",
       "summary": {
-        "events": 40581,
-        "rewrites": 39933,
-        "accepted_rewrites": 36118,
-        "failed_synthesis_attempts": 535,
+        "events": 12838,
+        "rewrites": 12265,
+        "accepted_rewrites": 12236,
+        "failed_synthesis_attempts": 456,
         "fallbacks": 0,
         "candidate_tolerance_misses": 0
       },
-      "verified_rewrites": 39933,
-      "accepted_rewrites": 36118,
-      "worst_process_infidelity": 8.983924715266767e-13,
+      "verified_rewrites": 12265,
+      "accepted_rewrites": 12236,
+      "worst_process_infidelity": 4.440892098500626e-16,
       "worst_accepted_process_infidelity": 4.440892098500626e-16,
       "candidate_tolerance_misses": 0,
-      "accepted_spectral_error_bound": 6.947058988273009e-07,
-      "replayed_native_rounds": 56,
+      "accepted_spectral_error_bound": 7.235231430336237e-07,
+      "replayed_native_rounds": 58,
       "replayed_bqskit_invocations": 0,
       "replayed_pam_routing_passes": 0,
       "replayed_placement_passes": 0,
@@ -2614,8 +3669,108 @@
       "replayed_squander_sabre_passes": 0,
       "replayed_bqskit_stages": 0,
       "chained_bqskit_events": 0,
-      "replayed_whole_circuit_transitions": 113,
-      "final_circuit_sha256": "696775a5b0436912c2cb3bed21f901a9803138840d30497f3742b36b75130ef6"
+      "replayed_whole_circuit_transitions": 117,
+      "final_circuit_sha256": "efba319f2093604348e9752106bf9634b685d9f9c27705ae32b531f76715f446"
+    },
+    "routing_replay": {
+      "policy": "cached-pam-cover-and-packing-v1",
+      "timing_basis": "archived-complete-run-plus-measured-extension",
+      "original_timing": {
+        "a2a": 20.14,
+        "routing": 101.85,
+        "optimization": 101.47,
+        "total": 223.47
+      },
+      "archived_audit_sha256": "9d62b90a797c4c1419e35ac3b38e2e8da3ccbbd4fe954bce773905b158c9b4d6",
+      "archived_routing_audit_sha256": "9d62b90a797c4c1419e35ac3b38e2e8da3ccbbd4fe954bce773905b158c9b4d6",
+      "archived_catalog_sha256": "253f157cfe46e7ec08e44d8131284790fbbecfef1f9213fcf6be0479ce1d57d9",
+      "routing_seconds": 519.3558886973187,
+      "a2a_reused": true,
+      "catalogue_synthesis_reused": true,
+      "route_bit_identical": false,
+      "new_routing_synthesis_calls": 0,
+      "implementation_sha256": {
+        "benchmarks/partitioning/replay_routing.py": "3991f2d6ef362d88a3794883c4dfea10b57f35a0777feeea44dac7fc1b0a4126",
+        "squander/partitioning/routing.py": "b782cd9ce59e7cc94cd32f1d0adff55fdda560aef29f51c0fb40ac00099390fd",
+        "squander/partitioning/_routing_catalog_replay.py": "d79d687edb00afae2e172d9d5cd4ad742ca8073833a85e75475cb769de9407b7"
+      },
+      "runtime_limits": {
+        "address_space_gib": 96
+      },
+      "final_implementation_sha256": {
+        "benchmarks/partitioning/replay_routing.py": "3991f2d6ef362d88a3794883c4dfea10b57f35a0777feeea44dac7fc1b0a4126",
+        "squander/partitioning/ilp.py": "899e7c6e4e72379ff8f7b9300baa03b7d135775eb87cf4e3ba5cb43624a1e8ad",
+        "squander/decomposition/qgd_Wide_Circuit_Optimization.py": "3ca9a0bdd9b685cdd74e46ac2644c5817886615d706aa01a6f1a223532f7a280"
+      },
+      "final_reused": false,
+      "final_seconds": 94.22981714271009,
+      "candidate_final": {
+        "cnot_equiv": 348,
+        "single_qubit": 809,
+        "total_raw": 1157,
+        "qubits": 15,
+        "gate_breakdown": {
+          "CNOT": 348,
+          "U3": 809
+        }
+      },
+      "candidate_adopted": true,
+      "candidate_qasm": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_TreeSearch/multiplier_n15.replay-candidate.qasm",
+      "candidate_audit": {
+        "file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_TreeSearch/multiplier_n15.replay-candidate.audit.json.gz",
+        "sha256": "bd1b777c5d030e994f886dfc547f94e2139c5e6b3bf3ae9564fdddd704ab3539",
+        "verified_rewrites": 12265,
+        "accepted_rewrites": 12236,
+        "worst_process_infidelity": 4.440892098500626e-16,
+        "worst_accepted_process_infidelity": 4.440892098500626e-16,
+        "candidate_tolerance_misses": 0,
+        "accepted_spectral_error_bound": 7.235231430336237e-07,
+        "replayed_native_rounds": 58,
+        "replayed_bqskit_invocations": 0,
+        "replayed_pam_routing_passes": 0,
+        "replayed_placement_passes": 0,
+        "replayed_qiskit_sabre_passes": 0,
+        "replayed_exact_osr_routing_passes": 1,
+        "replayed_squander_sabre_passes": 0,
+        "replayed_bqskit_stages": 0,
+        "chained_bqskit_events": 0,
+        "replayed_whole_circuit_transitions": 117,
+        "final_circuit_sha256": "efba319f2093604348e9752106bf9634b685d9f9c27705ae32b531f76715f446"
+      },
+      "raw_initial_mapping": [
+        0,
+        6,
+        1,
+        2,
+        10,
+        4,
+        3,
+        9,
+        8,
+        5,
+        11,
+        12,
+        7,
+        13,
+        14
+      ],
+      "raw_final_mapping": [
+        3,
+        0,
+        2,
+        1,
+        5,
+        4,
+        6,
+        9,
+        7,
+        8,
+        12,
+        14,
+        13,
+        11,
+        10
+      ]
     }
   },
   "heisenberg-16-20.qasm": {
@@ -2876,20 +4031,20 @@
       }
     },
     "final": {
-      "cnot_equiv": 337,
-      "single_qubit": 923,
-      "total_raw": 1260,
+      "cnot_equiv": 333,
+      "single_qubit": 880,
+      "total_raw": 1213,
       "qubits": 33,
       "gate_breakdown": {
-        "CNOT": 337,
-        "U3": 923
+        "CNOT": 333,
+        "U3": 880
       }
     },
     "timing": {
       "a2a": 47.89,
-      "routing": 166.88,
-      "optimization": 82.26,
-      "total": 297.04
+      "routing": 970.08,
+      "optimization": 136.08,
+      "total": 1154.06
     },
     "all_to_all": {
       "cnot_equiv": 229,
@@ -2906,14 +4061,14 @@
       }
     },
     "routed": {
-      "cnot_equiv": 359,
-      "single_qubit": 865,
-      "total_raw": 1214,
+      "cnot_equiv": 345,
+      "single_qubit": 843,
+      "total_raw": 1180,
       "qubits": 33,
       "gate_breakdown": {
-        "CNOT": 344,
-        "SWAP": 5,
-        "U3": 865
+        "CNOT": 333,
+        "SWAP": 4,
+        "U3": 843
       }
     },
     "routing_osr_catalog": {
@@ -2929,22 +4084,22 @@
     "rewrite_audit": {
       "schema_version": 2,
       "file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_TreeSearch/grover_33.audit.json.gz",
-      "sha256": "29de618a7f2b9e9d9e31282cae66258c08ddc635f18301fbd6e9a0188a0c74b2",
+      "sha256": "9ddd9ea9e8dd454e4f2d3cbc8c444f18c902b70a18e8cdd18f1748ed6c138240",
       "summary": {
-        "events": 59428,
-        "rewrites": 59028,
-        "accepted_rewrites": 56179,
-        "failed_synthesis_attempts": 263,
+        "events": 32359,
+        "rewrites": 32009,
+        "accepted_rewrites": 31998,
+        "failed_synthesis_attempts": 233,
         "fallbacks": 0,
         "candidate_tolerance_misses": 0
       },
-      "verified_rewrites": 59028,
-      "accepted_rewrites": 56179,
-      "worst_process_infidelity": 4.59154936294226e-11,
+      "verified_rewrites": 32009,
+      "accepted_rewrites": 31998,
+      "worst_process_infidelity": 5.551115123125783e-15,
       "worst_accepted_process_infidelity": 5.551115123125783e-15,
       "candidate_tolerance_misses": 0,
-      "accepted_spectral_error_bound": 4.915347677596668e-07,
-      "replayed_native_rounds": 68,
+      "accepted_spectral_error_bound": 3.564244916290036e-07,
+      "replayed_native_rounds": 58,
       "replayed_bqskit_invocations": 0,
       "replayed_pam_routing_passes": 0,
       "replayed_placement_passes": 0,
@@ -2953,8 +4108,144 @@
       "replayed_squander_sabre_passes": 0,
       "replayed_bqskit_stages": 0,
       "chained_bqskit_events": 0,
-      "replayed_whole_circuit_transitions": 137,
-      "final_circuit_sha256": "73544e77bbf5657e7ecc14e1b961fb5287681e7f771a2dbc725c702fc8bbdfbf"
+      "replayed_whole_circuit_transitions": 117,
+      "final_circuit_sha256": "5d6823db57771905ba6566954322b81e21e405b114eaf1c5b900941508eaec47"
+    },
+    "routing_replay": {
+      "policy": "cached-pam-cover-and-packing-v1",
+      "timing_basis": "archived-complete-run-plus-measured-extension",
+      "original_timing": {
+        "a2a": 47.89,
+        "routing": 166.88,
+        "optimization": 82.26,
+        "total": 297.04
+      },
+      "archived_audit_sha256": "29de618a7f2b9e9d9e31282cae66258c08ddc635f18301fbd6e9a0188a0c74b2",
+      "archived_routing_audit_sha256": "29de618a7f2b9e9d9e31282cae66258c08ddc635f18301fbd6e9a0188a0c74b2",
+      "archived_catalog_sha256": "79f32cdbe80fcaf14848e6144e48f3a78cd65abf5a1316537994e3f02512ce57",
+      "routing_seconds": 803.199811915867,
+      "a2a_reused": true,
+      "catalogue_synthesis_reused": true,
+      "route_bit_identical": false,
+      "new_routing_synthesis_calls": 0,
+      "implementation_sha256": {
+        "benchmarks/partitioning/replay_routing.py": "3991f2d6ef362d88a3794883c4dfea10b57f35a0777feeea44dac7fc1b0a4126",
+        "squander/partitioning/routing.py": "b782cd9ce59e7cc94cd32f1d0adff55fdda560aef29f51c0fb40ac00099390fd",
+        "squander/partitioning/_routing_catalog_replay.py": "d79d687edb00afae2e172d9d5cd4ad742ca8073833a85e75475cb769de9407b7"
+      },
+      "runtime_limits": {
+        "address_space_gib": 96
+      },
+      "final_implementation_sha256": {
+        "benchmarks/partitioning/replay_routing.py": "3991f2d6ef362d88a3794883c4dfea10b57f35a0777feeea44dac7fc1b0a4126",
+        "squander/partitioning/ilp.py": "899e7c6e4e72379ff8f7b9300baa03b7d135775eb87cf4e3ba5cb43624a1e8ad",
+        "squander/decomposition/qgd_Wide_Circuit_Optimization.py": "3ca9a0bdd9b685cdd74e46ac2644c5817886615d706aa01a6f1a223532f7a280"
+      },
+      "final_reused": false,
+      "final_seconds": 53.82272499334067,
+      "candidate_final": {
+        "cnot_equiv": 333,
+        "single_qubit": 880,
+        "total_raw": 1213,
+        "qubits": 33,
+        "gate_breakdown": {
+          "CNOT": 333,
+          "U3": 880
+        }
+      },
+      "candidate_adopted": true,
+      "candidate_qasm": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_TreeSearch/grover_33.replay-candidate.qasm",
+      "candidate_audit": {
+        "file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_TreeSearch/grover_33.replay-candidate.audit.json.gz",
+        "sha256": "9ddd9ea9e8dd454e4f2d3cbc8c444f18c902b70a18e8cdd18f1748ed6c138240",
+        "verified_rewrites": 32009,
+        "accepted_rewrites": 31998,
+        "worst_process_infidelity": 5.551115123125783e-15,
+        "worst_accepted_process_infidelity": 5.551115123125783e-15,
+        "candidate_tolerance_misses": 0,
+        "accepted_spectral_error_bound": 3.564244916290036e-07,
+        "replayed_native_rounds": 58,
+        "replayed_bqskit_invocations": 0,
+        "replayed_pam_routing_passes": 0,
+        "replayed_placement_passes": 0,
+        "replayed_qiskit_sabre_passes": 0,
+        "replayed_exact_osr_routing_passes": 1,
+        "replayed_squander_sabre_passes": 0,
+        "replayed_bqskit_stages": 0,
+        "chained_bqskit_events": 0,
+        "replayed_whole_circuit_transitions": 117,
+        "final_circuit_sha256": "5d6823db57771905ba6566954322b81e21e405b114eaf1c5b900941508eaec47"
+      },
+      "raw_initial_mapping": [
+        0,
+        2,
+        3,
+        5,
+        7,
+        9,
+        11,
+        13,
+        15,
+        18,
+        20,
+        22,
+        24,
+        26,
+        28,
+        30,
+        29,
+        1,
+        4,
+        6,
+        8,
+        10,
+        12,
+        14,
+        16,
+        17,
+        19,
+        21,
+        23,
+        25,
+        27,
+        31,
+        32
+      ],
+      "raw_final_mapping": [
+        0,
+        2,
+        3,
+        5,
+        7,
+        9,
+        11,
+        14,
+        16,
+        18,
+        20,
+        22,
+        24,
+        26,
+        28,
+        30,
+        29,
+        1,
+        4,
+        6,
+        8,
+        10,
+        12,
+        13,
+        15,
+        17,
+        19,
+        21,
+        23,
+        25,
+        27,
+        31,
+        32
+      ]
     }
   },
   "dnn_n16.qasm": {
@@ -3076,9 +4367,9 @@
     },
     "timing": {
       "a2a": 415.08,
-      "routing": 313.58,
+      "routing": 528.62,
       "optimization": 36.46,
-      "total": 765.12
+      "total": 980.16
     },
     "all_to_all": {
       "cnot_equiv": 128,
@@ -3146,6 +4437,37 @@
       "chained_bqskit_events": 0,
       "replayed_whole_circuit_transitions": 243,
       "final_circuit_sha256": "e79a91aef799258a6ae3d14d4699e65c4cae49528633e0e3fcdd72b33635fcd0"
+    },
+    "routing_replay": {
+      "policy": "cached-pam-cover-and-packing-v1",
+      "timing_basis": "archived-complete-run-plus-measured-extension",
+      "original_timing": {
+        "a2a": 415.08,
+        "routing": 313.58,
+        "optimization": 36.46,
+        "total": 765.12
+      },
+      "archived_audit_sha256": "dfca419ca52c58d3289675b69438c2407905cc20ce761df63ce9c3a4685b2076",
+      "archived_routing_audit_sha256": "dfca419ca52c58d3289675b69438c2407905cc20ce761df63ce9c3a4685b2076",
+      "archived_catalog_sha256": "5915ff0d7cc4357bfab055384c0fc2916fa30f9e9e4896673f5903ae82f3465c",
+      "routing_seconds": 215.03922027163208,
+      "a2a_reused": true,
+      "catalogue_synthesis_reused": true,
+      "route_bit_identical": true,
+      "new_routing_synthesis_calls": 0,
+      "implementation_sha256": {
+        "benchmarks/partitioning/replay_routing.py": "3991f2d6ef362d88a3794883c4dfea10b57f35a0777feeea44dac7fc1b0a4126",
+        "squander/partitioning/routing.py": "b782cd9ce59e7cc94cd32f1d0adff55fdda560aef29f51c0fb40ac00099390fd",
+        "squander/partitioning/_routing_catalog_replay.py": "d79d687edb00afae2e172d9d5cd4ad742ca8073833a85e75475cb769de9407b7"
+      },
+      "runtime_limits": {
+        "address_space_gib": 96
+      },
+      "final_reused": true,
+      "final_seconds": 0.0,
+      "final_implementation_sha256": {
+        "squander/partitioning/ilp.py": "899e7c6e4e72379ff8f7b9300baa03b7d135775eb87cf4e3ba5cb43624a1e8ad"
+      }
     }
   },
   "qft_20.qasm": {
@@ -3251,20 +4573,20 @@
       }
     },
     "final": {
-      "cnot_equiv": 832,
-      "single_qubit": 1631,
-      "total_raw": 2463,
+      "cnot_equiv": 809,
+      "single_qubit": 1591,
+      "total_raw": 2400,
       "qubits": 20,
       "gate_breakdown": {
-        "CNOT": 832,
-        "U3": 1631
+        "CNOT": 809,
+        "U3": 1591
       }
     },
     "timing": {
       "a2a": 94.96,
-      "routing": 504.09,
-      "optimization": 398.63,
-      "total": 997.69
+      "routing": 1570.09,
+      "optimization": 678.78,
+      "total": 2343.84
     },
     "all_to_all": {
       "cnot_equiv": 387,
@@ -3278,14 +4600,14 @@
       }
     },
     "routed": {
-      "cnot_equiv": 941,
-      "single_qubit": 1255,
-      "total_raw": 1894,
+      "cnot_equiv": 854,
+      "single_qubit": 1354,
+      "total_raw": 1992,
       "qubits": 20,
       "gate_breakdown": {
-        "CNOT": 488,
-        "SWAP": 151,
-        "U3": 1255
+        "CNOT": 530,
+        "SWAP": 108,
+        "U3": 1354
       }
     },
     "routing_osr_catalog": {
@@ -3301,22 +4623,22 @@
     "rewrite_audit": {
       "schema_version": 2,
       "file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_TreeSearch/qft_20.audit.json.gz",
-      "sha256": "31a9bb94d2e046313b5234f5272a7f6ab822ff2ee06b4b5b1731712045857dfe",
+      "sha256": "4c7e7263e55f4e5b9dcf379c5514a1f3575ec02a8d434627e4b9917e55409b43",
       "summary": {
-        "events": 158386,
-        "rewrites": 156658,
-        "accepted_rewrites": 147715,
-        "failed_synthesis_attempts": 1537,
+        "events": 18893,
+        "rewrites": 17446,
+        "accepted_rewrites": 17410,
+        "failed_synthesis_attempts": 1326,
         "fallbacks": 0,
         "candidate_tolerance_misses": 0
       },
-      "verified_rewrites": 156658,
-      "accepted_rewrites": 147715,
-      "worst_process_infidelity": 9.990852589680799e-11,
-      "worst_accepted_process_infidelity": 4.34219327161145e-11,
+      "verified_rewrites": 17446,
+      "accepted_rewrites": 17410,
+      "worst_process_infidelity": 3.590505670558741e-11,
+      "worst_accepted_process_infidelity": 3.590505670558741e-11,
       "candidate_tolerance_misses": 0,
-      "accepted_spectral_error_bound": 6.116297421684514e-05,
-      "replayed_native_rounds": 95,
+      "accepted_spectral_error_bound": 3.0376590160289004e-05,
+      "replayed_native_rounds": 60,
       "replayed_bqskit_invocations": 0,
       "replayed_pam_routing_passes": 0,
       "replayed_placement_passes": 0,
@@ -3325,8 +4647,117 @@
       "replayed_squander_sabre_passes": 0,
       "replayed_bqskit_stages": 0,
       "chained_bqskit_events": 0,
-      "replayed_whole_circuit_transitions": 191,
-      "final_circuit_sha256": "d1af52d6ff0948d83edee40a631691aa5015ee0656f264ec7fab57718ced22a6"
+      "replayed_whole_circuit_transitions": 121,
+      "final_circuit_sha256": "f1c5a3c6849e06910b5d077b2d85fbf078dec42823ede876503a7051ede66e64"
+    },
+    "routing_replay": {
+      "policy": "cached-pam-cover-and-packing-v1",
+      "timing_basis": "archived-complete-run-plus-measured-extension",
+      "original_timing": {
+        "a2a": 94.96,
+        "routing": 504.09,
+        "optimization": 398.63,
+        "total": 997.69
+      },
+      "archived_audit_sha256": "31a9bb94d2e046313b5234f5272a7f6ab822ff2ee06b4b5b1731712045857dfe",
+      "archived_catalog_sha256": "1b4efc45ac98de645d508b5fcc1ffe13fe7eb455ee475f3187332beeec19ec19",
+      "routing_seconds": 1065.9950573528185,
+      "a2a_reused": true,
+      "catalogue_synthesis_reused": true,
+      "route_bit_identical": false,
+      "new_routing_synthesis_calls": 0,
+      "implementation_sha256": {
+        "benchmarks/partitioning/replay_routing.py": "5ec026b260db687f5065ed8bb7219aed7dc7134f595c58ef47b1f767490e78c4",
+        "squander/partitioning/routing.py": "b782cd9ce59e7cc94cd32f1d0adff55fdda560aef29f51c0fb40ac00099390fd",
+        "squander/partitioning/_routing_catalog_replay.py": "d79d687edb00afae2e172d9d5cd4ad742ca8073833a85e75475cb769de9407b7"
+      },
+      "runtime_limits": {
+        "address_space_gib": 96
+      },
+      "final_implementation_sha256": {
+        "benchmarks/partitioning/replay_routing.py": "5ec026b260db687f5065ed8bb7219aed7dc7134f595c58ef47b1f767490e78c4",
+        "squander/partitioning/ilp.py": "899e7c6e4e72379ff8f7b9300baa03b7d135775eb87cf4e3ba5cb43624a1e8ad",
+        "squander/decomposition/qgd_Wide_Circuit_Optimization.py": "3ca9a0bdd9b685cdd74e46ac2644c5817886615d706aa01a6f1a223532f7a280"
+      },
+      "final_reused": false,
+      "final_seconds": 280.15033677220345,
+      "candidate_final": {
+        "cnot_equiv": 809,
+        "single_qubit": 1591,
+        "total_raw": 2400,
+        "qubits": 20,
+        "gate_breakdown": {
+          "CNOT": 809,
+          "U3": 1591
+        }
+      },
+      "candidate_adopted": true,
+      "candidate_qasm": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_TreeSearch/qft_20.replay-candidate.qasm",
+      "candidate_audit": {
+        "file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_TreeSearch/qft_20.replay-candidate.audit.json.gz",
+        "sha256": "4c7e7263e55f4e5b9dcf379c5514a1f3575ec02a8d434627e4b9917e55409b43",
+        "verified_rewrites": 17446,
+        "accepted_rewrites": 17410,
+        "worst_process_infidelity": 3.590505670558741e-11,
+        "worst_accepted_process_infidelity": 3.590505670558741e-11,
+        "candidate_tolerance_misses": 0,
+        "accepted_spectral_error_bound": 3.0376590160289004e-05,
+        "replayed_native_rounds": 60,
+        "replayed_bqskit_invocations": 0,
+        "replayed_pam_routing_passes": 0,
+        "replayed_placement_passes": 0,
+        "replayed_qiskit_sabre_passes": 0,
+        "replayed_exact_osr_routing_passes": 1,
+        "replayed_squander_sabre_passes": 0,
+        "replayed_bqskit_stages": 0,
+        "chained_bqskit_events": 0,
+        "replayed_whole_circuit_transitions": 121,
+        "final_circuit_sha256": "f1c5a3c6849e06910b5d077b2d85fbf078dec42823ede876503a7051ede66e64"
+      },
+      "raw_initial_mapping": [
+        18,
+        19,
+        17,
+        16,
+        15,
+        14,
+        13,
+        12,
+        11,
+        10,
+        9,
+        8,
+        7,
+        6,
+        5,
+        4,
+        3,
+        2,
+        1,
+        0
+      ],
+      "raw_final_mapping": [
+        9,
+        13,
+        5,
+        10,
+        7,
+        11,
+        14,
+        18,
+        15,
+        19,
+        16,
+        0,
+        17,
+        1,
+        2,
+        6,
+        3,
+        4,
+        12,
+        8
+      ]
     }
   },
   "adder_n64.qasm": {
@@ -3432,23 +4863,22 @@
       }
     },
     "final": {
-      "cnot_equiv": 368,
-      "single_qubit": 1201,
-      "total_raw": 1569,
+      "cnot_equiv": 345,
+      "single_qubit": 864,
+      "total_raw": 1209,
       "qubits": 64,
       "gate_breakdown": {
-        "CNOT": 368,
-        "H": 21,
-        "T": 43,
-        "U3": 1108,
-        "X": 29
+        "CNOT": 345,
+        "H": 7,
+        "T": 7,
+        "U3": 850
       }
     },
     "timing": {
       "a2a": 104.7,
-      "routing": 480.57,
-      "optimization": 240.63,
-      "total": 825.91
+      "routing": 1636.84,
+      "optimization": 258.1,
+      "total": 1999.65
     },
     "all_to_all": {
       "cnot_equiv": 287,
@@ -3465,18 +4895,15 @@
       }
     },
     "routed": {
-      "cnot_equiv": 563,
-      "single_qubit": 827,
-      "total_raw": 1206,
+      "cnot_equiv": 345,
+      "single_qubit": 864,
+      "total_raw": 1209,
       "qubits": 64,
       "gate_breakdown": {
-        "CNOT": 287,
-        "H": 56,
-        "SWAP": 92,
-        "T": 77,
-        "Tdg": 42,
-        "U3": 623,
-        "X": 29
+        "CNOT": 345,
+        "H": 7,
+        "T": 7,
+        "U3": 850
       }
     },
     "routing_osr_catalog": {
@@ -3492,22 +4919,22 @@
     "rewrite_audit": {
       "schema_version": 2,
       "file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_TreeSearch/adder_n64.audit.json.gz",
-      "sha256": "5e55bbfc1570485c34aea0d84b91cff10121161730a615ed46179b454e7432ba",
+      "sha256": "4103aba81f7746392fa2d4d4929455c3816a19aa5e67b1d8a8584d243e84ae9a",
       "summary": {
-        "events": 188609,
-        "rewrites": 188014,
-        "accepted_rewrites": 185704,
-        "failed_synthesis_attempts": 192,
+        "events": 69908,
+        "rewrites": 69653,
+        "accepted_rewrites": 69647,
+        "failed_synthesis_attempts": 78,
         "fallbacks": 0,
         "candidate_tolerance_misses": 0
       },
-      "verified_rewrites": 188014,
-      "accepted_rewrites": 185704,
-      "worst_process_infidelity": 5.590639062802438e-12,
+      "verified_rewrites": 69653,
+      "accepted_rewrites": 69647,
+      "worst_process_infidelity": 4.440892098500626e-16,
       "worst_accepted_process_infidelity": 4.440892098500626e-16,
       "candidate_tolerance_misses": 0,
-      "accepted_spectral_error_bound": 2.008108185951375e-06,
-      "replayed_native_rounds": 201,
+      "accepted_spectral_error_bound": 5.147082059359773e-07,
+      "replayed_native_rounds": 88,
       "replayed_bqskit_invocations": 0,
       "replayed_pam_routing_passes": 0,
       "replayed_placement_passes": 0,
@@ -3516,8 +4943,208 @@
       "replayed_squander_sabre_passes": 0,
       "replayed_bqskit_stages": 0,
       "chained_bqskit_events": 0,
-      "replayed_whole_circuit_transitions": 403,
-      "final_circuit_sha256": "36f6fb814de89a7818aa1b767eef6f3e8e031dfa89e5f1000451ac0d5b33acb9"
+      "replayed_whole_circuit_transitions": 177,
+      "final_circuit_sha256": "539f536509d31d931aa4f815eade6e44d7c4d3388b217fb5f1e953f5c96cb44c"
+    },
+    "routing_replay": {
+      "policy": "cached-pam-cover-and-packing-v1",
+      "timing_basis": "archived-complete-run-plus-measured-extension",
+      "original_timing": {
+        "a2a": 104.7,
+        "routing": 480.57,
+        "optimization": 240.63,
+        "total": 825.91
+      },
+      "archived_audit_sha256": "5e55bbfc1570485c34aea0d84b91cff10121161730a615ed46179b454e7432ba",
+      "archived_routing_audit_sha256": "5e55bbfc1570485c34aea0d84b91cff10121161730a615ed46179b454e7432ba",
+      "archived_catalog_sha256": "a29294283f98d0bf818fb075638710bd7e0c2e6fab0e2e824f3f4102764ad84c",
+      "routing_seconds": 1156.2711876481771,
+      "a2a_reused": true,
+      "catalogue_synthesis_reused": true,
+      "route_bit_identical": false,
+      "new_routing_synthesis_calls": 0,
+      "implementation_sha256": {
+        "benchmarks/partitioning/replay_routing.py": "51e9bc944d1222b0b62a303ba1d9b4fa50ca7a2fa254ce243d6dbf0bbab4b7cc",
+        "squander/partitioning/routing.py": "b782cd9ce59e7cc94cd32f1d0adff55fdda560aef29f51c0fb40ac00099390fd",
+        "squander/partitioning/_routing_catalog_replay.py": "d79d687edb00afae2e172d9d5cd4ad742ca8073833a85e75475cb769de9407b7"
+      },
+      "runtime_limits": {
+        "address_space_gib": 96
+      },
+      "final_implementation_sha256": {
+        "benchmarks/partitioning/replay_routing.py": "51e9bc944d1222b0b62a303ba1d9b4fa50ca7a2fa254ce243d6dbf0bbab4b7cc",
+        "squander/partitioning/ilp.py": "899e7c6e4e72379ff8f7b9300baa03b7d135775eb87cf4e3ba5cb43624a1e8ad",
+        "squander/decomposition/qgd_Wide_Circuit_Optimization.py": "3ca9a0bdd9b685cdd74e46ac2644c5817886615d706aa01a6f1a223532f7a280"
+      },
+      "final_reused": false,
+      "final_seconds": 17.46900812536478,
+      "candidate_final": {
+        "cnot_equiv": 345,
+        "single_qubit": 864,
+        "total_raw": 1209,
+        "qubits": 64,
+        "gate_breakdown": {
+          "CNOT": 345,
+          "H": 7,
+          "T": 7,
+          "U3": 850
+        }
+      },
+      "candidate_adopted": true,
+      "candidate_qasm": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_TreeSearch/adder_n64.replay-candidate.qasm",
+      "candidate_audit": {
+        "file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_TreeSearch/adder_n64.replay-candidate.audit.json.gz",
+        "sha256": "4103aba81f7746392fa2d4d4929455c3816a19aa5e67b1d8a8584d243e84ae9a",
+        "verified_rewrites": 69653,
+        "accepted_rewrites": 69647,
+        "worst_process_infidelity": 4.440892098500626e-16,
+        "worst_accepted_process_infidelity": 4.440892098500626e-16,
+        "candidate_tolerance_misses": 0,
+        "accepted_spectral_error_bound": 5.147082059359773e-07,
+        "replayed_native_rounds": 88,
+        "replayed_bqskit_invocations": 0,
+        "replayed_pam_routing_passes": 0,
+        "replayed_placement_passes": 0,
+        "replayed_qiskit_sabre_passes": 0,
+        "replayed_exact_osr_routing_passes": 1,
+        "replayed_squander_sabre_passes": 0,
+        "replayed_bqskit_stages": 0,
+        "chained_bqskit_events": 0,
+        "replayed_whole_circuit_transitions": 177,
+        "final_circuit_sha256": "539f536509d31d931aa4f815eade6e44d7c4d3388b217fb5f1e953f5c96cb44c"
+      },
+      "raw_initial_mapping": [
+        1,
+        3,
+        5,
+        7,
+        10,
+        12,
+        14,
+        16,
+        20,
+        21,
+        23,
+        25,
+        29,
+        30,
+        32,
+        34,
+        37,
+        39,
+        41,
+        43,
+        46,
+        48,
+        50,
+        52,
+        55,
+        57,
+        59,
+        61,
+        0,
+        4,
+        6,
+        8,
+        11,
+        13,
+        15,
+        17,
+        19,
+        22,
+        24,
+        26,
+        28,
+        31,
+        33,
+        35,
+        38,
+        40,
+        42,
+        44,
+        47,
+        49,
+        51,
+        53,
+        56,
+        58,
+        60,
+        62,
+        2,
+        9,
+        18,
+        27,
+        36,
+        45,
+        54,
+        63
+      ],
+      "raw_final_mapping": [
+        2,
+        3,
+        5,
+        7,
+        9,
+        12,
+        14,
+        16,
+        18,
+        21,
+        23,
+        25,
+        27,
+        30,
+        32,
+        34,
+        36,
+        39,
+        41,
+        43,
+        45,
+        48,
+        50,
+        52,
+        54,
+        57,
+        59,
+        61,
+        1,
+        4,
+        6,
+        8,
+        11,
+        13,
+        15,
+        17,
+        20,
+        22,
+        24,
+        26,
+        29,
+        31,
+        33,
+        35,
+        38,
+        40,
+        42,
+        44,
+        47,
+        49,
+        51,
+        53,
+        56,
+        58,
+        60,
+        62,
+        0,
+        10,
+        19,
+        28,
+        37,
+        46,
+        55,
+        63
+      ]
     }
   },
   "grover_45.qasm": {
@@ -3623,20 +5250,20 @@
       }
     },
     "final": {
-      "cnot_equiv": 507,
-      "single_qubit": 1418,
-      "total_raw": 1925,
+      "cnot_equiv": 460,
+      "single_qubit": 1161,
+      "total_raw": 1621,
       "qubits": 45,
       "gate_breakdown": {
-        "CNOT": 507,
-        "U3": 1418
+        "CNOT": 460,
+        "U3": 1161
       }
     },
     "timing": {
       "a2a": 84.52,
-      "routing": 297.08,
-      "optimization": 147.94,
-      "total": 529.55
+      "routing": 1455.1,
+      "optimization": 175.39,
+      "total": 1715.02
     },
     "all_to_all": {
       "cnot_equiv": 319,
@@ -3653,14 +5280,14 @@
       }
     },
     "routed": {
-      "cnot_equiv": 555,
-      "single_qubit": 1095,
-      "total_raw": 1562,
+      "cnot_equiv": 462,
+      "single_qubit": 1155,
+      "total_raw": 1611,
       "qubits": 45,
       "gate_breakdown": {
-        "CNOT": 423,
-        "SWAP": 44,
-        "U3": 1095
+        "CNOT": 453,
+        "SWAP": 3,
+        "U3": 1155
       }
     },
     "routing_osr_catalog": {
@@ -3676,22 +5303,22 @@
     "rewrite_audit": {
       "schema_version": 2,
       "file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_TreeSearch/grover_45.audit.json.gz",
-      "sha256": "13b4b9bae93c7e5eb6e8dc3554316ff0e6f370193e88aca7bf198439f6f9f16b",
+      "sha256": "cbab0159bbafd03b52aad9103fe8f011e9c5a7ce42aa56a2fb3aabd0584fa3a2",
       "summary": {
-        "events": 134271,
-        "rewrites": 133839,
-        "accepted_rewrites": 131022,
-        "failed_synthesis_attempts": 213,
+        "events": 63071,
+        "rewrites": 62796,
+        "accepted_rewrites": 62792,
+        "failed_synthesis_attempts": 142,
         "fallbacks": 0,
         "candidate_tolerance_misses": 0
       },
-      "verified_rewrites": 133839,
-      "accepted_rewrites": 131022,
-      "worst_process_infidelity": 4.59154936294226e-11,
-      "worst_accepted_process_infidelity": 1.3078427230084344e-13,
+      "verified_rewrites": 62796,
+      "accepted_rewrites": 62792,
+      "worst_process_infidelity": 5.551115123125783e-15,
+      "worst_accepted_process_infidelity": 5.551115123125783e-15,
       "candidate_tolerance_misses": 0,
-      "accepted_spectral_error_bound": 1.0694777704832038e-06,
-      "replayed_native_rounds": 109,
+      "accepted_spectral_error_bound": 3.1280775773274673e-07,
+      "replayed_native_rounds": 66,
       "replayed_bqskit_invocations": 0,
       "replayed_pam_routing_passes": 0,
       "replayed_placement_passes": 0,
@@ -3700,8 +5327,168 @@
       "replayed_squander_sabre_passes": 0,
       "replayed_bqskit_stages": 0,
       "chained_bqskit_events": 0,
-      "replayed_whole_circuit_transitions": 219,
-      "final_circuit_sha256": "13f1f5b0d2433430a52895843655f5c2fdc5ac034c3b89173b8abbd793cf6db2"
+      "replayed_whole_circuit_transitions": 133,
+      "final_circuit_sha256": "71be2af136e482af4128d21412e32d1b4e2ef02f95fd9d841b344a89e14fd38d"
+    },
+    "routing_replay": {
+      "policy": "cached-pam-cover-and-packing-v1",
+      "timing_basis": "archived-complete-run-plus-measured-extension",
+      "original_timing": {
+        "a2a": 84.52,
+        "routing": 297.08,
+        "optimization": 147.94,
+        "total": 529.55
+      },
+      "archived_audit_sha256": "13b4b9bae93c7e5eb6e8dc3554316ff0e6f370193e88aca7bf198439f6f9f16b",
+      "archived_routing_audit_sha256": "13b4b9bae93c7e5eb6e8dc3554316ff0e6f370193e88aca7bf198439f6f9f16b",
+      "archived_catalog_sha256": "007e30d3df55a752b074b765a16dc3d3b263925e30c71cea68a3e10e6219baea",
+      "routing_seconds": 1158.0179438414052,
+      "a2a_reused": true,
+      "catalogue_synthesis_reused": true,
+      "route_bit_identical": false,
+      "new_routing_synthesis_calls": 0,
+      "implementation_sha256": {
+        "benchmarks/partitioning/replay_routing.py": "51e9bc944d1222b0b62a303ba1d9b4fa50ca7a2fa254ce243d6dbf0bbab4b7cc",
+        "squander/partitioning/routing.py": "b782cd9ce59e7cc94cd32f1d0adff55fdda560aef29f51c0fb40ac00099390fd",
+        "squander/partitioning/_routing_catalog_replay.py": "d79d687edb00afae2e172d9d5cd4ad742ca8073833a85e75475cb769de9407b7"
+      },
+      "runtime_limits": {
+        "address_space_gib": 96
+      },
+      "final_implementation_sha256": {
+        "benchmarks/partitioning/replay_routing.py": "3991f2d6ef362d88a3794883c4dfea10b57f35a0777feeea44dac7fc1b0a4126",
+        "squander/partitioning/ilp.py": "899e7c6e4e72379ff8f7b9300baa03b7d135775eb87cf4e3ba5cb43624a1e8ad",
+        "squander/decomposition/qgd_Wide_Circuit_Optimization.py": "3ca9a0bdd9b685cdd74e46ac2644c5817886615d706aa01a6f1a223532f7a280"
+      },
+      "final_reused": false,
+      "final_seconds": 27.45422931946814,
+      "candidate_final": {
+        "cnot_equiv": 460,
+        "single_qubit": 1161,
+        "total_raw": 1621,
+        "qubits": 45,
+        "gate_breakdown": {
+          "CNOT": 460,
+          "U3": 1161
+        }
+      },
+      "candidate_adopted": true,
+      "candidate_qasm": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_TreeSearch/grover_45.replay-candidate.qasm",
+      "candidate_audit": {
+        "file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_TreeSearch/grover_45.replay-candidate.audit.json.gz",
+        "sha256": "cbab0159bbafd03b52aad9103fe8f011e9c5a7ce42aa56a2fb3aabd0584fa3a2",
+        "verified_rewrites": 62796,
+        "accepted_rewrites": 62792,
+        "worst_process_infidelity": 5.551115123125783e-15,
+        "worst_accepted_process_infidelity": 5.551115123125783e-15,
+        "candidate_tolerance_misses": 0,
+        "accepted_spectral_error_bound": 3.1280775773274673e-07,
+        "replayed_native_rounds": 66,
+        "replayed_bqskit_invocations": 0,
+        "replayed_pam_routing_passes": 0,
+        "replayed_placement_passes": 0,
+        "replayed_qiskit_sabre_passes": 0,
+        "replayed_exact_osr_routing_passes": 1,
+        "replayed_squander_sabre_passes": 0,
+        "replayed_bqskit_stages": 0,
+        "chained_bqskit_events": 0,
+        "replayed_whole_circuit_transitions": 133,
+        "final_circuit_sha256": "71be2af136e482af4128d21412e32d1b4e2ef02f95fd9d841b344a89e14fd38d"
+      },
+      "raw_initial_mapping": [
+        0,
+        2,
+        4,
+        6,
+        8,
+        10,
+        12,
+        14,
+        16,
+        18,
+        20,
+        22,
+        24,
+        26,
+        28,
+        30,
+        32,
+        34,
+        36,
+        38,
+        40,
+        42,
+        43,
+        1,
+        3,
+        5,
+        7,
+        9,
+        11,
+        13,
+        15,
+        17,
+        19,
+        21,
+        23,
+        25,
+        27,
+        29,
+        31,
+        33,
+        35,
+        37,
+        39,
+        41,
+        44
+      ],
+      "raw_final_mapping": [
+        0,
+        2,
+        3,
+        5,
+        7,
+        9,
+        11,
+        13,
+        15,
+        17,
+        19,
+        21,
+        23,
+        25,
+        27,
+        29,
+        32,
+        34,
+        36,
+        38,
+        40,
+        43,
+        42,
+        1,
+        4,
+        6,
+        8,
+        10,
+        12,
+        14,
+        16,
+        18,
+        20,
+        22,
+        24,
+        26,
+        28,
+        30,
+        31,
+        33,
+        35,
+        37,
+        39,
+        41,
+        44
+      ]
     }
   },
   "grover_61.qasm": {
@@ -3807,20 +5594,24 @@
       }
     },
     "final": {
-      "cnot_equiv": 697,
-      "single_qubit": 1958,
-      "total_raw": 2655,
+      "cnot_equiv": 633,
+      "single_qubit": 1614,
+      "total_raw": 2247,
       "qubits": 61,
       "gate_breakdown": {
-        "CNOT": 697,
-        "U3": 1958
+        "CNOT": 633,
+        "H": 9,
+        "T": 5,
+        "Tdg": 1,
+        "U3": 1597,
+        "X": 2
       }
     },
     "timing": {
       "a2a": 153.53,
-      "routing": 629.11,
-      "optimization": 232.05,
-      "total": 1014.69
+      "routing": 2335.07,
+      "optimization": 263.68,
+      "total": 2752.29
     },
     "all_to_all": {
       "cnot_equiv": 439,
@@ -3837,14 +5628,18 @@
       }
     },
     "routed": {
-      "cnot_equiv": 761,
-      "single_qubit": 1507,
-      "total_raw": 2148,
+      "cnot_equiv": 635,
+      "single_qubit": 1616,
+      "total_raw": 2245,
       "qubits": 61,
       "gate_breakdown": {
-        "CNOT": 581,
-        "SWAP": 60,
-        "U3": 1507
+        "CNOT": 626,
+        "H": 14,
+        "SWAP": 3,
+        "T": 8,
+        "Tdg": 2,
+        "U3": 1589,
+        "X": 3
       }
     },
     "routing_osr_catalog": {
@@ -3860,22 +5655,22 @@
     "rewrite_audit": {
       "schema_version": 2,
       "file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_TreeSearch/grover_61.audit.json.gz",
-      "sha256": "0b7adee8251bf839ed38aa00e300bf4153a3feb47fa8de8e2c88db1f88d1a89e",
+      "sha256": "de454457d25d8896c756fb40f5120d14060a137c48e1cc2d8ff2c2e5f03ad992",
       "summary": {
-        "events": 250058,
-        "rewrites": 249545,
-        "accepted_rewrites": 246657,
-        "failed_synthesis_attempts": 214,
+        "events": 120218,
+        "rewrites": 119884,
+        "accepted_rewrites": 119880,
+        "failed_synthesis_attempts": 153,
         "fallbacks": 0,
         "candidate_tolerance_misses": 0
       },
-      "verified_rewrites": 249545,
-      "accepted_rewrites": 246657,
-      "worst_process_infidelity": 4.59154936294226e-11,
-      "worst_accepted_process_infidelity": 1.3078427230084344e-13,
+      "verified_rewrites": 119884,
+      "accepted_rewrites": 119880,
+      "worst_process_infidelity": 4.440892098500626e-16,
+      "worst_accepted_process_infidelity": 4.440892098500626e-16,
       "candidate_tolerance_misses": 0,
-      "accepted_spectral_error_bound": 1.25103065294387e-06,
-      "replayed_native_rounds": 149,
+      "accepted_spectral_error_bound": 2.9966620118109757e-07,
+      "replayed_native_rounds": 90,
       "replayed_bqskit_invocations": 0,
       "replayed_pam_routing_passes": 0,
       "replayed_placement_passes": 0,
@@ -3884,8 +5679,204 @@
       "replayed_squander_sabre_passes": 0,
       "replayed_bqskit_stages": 0,
       "chained_bqskit_events": 0,
-      "replayed_whole_circuit_transitions": 299,
-      "final_circuit_sha256": "4f8b39b1fc16a01360218e68e8f366e4369a545f4443761a0ad954c5a0f64adc"
+      "replayed_whole_circuit_transitions": 181,
+      "final_circuit_sha256": "96a793c3930a66994cdf967e673d06248059bbeb501878e514475f4ae1a31629"
+    },
+    "routing_replay": {
+      "policy": "cached-pam-cover-and-packing-v1",
+      "timing_basis": "archived-complete-run-plus-measured-extension",
+      "original_timing": {
+        "a2a": 153.53,
+        "routing": 629.11,
+        "optimization": 232.05,
+        "total": 1014.69
+      },
+      "archived_audit_sha256": "0b7adee8251bf839ed38aa00e300bf4153a3feb47fa8de8e2c88db1f88d1a89e",
+      "archived_routing_audit_sha256": "0b7adee8251bf839ed38aa00e300bf4153a3feb47fa8de8e2c88db1f88d1a89e",
+      "archived_catalog_sha256": "aeeb7a4af187f156a5c0271a3467c43349a4847e2a4f3217dcaea8533cd59f4b",
+      "routing_seconds": 1705.9647218091413,
+      "a2a_reused": true,
+      "catalogue_synthesis_reused": true,
+      "route_bit_identical": false,
+      "new_routing_synthesis_calls": 0,
+      "implementation_sha256": {
+        "benchmarks/partitioning/replay_routing.py": "51e9bc944d1222b0b62a303ba1d9b4fa50ca7a2fa254ce243d6dbf0bbab4b7cc",
+        "squander/partitioning/routing.py": "b782cd9ce59e7cc94cd32f1d0adff55fdda560aef29f51c0fb40ac00099390fd",
+        "squander/partitioning/_routing_catalog_replay.py": "d79d687edb00afae2e172d9d5cd4ad742ca8073833a85e75475cb769de9407b7"
+      },
+      "runtime_limits": {
+        "address_space_gib": 96
+      },
+      "final_implementation_sha256": {
+        "benchmarks/partitioning/replay_routing.py": "51e9bc944d1222b0b62a303ba1d9b4fa50ca7a2fa254ce243d6dbf0bbab4b7cc",
+        "squander/partitioning/ilp.py": "899e7c6e4e72379ff8f7b9300baa03b7d135775eb87cf4e3ba5cb43624a1e8ad",
+        "squander/decomposition/qgd_Wide_Circuit_Optimization.py": "3ca9a0bdd9b685cdd74e46ac2644c5817886615d706aa01a6f1a223532f7a280"
+      },
+      "final_reused": false,
+      "final_seconds": 31.632484182715416,
+      "candidate_final": {
+        "cnot_equiv": 633,
+        "single_qubit": 1614,
+        "total_raw": 2247,
+        "qubits": 61,
+        "gate_breakdown": {
+          "CNOT": 633,
+          "H": 9,
+          "T": 5,
+          "Tdg": 1,
+          "U3": 1597,
+          "X": 2
+        }
+      },
+      "candidate_adopted": true,
+      "candidate_qasm": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_TreeSearch/grover_61.replay-candidate.qasm",
+      "candidate_audit": {
+        "file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_TreeSearch/grover_61.replay-candidate.audit.json.gz",
+        "sha256": "de454457d25d8896c756fb40f5120d14060a137c48e1cc2d8ff2c2e5f03ad992",
+        "verified_rewrites": 119884,
+        "accepted_rewrites": 119880,
+        "worst_process_infidelity": 4.440892098500626e-16,
+        "worst_accepted_process_infidelity": 4.440892098500626e-16,
+        "candidate_tolerance_misses": 0,
+        "accepted_spectral_error_bound": 2.9966620118109757e-07,
+        "replayed_native_rounds": 90,
+        "replayed_bqskit_invocations": 0,
+        "replayed_pam_routing_passes": 0,
+        "replayed_placement_passes": 0,
+        "replayed_qiskit_sabre_passes": 0,
+        "replayed_exact_osr_routing_passes": 1,
+        "replayed_squander_sabre_passes": 0,
+        "replayed_bqskit_stages": 0,
+        "chained_bqskit_events": 0,
+        "replayed_whole_circuit_transitions": 181,
+        "final_circuit_sha256": "96a793c3930a66994cdf967e673d06248059bbeb501878e514475f4ae1a31629"
+      },
+      "raw_initial_mapping": [
+        0,
+        2,
+        4,
+        6,
+        8,
+        10,
+        12,
+        14,
+        16,
+        18,
+        20,
+        22,
+        24,
+        26,
+        28,
+        30,
+        32,
+        34,
+        36,
+        38,
+        40,
+        42,
+        44,
+        46,
+        48,
+        50,
+        52,
+        54,
+        56,
+        58,
+        59,
+        1,
+        3,
+        5,
+        7,
+        9,
+        11,
+        13,
+        15,
+        17,
+        19,
+        21,
+        23,
+        25,
+        27,
+        29,
+        31,
+        33,
+        35,
+        37,
+        39,
+        41,
+        43,
+        45,
+        47,
+        49,
+        51,
+        53,
+        55,
+        57,
+        60
+      ],
+      "raw_final_mapping": [
+        0,
+        2,
+        3,
+        6,
+        7,
+        10,
+        11,
+        14,
+        15,
+        17,
+        19,
+        21,
+        23,
+        25,
+        27,
+        29,
+        31,
+        33,
+        35,
+        37,
+        39,
+        41,
+        43,
+        45,
+        48,
+        50,
+        52,
+        54,
+        56,
+        59,
+        58,
+        1,
+        4,
+        5,
+        8,
+        9,
+        12,
+        13,
+        16,
+        18,
+        20,
+        22,
+        24,
+        26,
+        28,
+        30,
+        32,
+        34,
+        36,
+        38,
+        40,
+        42,
+        44,
+        46,
+        47,
+        49,
+        51,
+        53,
+        55,
+        57,
+        60
+      ]
     }
   },
   "grover_81.qasm": {
@@ -3991,20 +5982,20 @@
       }
     },
     "final": {
-      "cnot_equiv": 937,
-      "single_qubit": 2638,
-      "total_raw": 3575,
+      "cnot_equiv": 857,
+      "single_qubit": 2171,
+      "total_raw": 3028,
       "qubits": 81,
       "gate_breakdown": {
-        "CNOT": 937,
-        "U3": 2638
+        "CNOT": 857,
+        "U3": 2171
       }
     },
     "timing": {
       "a2a": 274.04,
-      "routing": 1518.35,
-      "optimization": 383.29,
-      "total": 2175.68
+      "routing": 4013.74,
+      "optimization": 418.07,
+      "total": 4705.85
     },
     "all_to_all": {
       "cnot_equiv": 589,
@@ -4021,14 +6012,14 @@
       }
     },
     "routed": {
-      "cnot_equiv": 1021,
-      "single_qubit": 2027,
-      "total_raw": 2888,
+      "cnot_equiv": 859,
+      "single_qubit": 2165,
+      "total_raw": 3018,
       "qubits": 81,
       "gate_breakdown": {
-        "CNOT": 781,
-        "SWAP": 80,
-        "U3": 2027
+        "CNOT": 850,
+        "SWAP": 3,
+        "U3": 2165
       }
     },
     "routing_osr_catalog": {
@@ -4044,22 +6035,22 @@
     "rewrite_audit": {
       "schema_version": 2,
       "file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_TreeSearch/grover_81.audit.json.gz",
-      "sha256": "405c1e6bd44874f4edf9488075c529775691f8946950376b3d03ab33531590b0",
+      "sha256": "5d6d421d31410b0efc7fd6cbafc82c4705787bcbc70135bd745222f2091e950b",
       "summary": {
-        "events": 446361,
-        "rewrites": 445749,
-        "accepted_rewrites": 442902,
-        "failed_synthesis_attempts": 213,
+        "events": 217367,
+        "rewrites": 216984,
+        "accepted_rewrites": 216980,
+        "failed_synthesis_attempts": 142,
         "fallbacks": 0,
         "candidate_tolerance_misses": 0
       },
-      "verified_rewrites": 445749,
-      "accepted_rewrites": 442902,
-      "worst_process_infidelity": 4.59154936294226e-11,
-      "worst_accepted_process_infidelity": 1.3078427230084344e-13,
+      "verified_rewrites": 216984,
+      "accepted_rewrites": 216980,
+      "worst_process_infidelity": 5.551115123125783e-15,
+      "worst_accepted_process_infidelity": 5.551115123125783e-15,
       "candidate_tolerance_misses": 0,
-      "accepted_spectral_error_bound": 1.4750226458263818e-06,
-      "replayed_native_rounds": 199,
+      "accepted_spectral_error_bound": 4.837353252634e-07,
+      "replayed_native_rounds": 120,
       "replayed_bqskit_invocations": 0,
       "replayed_pam_routing_passes": 0,
       "replayed_placement_passes": 0,
@@ -4068,8 +6059,239 @@
       "replayed_squander_sabre_passes": 0,
       "replayed_bqskit_stages": 0,
       "chained_bqskit_events": 0,
-      "replayed_whole_circuit_transitions": 399,
-      "final_circuit_sha256": "1cceaa6ec5eb6c9dab7966d682f09380eb466c5d5c7d49b55a4c39c08ccdcb7e"
+      "replayed_whole_circuit_transitions": 241,
+      "final_circuit_sha256": "23506b1e31d3552cfa3730918bf3d474830bceb5004937f2edd45cb74ac0ba7b"
+    },
+    "routing_replay": {
+      "policy": "cached-pam-cover-and-packing-v1",
+      "timing_basis": "archived-complete-run-plus-measured-extension",
+      "original_timing": {
+        "a2a": 274.04,
+        "routing": 1518.35,
+        "optimization": 383.29,
+        "total": 2175.68
+      },
+      "archived_audit_sha256": "405c1e6bd44874f4edf9488075c529775691f8946950376b3d03ab33531590b0",
+      "archived_catalog_sha256": "4af573285d166c15ecb1cc15db0d3ff2c480bc1831251808b743ebdc203ae73e",
+      "routing_seconds": 2495.3929103566334,
+      "a2a_reused": true,
+      "catalogue_synthesis_reused": true,
+      "route_bit_identical": false,
+      "new_routing_synthesis_calls": 0,
+      "implementation_sha256": {
+        "benchmarks/partitioning/replay_routing.py": "5ec026b260db687f5065ed8bb7219aed7dc7134f595c58ef47b1f767490e78c4",
+        "squander/partitioning/routing.py": "b782cd9ce59e7cc94cd32f1d0adff55fdda560aef29f51c0fb40ac00099390fd",
+        "squander/partitioning/_routing_catalog_replay.py": "d79d687edb00afae2e172d9d5cd4ad742ca8073833a85e75475cb769de9407b7"
+      },
+      "runtime_limits": {
+        "address_space_gib": 96
+      },
+      "final_implementation_sha256": {
+        "benchmarks/partitioning/replay_routing.py": "51e9bc944d1222b0b62a303ba1d9b4fa50ca7a2fa254ce243d6dbf0bbab4b7cc",
+        "squander/partitioning/ilp.py": "899e7c6e4e72379ff8f7b9300baa03b7d135775eb87cf4e3ba5cb43624a1e8ad",
+        "squander/decomposition/qgd_Wide_Circuit_Optimization.py": "3ca9a0bdd9b685cdd74e46ac2644c5817886615d706aa01a6f1a223532f7a280"
+      },
+      "final_reused": false,
+      "final_seconds": 34.77648075949401,
+      "candidate_final": {
+        "cnot_equiv": 857,
+        "single_qubit": 2171,
+        "total_raw": 3028,
+        "qubits": 81,
+        "gate_breakdown": {
+          "CNOT": 857,
+          "U3": 2171
+        }
+      },
+      "candidate_adopted": true,
+      "candidate_qasm": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_TreeSearch/grover_81.replay-candidate.qasm",
+      "candidate_audit": {
+        "file": "benchmarks/partitioning/QASMBenchmarks_results_3qbit_TreeSearch/grover_81.replay-candidate.audit.json.gz",
+        "sha256": "5d6d421d31410b0efc7fd6cbafc82c4705787bcbc70135bd745222f2091e950b",
+        "verified_rewrites": 216984,
+        "accepted_rewrites": 216980,
+        "worst_process_infidelity": 5.551115123125783e-15,
+        "worst_accepted_process_infidelity": 5.551115123125783e-15,
+        "candidate_tolerance_misses": 0,
+        "accepted_spectral_error_bound": 4.837353252634e-07,
+        "replayed_native_rounds": 120,
+        "replayed_bqskit_invocations": 0,
+        "replayed_pam_routing_passes": 0,
+        "replayed_placement_passes": 0,
+        "replayed_qiskit_sabre_passes": 0,
+        "replayed_exact_osr_routing_passes": 1,
+        "replayed_squander_sabre_passes": 0,
+        "replayed_bqskit_stages": 0,
+        "chained_bqskit_events": 0,
+        "replayed_whole_circuit_transitions": 241,
+        "final_circuit_sha256": "23506b1e31d3552cfa3730918bf3d474830bceb5004937f2edd45cb74ac0ba7b"
+      },
+      "raw_initial_mapping": [
+        0,
+        2,
+        4,
+        6,
+        8,
+        10,
+        12,
+        14,
+        16,
+        18,
+        20,
+        22,
+        24,
+        26,
+        28,
+        30,
+        32,
+        34,
+        36,
+        38,
+        40,
+        42,
+        44,
+        46,
+        48,
+        50,
+        52,
+        54,
+        56,
+        58,
+        60,
+        62,
+        64,
+        66,
+        68,
+        70,
+        72,
+        74,
+        76,
+        78,
+        79,
+        1,
+        3,
+        5,
+        7,
+        9,
+        11,
+        13,
+        15,
+        17,
+        19,
+        21,
+        23,
+        25,
+        27,
+        29,
+        31,
+        33,
+        35,
+        37,
+        39,
+        41,
+        43,
+        45,
+        47,
+        49,
+        51,
+        53,
+        55,
+        57,
+        59,
+        61,
+        63,
+        65,
+        67,
+        69,
+        71,
+        73,
+        75,
+        77,
+        80
+      ],
+      "raw_final_mapping": [
+        0,
+        2,
+        3,
+        5,
+        7,
+        9,
+        11,
+        13,
+        15,
+        17,
+        19,
+        21,
+        23,
+        25,
+        27,
+        29,
+        31,
+        33,
+        35,
+        37,
+        39,
+        41,
+        43,
+        45,
+        47,
+        49,
+        51,
+        53,
+        55,
+        57,
+        59,
+        61,
+        63,
+        65,
+        67,
+        70,
+        72,
+        74,
+        76,
+        79,
+        78,
+        1,
+        4,
+        6,
+        8,
+        10,
+        12,
+        14,
+        16,
+        18,
+        20,
+        22,
+        24,
+        26,
+        28,
+        30,
+        32,
+        34,
+        36,
+        38,
+        40,
+        42,
+        44,
+        46,
+        48,
+        50,
+        52,
+        54,
+        56,
+        58,
+        60,
+        62,
+        64,
+        66,
+        68,
+        69,
+        71,
+        73,
+        75,
+        77,
+        80
+      ]
     }
   },
   "quantum_volume_n40_d20_i0.qasm": {
@@ -4187,9 +6409,9 @@
     },
     "timing": {
       "a2a": 4208.93,
-      "routing": 8928.05,
+      "routing": 13591.14,
       "optimization": 36156.92,
-      "total": 49293.92
+      "total": 53957.01
     },
     "all_to_all": {
       "cnot_equiv": 1170,
@@ -4253,6 +6475,33 @@
       "chained_bqskit_events": 0,
       "replayed_whole_circuit_transitions": 1665,
       "final_circuit_sha256": "becfaf3d80653390e1c4c4f617a57cc0058ec0e560526db6d7bd70fa28639811"
+    },
+    "routing_replay": {
+      "policy": "cached-pam-cover-and-packing-v1",
+      "timing_basis": "archived-complete-run-plus-measured-extension",
+      "original_timing": {
+        "a2a": 4208.93,
+        "routing": 8928.05,
+        "optimization": 36156.92,
+        "total": 49293.92
+      },
+      "archived_audit_sha256": "893982bac4170216786c175247e3fc2234a6144ce8b127d93f560d10cbe73ecd",
+      "archived_catalog_sha256": "de18f733e31143ac611d65242326a3a6bf8ceb5771d93a5da5aaaa864cfb424b",
+      "routing_seconds": 4663.093398270197,
+      "a2a_reused": true,
+      "catalogue_synthesis_reused": true,
+      "route_bit_identical": true,
+      "new_routing_synthesis_calls": 0,
+      "implementation_sha256": {
+        "benchmarks/partitioning/replay_routing.py": "290d7e293201be9f8c4ba67a28133d5d5c7817922f67c0f9efa143307d22dba5",
+        "squander/partitioning/routing.py": "b782cd9ce59e7cc94cd32f1d0adff55fdda560aef29f51c0fb40ac00099390fd",
+        "squander/partitioning/_routing_catalog_replay.py": "b114502d257740b058134890b6fc3fa37f291ea9dfcd97d69285dfa7b5df36b7"
+      },
+      "final_reused": true,
+      "final_seconds": 0.0,
+      "final_implementation_sha256": {
+        "squander/partitioning/ilp.py": "bca18fdc6549a1395ca2e06a9e581679eee1d299edf892d668520da36472848e"
+      }
     }
   },
   "multiplier_n75.qasm": {

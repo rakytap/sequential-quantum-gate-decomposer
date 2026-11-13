@@ -608,6 +608,41 @@ def sol_to_badsccs(g, allparts, L):
     _, scc = scc_tarjan_iterative(G_part)
     return {frozenset(v) for v in scc if len(v) > 1}
 
+def _binary_partition_cover(values, allparts, gates, tolerance=1e-5):
+    """Read an integer incumbent only if it covers every gate exactly once."""
+    import math
+    selected = []
+    covered = set()
+    for index, value in enumerate(values):
+        if value is None or not math.isfinite(value):
+            return None
+        integer = round(value)
+        if integer not in (0, 1) or abs(value - integer) > tolerance:
+            return None
+        if integer:
+            part = allparts[index]
+            if covered.intersection(part):
+                return None
+            covered.update(part)
+            selected.append(index)
+    return selected if covered == set(gates) else None
+
+
+def _singleton_cover_start(allparts, gates, weights):
+    """Seed a convex block plus singleton remainder for solver recovery."""
+    singletons = {next(iter(part)): i for i, part in enumerate(allparts) if len(part) == 1}
+    if set(singletons) != set(gates):
+        return None
+    selected = set(singletons.values())
+    if weights is not None and allparts:
+        best = min(range(len(allparts)), key=lambda i:
+                   weights[i] - sum(weights[singletons[g]] for g in allparts[i]))
+        if weights[best] < sum(weights[singletons[g]] for g in allparts[best]):
+            selected.difference_update(singletons[g] for g in allparts[best])
+            selected.add(best)
+    return selected
+
+
 def ilp_global_optimal(
     allparts,
     g,
@@ -871,7 +906,21 @@ def ilp_global_optimal(
                 use_gurobi = False
         else:
             prob.solve(cbc_solver(pulp, msg=False))
-        L = [i for i in range(N) if int(round(pulp.value(x[i])))]
+        L = _binary_partition_cover([pulp.value(x[i]) for i in range(N)], allparts, g)
+        if L is None:
+            # A timed-out solve can leave the fractional LP relaxation in x.
+            # Rounding it silently drops gates and later breaks chain fusion.
+            # Retry the same model with a valid incumbent and one CBC thread;
+            # do not accept a fractional or incomplete cover as a partition.
+            start = _singleton_cover_start(allparts, g, weights) if weighted_info is None else None
+            if start is not None:
+                for i in range(N):
+                    x[i].setInitialValue(int(i in start))
+            prob.solve(cbc_solver(pulp, msg=False, threads=1, warmStart=start is not None))
+            use_gurobi = False
+            L = _binary_partition_cover([pulp.value(x[i]) for i in range(N)], allparts, g)
+            if L is None:
+                raise RuntimeError("Partition solver returned no integral complete cover.")
         badsccs = sol_to_badsccs(g, allparts, L)
         if not badsccs: break #if all partitions do not have any cycles with more than one element per SCC terminate
         for badscc in badsccs:
