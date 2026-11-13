@@ -13,8 +13,18 @@ def test_fractional_timeout_retries_with_complete_integer_incumbent(monkeypatch)
 
     class FractionalTimeout(pulp.LpSolver):
         def actualSolve(self, problem, **kwargs):
+            solve_status = getattr(pulp, "LpSolveStatus", None)
+            if solve_status is not None:
+                from pulp.apis.core import clocks
+
+                start = clocks()
             for variable in problem.variables():
                 variable.varValue = 0.5
+            if solve_status is not None:
+                # PuLP 4 returns solve statistics instead of problem.status.
+                return self.buildStats(
+                    problem, solve_status.TimeLimit, False, start=start
+                )
             problem.status = pulp.LpStatusNotSolved
             return problem.status
 
