@@ -5,6 +5,18 @@
 [Revised manuscript](../symbolic_manuscript/manuscript.pdf) ·
 [Full review bundle](../symbolic_manuscript/review-package.zip)
 
+[Browser atlas](../atlas/index.html) covers the same gate and basis grid. Select a
+target, a native basis, and a phase mode to see the archived circuit and export
+OpenQASM 3. Parameterized results export as reusable gate definitions where
+supported. Formulas that require branch evaluation export at specified values.
+
+Download `docs/atlas/index.html` and open it in a modern browser for an offline
+preview. To preview over HTTP, run `python -m http.server --bind 127.0.0.1 8765
+--directory docs` from the repository root and open
+`http://127.0.0.1:8765/atlas/`. To regenerate the page with SymPy installed, run
+`python examples/decomposition/symbolic_atlas_web/build.py`. The builder checks
+the archive hash against the PDF data.
+
 The current archive is `synthesis_reference_20261107_referee.json.gz`.
 The gate volume has 327 indexed target sheets with 32 presets per target;
 its expression glossaries add continuation pages (see `build-report.json` for the current total). The separate Clifford
