@@ -130,6 +130,15 @@ set_target_properties(_density_matrix_cpp PROPERTIES
     OUTPUT_NAME "_density_matrix_cpp"
 )
 
+# The installed module lives one directory below the bundled libqgd.so.
+# Without this relative RPATH, imports and auditwheel treat it as an unresolved
+# external dependency once CMake removes the build-tree RPATH on installation.
+if(UNIX AND NOT APPLE)
+    set_target_properties(_density_matrix_cpp PROPERTIES
+        INSTALL_RPATH "$ORIGIN/.."
+    )
+endif()
+
 # ===================================================================
 # Tests (C++)
 # ===================================================================

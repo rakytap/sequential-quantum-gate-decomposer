@@ -2,6 +2,32 @@
 
 This directory contains scripts for building and packaging the squander package.
 
+## check_wheel_records.py
+
+Check every wheel's archived files against its `RECORD`, without installing or
+modifying the wheel:
+
+```bash
+python .github/scripts/check_wheel_records.py "dist/*.whl"
+```
+
+The check verifies file coverage, hashes, and byte sizes, and rejects missing or
+duplicate entries. Quoted glob patterns work in both Bash and PowerShell. A
+missing wheel or any mismatch fails the command. Release jobs run it after
+repair and again on collected artifacts immediately before PyPI/TestPyPI upload.
+
+macOS repair edits binaries and adds bundled libraries. It must finish with
+`python -m wheel pack`, which regenerates `RECORD`; plain `zip` retains stale
+hashes. See the [wheel pack documentation](https://wheel.readthedocs.io/en/stable/reference/wheel_pack.html)
+and the [wheel file specification](https://packaging.python.org/en/latest/specifications/binary-distribution-format/).
+
+On Linux, native extensions must retain an install RPATH to the bundled
+`squander/libqgd.so` (for modules in a child directory, `$ORIGIN/..`). The
+packaging tests build and install a small module with the production density
+matrix CMake rules, repair its wheel with auditwheel, and load the relocated
+module without `LD_LIBRARY_PATH`. The manylinux job stops on repair failure and
+only replaces original wheels after the repaired RECORDs pass verification.
+
 ## build_wheel.sh
 
 Creates a minimal conda environment, builds a wheel, and fixes it with auditwheel (Linux only).
@@ -40,7 +66,8 @@ PYTHON_VERSION=3.11 ENV_NAME=squander-py311 ./.github/scripts/build_wheel.sh
 3. Installs Python build tools (build, setuptools, wheel, scikit-build, auditwheel)
 4. Builds the wheel using `python -m build --wheel`
 5. Repairs the wheel with `auditwheel repair` to bundle dependencies
-6. Outputs the repaired wheel to `dist/` directory
+6. Verifies all wheel files against their `RECORD` hashes and sizes
+7. Outputs the repaired wheel to `dist/` directory
 
 ### Output
 

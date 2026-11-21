@@ -119,22 +119,22 @@ jobs:
       - name: Install build dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install build setuptools wheel scikit-build ninja numpy
+          python -m pip install --upgrade build setuptools wheel scikit-build ninja numpy
 
       - name: Install wheel repair tools (Linux)
         if: runner.os == 'Linux'
         run: |
-          python -m pip install auditwheel
+          python -m pip install --upgrade auditwheel
 
       - name: Install wheel repair tools (macOS)
         if: runner.os == 'macOS'
         run: |
-          python -m pip install delocate
+          python -m pip install --upgrade delocate
 
       - name: Install wheel repair tools (Windows)
         if: runner.os == 'Windows'
         run: |
-          python -m pip install delvewheel
+          python -m pip install --upgrade delvewheel
 
       - name: Set environment variables (Linux)
         if: runner.os == 'Linux'
@@ -176,7 +176,9 @@ jobs:
           for wheel in dist/*.whl; do
             if [[ "$wheel" != *"wheelhouse"* ]]; then
               # Extract wheel
-              temp_dir=$(mktemp -d)
+              work_dir=$(mktemp -d)
+              temp_dir="$work_dir/unpacked"
+              mkdir "$temp_dir" "$work_dir/repaired"
               wheel_name=$(basename "$wheel")
               unzip -q "$wheel" -d "$temp_dir"
               
@@ -185,7 +187,7 @@ jobs:
               
               if [ -z "$libqgd_path" ]; then
                 echo "ERROR: libqgd.dylib not found in wheel"
-                rm -rf "$temp_dir"
+                rm -rf "$work_dir"
                 exit 1
               fi
               
@@ -203,17 +205,14 @@ jobs:
               # Now run delocate-path to handle external dependencies
               delocate-path "$temp_dir"
               
-              # Rebuild wheel in temp_dir
-              (cd "$temp_dir" && zip -q -r "$wheel_name" .)
-              
-              # Remove original wheel first
-              rm -f "$wheel"
-              
-              # Move repaired wheel to dist/
-              mv "$temp_dir/$wheel_name" "dist/$wheel_name"
+              # Recompute every RECORD hash/size, including bundled libraries.
+              # Plain zip leaves the pre-repair RECORD stale.
+              python -m wheel pack "$temp_dir" --dest-dir "$work_dir/repaired"
+              python .github/scripts/check_wheel_records.py "$work_dir/repaired/$wheel_name"
+              mv -f "$work_dir/repaired/$wheel_name" "$wheel"
               
               # Clean up
-              rm -rf "$temp_dir"
+              rm -rf "$work_dir"
             fi
           done
           
@@ -280,6 +279,34 @@ jobs:
           Write-Host "Repair complete. Wheels in dist/:"
           Get-ChildItem dist/*.whl | ForEach-Object { Write-Host "  $($_.Name)" }
 
+      - name: Check repaired Windows wheel
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $wheel = Get-ChildItem dist/*.whl | Select-Object -First 1
+          # Use an empty environment so build-time SDK installations cannot
+          # hide missing runtime dependencies in the wheel metadata.
+          $venv = Join-Path $env:RUNNER_TEMP 'squander-wheel-check'
+          python -m venv --clear $venv
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $wheelPython = Join-Path $venv 'Scripts/python.exe'
+          & $wheelPython -m pip install $wheel.FullName
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & $wheelPython -m pip check
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          # Import the installed wheel, not native binaries in the checkout.
+          $check = Join-Path $PWD 'tests/check_windows_wheel.py'
+          Push-Location $env:RUNNER_TEMP
+          try {
+            & $wheelPython $check --require-venv
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          } finally {
+            Pop-Location
+          }
+
+      - name: Verify repaired wheel RECORDs
+        run: python .github/scripts/check_wheel_records.py "dist/*.whl"
+
       - name: Upload wheel artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -303,11 +330,12 @@ jobs:
         run: |
           docker run --rm -v ${{ github.workspace }}:/io \
             quay.io/pypa/${{ matrix.image }} \
-            /bin/bash -c "
+            /bin/bash -e -c "
               yum install -y cmake tbb-devel openblas-devel lapack-devel
               PYTHON_TAG=$(echo '${{ matrix.python-version }}' | tr -d '.')
+              export PATH=/opt/python/cp\${PYTHON_TAG}-cp\${PYTHON_TAG}/bin:\${PATH}
               /opt/python/cp\${PYTHON_TAG}-cp\${PYTHON_TAG}/bin/pip install --upgrade pip
-              /opt/python/cp\${PYTHON_TAG}-cp\${PYTHON_TAG}/bin/pip install build setuptools wheel scikit-build ninja numpy auditwheel
+              /opt/python/cp\${PYTHON_TAG}-cp\${PYTHON_TAG}/bin/pip install --upgrade build setuptools wheel scikit-build ninja numpy auditwheel
               
               # Find TBB library location
               TBB_LIB_PATH=\$(find /usr -name 'libtbb.so*' 2>/dev/null | head -1 | xargs dirname)
@@ -348,9 +376,15 @@ jobs:
               /opt/python/cp\${PYTHON_TAG}-cp\${PYTHON_TAG}/bin/python -m build --wheel
               
               # Repair wheel - auditwheel should now find TBB in /usr/lib64
-              /opt/python/cp\${PYTHON_TAG}-cp\${PYTHON_TAG}/bin/auditwheel repair dist/*.whl -w dist/
+              /opt/python/cp\${PYTHON_TAG}-cp\${PYTHON_TAG}/bin/auditwheel repair dist/*.whl -w wheelhouse/
+              /opt/python/cp\${PYTHON_TAG}-cp\${PYTHON_TAG}/bin/python .github/scripts/check_wheel_records.py 'wheelhouse/*.whl'
+              # Keep the original until repair and RECORD verification succeed.
               rm -f dist/*linux_x86_64.whl
+              mv wheelhouse/*.whl dist/
             "
+
+      - name: Verify repaired wheel RECORDs
+        run: python .github/scripts/check_wheel_records.py "dist/*.whl"
 
       - name: Upload wheel artifacts
         uses: actions/upload-artifact@v4
@@ -364,6 +398,9 @@ jobs:
     runs-on: ubuntu-latest
     if: needs.get-version.outputs.version != '' && github.event.inputs.target == 'pypi'
     steps:
+      - name: Checkout verification script
+        uses: actions/checkout@v4
+
       - name: Download all wheels
         uses: actions/download-artifact@v4
         with:
@@ -375,6 +412,9 @@ jobs:
         run: |
           echo "Wheels to be published:"
           ls -lh dist/*.whl || echo "No wheels found"
+
+      - name: Verify all wheel RECORDs before publishing
+        run: python .github/scripts/check_wheel_records.py "dist/*.whl"
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
@@ -402,6 +442,9 @@ jobs:
     runs-on: ubuntu-latest
     if: needs.get-version.outputs.version != '' && github.event.inputs.target == 'testpypi'
     steps:
+      - name: Checkout verification script
+        uses: actions/checkout@v4
+
       - name: Download all wheels
         uses: actions/download-artifact@v4
         with:
@@ -413,6 +456,9 @@ jobs:
         run: |
           echo "Wheels to be published to TestPyPI:"
           ls -lh dist/*.whl || echo "No wheels found"
+
+      - name: Verify all wheel RECORDs before publishing
+        run: python .github/scripts/check_wheel_records.py "dist/*.whl"
 
       - name: Publish to TestPyPI
         uses: pypa/gh-action-pypi-publish@release/v1
