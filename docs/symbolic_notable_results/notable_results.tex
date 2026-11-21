@@ -1,0 +1,115 @@
+\documentclass[11pt]{article}
+\usepackage[a4paper,margin=22mm]{geometry}
+\usepackage[T1]{fontenc}\usepackage{lmodern}
+\usepackage{amsmath,amssymb,booktabs,longtable,graphicx,qcircuit,hyperref}
+\title{Symbolic circuit reference: selected identities and comparisons}
+\author{Gregory Morse \and P\'eter Rakyta}\date{8 November 2026}
+\begin{document}\maketitle
+This appendix records exact identities and scoped comparisons. The revised
+manuscript and its current independent compiler table are authoritative.
+The atlas is not claimed to dominate every tool or publication.
+\section{Controlled fermionic SWAP}
+The literal CX/U3 circuit has four CNOTs and six locals. The interaction
+count is optimal among arbitrary Ising-class interactions without ancillas;
+the local count is an upper bound. BQSKit independently finds four-CNOT,
+six-local circuits, so discovering the upper bound is not a new compiler
+advantage. The lower theorem extends to all controlled balanced involutions.
+The three-qubit hardware family of Warren et al.\ is related physical
+context, not a proof of these CNOT counts~\cite{fermionic}.
+\section{Sycamore phase contract}
+For $\mathrm{SYC}=\mathrm{fSim}(\pi/2,\pi/6)$, the exact P/CX circuit and
+the projective Rz/CX circuit below each use three entanglers and three
+locals. In the Rz circuit, $\mathrm{SYC}=e^{-7i\pi/24}C$.
+The phase-polynomial certificate proves the three-phase lower bound only
+in the CNOT/P subalphabet; it does not establish an unrestricted local
+minimum. The former tomography-figure comparison has been withdrawn.
+\paragraph{cx\_h\_phase}\begin{center}\resizebox{.9\linewidth}{!}{\scalebox{1.0}{
+\Qcircuit @C=0.55em @R=0.5em @!R { \\
+                \nghost{{q}_{0} :  } & \lstick{{q}_{0} :  } & \gate{\operatorname{P}\left(-\,\frac{\pi}{12}\right)} & \ctrl{1} & \qw & \targ & \ctrl{1} & \qw & \qw\\
+                \nghost{{q}_{1} :  } & \lstick{{q}_{1} :  } & \gate{\operatorname{P}\left(-\,\frac{\pi}{12}\right)} & \targ & \gate{\operatorname{P}\left(-\,\frac{5\,\pi}{12}\right)} & \ctrl{-1} & \targ & \qw & \qw\\
+\\ }}}\end{center}
+\paragraph{ibm\_cx}\begin{center}\resizebox{.9\linewidth}{!}{\scalebox{1.0}{
+\Qcircuit @C=0.55em @R=0.5em @!R { \\
+                \nghost{{q}_{0} :  } & \lstick{{q}_{0} :  } & \gate{R_z\left(-\,\frac{\pi}{12}\right)} & \ctrl{1} & \qw & \targ & \ctrl{1} & \qw & \qw\\
+                \nghost{{q}_{1} :  } & \lstick{{q}_{1} :  } & \gate{R_z\left(-\,\frac{\pi}{12}\right)} & \targ & \gate{R_z\left(-\,\frac{5\,\pi}{12}\right)} & \ctrl{-1} & \targ & \qw & \qw\\
+\\ }}}\end{center}
+\section{Current independent fixed-target comparison}
+The table gives $E/L$ in CX/U3 and the best verified recorded route for each
+tool. Inputs are independent library words or target matrices, not the
+atlas output. A dash excludes all recorded outputs on that route that fail
+its replay threshold or budget. Quartz and QUESO optimize total NAM gates;
+their locals are then fused to U3 without changing the entangling skeleton.
+\begin{center}\small\begin{tabular}{lrrrrrr}\toprule
+Gate & Qiskit & tket & BQSKit & Quartz & QUESO & Exact atlas\\\midrule
+SYC & 3/8 & 3/7 & 3/4 & 4/5 & 4/5 & 3/3\\
+iSWAP & 2/3 & 2/4 & 2/4 & 2/3 & 2/3 & 2/3\\
+SSWAP & 3/8 & 3/7 & 3/5 & -- & 3/8 & 3/7\\
+fFredkin & 5/13 & 10/15 & 4/6 & 9/10 & 13/10 & 4/6\\
+CCX & 6/8 & 6/8 & 6/8 & 6/8 & 6/8 & 6/8\\
+CSWAP & 7/10 & 7/8 & 7/9 & 8/8 & 8/8 & 7/10\\
+C3X & 14/19 & 14/16 & 14/16 & 14/16 & 14/16 & 14/17\\
+C4X & 36/41 & 36/41 & -- & 30/33 & 36/36 & 36/41\\
+\bottomrule\end{tabular}\end{center}
+BQSKit matches fFredkin and beats the SSWAP local count. tket and
+BQSKit beat the C3X local count. Quartz's 30-CX C4X circuit beats the current
+36-CX atlas entry. These losses are retained. The earlier eleven SDK
+entangler wins were all fFredkin in different alphabets.
+\section{Historical broad local-count audit}
+The CSV files retain comparisons against the older, explicitly identified
+SDK routes, including source-fed routes. They are not comparisons against
+all compiler strategies. Counts and parameter-description score are different
+objectives; a smaller $L$ alone does not prove a better archived score.
+\begin{center}\begin{tabular}{lr}\toprule Historical status & Cells\\\midrule
+equal\_E\_equal\_locals & 2108\\
+equal\_E\_fewer\_locals & 553\\
+equal\_E\_more\_locals & 1\\
+fewer\_entanglers & 11\\
+\bottomrule\end{tabular}\end{center}
+\section{Established native bounds and proof scope}
+The universal two-B construction~\cite{b} and the SQiSW two-pulse Weyl
+region and three-pulse universal construction~\cite{sq} are prior results.
+The released exact charts implement them with explicit scalar handling and
+branch definitions. The new invariant iff proof rewrites the known SQiSW
+region; it is not a new universal pulse cap. The 192 one-qubit phase-resolved
+Clifford circuits are a finite reference, not a large unexplored class.
+\section{Reflection extension and native count certificates}
+The theory paper now gives normal forms for every spectral stratum of
+two-qubit involutions. Trace-$\pm2$ reflections interpolate between CCZ
+and Fredkin, with proved interior bounds of four to seven CNOTs and three
+to five unrestricted interactions. These are partial bounds, not an exact
+interior classification. The SQiSW result is presented as a polynomial
+reformulation of the known reachable region for symbolic-family reasoning.
+
+The five-unrestricted-gate reflection word is literal with the Schmidt angle
+free. The seven-CNOT family word is also exact, with only two varying local
+angles. The interior lower bounds remain open.
+
+The native library now has an exact two-SYC controlled-phase chart and a
+literal one-TK2 DCX circuit. Remaining SYC and square-root-SWAP gaps are
+annotated in the atlas. Exact monodromy certificates now settle minimum
+counts for all 64 fixed-target/native pairs in the audited subset, including
+five square-root-SWAPs for SYC. The stored six-pulse word retains its visible
+gap. These count proofs do not supply shortest local-frame words. Family
+sample certificates apply only to the named parameter substitution. Remaining TK2 gaps are
+flagged against its known Cartan capacity. The standalone supplement
+contains the gap ledger and complete empirical evaluation.
+\section{Reproduction}
+The companion JSON and CSVs retain archive hashes, exact identities, older
+comparison settings, and every local-count regression. The revised review
+bundle additionally includes the stronger SDK/Quartz/QUESO outputs, failures,
+optimality ledger, theorem checks, and both complete atlas PDFs and sources.
+UniversalQCompiler has no executed comparison because its licensed kernel
+was unavailable. No numerical sample proves a symbolic family identity or
+an unrestricted global minimum.
+\begin{thebibliography}{9}
+\bibitem{fermionic} C. W. Warren, J. Fern\'andez-Pend\'as, S. Ahmed, et al.,
+Extensive characterization and implementation of a family of three-qubit
+gates at the coherence limit, npj Quantum Information 9, 44 (2023),
+\href{https://doi.org/10.1038/s41534-023-00711-x}{doi:10.1038/s41534-023-00711-x}.
+\bibitem{b} J. Zhang, J. Vala, S. Sastry, and K. B. Whaley, Minimum
+construction of two-qubit quantum operations, Physical Review Letters 93,
+020502 (2004), \href{https://arxiv.org/abs/quant-ph/0312193}{arXiv:quant-ph/0312193}.
+\bibitem{sq} C. Huang et al., Quantum instruction set design for performance,
+Physical Review Letters 130, 070601 (2023),
+\href{https://arxiv.org/abs/2105.06074}{arXiv:2105.06074}.
+\end{thebibliography}\end{document}

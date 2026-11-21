@@ -1,0 +1,143 @@
+import importlib.util
+from pathlib import Path
+
+import pytest
+import sympy as sp
+
+from symbolic_bases import BASIS_SETS
+
+path = Path(__file__).resolve().parents[2] / "examples/decomposition/symbolic_circuit_atlas.py"
+spec = importlib.util.spec_from_file_location("symbolic_circuit_atlas", path)
+atlas = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(atlas)
+
+
+def test_gate_page_keeps_all_32_bases_and_alphabetical_target_order():
+    report = dict(rows=[dict(gate=name, basis=basis) for name, basis in
+                        [("SWAP", "cx_u"), ("CP", "cx_u"), ("CP", "zz_u")]])
+    assert atlas.ordered_targets(report) == ["CP", "SWAP"]
+    grid = atlas.gate_grid(report, "CP")
+    assert len(grid) == 32
+    assert [basis for basis, _ in grid] == sorted(BASIS_SETS)
+    assert sum(row is not None for _, row in grid) == 2
+    with pytest.raises(ValueError):
+        atlas.ordered_targets(report, ["invented"])
+
+
+def test_open_and_impossible_cases_never_acquire_a_drawn_circuit():
+    row = dict(phase_exact=dict(status="proved_impossible"),
+               projective=dict(status="timeout"))
+    assert atlas.phase_variants(row) == []
+    row["projective"] = dict(status="verified_symbolic", virtual_gp=dict(factor="I"))
+    assert [mode for mode, _ in atlas.phase_variants(row)] == ["projective"]
+
+
+def test_repeated_pulse_display_preserves_every_physical_operation():
+    operation = dict(gate="SYC", parameters=[], wires=[0, 1])
+    local = dict(gate="Rz", parameters=["theta"], wires=[0])
+    original = [operation] * 6 + [local] + [operation] * 2
+    compressed = atlas.compressed_operations(original)
+    assert [repeat for _, repeat in compressed] == [6, 1, 2]
+    assert [op for op, repeat in compressed for _ in range(repeat)] == original
+    assert r"\times 6" in atlas.operation_label(operation, 6)
+
+
+def test_parameter_names_do_not_turn_into_sympy_special_functions():
+    assert atlas.parameter_latex("gamma/2") == r"\frac{\gamma}{2}"
+    assert atlas.parameter_latex("beta + pi/8") == r"\beta + \frac{\pi}{8}"
+
+
+def test_qiskit_draws_exact_symbolic_math_and_operand_order():
+    pytest.importorskip("qiskit")
+    operations = [(dict(gate="Rzz", parameters=["gamma/2"], wires=[1, 0]), 1)]
+    source = atlas.qiskit_latex(2, operations)
+    assert r"R_{ZZ}" in source and r"\frac{\gamma}{2}" in source
+    assert r"\string^" not in source and r"\mathrm{$" not in source
+    assert "<<<{1}" in source and "<<<{0}" in source
+    with pytest.raises(ValueError, match="GP"):
+        atlas.qiskit_latex(1, [(dict(gate="GP", parameters=["theta"], wires=[0]), 1)])
+
+
+def test_long_exact_parameters_keep_a_glossary_definition(tmp_path):
+    store=atlas.CircuitStore(tmp_path)
+    expression="atan((sqrt(2-sqrt(2))-sqrt(2+sqrt(2)))/(-sqrt(2+sqrt(2))-sqrt(2-sqrt(2))))"
+    symbol=store.expression(expression)
+    assert symbol==r"\eta_{1}"
+    assert store.aliases[expression]==symbol
+    operation=dict(gate="U3",parameters=["pi",expression,expression],wires=[0])
+    paths=store.render(1,[operation])
+    source=(tmp_path/paths[0]).read_text()
+    assert r"\eta_{1}" in source
+    assert r"\operatorname{atan}" not in source
+
+
+def test_independent_pages_keep_fonts_and_bound_the_entire_panel():
+    source=atlas.preamble("Gate atlas")
+    preamble=source.split(r"\begin{document}")[0]
+    assert r"\AtBeginDocument{\renewcommand{\small}{\fontsize{14}{17}" in preamble
+    body=atlas.panel("circuit and status", "62mm")
+    assert r"\fitcontent{\dimexpr62mm-2mm\relax}{circuit and status}" in body
+
+
+def test_known_published_bound_gap_is_visible_on_the_gate_panel():
+    class Store:
+        aliases={}
+        def render(self,*args):return []
+    row=dict(phase_exact=dict(status="verified_symbolic",operations=[],
+             cost=dict(entanglers=6,single_qubit_gates=0,parameter_score="24")),
+             projective=None,projective_omitted_as_no_better=True,
+             literature_uniform_upper_bound_comparison=dict(modes=dict(phase_exact=dict(
+                 status="exceeds_published_uniform_bound",uniform_upper_bound=2))))
+    source=atlas.gate_panel(Store(),"berkeley_b",row,2)
+    assert r"Published uniform cap: $E\leq 2$" in source
+    assert "optimization remains" in source
+    assert "proved minimum" not in source
+
+
+def test_missing_clifford_phases_have_a_basis_preserving_obstruction():
+    from symbolic_clifford_search import group_data
+    state=group_data()[3]["I_q1"]
+    proof=atlas.clifford_phase_obstruction(state,BASIS_SETS["cx_rz_ry"])
+    assert proof["method"]=="one_wire_determinant_group"
+    assert proof["determinant_root_order"]==1
+    assert atlas.clifford_phase_obstruction(state,BASIS_SETS["clifford_only"]) is None
+
+
+def test_family_budget_label_is_distinct_from_a_fixed_target_minimum():
+    result = dict(cost=dict(entanglers=3, single_qubit_gates=4, parameter_score='20'))
+    fixed = dict(scope='fixed_target_minimum')
+    family = dict(scope='minimum_uniform_family_budget')
+    assert 'E upper bound' in atlas.cost_line(result)
+    assert 'proved E minimum' in atlas.cost_line(result, fixed)
+    assert 'minimum uniform E budget' in atlas.cost_line(result, family)
+    assert 'proved E minimum' not in atlas.cost_line(result, family)
+
+
+def test_shared_angles_have_scoped_definitions_and_no_invented_score(tmp_path):
+    from symbolic_expression_program import ExpressionProgram
+    x=sp.Symbol('x',real=True)
+    p=ExpressionProgram((x,));angle=p.bind(sp.atan2(sp.sin(x),sp.cos(x)))
+    store=atlas.CircuitStore(tmp_path)
+    result=dict(operations=[dict(gate='U3',parameters=[str(angle),'0','0'],wires=[0])],
+                expression_program=p.encode(),cost=dict(entanglers=0,single_qubit_gates=1,parameter_score=None))
+    drawing=atlas.drawing(store,1,result)
+    assert 'shared-expression program 1' in drawing
+    assert len(store.programs)==1
+    assert (tmp_path/'programs/program-1.json').exists()
+    assert 'score unresolved' in atlas.cost_line(result)
+    assert str(angle) not in (tmp_path/next(iter(store.paths.values()))[0]).read_text()
+
+
+def test_long_native_program_outputs_keep_exact_scoped_glossary_definitions(tmp_path):
+    from symbolic_expression_program import ExpressionProgram
+    x=sp.Symbol('x',real=True)
+    program=ExpressionProgram((x,))
+    angle=program.bind(sp.atan2(sp.sin(x),sp.cos(x)))
+    value=str(sp.sin(angle)+sp.cos(angle)+sp.atan2(angle+1,angle-1)+sp.sqrt(angle**2+2))
+    store=atlas.CircuitStore(tmp_path)
+    compact=store.program_expression(value,program.encode())
+    assert compact==r'\upsilon_{1,0}'
+    assert store.program_outputs[1][value]==compact
+    full=store.program_expression(value,program.encode(),compact=False)
+    assert r'\xi_{1,0}' in full and compact not in full
+    assert len(full)>100

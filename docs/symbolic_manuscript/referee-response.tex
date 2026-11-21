@@ -1,0 +1,45 @@
+\documentclass[11pt]{article}
+\usepackage[margin=25mm]{geometry}
+\usepackage[T1]{fontenc}\usepackage{lmodern,amsmath,amssymb,hyperref}
+\setlength{\emergencystretch}{3em}
+\title{Response to the final report}
+\author{Gregory Morse \and P\'eter Rakyta}\date{8 November 2026}
+\begin{document}\maketitle
+\paragraph{Seven-CNOT free-angle construction.}
+Fine-step continuation with a fixed local gauge produced a word whose only
+varying local angles are $\pi-2\theta$ and $2\pi-2\theta$. Rational-angle
+reconstruction and full symbolic matrix multiplication verify the literal
+identity for every real $\theta$, including the negative-reflection variant.
+It uses seven CNOTs and eighteen physical $U_3$ gates, with no GP gate or
+residual scalar. The complete time-ordered table is in the supplement;
+the exact JSON word and regression checks are archived. The proved interior
+bounds are now $4\le E_{\mathrm{CX}}\le7$ and
+$3\le E_{\mathrm{arb}}\le5$. Five/seven minimality remains a conjecture.
+
+\paragraph{Explicit obstruction scope.}
+The supplement now names the alternating time-ordered edge words
+$(ca,ab,ca,ab)$, $(ab,ca,ab,ca)$, $(cb,ab,cb,ab)$, and $(ab,cb,ab,cb)$,
+under the condition that the two control-edge gates are individually
+controlled on $c$ in its computational basis. The zero-branch normalization
+then forces the prohibited doubled spectrum. The branch equation is written
+out. No normalization of arbitrary control-edge gates is assumed, and
+other four-gate layouts remain outside this partial argument.
+
+\paragraph{Certificates and numerical fits.}
+The supplement uses the two-SYC B certificate to explain why an unsuccessful
+local-frame fit cannot disprove exact reachability. It does not claim that
+we reproduced the referee's 64-restart experiment. Count certificates and
+explicit shortest symbolic local frames remain separate deliverables.
+
+\paragraph{Archiving and submission preparation.}
+Separate atlas and data upload packages have been prepared locally for
+archival deposit, retaining the existing repository license and third-party
+notices. The author will arrange Zenodo; no DOI has been invented or claimed.
+The arXiv audit and source-upload package are separate from the complete
+review bundle. The source has a field-audited BibTeX bibliography and a
+matching processed bibliography; the journal version and extracted upload
+are checked with pdfLaTeX in an isolated TeX Live environment. The final
+audit records any remaining public-artifact and author-metadata requirements.
+No repository push, Zenodo publication, arXiv posting, or journal submission
+has been performed by this revision.
+\end{document}

@@ -1,0 +1,153 @@
+\begin{thebibliography}{19}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Low and Chuang(2019)]{qubitization}
+Guang~Hao Low and Isaac~L. Chuang.
+\newblock {Hamiltonian Simulation by Qubitization}.
+\newblock \emph{Quantum}, 3:\penalty0 163, 2019.
+\newblock \doi{10.22331/q-2019-07-12-163}.
+
+\bibitem[Nielsen et~al.(2003)Nielsen, Dawson, Dodd, Gilchrist, Mortimer,
+  Osborne, Bremner, Harrow, and Hines]{nielsen}
+Michael~A. Nielsen, Christopher~M. Dawson, Jennifer~L. Dodd, Alexei Gilchrist,
+  Duncan Mortimer, Tobias~J. Osborne, Michael~J. Bremner, Aram~W. Harrow, and
+  Andrew Hines.
+\newblock {Quantum dynamics as a physical resource}.
+\newblock \emph{Physical Review A}, 67:\penalty0 052301, 2003.
+\newblock \doi{10.1103/PhysRevA.67.052301}.
+\newblock URL \url{https://arxiv.org/abs/quant-ph/0208077}.
+
+\bibitem[Yu et~al.(2013)Yu, Duan, and Ying]{yuduan}
+Nengkun Yu, Runyao Duan, and Mingsheng Ying.
+\newblock {Five two-qubit gates are necessary for implementing the Toffoli
+  gate}.
+\newblock \emph{Physical Review A}, 88\penalty0 (1):\penalty0 010304, 2013.
+\newblock \doi{10.1103/physreva.88.010304}.
+
+\bibitem[Yu and Ying(2015)]{yuying}
+Nengkun Yu and Mingsheng Ying.
+\newblock {Optimal simulation of Deutsch gates and the Fredkin gate}.
+\newblock \emph{Physical Review A}, 91\penalty0 (3):\penalty0 032302, 2015.
+\newblock \doi{10.1103/physreva.91.032302}.
+
+\bibitem[Shende and Markov(2009)]{toffolicnot}
+Vivek~V. Shende and Igor~L. Markov.
+\newblock {On the CNOT-cost of TOFFOLI gates}.
+\newblock \emph{Quantum Information and Computation}, 9\penalty0
+  (5-6):\penalty0 461--486, 2009.
+\newblock \doi{10.26421/QIC9.5-6-8}.
+\newblock URL \url{https://arxiv.org/abs/0803.2316}.
+
+\bibitem[Makhlin(2002)]{makhlin}
+Yuriy Makhlin.
+\newblock {Nonlocal Properties of Two-Qubit Gates and Mixed States, and the
+  Optimization of Quantum Computations}.
+\newblock \emph{Quantum Information Processing}, 1\penalty0 (4):\penalty0
+  243--252, 2002.
+\newblock \doi{10.1023/a:1022144002391}.
+
+\bibitem[Shende et~al.(2004)Shende, Bullock, and Markov]{shende}
+Vivek~V. Shende, Stephen~S. Bullock, and Igor~L. Markov.
+\newblock {Recognizing small-circuit structure in two-qubit operators}.
+\newblock \emph{Physical Review A}, 70\penalty0 (1):\penalty0 012310, 2004.
+\newblock \doi{10.1103/physreva.70.012310}.
+
+\bibitem[Zhang et~al.(2004)Zhang, Vala, Sastry, and Whaley]{bgate}
+Jun Zhang, Jiri Vala, Shankar Sastry, and K.~Birgitta Whaley.
+\newblock {Minimum Construction of Two-Qubit Quantum Operations}.
+\newblock \emph{Physical Review Letters}, 93\penalty0 (2):\penalty0 020502,
+  2004.
+\newblock \doi{10.1103/physrevlett.93.020502}.
+
+\bibitem[Huang et~al.(2023)Huang, Wang, Wu, Ding, Ye, Kong, Zhang, Ni, Song,
+  Shi, Zhao, Deng, and Chen]{sqisw}
+Cupjin Huang, Tenghui Wang, Feng Wu, Dawei Ding, Qi~Ye, Linghang Kong, Fang
+  Zhang, Xiaotong Ni, Zhijun Song, Yaoyun Shi, Hui-Hai Zhao, Chunqing Deng, and
+  Jianxin Chen.
+\newblock {Quantum Instruction Set Design for Performance}.
+\newblock \emph{Physical Review Letters}, 130\penalty0 (7):\penalty0 070601,
+  2023.
+\newblock \doi{10.1103/physrevlett.130.070601}.
+
+\bibitem[Peterson et~al.(2020)Peterson, Crooks, and Smith]{peterson}
+Eric~C. Peterson, Gavin~E. Crooks, and Robert~S. Smith.
+\newblock {Fixed-Depth Two-Qubit Circuits and the Monodromy Polytope}.
+\newblock \emph{Quantum}, 4:\penalty0 247, 2020.
+\newblock \doi{10.22331/q-2020-03-26-247}.
+\newblock URL \url{https://arxiv.org/abs/1904.10541v4}.
+\newblock Corrected arXiv version v4, 2021: increasing/decreasing conventions
+  and Figure 6.
+
+\bibitem[Xu et~al.(2022)Xu, Li, Padon, Lin, Pointing, Hirth, Ma, Palsberg,
+  Aiken, Acar, and Jia]{quartz}
+Mingkuan Xu, Zikun Li, Oded Padon, Sina Lin, Jessica Pointing, Auguste Hirth,
+  Henry Ma, Jens Palsberg, Alex Aiken, Umut~A. Acar, and Zhihao Jia.
+\newblock {Quartz: Superoptimization of Quantum Circuits}.
+\newblock In \emph{Proceedings of the 43rd ACM SIGPLAN International Conference
+  on Programming Language Design and Implementation}, 2022.
+\newblock \doi{10.1145/3519939.3523433}.
+\newblock URL \url{https://arxiv.org/abs/2204.09033}.
+
+\bibitem[Xu et~al.(2023)Xu, Molavi, Pick, Tannu, and Albarghouthi]{queso}
+Amanda Xu, Abtin Molavi, Lauren Pick, Swamit Tannu, and Aws Albarghouthi.
+\newblock {Synthesizing Quantum-Circuit Optimizers}.
+\newblock \emph{Proceedings of the ACM on Programming Languages}, 7\penalty0
+  (PLDI):\penalty0 140, 2023.
+\newblock \doi{10.1145/3591254}.
+\newblock URL \url{https://arxiv.org/abs/2211.09691}.
+
+\bibitem[Iten et~al.(2021)Iten, Reardon-Smith, Malvetti, Mondada, Pauvert,
+  Redmond, Kohli, and Colbeck]{universalqcompiler}
+Raban Iten, Oliver Reardon-Smith, Emanuel Malvetti, Luca Mondada, Gabrielle
+  Pauvert, Ethan Redmond, Ravjot~Singh Kohli, and Roger Colbeck.
+\newblock {Introduction to UniversalQCompiler}, 2021.
+\newblock URL \url{https://arxiv.org/abs/1904.01072}.
+\newblock Preprint first posted 2019; revised 2021.
+
+\bibitem[Matsumoto and Amano(2008)]{matsumoto}
+Ken Matsumoto and Kazuyuki Amano.
+\newblock {Representation of Quantum Circuits with Clifford and $\pi/8$ Gates},
+  2008.
+\newblock URL \url{https://arxiv.org/abs/0806.3834}.
+
+\bibitem[Kliuchnikov et~al.(2013)Kliuchnikov, Maslov, and Mosca]{kmm}
+Vadym Kliuchnikov, Dmitri Maslov, and Michele Mosca.
+\newblock {Fast and efficient exact synthesis of single-qubit unitaries
+  generated by Clifford and T gates}.
+\newblock \emph{Quantum Information and Computation}, 13\penalty0
+  (7--8):\penalty0 607--630, 2013.
+\newblock \doi{10.26421/qic13.7-8-4}.
+
+\bibitem[Giles and Selinger(2013)]{giles}
+Brett Giles and Peter Selinger.
+\newblock {Exact synthesis of multiqubit Clifford+T circuits}.
+\newblock \emph{Physical Review A}, 87\penalty0 (3):\penalty0 032332, 2013.
+\newblock \doi{10.1103/physreva.87.032332}.
+
+\bibitem[Giles and Selinger(2019)]{gilesma}
+Brett Giles and Peter Selinger.
+\newblock {Remarks on Matsumoto and Amano's normal form for single-qubit
+  Clifford+T operators}, 2019.
+\newblock URL \url{https://arxiv.org/abs/1312.6584}.
+
+\bibitem[Morse et~al.(2026)Morse, Farizi, N\'adori, Hajas, Kozsik, and
+  Rakyta]{partition}
+Gregory Morse, Muhammad~Al Farizi, Jakab N\'adori, L\'aszl\'o Hajas, Tam\'as
+  Kozsik, and Peter Rakyta.
+\newblock {Entanglement-Aware Quantum Circuit Optimization through Globally
+  Optimal Partitioning}, 2026.
+\newblock URL \url{https://arxiv.org/abs/2611.03845}.
+
+\bibitem[Cruz and Murta(2024)]{fredkinshallow}
+Pedro M.~Q. Cruz and Bruno Murta.
+\newblock {Shallow unitary decompositions of quantum Fredkin and Toffoli gates
+  for connectivity-aware equivalent circuit averaging}.
+\newblock \emph{APL Quantum}, 1:\penalty0 016105, 2024.
+\newblock \doi{10.1063/5.0187026}.
+\newblock URL \url{https://arxiv.org/abs/2305.18128}.
+
+\end{thebibliography}

@@ -1,0 +1,266 @@
+{
+  "date": "2026-11-06",
+  "source": "https://en.wikipedia.org/wiki/List_of_quantum_logic_gates",
+  "scope": "Every named unitary row in the retrieved qubit-gate tables. Generic controls, adjoints, powers, and register operations are also available. Measurement/reset are not unitary gates.",
+  "gates": [
+    {
+      "source_name": "Identity, no-op",
+      "catalog_name": "I"
+    },
+    {
+      "source_name": "Global phase",
+      "catalog_name": "GP"
+    },
+    {
+      "source_name": "Pauli X , NOT, bit flip",
+      "catalog_name": "X"
+    },
+    {
+      "source_name": "Pauli Y",
+      "catalog_name": "Y"
+    },
+    {
+      "source_name": "Pauli Z , phase flip",
+      "catalog_name": "Z"
+    },
+    {
+      "source_name": "Phase gate S , square root of Z",
+      "catalog_name": "S"
+    },
+    {
+      "source_name": "Square root of X , square root of NOT",
+      "catalog_name": "Sx"
+    },
+    {
+      "source_name": "Hadamard , Walsh-Hadamard",
+      "catalog_name": "H"
+    },
+    {
+      "source_name": "Controlled NOT , controlled- X , controlled-bit flip, reversible exclusive OR , Feynman",
+      "catalog_name": "CX"
+    },
+    {
+      "source_name": "Anticontrolled-NOT, anticontrolled- X , open-controlled-CNOT, zero control, control-on-0-NOT, reversible exclusive NOR",
+      "catalog_name": "ACX"
+    },
+    {
+      "source_name": "Controlled- Z , controlled sign flip, controlled phase flip",
+      "catalog_name": "CZ"
+    },
+    {
+      "source_name": "Double-controlled NOT",
+      "catalog_name": "CCX"
+    },
+    {
+      "source_name": "Swap",
+      "catalog_name": "SWAP"
+    },
+    {
+      "source_name": "Imaginary swap",
+      "catalog_name": "iSWAP"
+    },
+    {
+      "source_name": "Phase shift",
+      "catalog_name": "P"
+    },
+    {
+      "source_name": "Phase gate T, π/8 gate, fourth root of Z",
+      "catalog_name": "T"
+    },
+    {
+      "source_name": "Controlled phase",
+      "catalog_name": "CP"
+    },
+    {
+      "source_name": "Controlled phase S",
+      "catalog_name": "CS"
+    },
+    {
+      "source_name": "Rotation about x -axis",
+      "catalog_name": "Rx"
+    },
+    {
+      "source_name": "Rotation about y-axis",
+      "catalog_name": "Ry"
+    },
+    {
+      "source_name": "Rotation about z-axis",
+      "catalog_name": "Rz"
+    },
+    {
+      "source_name": "XX interaction",
+      "catalog_name": "Rxx"
+    },
+    {
+      "source_name": "YY interaction",
+      "catalog_name": "Ryy"
+    },
+    {
+      "source_name": "ZZ interaction",
+      "catalog_name": "Rzz"
+    },
+    {
+      "source_name": "XY, XX plus YY",
+      "catalog_name": "Rxy"
+    },
+    {
+      "source_name": "Square root swap",
+      "catalog_name": "SSWAP"
+    },
+    {
+      "source_name": "Square root imaginary swap",
+      "catalog_name": "SiSWAP"
+    },
+    {
+      "source_name": "Swap (raised to a power)",
+      "catalog_name": "SWAPPow"
+    },
+    {
+      "source_name": "Fredkin , controlled swap",
+      "catalog_name": "CSWAP"
+    },
+    {
+      "source_name": "General single qubit rotation",
+      "catalog_name": "U3"
+    },
+    {
+      "source_name": "Barenco",
+      "catalog_name": "Barenco"
+    },
+    {
+      "source_name": "Berkeley B",
+      "catalog_name": "B"
+    },
+    {
+      "source_name": "Controlled-V, controlled square root NOT",
+      "catalog_name": "CSX"
+    },
+    {
+      "source_name": "Core entangling, canonical decomposition",
+      "catalog_name": "Canonical"
+    },
+    {
+      "source_name": "Dagwood Bumstead",
+      "catalog_name": "DB"
+    },
+    {
+      "source_name": "Echoed cross resonance",
+      "catalog_name": "ECR"
+    },
+    {
+      "source_name": "Fermionic simulation",
+      "catalog_name": "fSim"
+    },
+    {
+      "source_name": "Givens",
+      "catalog_name": "Givens"
+    },
+    {
+      "source_name": "Magic",
+      "catalog_name": "Magic"
+    },
+    {
+      "source_name": "Sycamore",
+      "catalog_name": "SYC"
+    },
+    {
+      "source_name": "CZ-SWAP",
+      "catalog_name": "CZS"
+    },
+    {
+      "source_name": "Deutsch",
+      "catalog_name": "Deutsch"
+    },
+    {
+      "source_name": "Margolus, simplified Toffoli",
+      "catalog_name": "Margolus"
+    },
+    {
+      "source_name": "Peres",
+      "catalog_name": "Peres"
+    },
+    {
+      "source_name": "Toffoli , controlled-controlled NOT",
+      "catalog_name": "Toffoli"
+    },
+    {
+      "source_name": "Fermionic-Fredkin, Controlled-fermionic SWAP",
+      "catalog_name": "fFredkin"
+    }
+  ],
+  "provider_sources": {
+    "wikipedia": "https://en.wikipedia.org/wiki/List_of_quantum_logic_gates",
+    "qiskit": "https://quantum.cloud.ibm.com/docs/en/api/qiskit/circuit_library",
+    "cirq": "https://quantumai.google/cirq/gatezoo"
+  },
+  "qiskit_classes": {
+    "IGate": "I",
+    "HGate": "H",
+    "XGate": "X",
+    "YGate": "Y",
+    "ZGate": "Z",
+    "SGate": "S",
+    "SdgGate": "Sdg",
+    "SXGate": "Sx",
+    "SXdgGate": "Sxdg",
+    "TGate": "T",
+    "TdgGate": "Tdg",
+    "PhaseGate": "P",
+    "RGate": "R",
+    "RXGate": "Rx",
+    "RYGate": "Ry",
+    "RZGate": "Rz",
+    "UGate": "U",
+    "U1Gate": "U1",
+    "U2Gate": "U2",
+    "U3Gate": "U3",
+    "CXGate": "CX",
+    "CYGate": "CY",
+    "CZGate": "CZ",
+    "CHGate": "CH",
+    "CSGate": "CS",
+    "CSdgGate": "CSdg",
+    "CSXGate": "CSX",
+    "CPhaseGate": "CP",
+    "CRXGate": "CRX",
+    "CRYGate": "CRY",
+    "CRZGate": "CRZ",
+    "CUGate": "CU",
+    "CU1Gate": "CU1",
+    "CU3Gate": "CU3",
+    "DCXGate": "DCX",
+    "ECRGate": "ECR",
+    "iSwapGate": "iSWAP",
+    "RXXGate": "Rxx",
+    "RYYGate": "Ryy",
+    "RZZGate": "Rzz",
+    "RZXGate": "Rzx",
+    "SwapGate": "SWAP",
+    "XXPlusYYGate": "xx_plus_yy",
+    "XXMinusYYGate": "xx_minus_yy",
+    "CCXGate": "CCX",
+    "CCZGate": "CCZ",
+    "CSwapGate": "CSWAP",
+    "RCCXGate": "RCCX",
+    "RC3XGate": "RC3X",
+    "C3XGate": "C3X",
+    "C4XGate": "C4X",
+    "C3SXGate": "C3SX",
+    "GlobalPhaseGate": "GP",
+    "MCXGate": "MCX",
+    "MCPhaseGate": "MCPhase",
+    "MCMTGate": "MCMT",
+    "MSGate": "MS",
+    "RVGate": "RV",
+    "PauliGate": "Pauli",
+    "PauliProductRotationGate": "PauliRotation",
+    "DiagonalGate": "Diagonal",
+    "PermutationGate": "Permutation",
+    "UnitaryGate": "Unitary",
+    "UCGate": "UC",
+    "UCRXGate": "UCRX",
+    "UCRYGate": "UCRY",
+    "UCRZGate": "UCRZ",
+    "QFTGate": "QFT"
+  }
+}

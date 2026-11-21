@@ -1,0 +1,788 @@
+{
+  "schema_version": 1,
+  "reviewed_on": "2026-11-06",
+  "scope": "Curated primary-source references, not an exhaustive claim about every publication. The generated catalog-by-basis report records compiler coverage and gaps.",
+  "comparison_contract": {
+    "phase": "exact matrix; scalar phase tracked explicitly",
+    "ancillas": 0,
+    "topology": "all_to_all",
+    "entangler": "one named family per basis",
+    "primary_objective": "minimum primitive entanglers",
+    "secondary_objective": "unchanged legacy parameter-sensitive gate score for exact symbolic circuits",
+    "sdk_score": "numerical parameter slots are diagnostic only; never substituted for the symbolic score",
+    "family_policy": "one parameter binding is not a proof for the entire parameterized family",
+    "input_state": "arbitrary; logical qubits are not assumed zero-initialized",
+    "wire_order": "fixed on input and output; final permutations are not free"
+  },
+  "sources": {
+    "sbm2004": {
+      "title": "Recognizing Small-Circuit Structure in Two-Qubit Operators and Timing Hamiltonians to Compute Controlled-Not Gates",
+      "url": "https://arxiv.org/abs/quant-ph/0308045",
+      "location": "Propositions III.1-III.3; exact zero/one/two CNOT classification"
+    },
+    "vidal_dawson2004": {
+      "title": "A universal quantum circuit for two-qubit transformations with three CNOT gates",
+      "url": "https://arxiv.org/abs/quant-ph/0307177",
+      "location": "Theorems 1 and 2"
+    },
+    "toffoli2009": {
+      "title": "On the CNOT-cost of TOFFOLI gates",
+      "url": "https://arxiv.org/abs/0803.2316",
+      "location": "Three-qubit Toffoli optimality; six CNOTs"
+    },
+    "margolus2004": {
+      "title": "The simplified Toffoli gate implementation by Margolus is optimal",
+      "url": "https://arxiv.org/abs/quant-ph/0312225",
+      "location": "Theorem M"
+    },
+    "fredkin2024": {
+      "title": "Shallow unitary decompositions of quantum Fredkin and Toffoli gates for connectivity-aware equivalent circuit averaging",
+      "url": "https://arxiv.org/abs/2305.18128",
+      "location": "Fredkin all-to-all seven-CNOT construction; APL Quantum 1, 016105 (2024)"
+    },
+    "b_gate2004": {
+      "title": "Minimum construction of two-qubit quantum operations",
+      "url": "https://arxiv.org/abs/quant-ph/0312193",
+      "location": "Two Berkeley B gates suffice for arbitrary two-qubit unitaries"
+    },
+    "sqisw2023": {
+      "title": "Quantum Instruction Set Design for Performance",
+      "url": "https://arxiv.org/abs/2105.06074",
+      "location": "Supplement I.B, exact synthesis with at most three SQiSW gates"
+    },
+    "sqisw2025": {
+      "title": "Quantum circuit synthesis with SQiSW",
+      "url": "https://arxiv.org/abs/2412.14828",
+      "location": "Higher-qubit constructive bounds; Toffoli eight-SQiSW construction (not a minimality claim)"
+    },
+    "fixed_xx2022": {
+      "title": "Optimal synthesis into fixed XX interactions",
+      "url": "https://quantum-journal.org/papers/q-2022-04-27-696/",
+      "location": "Fixed XX interaction synthesis; native angle constraints matter"
+    },
+    "qiskit_synthesis": {
+      "title": "Qiskit circuit synthesis API",
+      "url": "https://quantum.cloud.ibm.com/docs/en/api/qiskit/synthesis",
+      "location": "TwoQubitBasisDecomposer and XXDecomposer; runtime compiler results remain numeric upper bounds"
+    }
+  },
+  "records": [
+    {
+      "id": "CX_cx",
+      "gate": "CX",
+      "basis": "cx_u",
+      "parameter_domain": "fixed gate",
+      "ancillas": 0,
+      "topology": "all_to_all",
+      "phase": "exact matrix after separately tracking global phase",
+      "lower_bound": 1,
+      "upper_bound": 1,
+      "claim": "proved_minimum",
+      "sources": [
+        "sbm2004"
+      ],
+      "notes": "Evaluate exact local invariants of the catalog matrix; this is an entangler-count statement only."
+    },
+    {
+      "id": "CY_cx",
+      "gate": "CY",
+      "basis": "cx_u",
+      "parameter_domain": "fixed gate",
+      "ancillas": 0,
+      "topology": "all_to_all",
+      "phase": "exact matrix after separately tracking global phase",
+      "lower_bound": 1,
+      "upper_bound": 1,
+      "claim": "proved_minimum",
+      "sources": [
+        "sbm2004"
+      ],
+      "notes": "Evaluate exact local invariants of the catalog matrix; this is an entangler-count statement only."
+    },
+    {
+      "id": "CZ_cx",
+      "gate": "CZ",
+      "basis": "cx_u",
+      "parameter_domain": "fixed gate",
+      "ancillas": 0,
+      "topology": "all_to_all",
+      "phase": "exact matrix after separately tracking global phase",
+      "lower_bound": 1,
+      "upper_bound": 1,
+      "claim": "proved_minimum",
+      "sources": [
+        "sbm2004"
+      ],
+      "notes": "Evaluate exact local invariants of the catalog matrix; this is an entangler-count statement only."
+    },
+    {
+      "id": "CH_cx",
+      "gate": "CH",
+      "basis": "cx_u",
+      "parameter_domain": "fixed gate",
+      "ancillas": 0,
+      "topology": "all_to_all",
+      "phase": "exact matrix after separately tracking global phase",
+      "lower_bound": 1,
+      "upper_bound": 1,
+      "claim": "proved_minimum",
+      "sources": [
+        "sbm2004"
+      ],
+      "notes": "Evaluate exact local invariants of the catalog matrix; this is an entangler-count statement only."
+    },
+    {
+      "id": "ACX_cx",
+      "gate": "ACX",
+      "basis": "cx_u",
+      "parameter_domain": "fixed gate",
+      "ancillas": 0,
+      "topology": "all_to_all",
+      "phase": "exact matrix after separately tracking global phase",
+      "lower_bound": 1,
+      "upper_bound": 1,
+      "claim": "proved_minimum",
+      "sources": [
+        "sbm2004"
+      ],
+      "notes": "Evaluate exact local invariants of the catalog matrix; this is an entangler-count statement only."
+    },
+    {
+      "id": "ECR_cx",
+      "gate": "ECR",
+      "basis": "cx_u",
+      "parameter_domain": "fixed gate",
+      "ancillas": 0,
+      "topology": "all_to_all",
+      "phase": "exact matrix after separately tracking global phase",
+      "lower_bound": 1,
+      "upper_bound": 1,
+      "claim": "proved_minimum",
+      "sources": [
+        "sbm2004"
+      ],
+      "notes": "Evaluate exact local invariants of the catalog matrix; this is an entangler-count statement only."
+    },
+    {
+      "id": "DCX_cx",
+      "gate": "DCX",
+      "basis": "cx_u",
+      "parameter_domain": "fixed gate",
+      "ancillas": 0,
+      "topology": "all_to_all",
+      "phase": "exact matrix after separately tracking global phase",
+      "lower_bound": 2,
+      "upper_bound": 2,
+      "claim": "proved_minimum",
+      "sources": [
+        "sbm2004"
+      ],
+      "notes": "Evaluate exact local invariants of the catalog matrix; this is an entangler-count statement only."
+    },
+    {
+      "id": "iSWAP_cx",
+      "gate": "iSWAP",
+      "basis": "cx_u",
+      "parameter_domain": "fixed gate",
+      "ancillas": 0,
+      "topology": "all_to_all",
+      "phase": "exact matrix after separately tracking global phase",
+      "lower_bound": 2,
+      "upper_bound": 2,
+      "claim": "proved_minimum",
+      "sources": [
+        "sbm2004"
+      ],
+      "notes": "Evaluate exact local invariants of the catalog matrix; this is an entangler-count statement only."
+    },
+    {
+      "id": "SiSWAP_cx",
+      "gate": "SiSWAP",
+      "basis": "cx_u",
+      "parameter_domain": "fixed gate",
+      "ancillas": 0,
+      "topology": "all_to_all",
+      "phase": "exact matrix after separately tracking global phase",
+      "lower_bound": 2,
+      "upper_bound": 2,
+      "claim": "proved_minimum",
+      "sources": [
+        "sbm2004"
+      ],
+      "notes": "Evaluate exact local invariants of the catalog matrix; this is an entangler-count statement only."
+    },
+    {
+      "id": "SSWAP_cx",
+      "gate": "SSWAP",
+      "basis": "cx_u",
+      "parameter_domain": "fixed gate",
+      "ancillas": 0,
+      "topology": "all_to_all",
+      "phase": "exact matrix after separately tracking global phase",
+      "lower_bound": 3,
+      "upper_bound": 3,
+      "claim": "proved_minimum",
+      "sources": [
+        "sbm2004"
+      ],
+      "notes": "Evaluate exact local invariants of the catalog matrix; this is an entangler-count statement only."
+    },
+    {
+      "id": "SWAP_cx",
+      "gate": "SWAP",
+      "basis": "cx_u",
+      "parameter_domain": "fixed gate",
+      "ancillas": 0,
+      "topology": "all_to_all",
+      "phase": "exact matrix after separately tracking global phase",
+      "lower_bound": 3,
+      "upper_bound": 3,
+      "claim": "proved_minimum",
+      "sources": [
+        "sbm2004"
+      ],
+      "notes": "Evaluate exact local invariants of the catalog matrix; this is an entangler-count statement only."
+    },
+    {
+      "id": "SYC_cx",
+      "gate": "SYC",
+      "basis": "cx_u",
+      "parameter_domain": "fixed gate",
+      "ancillas": 0,
+      "topology": "all_to_all",
+      "phase": "exact matrix after separately tracking global phase",
+      "lower_bound": 3,
+      "upper_bound": 3,
+      "claim": "proved_minimum",
+      "sources": [
+        "sbm2004"
+      ],
+      "notes": "Evaluate exact local invariants of the catalog matrix; this is an entangler-count statement only."
+    },
+    {
+      "id": "B_cx",
+      "gate": "B",
+      "basis": "cx_u",
+      "parameter_domain": "fixed gate",
+      "ancillas": 0,
+      "topology": "all_to_all",
+      "phase": "exact matrix after separately tracking global phase",
+      "lower_bound": 2,
+      "upper_bound": 2,
+      "claim": "proved_minimum",
+      "sources": [
+        "sbm2004"
+      ],
+      "notes": "Evaluate exact local invariants of the catalog matrix; this is an entangler-count statement only."
+    },
+    {
+      "id": "ZZ90_cx",
+      "gate": "ZZ90",
+      "basis": "cx_u",
+      "parameter_domain": "fixed gate",
+      "ancillas": 0,
+      "topology": "all_to_all",
+      "phase": "exact matrix after separately tracking global phase",
+      "lower_bound": 1,
+      "upper_bound": 1,
+      "claim": "proved_minimum",
+      "sources": [
+        "sbm2004"
+      ],
+      "notes": "Evaluate exact local invariants of the catalog matrix; this is an entangler-count statement only."
+    },
+    {
+      "id": "XX90_cx",
+      "gate": "XX90",
+      "basis": "cx_u",
+      "parameter_domain": "fixed gate",
+      "ancillas": 0,
+      "topology": "all_to_all",
+      "phase": "exact matrix after separately tracking global phase",
+      "lower_bound": 1,
+      "upper_bound": 1,
+      "claim": "proved_minimum",
+      "sources": [
+        "sbm2004"
+      ],
+      "notes": "Evaluate exact local invariants of the catalog matrix; this is an entangler-count statement only."
+    },
+    {
+      "id": "YY90_cx",
+      "gate": "YY90",
+      "basis": "cx_u",
+      "parameter_domain": "fixed gate",
+      "ancillas": 0,
+      "topology": "all_to_all",
+      "phase": "exact matrix after separately tracking global phase",
+      "lower_bound": 1,
+      "upper_bound": 1,
+      "claim": "proved_minimum",
+      "sources": [
+        "sbm2004"
+      ],
+      "notes": "Evaluate exact local invariants of the catalog matrix; this is an entangler-count statement only."
+    },
+    {
+      "id": "CCX_cx",
+      "gate": "CCX",
+      "basis": "cx_u",
+      "parameter_domain": "fixed gate",
+      "ancillas": 0,
+      "topology": "all_to_all",
+      "phase": "exact matrix after separately tracking global phase",
+      "lower_bound": 6,
+      "upper_bound": 6,
+      "claim": "proved_minimum",
+      "sources": [
+        "toffoli2009"
+      ],
+      "notes": "CCZ follows by local Hadamard conjugation of Toffoli."
+    },
+    {
+      "id": "CCZ_cx",
+      "gate": "CCZ",
+      "basis": "cx_u",
+      "parameter_domain": "fixed gate",
+      "ancillas": 0,
+      "topology": "all_to_all",
+      "phase": "exact matrix after separately tracking global phase",
+      "lower_bound": 6,
+      "upper_bound": 6,
+      "claim": "proved_minimum",
+      "sources": [
+        "toffoli2009"
+      ],
+      "notes": "CCZ follows by local Hadamard conjugation of Toffoli."
+    },
+    {
+      "id": "margolus_cx",
+      "gate": "Margolus",
+      "basis": "cx_u",
+      "parameter_domain": "fixed gate",
+      "ancillas": 0,
+      "topology": "all_to_all",
+      "phase": "exact matrix after separately tracking global phase",
+      "lower_bound": 3,
+      "upper_bound": 3,
+      "claim": "proved_minimum",
+      "sources": [
+        "margolus2004"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "fredkin_cx",
+      "gate": "CSWAP",
+      "basis": "cx_u",
+      "parameter_domain": "fixed gate",
+      "ancillas": 0,
+      "topology": "all_to_all",
+      "phase": "exact matrix after separately tracking global phase",
+      "lower_bound": null,
+      "upper_bound": 7,
+      "claim": "published_upper_bound",
+      "sources": [
+        "fredkin2024"
+      ],
+      "notes": "Seven is a verified published construction; no matching lower bound is asserted. The stored reference already attains seven."
+    },
+    {
+      "id": "arbitrary_su4_cx",
+      "gate": "Unitary",
+      "basis": "cx_u",
+      "parameter_domain": "arbitrary two-qubit unitary; three required for a generic member, not every member",
+      "ancillas": 0,
+      "topology": "all_to_all",
+      "phase": "exact matrix after separately tracking global phase",
+      "lower_bound": null,
+      "upper_bound": 3,
+      "claim": "tight_worst_case",
+      "sources": [
+        "vidal_dawson2004",
+        "sbm2004"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "arbitrary_su4_b",
+      "gate": "Unitary",
+      "basis": "berkeley_b",
+      "parameter_domain": "arbitrary two-qubit unitary; special local-equivalence classes use fewer",
+      "ancillas": 0,
+      "topology": "all_to_all",
+      "phase": "exact matrix after separately tracking global phase",
+      "lower_bound": null,
+      "upper_bound": 2,
+      "claim": "tight_worst_case",
+      "sources": [
+        "b_gate2004"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "arbitrary_su4_sqisw",
+      "gate": "Unitary",
+      "basis": "sqrt_iswap_u",
+      "parameter_domain": "arbitrary two-qubit unitary; two suffice only in a specified Weyl-chamber region",
+      "ancillas": 0,
+      "topology": "all_to_all",
+      "phase": "exact matrix after separately tracking global phase",
+      "lower_bound": null,
+      "upper_bound": 3,
+      "claim": "published_upper_bound",
+      "sources": [
+        "sqisw2023"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "toffoli_sqisw",
+      "gate": "CCX",
+      "basis": "sqrt_iswap_u",
+      "parameter_domain": "fixed gate",
+      "ancillas": 0,
+      "topology": "all_to_all",
+      "phase": "exact matrix after separately tracking global phase",
+      "lower_bound": null,
+      "upper_bound": 8,
+      "claim": "published_upper_bound",
+      "sources": [
+        "sqisw2025"
+      ],
+      "notes": "Construction only; do not promote numerical observations to an optimality proof."
+    },
+    {
+      "id": "CP_family_cx",
+      "gate": "CP",
+      "basis": "cx_u",
+      "parameter_domain": "all real parameters; specializations can require zero or one CNOT",
+      "ancillas": 0,
+      "topology": "all_to_all",
+      "phase": "exact matrix after separately tracking global phase",
+      "lower_bound": null,
+      "upper_bound": 2,
+      "claim": "family_upper_bound",
+      "sources": [
+        "sbm2004"
+      ],
+      "notes": "Use the exact certificate on a specialization, or retain its conditions; do not label two as the minimum for all angles."
+    },
+    {
+      "id": "CRX_family_cx",
+      "gate": "CRX",
+      "basis": "cx_u",
+      "parameter_domain": "all real parameters; specializations can require zero or one CNOT",
+      "ancillas": 0,
+      "topology": "all_to_all",
+      "phase": "exact matrix after separately tracking global phase",
+      "lower_bound": null,
+      "upper_bound": 2,
+      "claim": "family_upper_bound",
+      "sources": [
+        "sbm2004"
+      ],
+      "notes": "Use the exact certificate on a specialization, or retain its conditions; do not label two as the minimum for all angles."
+    },
+    {
+      "id": "CRY_family_cx",
+      "gate": "CRY",
+      "basis": "cx_u",
+      "parameter_domain": "all real parameters; specializations can require zero or one CNOT",
+      "ancillas": 0,
+      "topology": "all_to_all",
+      "phase": "exact matrix after separately tracking global phase",
+      "lower_bound": null,
+      "upper_bound": 2,
+      "claim": "family_upper_bound",
+      "sources": [
+        "sbm2004"
+      ],
+      "notes": "Use the exact certificate on a specialization, or retain its conditions; do not label two as the minimum for all angles."
+    },
+    {
+      "id": "CRZ_family_cx",
+      "gate": "CRZ",
+      "basis": "cx_u",
+      "parameter_domain": "all real parameters; specializations can require zero or one CNOT",
+      "ancillas": 0,
+      "topology": "all_to_all",
+      "phase": "exact matrix after separately tracking global phase",
+      "lower_bound": null,
+      "upper_bound": 2,
+      "claim": "family_upper_bound",
+      "sources": [
+        "sbm2004"
+      ],
+      "notes": "Use the exact certificate on a specialization, or retain its conditions; do not label two as the minimum for all angles."
+    },
+    {
+      "id": "CU_family_cx",
+      "gate": "CU",
+      "basis": "cx_u",
+      "parameter_domain": "all real parameters; specializations can require zero or one CNOT",
+      "ancillas": 0,
+      "topology": "all_to_all",
+      "phase": "exact matrix after separately tracking global phase",
+      "lower_bound": null,
+      "upper_bound": 2,
+      "claim": "family_upper_bound",
+      "sources": [
+        "sbm2004"
+      ],
+      "notes": "Use the exact certificate on a specialization, or retain its conditions; do not label two as the minimum for all angles."
+    },
+    {
+      "id": "CU3_family_cx",
+      "gate": "CU3",
+      "basis": "cx_u",
+      "parameter_domain": "all real parameters; specializations can require zero or one CNOT",
+      "ancillas": 0,
+      "topology": "all_to_all",
+      "phase": "exact matrix after separately tracking global phase",
+      "lower_bound": null,
+      "upper_bound": 2,
+      "claim": "family_upper_bound",
+      "sources": [
+        "sbm2004"
+      ],
+      "notes": "Use the exact certificate on a specialization, or retain its conditions; do not label two as the minimum for all angles."
+    },
+    {
+      "id": "Rxx_family_cx",
+      "gate": "Rxx",
+      "basis": "cx_u",
+      "parameter_domain": "all real parameters; specializations can require zero or one CNOT",
+      "ancillas": 0,
+      "topology": "all_to_all",
+      "phase": "exact matrix after separately tracking global phase",
+      "lower_bound": null,
+      "upper_bound": 2,
+      "claim": "family_upper_bound",
+      "sources": [
+        "sbm2004"
+      ],
+      "notes": "Use the exact certificate on a specialization, or retain its conditions; do not label two as the minimum for all angles."
+    },
+    {
+      "id": "Ryy_family_cx",
+      "gate": "Ryy",
+      "basis": "cx_u",
+      "parameter_domain": "all real parameters; specializations can require zero or one CNOT",
+      "ancillas": 0,
+      "topology": "all_to_all",
+      "phase": "exact matrix after separately tracking global phase",
+      "lower_bound": null,
+      "upper_bound": 2,
+      "claim": "family_upper_bound",
+      "sources": [
+        "sbm2004"
+      ],
+      "notes": "Use the exact certificate on a specialization, or retain its conditions; do not label two as the minimum for all angles."
+    },
+    {
+      "id": "Rzz_family_cx",
+      "gate": "Rzz",
+      "basis": "cx_u",
+      "parameter_domain": "all real parameters; specializations can require zero or one CNOT",
+      "ancillas": 0,
+      "topology": "all_to_all",
+      "phase": "exact matrix after separately tracking global phase",
+      "lower_bound": null,
+      "upper_bound": 2,
+      "claim": "family_upper_bound",
+      "sources": [
+        "sbm2004"
+      ],
+      "notes": "Use the exact certificate on a specialization, or retain its conditions; do not label two as the minimum for all angles."
+    },
+    {
+      "id": "Rzx_family_cx",
+      "gate": "Rzx",
+      "basis": "cx_u",
+      "parameter_domain": "all real parameters; specializations can require zero or one CNOT",
+      "ancillas": 0,
+      "topology": "all_to_all",
+      "phase": "exact matrix after separately tracking global phase",
+      "lower_bound": null,
+      "upper_bound": 2,
+      "claim": "family_upper_bound",
+      "sources": [
+        "sbm2004"
+      ],
+      "notes": "Use the exact certificate on a specialization, or retain its conditions; do not label two as the minimum for all angles."
+    },
+    {
+      "id": "xx_plus_yy_family_cx",
+      "gate": "xx_plus_yy",
+      "basis": "cx_u",
+      "parameter_domain": "all real parameters; specializations can require zero or one CNOT",
+      "ancillas": 0,
+      "topology": "all_to_all",
+      "phase": "exact matrix after separately tracking global phase",
+      "lower_bound": null,
+      "upper_bound": 2,
+      "claim": "family_upper_bound",
+      "sources": [
+        "sbm2004"
+      ],
+      "notes": "Use the exact certificate on a specialization, or retain its conditions; do not label two as the minimum for all angles."
+    },
+    {
+      "id": "xx_minus_yy_family_cx",
+      "gate": "xx_minus_yy",
+      "basis": "cx_u",
+      "parameter_domain": "all real parameters; specializations can require zero or one CNOT",
+      "ancillas": 0,
+      "topology": "all_to_all",
+      "phase": "exact matrix after separately tracking global phase",
+      "lower_bound": null,
+      "upper_bound": 2,
+      "claim": "family_upper_bound",
+      "sources": [
+        "sbm2004"
+      ],
+      "notes": "Use the exact certificate on a specialization, or retain its conditions; do not label two as the minimum for all angles."
+    },
+    {
+      "id": "toffoli_cx",
+      "gate": "Toffoli",
+      "basis": "cx_u",
+      "parameter_domain": "fixed gate",
+      "ancillas": 0,
+      "topology": "all_to_all",
+      "phase": "exact matrix after separately tracking global phase",
+      "lower_bound": 6,
+      "upper_bound": 6,
+      "claim": "proved_minimum",
+      "sources": [
+        "toffoli2009"
+      ],
+      "notes": "Same matrix (Toffoli) or exact local S conjugation (CCY) of CCX."
+    },
+    {
+      "id": "ccy_cx",
+      "gate": "CCY",
+      "basis": "cx_u",
+      "parameter_domain": "fixed gate",
+      "ancillas": 0,
+      "topology": "all_to_all",
+      "phase": "exact matrix after separately tracking global phase",
+      "lower_bound": 6,
+      "upper_bound": 6,
+      "claim": "proved_minimum",
+      "sources": [
+        "toffoli2009"
+      ],
+      "notes": "Same matrix (Toffoli) or exact local S conjugation (CCY) of CCX."
+    },
+    {
+      "id": "rccx_cx",
+      "gate": "RCCX",
+      "basis": "cx_u",
+      "parameter_domain": "fixed gate",
+      "ancillas": 0,
+      "topology": "all_to_all",
+      "phase": "exact matrix after separately tracking global phase",
+      "lower_bound": 3,
+      "upper_bound": 3,
+      "claim": "proved_minimum",
+      "sources": [
+        "margolus2004"
+      ],
+      "notes": "Exact local S conjugation of Margolus; the same three-CNOT lower bound applies."
+    },
+    {
+      "id": "peres_cx",
+      "gate": "Peres",
+      "basis": "cx_u",
+      "parameter_domain": "fixed gate",
+      "ancillas": 0,
+      "topology": "all_to_all",
+      "phase": "exact matrix after separately tracking global phase",
+      "lower_bound": 5,
+      "upper_bound": 5,
+      "claim": "proved_minimum",
+      "sources": [
+        "toffoli2009"
+      ],
+      "notes": "Deduction: Peres = CX(0,1) after CCX. The stored reference cancels one CNOT; fewer than five would implement Toffoli with fewer than six after appending one CX."
+    }
+  ],
+  "hardware_gate_sets": [
+    {
+      "id": "ibm",
+      "bases": [
+        "ibm_cx",
+        "ibm_ecr",
+        "ibm_cz"
+      ],
+      "source": "https://quantum.cloud.ibm.com/docs/en/guides/qpu-information",
+      "notes": "Device-specific instructions vary. Modern ECR/CZ targets with Rz/SX/X; CX retained as an abstract and historical target."
+    },
+    {
+      "id": "google",
+      "bases": [
+        "google_cz",
+        "google_sqrt_iswap",
+        "google_syc",
+        "google_fsim"
+      ],
+      "source": "https://quantumai.google/cirq/gatezoo",
+      "notes": "PhasedXZ local gates; fixed SYC is distinct from freely parameterized fSim. Device availability is not implied by a mathematical preset."
+    },
+    {
+      "id": "ionq",
+      "bases": [
+        "ionq_aria",
+        "ionq_aria_full",
+        "ionq_forte"
+      ],
+      "source": "https://docs.ionq.com/features/getting-started-with-native-gates",
+      "notes": "GPi/GPi2 and MS on Aria, ZZ on Forte. Native turns and interaction bounds are explicit in gate metadata; mathematical matrices also exist outside hardware ranges."
+    },
+    {
+      "id": "quantinuum",
+      "bases": [
+        "quantinuum_zzmax",
+        "quantinuum_zzphase",
+        "tket_tk2"
+      ],
+      "source": "https://docs.quantinuum.com/tket/api-docs/optype.html",
+      "notes": "PhasedX/Rz with ZZMax or ZZPhase; TK2 is an SU4 compiler macro. Rz catalog arguments are radians; PhasedX/ZZPhase/TK2 use TKET half turns."
+    },
+    {
+      "id": "rigetti",
+      "bases": [
+        "rigetti_cz"
+      ],
+      "source": "https://pyquil-docs.rigetti.com/en/v4/compiler.html",
+      "notes": "Rz and fixed Rx(k*pi/2), CZ; SX preset representation requires a separately tracked phase relative to physical Rx(pi/2)."
+    },
+    {
+      "id": "aqt",
+      "bases": [
+        "aqt_rxx"
+      ],
+      "source": "https://qiskit-community.github.io/qiskit-aqt-provider/v1/guide.html",
+      "notes": "R, Rz, Rxx targets in provider radians."
+    },
+    {
+      "id": "iqm",
+      "bases": [
+        "iqm_cz"
+      ],
+      "source": "https://docs.iqm.tech/iqm-client/api/iqm.iqm_client.models.html",
+      "notes": "PRX and CZ represented mathematically by R and CZ; convert provider units at the API boundary. Resonator MOVE is not counted as a qubit entangler."
+    },
+    {
+      "id": "discrete",
+      "bases": [
+        "clifford_t_cx",
+        "clifford_t_cz"
+      ],
+      "source": "https://arxiv.org/abs/1206.5236",
+      "notes": "Dense universality does not imply exact finite synthesis for arbitrary real symbolic angles."
+    }
+  ]
+}

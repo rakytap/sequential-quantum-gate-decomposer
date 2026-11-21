@@ -1,0 +1,257 @@
+\documentclass[11pt]{article}
+\usepackage[margin=24mm]{geometry}
+\usepackage{amsmath,amssymb,booktabs,hyperref}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{graphicx}
+\usepackage[braket,qm]{qcircuit}
+\newcommand{\A}{\mathcal A}
+\newcommand{\Sqi}{\mathrm{SQiSW}}
+\title{Exact symbolic SQiSW circuits: completing the outer local frames}
+\author{Symbolic decomposition construction ledger}
+\date{7 November 2026}
+\begin{document}\maketitle
+
+\noindent The new constructor implements every real member of the five
+families below with three SQiSW pulses, in each of the two supplied bases,
+under both phase policies. The previous scored constructions used six.
+The circuits include explicit symbolic outer frames and all degeneracy and
+periodic-angle branches. They do not call a numerical KAK decomposition.
+\begin{center}
+\begin{tabular}{lccc}\toprule
+Target family & Previous pulses & New pulses & New local gates\\\midrule
+Canonical & 6 & 3 & 9 exact / 8 projective\\
+fSim & 6 & 3 & 9 exact / 8 projective\\
+PhasedFSim & 6 & 3 & 9 exact / 8 projective\\
+SWAPPow & 6 & 3 & 9 exact / 8 projective\\
+TK2 & 6 & 3 & 9 exact / 8 projective\\\bottomrule
+\end{tabular}
+\end{center}
+\begin{center}
+\resizebox{\linewidth}{!}{\input{sqrt_iswap_cartan_circuit.tex}}
+\end{center}
+\noindent Qiskit drawing of the actual phase-exact Canonical construction:
+$S$ is native SQiSW and $K_j$ are the nine derived $U_3$ gates, in archived
+operation order. The formulas below define the local matrices; the scalar
+program records their exact Euler angles. The projective circuit has eight
+local gates and a virtual scalar in its metadata.
+
+\noindent Each row applies to both \texttt{sqrt\_iswap\_u} and
+\texttt{google\_sqrt\_iswap}, giving twenty phase modes. Three is the
+\emph{minimum uniform family budget}: every family has a specialization in
+the SWAP class, which cannot use two SQiSW pulses~\cite{sq}.
+This is not a claim that every specialization needs three pulses.
+Identity, native-pulse, and two-pulse specializations can require fewer.
+
+The parameter-sensitive local score is explicitly \emph{not evaluated} for
+these shared-expression circuits. Assigning costs to temporary symbol names
+would incorrectly score aliases rather than their defining expressions.
+The existing scored archive is preserved; the separate construction-frontier
+archive supplies the new pulse bounds and exact replay certificates.
+No new global local-score or literature-novelty claim is made here.
+
+\section{Conventions and the two-pulse middle chart}
+Write
+\[
+ \A(x,y,z)=\exp(i(xXX+yYY+zZZ)),\qquad
+ S=\Sqi=\A(\pi/8,\pi/8,0).
+\]
+First assume $\pi/4\geq x\geq y\geq |z|$ and $x\geq y+|z|$.
+The middle chart of~\cite{sq} can be expressed without inverse cosines.
+Put
+\begin{align*}
+ X&=\cos2x,&Y&=\cos2y,&Z&=\cos2z,\\
+ d&=X-Y+Z,&r&=\sqrt{X^2+Y^2+Z^2-2XYZ-1},\\
+ C&=(1+d-r)/2,&V&=(1-d-r)/2,&D&=(1+X)(1+Z)(1-Y)/2.
+\end{align*}
+On the regular chart define
+\[
+ c=\sqrt C,\quad t=\sqrt{1-C},\quad v=\sqrt V,\quad
+ u=\operatorname{sgn}_+(z)\sqrt D/c,\quad w=\sqrt{XYZ}/c,
+\]
+where $\operatorname{sgn}_+(0)=1$. Then
+\[
+ c^2+t^2=1,\quad u^2+v^2+w^2=1,\quad
+ U=S\big((uI+ivX+iwZ)\otimes(cI+itX)\big)S.
+\]
+The only $c=0$ point in this chamber is the CNOT corner
+$(x,y,z)=(\pi/4,0,0)$. There the explicit branch is
+$(c,t,u,v,w)=(0,1,0,0,1)$; no division by zero is evaluated.
+
+The domain inequalities follow from $0\leq X\leq Y,Z\leq1$ and
+$x\geq y+|z|$. In particular
+\[
+ r^2=(X-YZ)^2-(1-Y^2)(1-Z^2)\geq0,
+\]
+and
+\begin{align*}
+ (1-d)^2-r^2&=2(1-X)(1+Y)(1-Z)\geq0,\\
+ (1+d)^2-r^2&=4(D+XYZ)\geq0.
+\end{align*}
+Thus every square root denotes its real nonnegative branch. The identities
+\begin{align*}
+ C(1-V)&=D+XYZ,\\
+ 4(1-C)VD&=(1-X^2)(1-Y^2)(1-Z^2)
+\end{align*}
+give the required normalization and the sign of the spin trace.
+
+\section{Exact local-equivalence certificate}
+For $W\in SU(4)$ let
+\[
+ \Gamma(W)=W(YY)W^T(YY).
+\]
+The implemented polynomial checks establish
+\begin{align*}
+ \tfrac14\operatorname{tr}\Gamma(U)&=c^2w^2+2ictuv
+       =XYZ+i\sin2x\sin2y\sin2z,\\
+ e_2(\Gamma(U))&=4c^4-8c^2u^2+4v^4-8v^2+2\\
+       &=2(\cos4x+\cos4y+\cos4z).
+\end{align*}
+Here $e_2(M)=((\operatorname{tr}M)^2-\operatorname{tr}(M^2))/2$.
+Both spin matrices are unitary with determinant one, so the third
+characteristic coefficient is the conjugate of the trace and the fourth
+is one. Their full characteristic polynomials therefore agree.
+The standard two-qubit local-equivalence theorem~\cite{makhlin} supplies
+local $SU(2)$ factors; the next section recovers those factors explicitly.
+No numerical comparison is used as this certificate.
+
+\section{Recovering the local factors through a real $3\times3$ tensor}
+The spin matrix has the Pauli expansion
+\[
+ \Gamma(U)=k_0 I+\sum_{i,j=1}^3T_{ij}\sigma_i\otimes\sigma_j.
+\]
+There are no one-body coefficients. For the target, the tensor is diagonal,
+with
+\[
+ k_i=\cos2x_i\sin2x_j\sin2x_k+
+          i\sin2x_i\cos2x_j\cos2x_k,
+ \qquad \{i,j,k\}=\{1,2,3\}.
+\]
+Under local conjugation the tensor transforms by real rotations on its two
+indices. Hence $T=W\operatorname{diag}(k_i)V^T$ for $W,V\in SO(3)$.
+Write $a_i=\Re k_i$, $b_i=\Im k_i$. The product $a_ib_i=q$ is independent
+of $i$. Consequently
+\[
+ H=(\Re T)^T\Re T-(\Im T)^T\Im T
+     =V\operatorname{diag}(h_i)V^T,\qquad h_i=a_i^2-b_i^2.
+\]
+These are known symbolic eigenvalues; a polynomial root solver is unnecessary.
+For each label $i$ construct its spectral projector as
+\[
+ P_i=\prod_{j\ne i,\ h_j\ne h_i}\frac{H-h_j I}{h_i-h_j}.
+\]
+Repeated nonmatching eigenvalues can repeat a projector factor harmlessly.
+The implementation tests every eigenvalue-multiplicity pattern exactly.
+A column $P_ie_p/\sqrt{(P_i)_{pp}}$, choosing the largest diagonal, gives
+a unit vector. If labels zero and one share an eigenspace, subtract
+$v_0v_0^T$ before choosing $v_1$. Set $v_2=v_0\times v_1$.
+
+For nonzero $k_i$, the matching other column is
+\[
+ w_i=\frac{a_i\Re T+b_i\Im T}{a_i^2+b_i^2}\,v_i.
+\]
+If a coefficient vanishes, complete its frame with cross products and a
+projected coordinate vector. All eight zero/nonzero patterns are explicit.
+A collision $h_i=h_j$ implies $k_i^2=k_j^2$, since
+$\Im(k_i^2)=2q$. Thus $k_i=\pm k_j$, and the degenerate eigenspace presents
+no missing branch. The local-equivalence certificate fixes the orientation
+in the full-rank case; cross products fix it in deficient-rank cases.
+
+Lift each real rotation to a unit quaternion, taking the largest of
+\[
+ q_0^2=(1+\operatorname{tr}R)/4,\qquad
+ q_j^2=(1+2R_{jj}-\operatorname{tr}R)/4.
+\]
+That pivot is at least $1/4$. Antisymmetric and symmetric matrix entries
+recover the other quaternion components. The implementation verifies these
+identities against the quaternion Pauli action as polynomial equalities.
+The corresponding $SU(2)$ matrix is $Q=q_0I-i\sum_jq_j\sigma_j$.
+
+Let $L=Q(W)\otimes Q(V)$ and set
+\[
+ R=\A^\dagger L^\dagger U.
+\]
+Then $\Gamma(R)=I$ and $\det R=1$. In the magic basis this is a proper real
+orthogonal matrix, so the $SU(2)\times SU(2)$ double cover of $SO(4)$ makes
+$R$ local. Its coefficients in the orthonormal quaternion basis
+$(I,-iX,-iY,-iZ)^{\otimes2}$ form a real rank-one outer product.
+A normalized nonzero column recovers the first quaternion and contraction
+with that column recovers the second. Thus the final, literal identity is
+\[
+ \boxed{\A=L^\dagger S(C_0\otimes C_1)S R^\dagger.}
+\]
+
+\section{Three pulses and arbitrary real angles}
+For arbitrary coordinates, fold each angle into $[-\pi/4,\pi/4)$ using
+\[
+ n_i=\left\lfloor2x_i/\pi+\tfrac12\right\rfloor,\qquad
+ e^{i\pi n_i\sigma_i\sigma_i/2}
+ =e^{-i\pi n_i/2}\bigl(R_i(-\pi n_i)\otimes R_i(-\pi n_i)\bigr).
+\]
+Simultaneous local Clifford permutations order their absolute values;
+a Pauli frame on one wire makes the first two signs positive.
+The scalar $e^{-i\pi\sum_i n_i/2}$ is retained explicitly.
+
+For canonical coordinates choose a commuting one-pulse kernel
+\[
+ b=\begin{cases}
+ (0,\pi/8,-\pi/8),&y>\pi/8,\ z<0,\\
+ (0,\pi/8,\pi/8),&y>\pi/8,\ z\geq0,\\
+ (-\pi/8,\pi/8,0),&y\leq\pi/8.
+ \end{cases}
+\]
+Each is a fixed local conjugate of $S$. Canonicalizing the residual
+$(x,y,z)-b$ puts it in the two-pulse chamber. To verify the inequality,
+measure $x,y,|z|$ in units $\pi/8$ as $a,b,c$ with
+$0\leq c\leq b\leq a\leq2$. The four residual differences between its
+largest absolute coordinate and the sum of the other two are
+\[
+ a+(b-c),\quad (2-a)+(b-c),\quad (a-b)+c,\quad (a-b)+(2-c),
+\]
+on the branches $(b\leq1,a<1)$, $(b\leq1,a\geq1)$,
+$(b>1,c\leq1)$, $(b>1,c\geq1)$, respectively. Each is nonnegative.
+Multiplying the one-pulse kernel and the two-pulse residual yields three
+pulses and four local layers, after fusing adjacent local factors.
+
+Each unit quaternion has an explicit polar $U_3$ chart, including zero
+diagonal and off-diagonal radii. Projective output records its scalar as
+virtual metadata. Exact output absorbs that scalar into a two-$U_3$ local
+word, replacing one existing local gate. The PhasedXZ conversion has its
+own checked scalar. No physical GP operation appears in either basis.
+
+\section{Reproduction and limitations}
+The arithmetic graph is an exact representation with shared subexpressions;
+its bindings introduce no independent parameters. Lazy branches avoid
+evaluating unused singular denominators. The implementation files are
+\texttt{symbolic\_sqrt\_iswap\_cartan.py} and
+\texttt{symbolic\_expression\_program.py}. Generate and replay the archive with
+\begin{verbatim}
+python examples/decomposition/symbolic_sqrt_iswap_frontier.py \
+  --output benchmarks/symbolic/sqrt_iswap_frontier_20261107.json.gz
+python examples/decomposition/symbolic_sqrt_iswap_frontier.py \
+  --verify benchmarks/symbolic/sqrt_iswap_frontier_20261107.json.gz
+\end{verbatim}
+The archive records source hashes, the code commit, twenty regenerated
+certificates, and matching uniform-budget witnesses. The independent
+regressions include full matrices at poles, repeated eigenvalues, fold
+boundaries, negative and out-of-chamber angles, both native bases, both
+phase policies, and all five free families. Regression samples supplement
+the component identities and local-equivalence theorem; they do not
+certify a symbolic family.
+
+The remaining work is substantial local-score optimization and broader
+global-optimality proofs. Neither the three-pulse construction nor the
+earlier all-phase Clifford proof establishes global optimality throughout
+the whole $327\times32$ grid. The existing scored archive and atlas retain
+their previous version until shared-expression scores are evaluated under
+the existing objective without alias substitution.
+
+\begin{thebibliography}{9}
+\bibitem{sq} C.~Huang et al., \emph{Towards ultra-high fidelity quantum
+operations: SQiSW gate as a native two-qubit gate},
+\href{https://arxiv.org/abs/2105.06074}{arXiv:2105.06074}.
+\bibitem{makhlin} Y.~Makhlin, \emph{Nonlocal properties of two-qubit gates
+and mixed states, and the optimization of quantum computations},
+\href{https://arxiv.org/abs/quant-ph/0002045}{arXiv:quant-ph/0002045}.
+\end{thebibliography}
+\end{document}

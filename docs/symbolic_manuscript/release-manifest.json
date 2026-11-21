@@ -1,0 +1,228 @@
+{
+  "schema": "symbolic-referee-package-v3",
+  "manuscript_pages": 11,
+  "quantum_template_pages": 11,
+  "response_pages": 1,
+  "atlas_pages": {
+    "gates": 569,
+    "cliffords": 98
+  },
+  "supplement_pages": 13,
+  "native_numerical_replays": {
+    "schema": "native-column-numerical-replay-v1",
+    "archive_sha256": "d05982db26becb1a4e86e928579bb20edb0152a83ea21fd0b594d815b524e72f",
+    "statuses": {
+      "verified_numerical_witness": 99,
+      "no_fit_within_budget": 51
+    },
+    "maximum_literal_entry_error": 1.026974074957431e-11,
+    "acceptance": "All witness operations use their declared alphabet and actual catalog matrices; no GP. Numerical only, not exact or minimum proofs."
+  },
+  "monodromy_exact_replays": {
+    "schema": "native-monodromy-verification-v1",
+    "artifacts": {
+      "native_monodromy_20261108.json.gz": {
+        "sha256": "ba780a672a1d46bbe0a2adce52ee61f0cd1800a3283117faa0c6fe1b583b256d",
+        "verified_records": 112,
+        "statuses": {
+          "proved_native_class_minimum": 111,
+          "proof_deadline": 30,
+          "coordinate_not_certified": 8,
+          "proved_lower_bound": 1
+        },
+        "sources": [
+          {
+            "path": "examples/decomposition/symbolic_monodromy_audit.py",
+            "sha256": "d146043ca41a77f043f0e46c57633a9ac4331f6493d9ed7c85fa393663e368e0",
+            "resolution": "historical_source",
+            "revision": "0e626c78f89413201ae6f45ba5df3384e92496fa"
+          },
+          {
+            "path": "squander/decomposition/symbolic_monodromy.py",
+            "sha256": "305d98c1f0da88247d6977f6a2441261a2305d3d961b6a0ae2bf06303cf77596",
+            "resolution": "included_current_source"
+          },
+          {
+            "path": "squander/decomposition/symbolic_monodromy_qlr.json",
+            "sha256": "918877b18f43379f967c972571391434ee7e926cdd41a5ecb696c1c202fc2771",
+            "resolution": "included_current_source"
+          },
+          {
+            "path": "squander/decomposition/symbolic_reflection_involution.py",
+            "sha256": "534e119df082dfbe9845fbc5e2846179b6db488b4b358180b5754fb6e83b1088",
+            "resolution": "historical_source",
+            "revision": "5987b7e1cbdff67e1aa8f701f47645c19838dd60"
+          }
+        ]
+      },
+      "native_monodromy_deep_20261108.json.gz": {
+        "sha256": "521d648e18a24534f93b4a2522e1bdfdfd18f009a1a7961983acaa789611e41e",
+        "verified_records": 1,
+        "statuses": {
+          "proved_native_class_minimum": 1
+        },
+        "sources": [
+          {
+            "path": "examples/decomposition/symbolic_monodromy_audit.py",
+            "sha256": "8265c72d0b5db2513657991b65ceabb9a36f0a8f517a5f9a9fb2e53ea9b9ceda",
+            "resolution": "included_current_source"
+          },
+          {
+            "path": "squander/decomposition/symbolic_monodromy.py",
+            "sha256": "305d98c1f0da88247d6977f6a2441261a2305d3d961b6a0ae2bf06303cf77596",
+            "resolution": "included_current_source"
+          },
+          {
+            "path": "squander/decomposition/symbolic_monodromy_qlr.json",
+            "sha256": "918877b18f43379f967c972571391434ee7e926cdd41a5ecb696c1c202fc2771",
+            "resolution": "included_current_source"
+          },
+          {
+            "path": "squander/decomposition/symbolic_reflection_involution.py",
+            "sha256": "534e119df082dfbe9845fbc5e2846179b6db488b4b358180b5754fb6e83b1088",
+            "resolution": "historical_source",
+            "revision": "5987b7e1cbdff67e1aa8f701f47645c19838dd60"
+          }
+        ]
+      }
+    },
+    "unique_minimum_records": 112,
+    "fixed_target_native_pairs": 64,
+    "scope": "Exact native-class E minima with arbitrary U(2) locals. Family rows apply only to named substitutions. No short local-frame word or local minimum is implied."
+  },
+  "reflection_numerical_replays": {
+    "schema": "reflection-seven-numerical-verification-v1",
+    "archive_sha256": "a08e460ceb901e61c379e92e315839cdd3b9bae47271df293f5dc2a07253ac17",
+    "independent_replay": "Qiskit QuantumCircuit and Operator",
+    "source": {
+      "path": "examples/decomposition/symbolic_reflection_numeric_audit.py",
+      "sha256": "c25461e1e5266c6646c8494651af08e054a1e1ced080ea317afb4efae8e4b79f",
+      "resolution": "included_current_source"
+    },
+    "maximum_literal_entry_error": 4.037621774323881e-14,
+    "no_physical_GP": true,
+    "rows": [
+      {
+        "angle_source": "pi/8",
+        "literal_maximum_entry_error": 4.543408799789508e-15
+      },
+      {
+        "angle_source": "0.3",
+        "literal_maximum_entry_error": 7.861460760820296e-16
+      },
+      {
+        "angle_source": "0",
+        "literal_maximum_entry_error": 6.545141402252904e-15
+      },
+      {
+        "angle_source": "0.1",
+        "literal_maximum_entry_error": 1.6537036554692385e-14
+      },
+      {
+        "angle_source": "0.2",
+        "literal_maximum_entry_error": 1.2156942119645464e-14
+      },
+      {
+        "angle_source": "0.4",
+        "literal_maximum_entry_error": 1.589806445095398e-14
+      },
+      {
+        "angle_source": "0.5",
+        "literal_maximum_entry_error": 1.772337691111416e-14
+      },
+      {
+        "angle_source": "0.6",
+        "literal_maximum_entry_error": 2.8061765448406604e-14
+      },
+      {
+        "angle_source": "0.7",
+        "literal_maximum_entry_error": 2.4987708289935304e-14
+      },
+      {
+        "angle_source": "pi/4",
+        "literal_maximum_entry_error": 4.037621774323881e-14
+      }
+    ],
+    "scope": "Ten numerical seven-CX witnesses only. The exact free-angle five-unrestricted-gate identity is separately checked by test_five_unrestricted_reflection_word_with_angle_free. Neither is an interior lower bound.",
+    "exact_family": {
+      "archive_sha256": "001a5e63ab8e0fd85567f1993e361fa55b5247935f6d269d9484d2ba58753d88",
+      "entanglers": 7,
+      "local_gates": 18,
+      "phase_contract": "literal; no GP",
+      "real_angle_free": true,
+      "negative_variant_verified": true,
+      "source": {
+        "path": "squander/decomposition/symbolic_reflection_involution.py",
+        "sha256": "6242eee03c5f5645ac707f39b3e52ab2af21b52a33035e28ec3f59f441b8f268",
+        "resolution": "included_current_source"
+      }
+    }
+  },
+  "validation": {
+    "full_suite": {
+      "status": "passed",
+      "passed": 1216,
+      "warnings": 1,
+      "seconds": 1154.17,
+      "log_sha256": "62ac0f3e592e79f45b4944ac4dd6a9463b0484cf2e3424478994a53632b93738"
+    },
+    "new_theory_suite": {
+      "status": "passed",
+      "passed": 17,
+      "warnings": 0,
+      "seconds": 4.43,
+      "log_sha256": "adf11588ef1c5a4b9ca8bf37c93c9a5312ce0483fc5f4cfa4746994054b28364"
+    },
+    "overall_status": "passed",
+    "covered_tests": 1216,
+    "scope": "Fresh full pure-symbolic collection, including both signs of the free-angle seven-CNOT word and the native monodromy checks. No core synthesis/proof source changed after collection. Exact certificate replays and numerical witness checks are separately reported."
+  },
+  "exact_changed_replays": 144,
+  "unchanged_payload_comparisons": 20784,
+  "artifacts": {
+    "docs/symbolic_manuscript/manuscript.pdf": {
+      "sha256": "b4b80dd89a33dfaa1ac47b9db81fd67bd78a263f4bf9703a9c3eea35e61b706d",
+      "bytes": 347728
+    },
+    "docs/symbolic_manuscript/quantum-submission.pdf": {
+      "sha256": "08985517c63a6552d0bd64b21b36b911307e0887d7cacfd3148f2462a77d1992",
+      "bytes": 345902
+    },
+    "docs/symbolic_manuscript/supplement.pdf": {
+      "sha256": "5705954b85add5b68d8eb174270b1e6294e6100f5016069a65ecdc96b1606cd5",
+      "bytes": 336686
+    },
+    "docs/symbolic_manuscript/referee-response.pdf": {
+      "sha256": "7f9eb028bbec2dcc0d6d85633ed22b94b5b9a9fe993a88a46f74a2190e50bd29",
+      "bytes": 147845
+    },
+    "docs/symbolic_manuscript/sources.zip": {
+      "sha256": "84f4cc545abf50cb79c4b07cee8b13bacac04e16b80ebd4eec32342123481acc",
+      "bytes": 4445838
+    },
+    "docs/symbolic_manuscript/review-package.zip": {
+      "sha256": "92c54e4ffa79df162ab3dda667d0e8e9476ee6808da1c5394ed3609e1068b5a8",
+      "bytes": 29016928
+    },
+    "docs/symbolic_atlas/gates.pdf": {
+      "sha256": "ac8822f5036ddb10b0cc828663db879d3101fdf8aabcacfdb5229320bcae2192",
+      "bytes": 26756890
+    },
+    "docs/symbolic_atlas/cliffords.pdf": {
+      "sha256": "e256d9103311ff5e7b49719c9930d2bcc77afd109a20e61285f59c53f09f52ce",
+      "bytes": 1894011
+    },
+    "docs/symbolic_atlas/sources.zip": {
+      "sha256": "2ef9b90de935a402f482796ca951fe474268570428c7c4b8b2e98e4da3b34261",
+      "bytes": 3481978
+    },
+    "docs/symbolic_notable_results/notable_results.pdf": {
+      "sha256": "a21bf7fd1de55b56f83e30096369a68a0418e57c51fff4e3a9b342ea8df5b2aa",
+      "bytes": 50580
+    },
+    "benchmarks/symbolic/synthesis_reference_20261107_referee.json.gz": {
+      "sha256": "f0e67c123e43d26c999cc39ef5865d153ceb7f9ad5742b5d9be35f76b8492495",
+      "bytes": 1617986
+    }
+  }
+}

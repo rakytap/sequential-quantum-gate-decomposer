@@ -1,0 +1,1471 @@
+{
+  "schema": "symbolic-manuscript-release-verification-v1",
+  "archive_sha256": "f0e67c123e43d26c999cc39ef5865d153ceb7f9ad5742b5d9be35f76b8492495",
+  "preserved_base_sha256": "4f5220708caaf639b7b1759b0157102564bd564d6294addf83d8985a2e0e6e8f",
+  "phase_modes": 20928,
+  "unchanged_construction_modes": 20784,
+  "changed_construction_modes": 144,
+  "source_checks": [
+    {
+      "run": 0,
+      "revision": "02645e1331c22686dc8e5cf807eac3749db54961",
+      "source_blobs": 20
+    },
+    {
+      "run": 1,
+      "revision": "924f395834ca5b9d3f846b198bd3006b86c6bfe9",
+      "source_blobs": 20
+    },
+    {
+      "run": 2,
+      "revision": "1076988fc4221f3de40dd47b4a793d862941dbc3",
+      "source_blobs": 24
+    },
+    {
+      "run": 3,
+      "revision": "1076988fc4221f3de40dd47b4a793d862941dbc3",
+      "source_blobs": 24
+    },
+    {
+      "run": 4,
+      "revision": "b391dd113d39c4a4bc40e86ce9d666981934bb9c",
+      "source_blobs": 24
+    },
+    {
+      "run": 5,
+      "revision": "c21e04944dc3e0f9745c07ae52ce21b027dc658d",
+      "source_blobs": 25
+    },
+    {
+      "run": 6,
+      "revision": "62b44f6588ceecd3d1793313f4e847985f9e6923",
+      "source_blobs": 25
+    },
+    {
+      "run": 7,
+      "revision": "d3d3c4b8402ad577dcaec57356d6fba1dae96c15",
+      "source_blobs": 25
+    },
+    {
+      "run": 8,
+      "revision": "2c39f362145638de4726344fbf34678125e1fc30",
+      "source_blobs": 26
+    },
+    {
+      "run": 9,
+      "revision": "2c39f362145638de4726344fbf34678125e1fc30",
+      "source_blobs": 26
+    },
+    {
+      "run": 10,
+      "revision": "0bdf752f9c80f90285a77b11029d968ed0dcc325",
+      "source_blobs": 26
+    },
+    {
+      "run": 11,
+      "revision": "5f2c8f6b78b74629796eb2de13d182aefef5bebd",
+      "source_blobs": 26
+    },
+    {
+      "run": 12,
+      "revision": "c5e84e602cf93d021fb220596915edcc2c9e0ef5",
+      "source_blobs": 28
+    },
+    {
+      "run": 13,
+      "revision": "0d4979ac433ccbdb90758614d4a4e20a2ebb6d43",
+      "source_blobs": 30
+    },
+    {
+      "run": 14,
+      "revision": "928fcf7cea46b77c0d4612bd1ca8bfdbe63cbaed",
+      "source_blobs": 31
+    },
+    {
+      "run": 15,
+      "revision": "40f98fe37eda63d4afaf89f9bf8f4ede1da736f4",
+      "source_blobs": 31
+    },
+    {
+      "run": 16,
+      "revision": "603df966096fae448d45914cb3883fe30d50972f",
+      "source_blobs": 33
+    },
+    {
+      "run": 17,
+      "revision": "603df966096fae448d45914cb3883fe30d50972f",
+      "source_blobs": 34
+    },
+    {
+      "run": 18,
+      "revision": "ba8e01b48f6f9e196022f653518f20282e922109",
+      "source_blobs": 33
+    },
+    {
+      "run": 19,
+      "revision": "ba8e01b48f6f9e196022f653518f20282e922109",
+      "source_blobs": 34
+    },
+    {
+      "run": 20,
+      "revision": "66f807ca18444576a89d7ceee703d57894122a23",
+      "source_blobs": 34
+    },
+    {
+      "run": 21,
+      "revision": "9b1542a2ebc0af6a5270ae919e7bd0ed7d8c4b8d",
+      "source_blobs": 34
+    },
+    {
+      "run": 22,
+      "revision": "f03198c2a9f69a3cd85abe02ee93b09b9d8679e7",
+      "source_blobs": 33
+    },
+    {
+      "run": 23,
+      "revision": "bba8ccc758c03f6758fb504a46fff54aae015c0b",
+      "source_blobs": 34
+    },
+    {
+      "run": 24,
+      "revision": "c5640588b25871b8bfb850132cf1779258e17de4",
+      "source_blobs": 34
+    },
+    {
+      "run": 25,
+      "revision": "24dcf58b63e3f6ffb88087f20ac61b5a19661eab",
+      "source_blobs": 34
+    },
+    {
+      "run": 26,
+      "revision": "6beb0a60e17d10c7bfc5d52f1145aee29dd19ed1",
+      "source_blobs": 34
+    },
+    {
+      "run": 27,
+      "revision": "cbc150cf230ffecee581fd8b0b6653207bf4fa16",
+      "source_blobs": 36
+    },
+    {
+      "run": 28,
+      "revision": "c6bf1ffd6ed5f91eec2843fcb5ce3ae92e6562e6",
+      "source_blobs": 37
+    },
+    {
+      "run": 29,
+      "revision": "35d9c593a7553da11c8cd984151d1d21155251d5",
+      "source_blobs": 39
+    },
+    {
+      "run": 30,
+      "revision": "35d9c593a7553da11c8cd984151d1d21155251d5",
+      "source_blobs": 39
+    },
+    {
+      "run": 31,
+      "revision": "9385be3c75bdc2468684979ff5432a0e1342aabf",
+      "source_blobs": 40
+    },
+    {
+      "run": 32,
+      "revision": "e388bba07f8b0a292b78ae71a06de88191aca766",
+      "source_blobs": 42
+    },
+    {
+      "run": 33,
+      "revision": "e388bba07f8b0a292b78ae71a06de88191aca766",
+      "source_blobs": 42
+    },
+    {
+      "run": 34,
+      "revision": "e388bba07f8b0a292b78ae71a06de88191aca766",
+      "source_blobs": 42
+    },
+    {
+      "run": 35,
+      "revision": "448852e0c2f09bf211a957b64026b006cd1428c5",
+      "source_blobs": 47
+    },
+    {
+      "run": 36,
+      "revision": "448852e0c2f09bf211a957b64026b006cd1428c5",
+      "source_blobs": 47
+    },
+    {
+      "run": 37,
+      "revision": "8fc3924837234d079d88aba68688dbbb535893c3",
+      "source_blobs": 48
+    },
+    {
+      "run": 38,
+      "revision": "543590cb7659f13f165c6342c29b17cb1a8dc929",
+      "source_blobs": 50
+    },
+    {
+      "run": 39,
+      "revision": "543590cb7659f13f165c6342c29b17cb1a8dc929",
+      "source_blobs": 50
+    }
+  ],
+  "distinct_revision_source_pairs": 1005,
+  "all_source_checks_passed": true,
+  "source_policy": "Verify recorded revision where possible; otherwise resolve exact recorded source hash from Git history and list the exception",
+  "recorded_revision_exceptions": [
+    {
+      "run": 0,
+      "path": "examples/decomposition/symbolic_synthesis_archive.py",
+      "recorded_revision": "02645e1331c22686dc8e5cf807eac3749db54961",
+      "content_sha256": "8a4595506f54e439ec0da32a9cd48078d7f70ba638c65d34d5737a4b8e362d86",
+      "resolved_content_revision": "924f395834ca5b9d3f846b198bd3006b86c6bfe9"
+    },
+    {
+      "run": 0,
+      "path": "squander/decomposition/symbolic_archive.py",
+      "recorded_revision": "02645e1331c22686dc8e5cf807eac3749db54961",
+      "content_sha256": "ede1efdad7dbdcbae2f2da03fde11cb1ddcff68f6048f21b864512a518a67863",
+      "resolved_content_revision": "924f395834ca5b9d3f846b198bd3006b86c6bfe9"
+    },
+    {
+      "run": 0,
+      "path": "squander/decomposition/symbolic_clifford_search.py",
+      "recorded_revision": "02645e1331c22686dc8e5cf807eac3749db54961",
+      "content_sha256": "e44e43c4197b6a2d14b10cd27129900dfe8f76b504e47ab3a8bb17961bc1c1bf",
+      "resolved_content_revision": "924f395834ca5b9d3f846b198bd3006b86c6bfe9"
+    },
+    {
+      "run": 0,
+      "path": "squander/decomposition/symbolic_contract.py",
+      "recorded_revision": "02645e1331c22686dc8e5cf807eac3749db54961",
+      "content_sha256": "00c749a92ef842b66f0d9ce33a408cdac933dd0360d862b1c18c9effceb3bf78",
+      "resolved_content_revision": "924f395834ca5b9d3f846b198bd3006b86c6bfe9"
+    },
+    {
+      "run": 0,
+      "path": "squander/decomposition/symbolic_feasibility.py",
+      "recorded_revision": "02645e1331c22686dc8e5cf807eac3749db54961",
+      "content_sha256": "6ed91e5ef6132309a39c16447e6c91307bc368acc70ec88f9407834729aa344a",
+      "resolved_content_revision": "924f395834ca5b9d3f846b198bd3006b86c6bfe9"
+    },
+    {
+      "run": 0,
+      "path": "squander/decomposition/symbolic_identity.py",
+      "recorded_revision": "02645e1331c22686dc8e5cf807eac3749db54961",
+      "content_sha256": "b32ad51e31beecb2895dd06c7fd04ce279b3b5802e79fba3c6cb62f34819baed",
+      "resolved_content_revision": "924f395834ca5b9d3f846b198bd3006b86c6bfe9"
+    },
+    {
+      "run": 0,
+      "path": "squander/decomposition/symbolic_qiskit_source.py",
+      "recorded_revision": "02645e1331c22686dc8e5cf807eac3749db54961",
+      "content_sha256": "1306e87e996cdd7b1b6e44f47820a056260dde32dda7c07374ac63af69603da5",
+      "resolved_content_revision": "924f395834ca5b9d3f846b198bd3006b86c6bfe9"
+    },
+    {
+      "run": 0,
+      "path": "squander/decomposition/symbolic_rules.py",
+      "recorded_revision": "02645e1331c22686dc8e5cf807eac3749db54961",
+      "content_sha256": "7ad8afaa2369f163d0172708d4083b5a6533075fa7a9f31debbbe5f14d6ebb79",
+      "resolved_content_revision": "924f395834ca5b9d3f846b198bd3006b86c6bfe9"
+    },
+    {
+      "run": 0,
+      "path": "squander/decomposition/symbolic_synthesis.py",
+      "recorded_revision": "02645e1331c22686dc8e5cf807eac3749db54961",
+      "content_sha256": "d51013c8e724ee21d8485795324a3db57b817a92fe2e0d645d93088ad01270da",
+      "resolved_content_revision": "924f395834ca5b9d3f846b198bd3006b86c6bfe9"
+    },
+    {
+      "run": 0,
+      "path": "squander/decomposition/symbolic_uqc.py",
+      "recorded_revision": "02645e1331c22686dc8e5cf807eac3749db54961",
+      "content_sha256": "3037fdd48c088c602363555c1e1ee17fbc813ec4850ccddf5f0534d7845e5968",
+      "resolved_content_revision": "924f395834ca5b9d3f846b198bd3006b86c6bfe9"
+    },
+    {
+      "run": 0,
+      "path": "squander/decomposition/symbolic_clifford_group.json",
+      "recorded_revision": "02645e1331c22686dc8e5cf807eac3749db54961",
+      "content_sha256": "605c562d4680f1bd2bd1269c312c135b5159636a2919da153846f3d52e271967",
+      "resolved_content_revision": "924f395834ca5b9d3f846b198bd3006b86c6bfe9"
+    },
+    {
+      "run": 0,
+      "path": "squander/decomposition/symbolic_cx_frames.json",
+      "recorded_revision": "02645e1331c22686dc8e5cf807eac3749db54961",
+      "content_sha256": "ce55d5d70730bb71035cc8ee12f7f82e7c0ab92266b25118aef7026ccb957b73",
+      "resolved_content_revision": "924f395834ca5b9d3f846b198bd3006b86c6bfe9"
+    },
+    {
+      "run": 1,
+      "path": "squander/decomposition/symbolic_qiskit_source.py",
+      "recorded_revision": "924f395834ca5b9d3f846b198bd3006b86c6bfe9",
+      "content_sha256": "d8cdcbb0dbf7b96d5f806e9a535dd66bf289ae77dbf1c975d209f067436485cf",
+      "resolved_content_revision": "953df13dd18316160eec7db3a5537e952ce9babb"
+    }
+  ],
+  "retained_unresolved_scores": 20,
+  "replays": [
+    {
+      "gate": "CNOT",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 14.74617340695113
+    },
+    {
+      "gate": "CX",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 14.747608251869678
+    },
+    {
+      "gate": "CY",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.007631950080394745
+    },
+    {
+      "gate": "CY",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.00798428151756525
+    },
+    {
+      "gate": "CZ",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.006417745724320412
+    },
+    {
+      "gate": "CZ",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.006700796075165272
+    },
+    {
+      "gate": "CNOT",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 14.764407898299396
+    },
+    {
+      "gate": "CX",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 14.822965689003468
+    },
+    {
+      "gate": "CRX",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 11.040652431547642
+    },
+    {
+      "gate": "CRY",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 11.077847549691796
+    },
+    {
+      "gate": "CRZ",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.11549827642738819
+    },
+    {
+      "gate": "CSX",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.26413882337510586
+    },
+    {
+      "gate": "CSX",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.0057462528347969055
+    },
+    {
+      "gate": "CS",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.027995371259748936
+    },
+    {
+      "gate": "CS",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.00546950101852417
+    },
+    {
+      "gate": "CH",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.01418138574808836
+    },
+    {
+      "gate": "CH",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.004510887898504734
+    },
+    {
+      "gate": "CRX",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 13.181905958801508
+    },
+    {
+      "gate": "CRY",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 13.194533118978143
+    },
+    {
+      "gate": "CRZ",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 2.681125368922949
+    },
+    {
+      "gate": "CU1",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.1387047478929162
+    },
+    {
+      "gate": "CU1",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 2.8651942759752274
+    },
+    {
+      "gate": "CP",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 11.118512469343841
+    },
+    {
+      "gate": "CP",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 13.618967135436833
+    },
+    {
+      "gate": "CR",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 13.931651868857443
+    },
+    {
+      "gate": "CR",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 12.014188517816365
+    },
+    {
+      "gate": "Rxx",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 7.941791704855859
+    },
+    {
+      "gate": "CROT",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 10.961827270686626
+    },
+    {
+      "gate": "Rxx",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 9.65528477076441
+    },
+    {
+      "gate": "Ryy",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 2.4994571106508374
+    },
+    {
+      "gate": "Rzz",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.23774711973965168
+    },
+    {
+      "gate": "CROT",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 14.723710007965565
+    },
+    {
+      "gate": "Rzz",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 1.6661700997501612
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "cx_u",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.1779345627874136
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "cx_u",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.0512195834890008
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "cx_rz_ry",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.04783914890140295
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "cx_rz_ry",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.046865785494446754
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "cx_h_phase",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.09379499033093452
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "cx_h_phase",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.09071251936256886
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "ibm_cx",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.0975553561002016
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "ibm_cx",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.08416842296719551
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "ibm_ecr",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.18561587296426296
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "ibm_ecr",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.13185697048902512
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "ibm_cz",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.16388993710279465
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "ibm_cz",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.15796893369406462
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "cz_u",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.08425675332546234
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "cz_u",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.08485843520611525
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "cz_rz_rx",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.15515723265707493
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "cz_rz_rx",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.154114649631083
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "sqrt_swap_u",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.1865798570215702
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "sqrt_swap_u",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.1849049897864461
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "xx90_u",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.20893825497478247
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "xx90_u",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.1697571910917759
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "xx_rz_ry",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.5097167529165745
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "xx_rz_ry",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.240434218198061
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "zz_u",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.39630673453211784
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "zz_u",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.11238743457943201
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "zx_u",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.3554236935451627
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "zx_u",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.10328937880694866
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "google_cz",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.09154938161373138
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "google_cz",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.07640108186751604
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.3695023888722062
+    },
+    {
+      "gate": "Ryy",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 7.8801022209227085
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.3648346997797489
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "berkeley_b",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.2745876554399729
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "berkeley_b",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.25230458565056324
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "ionq_aria",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 1.4171849768608809
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "ionq_aria",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 1.341908379457891
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "ionq_aria_full",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.45417891442775726
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "ionq_aria_full",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.4503658888861537
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "ionq_forte",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 2.049552875570953
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "ionq_forte",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 2.0394064048305154
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "quantinuum_zzmax",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.2825538255274296
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "quantinuum_zzmax",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.2832124484702945
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "quantinuum_zzphase",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 1.7448844211176038
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "quantinuum_zzphase",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 1.780222900211811
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "tket_tk2",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.21238391939550638
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "rigetti_cz",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.16859181504696608
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "rigetti_cz",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.1776027511805296
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "aqt_rxx",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.20134692545980215
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "iqm_cz",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.10657922085374594
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "iqm_cz",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.1061561293900013
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "aqt_rxx",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.4688773611560464
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "clifford_t_cx",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.10449493303894997
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "clifford_t_cx",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.11761147435754538
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "clifford_t_cz",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.1409854767844081
+    },
+    {
+      "gate": "fFredkin",
+      "basis": "clifford_t_cz",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.14105361700057983
+    },
+    {
+      "gate": "CSdg",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.05009998846799135
+    },
+    {
+      "gate": "CSXdg",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.05725087597966194
+    },
+    {
+      "gate": "CSXdg",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.0059618037194013596
+    },
+    {
+      "gate": "CSdg",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.24820406921207905
+    },
+    {
+      "gate": "CZPowGate",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 14.263517130166292
+    },
+    {
+      "gate": "CT",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 2.066486150957644
+    },
+    {
+      "gate": "CT",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 2.126446637324989
+    },
+    {
+      "gate": "ACX",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.013069570995867252
+    },
+    {
+      "gate": "ACX",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.004983879625797272
+    },
+    {
+      "gate": "DCX",
+      "basis": "tket_tk2",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.017924140207469463
+    },
+    {
+      "gate": "DCX",
+      "basis": "tket_tk2",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_exponential_polynomial_identity",
+      "wall_seconds": 0.013028201647102833
+    },
+    {
+      "gate": "CTdg",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.14812443498522043
+    },
+    {
+      "gate": "ECR",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.2733141602948308
+    },
+    {
+      "gate": "ECR",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.27421281207352877
+    },
+    {
+      "gate": "Rzx",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.6333985710516572
+    },
+    {
+      "gate": "CTdg",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 1.9722542688250542
+    },
+    {
+      "gate": "CZPowGate",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 17.546787335537374
+    },
+    {
+      "gate": "Rxz",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 1.7663908954709768
+    },
+    {
+      "gate": "Rzx",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 3.338019502349198
+    },
+    {
+      "gate": "XX90",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.14914439897984266
+    },
+    {
+      "gate": "XX90",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.006505855359137058
+    },
+    {
+      "gate": "YY90",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.20173099543899298
+    },
+    {
+      "gate": "YY90",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.007067377679049969
+    },
+    {
+      "gate": "ZZ90",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.019944428466260433
+    },
+    {
+      "gate": "ZZ90",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.005675312131643295
+    },
+    {
+      "gate": "Rxz",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 7.610661714337766
+    },
+    {
+      "gate": "Barenco",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 6.640822136774659
+    },
+    {
+      "gate": "Barenco",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 7.397426633164287
+    },
+    {
+      "gate": "IonQMSMax",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 4.958052019588649
+    },
+    {
+      "gate": "IonQMSMax",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 4.551761734299362
+    },
+    {
+      "gate": "IonQZZ",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 20.3960631294176
+    },
+    {
+      "gate": "IonQZZ",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 24.367949116043746
+    },
+    {
+      "gate": "IonQMS",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 34.7490523904562
+    },
+    {
+      "gate": "ZZMax",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.008709465153515339
+    },
+    {
+      "gate": "ZZMax",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.005709282122552395
+    },
+    {
+      "gate": "IonQMS",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 30.16504073794931
+    },
+    {
+      "gate": "CXPow",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 1.61485240701586
+    },
+    {
+      "gate": "CZPow",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 3.8885463075712323
+    },
+    {
+      "gate": "CZPow",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.02105910237878561
+    },
+    {
+      "gate": "ZZPhase",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 18.217939876951277
+    },
+    {
+      "gate": "ZZPhase",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 14.808519883081317
+    },
+    {
+      "gate": "CXPow",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 18.17862165160477
+    },
+    {
+      "gate": "XXPow",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 21.82908291835338
+    },
+    {
+      "gate": "ZZPow",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 4.206842233426869
+    },
+    {
+      "gate": "ZZPow",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.26960272435098886
+    },
+    {
+      "gate": "XXPow",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 18.071569339372218
+    },
+    {
+      "gate": "LinearFunction",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.1266397899016738
+    },
+    {
+      "gate": "LinearFunction",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.13680362049490213
+    },
+    {
+      "gate": "UC",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.4049358991906047
+    },
+    {
+      "gate": "UC",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.41583877243101597
+    },
+    {
+      "gate": "YYPow",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 17.72905821632594
+    },
+    {
+      "gate": "YYPow",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 21.67791678197682
+    },
+    {
+      "gate": "UCRX",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 37.2886259322986
+    },
+    {
+      "gate": "UCRZ",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 0.507721065543592
+    },
+    {
+      "gate": "UCRY",
+      "basis": "google_syc",
+      "mode": "projective",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 36.90629206318408
+    },
+    {
+      "gate": "UCRY",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 44.05587692838162
+    },
+    {
+      "gate": "UCRZ",
+      "basis": "google_syc",
+      "mode": "phase_exact",
+      "status": "replayed",
+      "method": "exact_controlled_SU2_chart_and_native_phase_lemma",
+      "wall_seconds": 43.01422915421426
+    }
+  ],
+  "all_changed_constructions_replayed": true,
+  "replay_methods": {
+    "exact_controlled_SU2_chart_and_native_phase_lemma": 89,
+    "exact_exponential_polynomial_identity": 55
+  },
+  "limits": [
+    "Unchanged modes are payload comparisons, not new identity replays",
+    "Old native/exchange reports retain their immutable input and proof-attempt timeouts",
+    "Four-Ising theorem is analytical, with algebraic components checked by this release"
+  ]
+}
